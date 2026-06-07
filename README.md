@@ -1,2 +1,69 @@
 # Concierge
-Concierge front-end for Napoleon
+
+Concierge is the adaptive human interface to Napoleon.
+
+This repository contains the initial product design, evaluator design, backlog, schemas, observability plan, and starter skeleton for the full lifecycle:
+
+1. Periodic evaluator for Napoleon complex agent development capability
+2. MVP text-only Concierge
+3. Voice Concierge
+4. Avatar Concierge with local camera and voice perception
+5. Controlled self-evolution through evaluated improvement proposals
+
+The current recommendation is Mac-first with a future cross-platform path:
+
+- Desktop shell: Tauri
+- Frontend: React or Svelte
+- Avatar renderer: three.js with VRM
+- Local perception: MediaPipe, Silero VAD, Whisper or WhisperKit, optional wake word
+- Observability: OpenTelemetry-compatible traces, metrics, logs, and evaluation reports
+- Napoleon access: governed bridge API, never direct uncontrolled action execution
+
+## Repository status
+
+This is an initial GitHub repository scaffold. It is designed to make the project buildable in phases, not to ship the final product on day one.
+
+## Quick start
+
+Run the evaluator in stub mode:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r evaluator/requirements.txt
+python evaluator/eval_runner.py --mode stub --out evaluator/reports/latest.json
+```
+
+Review the core documents:
+
+- [PRD](docs/PRD.md)
+- [Backlog](docs/BACKLOG.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Evaluator](docs/EVALUATOR.md)
+- [Observability](docs/OBSERVABILITY.md)
+- [Interaction stance policy](docs/INTERACTION_STANCE_POLICY.md)
+- [Self-evolution](docs/SELF_EVOLUTION.md)
+
+## Core principle
+
+Concierge may adapt how it interacts with the user, but it must evolve authority cautiously.
+
+The avatar, voice, and camera front-end should read user signals conservatively. It should not pretend to know emotions as facts. It should generate auditable interaction signals that Napoleon can use through governance.
+
+## Development phases
+
+| Phase | Name | Goal |
+|---|---|---|
+| P0 | Evaluator foundation | Periodically test Napoleon and Chief of Staff agent design ability |
+| P1 | Text Concierge MVP | Safe text interface with routing, stance, identity, governance, and traces |
+| P2 | Voice Concierge | Wake, VAD, STT, TTS, barge-in, and voice-friendly interaction |
+| P3 | Avatar Concierge | VRM avatar, gaze simulation, camera-aware stance, privacy controls |
+| P4 | Controlled self-evolution | Improvement proposals, regression gates, approval, rollout, rollback |
+
+## Non-goals
+
+- Concierge is not a monolithic super-agent.
+- Concierge does not bypass Napoleon governance.
+- Concierge does not store raw camera or microphone data by default.
+- Concierge does not infer child emotions as durable facts.
+- Concierge does not self-modify production behavior without evaluation and approval.

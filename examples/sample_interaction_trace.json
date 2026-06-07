@@ -1,0 +1,49 @@
+{
+  "trace_id": "trace_example_001",
+  "conversation_id": "conv_example_001",
+  "turn_id": "turn_example_001",
+  "user_profile": "adult_owner",
+  "channel": "text",
+  "intent": "architecture_review",
+  "stance": "direct_strategic",
+  "governance_decision": "read_only_allowed",
+  "events": [
+    {
+      "ts": "2026-06-07T12:00:00Z",
+      "event": "user_message_received",
+      "attributes": {
+        "channel": "text"
+      }
+    },
+    {
+      "ts": "2026-06-07T12:00:00Z",
+      "event": "identity_resolved",
+      "attributes": {
+        "user_profile": "adult_owner"
+      }
+    },
+    {
+      "ts": "2026-06-07T12:00:01Z",
+      "event": "intent_detected",
+      "attributes": {
+        "intent": "architecture_review",
+        "confidence": 0.86
+      }
+    },
+    {
+      "ts": "2026-06-07T12:00:01Z",
+      "event": "stance_selected",
+      "attributes": {
+        "stance": "direct_strategic",
+        "reason": "User requested critique"
+      }
+    },
+    {
+      "ts": "2026-06-07T12:00:03Z",
+      "event": "response_generated",
+      "attributes": {
+        "response_type": "structured_answer"
+      }
+    }
+  ]
+}

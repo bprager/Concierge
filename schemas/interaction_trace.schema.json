@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Concierge Interaction Trace",
+  "type": "object",
+  "required": [
+    "trace_id",
+    "conversation_id",
+    "turn_id",
+    "user_profile",
+    "channel",
+    "events"
+  ],
+  "properties": {
+    "trace_id": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "turn_id": {
+      "type": "string"
+    },
+    "user_profile": {
+      "type": "string",
+      "enum": [
+        "adult_owner",
+        "child_protected",
+        "guest",
+        "collaborator"
+      ]
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "text",
+        "voice",
+        "avatar"
+      ]
+    },
+    "intent": {
+      "type": "string"
+    },
+    "stance": {
+      "type": "string"
+    },
+    "governance_decision": {
+      "type": "string"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "ts",
+          "event"
+        ],
+        "properties": {
+          "ts": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "attributes": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

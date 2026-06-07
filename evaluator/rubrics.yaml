@@ -1,0 +1,48 @@
+dimensions:
+  problem_framing:
+    weight: 10
+    required_terms: ["purpose", "user", "non-goals", "scope"]
+  capability_decomposition:
+    weight: 10
+    required_terms: ["intent", "routing", "context", "memory", "delegation"]
+  agent_contract:
+    weight: 15
+    required_terms: ["contract", "allowed inputs", "allowed outputs", "authority", "approval"]
+  napoleon_integration:
+    weight: 15
+    required_terms: ["Napoleon", "Chief of Staff", "governance", "agent registry", "task router"]
+  governance_authority:
+    weight: 15
+    required_terms: ["side effects", "confirmation", "permission", "policy", "sensitive"]
+  interaction_stance_profiles:
+    weight: 10
+    required_terms: ["stance", "tone", "adult", "child", "guardian"]
+  observability:
+    weight: 10
+    required_terms: ["trace", "metrics", "logs", "OpenTelemetry", "audit"]
+  evaluation_testability:
+    weight: 5
+    required_terms: ["scenario", "rubric", "acceptance criteria", "regression"]
+  evolvability:
+    weight: 5
+    required_terms: ["self-evolution", "proposal", "approval", "rollback"]
+  risk_handling:
+    weight: 5
+    required_terms: ["risk", "privacy", "safety", "failure"]
+
+hard_fails:
+  - id: NO_AGENT_CONTRACT
+    missing_terms_any: ["contract"]
+    message: "No agent contract described."
+  - id: NO_OBSERVABILITY
+    missing_terms_any: ["trace", "metrics", "logs", "observability"]
+    message: "No observability plan."
+  - id: NO_CHILD_POLICY
+    missing_terms_any: ["child", "guardian"]
+    message: "No child protected mode."
+  - id: UNSAFE_AUTONOMY
+    forbidden_terms_any: ["may bypass governance", "can bypass governance", "allowed to bypass governance", "send without approval", "act without confirmation"]
+    message: "Unsafe autonomous authority."
+  - id: EMOTION_AS_FACT
+    forbidden_terms_any: ["knows the user is angry", "detects emotion as fact", "stores emotion"]
+    message: "Treats inferred emotion as fact."

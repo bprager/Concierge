@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Evolution Proposal",
+  "type": "object",
+  "required": [
+    "proposal_id",
+    "summary",
+    "risk_level",
+    "evidence",
+    "change",
+    "evaluator_cases",
+    "rollback_plan"
+  ],
+  "properties": {
+    "proposal_id": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "very_high"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "change": {
+      "type": "object"
+    },
+    "affected_profiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "affected_channels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evaluator_cases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "approval_required": {
+      "type": "string"
+    },
+    "rollback_plan": {
+      "type": "string"
+    }
+  }
+}

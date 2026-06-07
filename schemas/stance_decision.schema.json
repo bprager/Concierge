@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Interaction Stance Decision",
+  "type": "object",
+  "required": [
+    "user_profile",
+    "task_context",
+    "selected_stance",
+    "confidence",
+    "reason"
+  ],
+  "properties": {
+    "user_profile": {
+      "type": "string"
+    },
+    "task_context": {
+      "type": "string"
+    },
+    "detected_state": {
+      "type": "string"
+    },
+    "selected_stance": {
+      "type": "string"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "reason": {
+      "type": "string"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

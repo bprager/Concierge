@@ -1,0 +1,37 @@
+name: Concierge Evaluator
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "stub or http"
+        required: true
+        default: "stub"
+  schedule:
+    - cron: "0 9 * * 1"
+
+jobs:
+  evaluator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r evaluator/requirements.txt
+      - name: Run evaluator
+        env:
+          NAPOLEON_EVAL_ENDPOINT: ${{ secrets.NAPOLEON_EVAL_ENDPOINT }}
+          NAPOLEON_EVAL_TOKEN: ${{ secrets.NAPOLEON_EVAL_TOKEN }}
+          NAPOLEON_VERSION: ${{ vars.NAPOLEON_VERSION }}
+        run: |
+          MODE="${{ github.event.inputs.mode || 'stub' }}"
+          if [ "$MODE" = "http" ]; then
+            python evaluator/eval_runner.py --mode http --out evaluator/reports/latest.json
+          else
+            python evaluator/eval_runner.py --mode stub --out evaluator/reports/latest.json
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: concierge-evaluator-report
+          path: evaluator/reports/latest.json

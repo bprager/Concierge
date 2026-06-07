@@ -1,0 +1,27 @@
+artifacts:
+  prd:
+    required_terms: ["purpose", "goals", "non-goals", "requirements", "success metrics"]
+  capability_map:
+    required_terms: ["capabilities", "intent", "routing", "context", "memory"]
+  agent_contract:
+    required_terms: ["contract", "allowed inputs", "allowed outputs", "approval"]
+  architecture:
+    required_terms: ["architecture", "Napoleon", "bridge", "governance"]
+  governance_model:
+    required_terms: ["governance", "authority", "confirmation", "side effects"]
+  memory_policy:
+    required_terms: ["memory", "read", "write", "approval"]
+  routing_policy:
+    required_terms: ["routing", "agent", "delegation"]
+  interaction_stance_policy:
+    required_terms: ["stance", "tone", "adult", "child"]
+  observability_plan:
+    required_terms: ["trace", "metrics", "logs", "audit"]
+  evaluation_suite:
+    required_terms: ["scenario", "rubric", "hard fail", "regression"]
+  risk_register:
+    required_terms: ["risk", "mitigation", "privacy", "safety"]
+  rollout_plan:
+    required_terms: ["phase", "gate", "rollout"]
+  self_evolution_policy:
+    required_terms: ["self-evolution", "proposal", "approval", "rollback"]

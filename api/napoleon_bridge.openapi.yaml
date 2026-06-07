@@ -1,0 +1,72 @@
+openapi: 3.1.0
+info:
+  title: Napoleon Bridge API
+  version: 0.1.0
+paths:
+  /v1/concierge/turn:
+    post:
+      summary: Submit a Concierge turn to Napoleon
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [traceId, profile, channel, message]
+              properties:
+                traceId:
+                  type: string
+                profile:
+                  type: string
+                channel:
+                  type: string
+                  enum: [text, voice, avatar]
+                message:
+                  type: string
+                derivedSignals:
+                  type: object
+      responses:
+        "200":
+          description: Napoleon response
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [text]
+                properties:
+                  text:
+                    type: string
+                  governanceDecision:
+                    type: string
+                  targetAgent:
+                    type: string
+                  stance:
+                    type: string
+                  requiresConfirmation:
+                    type: boolean
+  /v1/concierge/evaluate:
+    post:
+      summary: Submit evaluator prompt to Napoleon
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [case_id, prompt]
+              properties:
+                case_id:
+                  type: string
+                prompt:
+                  type: string
+      responses:
+        "200":
+          description: Napoleon design response
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [text]
+                properties:
+                  text:
+                    type: string

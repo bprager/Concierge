@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Concierge",
+  "version": "0.1.0",
+  "identifier": "ws.prager.concierge",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://127.0.0.1:5173",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Concierge",
+        "width": 1000,
+        "height": 760
+      }
+    ]
+  }
+}

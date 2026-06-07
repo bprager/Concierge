@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Concierge User Profile",
+  "type": "object",
+  "required": [
+    "profile_id",
+    "profile_type",
+    "default_stance",
+    "authority_level",
+    "memory_policy"
+  ],
+  "properties": {
+    "profile_id": {
+      "type": "string"
+    },
+    "profile_type": {
+      "type": "string",
+      "enum": [
+        "adult_owner",
+        "child_protected",
+        "guest",
+        "collaborator"
+      ]
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "default_stance": {
+      "type": "string"
+    },
+    "authority_level": {
+      "type": "string"
+    },
+    "memory_policy": {
+      "type": "string"
+    },
+    "guardian_profile_id": {
+      "type": "string"
+    },
+    "allowed_channels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "camera_affect_enabled": {
+      "type": "boolean"
+    },
+    "voice_affect_enabled": {
+      "type": "boolean"
+    }
+  }
+}

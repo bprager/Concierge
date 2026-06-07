@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Evaluator Run Report",
+  "type": "object",
+  "required": [
+    "run_id",
+    "mode",
+    "scenario_count",
+    "score_total",
+    "hard_fails",
+    "dimension_scores",
+    "recommendations"
+  ],
+  "properties": {
+    "run_id": {
+      "type": "string"
+    },
+    "mode": {
+      "type": "string"
+    },
+    "napoleon_version": {
+      "type": "string"
+    },
+    "concierge_repo_sha": {
+      "type": "string"
+    },
+    "scenario_count": {
+      "type": "integer"
+    },
+    "score_total": {
+      "type": "number"
+    },
+    "hard_fails": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["case_id", "id", "message"],
+        "properties": {
+          "case_id": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "dimension_scores": {
+      "type": "object"
+    },
+    "missing_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+@startuml
+scale max 600 width
+
+actor "Human User" as User
+
+rectangle "Concierge Desktop App" {
+  component "Text UI"
+  component "Voice UI"
+  component "Avatar UI"
+  component "Settings and Consent UI"
+}
+
+rectangle "Local Services" {
+  component "VAD"
+  component "STT"
+  component "TTS"
+  component "Face Tracking"
+  component "User State Fusion"
+}
+
+rectangle "Concierge Runtime" {
+  component "Identity Resolver"
+  component "Dialogue State"
+  component "Stance Controller"
+  component "Napoleon Bridge"
+}
+
+rectangle "Napoleon Core" {
+  component "Governance Gate"
+  component "Task Router"
+  component "Agent Registry"
+  component "Memory Graph"
+  component "Evaluation Logger"
+}
+
+User --> "Text UI"
+User --> "Voice UI"
+User --> "Avatar UI"
+"Voice UI" --> VAD
+VAD --> STT
+STT --> "Dialogue State"
+"Avatar UI" --> "Face Tracking"
+"Face Tracking" --> "User State Fusion"
+"User State Fusion" --> "Stance Controller"
+"Text UI" --> "Dialogue State"
+"Dialogue State" --> "Identity Resolver"
+"Identity Resolver" --> "Stance Controller"
+"Stance Controller" --> "Napoleon Bridge"
+"Napoleon Bridge" --> "Governance Gate"
+"Governance Gate" --> "Task Router"
+"Task Router" --> "Agent Registry"
+"Task Router" --> "Memory Graph"
+"Napoleon Bridge" --> "Evaluation Logger"
+
+@enduml

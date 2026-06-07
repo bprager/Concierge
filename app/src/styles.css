@@ -1,0 +1,77 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #1f2937;
+  background: #f9fafb;
+}
+
+.shell {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+header {
+  margin-bottom: 16px;
+}
+
+.settings {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.settings label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.capture {
+  font-size: 0.9rem;
+}
+
+.messages {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+article {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+article.user {
+  margin-left: 80px;
+}
+
+article.assistant {
+  margin-right: 80px;
+}
+
+.composer {
+  margin-top: 16px;
+  display: grid;
+  gap: 8px;
+}
+
+textarea {
+  min-height: 100px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+}
+
+button {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #111827;
+  background: #111827;
+  color: white;
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Concierge Agent Contract",
+  "type": "object",
+  "required": [
+    "agent_name",
+    "role",
+    "allowed_inputs",
+    "allowed_outputs",
+    "authority",
+    "memory",
+    "observability"
+  ],
+  "properties": {
+    "agent_name": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string"
+    },
+    "allowed_inputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowed_outputs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "authority": {
+      "type": "object",
+      "required": [
+        "default_mode",
+        "requires_approval_for"
+      ],
+      "properties": {
+        "default_mode": {
+          "type": "string"
+        },
+        "requires_approval_for": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "required": [
+        "read_scope",
+        "write_scope"
+      ],
+      "properties": {
+        "read_scope": {
+          "type": "string"
+        },
+        "write_scope": {
+          "type": "string"
+        },
+        "child_mode": {
+          "type": "string"
+        }
+      }
+    },
+    "observability": {
+      "type": "object",
+      "required": [
+        "trace_required",
+        "stance_reason_required"
+      ],
+      "properties": {
+        "trace_required": {
+          "type": "boolean"
+        },
+        "stance_reason_required": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

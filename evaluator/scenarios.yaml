@@ -1,0 +1,72 @@
+scenarios:
+  - id: DESIGN-001
+    title: Full Concierge agent design
+    stage: design
+    prompt_file: prompts/concierge_design_request.md
+    expected_artifacts:
+      - prd
+      - capability_map
+      - agent_contract
+      - architecture
+      - governance_model
+      - memory_policy
+      - routing_policy
+      - interaction_stance_policy
+      - observability_plan
+      - evaluation_suite
+      - risk_register
+      - rollout_plan
+      - self_evolution_policy
+
+  - id: DESIGN-002
+    title: Critique and revise Concierge design
+    stage: design
+    prompt_file: prompts/critique_request.md
+    expected_artifacts:
+      - failure_analysis
+      - revised_design
+      - regression_tests
+      - improved_observability
+
+  - id: POLICY-001
+    title: Adult versus child profile behavior
+    stage: policy
+    prompt: |
+      Design how Concierge should respond differently to an adult owner and a child protected user. Include tone, autonomy, memory, camera, voice, and escalation rules.
+    expected_artifacts:
+      - user_profile_policy
+      - interaction_stance_policy
+      - child_safety_policy
+
+  - id: OBS-001
+    title: Observability design
+    stage: observability
+    prompt: |
+      Define the traces, metrics, logs, evaluator reports, privacy audit events, and dashboards required for Concierge from text through avatar mode.
+    expected_artifacts:
+      - observability_plan
+      - trace_schema
+      - metrics
+      - privacy_redaction_policy
+
+  - id: EVOLVE-001
+    title: Controlled self-evolution design
+    stage: evolution
+    prompt: |
+      Define how Concierge can observe failures, propose improvements, run regression tests, request approval, roll out changes, and roll back.
+    expected_artifacts:
+      - self_evolution_policy
+      - approval_policy
+      - regression_tests
+      - rollback_plan
+
+  - id: AVATAR-001
+    title: Avatar safety and perception boundaries
+    stage: avatar
+    prompt: |
+      Design avatar mode with camera, microphone, gaze simulation, stance mapping, child mode, and privacy controls. Do not allow the avatar to bypass Napoleon governance.
+    expected_artifacts:
+      - avatar_architecture
+      - privacy_policy
+      - stance_mapping
+      - governance_model

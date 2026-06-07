@@ -1,0 +1,91 @@
+# Controlled Self-Evolution
+
+## 1. Principle
+
+Concierge may learn from interactions, but it must not freely rewrite production behavior.
+
+The safe model is:
+
+1. Observe
+2. Measure
+3. Propose
+4. Evaluate
+5. Approve
+6. Roll out
+7. Monitor
+8. Roll back if needed
+
+## 2. Evolution Controller
+
+The Evolution Controller belongs to Napoleon, not the avatar front-end.
+
+Responsibilities:
+
+- Collect learning signals
+- Detect repeated failures
+- Create evolution proposals
+- Attach evidence
+- Assess risk
+- Add evaluator regression cases
+- Request approval
+- Track rollout and rollback
+
+## 3. Learning signals
+
+Examples:
+
+- User correction
+- User interruption
+- User rating
+- Repeated routing failure
+- Repeated privacy setting change
+- Stance mismatch
+- Child confusion signal
+- Governance block
+- Evaluator regression
+
+## 4. Change categories
+
+| Category | Example | Risk |
+|---|---|---|
+| Preference | User prefers shorter answers | Low |
+| Stance | Reduce humor in work mode | Low |
+| Routing | Calendar requests route to Calendar Agent first | Medium |
+| Interface | Default camera off | Medium |
+| Memory | Store stable preference automatically | High |
+| Tool access | Allow email metadata access | High |
+| Child policy | Change child proactivity | Very high |
+| External action authority | Send messages without confirmation | Very high |
+
+## 5. Approval policy
+
+| Risk | Approval |
+|---|---|
+| Low | User approval or local setting |
+| Medium | Chief of Staff approval |
+| High | Chief of Staff plus evaluator pass |
+| Very high | Explicit human approval plus evaluator pass plus rollback plan |
+
+## 6. Evolution proposal content
+
+Each proposal must include:
+
+- Summary
+- Evidence
+- Affected user profiles
+- Affected channels
+- Risk level
+- Expected benefit
+- New evaluator cases
+- Rollout plan
+- Rollback plan
+- Approval status
+
+## 7. Regression rule
+
+No change can be accepted unless:
+
+- Existing hard fail tests still pass
+- Related evaluator scenarios pass
+- Observability fields remain complete
+- Privacy behavior does not weaken silently

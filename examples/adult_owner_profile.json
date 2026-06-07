@@ -1,0 +1,15 @@
+{
+  "profile_id": "adult_owner_default",
+  "profile_type": "adult_owner",
+  "display_name": "Bernd",
+  "default_stance": "direct_strategic",
+  "authority_level": "draft_prepare_recommend",
+  "memory_policy": "preference_aware_with_user_control",
+  "allowed_channels": [
+    "text",
+    "voice",
+    "avatar"
+  ],
+  "camera_affect_enabled": true,
+  "voice_affect_enabled": true
+}

@@ -1,0 +1,20 @@
+@startuml
+scale max 600 width
+
+start
+:Load scenario suite;
+:Call Napoleon endpoint;
+:Collect response;
+:Check required artifacts;
+:Score rubric;
+:Detect hard fails;
+:Generate JSON report;
+if (Score passes and no hard fails?) then (yes)
+  :Allow next phase gate;
+else (no)
+  :Create improvement proposal;
+  :Add regression case;
+endif
+stop
+
+@enduml

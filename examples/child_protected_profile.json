@@ -1,0 +1,16 @@
+{
+  "profile_id": "child_protected_default",
+  "profile_type": "child_protected",
+  "display_name": "Child user",
+  "default_stance": "warm_encouraging",
+  "authority_level": "explain_and_suggest_only",
+  "memory_policy": "minimal_guardian_controlled",
+  "guardian_profile_id": "adult_owner_default",
+  "allowed_channels": [
+    "text",
+    "voice",
+    "avatar"
+  ],
+  "camera_affect_enabled": false,
+  "voice_affect_enabled": false
+}

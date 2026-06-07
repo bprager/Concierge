@@ -1,0 +1,92 @@
+# Backlog
+
+## Backlog principles
+
+Every story should include:
+
+1. User value
+2. Acceptance criteria
+3. Observability requirements
+4. Privacy and safety implications
+5. Evaluator coverage
+
+## Milestone P0: Evaluator foundation
+
+| ID | Story | Priority | Acceptance criteria | Observability |
+|---|---|---:|---|---|
+| EV-001 | Define evaluator objectives and rubric | P0 | Rubric covers product, architecture, governance, stance, observability, and self-evolution | eval_rubric_loaded |
+| EV-002 | Create scenario suite for Concierge design | P0 | At least 15 scenarios, including adult, child, adversarial, and evolution cases | eval_case_started, eval_case_completed |
+| EV-003 | Define expected artifacts | P0 | PRD, contract, architecture, stance policy, observability, backlog, risk register required | eval_artifact_checked |
+| EV-004 | Implement evaluator runner | P0 | Runner supports stub mode and HTTP Napoleon mode | eval_run_started, eval_run_completed |
+| EV-005 | Add hard fail taxonomy | P0 | Missing memory policy, unsafe authority, no contract, no observability can fail run | eval_hard_fail_detected |
+| EV-006 | Add GitHub Actions periodic run | P1 | Weekly scheduled run creates JSON report artifact | eval_ci_run_started |
+| EV-007 | Add regression comparison | P1 | Current run compares score to previous report | eval_regression_detected |
+| EV-008 | Add human review template | P1 | Reviewer can approve, reject, or request revision | eval_review_recorded |
+| EV-009 | Add evaluator report dashboard placeholder | P2 | HTML report or markdown summary generated | eval_report_rendered |
+
+## Milestone P1: Text Concierge MVP
+
+| ID | Story | Priority | Acceptance criteria | Observability |
+|---|---|---:|---|---|
+| TX-001 | Create desktop shell skeleton | P0 | Tauri app opens text interface | app_started, app_ready |
+| TX-002 | Add Napoleon bridge client | P0 | Text requests can be sent to configured Napoleon endpoint | bridge_request_started, bridge_request_completed |
+| TX-003 | Add user profile resolver | P0 | Adult owner, child protected, guest supported | identity_resolved |
+| TX-004 | Add interaction stance policy | P0 | Concierge selects stance and logs reason | stance_selected |
+| TX-005 | Add governance confirmation UI | P0 | Side effects require visible confirmation | governance_decision |
+| TX-006 | Add text conversation trace | P0 | Every turn has trace_id and turn_id | user_message_received, response_generated |
+| TX-007 | Add child profile response rules | P0 | Child mode uses simple language and restricted authority | child_policy_applied |
+| TX-008 | Add memory update suggestion flow | P1 | Preferences are proposed, not silently stored | memory_update_proposed |
+| TX-009 | Add local settings and privacy panel | P1 | User can configure endpoint, telemetry, profile, camera, mic | settings_changed |
+| TX-010 | Add evaluator fixtures for text UI | P1 | Text mode can be smoke tested | text_smoke_eval_completed |
+
+## Milestone P2: Voice Concierge
+
+| ID | Story | Priority | Acceptance criteria | Observability |
+|---|---|---:|---|---|
+| VO-001 | Add microphone permission flow | P0 | Mic cannot start without explicit permission | mic_permission_requested, mic_permission_result |
+| VO-002 | Add VAD service | P0 | Speech start and end detected in local service | voice_segment_detected |
+| VO-003 | Add STT adapter | P0 | Local Whisper path can transcribe sample audio | stt_started, stt_completed |
+| VO-004 | Add TTS adapter | P0 | Concierge response can be spoken | tts_started, tts_completed |
+| VO-005 | Add barge-in | P0 | User can interrupt TTS and start new turn | barge_in_detected |
+| VO-006 | Add voice turn latency metrics | P0 | VAD, STT, Napoleon, TTS spans emitted | voice_turn_completed |
+| VO-007 | Add voice-specific response shaping | P1 | Long text responses are summarized for speech | voice_response_shaped |
+| VO-008 | Add wake word option | P2 | Wake word can be enabled or disabled | wake_word_detected |
+| VO-009 | Add child voice constraints | P1 | Child mode has slower pacing and stricter side effect controls | child_voice_policy_applied |
+
+## Milestone P3: Avatar Concierge
+
+| ID | Story | Priority | Acceptance criteria | Observability |
+|---|---|---:|---|---|
+| AV-001 | Add avatar renderer placeholder | P0 | Text responses trigger neutral avatar state | avatar_state_changed |
+| AV-002 | Add VRM loader | P0 | App can load a local VRM model | avatar_model_loaded |
+| AV-003 | Map stance to expression | P0 | Direct, warm, concerned, playful, somber states render differently | avatar_expression_set |
+| AV-004 | Add lip sync baseline | P1 | Mouth movement follows generated audio amplitude | lip_sync_started, lip_sync_completed |
+| AV-005 | Add camera permission flow | P0 | Camera cannot start without explicit permission | camera_permission_requested, camera_permission_result |
+| AV-006 | Add face and head pose detection | P1 | Local service emits face present, head yaw, pitch, roll | camera_state_estimated |
+| AV-007 | Add gaze simulation | P1 | Avatar eye target updates based on user position and window state | gaze_target_updated |
+| AV-008 | Add conservative affect fusion | P1 | Output uses uncertainty labels, not emotional facts | affect_signal_fused |
+| AV-009 | Add avatar privacy dashboard | P0 | User can disable camera, affect, storage, and telemetry | privacy_setting_changed |
+| AV-010 | Add child avatar constraints | P0 | Child mode disables or restricts camera affect estimation by default | child_avatar_policy_applied |
+
+## Milestone P4: Controlled self-evolution
+
+| ID | Story | Priority | Acceptance criteria | Observability |
+|---|---|---:|---|---|
+| SE-001 | Define learning signal schema | P0 | Corrections, interruptions, ratings, and repeated patterns captured | learning_signal_recorded |
+| SE-002 | Create evolution proposal schema | P0 | Proposed changes include evidence, risk, rollback, evaluator cases | evolution_proposal_created |
+| SE-003 | Add proposal review workflow | P1 | Human or Chief of Staff can approve or reject proposal | evolution_proposal_reviewed |
+| SE-004 | Add regression gate | P0 | Any accepted change must run evaluator before rollout | evolution_regression_run |
+| SE-005 | Add rollout policy | P1 | Low-risk changes can roll out locally, high-risk changes require approval | rollout_decision_recorded |
+| SE-006 | Add rollback path | P1 | Last known good policy can be restored | rollback_completed |
+
+## Milestone P5: Operations and observability
+
+| ID | Story | Priority | Acceptance criteria | Observability |
+|---|---|---:|---|---|
+| OBS-001 | Define trace schema | P0 | JSON schema exists and validates example trace | trace_schema_validated |
+| OBS-002 | Add local telemetry buffer | P0 | Events persist locally if backend is unavailable | telemetry_buffered |
+| OBS-003 | Add redaction layer | P0 | PII and raw content controls exist before export | telemetry_redacted |
+| OBS-004 | Add OpenTelemetry exporter plan | P1 | OTLP exporter configuration documented | telemetry_export_configured |
+| OBS-005 | Add privacy audit log | P0 | Camera, mic, memory, and child policy changes are auditable | privacy_audit_logged |
+| OBS-006 | Add evaluator report retention | P1 | Reports retained with timestamps and version metadata | eval_report_retained |
+| OBS-007 | Add dashboard specification | P2 | Metrics, traces, evaluator history, and privacy events defined | dashboard_spec_created |

@@ -1,0 +1,17 @@
+@startuml
+scale max 600 width
+
+component "Concierge App" as App
+component "Local Redaction Layer" as Redact
+database "Local Telemetry Buffer" as Buffer
+component "OTLP Collector" as Collector
+component "Dashboard" as Dashboard
+component "Evaluator Reports" as Reports
+
+App --> Redact
+Redact --> Buffer
+Buffer --> Collector
+Collector --> Dashboard
+Buffer --> Reports
+
+@enduml
