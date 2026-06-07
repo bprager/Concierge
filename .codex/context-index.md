@@ -17,6 +17,7 @@ Use this file to choose context quickly. Read only what is relevant to the task.
 - Product requirements: `docs/PRD.md`
 - Roadmap: `docs/ROADMAP.md`
 - Backlog: `docs/BACKLOG.md`, `.codex/backlog.md`
+- Startup review reports: `docs/reports/`
 - Risk register: `docs/RISK_REGISTER.md`
 - Contribution workflow and definition of done: `CONTRIBUTING.md`
 
@@ -74,6 +75,7 @@ Use this file to choose context quickly. Read only what is relevant to the task.
 ## Current Work
 
 - AI handoff status: `.codex/status.md`
+- Initial repository review and startup alignment reports: `docs/reports/`
 - AI backlog routing: `.codex/backlog.md`
 - Capability inventory: `.codex/capabilities.md`
 - Research notes: `.codex/research.md`

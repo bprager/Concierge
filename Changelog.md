@@ -13,6 +13,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added starter Tauri and React desktop shell with local stub bridge behavior and development telemetry.
 - Added frontend and Tauri lockfiles plus a placeholder desktop icon so the scaffold can be built repeatably.
 - Added bridge API, JSON schemas, example profiles, sample traces, and local perception contract stubs.
+- Added initial repository review, Chief of Staff alignment, architecture gap analysis, evaluator readiness, and recommended startup plan reports.
 - Started maintaining this changelog.
 
 ### Fixed
