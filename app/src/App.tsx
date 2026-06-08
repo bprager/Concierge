@@ -1,11 +1,25 @@
 import { useState } from "react";
-import { defaultChiefOfStaffDescriptor, validateChiefOfStaffDescriptor, type LocalProfile } from "./contractBridge";
+import {
+  buildRehearsalPreview,
+  buildTextTurnContract,
+  defaultChiefOfStaffDescriptor,
+  validateChiefOfStaffDescriptor,
+  type LocalProfile,
+} from "./contractBridge";
 import { sendToNapoleon } from "./napoleonBridge";
-import { describeGovernanceDecision } from "./presentation";
+import { describeGovernanceDecision, summarizeRehearsalPreview } from "./presentation";
 import { emitEvent, newTraceId } from "./telemetry";
 import type { ConciergeMessage } from "./types";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
+
+interface PendingRehearsal {
+  content: string;
+  traceId: string;
+  turnId: string;
+  preview: ReturnType<typeof buildRehearsalPreview>;
+  summary: ReturnType<typeof summarizeRehearsalPreview>;
+}
 
 export function App() {
   const [messages, setMessages] = useState<ConciergeMessage[]>([
@@ -16,6 +30,8 @@ export function App() {
   ]);
   const [input, setInput] = useState("");
   const [profile, setProfile] = useState<LocalProfile>("adult_owner");
+  const [rehearsalMode, setRehearsalMode] = useState(true);
+  const [pendingRehearsal, setPendingRehearsal] = useState<PendingRehearsal | null>(null);
   const [endpoint, setEndpoint] = useState(() =>
     typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_endpoint") ?? "",
   );
@@ -32,16 +48,54 @@ export function App() {
     }
   }
 
-  async function submit() {
+  function updateProfile(value: LocalProfile) {
+    setProfile(value);
+    setPendingRehearsal(null);
+  }
+
+  function updateInput(value: string) {
+    setInput(value);
+    setPendingRehearsal(null);
+  }
+
+  function rehearse() {
     const content = input.trim();
     if (!content) return;
 
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
+    const contract = buildTextTurnContract({
+      message: content,
+      profile,
+      conversationId,
+      turnId,
+      traceId,
+    });
+    const preview = buildRehearsalPreview(contract, content);
+    const summary = summarizeRehearsalPreview(preview);
+
+    emitEvent("rehearsal_preview_created", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      requestId: preview.chiefOfStaffReviewPacket.requestId,
+    });
+    setPendingRehearsal({ content, traceId, turnId, preview, summary });
+    setLastDecision(null);
+  }
+
+  async function submit(rehearsal: PendingRehearsal | null = null) {
+    const content = rehearsal?.content ?? input.trim();
+    if (!content) return;
+
+    const traceId = rehearsal?.traceId ?? newTraceId();
+    const turnId = rehearsal?.turnId ?? `turn_${Date.now().toString(16)}`;
     emitEvent("user_message_received", { traceId, conversationId, turnId, channel: "text", profile });
 
     setMessages((m) => [...m, { role: "user", content }]);
     setInput("");
+    setPendingRehearsal(null);
 
     try {
       const response = await sendToNapoleon({
@@ -95,6 +149,8 @@ export function App() {
     }
   }
 
+  const canSendRehearsal = Boolean(pendingRehearsal && input.trim() === pendingRehearsal.content);
+
   return (
     <main className="shell">
       <header>
@@ -105,7 +161,7 @@ export function App() {
       <section className="settings">
         <label>
           User profile
-          <select value={profile} onChange={(e) => setProfile(e.target.value as LocalProfile)}>
+          <select value={profile} onChange={(e) => updateProfile(e.target.value as LocalProfile)}>
             <option value="adult_owner">Adult owner</option>
             <option value="child_protected">Child protected</option>
             <option value="guest">Guest</option>
@@ -117,6 +173,17 @@ export function App() {
             value={endpoint}
             onChange={(e) => updateEndpoint(e.target.value)}
             placeholder="Optional live endpoint"
+          />
+        </label>
+        <label>
+          Rehearsal Mode
+          <input
+            type="checkbox"
+            checked={rehearsalMode}
+            onChange={(e) => {
+              setRehearsalMode(e.target.checked);
+              setPendingRehearsal(null);
+            }}
           />
         </label>
         <span className="capture">Camera off, microphone off</span>
@@ -170,13 +237,61 @@ export function App() {
         </section>
       ) : null}
 
+      {pendingRehearsal ? (
+        <section className="rehearsal">
+          <div className="rehearsal-heading">
+            <strong>{pendingRehearsal.summary.status}</strong>
+            <span>{pendingRehearsal.summary.detail}</span>
+          </div>
+          <dl>
+            <dt>Understood request</dt>
+            <dd>{pendingRehearsal.preview.understoodRequest}</dd>
+            <dt>Proposed path</dt>
+            <dd>{pendingRehearsal.preview.proposedNapoleonPath.join(" -> ")}</dd>
+            <dt>Chief of Staff packet</dt>
+            <dd>
+              {pendingRehearsal.preview.chiefOfStaffReviewPacket.requestId},{" "}
+              {pendingRehearsal.preview.chiefOfStaffReviewPacket.profileMode},{" "}
+              {pendingRehearsal.preview.chiefOfStaffReviewPacket.authorityTier}
+            </dd>
+            <dt>Allowed</dt>
+            <dd>{pendingRehearsal.preview.allowedEffects.join(", ")}</dd>
+            <dt>Blocked</dt>
+            <dd>{pendingRehearsal.preview.blockedEffects.join(", ")}</dd>
+            <dt>Approval</dt>
+            <dd>{pendingRehearsal.summary.approval}</dd>
+            <dt>Memory proposal</dt>
+            <dd>{pendingRehearsal.summary.memory}</dd>
+            <dt>Trace and audit</dt>
+            <dd>
+              {pendingRehearsal.preview.traceAuditPreview.traceId},{" "}
+              {pendingRehearsal.preview.traceAuditPreview.auditId}
+            </dd>
+            <dt>Evaluator case</dt>
+            <dd>
+              {pendingRehearsal.preview.evaluatorCaseCandidate.scenarioType},{" "}
+              {pendingRehearsal.preview.evaluatorCaseCandidate.sourceRequestId}
+            </dd>
+          </dl>
+        </section>
+      ) : null}
+
       <section className="composer">
         <textarea
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e) => updateInput(e.target.value)}
           placeholder="Ask Napoleon through Concierge..."
         />
-        <button onClick={submit}>Send</button>
+        <div className="composer-actions">
+          <button onClick={rehearsalMode ? rehearse : () => submit()}>
+            {rehearsalMode ? "Rehearse" : "Send"}
+          </button>
+          {rehearsalMode ? (
+            <button className="secondary" disabled={!canSendRehearsal} onClick={() => submit(pendingRehearsal)}>
+              Send advisory request
+            </button>
+          ) : null}
+        </div>
       </section>
     </main>
   );

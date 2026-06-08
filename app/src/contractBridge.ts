@@ -99,6 +99,40 @@ export interface TextTurnContract {
   blockedEffects: string[];
 }
 
+export interface RehearsalPreview {
+  understoodRequest: string;
+  proposedNapoleonPath: string[];
+  chiefOfStaffReviewPacket: {
+    requestId: string;
+    requestType: ChiefOfStaffRequest["request_type"];
+    profileMode: NapoleonProfileMode;
+    authorityTier: AuthorityTier;
+    evidenceLinks: string[];
+    traceId: string;
+  };
+  allowedEffects: string[];
+  blockedEffects: string[];
+  approvalState: string;
+  memoryProposal: {
+    status: "candidate_only";
+    summary: string;
+    reviewRequired: true;
+  };
+  traceAuditPreview: {
+    traceId: string;
+    requestId: string;
+    decisionId: string;
+    auditId: string;
+  };
+  evaluatorCaseCandidate: {
+    scenarioType: "rehearsal_mode_text_turn";
+    sourceRequestId: string;
+    profileMode: NapoleonProfileMode;
+    traceId: string;
+    expectedBlockedEffects: string[];
+  };
+}
+
 const PROFILE_MAP: Record<LocalProfile, NapoleonProfileMode> = {
   adult_owner: "adult_owner",
   child_protected: "child_protected_user",
@@ -233,5 +267,43 @@ export function buildTextTurnContract(input: TextTurnContractInput): TextTurnCon
     auditEnvelope,
     sourceEvidence,
     blockedEffects,
+  };
+}
+
+export function buildRehearsalPreview(contract: TextTurnContract, message: string): RehearsalPreview {
+  const understoodRequest = message.trim();
+
+  return {
+    understoodRequest,
+    proposedNapoleonPath: ["concierge.text", "napoleon.chief_of_staff", "napoleon.governance"],
+    chiefOfStaffReviewPacket: {
+      requestId: contract.chiefOfStaffRequest.request_id,
+      requestType: contract.chiefOfStaffRequest.request_type,
+      profileMode: contract.profileMode,
+      authorityTier: contract.chiefOfStaffRequest.requested_authority_tier,
+      evidenceLinks: contract.sourceEvidence,
+      traceId: contract.chiefOfStaffRequest.trace_id,
+    },
+    allowedEffects: ["prepare_advisory_response"],
+    blockedEffects: contract.blockedEffects,
+    approvalState: "No approval captured. External effects remain blocked.",
+    memoryProposal: {
+      status: "candidate_only",
+      summary: "Potential preference or memory changes stay as review-only candidates.",
+      reviewRequired: true,
+    },
+    traceAuditPreview: {
+      traceId: contract.traceEnvelope.trace_id,
+      requestId: contract.traceEnvelope.request_id,
+      decisionId: contract.traceEnvelope.decision_id,
+      auditId: contract.auditEnvelope.audit_id,
+    },
+    evaluatorCaseCandidate: {
+      scenarioType: "rehearsal_mode_text_turn",
+      sourceRequestId: contract.chiefOfStaffRequest.request_id,
+      profileMode: contract.profileMode,
+      traceId: contract.traceEnvelope.trace_id,
+      expectedBlockedEffects: contract.blockedEffects,
+    },
   };
 }

@@ -39,6 +39,11 @@ header {
   padding: 4px 8px;
 }
 
+.settings input[type="checkbox"] {
+  width: 18px;
+  min-height: 18px;
+}
+
 .capture {
   font-size: 0.9rem;
 }
@@ -117,6 +122,42 @@ article dd {
   font-size: 0.88rem;
 }
 
+.rehearsal {
+  margin-top: 16px;
+  padding: 12px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+}
+
+.rehearsal-heading {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.rehearsal-heading span {
+  font-size: 0.9rem;
+}
+
+.rehearsal dl {
+  display: grid;
+  grid-template-columns: minmax(140px, max-content) 1fr;
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.rehearsal dt {
+  color: #065f46;
+  font-weight: 650;
+}
+
+.rehearsal dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .composer {
   margin-top: 16px;
   display: grid;
@@ -138,6 +179,22 @@ button {
   color: white;
 }
 
+.composer-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+button.secondary {
+  background: white;
+  color: #111827;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 @media (max-width: 640px) {
   .shell {
     padding: 16px;
@@ -157,5 +214,9 @@ button {
   article.assistant {
     margin-left: 0;
     margin-right: 0;
+  }
+
+  .rehearsal dl {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildRehearsalPreview,
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
   mapProfileToNapoleonMode,
@@ -45,4 +46,33 @@ test("builds a text turn contract with governance and observability identifiers"
   assert.ok(contract.governanceDecision.blocked_effects.includes("external_send"));
   assert.ok(contract.governanceDecision.blocked_effects.includes("memory_write"));
   assert.ok(contract.auditEnvelope.evidence_links.includes("local_text_turn"));
+});
+
+test("builds a rehearsal preview from the text turn contract without granting authority", () => {
+  const contract = buildTextTurnContract({
+    message: "Send the weekly deployment summary to the team",
+    profile: "adult_owner",
+    conversationId: "conv_rehearsal",
+    turnId: "turn_rehearsal",
+    traceId: "trace_rehearsal",
+    timestamp: "2026-06-08T12:00:00.000Z",
+  });
+
+  const preview = buildRehearsalPreview(contract, "Send the weekly deployment summary to the team");
+
+  assert.equal(preview.understoodRequest, "Send the weekly deployment summary to the team");
+  assert.deepEqual(preview.proposedNapoleonPath, [
+    "concierge.text",
+    "napoleon.chief_of_staff",
+    "napoleon.governance",
+  ]);
+  assert.equal(preview.chiefOfStaffReviewPacket.requestId, "cos_turn_rehearsal");
+  assert.equal(preview.chiefOfStaffReviewPacket.profileMode, "adult_owner");
+  assert.deepEqual(preview.allowedEffects, ["prepare_advisory_response"]);
+  assert.ok(preview.blockedEffects.includes("external_send"));
+  assert.equal(preview.approvalState, "No approval captured. External effects remain blocked.");
+  assert.equal(preview.memoryProposal.status, "candidate_only");
+  assert.equal(preview.traceAuditPreview.traceId, "trace_rehearsal");
+  assert.equal(preview.evaluatorCaseCandidate.scenarioType, "rehearsal_mode_text_turn");
+  assert.equal(preview.evaluatorCaseCandidate.sourceRequestId, "cos_turn_rehearsal");
 });

@@ -1,4 +1,4 @@
-import type { GovernanceOutcome } from "./contractBridge.js";
+import type { GovernanceOutcome, RehearsalPreview } from "./contractBridge.js";
 
 export interface GovernanceDecisionViewInput {
   outcome: GovernanceOutcome;
@@ -12,6 +12,14 @@ export interface GovernanceDecisionView {
   detail: string;
   requiresReview: boolean;
   blockedEffectsLabel: string;
+}
+
+export interface RehearsalPreviewView {
+  status: string;
+  detail: string;
+  executed: false;
+  approval: string;
+  memory: string;
 }
 
 export function describeGovernanceDecision(input: GovernanceDecisionViewInput): GovernanceDecisionView {
@@ -49,5 +57,15 @@ export function describeGovernanceDecision(input: GovernanceDecisionViewInput): 
     detail: `Concierge can prepare an advisory response but cannot execute blocked effects. Decision ${input.decisionId}, audit ${input.auditId}.`,
     requiresReview: false,
     blockedEffectsLabel,
+  };
+}
+
+export function summarizeRehearsalPreview(preview: RehearsalPreview): RehearsalPreviewView {
+  return {
+    status: "Rehearsal only",
+    detail: `This preview was not sent to Napoleon and did not execute anything. It shows the proposed CoS request ${preview.chiefOfStaffReviewPacket.requestId}.`,
+    executed: false,
+    approval: preview.approvalState,
+    memory: `Memory status: ${preview.memoryProposal.status}. ${preview.memoryProposal.summary}`,
   };
 }

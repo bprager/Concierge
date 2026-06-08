@@ -44,6 +44,7 @@ Review the core documents:
 - [Architecture](docs/ARCHITECTURE.md)
 - [Evaluator](docs/EVALUATOR.md)
 - [Observability](docs/OBSERVABILITY.md)
+- [Rehearsal Mode](docs/REHEARSAL_MODE.md)
 - [Interaction stance policy](docs/INTERACTION_STANCE_POLICY.md)
 - [Self-evolution](docs/SELF_EVOLUTION.md)
 - [Evaluation efficiency and CoS improvements](docs/reports/EVALUATION_EFFICIENCY_AND_COS_IMPROVEMENTS.md)

@@ -113,6 +113,7 @@ Text interface with:
 - Intent understanding
 - Napoleon bridge
 - Governance prompt and confirmation
+- Rehearsal Mode for previewing governed turns before live bridge calls
 - Interaction stance policy
 - Structured traces
 - Evaluation hooks
@@ -202,6 +203,8 @@ Text Concierge shall:
 - Request context only through governed Napoleon APIs
 - Ask concise clarification when needed
 - Route to Napoleon or specialized agents through the bridge
+- Preview governed turns locally in Rehearsal Mode before sending a live bridge request
+- Display allowed effects, blocked effects, approval state, memory proposal state, and trace/audit identifiers for rehearsed turns
 - Select an interaction stance
 - Return responses in the user-appropriate style
 - Emit telemetry for each turn

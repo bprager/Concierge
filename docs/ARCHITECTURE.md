@@ -152,6 +152,30 @@ UI -> User: text, voice, or avatar response
 @enduml
 ```
 
+### Rehearsal Mode sequence
+
+Rehearsal Mode is a local preview step before a live Napoleon bridge call. It builds the same text turn contract shape used by the bridge, then displays the understood request, proposed Napoleon path, Chief of Staff review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate. It does not contact Napoleon, capture approval, write memory, send externally, dispatch agents, or execute commands.
+
+```plantuml
+@startuml
+scale max 600 width
+
+actor User
+participant "Concierge UI" as UI
+participant "Contract Adapter" as CA
+participant "Telemetry" as OTEL
+
+User -> UI: typed request
+UI -> CA: build text turn contract
+CA -> UI: rehearsal preview
+UI -> OTEL: rehearsal_preview_created
+UI -> User: preview blocked and allowed effects
+User -> UI: send advisory request
+UI -> "Napoleon Bridge": governed request
+
+@enduml
+```
+
 ## 5. Observability pipeline
 
 ```plantuml

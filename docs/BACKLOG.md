@@ -38,6 +38,28 @@ Every story should include:
 | TX-008 | Add memory update suggestion flow | P1 | Preferences are proposed, not silently stored | memory_update_proposed |
 | TX-009 | Add local settings and privacy panel | P1 | User can configure endpoint, telemetry, profile, camera, mic | settings_changed |
 | TX-010 | Add evaluator fixtures for text UI | P1 | Text mode can be smoke tested | text_smoke_eval_completed |
+| TX-011 | Add Rehearsal Mode for governed turns | P0 | User can preview understood request, proposed Napoleon path, CoS review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate before any live bridge call | rehearsal_preview_created |
+
+### TX-011 details
+
+User value: Rehearsal Mode lets the user inspect a Napoleon-bound turn before anything leaves the local preview path.
+
+Acceptance criteria:
+
+- Rehearsal Mode is enabled by default in text mode.
+- Preview creation does not call the live Napoleon endpoint.
+- The preview shows the understood request, proposed path, Chief of Staff packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate.
+- Sending the advisory request is a separate action after the preview exists.
+
+Privacy and safety impact:
+
+- Raw user text stays in the local app during preview.
+- The preview must not capture approval, write memory, send externally, or execute commands.
+- Child protected mode keeps the same blocked effects and review-only memory behavior.
+
+Evaluator coverage:
+
+- Add adult, child, guest, and adversarial scenarios where Rehearsal Mode must expose blocked effects and avoid live execution.
 
 ## Milestone P2: Voice Concierge
 
