@@ -1,12 +1,12 @@
 # Recommended Startup Plan
 
-Date: 2026-06-07
+Date: 2026-06-08
 
 ## Guiding Principle
 
 Build the smallest observable, governed text path before adding voice, avatar, camera, or self-evolution behavior.
 
-The project should optimize for maintainability, observability, governance, and future evolution over rapid visible features.
+The project should optimize for maintainability, observability, governance, and future evolution over rapid visible features. After ingesting Napoleon's CoS integration package, the first implementation sequence should prioritize local contract reconciliation before UI expansion.
 
 ## Recommended First Implementation Sequence
 
@@ -29,7 +29,25 @@ Why first:
 
 - Future work needs a reliable local gate.
 
-### Step 2: Harden The Napoleon Bridge Contract
+### Step 2: Reconcile Napoleon CoS Contracts Locally
+
+Goal:
+
+- Make Concierge's local contracts match Napoleon's contract-only package before runtime behavior is built.
+
+Work:
+
+- Add or reference the `napoleon.chief_of_staff` descriptor.
+- Map local profile names to Napoleon profile modes.
+- Map local bridge request/response concepts to ChiefOfStaffRequest, ChiefOfStaffResponse, GovernanceEvaluationRequest, GovernanceDecision, AgentManifest, TraceEnvelope, AuditEnvelope, and EvolutionProposal.
+- Capture blocked effects as first-class test data.
+- Add schema-version and cache/fail-closed rules for descriptor discovery.
+
+Why second:
+
+- The bridge is the authority boundary. Contract drift here will contaminate every later feature.
+
+### Step 3: Harden The Local Bridge Adapter
 
 Goal:
 
@@ -37,21 +55,21 @@ Goal:
 
 Work:
 
-- Add auth scheme.
-- Add request/response IDs.
+- Add auth scheme once Napoleon provides the live transport.
+- Add request, response, decision, trace, and audit IDs.
 - Add error responses.
-- Add governance decision enum.
+- Add governance decision handling for `allow_prepare_only`, `deny`, `requires_review`, and `no_go`.
 - Add confirmation request and result payloads.
-- Add memory proposal payload.
-- Add delegation result payload.
+- Add memory proposal display payload that does not write memory.
+- Add delegation result payload based on agent manifests.
 - Add trace propagation fields.
 - Add version field.
 
-Why second:
+Why third:
 
-- The bridge is the authority boundary. Weak contracts here will contaminate every later feature.
+- Once local contracts match Napoleon's package, the app needs an adapter that keeps UI behavior inside those boundaries.
 
-### Step 3: Define Trace Completeness
+### Step 4: Define Trace Completeness
 
 Goal:
 
@@ -59,16 +77,17 @@ Goal:
 
 Work:
 
-- Tighten `schemas/interaction_trace.schema.json`.
+- Tighten `schemas/interaction_trace.schema.json` around Napoleon `TraceEnvelope`, `EventEnvelope`, `MetricEnvelope`, and `AuditEnvelope` requirements.
 - Add event enum and required fields by event type.
 - Add valid examples for adult, child, guest, confirmation-required, and blocked flows.
+- Require `decision_id`, `audit_id`, `authority_tier`, `approval_requirement`, `evidence_links`, and `blocked_effects` when governance or delegation is involved.
 - Add schema validation in CI.
 
 Why third:
 
 - Governance and self-improvement depend on knowing what happened.
 
-### Step 4: Expand Evaluator Coverage
+### Step 5: Expand Evaluator Coverage
 
 Goal:
 
@@ -78,6 +97,7 @@ Work:
 
 - Expand from 6 to at least 15 scenarios.
 - Add negative cases for unsafe autonomy, child safety, memory writes, raw capture, and direct tool execution.
+- Add contract-conformance cases for descriptor discovery, agent manifests, governance decisions, profile mapping, observability envelopes, evolution proposals, and contract-only boundaries.
 - Add regression comparison.
 - Add Markdown summary output.
 - Add human review checklist.
@@ -86,7 +106,7 @@ Why fourth:
 
 - The evaluator is the project's first gate, but it needs stronger coverage before it can block phase promotion.
 
-### Step 5: Build The Text MVP Core Flow
+### Step 6: Build The Text MVP Core Flow
 
 Goal:
 
@@ -97,7 +117,8 @@ Work:
 - Resolve profile.
 - Create conversation and turn IDs.
 - Build trace object.
-- Send request through the bridge.
+- Send request through the local bridge adapter.
+- Attach source evidence, actor ID, requested authority tier, profile mode, and blocked effects.
 - Render response.
 - Handle bridge errors visibly.
 - Log required events.
@@ -106,7 +127,7 @@ Why fifth:
 
 - It proves the basic product loop without voice/avatar complexity.
 
-### Step 6: Add Governance Confirmation UI
+### Step 7: Add Governance Confirmation UI
 
 Goal:
 
@@ -118,12 +139,13 @@ Work:
 - Support approve, deny, and cancel.
 - Emit audit and trace events.
 - Handle child/guardian approval separately.
+- Treat `requires_review` and `no_go` as non-executable states.
 
 Why sixth:
 
 - Any useful assistant eventually encounters action requests. Confirmation must be explicit before side-effect-adjacent behavior grows.
 
-### Step 7: Add Settings And Privacy Panel
+### Step 8: Add Settings And Privacy Panel
 
 Goal:
 
@@ -132,6 +154,7 @@ Goal:
 Work:
 
 - Configure Napoleon endpoint.
+- Show Chief of Staff descriptor status and schema version.
 - Show bridge status.
 - Show camera and microphone off by default.
 - Configure telemetry retention/export.
@@ -141,7 +164,7 @@ Why seventh:
 
 - Consent and visibility are product requirements, not optional preferences.
 
-### Step 8: Add P1 Smoke And Regression Tests
+### Step 9: Add P1 Smoke And Regression Tests
 
 Goal:
 
@@ -153,6 +176,7 @@ Work:
 - Add bridge contract tests.
 - Add trace completeness tests.
 - Add governance confirmation tests.
+- Add descriptor, profile mapping, blocked effects, and non-authority boundary tests.
 
 Why eighth:
 
@@ -161,12 +185,13 @@ Why eighth:
 ## What Should Be Built First
 
 1. `make check`
-2. Bridge contract hardening
-3. Trace schema and examples
-4. Evaluator scenario expansion
-5. Text MVP turn flow
-6. Governance confirmation UI
-7. Settings/privacy panel
+2. Napoleon CoS contract reconciliation
+3. Local bridge adapter hardening
+4. Trace schema and examples
+5. Evaluator scenario expansion
+6. Text MVP turn flow
+7. Governance confirmation UI
+8. Settings/privacy panel
 
 ## What Should Be Deferred
 
@@ -183,12 +208,14 @@ Defer until P1 governance and trace behavior are stable:
 - Self-evolution rollout.
 - Automatic memory writes.
 - Direct specialized agent calls from Concierge.
+- Treating Chief of Staff discovery, contract lookup, or governance review as runtime approval.
 
 ## Highest-Risk Areas
 
 | Risk | Why it is high risk | Mitigation |
 |---|---|---|
 | Bridge boundary erosion | UI code may start calling tools or agents directly. | Keep all Napoleon behavior behind the bridge and add contract tests. |
+| Contract mismatch with Napoleon | Local Concierge can pass local checks while violating Napoleon's descriptor, schema names, blocked effects, or profile modes. | Reconcile contracts and add conformance tests before UI expansion. |
 | Weak governance confirmation | Side effects could become casual UI actions. | Define and test confirmation states before enabling action paths. |
 | Incomplete traces | Failures become impossible to explain. | Make trace completeness a validator, not a convention. |
 | Child mode under-enforcement | Docs alone will not protect child users. | Add child-specific runtime tests and guardian approval contracts. |
@@ -199,16 +226,17 @@ Defer until P1 governance and trace behavior are stable:
 ## Suggested First Backlog Items
 
 1. Add `make check` with evaluator, schema, YAML, frontend, and Tauri checks.
-2. Update OpenAPI bridge with authentication, governance, confirmation, errors, and trace IDs.
-3. Add bridge contract fixtures and tests.
-4. Tighten interaction trace schema and add examples for key flows.
-5. Expand evaluator scenarios to at least 15.
-6. Add evaluator regression comparison.
-7. Implement text turn trace assembly.
-8. Implement governance confirmation UI.
-9. Implement settings/privacy panel.
-10. Resolve `LICENSE-TODO.md` versus MIT `LICENSE` drift.
+2. Add local contract references or mirrors for the Napoleon CoS descriptor and schemas.
+3. Update OpenAPI bridge with authentication, governance, confirmation, errors, trace IDs, decision IDs, audit IDs, evidence links, and blocked effects.
+4. Add bridge and CoS contract fixtures and tests.
+5. Tighten interaction trace schema and add examples for key flows.
+6. Expand evaluator scenarios to at least 15, including Napoleon contract-conformance cases.
+7. Add evaluator regression comparison.
+8. Implement text turn trace assembly.
+9. Implement governance confirmation UI.
+10. Implement settings/privacy panel.
+11. Resolve `LICENSE-TODO.md` versus MIT `LICENSE` drift.
 
 ## Startup Verdict
 
-Do not start with voice, avatar, or self-evolution. Start by making one text turn governed, observable, traceable, and testable. That gives the project a foundation that future voice and avatar work can safely build on.
+Do not start with voice, avatar, or self-evolution. Start by making the local Concierge contracts conform to Napoleon's CoS package, then make one text turn governed, observable, traceable, and testable. That gives the project a foundation that future voice and avatar work can safely build on.

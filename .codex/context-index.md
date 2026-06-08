@@ -25,6 +25,7 @@ Use this file to choose context quickly. Read only what is relevant to the task.
 
 - Canonical architecture: `docs/ARCHITECTURE.md`
 - AI architecture handoff: `.codex/architecture-plan.md`
+- Napoleon CoS integration alignment: `docs/reports/CHIEF_OF_STAFF_ALIGNMENT.md`
 - Napoleon bridge API: `api/napoleon_bridge.openapi.yaml`
 - Agent/evaluator/evolution/trace/stance/user schemas: `schemas/`
 - Architecture diagrams: `diagrams/`

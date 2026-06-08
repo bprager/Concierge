@@ -1,12 +1,12 @@
 # Evaluator Readiness Review
 
-Date: 2026-06-07
+Date: 2026-06-08
 
 ## Executive Summary
 
 The evaluator is ready as a local smoke test and repository health check. It is not ready to objectively assess future Concierge development or Napoleon's real Chief of Staff quality.
 
-The current runner proves that scenarios, rubrics, expected artifacts, and report generation are wired together. It does not yet prove that Napoleon can produce a safe, complete, implementation-ready Concierge design.
+The current runner proves that scenarios, rubrics, expected artifacts, and report generation are wired together. It does not yet prove that Napoleon can produce a safe, complete, implementation-ready Concierge design. After ingesting Napoleon's remote CoS integration package, the evaluator also needs to test contract conformance, descriptor discovery, blocked effects, governance outcomes, and trace/audit envelope requirements.
 
 ## Current Evaluator Inventory
 
@@ -20,6 +20,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Prompts | Full design prompt and critique prompt |
 | CI | Weekly/manual GitHub Actions workflow |
 | Report | JSON report with scores, hard fails, missing artifacts, cases |
+| Napoleon contract evidence | Remote CoS integration package with descriptor, OpenAPI, and schema files ingested over ssh from `bernd@mimir` |
 
 ## Latest Local Evidence
 
@@ -49,6 +50,7 @@ Specific limitations:
 - There is no golden answer comparison.
 - There is no bridge contract or trace validation.
 - There is no evaluator coverage for the actual P1 UI flow.
+- There is no validation against Napoleon's `napoleon.chief_of_staff` descriptor, governance decision schema, agent manifest schema, profile contract, observability envelopes, or evolution proposal contract.
 
 ## Scenario Gaps
 
@@ -74,6 +76,12 @@ Missing scenario groups:
 16. Avatar behavior that implies authority.
 17. Voice always-on capture violation.
 18. License/privacy publishing readiness.
+19. Chief of Staff descriptor discovery and fail-closed cache behavior.
+20. Agent manifest missing `chief_of_staff_discovery`.
+21. Governance decision missing `decision_id`, `audit_id`, `blocked_effects`, or `evidence_links`.
+22. Local `child_protected` profile not mapped to Napoleon `child_protected_user`.
+23. Evolution proposal missing rollback validation command or regression requirements.
+24. Contract-only boundary violated by treating discovery as runtime authority.
 
 ## Scoring Criteria Gaps
 
@@ -90,6 +98,8 @@ Needed improvements:
 - Score evaluator regression behavior separately.
 - Score implementation readiness, not just concept coverage.
 - Score contradictions against repository docs.
+- Score conformance to Napoleon's contract-only schemas and blocked effects.
+- Score descriptor discovery and stale descriptor behavior.
 
 ## Hard Fail Gaps
 
@@ -108,6 +118,10 @@ Add hard fails for:
 - Avatar or voice behavior that pressures the user.
 - Missing redaction before telemetry export.
 - No agent registry or delegation explanation.
+- Missing `napoleon.chief_of_staff` descriptor validation.
+- Missing source evidence in ChiefOfStaffRequest.
+- Missing blocked effects in ChiefOfStaffResponse or GovernanceDecision.
+- Treating a contract-only response as approval, dispatch, routing, memory write, audit append, or external send authority.
 
 ## Trace And Observability Gaps
 
@@ -122,6 +136,8 @@ The evaluator should check:
 - Sensitive requests include redaction or privacy audit events.
 - Child-mode requests include child policy event coverage.
 - Bridge errors are traceable.
+- Governance/delegation decisions include `decision_id`, `audit_id`, `authority_tier`, `approval_requirement`, `evidence_links`, and `blocked_effects`.
+- Trace/audit envelopes align with Napoleon's observability schema.
 
 ## Governance Check Gaps
 
@@ -135,6 +151,10 @@ Evaluator scenarios should explicitly test:
 - Policy change requires Chief of Staff plus approval.
 - Child external action requires guardian-appropriate approval.
 - Blocked actions are explained without bypass suggestions.
+- `allow_prepare_only` never becomes direct execution.
+- `requires_review` blocks activation until review evidence exists.
+- `no_go` is treated as a hard stop.
+- Discovery descriptor metadata is treated as advisory address/purpose metadata, not authority.
 
 ## Report Gaps
 
@@ -152,6 +172,9 @@ Missing or weak report fields:
 - Coverage summary by risk class.
 - Trace completeness summary.
 - Governance hard-fail summary.
+- Napoleon contract conformance summary.
+- Descriptor version/cache status.
+- Blocked effects coverage.
 
 ## Readiness Gates Before P1 Promotion
 
@@ -163,20 +186,21 @@ Before treating the evaluator as a phase gate:
 4. Add schema validation for reports and examples.
 5. Add trace completeness checks.
 6. Add governance-specific hard fails.
-7. Run HTTP mode against a real Napoleon endpoint.
-8. Add a human review artifact or checklist.
-9. Store or compare evaluator history.
-10. Make CI fail on hard fails, schema errors, and regression thresholds.
+7. Add validation against the remote CoS descriptor and schemas, or local mirrored equivalents.
+8. Run HTTP/MCP/local stdio mode against a real Napoleon endpoint once available.
+9. Add a human review artifact or checklist.
+10. Store or compare evaluator history.
+11. Make CI fail on hard fails, schema errors, contract boundary violations, and regression thresholds.
 
 ## Recommended Near-Term Evaluator Work
 
 1. Add a `make check` target that runs evaluator stub mode and schema validation.
 2. Add at least nine more scenarios to meet the backlog target.
-3. Add hard fails for bridge auth, direct tool calls, memory writes, raw capture, and child guardian approval.
-4. Add report schema coverage for regressions.
+3. Add hard fails for bridge auth, direct tool calls, memory writes, raw capture, child guardian approval, missing blocked effects, and contract-only authority violations.
+4. Add report schema coverage for regressions and contract conformance.
 5. Add a Markdown summary output for human review.
-6. Add first HTTP-mode run once Napoleon provides an endpoint.
+6. Add first HTTP/MCP/local stdio mode run once Napoleon provides an endpoint.
 
 ## Evaluator Verdict
 
-The evaluator is a useful P0 scaffold, but it should not be trusted as an objective gate yet. Its next job is to become stricter, broader, and harder to game.
+The evaluator is a useful P0 scaffold, but it should not be trusted as an objective gate yet. Its next job is to become stricter, broader, harder to game, and explicitly aware of Napoleon's CoS contract package.

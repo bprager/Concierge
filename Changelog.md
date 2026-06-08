@@ -14,6 +14,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added frontend and Tauri lockfiles plus a placeholder desktop icon so the scaffold can be built repeatably.
 - Added bridge API, JSON schemas, example profiles, sample traces, and local perception contract stubs.
 - Added initial repository review, Chief of Staff alignment, architecture gap analysis, evaluator readiness, and recommended startup plan reports.
+- Updated startup planning reports with Napoleon Chief of Staff integration contracts discovered from `bernd@mimir`.
 - Started maintaining this changelog.
 
 ### Fixed
