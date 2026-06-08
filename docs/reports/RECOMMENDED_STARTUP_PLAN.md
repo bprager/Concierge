@@ -6,7 +6,7 @@ Date: 2026-06-08
 
 Build the smallest observable, governed text path before adding voice, avatar, camera, or self-evolution behavior.
 
-The project should optimize for maintainability, observability, governance, and future evolution over rapid visible features. After ingesting Napoleon's CoS integration package, the first implementation sequence should prioritize local contract reconciliation before UI expansion.
+The project should optimize for maintainability, observability, governance, and future evolution over rapid visible features. After ingesting Napoleon's CoS integration package, the first implementation sequence correctly prioritized local contract reconciliation before UI expansion. A first Text Concierge pass now exists; subsequent UI work should still be gated by deeper contract tests and live Napoleon validation.
 
 ## Recommended First Implementation Sequence
 
@@ -35,6 +35,10 @@ Goal:
 
 - Make Concierge's local contracts match Napoleon's contract-only package before runtime behavior is built.
 
+Current state:
+
+- First-pass local reconciliation exists for Text Concierge schemas, bridge payloads, profile mode mapping, governance decisions, trace/audit envelopes, blocked effects, and tests.
+
 Work:
 
 - Add or reference the `napoleon.chief_of_staff` descriptor.
@@ -52,6 +56,10 @@ Why second:
 Goal:
 
 - Make the P1 bridge safe enough to build against.
+
+Current state:
+
+- The local bridge adapter builds CoS/governance/observability envelopes, posts them to a configured endpoint when present, and otherwise returns a prepare-only local stub with blocked effects visible.
 
 Work:
 

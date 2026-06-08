@@ -15,6 +15,9 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added bridge API, JSON schemas, example profiles, sample traces, and local perception contract stubs.
 - Added initial repository review, Chief of Staff alignment, architecture gap analysis, evaluator readiness, and recommended startup plan reports.
 - Updated startup planning reports with Napoleon Chief of Staff integration contracts discovered from `bernd@mimir`.
+- Added first-pass Text Concierge integration with Napoleon Chief of Staff contract envelopes, governance decisions, profile mapping, observability envelopes, blocked effects, and tests.
+- Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
+- Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.
 
 ### Fixed

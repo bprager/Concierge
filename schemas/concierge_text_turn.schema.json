@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Concierge Text Turn Contract",
+  "type": "object",
+  "description": "Local Text Concierge turn envelope aligned with Napoleon Chief of Staff, governance, profile, and observability contracts.",
+  "required": [
+    "traceId",
+    "conversationId",
+    "turnId",
+    "profile",
+    "profileMode",
+    "channel",
+    "message",
+    "chiefOfStaffRequest",
+    "governanceRequest",
+    "traceEnvelope",
+    "auditEnvelope",
+    "blockedEffects",
+    "sourceEvidence"
+  ],
+  "properties": {
+    "traceId": {
+      "type": "string"
+    },
+    "conversationId": {
+      "type": "string"
+    },
+    "turnId": {
+      "type": "string"
+    },
+    "profile": {
+      "type": "string",
+      "enum": ["adult_owner", "child_protected", "guest", "collaborator"]
+    },
+    "profileMode": {
+      "type": "string",
+      "enum": ["adult_owner", "child_protected_user", "guest", "collaborator"]
+    },
+    "channel": {
+      "const": "text"
+    },
+    "message": {
+      "type": "string"
+    },
+    "chiefOfStaffRequest": {
+      "$ref": "chief_of_staff_contract.schema.json#/definitions/ChiefOfStaffRequest"
+    },
+    "governanceRequest": {
+      "type": "object",
+      "required": ["request_id", "actor_id", "action", "target", "requested_authority_tier", "evidence_links", "trace_id"]
+    },
+    "traceEnvelope": {
+      "$ref": "observability_envelope.schema.json#/definitions/TraceEnvelope"
+    },
+    "auditEnvelope": {
+      "$ref": "observability_envelope.schema.json#/definitions/AuditEnvelope"
+    },
+    "blockedEffects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sourceEvidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

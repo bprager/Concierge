@@ -1,6 +1,7 @@
 {
   "profile_id": "child_protected_default",
   "profile_type": "child_protected",
+  "profile_mode": "child_protected_user",
   "display_name": "Child user",
   "default_stance": "warm_encouraging",
   "authority_level": "explain_and_suggest_only",
@@ -12,5 +13,11 @@
     "avatar"
   ],
   "camera_affect_enabled": false,
-  "voice_affect_enabled": false
+  "voice_affect_enabled": false,
+  "guardian_review_required": true,
+  "blocked_actions": [
+    "sensitive_inference",
+    "external_send",
+    "memory_write_without_owner_review"
+  ]
 }

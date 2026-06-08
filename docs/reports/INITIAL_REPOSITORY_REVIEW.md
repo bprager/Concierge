@@ -97,14 +97,14 @@ Reviewed documentation and handoff files:
 
 A new contributor can understand what Concierge is and why it exists by reading `README.md`, `docs/PRD.md`, `docs/ARCHITECTURE.md`, and `.codex/context-index.md`.
 
-A new contributor can now see both sides of the intended integration: local Concierge planning reports and Napoleon's remote contract-only CoS package. They still cannot safely implement P1 from docs alone because the local repo has not reconciled the remote contracts into local schemas, tests, bridge code, confirmation UI, trace assembly, memory proposal behavior, or endpoint authentication.
+A new contributor can now see both sides of the intended integration: local Concierge planning reports and Napoleon's remote contract-only CoS package. The local repo also has a first-pass reconciled Text Concierge bridge path with schemas, tests, profile mapping, trace/audit envelopes, blocked effects, and UI presentation. They still cannot treat P1 as complete because live endpoint/auth, confirmation workflows, memory proposal behavior, and contract-aware evaluator coverage remain incomplete.
 
 ## Recommended Immediate Corrections
 
 1. Treat this review and the other reports in `docs/reports/` as the startup baseline.
 2. Keep `.codex/status.md` synchronized with the Napoleon CoS integration state.
 3. Add a single `make check` target that runs evaluator stub mode, schema validation, frontend build, and Tauri check when dependencies are available.
-4. Reconcile local Concierge contracts with Napoleon's CoS package before building more UI behavior.
-5. Add contract tests for the `napoleon.chief_of_staff` descriptor, governance decision schema, profile mode mapping, observability envelopes, and blocked effects.
+4. Expand contract tests around the reconciled local Text Concierge bridge path.
+5. Add live endpoint/auth validation once Napoleon provides a runtime transport.
 6. Harden evaluator scenarios and scoring before phase promotion.
 7. Resolve the license TODO contradiction.

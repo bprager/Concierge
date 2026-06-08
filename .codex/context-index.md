@@ -34,6 +34,7 @@ Use this file to choose context quickly. Read only what is relevant to the task.
 ## Evaluator
 
 - Evaluator design: `docs/EVALUATOR.md`
+- Evaluation efficiency and CoS improvement analysis: `docs/reports/EVALUATION_EFFICIENCY_AND_COS_IMPROVEMENTS.md`
 - Evaluator implementation: `evaluator/eval_runner.py`
 - Scenarios: `evaluator/scenarios.yaml`
 - Rubric: `evaluator/rubrics.yaml`

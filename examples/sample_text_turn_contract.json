@@ -1,0 +1,81 @@
+{
+  "traceId": "trace_example_text_001",
+  "conversationId": "conv_example_text_001",
+  "turnId": "turn_example_text_001",
+  "profile": "child_protected",
+  "profileMode": "child_protected_user",
+  "channel": "text",
+  "message": "Can you help me send this message?",
+  "chiefOfStaffRequest": {
+    "request_id": "cos_turn_example_text_001",
+    "requester": "concierge.text",
+    "request_type": "governance_review",
+    "profile_mode": "child_protected_user",
+    "source_evidence": [
+      "local_text_turn",
+      "napoleon.chief_of_staff.contract",
+      "profile_mode:child_protected_user",
+      "conversation:conv_example_text_001"
+    ],
+    "requested_authority_tier": "advisory_review",
+    "trace_id": "trace_example_text_001",
+    "payload_schema": "napoleon/concierge/chief-of-staff-contract/v1#/definitions/ChiefOfStaffRequest"
+  },
+  "governanceRequest": {
+    "request_id": "cos_turn_example_text_001",
+    "actor_id": "concierge:child_protected_user",
+    "action": "prepare_text_response",
+    "target": "napoleon.chief_of_staff",
+    "requested_authority_tier": "advisory_review",
+    "evidence_links": [
+      "local_text_turn",
+      "napoleon.chief_of_staff.contract",
+      "profile_mode:child_protected_user",
+      "conversation:conv_example_text_001"
+    ],
+    "trace_id": "trace_example_text_001"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_example_text_001",
+    "parent_trace_id": "conv_example_text_001",
+    "actor_id": "concierge:child_protected_user",
+    "request_id": "cos_turn_example_text_001",
+    "decision_id": "decision_turn_example_text_001",
+    "timestamp": "2026-06-08T20:00:00Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_turn_example_text_001",
+    "trace_id": "trace_example_text_001",
+    "decision_id": "decision_turn_example_text_001",
+    "actor_id": "concierge:child_protected_user",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "none_for_metadata",
+    "evidence_links": [
+      "local_text_turn",
+      "napoleon.chief_of_staff.contract",
+      "profile_mode:child_protected_user",
+      "conversation:conv_example_text_001"
+    ]
+  },
+  "blockedEffects": [
+    "runtime_authority",
+    "command_execution",
+    "task_routing",
+    "agent_dispatch",
+    "registry_runtime_activation",
+    "graph_write",
+    "memory_write",
+    "audit_append",
+    "event_publication",
+    "approval_capture",
+    "external_send",
+    "service_control",
+    "remediation"
+  ],
+  "sourceEvidence": [
+    "local_text_turn",
+    "napoleon.chief_of_staff.contract",
+    "profile_mode:child_protected_user",
+    "conversation:conv_example_text_001"
+  ]
+}

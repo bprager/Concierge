@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Concierge Agent Manifest",
+  "type": "object",
+  "description": "Machine-readable Napoleon-compatible agent manifest for Concierge discovery. It does not grant runtime authority.",
+  "required": [
+    "manifest_version",
+    "agent_id",
+    "display_name",
+    "owner",
+    "lifecycle_status",
+    "capabilities",
+    "input_modes",
+    "output_modes",
+    "discovery",
+    "chief_of_staff_discovery",
+    "authority_tier",
+    "approval_requirements",
+    "observability",
+    "evidence_links"
+  ],
+  "properties": {
+    "manifest_version": {
+      "type": "string"
+    },
+    "agent_id": {
+      "type": "string"
+    },
+    "display_name": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "lifecycle_status": {
+      "type": "string",
+      "enum": ["draft", "reviewed", "active_candidate", "blocked", "deprecated"]
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["capability_id", "description", "input_schema", "output_schema"],
+        "properties": {
+          "capability_id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "input_schema": {
+            "type": "string"
+          },
+          "output_schema": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "input_modes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "output_modes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "required": ["discovery_api", "manifest_url", "cache_ttl_seconds"],
+      "properties": {
+        "discovery_api": {
+          "type": "string"
+        },
+        "manifest_url": {
+          "type": "string"
+        },
+        "cache_ttl_seconds": {
+          "type": "integer"
+        }
+      }
+    },
+    "chief_of_staff_discovery": {
+      "type": "object",
+      "required": ["service_id", "descriptor_ref", "required_for", "authority_boundary"],
+      "properties": {
+        "service_id": {
+          "const": "napoleon.chief_of_staff"
+        },
+        "descriptor_ref": {
+          "type": "string"
+        },
+        "required_for": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "governance_review",
+              "delegation_review",
+              "evaluation_review",
+              "evolution_proposal_review",
+              "new_agent_proposal_review"
+            ]
+          }
+        },
+        "authority_boundary": {
+          "const": "discovery_does_not_grant_authority"
+        }
+      }
+    },
+    "authority_tier": {
+      "type": "string",
+      "enum": ["metadata_only", "advisory_review", "prepare_only", "approval_required", "prohibited"]
+    },
+    "approval_requirements": {
+      "type": "object"
+    },
+    "observability": {
+      "type": "object",
+      "required": ["trace_required", "audit_required", "metric_namespace"],
+      "properties": {
+        "trace_required": {
+          "type": "boolean"
+        },
+        "audit_required": {
+          "type": "boolean"
+        },
+        "metric_namespace": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence_links": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

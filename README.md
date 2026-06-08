@@ -25,13 +25,16 @@ This is an initial GitHub repository scaffold. It is designed to make the projec
 
 ## Quick start
 
-Run the evaluator in stub mode:
+Run the local check suite:
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r evaluator/requirements.txt
-python evaluator/eval_runner.py --mode stub --out evaluator/reports/latest.json
+make check
+```
+
+Or run only the evaluator in stub mode:
+
+```bash
+make eval
 ```
 
 Review the core documents:
@@ -43,6 +46,7 @@ Review the core documents:
 - [Observability](docs/OBSERVABILITY.md)
 - [Interaction stance policy](docs/INTERACTION_STANCE_POLICY.md)
 - [Self-evolution](docs/SELF_EVOLUTION.md)
+- [Evaluation efficiency and CoS improvements](docs/reports/EVALUATION_EFFICIENCY_AND_COS_IMPROVEMENTS.md)
 
 ## Core principle
 

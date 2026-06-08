@@ -2,41 +2,137 @@ openapi: 3.1.0
 info:
   title: Napoleon Bridge API
   version: 0.1.0
+  description: Local Concierge bridge contract aligned with Napoleon Chief of Staff contract-only integration surfaces.
 paths:
   /v1/concierge/turn:
     post:
-      summary: Submit a Concierge turn to Napoleon
+      summary: Submit a Text Concierge turn using CoS, governance, profile, and observability envelopes
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [traceId, profile, channel, message]
+              required:
+                - traceId
+                - conversationId
+                - turnId
+                - profile
+                - profileMode
+                - channel
+                - message
+                - chiefOfStaffRequest
+                - governanceRequest
+                - traceEnvelope
+                - auditEnvelope
+                - blockedEffects
+                - sourceEvidence
               properties:
                 traceId:
                   type: string
+                conversationId:
+                  type: string
+                turnId:
+                  type: string
                 profile:
                   type: string
+                  enum: [adult_owner, child_protected, guest, collaborator]
+                profileMode:
+                  type: string
+                  enum: [adult_owner, child_protected_user, guest, collaborator]
                 channel:
                   type: string
-                  enum: [text, voice, avatar]
+                  enum: [text]
                 message:
                   type: string
+                descriptorStatus:
+                  type: object
+                  properties:
+                    serviceId:
+                      type: string
+                    ready:
+                      type: boolean
+                    runtimeAuthority:
+                      type: boolean
+                    cachePolicy:
+                      type: string
+                    blockedEffects:
+                      type: array
+                      items:
+                        type: string
+                chiefOfStaffRequest:
+                  type: object
+                  required: [request_id, requester, request_type, profile_mode, source_evidence, requested_authority_tier, trace_id]
+                governanceRequest:
+                  type: object
+                  required: [request_id, actor_id, action, target, requested_authority_tier, evidence_links, trace_id]
+                traceEnvelope:
+                  type: object
+                  required: [trace_id, parent_trace_id, actor_id, request_id, decision_id, timestamp]
+                auditEnvelope:
+                  type: object
+                  required: [audit_id, trace_id, decision_id, actor_id, authority_tier, approval_requirement, evidence_links]
+                blockedEffects:
+                  type: array
+                  items:
+                    type: string
+                sourceEvidence:
+                  type: array
+                  items:
+                    type: string
                 derivedSignals:
                   type: object
       responses:
         "200":
-          description: Napoleon response
+          description: Napoleon response with governance and audit context
           content:
             application/json:
               schema:
                 type: object
-                required: [text]
+                required: [text, governanceDecision]
                 properties:
                   text:
                     type: string
                   governanceDecision:
+                    type: object
+                    required:
+                      - decision_id
+                      - request_id
+                      - outcome
+                      - authority_tier
+                      - approval_requirement
+                      - rationale
+                      - blocked_effects
+                      - trace_id
+                      - audit_id
+                    properties:
+                      decision_id:
+                        type: string
+                      request_id:
+                        type: string
+                      outcome:
+                        type: string
+                        enum: [allow_prepare_only, deny, requires_review, no_go]
+                      authority_tier:
+                        type: string
+                        enum: [metadata_only, advisory_review, prepare_only, approval_required, prohibited]
+                      approval_requirement:
+                        type: string
+                      rationale:
+                        type: string
+                      blocked_effects:
+                        type: array
+                        items:
+                          type: string
+                      trace_id:
+                        type: string
+                      audit_id:
+                        type: string
+                  traceEnvelope:
+                    type: object
+                  auditEnvelope:
+                    type: object
+                  profileMode:
                     type: string
                   targetAgent:
                     type: string
@@ -44,6 +140,30 @@ paths:
                     type: string
                   requiresConfirmation:
                     type: boolean
+  /v1/concierge/chief-of-staff/descriptor:
+    get:
+      summary: Return the local view of the Napoleon Chief of Staff descriptor
+      responses:
+        "200":
+          description: Local descriptor status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [serviceId, ready, runtimeAuthority, cachePolicy, blockedEffects]
+                properties:
+                  serviceId:
+                    type: string
+                  ready:
+                    type: boolean
+                  runtimeAuthority:
+                    type: boolean
+                  cachePolicy:
+                    type: string
+                  blockedEffects:
+                    type: array
+                    items:
+                      type: string
   /v1/concierge/evaluate:
     post:
       summary: Submit evaluator prompt to Napoleon

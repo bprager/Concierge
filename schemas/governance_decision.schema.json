@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Concierge Governance Decision",
+  "type": "object",
+  "description": "Napoleon-aligned governance decision contract for Concierge. This schema is contract-only and does not grant runtime authority.",
+  "required": [
+    "decision_id",
+    "request_id",
+    "outcome",
+    "authority_tier",
+    "approval_requirement",
+    "rationale",
+    "blocked_effects",
+    "trace_id",
+    "audit_id"
+  ],
+  "properties": {
+    "decision_id": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["allow_prepare_only", "deny", "requires_review", "no_go"]
+    },
+    "authority_tier": {
+      "type": "string",
+      "enum": ["metadata_only", "advisory_review", "prepare_only", "approval_required", "prohibited"]
+    },
+    "approval_requirement": {
+      "type": "string"
+    },
+    "rationale": {
+      "type": "string"
+    },
+    "blocked_effects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "trace_id": {
+      "type": "string"
+    },
+    "audit_id": {
+      "type": "string"
+    }
+  }
+}

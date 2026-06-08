@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chief Of Staff Contract",
+  "type": "object",
+  "description": "Contract-only Chief of Staff request and response envelopes for Concierge integration.",
+  "definitions": {
+    "ChiefOfStaffRequest": {
+      "type": "object",
+      "required": [
+        "request_id",
+        "requester",
+        "request_type",
+        "profile_mode",
+        "source_evidence",
+        "requested_authority_tier",
+        "trace_id"
+      ],
+      "properties": {
+        "request_id": {
+          "type": "string"
+        },
+        "requester": {
+          "type": "string"
+        },
+        "request_type": {
+          "type": "string",
+          "enum": [
+            "new_agent_proposal_review",
+            "evolution_proposal_review",
+            "governance_review",
+            "evaluation_review"
+          ]
+        },
+        "profile_mode": {
+          "type": "string",
+          "enum": ["adult_owner", "child_protected_user", "guest", "collaborator"]
+        },
+        "source_evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "requested_authority_tier": {
+          "type": "string",
+          "enum": ["metadata_only", "advisory_review", "prepare_only", "approval_required", "prohibited"]
+        },
+        "trace_id": {
+          "type": "string"
+        },
+        "payload_schema": {
+          "type": "string"
+        }
+      }
+    },
+    "ChiefOfStaffResponse": {
+      "type": "object",
+      "required": [
+        "response_id",
+        "request_id",
+        "decision",
+        "review_status",
+        "required_approvals",
+        "blocked_effects",
+        "trace_id"
+      ],
+      "properties": {
+        "response_id": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string",
+          "enum": ["accept_for_review", "request_changes", "reject", "defer", "no_go"]
+        },
+        "review_status": {
+          "type": "string",
+          "enum": ["review_ready", "review_required", "blocked", "accepted", "rejected", "deferred"]
+        },
+        "required_approvals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blocked_effects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "trace_id": {
+          "type": "string"
+        },
+        "audit_id": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

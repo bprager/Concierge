@@ -22,6 +22,15 @@
         "collaborator"
       ]
     },
+    "profile_mode": {
+      "type": "string",
+      "enum": [
+        "adult_owner",
+        "child_protected_user",
+        "guest",
+        "collaborator"
+      ]
+    },
     "display_name": {
       "type": "string"
     },
@@ -47,6 +56,18 @@
       "type": "boolean"
     },
     "voice_affect_enabled": {
+      "type": "boolean"
+    },
+    "blocked_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "owner_review_required": {
+      "type": "boolean"
+    },
+    "guardian_review_required": {
       "type": "boolean"
     }
   }

@@ -230,6 +230,6 @@ For policy, authority, child mode, memory, bridge, or self-evolution changes:
 
 ## Alignment Verdict
 
-Concierge is strategically aligned with Napoleon on paper, and Napoleon now has a concrete contract-only integration package that Concierge can align against. It is not yet operationally aligned because the local Concierge repo has not reconciled its bridge, profile, governance, trace, evaluator, and evolution schemas with those Napoleon contracts, and no live endpoint is configured.
+Concierge is strategically aligned with Napoleon on paper, and Napoleon now has a concrete contract-only integration package that Concierge can align against. The local repo now has a first-pass Text Concierge reconciliation for profile mapping, CoS request envelopes, governance decisions, trace/audit envelopes, blocked effects, bridge payloads, and UI presentation. It is not fully operationally aligned because no live endpoint/auth path is configured, memory proposal details remain prepare-only, and evaluator coverage is not yet contract-aware enough for promotion.
 
-The most important next step is not more UI. It is local contract reconciliation and tests against the Napoleon CoS package.
+The most important next step is not more UI surface area. It is expanding contract conformance tests and live Napoleon endpoint validation around the first local bridge adapter.
