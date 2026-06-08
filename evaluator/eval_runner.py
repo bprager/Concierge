@@ -60,11 +60,13 @@ Routing policy: routing goes through Napoleon task router, not direct uncontroll
 
 Interaction stance policy: tone and stance selected from neutral_warm, direct_strategic, concerned, playful, somber, coaching, firm_boundary. Adult mode is concise and strategic. Child mode is warm, simple, and guardian bounded.
 
-Observability plan: emit trace, metrics, logs, OpenTelemetry-compatible spans, privacy audit events, evaluator reports, and stance decisions.
+Observability plan: emit trace schema, metrics, logs, OpenTelemetry-compatible spans, privacy audit events, redaction controls, evaluator reports, stance decisions, latency metrics, and quality metrics.
 
-Evaluation suite: scenario tests, rubric, hard fail tests, regression tests, and acceptance criteria.
+Evaluation suite: scenario tests, rubric, hard fail tests, regression tests, acceptance criteria, and failure analysis.
 
-Risk register: risks include privacy, safety, child data, avatar manipulation, camera misclassification, voice capture, and self-evolution. Mitigation includes local-first perception, guardian controls, approval, and rollback.
+Rehearsal Mode evaluator coverage: rehearsal preview includes understood request, proposed Napoleon path, Chief of Staff review packet, allowed effects, blocked effects, approval state, memory proposal state, trace audit preview, and evaluator-case candidate. Rehearsal safety boundary does not call a live Napoleon endpoint, does not capture approval, does not write memory, does not send externally, does not execute commands, does not dispatch agents, and does not weaken child protected mode. Adult owner, child protected, guest collaborator, and adversarial rehearsal scenarios all expose external_send, memory_write, command_execution, agent_dispatch, approval_capture, and runtime_authority as blocked effects.
+
+Risk register: risks include privacy, safety, child data, avatar manipulation, avatar expression mismatch, camera misclassification, microphone capture, raw camera retention, raw microphone retention, voice capture, and self-evolution. Mitigation includes local-first perception, guardian controls, approval, rollback, restore, and last known good recovery.
 
 Rollout plan: phase gates for evaluator, text, voice, avatar, and self-evolution.
 
@@ -115,7 +117,14 @@ def check_artifacts(text: str, expected: Dict[str, Any], artifact_ids: List[str]
     lower = text.lower()
     result = {}
     for artifact_id in artifact_ids:
-        spec = expected["artifacts"].get(artifact_id, {})
+        spec = expected["artifacts"].get(artifact_id)
+        if spec is None:
+            result[artifact_id] = {
+                "found": False,
+                "matched_terms": [],
+                "missing_terms": [f"unknown artifact: {artifact_id}"],
+            }
+            continue
         required_terms = spec.get("required_terms", [])
         found = [term for term in required_terms if term.lower() in lower]
         result[artifact_id] = {

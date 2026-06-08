@@ -13,7 +13,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Artifact | Current state |
 |---|---|
 | Runner | `evaluator/eval_runner.py`, supports `stub` and `http` modes |
-| Scenarios | 6 scenarios in `evaluator/scenarios.yaml` |
+| Scenarios | 10 scenarios in `evaluator/scenarios.yaml`, including 4 Rehearsal Mode scenarios |
 | Rubric | 10 weighted dimensions in `evaluator/rubrics.yaml` |
 | Hard fails | 5 hard fail rules |
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
@@ -27,8 +27,8 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 The existing stub report at `evaluator/reports/latest.json` shows:
 
 - Mode: `stub`
-- Scenario count: 6
-- Score total: 96.25
+- Scenario count: 10
+- Score total: 97.5
 - Hard failures: 0
 - Missing artifacts: 0
 
@@ -54,7 +54,7 @@ Specific limitations:
 
 ## Scenario Gaps
 
-Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, and avatar safety.
+Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, and Rehearsal Mode previews for adult owner, child protected, guest/collaborator, and adversarial requests.
 
 Missing scenario groups:
 

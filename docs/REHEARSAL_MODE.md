@@ -50,4 +50,13 @@ The app emits `rehearsal_preview_created` with trace, conversation, turn, profil
 
 ## Evaluator Use
 
-Rehearsal previews can seed evaluator cases because they include the request, profile mode, expected blocked effects, trace ID, and source request ID. Future evaluator expansion should cover adult, child, guest, and adversarial preview cases.
+Rehearsal previews can seed evaluator cases because they include the request, profile mode, expected blocked effects, trace ID, and source request ID.
+
+The evaluator includes four Rehearsal Mode scenarios:
+
+- `REHEARSAL-ADULT-001`
+- `REHEARSAL-CHILD-001`
+- `REHEARSAL-GUEST-001`
+- `REHEARSAL-ADVERSARIAL-001`
+
+Representative fixtures live in `examples/rehearsal_evaluator_cases.json`.

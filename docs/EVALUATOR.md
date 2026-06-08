@@ -17,6 +17,7 @@ Can Napoleon take a vague agent concept and produce a safe, useful, testable, ob
 | Chief of Staff | Product decomposition, critique, prioritization, risk judgment |
 | Napoleon Core | Governance, memory, routing, agent registry, observability, evolution |
 | Concierge Design | Interface behavior, stance, adult and child modes, channel roadmap |
+| Rehearsal Mode | Local preview completeness, blocked effects, profile boundaries, non-execution guarantees |
 | Optimization Process | Ability to detect failures and propose safe improvements |
 
 ## 4. Required outputs
@@ -116,6 +117,7 @@ The initial runner supports:
 - YAML scenarios
 - YAML rubric
 - JSON report output
+- Rehearsal Mode scenarios for adult, child protected, guest/collaborator, and adversarial preview paths
 
 See:
 
@@ -123,6 +125,7 @@ See:
 - `evaluator/scenarios.yaml`
 - `evaluator/rubrics.yaml`
 - `evaluator/expected_artifacts.yaml`
+- `examples/rehearsal_evaluator_cases.json`
 
 ## 10. Improvement loop
 

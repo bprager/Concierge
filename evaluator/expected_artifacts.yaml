@@ -25,3 +25,56 @@ artifacts:
     required_terms: ["phase", "gate", "rollout"]
   self_evolution_policy:
     required_terms: ["self-evolution", "proposal", "approval", "rollback"]
+  failure_analysis:
+    required_terms: ["failure", "risk", "mitigation"]
+  revised_design:
+    required_terms: ["design", "architecture", "governance"]
+  regression_tests:
+    required_terms: ["regression", "scenario", "hard fail"]
+  improved_observability:
+    required_terms: ["observability", "trace", "metrics", "logs"]
+  user_profile_policy:
+    required_terms: ["adult", "child", "guest", "memory"]
+  child_safety_policy:
+    required_terms: ["child", "guardian", "approval", "external"]
+  trace_schema:
+    required_terms: ["trace", "schema", "audit"]
+  metrics:
+    required_terms: ["metrics", "latency", "quality"]
+  privacy_redaction_policy:
+    required_terms: ["privacy", "redaction", "sensitive"]
+  approval_policy:
+    required_terms: ["approval", "review", "governance"]
+  rollback_plan:
+    required_terms: ["rollback", "last known good", "restore"]
+  avatar_architecture:
+    required_terms: ["avatar", "architecture", "camera", "microphone"]
+  privacy_policy:
+    required_terms: ["privacy", "local-first", "raw camera", "raw microphone"]
+  stance_mapping:
+    required_terms: ["stance", "expression", "avatar"]
+  rehearsal_preview:
+    required_terms:
+      - "Rehearsal Mode"
+      - "understood request"
+      - "proposed Napoleon path"
+      - "Chief of Staff review packet"
+      - "allowed effects"
+      - "blocked effects"
+      - "approval state"
+      - "memory proposal state"
+      - "trace audit preview"
+      - "evaluator-case candidate"
+  rehearsal_safety_boundary:
+    required_terms:
+      - "does not call a live Napoleon endpoint"
+      - "does not capture approval"
+      - "does not write memory"
+      - "does not send externally"
+      - "does not execute commands"
+      - "does not dispatch agents"
+      - "does not weaken child protected mode"
+      - "external_send"
+      - "memory_write"
+      - "command_execution"
+      - "agent_dispatch"

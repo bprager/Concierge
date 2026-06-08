@@ -59,7 +59,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Add adult, child, guest, and adversarial scenarios where Rehearsal Mode must expose blocked effects and avoid live execution.
+- Covered by adult, child, guest/collaborator, and adversarial scenarios where Rehearsal Mode must expose blocked effects and avoid live execution.
 
 ## Milestone P2: Voice Concierge
 

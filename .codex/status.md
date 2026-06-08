@@ -26,6 +26,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added `docs/reports/EVALUATION_EFFICIENCY_AND_COS_IMPROVEMENTS.md`.
 - Added Rehearsal Mode so a text turn can be previewed locally before a live Napoleon bridge call, including understood request, proposed path, Chief of Staff packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate.
 - Added `docs/REHEARSAL_MODE.md` and `docs/superpowers/plans/2026-06-08-rehearsal-mode.md`.
+- Added Rehearsal Mode evaluator coverage for adult owner, child protected, guest/collaborator, and adversarial preview paths.
 
 ## Current Blockers
 
@@ -42,14 +43,14 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - The bridge boundary can erode if UI code starts calling tools or services directly instead of governed Napoleon APIs.
 - Self-evolution language can be misread as permission for automatic production changes; it is proposal-only until gates and approval exist.
 - The Napoleon bridge contract has a first-pass CoS-aware Text Concierge adapter and local rehearsal preview, but live auth, confirmation workflows, memory proposal review, delegation, and richer error handling still need detail.
-- The evaluator has 6 scenarios, while the backlog target is at least 15.
+- The evaluator has 10 scenarios, while the backlog target is at least 15.
 - Local Concierge contracts now include first-pass mirrors of Napoleon's CoS package for text turns. Remaining mismatches include live endpoint/auth, descriptor signature/checksum validation, memory proposal details, and full contract-aware evaluator coverage.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
 
 ## Next 3 To 5 Priorities
 
-1. Extend Rehearsal Mode into evaluator fixtures for adult, child, guest, and adversarial preview cases.
-2. Add live Napoleon endpoint/auth support once the CoS descriptor exposes a runtime transport.
+1. Add live Napoleon endpoint/auth support once the CoS descriptor exposes a runtime transport.
+2. Add at least five more evaluator scenarios to reach the backlog target of 15.
 3. Implement governance confirmation and review-required UI states around `requires_review` and `no_go`.
 4. Add memory proposal review flow that never writes memory directly.
 5. Add richer bridge error handling and contract fixtures for live Napoleon responses.

@@ -17,6 +17,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Updated startup planning reports with Napoleon Chief of Staff integration contracts discovered from `bernd@mimir`.
 - Added first-pass Text Concierge integration with Napoleon Chief of Staff contract envelopes, governance decisions, profile mapping, observability envelopes, blocked effects, and tests.
 - Added Rehearsal Mode for local, contract-only previews of governed text turns before live Napoleon bridge calls.
+- Added Rehearsal Mode evaluator coverage for adult owner, child protected, guest/collaborator, and adversarial preview paths.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.
