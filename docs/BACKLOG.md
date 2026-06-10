@@ -216,7 +216,7 @@ Evaluator coverage:
 | OBS-005 | Add privacy audit log | P0 | Camera, mic, memory, and child policy changes are auditable | privacy_audit_logged |
 | OBS-006 | Add evaluator report retention | P1 | Reports retained with timestamps and version metadata | eval_report_retained |
 | OBS-007 | Add dashboard specification | P2 | Metrics, traces, evaluator history, and privacy events defined | dashboard_spec_created |
-| OBS-008 | Add conversation capability ledger | P1 | Local ledger stores derived capability signals, not raw conversation content by default | conversation_capability_signal |
+| OBS-008 | Add conversation capability ledger | P1 | Initial in-memory ledger stores derived capability signals, not raw conversation content by default; persistence and retention controls remain future work | conversation_capability_signal |
 
 ### OBS-008 details
 
@@ -225,7 +225,8 @@ User value: Concierge can inspect its own usefulness without requiring the user 
 Acceptance criteria:
 
 - Each eligible turn can emit a `conversation_capability_signal` with topic, intent, capability, outcome, architecture area, confidence, privacy class, and evidence references.
-- The ledger is local, bounded, redacted, and user-deletable.
+- The initial ledger is local, in-memory, bounded, and redacted.
+- A persistent ledger must add user-visible retention, deletion, and export controls before storing signals across launches.
 - Raw transcripts, raw audio, raw video, and raw child conversation content are not stored by default.
 - The taxonomy supports merge, split, rename, and deprecation review so labels do not drift.
 - Aggregates can identify common, working, degraded, missing, blocked, and unknown capability states.

@@ -28,6 +28,8 @@ Tracking only topics would be misleading. A frequent topic may already work well
 
 The local ledger should store derived metadata, not raw conversation transcripts by default.
 
+Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model and an in-memory bounded ledger. It is wired through `app/src/telemetry.ts` for current Text Concierge events. The ledger is local process memory for now; durable storage, deletion controls, and export controls are future work.
+
 Each turn can emit a `conversation_capability_signal` with:
 
 - `trace_id`
@@ -122,8 +124,8 @@ Initial components:
 
 This capability should be built in phases:
 
-1. Define schema and local derived event emission.
-2. Add bounded local ledger and redaction policy.
+1. Define schema and local derived event emission. Implemented in `app/src/capabilityLedger.ts` and `app/src/telemetry.ts`.
+2. Add bounded local ledger and redaction policy. Initial in-memory bounded ledger is implemented; persistent retention and deletion controls remain next.
 3. Add query summaries for common, working, missing, and next capabilities.
 4. Add architecture-area mapping and recommendation scoring.
 5. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.

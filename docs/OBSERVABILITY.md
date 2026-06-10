@@ -72,6 +72,8 @@ Every user turn has:
 | conversation_capability_signal | capability_intelligence | conversation_id, turn_id, profile_mode, channel, topic_label, intent_label, capability_label, capability_status, outcome_signal, confidence, architecture_area, privacy_class |
 | capability_recommendation_created | capability_intelligence | recommendation_id, capability_label, architecture_area, priority_score, risk_level, evidence_count, suggested_next_step |
 
+Initial local implementation: Text Concierge emits `conversation_capability_signal` records from `rehearsal_preview_created`, governance review required/blocked/acknowledged events, memory proposal review events, bridge failures, and normal response generation. These records are stored in the in-memory bounded ledger in `app/src/capabilityLedger.ts`.
+
 ## 5. Metrics
 
 ### Product metrics

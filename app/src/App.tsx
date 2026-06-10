@@ -99,6 +99,16 @@ export function App() {
       profile,
       requestId: preview.chiefOfStaffReviewPacket.requestId,
     });
+    if (preview.governanceReview.status === "review_needed") {
+      emitEvent("governance_review_required", {
+        traceId,
+        conversationId,
+        turnId,
+        profile,
+        outcome: preview.governanceReview.outcome,
+        decisionId: preview.governanceReview.decisionId,
+      });
+    }
     if (memoryReview) {
       emitEvent("memory_proposal_review_created", {
         traceId,
@@ -120,6 +130,14 @@ export function App() {
     const content = rehearsal?.content ?? input.trim();
     if (!content) return;
     if (rehearsal && !rehearsal.preview.governanceReview.canSendAdvisory) {
+      emitEvent("governance_review_blocked", {
+        traceId: rehearsal.traceId,
+        conversationId,
+        turnId: rehearsal.turnId,
+        profile,
+        outcome: rehearsal.preview.governanceReview.outcome,
+        decisionId: rehearsal.preview.governanceReview.decisionId,
+      });
       setLastReview(rehearsal.review);
       return;
     }
@@ -192,7 +210,18 @@ export function App() {
         auditId: response.auditEnvelope.audit_id,
       });
       setLastDecision(decisionView);
-      setLastReview(describeGovernanceReview(buildGovernanceReviewState(response.governanceDecision, profile)));
+      const responseReviewState = buildGovernanceReviewState(response.governanceDecision, profile);
+      setLastReview(describeGovernanceReview(responseReviewState));
+      if (responseReviewState.status === "review_needed") {
+        emitEvent("governance_review_required", {
+          traceId,
+          conversationId,
+          turnId,
+          profile,
+          outcome: responseReviewState.outcome,
+          decisionId: responseReviewState.decisionId,
+        });
+      }
       if (memoryReviewState.status === "none") {
         setLastMemoryReviewState(null);
         setLastMemoryReview(null);

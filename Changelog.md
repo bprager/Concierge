@@ -22,6 +22,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Expanded evaluator coverage to 15 scenarios with memory proposal review, bridge failure handling, privacy settings controls, and contract mismatch fail-closed cases.
 - Added proposal-only memory review panels with local acknowledgement and dismissal that do not write memory or capture approval.
 - Added Conversation Capability Intelligence design, backlog items, observability signals, risks, and evaluator coverage for privacy-safe capability tracking and proposal-only recommendations.
+- Added the first local `conversation_capability_signal` TypeScript model, bounded in-memory ledger, aggregation helpers, and telemetry wiring for Text Concierge flows.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.

@@ -1,8 +1,18 @@
+import {
+  appendCapabilitySignal,
+  createCapabilityLedger,
+  deriveCapabilitySignalFromEvent,
+  type CapabilityLedger,
+  type ConversationCapabilitySignal,
+} from "./capabilityLedger.js";
+
 export interface TelemetryPayload {
   ts: string;
   event: string;
   attributes: Record<string, unknown>;
 }
+
+export const capabilityLedger: CapabilityLedger = createCapabilityLedger({ maxSignals: 250 });
 
 export function newTraceId(): string {
   return `trace_${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -26,4 +36,29 @@ export function emitEvent(event: string, attributes: Record<string, unknown>) {
   // P1 target: write to local buffer and optionally export via OTLP.
   // For now, keep it visible during development.
   emitPayload(payload);
+  emitCapabilitySignal(event, attributes);
+}
+
+export function emitCapabilitySignal(
+  event: string,
+  attributes: Record<string, unknown>,
+): ConversationCapabilitySignal | null {
+  const trackableEvents = new Set([
+    "rehearsal_preview_created",
+    "governance_review_blocked",
+    "governance_review_required",
+    "governance_review_acknowledged_locally",
+    "memory_proposal_review_created",
+    "memory_proposal_acknowledged_locally",
+    "memory_proposal_dismissed_locally",
+    "response_failed",
+    "response_generated",
+  ]);
+
+  if (!trackableEvents.has(event)) return null;
+
+  const signal = deriveCapabilitySignalFromEvent(event, attributes);
+  appendCapabilitySignal(capabilityLedger, signal);
+  emitPayload(makeTelemetryPayload(signal.eventName, signal as unknown as Record<string, unknown>));
+  return signal;
 }

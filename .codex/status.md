@@ -6,7 +6,7 @@ Last updated: 2026-06-10
 
 Concierge is an initial scaffold for Napoleon's adaptive human interface. The repository contains product and architecture docs, evaluator design and runner, schemas, example profiles/traces, a Tauri + React app skeleton, bridge/perception service placeholders, GitHub templates, and an evaluator workflow scaffold.
 
-The initial scaffold is committed and pushed. The startup review reports under `docs/reports/` include Napoleon Chief of Staff integration evidence discovered over ssh from `bernd@mimir` at `~/Projects/Napoleon/docs/concierge-integration/`. The Text Concierge app now has a first-pass CoS-aware bridge path, UI status surface, local Rehearsal Mode preview, governance review UI states, and proposal-only memory review. The evaluator now has 16 scenarios and meets the backlog breadth target, including memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, and conversation capability intelligence coverage.
+The initial scaffold is committed and pushed. The startup review reports under `docs/reports/` include Napoleon Chief of Staff integration evidence discovered over ssh from `bernd@mimir` at `~/Projects/Napoleon/docs/concierge-integration/`. The Text Concierge app now has a first-pass CoS-aware bridge path, UI status surface, local Rehearsal Mode preview, governance review UI states, proposal-only memory review, and an in-memory Conversation Capability Intelligence ledger. The evaluator now has 16 scenarios and meets the backlog breadth target, including memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, and conversation capability intelligence coverage.
 
 ## Recently Completed
 
@@ -31,6 +31,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Expanded evaluator coverage from 11 to 15 scenarios with memory proposal review, bridge failure handling, privacy settings controls, and contract mismatch fail-closed cases.
 - Added Text Concierge memory proposal review panels with local acknowledgement/dismissal that never writes memory or captures approval.
 - Designed Conversation Capability Intelligence for privacy-safe tracking of common, working, missing, architecture-blocked, and recommended next capabilities.
+- Added the first local `conversation_capability_signal` TypeScript model, bounded in-memory ledger, aggregation helpers, and telemetry wiring for existing Text Concierge flows.
 
 ## Current Blockers
 
@@ -48,6 +49,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Self-evolution language can be misread as permission for automatic production changes; it is proposal-only until gates and approval exist.
 - The Napoleon bridge contract has a first-pass CoS-aware Text Concierge adapter, local rehearsal preview, governance review display, and local memory proposal review, but live auth, Napoleon-side memory review submission, delegation, and richer error handling still need detail.
 - The evaluator has 16 scenarios and meets the current backlog breadth target, but it is still a deterministic local gate until live Napoleon HTTP mode is configured and validated.
+- The capability ledger is in-memory only; persistent retention, deletion, export controls, and query UI remain future work.
 - Local Concierge contracts now include first-pass mirrors of Napoleon's CoS package for text turns. Remaining mismatches include live endpoint/auth, descriptor signature/checksum validation, Napoleon-side memory proposal submission, and full contract-aware evaluator coverage.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
 
@@ -57,7 +59,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 2. Add live governance review submission once Napoleon exposes a runtime transport.
 3. Add Napoleon-side memory proposal submission once a governed runtime contract exists.
 4. Add richer bridge error handling and contract fixtures for live Napoleon responses.
-5. Implement the local conversation capability ledger and query surface.
+5. Add the Conversation Capability Intelligence query surface over the local ledger aggregates.
 
 ## Useful Validation Commands
 
