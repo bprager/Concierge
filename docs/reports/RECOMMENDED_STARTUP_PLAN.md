@@ -103,7 +103,7 @@ Goal:
 
 Work:
 
-- Expand from 10 to at least 15 scenarios.
+- Expand from 11 to at least 15 scenarios.
 - Add negative cases for unsafe autonomy, child safety, memory writes, raw capture, and direct tool execution.
 - Add contract-conformance cases for descriptor discovery, agent manifests, governance decisions, profile mapping, observability envelopes, evolution proposals, and contract-only boundaries.
 - Add regression comparison.

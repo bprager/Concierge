@@ -50,6 +50,18 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("blocked effects", checks["rehearsal_preview"]["missing_terms"])
         self.assertIn("does not call a live Napoleon endpoint", checks["rehearsal_safety_boundary"]["missing_terms"])
 
+    def test_governance_review_ui_scenario_scores_acknowledgement_boundary(self):
+        scenario_ids = {scenario["id"]: scenario for scenario in self.scenarios}
+        scenario = scenario_ids["GOVERNANCE-REVIEW-001"]
+
+        self.assertIn("governance_review_ui", scenario["expected_artifacts"])
+
+        incomplete_response = "The UI shows requires_review and no_go."
+        checks = eval_runner.check_artifacts(incomplete_response, self.expected, ["governance_review_ui"])
+
+        self.assertFalse(checks["governance_review_ui"]["found"])
+        self.assertIn("local acknowledgement is not Napoleon approval", checks["governance_review_ui"]["missing_terms"])
+
 
 if __name__ == "__main__":
     unittest.main()

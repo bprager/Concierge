@@ -36,7 +36,22 @@ It may not directly:
 | Sensitive access | Health, finance, child data | Purpose-bound confirmation |
 | Policy change | Memory, autonomy, child behavior | Chief of Staff plus approval |
 
-## 3. Privacy defaults
+## 3. Governance review UI
+
+Text Concierge displays Napoleon governance outcomes as local review states:
+
+- `allow_prepare_only`: advisory preparation is allowed, but blocked effects remain unavailable.
+- `requires_review`: Chief of Staff or Napoleon review is needed before anything moves beyond preparation.
+- `deny`: the requested action is not allowed through the current path.
+- `no_go`: the request is non-executable and cannot be sent forward as an advisory request.
+
+Every review panel must show decision ID, audit ID, authority tier, approval requirement, rationale, blocked effects, and trace ID.
+
+Local acknowledgement is not approval. It records that the review state was seen, but it must not execute side effects, write memory, send externally, dispatch agents, or capture Napoleon approval.
+
+Child protected mode uses stricter wording. It must not imply secret-keeping, hidden external action, or guardian-bypassing approval.
+
+## 4. Privacy defaults
 
 - Camera off by default
 - Microphone off by default
@@ -46,7 +61,7 @@ It may not directly:
 - Child data minimized
 - Telemetry redacted before export
 
-## 4. Child mode rules
+## 5. Child mode rules
 
 Child protected mode must:
 
@@ -59,7 +74,7 @@ Child protected mode must:
 - Minimize memory
 - Disable camera affect estimation by default unless explicitly approved
 
-## 5. Avatar safety
+## 6. Avatar safety
 
 Avatar mode must:
 

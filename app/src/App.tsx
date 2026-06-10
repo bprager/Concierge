@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  buildGovernanceReviewState,
   buildRehearsalPreview,
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
@@ -7,7 +8,11 @@ import {
   type LocalProfile,
 } from "./contractBridge";
 import { sendToNapoleon } from "./napoleonBridge";
-import { describeGovernanceDecision, summarizeRehearsalPreview } from "./presentation";
+import {
+  describeGovernanceDecision,
+  describeGovernanceReview,
+  summarizeRehearsalPreview,
+} from "./presentation";
 import { emitEvent, newTraceId } from "./telemetry";
 import type { ConciergeMessage } from "./types";
 
@@ -19,6 +24,7 @@ interface PendingRehearsal {
   turnId: string;
   preview: ReturnType<typeof buildRehearsalPreview>;
   summary: ReturnType<typeof summarizeRehearsalPreview>;
+  review: ReturnType<typeof describeGovernanceReview>;
 }
 
 export function App() {
@@ -36,6 +42,7 @@ export function App() {
     typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_endpoint") ?? "",
   );
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
+  const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
   const descriptorStatus = validateChiefOfStaffDescriptor(defaultChiefOfStaffDescriptor);
 
   function updateEndpoint(value: string) {
@@ -73,6 +80,7 @@ export function App() {
     });
     const preview = buildRehearsalPreview(contract, content);
     const summary = summarizeRehearsalPreview(preview);
+    const review = describeGovernanceReview(preview.governanceReview);
 
     emitEvent("rehearsal_preview_created", {
       traceId,
@@ -81,16 +89,46 @@ export function App() {
       profile,
       requestId: preview.chiefOfStaffReviewPacket.requestId,
     });
-    setPendingRehearsal({ content, traceId, turnId, preview, summary });
+    setPendingRehearsal({ content, traceId, turnId, preview, summary, review });
     setLastDecision(null);
+    setLastReview(null);
   }
 
   async function submit(rehearsal: PendingRehearsal | null = null) {
     const content = rehearsal?.content ?? input.trim();
     if (!content) return;
+    if (rehearsal && !rehearsal.preview.governanceReview.canSendAdvisory) {
+      setLastReview(rehearsal.review);
+      return;
+    }
 
     const traceId = rehearsal?.traceId ?? newTraceId();
     const turnId = rehearsal?.turnId ?? `turn_${Date.now().toString(16)}`;
+    if (!rehearsal) {
+      const preflight = buildTextTurnContract({ message: content, profile, conversationId, turnId, traceId });
+      const reviewState = buildGovernanceReviewState(preflight.governanceDecision, profile);
+      if (!reviewState.canSendAdvisory) {
+        const reviewView = describeGovernanceReview(reviewState);
+        emitEvent("governance_review_blocked", {
+          traceId,
+          conversationId,
+          turnId,
+          outcome: reviewState.outcome,
+          decisionId: reviewState.decisionId,
+        });
+        setLastReview(reviewView);
+        setLastDecision(
+          describeGovernanceDecision({
+            outcome: reviewState.outcome,
+            decisionId: reviewState.decisionId,
+            auditId: reviewState.auditId,
+            blockedEffects: reviewState.blockedEffects,
+          }),
+        );
+        return;
+      }
+    }
+
     emitEvent("user_message_received", { traceId, conversationId, turnId, channel: "text", profile });
 
     setMessages((m) => [...m, { role: "user", content }]);
@@ -123,6 +161,7 @@ export function App() {
         auditId: response.auditEnvelope.audit_id,
       });
       setLastDecision(decisionView);
+      setLastReview(describeGovernanceReview(buildGovernanceReviewState(response.governanceDecision, profile)));
       setMessages((m) => [
         ...m,
         {
@@ -149,7 +188,51 @@ export function App() {
     }
   }
 
-  const canSendRehearsal = Boolean(pendingRehearsal && input.trim() === pendingRehearsal.content);
+  function acknowledgePendingReview() {
+    if (!pendingRehearsal || !pendingRehearsal.preview.governanceReview.canAcknowledge) return;
+    const acknowledgedReview = buildGovernanceReviewState(
+      {
+        decision_id: pendingRehearsal.preview.traceAuditPreview.decisionId,
+        request_id: pendingRehearsal.preview.traceAuditPreview.requestId,
+        outcome: pendingRehearsal.preview.governanceReview.outcome,
+        authority_tier: pendingRehearsal.preview.governanceReview.authorityTier,
+        approval_requirement: pendingRehearsal.preview.governanceReview.approvalRequirement,
+        rationale: pendingRehearsal.preview.governanceReview.rationale,
+        blocked_effects: pendingRehearsal.preview.governanceReview.blockedEffects,
+        trace_id: pendingRehearsal.preview.governanceReview.traceId,
+        audit_id: pendingRehearsal.preview.traceAuditPreview.auditId,
+      },
+      profile,
+      true,
+    );
+    const review = describeGovernanceReview(acknowledgedReview);
+    setPendingRehearsal({ ...pendingRehearsal, review });
+    emitEvent("governance_review_acknowledged_locally", {
+      traceId: pendingRehearsal.traceId,
+      conversationId,
+      turnId: pendingRehearsal.turnId,
+      decisionId: acknowledgedReview.decisionId,
+      approvalCaptured: acknowledgedReview.approvalCaptured,
+    });
+  }
+
+  function acknowledgeLastReview() {
+    if (!lastReview || !lastReview.canAcknowledge) return;
+    setLastReview({
+      ...lastReview,
+      heading: "Review acknowledged locally",
+      body:
+        "This local acknowledgement is not Napoleon approval. It does not execute side effects, write memory, send externally, or dispatch agents.",
+      actionLabel: "Acknowledged locally",
+      canAcknowledge: false,
+    });
+  }
+
+  const canSendRehearsal = Boolean(
+    pendingRehearsal &&
+      input.trim() === pendingRehearsal.content &&
+      pendingRehearsal.preview.governanceReview.canSendAdvisory,
+  );
 
   return (
     <main className="shell">
@@ -237,6 +320,26 @@ export function App() {
         </section>
       ) : null}
 
+      {lastReview ? (
+        <section className={`review ${lastReview.sendBlocked ? "blocked" : ""}`}>
+          <div className="review-heading">
+            <strong>{lastReview.heading}</strong>
+            <span>{lastReview.body}</span>
+          </div>
+          <dl>
+            {lastReview.details.map((detail) => (
+              <div key={detail.label}>
+                <dt>{detail.label}</dt>
+                <dd>{detail.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <button className="secondary" disabled={!lastReview.canAcknowledge} onClick={acknowledgeLastReview}>
+            {lastReview.actionLabel}
+          </button>
+        </section>
+      ) : null}
+
       {pendingRehearsal ? (
         <section className="rehearsal">
           <div className="rehearsal-heading">
@@ -273,6 +376,23 @@ export function App() {
               {pendingRehearsal.preview.evaluatorCaseCandidate.sourceRequestId}
             </dd>
           </dl>
+          <section className={`review inline ${pendingRehearsal.review.sendBlocked ? "blocked" : ""}`}>
+            <div className="review-heading">
+              <strong>{pendingRehearsal.review.heading}</strong>
+              <span>{pendingRehearsal.review.body}</span>
+            </div>
+            <dl>
+              {pendingRehearsal.review.details.map((detail) => (
+                <div key={detail.label}>
+                  <dt>{detail.label}</dt>
+                  <dd>{detail.value}</dd>
+                </div>
+              ))}
+            </dl>
+            <button className="secondary" disabled={!pendingRehearsal.review.canAcknowledge} onClick={acknowledgePendingReview}>
+              {pendingRehearsal.review.actionLabel}
+            </button>
+          </section>
         </section>
       ) : null}
 

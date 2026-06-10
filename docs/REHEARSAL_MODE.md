@@ -36,6 +36,8 @@ Preview creation is local. It builds a text turn contract from the current typed
 
 Sending an advisory request is a separate user action after the preview exists. That send still goes through the governed bridge path and remains subject to Chief of Staff and governance decisions.
 
+If the rehearsed turn is `no_go` or denied, Concierge blocks the send action. If the turn is `requires_review`, Concierge shows a review panel. A local acknowledgement can record that the review was seen, but it is not Napoleon approval and does not grant authority.
+
 ## Privacy And Safety
 
 - Raw text stays local during preview.
@@ -60,3 +62,5 @@ The evaluator includes four Rehearsal Mode scenarios:
 - `REHEARSAL-ADVERSARIAL-001`
 
 Representative fixtures live in `examples/rehearsal_evaluator_cases.json`.
+
+The related governance review UI scenario is `GOVERNANCE-REVIEW-001`.

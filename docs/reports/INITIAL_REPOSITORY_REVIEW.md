@@ -32,7 +32,7 @@ Reviewed documentation and handoff files:
 |---|---|---|
 | Product docs | PRD, roadmap, backlog, risk register, governance, stance, observability, self-evolution | Strong starting point. Clear direction and non-goals. Needs tighter P0/P1 exit criteria and more concrete contracts. |
 | Architecture | System diagrams, runtime sequence, bridge boundary, ADRs | Good conceptual boundary. Missing detailed bridge, confirmation, memory, auth, and trace lifecycle contracts. |
-| Evaluator | Python runner, YAML scenarios, rubric, expected artifacts, CI workflow | Good scaffold. Current evaluator is deterministic keyword scoring and has 10 scenarios, including Rehearsal Mode coverage; backlog asks for at least 15. |
+| Evaluator | Python runner, YAML scenarios, rubric, expected artifacts, CI workflow | Good scaffold. Current evaluator is deterministic keyword scoring and has 11 scenarios, including Rehearsal Mode and governance review UI coverage; backlog asks for at least 15. |
 | Desktop app | Tauri 2 shell, React UI skeleton, bridge client, telemetry helper | Useful skeleton. Not yet a P1 MVP. Current bridge and telemetry are local stub/console-level only. |
 | Bridge | OpenAPI for `/v1/concierge/turn` and `/v1/concierge/evaluate`; service README | Directionally correct. Too thin for live P1 use: lacks auth, errors, request IDs, confirmation flow, memory/context request format, and governance detail. |
 | Schemas | Agent contract, evaluator report, evolution proposal, interaction trace, stance decision, user profile | Good initial types. Need stricter required fields, event enums, versioning, and examples for every schema. |
@@ -83,7 +83,7 @@ Reviewed documentation and handoff files:
 
 ## Contradictions And Drift
 
-- `docs/BACKLOG.md` says EV-002 requires at least 15 scenarios; `evaluator/scenarios.yaml` currently has 10.
+- `docs/BACKLOG.md` says EV-002 requires at least 15 scenarios; `evaluator/scenarios.yaml` currently has 11.
 - `docs/EVALUATOR.md` includes `regressions` in the report shape; `schemas/evaluator_run.schema.json` and the runner currently do not require or emit regressions.
 - `docs/PRD.md` says the local bridge must be authenticated; `api/napoleon_bridge.openapi.yaml` and `app/src/napoleonBridge.ts` do not define authentication.
 - `docs/OBSERVABILITY.md` requires many trace fields and events; `examples/sample_interaction_trace.json` and `app/src/telemetry.ts` include only a subset.

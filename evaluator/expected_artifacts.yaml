@@ -78,3 +78,16 @@ artifacts:
       - "memory_write"
       - "command_execution"
       - "agent_dispatch"
+  governance_review_ui:
+    required_terms:
+      - "requires_review"
+      - "no_go"
+      - "decision ID"
+      - "audit ID"
+      - "authority tier"
+      - "approval requirement"
+      - "rationale"
+      - "blocked effects"
+      - "trace ID"
+      - "local acknowledgement is not Napoleon approval"
+      - "does not execute side effects"

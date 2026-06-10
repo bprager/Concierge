@@ -85,6 +85,7 @@ export interface TextTurnContractInput {
   turnId: string;
   traceId: string;
   timestamp?: string;
+  governanceOutcome?: GovernanceOutcome;
 }
 
 export interface TextTurnContract {
@@ -131,6 +132,30 @@ export interface RehearsalPreview {
     traceId: string;
     expectedBlockedEffects: string[];
   };
+  governanceReview: GovernanceReviewState;
+}
+
+export type GovernanceReviewStatus =
+  | "not_required"
+  | "review_needed"
+  | "review_acknowledged"
+  | "blocked_non_executable";
+
+export interface GovernanceReviewState {
+  outcome: GovernanceOutcome;
+  status: GovernanceReviewStatus;
+  decisionId: string;
+  auditId: string;
+  authorityTier: AuthorityTier;
+  approvalRequirement: string;
+  rationale: string;
+  blockedEffects: string[];
+  traceId: string;
+  profile: LocalProfile;
+  canAcknowledge: boolean;
+  canSendAdvisory: boolean;
+  approvalCaptured: false;
+  localAcknowledgement?: "review_acknowledged_not_approved";
 }
 
 const PROFILE_MAP: Record<LocalProfile, NapoleonProfileMode> = {
@@ -190,8 +215,57 @@ export function validateChiefOfStaffDescriptor(descriptor: ChiefOfStaffDescripto
   };
 }
 
+export function inferLocalGovernanceOutcome(message: string, profile: LocalProfile): GovernanceOutcome {
+  const lower = message.toLowerCase();
+  const asksForExternalEffect = /\b(send|email|post|publish|upload|share|execute|run|dispatch|bypass|skip governance)\b/.test(lower);
+  const asksForSecretKeeping = /\b(secret|do not tell|don't tell|hide|without (my )?guardian)\b/.test(lower);
+  const asksForAuthorityBypass = /\b(bypass|skip governance|approval captured|without approval|execute command|run command|dispatch agent)\b/.test(lower);
+
+  if (asksForAuthorityBypass || (profile === "child_protected" && asksForSecretKeeping && asksForExternalEffect)) {
+    return "no_go";
+  }
+
+  if (asksForExternalEffect || asksForSecretKeeping) {
+    return "requires_review";
+  }
+
+  return "allow_prepare_only";
+}
+
+function authorityTierForOutcome(outcome: GovernanceOutcome): AuthorityTier {
+  if (outcome === "no_go") return "prohibited";
+  if (outcome === "deny") return "prohibited";
+  if (outcome === "requires_review") return "approval_required";
+  return "advisory_review";
+}
+
+function approvalRequirementForOutcome(outcome: GovernanceOutcome, profileMode: NapoleonProfileMode): string {
+  if (outcome === "no_go" || outcome === "deny") return "not_available";
+  if (outcome === "requires_review" && profileMode === "child_protected_user") {
+    return "guardian_and_owner_review";
+  }
+  if (outcome === "requires_review") return "explicit_owner_approval";
+  return "none_for_metadata";
+}
+
+function rationaleForOutcome(outcome: GovernanceOutcome): string {
+  if (outcome === "no_go") {
+    return "Requested behavior is non-executable through Concierge because it attempts to bypass governance or protected-user boundaries.";
+  }
+  if (outcome === "deny") {
+    return "Napoleon governance denied the requested action; Concierge may not proceed beyond local display.";
+  }
+  if (outcome === "requires_review") {
+    return "The request may be prepared for review, but any external effect requires Napoleon or Chief of Staff approval.";
+  }
+  return "Text Concierge may prepare an advisory response but blocked effects remain unavailable.";
+}
+
 export function buildTextTurnContract(input: TextTurnContractInput): TextTurnContract {
   const profileMode = mapProfileToNapoleonMode(input.profile);
+  const outcome = input.governanceOutcome ?? inferLocalGovernanceOutcome(input.message, input.profile);
+  const authorityTier = authorityTierForOutcome(outcome);
+  const approvalRequirement = approvalRequirementForOutcome(outcome, profileMode);
   const requestId = `cos_${input.turnId}`;
   const decisionId = `decision_${input.turnId}`;
   const auditId = `audit_${input.turnId}`;
@@ -211,7 +285,7 @@ export function buildTextTurnContract(input: TextTurnContractInput): TextTurnCon
     request_type: "governance_review",
     profile_mode: profileMode,
     source_evidence: sourceEvidence,
-    requested_authority_tier: "advisory_review",
+    requested_authority_tier: authorityTier,
     trace_id: input.traceId,
     payload_schema: "napoleon/concierge/chief-of-staff-contract/v1#/definitions/ChiefOfStaffRequest",
   };
@@ -221,7 +295,7 @@ export function buildTextTurnContract(input: TextTurnContractInput): TextTurnCon
     actor_id: actorId,
     action: "prepare_text_response",
     target: "napoleon.chief_of_staff",
-    requested_authority_tier: "advisory_review",
+    requested_authority_tier: authorityTier,
     evidence_links: sourceEvidence,
     trace_id: input.traceId,
   };
@@ -229,10 +303,10 @@ export function buildTextTurnContract(input: TextTurnContractInput): TextTurnCon
   const governanceDecision: GovernanceDecision = {
     decision_id: decisionId,
     request_id: requestId,
-    outcome: "allow_prepare_only",
-    authority_tier: "advisory_review",
-    approval_requirement: "none_for_metadata",
-    rationale: "Text Concierge may prepare an advisory response but blocked effects remain unavailable.",
+    outcome,
+    authority_tier: authorityTier,
+    approval_requirement: approvalRequirement,
+    rationale: rationaleForOutcome(outcome),
     blocked_effects: blockedEffects,
     trace_id: input.traceId,
     audit_id: auditId,
@@ -252,8 +326,8 @@ export function buildTextTurnContract(input: TextTurnContractInput): TextTurnCon
     trace_id: input.traceId,
     decision_id: decisionId,
     actor_id: actorId,
-    authority_tier: "advisory_review",
-    approval_requirement: "none_for_metadata",
+    authority_tier: authorityTier,
+    approval_requirement: approvalRequirement,
     evidence_links: sourceEvidence,
   };
 
@@ -305,5 +379,43 @@ export function buildRehearsalPreview(contract: TextTurnContract, message: strin
       traceId: contract.traceEnvelope.trace_id,
       expectedBlockedEffects: contract.blockedEffects,
     },
+    governanceReview: buildGovernanceReviewState(contract.governanceDecision, localProfileFromNapoleonMode(contract.profileMode)),
+  };
+}
+
+function localProfileFromNapoleonMode(profileMode: NapoleonProfileMode): LocalProfile {
+  if (profileMode === "child_protected_user") return "child_protected";
+  return profileMode;
+}
+
+export function buildGovernanceReviewState(
+  decision: GovernanceDecision,
+  profile: LocalProfile,
+  locallyAcknowledged = false,
+): GovernanceReviewState {
+  const blocked = decision.outcome === "no_go" || decision.outcome === "deny";
+  const needsReview = decision.outcome === "requires_review";
+
+  return {
+    outcome: decision.outcome,
+    status: blocked
+      ? "blocked_non_executable"
+      : needsReview
+        ? locallyAcknowledged
+          ? "review_acknowledged"
+          : "review_needed"
+        : "not_required",
+    decisionId: decision.decision_id,
+    auditId: decision.audit_id,
+    authorityTier: decision.authority_tier,
+    approvalRequirement: decision.approval_requirement,
+    rationale: decision.rationale,
+    blockedEffects: decision.blocked_effects,
+    traceId: decision.trace_id,
+    profile,
+    canAcknowledge: needsReview,
+    canSendAdvisory: !blocked,
+    approvalCaptured: false,
+    localAcknowledgement: needsReview && locallyAcknowledged ? "review_acknowledged_not_approved" : undefined,
   };
 }

@@ -1,12 +1,12 @@
 # Status
 
-Last updated: 2026-06-08
+Last updated: 2026-06-09
 
 ## Current Project State
 
 Concierge is an initial scaffold for Napoleon's adaptive human interface. The repository contains product and architecture docs, evaluator design and runner, schemas, example profiles/traces, a Tauri + React app skeleton, bridge/perception service placeholders, GitHub templates, and an evaluator workflow scaffold.
 
-The initial scaffold is committed and pushed. The startup review reports under `docs/reports/` include Napoleon Chief of Staff integration evidence discovered over ssh from `bernd@mimir` at `~/Projects/Napoleon/docs/concierge-integration/`. The Text Concierge app now has a first-pass CoS-aware bridge path, UI status surface, and local Rehearsal Mode preview.
+The initial scaffold is committed and pushed. The startup review reports under `docs/reports/` include Napoleon Chief of Staff integration evidence discovered over ssh from `bernd@mimir` at `~/Projects/Napoleon/docs/concierge-integration/`. The Text Concierge app now has a first-pass CoS-aware bridge path, UI status surface, local Rehearsal Mode preview, and governance review UI states.
 
 ## Recently Completed
 
@@ -27,6 +27,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added Rehearsal Mode so a text turn can be previewed locally before a live Napoleon bridge call, including understood request, proposed path, Chief of Staff packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate.
 - Added `docs/REHEARSAL_MODE.md` and `docs/superpowers/plans/2026-06-08-rehearsal-mode.md`.
 - Added Rehearsal Mode evaluator coverage for adult owner, child protected, guest/collaborator, and adversarial preview paths.
+- Added governance review UI states for `requires_review`, `deny`, and `no_go`, including local-only acknowledgement that is not Napoleon approval.
 
 ## Current Blockers
 
@@ -38,20 +39,20 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Known Bugs Or Risks
 
 - The evaluator stub can pass while real Napoleon integration is incomplete.
-- The app skeleton can imply product readiness before governance confirmation, profile handling, and trace completeness are implemented.
+- The app skeleton can imply product readiness before live auth, full profile handling, memory proposal review, and trace completeness are implemented.
 - Camera, microphone, child-mode, and avatar work can weaken privacy or agency if implemented before consent and audit controls.
 - The bridge boundary can erode if UI code starts calling tools or services directly instead of governed Napoleon APIs.
 - Self-evolution language can be misread as permission for automatic production changes; it is proposal-only until gates and approval exist.
-- The Napoleon bridge contract has a first-pass CoS-aware Text Concierge adapter and local rehearsal preview, but live auth, confirmation workflows, memory proposal review, delegation, and richer error handling still need detail.
-- The evaluator has 10 scenarios, while the backlog target is at least 15.
+- The Napoleon bridge contract has a first-pass CoS-aware Text Concierge adapter, local rehearsal preview, and governance review display, but live auth, memory proposal review, delegation, and richer error handling still need detail.
+- The evaluator has 11 scenarios, while the backlog target is at least 15.
 - Local Concierge contracts now include first-pass mirrors of Napoleon's CoS package for text turns. Remaining mismatches include live endpoint/auth, descriptor signature/checksum validation, memory proposal details, and full contract-aware evaluator coverage.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
 
 ## Next 3 To 5 Priorities
 
 1. Add live Napoleon endpoint/auth support once the CoS descriptor exposes a runtime transport.
-2. Add at least five more evaluator scenarios to reach the backlog target of 15.
-3. Implement governance confirmation and review-required UI states around `requires_review` and `no_go`.
+2. Add at least four more evaluator scenarios to reach the backlog target of 15.
+3. Add live governance review submission once Napoleon exposes a runtime transport.
 4. Add memory proposal review flow that never writes memory directly.
 5. Add richer bridge error handling and contract fixtures for live Napoleon responses.
 

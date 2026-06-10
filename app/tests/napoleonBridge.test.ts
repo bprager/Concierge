@@ -22,7 +22,7 @@ test("local stub response includes CoS governance and trace contracts", async ()
   );
 
   assert.equal(response.profileMode, "child_protected_user");
-  assert.equal(response.governanceDecision.outcome, "allow_prepare_only");
+  assert.equal(response.governanceDecision.outcome, "requires_review");
   assert.equal(response.governanceDecision.decision_id, "decision_turn_bridge");
   assert.equal(response.auditEnvelope.audit_id, "audit_turn_bridge");
   assert.ok(response.governanceDecision.blocked_effects.includes("external_send"));

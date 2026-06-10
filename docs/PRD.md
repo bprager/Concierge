@@ -205,6 +205,7 @@ Text Concierge shall:
 - Route to Napoleon or specialized agents through the bridge
 - Preview governed turns locally in Rehearsal Mode before sending a live bridge request
 - Display allowed effects, blocked effects, approval state, memory proposal state, and trace/audit identifiers for rehearsed turns
+- Display governance review states for `requires_review`, `deny`, and `no_go`; local acknowledgement must not be treated as Napoleon approval
 - Select an interaction stance
 - Return responses in the user-appropriate style
 - Emit telemetry for each turn

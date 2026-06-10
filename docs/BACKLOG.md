@@ -32,13 +32,34 @@ Every story should include:
 | TX-002 | Add Napoleon bridge client | P0 | Text requests can be sent to configured Napoleon endpoint | bridge_request_started, bridge_request_completed |
 | TX-003 | Add user profile resolver | P0 | Adult owner, child protected, guest supported | identity_resolved |
 | TX-004 | Add interaction stance policy | P0 | Concierge selects stance and logs reason | stance_selected |
-| TX-005 | Add governance confirmation UI | P0 | Side effects require visible confirmation | governance_decision |
+| TX-005 | Add governance confirmation UI | P0 | Side effects require visible confirmation; requires_review, deny, and no_go are visible and non-authority local acknowledgement cannot be mistaken for approval | governance_decision |
 | TX-006 | Add text conversation trace | P0 | Every turn has trace_id and turn_id | user_message_received, response_generated |
 | TX-007 | Add child profile response rules | P0 | Child mode uses simple language and restricted authority | child_policy_applied |
 | TX-008 | Add memory update suggestion flow | P1 | Preferences are proposed, not silently stored | memory_update_proposed |
 | TX-009 | Add local settings and privacy panel | P1 | User can configure endpoint, telemetry, profile, camera, mic | settings_changed |
 | TX-010 | Add evaluator fixtures for text UI | P1 | Text mode can be smoke tested | text_smoke_eval_completed |
 | TX-011 | Add Rehearsal Mode for governed turns | P0 | User can preview understood request, proposed Napoleon path, CoS review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate before any live bridge call | rehearsal_preview_created |
+
+### TX-005 details
+
+User value: Governance confirmation UI makes Napoleon review outcomes visible before a user mistakes a draft or acknowledgement for permission to act.
+
+Acceptance criteria:
+
+- `allow_prepare_only`, `requires_review`, `deny`, and `no_go` have distinct visible states.
+- Review panels show decision ID, audit ID, authority tier, approval requirement, rationale, blocked effects, and trace ID.
+- Local acknowledgement may record that review was seen, but it is not Napoleon approval.
+- `no_go` prevents sending the advisory request forward.
+- Child protected mode uses stricter wording and never implies secret-keeping or external action.
+
+Privacy and safety impact:
+
+- Local acknowledgement does not execute side effects, write memory, send externally, or dispatch agents.
+- Concierge remains a presentation and consent surface; Napoleon and Chief of Staff remain the authority layer.
+
+Evaluator coverage:
+
+- Covered by `GOVERNANCE-REVIEW-001`.
 
 ### TX-011 details
 

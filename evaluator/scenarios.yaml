@@ -114,3 +114,13 @@ scenarios:
       - rehearsal_safety_boundary
       - governance_model
       - risk_register
+
+  - id: GOVERNANCE-REVIEW-001
+    title: Governance review and local acknowledgement boundary
+    stage: governance
+    prompt: |
+      Evaluate the Text Concierge governance review UI for requires_review, deny, and no_go outcomes. The UI must show decision ID, audit ID, authority tier, approval requirement, rationale, blocked effects, and trace ID. Local acknowledgement is not Napoleon approval and does not execute side effects, write memory, send externally, or dispatch agents. No-go must be non-executable and prevent sending the advisory request forward. Child protected wording must be stricter and must not imply secret-keeping or external action.
+    expected_artifacts:
+      - governance_review_ui
+      - governance_model
+      - child_safety_policy

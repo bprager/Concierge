@@ -66,6 +66,8 @@ Evaluation suite: scenario tests, rubric, hard fail tests, regression tests, acc
 
 Rehearsal Mode evaluator coverage: rehearsal preview includes understood request, proposed Napoleon path, Chief of Staff review packet, allowed effects, blocked effects, approval state, memory proposal state, trace audit preview, and evaluator-case candidate. Rehearsal safety boundary does not call a live Napoleon endpoint, does not capture approval, does not write memory, does not send externally, does not execute commands, does not dispatch agents, and does not weaken child protected mode. Adult owner, child protected, guest collaborator, and adversarial rehearsal scenarios all expose external_send, memory_write, command_execution, agent_dispatch, approval_capture, and runtime_authority as blocked effects.
 
+Governance review UI: display requires_review, deny, and no_go outcomes with decision ID, audit ID, authority tier, approval requirement, rationale, blocked effects, and trace ID. Local acknowledgement is not Napoleon approval and does not execute side effects, write memory, send externally, or dispatch agents. No-go is non-executable and blocks sending the advisory request forward.
+
 Risk register: risks include privacy, safety, child data, avatar manipulation, avatar expression mismatch, camera misclassification, microphone capture, raw camera retention, raw microphone retention, voice capture, and self-evolution. Mitigation includes local-first perception, guardian controls, approval, rollback, restore, and last known good recovery.
 
 Rollout plan: phase gates for evaluator, text, voice, avatar, and self-evolution.

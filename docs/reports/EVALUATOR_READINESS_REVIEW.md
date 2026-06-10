@@ -13,7 +13,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Artifact | Current state |
 |---|---|
 | Runner | `evaluator/eval_runner.py`, supports `stub` and `http` modes |
-| Scenarios | 10 scenarios in `evaluator/scenarios.yaml`, including 4 Rehearsal Mode scenarios |
+| Scenarios | 11 scenarios in `evaluator/scenarios.yaml`, including 4 Rehearsal Mode scenarios and 1 governance review UI scenario |
 | Rubric | 10 weighted dimensions in `evaluator/rubrics.yaml` |
 | Hard fails | 5 hard fail rules |
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
@@ -27,7 +27,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 The existing stub report at `evaluator/reports/latest.json` shows:
 
 - Mode: `stub`
-- Scenario count: 10
+- Scenario count: 11
 - Score total: 97.5
 - Hard failures: 0
 - Missing artifacts: 0
@@ -54,34 +54,33 @@ Specific limitations:
 
 ## Scenario Gaps
 
-Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, and Rehearsal Mode previews for adult owner, child protected, guest/collaborator, and adversarial requests.
+Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, Rehearsal Mode previews for adult owner, child protected, guest/collaborator, adversarial requests, and governance review UI behavior for local acknowledgement and no-go states.
 
 Missing scenario groups:
 
-1. Side-effect request requiring confirmation.
-2. Sensitive data access request.
-3. Memory write proposal and rejection.
-4. Child user asking for secret-keeping.
-5. Child user requesting an external action.
-6. Guest/collaborator access isolation.
-7. Bridge error and degraded Napoleon availability.
-8. Incomplete trace detection.
-9. Missing governance decision detection.
-10. Unsafe direct tool execution proposal.
-11. Agent registry routing explanation.
-12. Regression from a previous accepted design.
-13. Telemetry redaction failure.
-14. Camera/microphone opt-in violation.
-15. Self-evolution proposal without rollback.
-16. Avatar behavior that implies authority.
-17. Voice always-on capture violation.
-18. License/privacy publishing readiness.
-19. Chief of Staff descriptor discovery and fail-closed cache behavior.
-20. Agent manifest missing `chief_of_staff_discovery`.
-21. Governance decision missing `decision_id`, `audit_id`, `blocked_effects`, or `evidence_links`.
-22. Local `child_protected` profile not mapped to Napoleon `child_protected_user`.
-23. Evolution proposal missing rollback validation command or regression requirements.
-24. Contract-only boundary violated by treating discovery as runtime authority.
+1. Sensitive data access request.
+2. Memory write proposal and rejection.
+3. Child user asking for secret-keeping.
+4. Child user requesting an external action.
+5. Guest/collaborator access isolation.
+6. Bridge error and degraded Napoleon availability.
+7. Incomplete trace detection.
+8. Missing governance decision detection.
+9. Unsafe direct tool execution proposal.
+10. Agent registry routing explanation.
+11. Regression from a previous accepted design.
+12. Telemetry redaction failure.
+13. Camera/microphone opt-in violation.
+14. Self-evolution proposal without rollback.
+15. Avatar behavior that implies authority.
+16. Voice always-on capture violation.
+17. License/privacy publishing readiness.
+18. Chief of Staff descriptor discovery and fail-closed cache behavior.
+19. Agent manifest missing `chief_of_staff_discovery`.
+20. Governance decision missing `decision_id`, `audit_id`, `blocked_effects`, or `evidence_links`.
+21. Local `child_protected` profile not mapped to Napoleon `child_protected_user`.
+22. Evolution proposal missing rollback validation command or regression requirements.
+23. Contract-only boundary violated by treating discovery as runtime authority.
 
 ## Scoring Criteria Gaps
 

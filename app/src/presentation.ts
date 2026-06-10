@@ -1,4 +1,4 @@
-import type { GovernanceOutcome, RehearsalPreview } from "./contractBridge.js";
+import type { GovernanceOutcome, GovernanceReviewState, RehearsalPreview } from "./contractBridge.js";
 
 export interface GovernanceDecisionViewInput {
   outcome: GovernanceOutcome;
@@ -20,6 +20,15 @@ export interface RehearsalPreviewView {
   executed: false;
   approval: string;
   memory: string;
+}
+
+export interface GovernanceReviewView {
+  heading: string;
+  body: string;
+  actionLabel: string;
+  canAcknowledge: boolean;
+  sendBlocked: boolean;
+  details: Array<{ label: string; value: string }>;
 }
 
 export function describeGovernanceDecision(input: GovernanceDecisionViewInput): GovernanceDecisionView {
@@ -67,5 +76,68 @@ export function summarizeRehearsalPreview(preview: RehearsalPreview): RehearsalP
     executed: false,
     approval: preview.approvalState,
     memory: `Memory status: ${preview.memoryProposal.status}. ${preview.memoryProposal.summary}`,
+  };
+}
+
+export function describeGovernanceReview(review: GovernanceReviewState): GovernanceReviewView {
+  const details = [
+    { label: "Decision", value: review.decisionId },
+    { label: "Audit", value: review.auditId },
+    { label: "Authority tier", value: review.authorityTier },
+    { label: "Approval requirement", value: review.approvalRequirement },
+    { label: "Rationale", value: review.rationale },
+    { label: "Blocked effects", value: review.blockedEffects.join(", ") },
+    { label: "Trace", value: review.traceId },
+  ];
+
+  if (review.status === "blocked_non_executable") {
+    const childBody =
+      "I cannot help do that. I will not keep secrets, send anything outside this chat, or do actions without the right adult review.";
+    const adultBody =
+      "This is blocked and non-executable. Concierge will not execute side effects, write memory, send externally, dispatch agents, or treat this as approved.";
+    return {
+      heading: review.profile === "child_protected" ? "Not available" : "No-go",
+      body: review.profile === "child_protected" ? childBody : adultBody,
+      actionLabel: "Blocked",
+      canAcknowledge: false,
+      sendBlocked: true,
+      details,
+    };
+  }
+
+  if (review.status === "review_acknowledged") {
+    return {
+      heading: "Review acknowledged locally",
+      body:
+        "This local acknowledgement is not Napoleon approval. It does not execute side effects, write memory, send externally, or dispatch agents.",
+      actionLabel: "Acknowledged locally",
+      canAcknowledge: false,
+      sendBlocked: false,
+      details,
+    };
+  }
+
+  if (review.status === "review_needed") {
+    const childBody =
+      "This needs adult review before anything outside this chat can happen. Concierge will only show the request and will not keep secrets or send anything.";
+    const adultBody =
+      "Chief of Staff or Napoleon review is needed before this can move beyond preparation. Local acknowledgement records that review is needed, not approval.";
+    return {
+      heading: "Review required",
+      body: review.profile === "child_protected" ? childBody : adultBody,
+      actionLabel: "Acknowledge review needed",
+      canAcknowledge: true,
+      sendBlocked: false,
+      details,
+    };
+  }
+
+  return {
+    heading: "Prepare only",
+    body: "Concierge may prepare an advisory response, but blocked effects remain unavailable.",
+    actionLabel: "No review needed",
+    canAcknowledge: false,
+    sendBlocked: false,
+    details,
   };
 }
