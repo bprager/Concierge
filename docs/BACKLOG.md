@@ -58,6 +58,7 @@ Evaluator coverage:
 | TX-009 | Add local settings and privacy panel | P1 | User can configure endpoint, telemetry, profile, camera, mic | settings_changed |
 | TX-010 | Add evaluator fixtures for text UI | P1 | Text mode can be smoke tested | text_smoke_eval_completed |
 | TX-011 | Add Rehearsal Mode for governed turns | P0 | User can preview understood request, proposed Napoleon path, CoS review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate before any live bridge call | rehearsal_preview_created |
+| TX-012 | Add capability intelligence query surface | P1 | User can ask what conversations are common, working, missing, architecture-blocked, and recommended next from local capability aggregates | capability_intelligence_answered |
 
 ### TX-005 details
 
@@ -122,6 +123,27 @@ Evaluator coverage:
 
 - Covered by adult, child, guest/collaborator, and adversarial scenarios where Rehearsal Mode must expose blocked effects and avoid live execution.
 
+### TX-012 details
+
+User value: The user can ask Concierge where it is useful, where it is failing, and what should be improved next.
+
+Acceptance criteria:
+
+- Concierge can answer common, working, missing, architecture-blocked, and recommended-next capability questions from local aggregate signals.
+- Answers include counts or evidence strength, confidence, architecture area, and key caveats.
+- Correctly blocked unsafe requests are classified separately from failed safe requests.
+- Recommendations are proposal-only and do not implement features, grant approval, write memory, dispatch agents, or send externally.
+- Child protected aggregates are minimized and separated from adult-owner aggregates.
+
+Privacy and safety impact:
+
+- The query surface uses derived metadata and redacted summaries by default.
+- Raw conversation content is not stored or exported without explicit user-visible controls.
+
+Evaluator coverage:
+
+- Covered by `CAPABILITY-INTELLIGENCE-001`.
+
 ## Milestone P2: Voice Concierge
 
 | ID | Story | Priority | Acceptance criteria | Observability |
@@ -161,6 +183,27 @@ Evaluator coverage:
 | SE-004 | Add regression gate | P0 | Any accepted change must run evaluator before rollout | evolution_regression_run |
 | SE-005 | Add rollout policy | P1 | Low-risk changes can roll out locally, high-risk changes require approval | rollout_decision_recorded |
 | SE-006 | Add rollback path | P1 | Last known good policy can be restored | rollback_completed |
+| SE-007 | Add capability recommendation handoff | P1 | Capability recommendations can become reviewed evolution proposals with evidence, evaluator cases, rollout, and rollback | capability_recommendation_created |
+
+### SE-007 details
+
+User value: High-value repeated misses can become concrete improvement proposals without letting Concierge change itself.
+
+Acceptance criteria:
+
+- Capability recommendations include evidence count, confidence, affected profiles, affected channels, architecture area, expected benefit, risk level, evaluator gap, rollout needs, and rollback needs.
+- Recommendations can create backlog items or Napoleon evolution proposals only through an explicit reviewed handoff.
+- Recommendations cannot grant approval, implement capabilities, write memory, dispatch agents, expand tool access, send externally, or change child policy.
+- Ranking shows counterarguments, including low confidence, high privacy risk, high governance risk, or rare-but-severe signals.
+
+Privacy and safety impact:
+
+- Evidence uses trace, audit, evaluator, and redacted aggregate references rather than raw transcripts by default.
+- Child protected signals remain minimized and cannot be used to optimize engagement.
+
+Evaluator coverage:
+
+- Covered by `CAPABILITY-INTELLIGENCE-001`.
 
 ## Milestone P5: Operations and observability
 
@@ -173,3 +216,25 @@ Evaluator coverage:
 | OBS-005 | Add privacy audit log | P0 | Camera, mic, memory, and child policy changes are auditable | privacy_audit_logged |
 | OBS-006 | Add evaluator report retention | P1 | Reports retained with timestamps and version metadata | eval_report_retained |
 | OBS-007 | Add dashboard specification | P2 | Metrics, traces, evaluator history, and privacy events defined | dashboard_spec_created |
+| OBS-008 | Add conversation capability ledger | P1 | Local ledger stores derived capability signals, not raw conversation content by default | conversation_capability_signal |
+
+### OBS-008 details
+
+User value: Concierge can inspect its own usefulness without requiring the user to manually remember repeated misses.
+
+Acceptance criteria:
+
+- Each eligible turn can emit a `conversation_capability_signal` with topic, intent, capability, outcome, architecture area, confidence, privacy class, and evidence references.
+- The ledger is local, bounded, redacted, and user-deletable.
+- Raw transcripts, raw audio, raw video, and raw child conversation content are not stored by default.
+- The taxonomy supports merge, split, rename, and deprecation review so labels do not drift.
+- Aggregates can identify common, working, degraded, missing, blocked, and unknown capability states.
+
+Privacy and safety impact:
+
+- Capability analysis must not infer durable emotional traits or optimize engagement.
+- Export is opt-in and redacted.
+
+Evaluator coverage:
+
+- Covered by `CAPABILITY-INTELLIGENCE-001`.

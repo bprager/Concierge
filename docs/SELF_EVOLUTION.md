@@ -43,6 +43,8 @@ Examples:
 - Child confusion signal
 - Governance block
 - Evaluator regression
+- Conversation capability signal
+- Capability recommendation
 
 ## 4. Change categories
 
@@ -52,6 +54,7 @@ Examples:
 | Stance | Reduce humor in work mode | Low |
 | Routing | Calendar requests route to Calendar Agent first | Medium |
 | Interface | Default camera off | Medium |
+| Capability intelligence | Recommend a missing easy-to-evolve conversation capability | Medium |
 | Memory | Store stable preference automatically | High |
 | Tool access | Allow email metadata access | High |
 | Child policy | Change child proactivity | Very high |
@@ -72,8 +75,10 @@ Each proposal must include:
 
 - Summary
 - Evidence
+- Conversation capability evidence, if applicable
 - Affected user profiles
 - Affected channels
+- Affected architecture area
 - Risk level
 - Expected benefit
 - New evaluator cases
@@ -89,3 +94,20 @@ No change can be accepted unless:
 - Related evaluator scenarios pass
 - Observability fields remain complete
 - Privacy behavior does not weaken silently
+
+## 8. Capability intelligence boundary
+
+Conversation Capability Intelligence may cluster working and missing capabilities, rank possible improvements, and suggest backlog or evaluator additions.
+
+It may not:
+
+- Implement capabilities automatically
+- Grant approval
+- Write memory
+- Dispatch agents
+- Send externally
+- Expand tool access
+- Change child policy
+- Optimize for engagement at the expense of safety or privacy
+
+Any recommendation that changes behavior must become an evolution proposal with evidence, evaluator coverage, approval, rollout, and rollback.

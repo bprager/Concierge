@@ -21,6 +21,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added governance review UI states for `requires_review`, `deny`, and `no_go`, with local-only acknowledgement that is not Napoleon approval.
 - Expanded evaluator coverage to 15 scenarios with memory proposal review, bridge failure handling, privacy settings controls, and contract mismatch fail-closed cases.
 - Added proposal-only memory review panels with local acknowledgement and dismissal that do not write memory or capture approval.
+- Added Conversation Capability Intelligence design, backlog items, observability signals, risks, and evaluator coverage for privacy-safe capability tracking and proposal-only recommendations.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.

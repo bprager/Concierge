@@ -13,7 +13,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Artifact | Current state |
 |---|---|
 | Runner | `evaluator/eval_runner.py`, supports `stub` and `http` modes |
-| Scenarios | 15 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, privacy settings controls, and contract mismatch fail-closed coverage |
+| Scenarios | 16 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, and conversation capability intelligence coverage |
 | Rubric | 10 weighted dimensions in `evaluator/rubrics.yaml` |
 | Hard fails | 5 hard fail rules |
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
@@ -27,7 +27,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 The existing stub report at `evaluator/reports/latest.json` shows:
 
 - Mode: `stub`
-- Scenario count: 15
+- Scenario count: 16
 - Score total: 97.5
 - Hard failures: 0
 - Missing artifacts: 0
@@ -54,7 +54,7 @@ Specific limitations:
 
 ## Scenario Gaps
 
-Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, Rehearsal Mode previews for adult owner, child protected, guest/collaborator, adversarial requests, governance review UI behavior, memory proposal review, live bridge failure handling, local privacy settings controls, and contract mismatch fail-closed behavior.
+Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, Rehearsal Mode previews for adult owner, child protected, guest/collaborator, adversarial requests, governance review UI behavior, memory proposal review, live bridge failure handling, local privacy settings controls, contract mismatch fail-closed behavior, and conversation capability intelligence.
 
 Missing scenario groups:
 

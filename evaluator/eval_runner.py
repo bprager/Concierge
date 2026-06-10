@@ -76,6 +76,8 @@ Privacy settings controls: endpoint, telemetry, profile, camera, and microphone 
 
 Contract mismatch fail-closed behavior: contract mismatch cases include missing descriptor fields, invalid governance decision, missing trace or audit IDs, unsupported authority tier, bad signatures or checksums, and unknown approval requirements. Each case must fail closed, be not treated as approval, show blocked state and validation error, and Concierge cannot repair the contract by granting itself authority.
 
+Conversation Capability Intelligence: conversation capability intelligence distinguishes topic, intent, and capability so common, working, missing, and architecture-blocked conversations can be analyzed. It stores local metadata and redacted summaries, not raw transcripts by default. Each signal includes confidence, evidence references, architecture area, and privacy class. Correctly blocked unsafe requests are separated from failed safe requests. Child protected minimization applies. Recommendations are proposal-only recommendations and does not implement features, does not grant approval, does not write memory, does not dispatch agents, does not send externally, and does not optimize engagement over safety and privacy.
+
 Risk register: risks include privacy, safety, child data, avatar manipulation, avatar expression mismatch, camera misclassification, microphone capture, raw camera retention, raw microphone retention, voice capture, and self-evolution. Mitigation includes local-first perception, guardian controls, approval, rollback, restore, and last known good recovery.
 
 Rollout plan: phase gates for evaluator, text, voice, avatar, and self-evolution.

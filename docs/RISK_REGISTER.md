@@ -12,3 +12,7 @@
 | Tauri packaging complexity | Medium | Medium | Start with skeleton, add native modules gradually | Engineering |
 | Local model performance insufficient | Medium | Medium | Model adapters and remote fallback | Engineering |
 | Telemetry leaks sensitive content | High | Medium | Redaction, local buffer, user settings | Observability |
+| Capability intelligence optimizes engagement instead of user value | High | Medium | Rank by user value, safety, privacy, and strategic fit; penalize engagement-only signals | Product |
+| Capability gap tracking stores raw or sensitive conversations | High | Medium | Store derived metadata and redacted summaries by default; require visible retention and deletion controls | Privacy |
+| Capability recommendations bypass governance | High | Low | Keep recommendations proposal-only and require Napoleon evolution approval before behavior changes | Napoleon |
+| Frequent low-risk requests hide rare high-impact missing capabilities | Medium | Medium | Include severity, safety risk, and strategic fit in ranking, not frequency alone | Chief of Staff |

@@ -17,6 +17,7 @@ Concierge is not another uncontrolled agent. It is a governed interface layer.
 5. Add avatar and camera perception only with explicit local-first privacy controls.
 6. Support adult and child profiles with different authority, tone, explanation style, and memory rules.
 7. Enable controlled self-evolution through evaluated improvement proposals.
+8. Track local conversation capability signals so Concierge can explain common, working, missing, and next capabilities without storing raw conversations by default.
 
 ## 3. Non-goals
 
@@ -152,6 +153,7 @@ Add:
 Add:
 
 - Learning signals
+- Conversation capability intelligence
 - Failure clustering
 - Improvement proposals
 - Evaluation gates
@@ -260,6 +262,29 @@ Required trace events include:
 - eval_case_started
 - eval_case_completed
 - evolution_proposal_created
+- conversation_capability_signal
+- capability_recommendation_created
+
+### FR6A: Conversation Capability Intelligence
+
+Concierge shall track derived metadata about conversation capabilities so the user can ask what conversations are common, what is working well, what is missing, what architecture area is blocking progress, and what capabilities should be built next.
+
+It shall:
+
+- Classify turns by topic, intent, capability, capability status, outcome signal, architecture area, confidence, and privacy class.
+- Store local metadata and redacted summaries by default, not raw conversation transcripts.
+- Treat correctly blocked unsafe requests as successful governance outcomes, not ordinary failures.
+- Rank recommendations by user value, frequency, failure severity, strategic fit, evaluator gap, effort, governance risk, privacy risk, and child-safety risk.
+- Produce proposal-only recommendations with evidence, uncertainty, evaluator needs, and rollback considerations.
+- Keep child protected signals minimized and guardian-appropriate.
+
+It shall not:
+
+- Implement capabilities automatically.
+- Grant approval or authority.
+- Write memory directly.
+- Dispatch agents or send externally.
+- Optimize for engagement over safety, privacy, and user value.
 
 ### FR7: Self-evolution
 

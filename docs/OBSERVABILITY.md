@@ -16,6 +16,7 @@ For each interaction, we should be able to answer:
 8. What response was produced?
 9. What latency and errors occurred?
 10. What should improve?
+11. Which conversation capabilities are common, working, missing, or blocked by architecture?
 
 ## 2. Signals
 
@@ -27,6 +28,7 @@ The system emits:
 - Evaluator reports
 - Privacy audit records
 - Evolution proposals
+- Conversation capability signals
 
 OpenTelemetry is the preferred standard for traces, metrics, and logs because it is vendor-neutral and supports multiple languages and destinations.
 
@@ -67,6 +69,8 @@ Every user turn has:
 | eval_case_started | evaluator | case_id |
 | eval_case_completed | evaluator | case_id, score |
 | evolution_proposal_created | evolution | proposal_id, risk_level |
+| conversation_capability_signal | capability_intelligence | conversation_id, turn_id, profile_mode, channel, topic_label, intent_label, capability_label, capability_status, outcome_signal, confidence, architecture_area, privacy_class |
+| capability_recommendation_created | capability_intelligence | recommendation_id, capability_label, architecture_area, priority_score, risk_level, evidence_count, suggested_next_step |
 
 ## 5. Metrics
 
@@ -79,6 +83,10 @@ Every user turn has:
 - unsafe_action_attempt_rate
 - governance_block_rate
 - stance_fit_rating
+- capability_success_rate
+- capability_gap_rate
+- capability_recommendation_acceptance_rate
+- correctly_blocked_request_rate
 
 ### Performance metrics
 
@@ -107,6 +115,7 @@ Every user turn has:
 - mic_enabled_sessions
 - child_profile_sessions
 - redaction_failure_count
+- raw_conversation_retention_enabled
 
 ## 6. Logs
 
@@ -129,6 +138,8 @@ Example:
   "reason_code": "architecture_review"
 }
 ```
+
+Capability intelligence logs must avoid raw user content by default. Store labels, counts, confidence, and trace references rather than transcripts.
 
 ## 7. Redaction policy
 
@@ -165,6 +176,16 @@ Minimum dashboards:
 6. Stance fit and corrections
 7. Privacy controls and capture state
 8. Evolution proposal status
+9. Conversation capability intelligence
+
+The Conversation Capability Intelligence dashboard should answer:
+
+- Most common topic, intent, and capability labels.
+- Capabilities with high success and low correction rates.
+- Missing or degraded capabilities grouped by architecture area.
+- Correctly blocked unsafe requests versus failed safe requests.
+- Recommendations ranked by value, effort, risk, and evaluator gap.
+- Child protected aggregates, minimized and separated from adult-owner aggregates.
 
 ## 10. Alerts
 

@@ -36,6 +36,7 @@ rectangle "Concierge Runtime" {
   component "Dialogue State" as Dialogue
   component "Interaction Stance Controller" as Stance
   component "Governance UX" as GovUX
+  component "Capability Intelligence" as CapIntel
   component "Napoleon Bridge" as Bridge
 }
 
@@ -69,6 +70,7 @@ TextUI --> Dialogue
 Dialogue --> Identity
 Identity --> Stance
 Stance --> GovUX
+Dialogue --> CapIntel
 GovUX --> Bridge
 Bridge --> Gov
 Gov --> Policy
@@ -77,6 +79,8 @@ Router --> Registry
 Router --> Memory
 CoS --> Gov
 Bridge --> Eval
+CapIntel --> Eval
+CapIntel --> Evolution
 Eval --> Evolution
 Evolution --> CoS
 
@@ -85,6 +89,7 @@ Buffer <-- VoiceUI
 Buffer <-- AvatarUI
 Buffer <-- Bridge
 Buffer <-- Stance
+Buffer <-- CapIntel
 
 @enduml
 ```
@@ -176,6 +181,34 @@ UI -> "Napoleon Bridge": governed request
 @enduml
 ```
 
+### Conversation Capability Intelligence sequence
+
+Conversation Capability Intelligence records derived metadata about conversation capability performance. It is local-first and proposal-only. It can explain common conversations, working capabilities, missing capabilities, architecture blockers, and recommended next capabilities, but it cannot implement changes, grant approval, write memory, dispatch agents, or send externally.
+
+```plantuml
+@startuml
+scale max 600 width
+
+actor User
+participant "Concierge UI" as UI
+participant "Dialogue State" as D
+participant "Capability Intelligence" as CI
+participant "Local Telemetry Buffer" as Buffer
+participant "Evaluator" as Eval
+participant "Napoleon Evolution Controller" as Evo
+
+User -> UI: asks or corrects Concierge
+UI -> D: normalize turn
+D -> CI: derived topic, intent, capability, outcome
+CI -> Buffer: conversation_capability_signal
+CI -> UI: aggregate answer or recommendation
+UI -> User: common, working, missing, next capability summary
+CI -> Eval: suggested evaluator case
+CI -> Evo: proposal-only recommendation
+
+@enduml
+```
+
 ## 5. Observability pipeline
 
 ```plantuml
@@ -229,6 +262,7 @@ rectangle "Telemetry Destinations" {
 - Resolves user profile.
 - Chooses interaction stance.
 - Asks for confirmation when governance requires it.
+- Tracks derived conversation capability signals and proposal-only improvement recommendations.
 - Sends governed requests to Napoleon.
 
 ### Napoleon Core
