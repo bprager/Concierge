@@ -1,16 +1,20 @@
 import { useState } from "react";
 import {
   buildGovernanceReviewState,
+  buildMemoryProposalReviewState,
   buildRehearsalPreview,
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
+  transitionMemoryProposalReviewState,
   validateChiefOfStaffDescriptor,
   type LocalProfile,
+  type MemoryProposalReviewState,
 } from "./contractBridge";
 import { sendToNapoleon } from "./napoleonBridge";
 import {
   describeGovernanceDecision,
   describeGovernanceReview,
+  describeMemoryProposalReview,
   summarizeRehearsalPreview,
 } from "./presentation";
 import { emitEvent, newTraceId } from "./telemetry";
@@ -25,6 +29,8 @@ interface PendingRehearsal {
   preview: ReturnType<typeof buildRehearsalPreview>;
   summary: ReturnType<typeof summarizeRehearsalPreview>;
   review: ReturnType<typeof describeGovernanceReview>;
+  memoryReviewState: MemoryProposalReviewState;
+  memoryReview: ReturnType<typeof describeMemoryProposalReview> | null;
 }
 
 export function App() {
@@ -43,6 +49,8 @@ export function App() {
   );
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
+  const [lastMemoryReviewState, setLastMemoryReviewState] = useState<MemoryProposalReviewState | null>(null);
+  const [lastMemoryReview, setLastMemoryReview] = useState<ReturnType<typeof describeMemoryProposalReview> | null>(null);
   const descriptorStatus = validateChiefOfStaffDescriptor(defaultChiefOfStaffDescriptor);
 
   function updateEndpoint(value: string) {
@@ -81,6 +89,8 @@ export function App() {
     const preview = buildRehearsalPreview(contract, content);
     const summary = summarizeRehearsalPreview(preview);
     const review = describeGovernanceReview(preview.governanceReview);
+    const memoryReviewState = preview.memoryProposal;
+    const memoryReview = memoryReviewState.status === "none" ? null : describeMemoryProposalReview(memoryReviewState);
 
     emitEvent("rehearsal_preview_created", {
       traceId,
@@ -89,9 +99,21 @@ export function App() {
       profile,
       requestId: preview.chiefOfStaffReviewPacket.requestId,
     });
-    setPendingRehearsal({ content, traceId, turnId, preview, summary, review });
+    if (memoryReview) {
+      emitEvent("memory_proposal_review_created", {
+        traceId,
+        conversationId,
+        turnId,
+        proposalId: memoryReviewState.proposalId,
+        memoryWritePerformed: memoryReviewState.memoryWritePerformed,
+        approvalCaptured: memoryReviewState.approvalCaptured,
+      });
+    }
+    setPendingRehearsal({ content, traceId, turnId, preview, summary, review, memoryReviewState, memoryReview });
     setLastDecision(null);
     setLastReview(null);
+    setLastMemoryReviewState(null);
+    setLastMemoryReview(null);
   }
 
   async function submit(rehearsal: PendingRehearsal | null = null) {
@@ -151,6 +173,15 @@ export function App() {
         auditId: response.auditEnvelope.audit_id,
         blockedEffects: response.governanceDecision.blocked_effects,
       });
+      const memoryContract = buildTextTurnContract({
+        message: content,
+        profile,
+        conversationId,
+        turnId,
+        traceId,
+        governanceOutcome: response.governanceDecision.outcome,
+      });
+      const memoryReviewState = buildMemoryProposalReviewState(memoryContract, content);
 
       emitEvent("response_generated", {
         traceId,
@@ -162,6 +193,21 @@ export function App() {
       });
       setLastDecision(decisionView);
       setLastReview(describeGovernanceReview(buildGovernanceReviewState(response.governanceDecision, profile)));
+      if (memoryReviewState.status === "none") {
+        setLastMemoryReviewState(null);
+        setLastMemoryReview(null);
+      } else {
+        setLastMemoryReviewState(memoryReviewState);
+        setLastMemoryReview(describeMemoryProposalReview(memoryReviewState));
+        emitEvent("memory_proposal_review_created", {
+          traceId,
+          conversationId,
+          turnId,
+          proposalId: memoryReviewState.proposalId,
+          memoryWritePerformed: memoryReviewState.memoryWritePerformed,
+          approvalCaptured: memoryReviewState.approvalCaptured,
+        });
+      }
       setMessages((m) => [
         ...m,
         {
@@ -216,6 +262,22 @@ export function App() {
     });
   }
 
+  function updatePendingMemoryReview(status: "acknowledged_locally" | "dismissed_locally") {
+    if (!pendingRehearsal) return;
+    const updated = transitionMemoryProposalReviewState(pendingRehearsal.memoryReviewState, status);
+    const memoryReview = describeMemoryProposalReview(updated);
+    setPendingRehearsal({ ...pendingRehearsal, memoryReviewState: updated, memoryReview });
+    emitEvent(status === "acknowledged_locally" ? "memory_proposal_acknowledged_locally" : "memory_proposal_dismissed_locally", {
+      traceId: pendingRehearsal.traceId,
+      conversationId,
+      turnId: pendingRehearsal.turnId,
+      proposalId: updated.proposalId,
+      memoryWritePerformed: updated.memoryWritePerformed,
+      approvalCaptured: updated.approvalCaptured,
+      localReview: updated.localReview,
+    });
+  }
+
   function acknowledgeLastReview() {
     if (!lastReview || !lastReview.canAcknowledge) return;
     setLastReview({
@@ -225,6 +287,21 @@ export function App() {
         "This local acknowledgement is not Napoleon approval. It does not execute side effects, write memory, send externally, or dispatch agents.",
       actionLabel: "Acknowledged locally",
       canAcknowledge: false,
+    });
+  }
+
+  function updateLastMemoryReview(status: "acknowledged_locally" | "dismissed_locally") {
+    if (!lastMemoryReviewState) return;
+    const updated = transitionMemoryProposalReviewState(lastMemoryReviewState, status);
+    setLastMemoryReviewState(updated);
+    setLastMemoryReview(describeMemoryProposalReview(updated));
+    emitEvent(status === "acknowledged_locally" ? "memory_proposal_acknowledged_locally" : "memory_proposal_dismissed_locally", {
+      traceId: updated.traceId,
+      conversationId,
+      proposalId: updated.proposalId,
+      memoryWritePerformed: updated.memoryWritePerformed,
+      approvalCaptured: updated.approvalCaptured,
+      localReview: updated.localReview,
     });
   }
 
@@ -340,6 +417,39 @@ export function App() {
         </section>
       ) : null}
 
+      {lastMemoryReview ? (
+        <section className="memory-review">
+          <div className="review-heading">
+            <strong>{lastMemoryReview.heading}</strong>
+            <span>{lastMemoryReview.body}</span>
+          </div>
+          <dl>
+            {lastMemoryReview.details.map((detail) => (
+              <div key={detail.label}>
+                <dt>{detail.label}</dt>
+                <dd>{detail.value}</dd>
+              </div>
+            ))}
+          </dl>
+          <div className="review-actions">
+            <button
+              className="secondary"
+              disabled={!lastMemoryReview.canAcknowledge}
+              onClick={() => updateLastMemoryReview("acknowledged_locally")}
+            >
+              {lastMemoryReview.actionLabel}
+            </button>
+            <button
+              className="secondary"
+              disabled={!lastMemoryReview.canDismiss}
+              onClick={() => updateLastMemoryReview("dismissed_locally")}
+            >
+              {lastMemoryReview.dismissLabel}
+            </button>
+          </div>
+        </section>
+      ) : null}
+
       {pendingRehearsal ? (
         <section className="rehearsal">
           <div className="rehearsal-heading">
@@ -393,6 +503,38 @@ export function App() {
               {pendingRehearsal.review.actionLabel}
             </button>
           </section>
+          {pendingRehearsal.memoryReview ? (
+            <section className="memory-review inline">
+              <div className="review-heading">
+                <strong>{pendingRehearsal.memoryReview.heading}</strong>
+                <span>{pendingRehearsal.memoryReview.body}</span>
+              </div>
+              <dl>
+                {pendingRehearsal.memoryReview.details.map((detail) => (
+                  <div key={detail.label}>
+                    <dt>{detail.label}</dt>
+                    <dd>{detail.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <div className="review-actions">
+                <button
+                  className="secondary"
+                  disabled={!pendingRehearsal.memoryReview.canAcknowledge}
+                  onClick={() => updatePendingMemoryReview("acknowledged_locally")}
+                >
+                  {pendingRehearsal.memoryReview.actionLabel}
+                </button>
+                <button
+                  className="secondary"
+                  disabled={!pendingRehearsal.memoryReview.canDismiss}
+                  onClick={() => updatePendingMemoryReview("dismissed_locally")}
+                >
+                  {pendingRehearsal.memoryReview.dismissLabel}
+                </button>
+              </div>
+            </section>
+          ) : null}
         </section>
       ) : null}
 

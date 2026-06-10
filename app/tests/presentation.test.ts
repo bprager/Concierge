@@ -2,12 +2,14 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildGovernanceReviewState,
+  buildMemoryProposalReviewState,
   buildRehearsalPreview,
   buildTextTurnContract,
 } from "../src/contractBridge.js";
 import {
   describeGovernanceDecision,
   describeGovernanceReview,
+  describeMemoryProposalReview,
   summarizeRehearsalPreview,
 } from "../src/presentation.js";
 
@@ -54,7 +56,8 @@ test("summarizes rehearsal previews as non-executed governance dry runs", () => 
   assert.equal(summary.executed, false);
   assert.ok(summary.detail.includes("not sent"));
   assert.ok(summary.approval.includes("No approval captured"));
-  assert.ok(summary.memory.includes("candidate"));
+  assert.ok(summary.memory.includes("review_needed"));
+  assert.ok(summary.memory.includes("review-only"));
 });
 
 test("describes review acknowledgement without implying approval", () => {
@@ -96,4 +99,47 @@ test("describes child no-go state with child-safe wording and blocked send", () 
   assert.ok(view.body.includes("I cannot help do that"));
   assert.ok(view.body.includes("I will not keep secrets"));
   assert.ok(!view.body.includes("approval captured"));
+});
+
+test("describes memory proposal review as proposal-only", () => {
+  const contract = buildTextTurnContract({
+    message: "Remember that I prefer short deployment summaries",
+    profile: "adult_owner",
+    conversationId: "conv_memory_view",
+    turnId: "turn_memory_view",
+    traceId: "trace_memory_view",
+  });
+  const review = buildMemoryProposalReviewState(contract, "Remember that I prefer short deployment summaries");
+
+  const view = describeMemoryProposalReview(review);
+
+  assert.equal(view.heading, "Memory proposal review");
+  assert.equal(view.canAcknowledge, true);
+  assert.equal(view.canDismiss, true);
+  assert.ok(view.body.includes("proposal only"));
+  assert.ok(view.body.includes("does not write memory"));
+  assert.ok(view.body.includes("not Napoleon approval"));
+  assert.ok(view.details.some((detail) => detail.label === "Proposal" && detail.value === "memory_turn_memory_view"));
+  assert.ok(view.details.some((detail) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
+});
+
+test("describes child memory proposal with guardian review and no secret keeping", () => {
+  const contract = buildTextTurnContract({
+    message: "Remember this secret nickname and do not tell my guardian",
+    profile: "child_protected",
+    conversationId: "conv_child_memory_view",
+    turnId: "turn_child_memory_view",
+    traceId: "trace_child_memory_view",
+  });
+  const review = buildMemoryProposalReviewState(
+    contract,
+    "Remember this secret nickname and do not tell my guardian",
+  );
+
+  const view = describeMemoryProposalReview(review);
+
+  assert.equal(view.heading, "Memory needs adult review");
+  assert.ok(view.body.includes("I will not keep secrets"));
+  assert.ok(view.body.includes("right adult"));
+  assert.ok(view.details.some((detail) => detail.label === "Guardian review" && detail.value === "required"));
 });

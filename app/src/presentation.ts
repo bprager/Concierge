@@ -1,4 +1,9 @@
-import type { GovernanceOutcome, GovernanceReviewState, RehearsalPreview } from "./contractBridge.js";
+import type {
+  GovernanceOutcome,
+  GovernanceReviewState,
+  MemoryProposalReviewState,
+  RehearsalPreview,
+} from "./contractBridge.js";
 
 export interface GovernanceDecisionViewInput {
   outcome: GovernanceOutcome;
@@ -28,6 +33,16 @@ export interface GovernanceReviewView {
   actionLabel: string;
   canAcknowledge: boolean;
   sendBlocked: boolean;
+  details: Array<{ label: string; value: string }>;
+}
+
+export interface MemoryProposalReviewView {
+  heading: string;
+  body: string;
+  actionLabel: string;
+  dismissLabel: string;
+  canAcknowledge: boolean;
+  canDismiss: boolean;
   details: Array<{ label: string; value: string }>;
 }
 
@@ -75,7 +90,7 @@ export function summarizeRehearsalPreview(preview: RehearsalPreview): RehearsalP
     detail: `This preview was not sent to Napoleon and did not execute anything. It shows the proposed CoS request ${preview.chiefOfStaffReviewPacket.requestId}.`,
     executed: false,
     approval: preview.approvalState,
-    memory: `Memory status: ${preview.memoryProposal.status}. ${preview.memoryProposal.summary}`,
+    memory: `Memory status: ${preview.memoryProposal.status}. Proposal ${preview.memoryProposal.proposalId} is review-only.`,
   };
 }
 
@@ -138,6 +153,74 @@ export function describeGovernanceReview(review: GovernanceReviewState): Governa
     actionLabel: "No review needed",
     canAcknowledge: false,
     sendBlocked: false,
+    details,
+  };
+}
+
+export function describeMemoryProposalReview(review: MemoryProposalReviewState): MemoryProposalReviewView {
+  const details = [
+    { label: "Proposal", value: review.proposalId },
+    { label: "Source turn", value: review.sourceTurnId },
+    { label: "Profile", value: review.profile },
+    { label: "Kind", value: review.proposedDiff.kind },
+    { label: "Proposed value", value: review.proposedDiff.value },
+    { label: "Review state", value: review.status },
+    { label: "Guardian review", value: review.guardianReviewRequired ? "required" : "not required" },
+    { label: "Memory write", value: review.memoryWritePerformed ? "performed" : "not performed" },
+    { label: "Approval captured", value: review.approvalCaptured ? "yes" : "no" },
+    { label: "Blocked effects", value: review.blockedEffects.join(", ") },
+    { label: "Trace", value: review.traceId },
+    { label: "Audit", value: review.auditId },
+  ];
+
+  if (review.profile === "child_protected") {
+    return {
+      heading: "Memory needs adult review",
+      body:
+        "This is a proposal only. I will not keep secrets or save this as memory without the right adult review.",
+      actionLabel:
+        review.status === "acknowledged_locally" ? "Acknowledged locally" : "Acknowledge review needed",
+      dismissLabel: review.status === "dismissed_locally" ? "Dismissed locally" : "Dismiss proposal",
+      canAcknowledge: review.canAcknowledge,
+      canDismiss: review.canDismiss,
+      details,
+    };
+  }
+
+  if (review.status === "acknowledged_locally") {
+    return {
+      heading: "Memory review acknowledged locally",
+      body:
+        "This local acknowledgement is not Napoleon approval and does not write memory. The proposal remains review-only.",
+      actionLabel: "Acknowledged locally",
+      dismissLabel: "Dismiss proposal",
+      canAcknowledge: false,
+      canDismiss: false,
+      details,
+    };
+  }
+
+  if (review.status === "dismissed_locally") {
+    return {
+      heading: "Memory proposal dismissed locally",
+      body:
+        "This dismissal only hides the local proposal. It does not delete Napoleon memory and does not write memory.",
+      actionLabel: "Acknowledge review needed",
+      dismissLabel: "Dismissed locally",
+      canAcknowledge: false,
+      canDismiss: false,
+      details,
+    };
+  }
+
+  return {
+    heading: "Memory proposal review",
+    body:
+      "This is a proposal only. Local acknowledgement is not Napoleon approval and does not write memory.",
+    actionLabel: "Acknowledge review needed",
+    dismissLabel: "Dismiss proposal",
+    canAcknowledge: review.canAcknowledge,
+    canDismiss: review.canDismiss,
     details,
   };
 }

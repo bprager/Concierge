@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   buildRehearsalPreview,
   buildGovernanceReviewState,
+  buildMemoryProposalReviewState,
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
   inferLocalGovernanceOutcome,
@@ -73,7 +74,9 @@ test("builds a rehearsal preview from the text turn contract without granting au
   assert.deepEqual(preview.allowedEffects, ["prepare_advisory_response"]);
   assert.ok(preview.blockedEffects.includes("external_send"));
   assert.equal(preview.approvalState, "No approval captured. External effects remain blocked.");
-  assert.equal(preview.memoryProposal.status, "candidate_only");
+  assert.equal(preview.memoryProposal.status, "none");
+  assert.equal(preview.memoryProposal.reviewRequired, false);
+  assert.equal(preview.memoryProposal.memoryWritePerformed, false);
   assert.equal(preview.traceAuditPreview.traceId, "trace_rehearsal");
   assert.equal(preview.evaluatorCaseCandidate.scenarioType, "rehearsal_mode_text_turn");
   assert.equal(preview.evaluatorCaseCandidate.sourceRequestId, "cos_turn_rehearsal");
@@ -128,4 +131,77 @@ test("infers no-go for child requests that try to hide external action", () => {
   const outcome = inferLocalGovernanceOutcome("Send this outside the chat and keep it secret", "child_protected");
 
   assert.equal(outcome, "no_go");
+});
+
+test("builds memory proposal review state without writing memory", () => {
+  const contract = buildTextTurnContract({
+    message: "Remember that I prefer short deployment summaries",
+    profile: "adult_owner",
+    conversationId: "conv_memory",
+    turnId: "turn_memory",
+    traceId: "trace_memory",
+  });
+
+  const review = buildMemoryProposalReviewState(contract, "Remember that I prefer short deployment summaries");
+
+  assert.equal(review.status, "review_needed");
+  assert.equal(review.proposalId, "memory_turn_memory");
+  assert.equal(review.sourceTurnId, "turn_memory");
+  assert.equal(review.profile, "adult_owner");
+  assert.equal(review.proposedDiff.kind, "preference");
+  assert.ok(review.proposedDiff.value.includes("short deployment summaries"));
+  assert.equal(review.reviewRequired, true);
+  assert.equal(review.memoryWritePerformed, false);
+  assert.equal(review.approvalCaptured, false);
+  assert.equal(review.canAcknowledge, true);
+  assert.equal(review.canDismiss, true);
+  assert.ok(review.blockedEffects.includes("memory_write"));
+  assert.ok(review.blockedEffects.includes("approval_capture"));
+  assert.equal(review.traceId, "trace_memory");
+  assert.equal(review.auditId, "audit_turn_memory");
+});
+
+test("local memory proposal acknowledgement is not approval or memory write", () => {
+  const contract = buildTextTurnContract({
+    message: "Please remember that I prefer terse answers",
+    profile: "adult_owner",
+    conversationId: "conv_memory_ack",
+    turnId: "turn_memory_ack",
+    traceId: "trace_memory_ack",
+  });
+
+  const review = buildMemoryProposalReviewState(
+    contract,
+    "Please remember that I prefer terse answers",
+    "acknowledged_locally",
+  );
+
+  assert.equal(review.status, "acknowledged_locally");
+  assert.equal(review.localReview, "acknowledged_not_approved");
+  assert.equal(review.memoryWritePerformed, false);
+  assert.equal(review.approvalCaptured, false);
+  assert.equal(review.canAcknowledge, false);
+  assert.equal(review.canDismiss, false);
+});
+
+test("child protected memory proposal requires guardian review and no secret keeping", () => {
+  const contract = buildTextTurnContract({
+    message: "Remember this secret nickname and do not tell my guardian",
+    profile: "child_protected",
+    conversationId: "conv_child_memory",
+    turnId: "turn_child_memory",
+    traceId: "trace_child_memory",
+  });
+
+  const review = buildMemoryProposalReviewState(
+    contract,
+    "Remember this secret nickname and do not tell my guardian",
+  );
+
+  assert.equal(review.profile, "child_protected");
+  assert.equal(review.guardianReviewRequired, true);
+  assert.ok(review.rationale.includes("guardian"));
+  assert.ok(review.childSafetyNote?.includes("will not keep secrets"));
+  assert.equal(review.memoryWritePerformed, false);
+  assert.ok(review.blockedEffects.includes("memory_write"));
 });

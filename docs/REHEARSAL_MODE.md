@@ -13,7 +13,7 @@ This is useful for:
 - Verifying what Concierge understood.
 - Seeing which Napoleon and Chief of Staff contracts would be used.
 - Spotting blocked side effects early.
-- Treating memory changes as review-only candidates.
+- Treating memory changes as proposal-only review items.
 - Turning interesting or failed turns into evaluator scenarios.
 
 ## Preview Contents
@@ -38,17 +38,21 @@ Sending an advisory request is a separate user action after the preview exists. 
 
 If the rehearsed turn is `no_go` or denied, Concierge blocks the send action. If the turn is `requires_review`, Concierge shows a review panel. A local acknowledgement can record that the review was seen, but it is not Napoleon approval and does not grant authority.
 
+If the turn looks like a memory preference or profile note, Concierge shows a memory proposal review panel. Acknowledging or dismissing that panel is local only: it does not write memory, capture approval, send externally, or append a Napoleon audit record.
+
 ## Privacy And Safety
 
 - Raw text stays local during preview.
 - No raw audio or video is involved.
-- Memory is shown only as a candidate for review.
+- Memory is shown only as a proposal for review.
 - Child protected mode keeps blocked effects visible and does not allow secret-keeping or external action.
 - A preview cannot be used as evidence that an action was approved.
 
 ## Observability
 
 The app emits `rehearsal_preview_created` with trace, conversation, turn, profile, and request identifiers. This event records that a preview was created, not that any external action happened.
+
+For memory proposals, the app emits local `memory_proposal_review_created`, `memory_proposal_acknowledged_locally`, or `memory_proposal_dismissed_locally` events. These events include proposal and trace identifiers and explicitly record that no memory write or approval capture occurred.
 
 ## Evaluator Use
 
@@ -64,3 +68,5 @@ The evaluator includes four Rehearsal Mode scenarios:
 Representative fixtures live in `examples/rehearsal_evaluator_cases.json`.
 
 The related governance review UI scenario is `GOVERNANCE-REVIEW-001`.
+
+The related memory proposal review scenario is `MEMORY-PROPOSAL-001`.

@@ -114,11 +114,7 @@ export interface RehearsalPreview {
   allowedEffects: string[];
   blockedEffects: string[];
   approvalState: string;
-  memoryProposal: {
-    status: "candidate_only";
-    summary: string;
-    reviewRequired: true;
-  };
+  memoryProposal: MemoryProposalReviewState;
   traceAuditPreview: {
     traceId: string;
     requestId: string;
@@ -133,6 +129,32 @@ export interface RehearsalPreview {
     expectedBlockedEffects: string[];
   };
   governanceReview: GovernanceReviewState;
+}
+
+export type MemoryProposalStatus = "none" | "review_needed" | "acknowledged_locally" | "dismissed_locally";
+export type MemoryProposalKind = "preference" | "profile_note" | "unknown";
+
+export interface MemoryProposalReviewState {
+  status: MemoryProposalStatus;
+  proposalId: string;
+  sourceTurnId: string;
+  profile: LocalProfile;
+  proposedDiff: {
+    kind: MemoryProposalKind;
+    value: string;
+  };
+  rationale: string;
+  reviewRequired: boolean;
+  guardianReviewRequired: boolean;
+  childSafetyNote?: string;
+  blockedEffects: string[];
+  traceId: string;
+  auditId: string;
+  canAcknowledge: boolean;
+  canDismiss: boolean;
+  memoryWritePerformed: false;
+  approvalCaptured: false;
+  localReview?: "acknowledged_not_approved" | "dismissed_not_deleted";
 }
 
 export type GovernanceReviewStatus =
@@ -180,6 +202,8 @@ const DEFAULT_BLOCKED_EFFECTS = [
   "service_control",
   "remediation",
 ];
+
+const MEMORY_TRIGGER_PATTERN = /\b(remember|prefer|preference|call me|nickname|my name is|i like|i usually)\b/i;
 
 export const defaultChiefOfStaffDescriptor: ChiefOfStaffDescriptor = {
   schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
@@ -230,6 +254,91 @@ export function inferLocalGovernanceOutcome(message: string, profile: LocalProfi
   }
 
   return "allow_prepare_only";
+}
+
+function sourceTurnIdFromContract(contract: TextTurnContract): string {
+  return contract.traceEnvelope.request_id.replace(/^cos_/, "");
+}
+
+function inferMemoryProposalKind(message: string): MemoryProposalKind {
+  const lower = message.toLowerCase();
+  if (/\b(prefer|preference|i like|i usually)\b/.test(lower)) return "preference";
+  if (/\b(call me|nickname|my name is)\b/.test(lower)) return "profile_note";
+  if (MEMORY_TRIGGER_PATTERN.test(message)) return "unknown";
+  return "unknown";
+}
+
+function extractMemoryProposalValue(message: string): string {
+  const trimmed = message.trim().replace(/\s+/g, " ");
+  const rememberMatch = trimmed.match(/\bremember(?: that)?\s+(.+)/i);
+  if (rememberMatch?.[1]) return rememberMatch[1].trim();
+  return trimmed;
+}
+
+export function hasMemoryProposalCandidate(message: string): boolean {
+  return MEMORY_TRIGGER_PATTERN.test(message);
+}
+
+export function buildMemoryProposalReviewState(
+  contract: TextTurnContract,
+  message: string,
+  status: MemoryProposalStatus = hasMemoryProposalCandidate(message) ? "review_needed" : "none",
+): MemoryProposalReviewState {
+  const sourceTurnId = sourceTurnIdFromContract(contract);
+  const profile = localProfileFromNapoleonMode(contract.profileMode);
+  const isChild = profile === "child_protected";
+  const hasCandidate = hasMemoryProposalCandidate(message);
+  const activeStatus = hasCandidate ? status : "none";
+  const localReview =
+    activeStatus === "acknowledged_locally"
+      ? "acknowledged_not_approved"
+      : activeStatus === "dismissed_locally"
+        ? "dismissed_not_deleted"
+        : undefined;
+
+  return {
+    status: activeStatus,
+    proposalId: `memory_${sourceTurnId}`,
+    sourceTurnId,
+    profile,
+    proposedDiff: {
+      kind: hasCandidate ? inferMemoryProposalKind(message) : "unknown",
+      value: hasCandidate ? extractMemoryProposalValue(message) : "No memory candidate detected.",
+    },
+    rationale: isChild
+      ? "Child protected memory is minimized and requires guardian review before anything can be stored."
+      : "Concierge identified a possible preference or profile note for review only.",
+    reviewRequired: hasCandidate,
+    guardianReviewRequired: isChild && hasCandidate,
+    childSafetyNote: isChild
+      ? "I will not keep secrets or save this as memory without the right adult review."
+      : undefined,
+    blockedEffects: contract.blockedEffects.filter((effect) =>
+      ["memory_write", "approval_capture", "external_send", "audit_append"].includes(effect),
+    ),
+    traceId: contract.traceEnvelope.trace_id,
+    auditId: contract.auditEnvelope.audit_id,
+    canAcknowledge: activeStatus === "review_needed",
+    canDismiss: activeStatus === "review_needed",
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    localReview,
+  };
+}
+
+export function transitionMemoryProposalReviewState(
+  review: MemoryProposalReviewState,
+  status: Extract<MemoryProposalStatus, "acknowledged_locally" | "dismissed_locally">,
+): MemoryProposalReviewState {
+  return {
+    ...review,
+    status,
+    canAcknowledge: false,
+    canDismiss: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    localReview: status === "acknowledged_locally" ? "acknowledged_not_approved" : "dismissed_not_deleted",
+  };
 }
 
 function authorityTierForOutcome(outcome: GovernanceOutcome): AuthorityTier {
@@ -361,11 +470,7 @@ export function buildRehearsalPreview(contract: TextTurnContract, message: strin
     allowedEffects: ["prepare_advisory_response"],
     blockedEffects: contract.blockedEffects,
     approvalState: "No approval captured. External effects remain blocked.",
-    memoryProposal: {
-      status: "candidate_only",
-      summary: "Potential preference or memory changes stay as review-only candidates.",
-      reviewRequired: true,
-    },
+    memoryProposal: buildMemoryProposalReviewState(contract, message),
     traceAuditPreview: {
       traceId: contract.traceEnvelope.trace_id,
       requestId: contract.traceEnvelope.request_id,

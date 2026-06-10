@@ -51,7 +51,17 @@ Local acknowledgement is not approval. It records that the review state was seen
 
 Child protected mode uses stricter wording. It must not imply secret-keeping, hidden external action, or guardian-bypassing approval.
 
-## 4. Privacy defaults
+## 4. Memory proposal review
+
+Text Concierge may identify possible preferences or profile notes from a turn and show them as memory proposals.
+
+Every memory proposal review must show proposal ID, source turn, user profile, proposed value, rationale, review state, blocked effects, trace ID, and audit ID.
+
+Memory proposal review is proposal-only. Local acknowledgement records that the proposal was seen, and local dismissal hides the local proposal, but neither action writes memory, captures approval, appends Napoleon audit records, or changes profile authority.
+
+Child protected memory proposals require guardian-appropriate review and must use wording that rejects secret-keeping.
+
+## 5. Privacy defaults
 
 - Camera off by default
 - Microphone off by default
@@ -61,7 +71,7 @@ Child protected mode uses stricter wording. It must not imply secret-keeping, hi
 - Child data minimized
 - Telemetry redacted before export
 
-## 5. Child mode rules
+## 6. Child mode rules
 
 Child protected mode must:
 
@@ -74,7 +84,7 @@ Child protected mode must:
 - Minimize memory
 - Disable camera affect estimation by default unless explicitly approved
 
-## 6. Avatar safety
+## 7. Avatar safety
 
 Avatar mode must:
 

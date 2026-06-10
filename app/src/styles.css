@@ -177,6 +177,48 @@ article dd {
   overflow-wrap: anywhere;
 }
 
+.memory-review {
+  margin-top: 16px;
+  padding: 12px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+}
+
+.memory-review.inline {
+  margin-top: 12px;
+  background: #ffffff;
+}
+
+.memory-review dl {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+  font-size: 0.88rem;
+}
+
+.memory-review dl div {
+  display: grid;
+  grid-template-columns: minmax(140px, max-content) 1fr;
+  gap: 8px;
+}
+
+.memory-review dt {
+  color: #1d4ed8;
+  font-weight: 650;
+}
+
+.memory-review dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .rehearsal {
   margin-top: 16px;
   padding: 12px;
@@ -276,6 +318,10 @@ button:disabled {
   }
 
   .review dl div {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-review dl div {
     grid-template-columns: 1fr;
   }
 }
