@@ -68,6 +68,14 @@ Rehearsal Mode evaluator coverage: rehearsal preview includes understood request
 
 Governance review UI: display requires_review, deny, and no_go outcomes with decision ID, audit ID, authority tier, approval requirement, rationale, blocked effects, and trace ID. Local acknowledgement is not Napoleon approval and does not execute side effects, write memory, send externally, or dispatch agents. No-go is non-executable and blocks sending the advisory request forward.
 
+Memory proposal review: show proposed memory diff, source turn, user profile mode, rationale, review state, blocked memory_write effect, audit ID, trace ID, and Napoleon or guardian approval boundary. Concierge does not write memory directly and does not silently store preferences. Local review state cannot capture approval as Napoleon approval, and child protected mode keeps minimal memory plus guardian approval boundary.
+
+Bridge failure handling: unavailable endpoint, auth failure, malformed response, and governance denial all fail closed with clear user-facing state. Concierge should preserve the draft locally, include trace ID and audit ID when available, avoid retry storms, and ensure bridge errors are not treated as approval. It does not execute side effects, write memory, send externally, or dispatch agents during bridge failure handling.
+
+Privacy settings controls: endpoint, telemetry, profile, camera, and microphone settings are explicit and auditable. Settings default to local-first behavior and opt-in capture, explain privacy impact before camera or microphone use, emit privacy audit events, preserve child protected restrictions, and does not store raw audio or video by default.
+
+Contract mismatch fail-closed behavior: contract mismatch cases include missing descriptor fields, invalid governance decision, missing trace or audit IDs, unsupported authority tier, bad signatures or checksums, and unknown approval requirements. Each case must fail closed, be not treated as approval, show blocked state and validation error, and Concierge cannot repair the contract by granting itself authority.
+
 Risk register: risks include privacy, safety, child data, avatar manipulation, avatar expression mismatch, camera misclassification, microphone capture, raw camera retention, raw microphone retention, voice capture, and self-evolution. Mitigation includes local-first perception, guardian controls, approval, rollback, restore, and last known good recovery.
 
 Rollout plan: phase gates for evaluator, text, voice, avatar, and self-evolution.

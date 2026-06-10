@@ -13,7 +13,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Artifact | Current state |
 |---|---|
 | Runner | `evaluator/eval_runner.py`, supports `stub` and `http` modes |
-| Scenarios | 11 scenarios in `evaluator/scenarios.yaml`, including 4 Rehearsal Mode scenarios and 1 governance review UI scenario |
+| Scenarios | 15 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, privacy settings controls, and contract mismatch fail-closed coverage |
 | Rubric | 10 weighted dimensions in `evaluator/rubrics.yaml` |
 | Hard fails | 5 hard fail rules |
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
@@ -27,7 +27,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 The existing stub report at `evaluator/reports/latest.json` shows:
 
 - Mode: `stub`
-- Scenario count: 11
+- Scenario count: 15
 - Score total: 97.5
 - Hard failures: 0
 - Missing artifacts: 0
@@ -43,7 +43,7 @@ The evaluator can check for the presence of important concepts. It cannot yet ju
 Specific limitations:
 
 - Keyword matching can reward shallow mentions.
-- There are too few scenarios for the backlog target.
+- The suite now meets the backlog target of at least 15 scenarios, but the cases are still deterministic artifact checks.
 - There are no negative tests that assert unsafe designs fail.
 - There is no regression comparison.
 - There is no human review artifact.
@@ -54,28 +54,28 @@ Specific limitations:
 
 ## Scenario Gaps
 
-Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, Rehearsal Mode previews for adult owner, child protected, guest/collaborator, adversarial requests, and governance review UI behavior for local acknowledgement and no-go states.
+Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, Rehearsal Mode previews for adult owner, child protected, guest/collaborator, adversarial requests, governance review UI behavior, memory proposal review, live bridge failure handling, local privacy settings controls, and contract mismatch fail-closed behavior.
 
 Missing scenario groups:
 
 1. Sensitive data access request.
-2. Memory write proposal and rejection.
+2. Additional memory write rejection variants beyond the first memory proposal review scenario.
 3. Child user asking for secret-keeping.
 4. Child user requesting an external action.
 5. Guest/collaborator access isolation.
-6. Bridge error and degraded Napoleon availability.
+6. Additional degraded Napoleon availability variants beyond the first bridge failure scenario.
 7. Incomplete trace detection.
 8. Missing governance decision detection.
 9. Unsafe direct tool execution proposal.
 10. Agent registry routing explanation.
 11. Regression from a previous accepted design.
 12. Telemetry redaction failure.
-13. Camera/microphone opt-in violation.
+13. Additional camera/microphone opt-in violation variants beyond the first privacy settings scenario.
 14. Self-evolution proposal without rollback.
 15. Avatar behavior that implies authority.
 16. Voice always-on capture violation.
 17. License/privacy publishing readiness.
-18. Chief of Staff descriptor discovery and fail-closed cache behavior.
+18. Additional Chief of Staff descriptor discovery and fail-closed cache behavior variants beyond the first contract mismatch scenario.
 19. Agent manifest missing `chief_of_staff_discovery`.
 20. Governance decision missing `decision_id`, `audit_id`, `blocked_effects`, or `evidence_links`.
 21. Local `child_protected` profile not mapped to Napoleon `child_protected_user`.
@@ -179,9 +179,9 @@ Missing or weak report fields:
 
 Before treating the evaluator as a phase gate:
 
-1. Expand to at least 15 scenarios.
-2. Add negative scenarios for unsafe behavior.
-3. Add regression comparison.
+1. Add more negative scenarios for unsafe behavior.
+2. Add regression comparison.
+3. Add regression baseline storage for accepted reports.
 4. Add schema validation for reports and examples.
 5. Add trace completeness checks.
 6. Add governance-specific hard fails.

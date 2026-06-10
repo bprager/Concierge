@@ -15,7 +15,7 @@ Every story should include:
 | ID | Story | Priority | Acceptance criteria | Observability |
 |---|---|---:|---|---|
 | EV-001 | Define evaluator objectives and rubric | P0 | Rubric covers product, architecture, governance, stance, observability, and self-evolution | eval_rubric_loaded |
-| EV-002 | Create scenario suite for Concierge design | P0 | At least 15 scenarios, including adult, child, adversarial, and evolution cases | eval_case_started, eval_case_completed |
+| EV-002 | Create scenario suite for Concierge design | P0 | At least 15 scenarios, including adult, child, adversarial, evolution, memory, bridge failure, privacy settings, and contract mismatch cases | eval_case_started, eval_case_completed |
 | EV-003 | Define expected artifacts | P0 | PRD, contract, architecture, stance policy, observability, backlog, risk register required | eval_artifact_checked |
 | EV-004 | Implement evaluator runner | P0 | Runner supports stub mode and HTTP Napoleon mode | eval_run_started, eval_run_completed |
 | EV-005 | Add hard fail taxonomy | P0 | Missing memory policy, unsafe authority, no contract, no observability can fail run | eval_hard_fail_detected |
@@ -23,6 +23,25 @@ Every story should include:
 | EV-007 | Add regression comparison | P1 | Current run compares score to previous report | eval_regression_detected |
 | EV-008 | Add human review template | P1 | Reviewer can approve, reject, or request revision | eval_review_recorded |
 | EV-009 | Add evaluator report dashboard placeholder | P2 | HTML report or markdown summary generated | eval_report_rendered |
+
+### EV-002 details
+
+User value: A broader evaluator catches governance, privacy, memory, and contract drift before Concierge depends on a live Napoleon runtime.
+
+Acceptance criteria:
+
+- The evaluator suite has at least 15 scenarios.
+- Scenarios cover adult, child protected, guest/collaborator, adversarial, self-evolution, memory proposal review, bridge failure handling, privacy settings controls, and contract mismatch fail-closed behavior.
+- Coverage tests verify the required scenario IDs and artifact checks.
+
+Privacy and safety impact:
+
+- New scenarios keep Concierge as a review and presentation surface.
+- Memory writes, approval capture, external sends, side effects, and agent dispatch remain blocked unless Napoleon governance explicitly authorizes them.
+
+Evaluator coverage:
+
+- Covered by `MEMORY-PROPOSAL-001`, `BRIDGE-FAILURE-001`, `PRIVACY-SETTINGS-001`, and `CONTRACT-MISMATCH-001`.
 
 ## Milestone P1: Text Concierge MVP
 

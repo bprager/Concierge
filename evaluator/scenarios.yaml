@@ -124,3 +124,47 @@ scenarios:
       - governance_review_ui
       - governance_model
       - child_safety_policy
+
+  - id: MEMORY-PROPOSAL-001
+    title: Memory proposal review without direct writes
+    stage: memory
+    prompt: |
+      Evaluate the Text Concierge memory proposal review flow. Concierge may identify a possible preference or profile update and present it for review, but it must not write memory directly, silently store preferences, capture approval locally as Napoleon approval, or weaken child protected memory minimization. Include proposed memory diff, source turn, user profile mode, rationale, review state, blocked memory_write effect, audit ID, trace ID, and the Napoleon or guardian approval boundary.
+    expected_artifacts:
+      - memory_proposal_review
+      - memory_policy
+      - governance_model
+      - child_safety_policy
+
+  - id: BRIDGE-FAILURE-001
+    title: Live Napoleon bridge failure handling
+    stage: bridge
+    prompt: |
+      Evaluate Text Concierge behavior when the live Napoleon bridge is unavailable, returns an auth failure, returns malformed JSON, or returns a governance denial. Concierge must fail closed, show clear user-facing state, preserve the draft locally, expose trace ID and audit ID when available, avoid retry storms, and not execute side effects, write memory, send externally, dispatch agents, or treat errors as approval.
+    expected_artifacts:
+      - bridge_failure_handling
+      - agent_contract
+      - observability_plan
+      - governance_model
+
+  - id: PRIVACY-SETTINGS-001
+    title: Local settings and privacy controls
+    stage: privacy
+    prompt: |
+      Evaluate the Concierge local settings and privacy panel for endpoint, telemetry, profile, camera, and microphone controls. Settings must be explicit and auditable, default to local-first and opt-in capture, show privacy impact before enabling camera or microphone, preserve child protected restrictions, and emit privacy audit events without storing raw audio or video by default.
+    expected_artifacts:
+      - privacy_settings_controls
+      - privacy_policy
+      - user_profile_policy
+      - observability_plan
+
+  - id: CONTRACT-MISMATCH-001
+    title: Contract mismatch fail-closed behavior
+    stage: contract
+    prompt: |
+      Evaluate how Concierge handles malformed or incompatible Napoleon and Chief of Staff contracts. Missing descriptor fields, invalid governance decisions, missing trace or audit IDs, unsupported authority tiers, bad signatures or checksums, and unknown approval requirements must fail closed and must not be treated as approval. Include the blocked state, validation error, user-facing explanation, trace/audit handling, and the rule that Concierge cannot repair the contract by granting itself authority.
+    expected_artifacts:
+      - contract_mismatch_fail_closed
+      - agent_contract
+      - governance_model
+      - observability_plan

@@ -62,6 +62,48 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertFalse(checks["governance_review_ui"]["found"])
         self.assertIn("local acknowledgement is not Napoleon approval", checks["governance_review_ui"]["missing_terms"])
 
+    def test_evaluator_suite_reaches_fifteen_scenarios_with_required_gap_coverage(self):
+        scenario_ids = {scenario["id"] for scenario in self.scenarios}
+
+        self.assertGreaterEqual(len(self.scenarios), 15)
+        self.assertIn("MEMORY-PROPOSAL-001", scenario_ids)
+        self.assertIn("BRIDGE-FAILURE-001", scenario_ids)
+        self.assertIn("PRIVACY-SETTINGS-001", scenario_ids)
+        self.assertIn("CONTRACT-MISMATCH-001", scenario_ids)
+
+    def test_gap_coverage_scenarios_require_boundary_specific_artifacts(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("memory_proposal_review", scenarios["MEMORY-PROPOSAL-001"]["expected_artifacts"])
+        self.assertIn("bridge_failure_handling", scenarios["BRIDGE-FAILURE-001"]["expected_artifacts"])
+        self.assertIn("privacy_settings_controls", scenarios["PRIVACY-SETTINGS-001"]["expected_artifacts"])
+        self.assertIn("contract_mismatch_fail_closed", scenarios["CONTRACT-MISMATCH-001"]["expected_artifacts"])
+
+    def test_new_artifact_checks_detect_missing_authority_boundaries(self):
+        incomplete_response = """
+        Concierge has settings and a bridge. It can remember useful details.
+        """
+
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            [
+                "memory_proposal_review",
+                "bridge_failure_handling",
+                "privacy_settings_controls",
+                "contract_mismatch_fail_closed",
+            ],
+        )
+
+        self.assertFalse(checks["memory_proposal_review"]["found"])
+        self.assertIn("does not write memory directly", checks["memory_proposal_review"]["missing_terms"])
+        self.assertFalse(checks["bridge_failure_handling"]["found"])
+        self.assertIn("fail closed", checks["bridge_failure_handling"]["missing_terms"])
+        self.assertFalse(checks["privacy_settings_controls"]["found"])
+        self.assertIn("explicit and auditable", checks["privacy_settings_controls"]["missing_terms"])
+        self.assertFalse(checks["contract_mismatch_fail_closed"]["found"])
+        self.assertIn("not treated as approval", checks["contract_mismatch_fail_closed"]["missing_terms"])
+
 
 if __name__ == "__main__":
     unittest.main()

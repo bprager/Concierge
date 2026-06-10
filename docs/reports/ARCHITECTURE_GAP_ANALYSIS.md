@@ -100,7 +100,7 @@ Create a trace contract that can be validated by tests before the UI grows.
 Current state:
 
 - The docs describe evaluator quality gates, hard fails, regression, reports, and human review.
-- The implementation is a deterministic keyword/artifact checker with 11 scenarios, including Rehearsal Mode and governance review UI coverage.
+- The implementation is a deterministic keyword/artifact checker with 15 scenarios, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, privacy settings controls, and contract mismatch fail-closed coverage.
 
 Missing:
 
@@ -161,7 +161,7 @@ Keep self-evolution proposal-only. Do not build runtime adaptation until evaluat
 
 | Area | Inconsistency | Recommendation |
 |---|---|---|
-| Evaluator scenarios | Backlog asks for at least 15; current suite has 11. | Add at least four more scenarios before using evaluator for phase gates. |
+| Evaluator mechanics | The suite now meets the 15-scenario breadth target, but remains deterministic keyword/artifact checking. | Add regression comparison, human review, negative failure fixtures, and live Napoleon baseline checks before using evaluator for phase gates. |
 | Evaluator reports | Docs mention regressions; schema/runner do not emit them. | Add regression fields or revise docs. |
 | Authentication | PRD requires authenticated local bridge; OpenAPI does not specify auth. | Add auth scheme to OpenAPI. |
 | Observability | Required events are broad; sample trace and telemetry helper are minimal. | Add trace completeness tests. |

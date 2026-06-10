@@ -118,6 +118,9 @@ The initial runner supports:
 - YAML rubric
 - JSON report output
 - Rehearsal Mode scenarios for adult, child protected, guest/collaborator, and adversarial preview paths
+- Governance review, memory proposal review, bridge failure, privacy settings, and contract mismatch fail-closed scenarios
+
+Current local suite size: 15 scenarios. Stub mode is still a deterministic repository health check; live Napoleon quality requires `http` mode with a configured `NAPOLEON_EVAL_ENDPOINT`.
 
 See:
 
