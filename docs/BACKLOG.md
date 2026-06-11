@@ -159,6 +159,7 @@ Acceptance criteria:
 - Configured Napoleon base URLs resolve to canonical bridge paths for text turns, descriptor discovery, Chief of Staff steering handoff, memory proposal review, and evaluator requests.
 - Bridge operation IDs and paths are covered by an app test that compares the local registry to `api/napoleon_bridge.openapi.yaml`.
 - Repository validation checks that governed bridge operations have matching request-kind constants, `NapoleonBearer` security, and named operation usage.
+- Repository validation scans runtime source for direct process execution, memory or graph access, and agent or tool dispatch outside the governed bridge.
 - Descriptor discovery is visible as first-class connection state, including live-discovered, missing descriptor, and checksum/signature mismatch states.
 - Live descriptor discovery resolves the configured Napoleon base URL to `/v1/concierge/chief-of-staff/descriptor` and treats invalid results as blocked connection state, not authority.
 - Failures are visible as local blocked states and do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
@@ -173,7 +174,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by bridge failure, contract mismatch, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, and timeout cases.
+- Covered by bridge failure, contract mismatch, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, and timeout cases, and repository validation for direct authority-boundary bypass attempts.
 
 ## Milestone P2: Voice Concierge
 

@@ -21,9 +21,13 @@ It may not directly:
 - Modify calendar
 - Buy anything
 - Change memory authority
+- Execute local shell or process commands
+- Call agents, tools, Memgraph, memory, or services outside the governed bridge
 - Enable camera or microphone silently
 - Act for a child without guardian-appropriate approval
 - Bypass Napoleon governance
+
+Repository validation scans Concierge runtime source for direct process execution, memory or graph access, and agent or tool dispatch. The scan is a guardrail, not authority: it catches local implementation drift while Napoleon remains the only authority layer.
 
 ## 2. Confirmation tiers
 

@@ -17,6 +17,50 @@ warnings.filterwarnings("ignore", message="jsonschema.RefResolver is deprecated.
 
 ROOT = Path(__file__).resolve().parents[1]
 
+AUTHORITY_SOURCE_ROOTS = [
+    ROOT / "app/src",
+    ROOT / "app/src-tauri/src",
+]
+
+AUTHORITY_SOURCE_SUFFIXES = {".ts", ".tsx", ".rs"}
+AUTHORITY_SOURCE_EXCLUDED_NAMES = {
+    "napoleonBridgeFixtures.ts",
+}
+AUTHORITY_SOURCE_EXCLUDED_PARTS = {
+    ".git",
+    ".venv",
+    "node_modules",
+    "dist",
+    "target",
+    "tests",
+    "__tests__",
+}
+
+AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (
+        re.compile(
+            r"\b(child_process|std::process|subprocess|os\.system)\b"
+            r"|\b(?:exec|spawn)\s*\("
+            r"|\bCommand::new\s*\("
+        ),
+        "direct process or shell execution",
+    ),
+    (
+        re.compile(
+            r"\b(memgraph|neo4j|bolt://|writeMemory|saveMemory|memoryGraph)\b"
+            r"|\bgraph_write\s*\("
+        ),
+        "direct memory or graph access",
+    ),
+    (
+        re.compile(
+            r"\b(dispatchAgent|agentRegistry|taskRouter|callTool)\b"
+            r"|\btool\.execute\s*\("
+        ),
+        "direct agent or tool dispatch",
+    ),
+]
+
 
 def load_json(path: str) -> object:
     return json.loads((ROOT / path).read_text(encoding="utf-8"))
@@ -142,6 +186,51 @@ def find_freeform_bridge_path_callers() -> list[str]:
     return sorted(offenders)
 
 
+def is_authority_source_path(path: Path) -> bool:
+    if path.suffix not in AUTHORITY_SOURCE_SUFFIXES:
+        return False
+    if path.name in AUTHORITY_SOURCE_EXCLUDED_NAMES:
+        return False
+    if any(part in AUTHORITY_SOURCE_EXCLUDED_PARTS for part in path.parts):
+        return False
+    return any(path.is_relative_to(root) for root in AUTHORITY_SOURCE_ROOTS)
+
+
+def authority_source_paths() -> list[Path]:
+    paths: list[Path] = []
+    for root in AUTHORITY_SOURCE_ROOTS:
+        if not root.exists():
+            continue
+        paths.extend(path for path in root.rglob("*") if path.is_file() and is_authority_source_path(path))
+    return sorted(paths)
+
+
+def scan_authority_boundary_text(path: str, text: str) -> list[str]:
+    violations: list[str] = []
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        for pattern, reason in AUTHORITY_BOUNDARY_PATTERNS:
+            if pattern.search(line):
+                violations.append(f"{path}:{line_number}: {reason}")
+    return violations
+
+
+def find_direct_authority_boundary_violations() -> list[str]:
+    violations: list[str] = []
+    for path in authority_source_paths():
+        relative_path = str(path.relative_to(ROOT))
+        violations.extend(scan_authority_boundary_text(relative_path, path.read_text(encoding="utf-8")))
+    return sorted(violations)
+
+
+def validate_authority_boundary() -> None:
+    violations = find_direct_authority_boundary_violations()
+    if violations:
+        raise SystemExit(
+            "Concierge runtime code bypasses the governed Napoleon bridge:\n" + "\n".join(violations)
+        )
+    print("authority boundary scan passed")
+
+
 def validate_bridge_contract_alignment() -> None:
     operations = load_bridge_operations()
     openapi_paths = load_openapi_concierge_paths()
@@ -185,6 +274,7 @@ def main() -> int:
     validate_json_pairs()
     validate_yaml()
     validate_bridge_contract_alignment()
+    validate_authority_boundary()
     validate_markdown_links()
     return 0
 
