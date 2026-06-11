@@ -26,6 +26,37 @@ export interface DescriptorStatus {
   message: string;
 }
 
+export type DescriptorConnectionStateKind =
+  | "no_endpoint"
+  | "missing_descriptor"
+  | "descriptor_mismatch"
+  | "ready";
+export type DescriptorChecksumState = "not_checked" | "matched" | "mismatch";
+export type DescriptorSignatureState = "not_checked" | "valid" | "invalid";
+export type DescriptorFailClosedReason =
+  | "no_endpoint"
+  | "no_descriptor"
+  | "descriptor_invalid"
+  | "descriptor_signature_or_checksum_mismatch";
+
+export interface DescriptorConnectionInput {
+  endpointConfigured: boolean;
+  descriptor?: ChiefOfStaffDescriptor | null;
+  expectedChecksum?: string;
+  actualChecksum?: string;
+  signatureValid?: boolean;
+}
+
+export interface DescriptorConnectionState {
+  state: DescriptorConnectionStateKind;
+  descriptorStatus: DescriptorStatus | null;
+  checksumState: DescriptorChecksumState;
+  signatureState: DescriptorSignatureState;
+  canAttemptLiveBridge: boolean;
+  failClosedReason?: DescriptorFailClosedReason;
+  message: string;
+}
+
 export interface ChiefOfStaffRequest {
   request_id: string;
   requester: string;
@@ -236,6 +267,75 @@ export function validateChiefOfStaffDescriptor(descriptor: ChiefOfStaffDescripto
     message: ready
       ? "Chief of Staff contract descriptor is valid and contract-only."
       : "Chief of Staff descriptor is invalid or grants authority.",
+  };
+}
+
+export function buildDescriptorConnectionState(input: DescriptorConnectionInput): DescriptorConnectionState {
+  const checksumState: DescriptorChecksumState =
+    input.expectedChecksum === undefined || input.actualChecksum === undefined
+      ? "not_checked"
+      : input.expectedChecksum === input.actualChecksum
+        ? "matched"
+        : "mismatch";
+  const signatureState: DescriptorSignatureState =
+    input.signatureValid === undefined ? "not_checked" : input.signatureValid ? "valid" : "invalid";
+  const descriptorStatus = input.descriptor ? validateChiefOfStaffDescriptor(input.descriptor) : null;
+
+  if (!input.endpointConfigured) {
+    return {
+      state: "no_endpoint",
+      descriptorStatus,
+      checksumState,
+      signatureState,
+      canAttemptLiveBridge: false,
+      failClosedReason: "no_endpoint",
+      message: "No Napoleon endpoint is configured, so Concierge cannot attempt a live bridge call.",
+    };
+  }
+
+  if (!descriptorStatus) {
+    return {
+      state: "missing_descriptor",
+      descriptorStatus: null,
+      checksumState,
+      signatureState,
+      canAttemptLiveBridge: false,
+      failClosedReason: "no_descriptor",
+      message: "No Napoleon Chief of Staff descriptor has been discovered.",
+    };
+  }
+
+  if (!descriptorStatus.ready) {
+    return {
+      state: "descriptor_mismatch",
+      descriptorStatus,
+      checksumState,
+      signatureState,
+      canAttemptLiveBridge: false,
+      failClosedReason: "descriptor_invalid",
+      message: descriptorStatus.message,
+    };
+  }
+
+  if (checksumState === "mismatch" || signatureState === "invalid") {
+    return {
+      state: "descriptor_mismatch",
+      descriptorStatus,
+      checksumState,
+      signatureState,
+      canAttemptLiveBridge: false,
+      failClosedReason: "descriptor_signature_or_checksum_mismatch",
+      message: "Napoleon descriptor signature or checksum did not match the expected value.",
+    };
+  }
+
+  return {
+    state: "ready",
+    descriptorStatus,
+    checksumState,
+    signatureState,
+    canAttemptLiveBridge: true,
+    message: "Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.",
   };
 }
 

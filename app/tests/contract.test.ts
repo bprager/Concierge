@@ -5,6 +5,7 @@ import {
   buildGovernanceReviewState,
   buildMemoryProposalReviewState,
   buildTextTurnContract,
+  buildDescriptorConnectionState,
   defaultChiefOfStaffDescriptor,
   inferLocalGovernanceOutcome,
   mapProfileToNapoleonMode,
@@ -26,6 +27,52 @@ test("validates Chief of Staff descriptor as contract-only and fail-closed", () 
   assert.equal(status.cachePolicy, "fail_closed_to_review_required");
   assert.ok(status.blockedEffects.includes("runtime_authority"));
   assert.ok(status.blockedEffects.includes("memory_write"));
+});
+
+test("builds first-class descriptor discovery connection states", () => {
+  const discovered = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:descriptor-ok",
+    actualChecksum: "sha256:descriptor-ok",
+    signatureValid: true,
+  });
+
+  assert.equal(discovered.state, "ready");
+  assert.equal(discovered.canAttemptLiveBridge, true);
+  assert.equal(discovered.failClosedReason, undefined);
+  assert.equal(discovered.checksumState, "matched");
+  assert.equal(discovered.signatureState, "valid");
+
+  const missing = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: null,
+  });
+
+  assert.equal(missing.state, "missing_descriptor");
+  assert.equal(missing.canAttemptLiveBridge, false);
+  assert.equal(missing.failClosedReason, "no_descriptor");
+
+  const checksumMismatch = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:expected",
+    actualChecksum: "sha256:actual",
+  });
+
+  assert.equal(checksumMismatch.state, "descriptor_mismatch");
+  assert.equal(checksumMismatch.canAttemptLiveBridge, false);
+  assert.equal(checksumMismatch.failClosedReason, "descriptor_signature_or_checksum_mismatch");
+  assert.equal(checksumMismatch.checksumState, "mismatch");
+
+  const noEndpoint = buildDescriptorConnectionState({
+    endpointConfigured: false,
+    descriptor: defaultChiefOfStaffDescriptor,
+  });
+
+  assert.equal(noEndpoint.state, "no_endpoint");
+  assert.equal(noEndpoint.canAttemptLiveBridge, false);
+  assert.equal(noEndpoint.descriptorStatus?.ready, true);
 });
 
 test("builds a text turn contract with governance and observability identifiers", () => {

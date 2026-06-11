@@ -153,6 +153,7 @@ User value: The user can tell whether a response came from Napoleon, which capab
 Acceptance criteria:
 
 - Live sends fail closed when no endpoint is configured, descriptor validation fails, auth fails, the response contract is invalid, local governance is `no_go`, or the bridge times out.
+- Descriptor discovery is visible as first-class connection state, including missing descriptor and checksum/signature mismatch states.
 - Failures are visible as local blocked states and do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
 - Successful live responses may include a Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID.
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.

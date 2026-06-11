@@ -30,6 +30,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added age-based Conversation Capability Intelligence retention and local trend answers for increasing, worsening, recently working, and weekly-change questions.
 - Added local risk/value score components and scoring caveats for Conversation Capability Intelligence recommendations.
 - Added fail-closed live Napoleon bridge errors for missing endpoints, descriptor mismatch, auth failure, contract mismatch, no-go governance, bridge timeout, and HTTP failure.
+- Added first-class Napoleon descriptor connection state for discovered, missing, and checksum/signature mismatch cases.
 - Added Napoleon delegation provenance support and a Text Concierge delegation panel that only attributes agent contributions when the bridge response includes them.
 - Added reusable Napoleon bridge contract fixtures for delegated success, auth failure, contract mismatch, and timeout cases.
 - Added evaluator coverage for bridge delegation provenance and reusable bridge fixture fail-closed cases.

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { sendToNapoleon } from "../src/napoleonBridge.js";
+import { defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
 import type { TelemetryPayload } from "../src/telemetry.js";
 
 test("live bridge fails closed when no Napoleon endpoint is configured", async () => {
@@ -93,4 +94,42 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   assert.equal(response.requiresReview, true);
   assert.equal(response.delegation?.selectedAgents[0]?.displayName, "Passive Brain");
   assert.equal(response.delegation?.blockedEffects[0], "external_send");
+});
+
+test("live bridge fails closed before fetch when discovered descriptor checksum mismatches", async () => {
+  let fetchCalled = false;
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_descriptor_mismatch",
+          conversationId: "conv_descriptor_mismatch",
+          turnId: "turn_descriptor_mismatch",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: {
+            endpointConfigured: true,
+            descriptor: defaultChiefOfStaffDescriptor,
+            expectedChecksum: "sha256:expected",
+            actualChecksum: "sha256:actual",
+          },
+          emit: () => undefined,
+          fetch: async () => {
+            fetchCalled = true;
+            return { ok: true, json: async () => ({}) };
+          },
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch"),
+  );
+
+  assert.equal(fetchCalled, false);
 });

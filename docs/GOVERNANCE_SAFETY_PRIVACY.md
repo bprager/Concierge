@@ -51,7 +51,7 @@ Local acknowledgement is not approval. It records that the review state was seen
 
 Child protected mode uses stricter wording. It must not imply secret-keeping, hidden external action, or guardian-bypassing approval.
 
-Live Napoleon bridge failures are fail-closed states. Missing endpoint, descriptor mismatch, authentication failure, contract mismatch, `no_go`, timeout, and HTTP failure must be shown as blocked local states. They must not be treated as Napoleon approval, and Concierge must preserve blocked effects rather than retrying into side effects.
+Live Napoleon bridge failures are fail-closed states. Missing endpoint, missing descriptor, descriptor mismatch, checksum or signature mismatch, authentication failure, contract mismatch, `no_go`, timeout, and HTTP failure must be shown as blocked local states. They must not be treated as Napoleon approval, and Concierge must preserve blocked effects rather than retrying into side effects.
 
 Delegation attribution requires bridge provenance. Concierge may say that Napoleon recommended something or that a selected agent found something only when the live bridge response includes that contribution, selected agent, governance state, trace ID, and audit ID. Without provenance, Concierge presents the response without inventing authority or agent involvement.
 

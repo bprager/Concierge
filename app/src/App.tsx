@@ -11,13 +11,13 @@ import {
 } from "./capabilityTaxonomy";
 import { draftChiefOfStaffSteering } from "./chiefOfStaffSteering";
 import {
+  buildDescriptorConnectionState,
   buildGovernanceReviewState,
   buildMemoryProposalReviewState,
   buildRehearsalPreview,
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
   transitionMemoryProposalReviewState,
-  validateChiefOfStaffDescriptor,
   type LocalProfile,
   type MemoryProposalReviewState,
 } from "./contractBridge";
@@ -90,6 +90,7 @@ export function App() {
   const [input, setInput] = useState("");
   const [profile, setProfile] = useState<LocalProfile>("adult_owner");
   const [rehearsalMode, setRehearsalMode] = useState(true);
+  const [descriptorMode, setDescriptorMode] = useState<"discovered" | "missing" | "checksum_mismatch">("discovered");
   const [pendingRehearsal, setPendingRehearsal] = useState<PendingRehearsal | null>(null);
   const [endpoint, setEndpoint] = useState(() =>
     typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_endpoint") ?? "",
@@ -107,7 +108,14 @@ export function App() {
   const [selectedTaxonomyLabel, setSelectedTaxonomyLabel] = useState("");
   const [taxonomyRenameValue, setTaxonomyRenameValue] = useState("");
   const [taxonomyMergeTarget, setTaxonomyMergeTarget] = useState("");
-  const descriptorStatus = validateChiefOfStaffDescriptor(defaultChiefOfStaffDescriptor);
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: Boolean(endpoint.trim()),
+    descriptor: descriptorMode === "missing" ? null : defaultChiefOfStaffDescriptor,
+    expectedChecksum: descriptorMode === "checksum_mismatch" ? "sha256:expected" : "sha256:local-static",
+    actualChecksum: descriptorMode === "checksum_mismatch" ? "sha256:actual" : "sha256:local-static",
+    signatureValid: descriptorMode === "checksum_mismatch" ? false : true,
+  });
+  const descriptorStatus = descriptorConnection.descriptorStatus;
 
   function refreshCapabilityLedgerStatus() {
     setCapabilitySignalCount(capabilityLedger.listRecent().length);
@@ -337,6 +345,14 @@ export function App() {
         profile,
         channel: "text",
         message: content,
+      }, {
+        descriptorConnection: {
+          endpointConfigured: Boolean(endpoint.trim()),
+          descriptor: descriptorMode === "missing" ? null : defaultChiefOfStaffDescriptor,
+          expectedChecksum: descriptorMode === "checksum_mismatch" ? "sha256:expected" : "sha256:local-static",
+          actualChecksum: descriptorMode === "checksum_mismatch" ? "sha256:actual" : "sha256:local-static",
+          signatureValid: descriptorMode === "checksum_mismatch" ? false : true,
+        },
       });
 
       const decisionView = describeGovernanceDecision({
@@ -640,6 +656,14 @@ export function App() {
           />
         </label>
         <label>
+          Descriptor
+          <select value={descriptorMode} onChange={(e) => setDescriptorMode(e.target.value as typeof descriptorMode)}>
+            <option value="discovered">Discovered local descriptor</option>
+            <option value="missing">Missing descriptor</option>
+            <option value="checksum_mismatch">Checksum/signature mismatch</option>
+          </select>
+        </label>
+        <label>
           Rehearsal Mode
           <input
             type="checkbox"
@@ -656,19 +680,31 @@ export function App() {
       <section className="contract-status">
         <div>
           <strong>Chief of Staff</strong>
-          <span>{descriptorStatus.serviceId}</span>
+          <span>{descriptorStatus?.serviceId ?? "not discovered"}</span>
         </div>
         <div>
-          <strong>Descriptor</strong>
-          <span>{descriptorStatus.ready ? "valid, contract-only" : "not valid"}</span>
+          <strong>Connection state</strong>
+          <span>{descriptorConnection.state}</span>
+        </div>
+        <div>
+          <strong>Descriptor validation</strong>
+          <span>{descriptorStatus?.ready ? "valid, contract-only" : descriptorConnection.message}</span>
+        </div>
+        <div>
+          <strong>Checksum</strong>
+          <span>{descriptorConnection.checksumState}</span>
+        </div>
+        <div>
+          <strong>Signature</strong>
+          <span>{descriptorConnection.signatureState}</span>
         </div>
         <div>
           <strong>Runtime authority</strong>
-          <span>{descriptorStatus.runtimeAuthority ? "enabled" : "blocked"}</span>
+          <span>{descriptorStatus?.runtimeAuthority ? "enabled" : "blocked"}</span>
         </div>
         <div>
           <strong>Cache policy</strong>
-          <span>{descriptorStatus.cachePolicy}</span>
+          <span>{descriptorStatus?.cachePolicy ?? "unavailable"}</span>
         </div>
       </section>
 

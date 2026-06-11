@@ -1,8 +1,9 @@
 import type { NapoleonDelegation, NapoleonRequest, NapoleonResponse } from "./types";
 import {
+  buildDescriptorConnectionState,
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
-  validateChiefOfStaffDescriptor,
+  type DescriptorConnectionInput,
   type GovernanceDecision,
 } from "./contractBridge.js";
 import { emitEvent, makeTelemetryPayload, type TelemetryPayload } from "./telemetry.js";
@@ -15,6 +16,7 @@ type BridgeFetch = (url: string, init?: { method?: string; headers?: Record<stri
 
 interface BridgeDependencies {
   getEndpoint?: () => string | null;
+  descriptorConnection?: DescriptorConnectionInput;
   emit?: (payload: TelemetryPayload) => void;
   fetch?: BridgeFetch;
 }
@@ -131,8 +133,6 @@ export async function sendToNapoleon(
     turnId: request.turnId,
     traceId: request.traceId,
   });
-  const descriptorStatus = validateChiefOfStaffDescriptor(defaultChiefOfStaffDescriptor);
-
   emitBridgeEvent(dependencies, "bridge_request_started", {
     traceId: request.traceId,
     profile: request.profile,
@@ -142,12 +142,18 @@ export async function sendToNapoleon(
   });
 
   const endpoint = getConfiguredEndpoint(dependencies);
+  const descriptorConnection = buildDescriptorConnectionState(
+    dependencies.descriptorConnection ?? {
+      endpointConfigured: Boolean(endpoint),
+      descriptor: defaultChiefOfStaffDescriptor,
+    },
+  );
 
   if (!endpoint) {
     failClosed(dependencies, "no_endpoint", request.traceId, contract.chiefOfStaffRequest.request_id);
   }
 
-  if (!descriptorStatus.ready) {
+  if (!descriptorConnection.canAttemptLiveBridge) {
     failClosed(dependencies, "descriptor_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
   }
 
@@ -164,7 +170,8 @@ export async function sendToNapoleon(
       body: JSON.stringify({
         ...request,
         profileMode: contract.profileMode,
-        descriptorStatus,
+        descriptorStatus: descriptorConnection.descriptorStatus,
+        descriptorConnection,
         chiefOfStaffRequest: contract.chiefOfStaffRequest,
         governanceRequest: contract.governanceRequest,
         traceEnvelope: contract.traceEnvelope,

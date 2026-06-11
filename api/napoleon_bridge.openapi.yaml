@@ -60,6 +60,29 @@ paths:
                       type: array
                       items:
                         type: string
+                descriptorConnection:
+                  type: object
+                  properties:
+                    state:
+                      type: string
+                      enum: [no_endpoint, missing_descriptor, descriptor_mismatch, ready]
+                    checksumState:
+                      type: string
+                      enum: [not_checked, matched, mismatch]
+                    signatureState:
+                      type: string
+                      enum: [not_checked, valid, invalid]
+                    canAttemptLiveBridge:
+                      type: boolean
+                    failClosedReason:
+                      type: string
+                      enum:
+                        - no_endpoint
+                        - no_descriptor
+                        - descriptor_invalid
+                        - descriptor_signature_or_checksum_mismatch
+                    message:
+                      type: string
                 chiefOfStaffRequest:
                   type: object
                   required: [request_id, requester, request_type, profile_mode, source_evidence, requested_authority_tier, trace_id]
@@ -196,6 +219,20 @@ paths:
                     type: array
                     items:
                       type: string
+                  connection:
+                    type: object
+                    properties:
+                      state:
+                        type: string
+                        enum: [no_endpoint, missing_descriptor, descriptor_mismatch, ready]
+                      checksumState:
+                        type: string
+                        enum: [not_checked, matched, mismatch]
+                      signatureState:
+                        type: string
+                        enum: [not_checked, valid, invalid]
+                      canAttemptLiveBridge:
+                        type: boolean
   /v1/concierge/evaluate:
     post:
       summary: Submit evaluator prompt to Napoleon
