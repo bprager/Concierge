@@ -157,6 +157,7 @@ Acceptance criteria:
 - Failures are visible as local blocked states and do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
 - Successful live responses may include a Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID.
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.
+- Successful live responses require matching governance, trace, and audit envelopes; missing or mismatched response/delegation provenance fails closed as a contract mismatch.
 
 Privacy and safety impact:
 

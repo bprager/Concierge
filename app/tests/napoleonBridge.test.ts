@@ -66,6 +66,23 @@ test("live bridge request sends contract-first payload to configured endpoint", 
               trace_id: "trace_live",
               audit_id: "audit_remote",
             },
+            traceEnvelope: {
+              trace_id: "trace_live",
+              parent_trace_id: "conv_live",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_turn_live",
+              decision_id: "decision_remote",
+              timestamp: "2026-06-11T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_remote",
+              trace_id: "trace_live",
+              decision_id: "decision_remote",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "prepare_only",
+              approval_requirement: "explicit_owner_approval",
+              evidence_links: ["trace:trace_live"],
+            },
             delegation: {
               selectedAgents: [
                 {
@@ -94,6 +111,120 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   assert.equal(response.requiresReview, true);
   assert.equal(response.delegation?.selectedAgents[0]?.displayName, "Passive Brain");
   assert.equal(response.delegation?.blockedEffects[0], "external_send");
+});
+
+test("live bridge fails closed when Napoleon response omits trace or audit provenance", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_missing_provenance",
+          conversationId: "conv_missing_provenance",
+          turnId: "turn_missing_provenance",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            json: async () => ({
+              text: "Prepared through Napoleon.",
+              governanceDecision: {
+                decision_id: "decision_missing_provenance",
+                request_id: "cos_turn_missing_provenance",
+                outcome: "allow_prepare_only",
+                authority_tier: "prepare_only",
+                approval_requirement: "none",
+                rationale: "Prepared locally.",
+                blocked_effects: ["external_send"],
+                trace_id: "trace_missing_provenance",
+                audit_id: "audit_missing_provenance",
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
+test("live bridge fails closed when delegation provenance disagrees with trace or audit envelope", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_bad_delegate",
+          conversationId: "conv_bad_delegate",
+          turnId: "turn_bad_delegate",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            json: async () => ({
+              text: "Passive Brain found the prior rollout note.",
+              governanceDecision: {
+                decision_id: "decision_bad_delegate",
+                request_id: "cos_turn_bad_delegate",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["external_send"],
+                trace_id: "trace_bad_delegate",
+                audit_id: "audit_bad_delegate",
+              },
+              traceEnvelope: {
+                trace_id: "trace_bad_delegate",
+                parent_trace_id: "conv_bad_delegate",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_bad_delegate",
+                decision_id: "decision_bad_delegate",
+                timestamp: "2026-06-11T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_bad_delegate",
+                trace_id: "trace_bad_delegate",
+                decision_id: "decision_bad_delegate",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_bad_delegate"],
+              },
+              delegation: {
+                selectedAgents: [
+                  {
+                    agentId: "napoleon.passive_brain",
+                    displayName: "Passive Brain",
+                    selectionReason: "Relevant deployment history was found.",
+                    contributionSummary: "Found the prior bridge rollout note.",
+                  },
+                ],
+                allowedEffects: ["prepare_advisory_response"],
+                blockedEffects: ["external_send"],
+                governanceState: "requires_review",
+                traceId: "trace_other",
+                auditId: "audit_bad_delegate",
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
 });
 
 test("live bridge fails closed before fetch when discovered descriptor checksum mismatches", async () => {

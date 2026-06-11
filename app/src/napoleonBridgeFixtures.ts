@@ -39,6 +39,14 @@ export const napoleonBridgeFixtures = {
         trace_id: "trace_fixture",
         audit_id: "audit_fixture_delegate",
       },
+      traceEnvelope: {
+        trace_id: "trace_fixture",
+        parent_trace_id: "conv_fixture",
+        actor_id: "napoleon.chief_of_staff",
+        request_id: "cos_turn_fixture",
+        decision_id: "decision_fixture_delegate",
+        timestamp: "2026-06-11T00:00:00.000Z",
+      },
       auditEnvelope: {
         audit_id: "audit_fixture_delegate",
         trace_id: "trace_fixture",

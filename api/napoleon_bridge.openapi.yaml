@@ -112,7 +112,7 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [text, governanceDecision]
+                required: [text, governanceDecision, traceEnvelope, auditEnvelope]
                 properties:
                   text:
                     type: string
@@ -153,8 +153,41 @@ paths:
                         type: string
                   traceEnvelope:
                     type: object
+                    required: [trace_id, parent_trace_id, actor_id, request_id, decision_id, timestamp]
+                    properties:
+                      trace_id:
+                        type: string
+                      parent_trace_id:
+                        type: string
+                      actor_id:
+                        type: string
+                      request_id:
+                        type: string
+                      decision_id:
+                        type: string
+                      timestamp:
+                        type: string
                   auditEnvelope:
                     type: object
+                    required: [audit_id, trace_id, decision_id, actor_id, authority_tier, approval_requirement, evidence_links]
+                    properties:
+                      audit_id:
+                        type: string
+                      trace_id:
+                        type: string
+                      decision_id:
+                        type: string
+                      actor_id:
+                        type: string
+                      authority_tier:
+                        type: string
+                        enum: [metadata_only, advisory_review, prepare_only, approval_required, prohibited]
+                      approval_requirement:
+                        type: string
+                      evidence_links:
+                        type: array
+                        items:
+                          type: string
                   profileMode:
                     type: string
                   targetAgent:

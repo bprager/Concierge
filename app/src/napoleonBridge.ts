@@ -4,7 +4,9 @@ import {
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
   type DescriptorConnectionInput,
+  type AuditEnvelope,
   type GovernanceDecision,
+  type TraceEnvelope,
 } from "./contractBridge.js";
 import { emitEvent, makeTelemetryPayload, type TelemetryPayload } from "./telemetry.js";
 
@@ -75,6 +77,33 @@ function isGovernanceDecision(value: unknown): value is GovernanceDecision {
   );
 }
 
+function isTraceEnvelope(value: unknown): value is TraceEnvelope {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<TraceEnvelope>;
+  return Boolean(
+    typeof candidate.trace_id === "string" &&
+      typeof candidate.parent_trace_id === "string" &&
+      typeof candidate.actor_id === "string" &&
+      typeof candidate.request_id === "string" &&
+      typeof candidate.decision_id === "string" &&
+      typeof candidate.timestamp === "string",
+  );
+}
+
+function isAuditEnvelope(value: unknown): value is AuditEnvelope {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<AuditEnvelope>;
+  return Boolean(
+    typeof candidate.audit_id === "string" &&
+      typeof candidate.trace_id === "string" &&
+      typeof candidate.decision_id === "string" &&
+      typeof candidate.actor_id === "string" &&
+      typeof candidate.authority_tier === "string" &&
+      typeof candidate.approval_requirement === "string" &&
+      isStringArray(candidate.evidence_links),
+  );
+}
+
 function requiresReview(decision: GovernanceDecision): boolean {
   return decision.outcome === "requires_review" || decision.outcome === "no_go";
 }
@@ -103,6 +132,38 @@ function isNapoleonDelegation(value: unknown): value is NapoleonDelegation {
       typeof candidate.governanceState === "string" &&
       typeof candidate.traceId === "string" &&
       typeof candidate.auditId === "string",
+  );
+}
+
+function envelopesMatchDecision(
+  decision: GovernanceDecision,
+  traceEnvelope: TraceEnvelope,
+  auditEnvelope: AuditEnvelope,
+): boolean {
+  return (
+    traceEnvelope.trace_id === decision.trace_id &&
+    traceEnvelope.request_id === decision.request_id &&
+    traceEnvelope.decision_id === decision.decision_id &&
+    auditEnvelope.audit_id === decision.audit_id &&
+    auditEnvelope.trace_id === decision.trace_id &&
+    auditEnvelope.decision_id === decision.decision_id &&
+    auditEnvelope.authority_tier === decision.authority_tier &&
+    auditEnvelope.approval_requirement === decision.approval_requirement
+  );
+}
+
+function delegationMatchesProvenance(
+  delegation: NapoleonDelegation,
+  decision: GovernanceDecision,
+  traceEnvelope: TraceEnvelope,
+  auditEnvelope: AuditEnvelope,
+): boolean {
+  return (
+    delegation.traceId === traceEnvelope.trace_id &&
+    delegation.traceId === decision.trace_id &&
+    delegation.auditId === auditEnvelope.audit_id &&
+    delegation.auditId === decision.audit_id &&
+    delegation.governanceState === decision.outcome
   );
 }
 
@@ -196,20 +257,36 @@ export async function sendToNapoleon(
   }
 
   const decision = payload.governanceDecision;
+  if (!isTraceEnvelope(payload.traceEnvelope) || !isAuditEnvelope(payload.auditEnvelope)) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
+  }
+
+  const traceEnvelope = payload.traceEnvelope;
+  const auditEnvelope = payload.auditEnvelope;
+  if (!envelopesMatchDecision(decision, traceEnvelope, auditEnvelope)) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
+  }
+
+  const delegation =
+    payload.delegation === undefined
+      ? undefined
+      : isNapoleonDelegation(payload.delegation) &&
+          delegationMatchesProvenance(payload.delegation, decision, traceEnvelope, auditEnvelope)
+        ? payload.delegation
+        : null;
+  if (delegation === null) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
+  }
 
   const normalized: NapoleonResponse = {
     text: payload.text ?? "Napoleon returned no response text.",
     profileMode: payload.profileMode ?? contract.profileMode,
     governanceDecision: decision,
-    traceEnvelope: payload.traceEnvelope ?? contract.traceEnvelope,
-    auditEnvelope: payload.auditEnvelope ?? {
-      ...contract.auditEnvelope,
-      audit_id: decision.audit_id,
-      decision_id: decision.decision_id,
-    },
+    traceEnvelope,
+    auditEnvelope,
     requiresReview: requiresReview(decision),
     targetAgent: payload.targetAgent,
-    delegation: isNapoleonDelegation(payload.delegation) ? payload.delegation : undefined,
+    delegation,
     stance: payload.stance,
   };
 
