@@ -125,6 +125,27 @@ class RehearsalCoverageTest(unittest.TestCase):
             checks["conversation_capability_intelligence"]["missing_terms"],
         )
 
+    def test_bridge_fixture_scenarios_cover_delegation_and_fail_closed_cases(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("BRIDGE-FIXTURE-DELEGATION-001", scenarios)
+        self.assertIn("bridge_delegation_provenance", scenarios["BRIDGE-FIXTURE-DELEGATION-001"]["expected_artifacts"])
+        self.assertIn("bridge_contract_fixtures", scenarios["BRIDGE-FIXTURE-DELEGATION-001"]["expected_artifacts"])
+
+        incomplete_response = "Napoleon returned a delegated answer."
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["bridge_delegation_provenance", "bridge_contract_fixtures"],
+        )
+
+        self.assertFalse(checks["bridge_delegation_provenance"]["found"])
+        self.assertIn("selected agents", checks["bridge_delegation_provenance"]["missing_terms"])
+        self.assertIn("Passive Brain found", checks["bridge_delegation_provenance"]["missing_terms"])
+        self.assertFalse(checks["bridge_contract_fixtures"]["found"])
+        self.assertIn("delegated success fixture", checks["bridge_contract_fixtures"]["missing_terms"])
+        self.assertIn("timeout fixture", checks["bridge_contract_fixtures"]["missing_terms"])
+
 
 if __name__ == "__main__":
     unittest.main()

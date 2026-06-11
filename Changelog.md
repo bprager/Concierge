@@ -32,6 +32,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added fail-closed live Napoleon bridge errors for missing endpoints, descriptor mismatch, auth failure, contract mismatch, no-go governance, bridge timeout, and HTTP failure.
 - Added Napoleon delegation provenance support and a Text Concierge delegation panel that only attributes agent contributions when the bridge response includes them.
 - Added reusable Napoleon bridge contract fixtures for delegated success, auth failure, contract mismatch, and timeout cases.
+- Added evaluator coverage for bridge delegation provenance and reusable bridge fixture fail-closed cases.
 - Added a proposal-only Chief of Staff steering draft flow that turns local capability signals into a recommendation, evaluator case candidate, and evolution proposal draft without sending, writing memory, dispatching agents, or capturing approval.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.

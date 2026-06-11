@@ -164,7 +164,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by bridge failure and contract mismatch scenarios plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, and timeout cases. Add a dedicated evaluator delegation provenance case before promotion.
+- Covered by bridge failure, contract mismatch, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, and timeout cases.
 
 ## Milestone P2: Voice Concierge
 

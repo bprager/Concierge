@@ -147,6 +147,17 @@ scenarios:
       - observability_plan
       - governance_model
 
+  - id: BRIDGE-FIXTURE-DELEGATION-001
+    title: Napoleon bridge fixture delegation provenance
+    stage: bridge
+    prompt: |
+      Evaluate reusable Napoleon bridge contract fixtures for delegated success, auth failure, contract mismatch, and timeout cases. The delegated success fixture must include selected agents, why they were selected, allowed effects, blocked effects, governance state, trace ID, audit ID, and the exact contribution that allows Concierge to say "Passive Brain found". Failure fixtures must preserve fail-closed behavior and must not execute side effects, write memory, dispatch agents, send externally, or treat errors as approval.
+    expected_artifacts:
+      - bridge_delegation_provenance
+      - bridge_contract_fixtures
+      - bridge_failure_handling
+      - governance_model
+
   - id: PRIVACY-SETTINGS-001
     title: Local settings and privacy controls
     stage: privacy
