@@ -27,6 +27,10 @@ import {
   type MemoryProposalReviewState,
 } from "./contractBridge";
 import { discoverNapoleonDescriptor } from "./descriptorDiscovery";
+import {
+  submitMemoryProposalForReview,
+  type MemoryProposalSubmissionResult,
+} from "./memoryProposalSubmission";
 import { NapoleonBridgeError, sendToNapoleon } from "./napoleonBridge";
 import {
   describeDelegation,
@@ -112,6 +116,8 @@ export function App() {
   const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
   const [lastMemoryReviewState, setLastMemoryReviewState] = useState<MemoryProposalReviewState | null>(null);
   const [lastMemoryReview, setLastMemoryReview] = useState<ReturnType<typeof describeMemoryProposalReview> | null>(null);
+  const [memorySubmission, setMemorySubmission] = useState<MemoryProposalSubmissionResult | null>(null);
+  const [memorySubmissionFailure, setMemorySubmissionFailure] = useState<string | null>(null);
   const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
   const [steeringDraft, setSteeringDraft] = useState<ReturnType<typeof draftChiefOfStaffSteering> | null>(null);
@@ -261,6 +267,8 @@ export function App() {
       setLastReview(null);
       setLastMemoryReviewState(null);
       setLastMemoryReview(null);
+      setMemorySubmission(null);
+      setMemorySubmissionFailure(null);
       return;
     }
     const contract = buildTextTurnContract({
@@ -313,6 +321,8 @@ export function App() {
     setLastReview(null);
     setLastMemoryReviewState(null);
     setLastMemoryReview(null);
+    setMemorySubmission(null);
+    setMemorySubmissionFailure(null);
   }
 
   async function submit(rehearsal: PendingRehearsal | null = null) {
@@ -345,6 +355,8 @@ export function App() {
         setLastReview(null);
         setLastMemoryReviewState(null);
         setLastMemoryReview(null);
+        setMemorySubmission(null);
+        setMemorySubmissionFailure(null);
         return;
       }
     }
@@ -362,6 +374,8 @@ export function App() {
       setLastReview(rehearsal.review);
       setLastDelegation(null);
       setLastBridgeFailure(null);
+      setMemorySubmission(null);
+      setMemorySubmissionFailure(null);
       return;
     }
 
@@ -457,9 +471,13 @@ export function App() {
       if (memoryReviewState.status === "none") {
         setLastMemoryReviewState(null);
         setLastMemoryReview(null);
+        setMemorySubmission(null);
+        setMemorySubmissionFailure(null);
       } else {
         setLastMemoryReviewState(memoryReviewState);
         setLastMemoryReview(describeMemoryProposalReview(memoryReviewState));
+        setMemorySubmission(null);
+        setMemorySubmissionFailure(null);
         emitEvent("memory_proposal_review_created", {
           traceId,
           conversationId,
@@ -565,6 +583,8 @@ export function App() {
     const updated = transitionMemoryProposalReviewState(lastMemoryReviewState, status);
     setLastMemoryReviewState(updated);
     setLastMemoryReview(describeMemoryProposalReview(updated));
+    setMemorySubmission(null);
+    setMemorySubmissionFailure(null);
     emitEvent(status === "acknowledged_locally" ? "memory_proposal_acknowledged_locally" : "memory_proposal_dismissed_locally", {
       traceId: updated.traceId,
       conversationId,
@@ -574,6 +594,29 @@ export function App() {
       localReview: updated.localReview,
     });
     refreshCapabilityLedgerStatus();
+  }
+
+  async function submitLastMemoryProposal() {
+    if (!lastMemoryReviewState) return;
+    const traceId = newTraceId();
+    try {
+      const result = await submitMemoryProposalForReview(lastMemoryReviewState, {
+        conversationId,
+        traceId,
+        descriptorConnection: currentDescriptorInput(),
+      });
+      setMemorySubmission(result);
+      setMemorySubmissionFailure(null);
+      refreshCapabilityLedgerStatus();
+    } catch (error) {
+      const message =
+        error instanceof NapoleonBridgeError
+          ? `Memory proposal review handoff blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}. Concierge did not write memory, send externally, dispatch agents, or capture approval.`
+          : "Memory proposal review handoff failed closed. Concierge did not write memory, send externally, dispatch agents, or capture approval.";
+      setMemorySubmissionFailure(message);
+      setMemorySubmission(null);
+      refreshCapabilityLedgerStatus();
+    }
   }
 
   function clearCapabilityHistory() {
@@ -1056,7 +1099,36 @@ export function App() {
             >
               {lastMemoryReview.dismissLabel}
             </button>
+            <button
+              className="secondary"
+              disabled={
+                !lastMemoryReviewState ||
+                lastMemoryReviewState.status === "dismissed_locally" ||
+                !descriptorConnection.canAttemptLiveBridge
+              }
+              onClick={submitLastMemoryProposal}
+            >
+              Send memory proposal to Napoleon review
+            </button>
           </div>
+          {memorySubmissionFailure ? <p className="warning">{memorySubmissionFailure}</p> : null}
+          {memorySubmission ? (
+            <dl>
+              <dt>Napoleon review response</dt>
+              <dd>{memorySubmission.text}</dd>
+              <dt>Governance</dt>
+              <dd>
+                {memorySubmission.governanceDecision.outcome}, decision{" "}
+                {memorySubmission.governanceDecision.decision_id}
+              </dd>
+              <dt>Trace</dt>
+              <dd>{memorySubmission.traceEnvelope.trace_id}</dd>
+              <dt>Audit</dt>
+              <dd>{memorySubmission.auditEnvelope.audit_id}</dd>
+              <dt>Local effects</dt>
+              <dd>no memory write; no approval captured; no external send.</dd>
+            </dl>
+          ) : null}
         </section>
       ) : null}
 

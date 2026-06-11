@@ -54,7 +54,7 @@ Evaluator coverage:
 | TX-005 | Add governance confirmation UI | P0 | Side effects require visible confirmation; requires_review, deny, and no_go are visible and non-authority local acknowledgement cannot be mistaken for approval | governance_decision |
 | TX-006 | Add text conversation trace | P0 | Every turn has trace_id and turn_id | user_message_received, response_generated |
 | TX-007 | Add child profile response rules | P0 | Child mode uses simple language and restricted authority | child_policy_applied |
-| TX-008 | Add memory update suggestion flow | P1 | Preferences are proposed, shown for review, and never silently stored or written directly | memory_update_proposed |
+| TX-008 | Add memory update suggestion flow | P1 | Preferences are proposed, shown for review, and can be submitted for governed Napoleon review without silently storing or writing directly | memory_update_proposed, memory_proposal_send_started |
 | TX-009 | Add local settings and privacy panel | P1 | User can configure endpoint, optional local bridge token, telemetry, profile, camera, mic | settings_changed |
 | TX-010 | Add evaluator fixtures for text UI | P1 | Text mode can be smoke tested | text_smoke_eval_completed |
 | TX-011 | Add Rehearsal Mode for governed turns | P0 | User can preview understood request, proposed Napoleon path, CoS review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate before any live bridge call | rehearsal_preview_created |
@@ -91,13 +91,15 @@ Acceptance criteria:
 - Memory-like turns create a proposal-only review panel with proposal ID, source turn, profile, proposed value, rationale, review state, blocked effects, trace ID, and audit ID.
 - Local acknowledgement records that the proposal was seen, but it is not Napoleon approval.
 - Local dismissal hides the local proposal, but it does not delete or write Napoleon memory.
+- A live memory proposal can be submitted to Napoleon review only through the governed bridge after endpoint and descriptor preflight pass.
+- Napoleon review responses require matching governance, trace, and audit proof before Concierge displays them as reviewed.
 - `memory_write`, `approval_capture`, external sends, and remote audit appends remain blocked.
 - Child protected mode requires guardian-appropriate review and rejects secret-keeping.
 
 Privacy and safety impact:
 
 - No memory is written directly from Concierge.
-- The review flow emits local telemetry for proposal creation, acknowledgement, or dismissal without treating those events as approval.
+- The review flow emits local telemetry for proposal creation, acknowledgement, dismissal, and governed submission without treating those events as approval.
 
 Evaluator coverage:
 
