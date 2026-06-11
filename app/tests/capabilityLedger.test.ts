@@ -5,8 +5,12 @@ import {
   answerCapabilityQuestion,
   aggregateCapabilitySignals,
   buildCapabilitySignal,
+  clearCapabilityLedger,
   createCapabilityLedger,
   deriveCapabilitySignalFromEvent,
+  deserializeCapabilityLedger,
+  exportCapabilityLedger,
+  serializeCapabilityLedger,
   type ConversationCapabilitySignal,
 } from "../src/capabilityLedger.js";
 
@@ -501,4 +505,144 @@ test("does not answer unrelated questions as capability intelligence queries", (
   const answer = answerCapabilityQuestion("Draft a bridge plan", ledger);
 
   assert.equal(answer, null);
+});
+
+test("serializes capability ledger as versioned metadata without raw user text", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_persist",
+      conversationId: "conv_persist",
+      turnId: "turn_persist",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "deployment",
+      intentLabel: "summarize",
+      capabilityLabel: "rehearsal_mode",
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.84,
+      evidenceRefs: ["trace:trace_persist"],
+      architectureArea: "text_ui",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "no_action",
+      rawMessage: "raw deployment secret",
+    }),
+  );
+
+  const snapshot = serializeCapabilityLedger(ledger);
+
+  assert.equal(snapshot.schemaVersion, "concierge.capability-ledger.v1");
+  assert.equal(snapshot.privacyCaveat.includes("metadata-only"), true);
+  assert.equal(snapshot.signals.length, 1);
+  assert.equal(snapshot.signals[0].topicLabel, "deployment");
+  assert.equal(JSON.stringify(snapshot).includes("raw deployment secret"), false);
+});
+
+test("deserializes persisted metadata into a queryable pruned ledger", () => {
+  const source = createCapabilityLedger();
+  appendCapabilitySignal(
+    source,
+    deriveCapabilitySignalFromEvent("rehearsal_preview_created", {
+      traceId: "trace_old",
+      conversationId: "conv_reload",
+      turnId: "turn_old",
+      profile: "adult_owner",
+    }),
+  );
+  appendCapabilitySignal(
+    source,
+    deriveCapabilitySignalFromEvent("response_failed", {
+      traceId: "trace_new",
+      conversationId: "conv_reload",
+      turnId: "turn_new",
+      profile: "adult_owner",
+    }),
+  );
+  const snapshot = serializeCapabilityLedger(source, { maxSignals: 1 });
+
+  const restored = deserializeCapabilityLedger(snapshot);
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", restored);
+
+  assert.equal(restored.listRecent().length, 1);
+  assert.equal(restored.listRecent()[0].traceId, "trace_new");
+  assert.ok(answer);
+  if (!answer) throw new Error("expected persisted answer");
+  assert.equal(answer.rows[0].label, "bridge_failure_handling");
+});
+
+test("clear helper removes in-memory capability signals", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("rehearsal_preview_created", {
+      traceId: "trace_clear",
+      conversationId: "conv_clear",
+      turnId: "turn_clear",
+      profile: "adult_owner",
+    }),
+  );
+
+  clearCapabilityLedger(ledger);
+
+  assert.equal(ledger.listRecent().length, 0);
+  const answer = answerCapabilityQuestion("What conversations are most common?", ledger);
+  assert.ok(answer);
+  if (!answer) throw new Error("expected empty answer");
+  assert.equal(answer.evidenceCount, 0);
+});
+
+test("export includes version, generated timestamp, privacy caveat, and metadata only", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("response_failed", {
+      traceId: "trace_export",
+      conversationId: "conv_export",
+      turnId: "turn_export",
+      profile: "adult_owner",
+      error: "raw error details should not be exported",
+    }),
+  );
+
+  const exported = exportCapabilityLedger(ledger);
+
+  assert.equal(exported.schemaVersion, "concierge.capability-ledger.export.v1");
+  assert.equal(/^\d{4}-\d{2}-\d{2}T/.test(exported.generatedAt), true);
+  assert.equal(exported.privacyCaveat.includes("does not grant permission to share externally"), true);
+  assert.equal(exported.signals.length, 1);
+  assert.equal(JSON.stringify(exported).includes("raw error details"), false);
+});
+
+test("child protected persisted records remain minimized and distinguishable", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_child_persist",
+      conversationId: "conv_child_persist",
+      turnId: "turn_child_persist",
+      profileMode: "child_protected_user",
+      channel: "text",
+      topicLabel: "school",
+      intentLabel: "ask_help",
+      capabilityLabel: "child_safe_response",
+      capabilityStatus: "working",
+      outcomeSignal: "answered",
+      confidence: 0.7,
+      evidenceRefs: ["trace:trace_child_persist"],
+      architectureArea: "text_ui",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "no_action",
+      rawMessage: "child protected raw phrase",
+    }),
+  );
+
+  const restored = deserializeCapabilityLedger(serializeCapabilityLedger(ledger));
+  const [signal] = restored.listRecent();
+
+  assert.equal(signal.profileMode, "child_protected_user");
+  assert.equal(signal.privacyClass, "child_sensitive");
+  assert.equal(JSON.stringify(signal).includes("child protected raw phrase"), false);
 });

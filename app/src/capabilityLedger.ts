@@ -90,8 +90,29 @@ export interface CapabilityAggregate {
 
 export interface CapabilityLedger {
   append(signal: ConversationCapabilitySignal): ConversationCapabilitySignal;
+  clear(): void;
   listRecent(limit?: number): ConversationCapabilitySignal[];
   aggregate(): CapabilityAggregate;
+}
+
+export interface SerializedCapabilityLedger {
+  schemaVersion: "concierge.capability-ledger.v1";
+  generatedAt: string;
+  privacyCaveat: string;
+  retention: {
+    maxSignals: number;
+  };
+  signals: ConversationCapabilitySignal[];
+}
+
+export interface ExportedCapabilityLedger {
+  schemaVersion: "concierge.capability-ledger.export.v1";
+  generatedAt: string;
+  privacyCaveat: string;
+  retention: {
+    maxSignals: number;
+  };
+  signals: ConversationCapabilitySignal[];
 }
 
 export type CapabilityQuestionKind =
@@ -129,6 +150,53 @@ const DEFAULT_RECOMMENDATION_BOUNDARY: RecommendationBoundary = {
   agentDispatchAllowed: false,
   externalSendAllowed: false,
 };
+
+const CAPABILITY_LEDGER_SCHEMA_VERSION = "concierge.capability-ledger.v1" as const;
+const CAPABILITY_LEDGER_EXPORT_SCHEMA_VERSION = "concierge.capability-ledger.export.v1" as const;
+const CAPABILITY_LEDGER_PRIVACY_CAVEAT =
+  "Local metadata-only capability signals. Raw user text, raw audio, and raw video are not stored by default.";
+const CAPABILITY_LEDGER_EXPORT_PRIVACY_CAVEAT =
+  "Local metadata-only capability signals. This export does not grant permission to share externally and does not approve, implement, write memory, dispatch agents, or send.";
+
+const CAPABILITY_STATUSES: CapabilityStatus[] = ["working", "degraded", "missing", "blocked", "unknown"];
+const CAPABILITY_OUTCOMES: CapabilityOutcomeSignal[] = [
+  "answered",
+  "clarified",
+  "rehearsed",
+  "review_required",
+  "blocked",
+  "bridge_failed",
+  "user_corrected",
+  "user_retried",
+  "dismissed",
+  "abandoned",
+];
+const CAPABILITY_ARCHITECTURE_AREAS: CapabilityArchitectureArea[] = [
+  "text_ui",
+  "bridge",
+  "governance_ux",
+  "memory_review",
+  "settings_privacy",
+  "observability",
+  "evaluator",
+  "voice",
+  "avatar",
+  "napoleon_runtime",
+  "agent_registry",
+];
+const CAPABILITY_PRIVACY_CLASSES: CapabilityPrivacyClass[] = [
+  "metadata_only",
+  "redacted_summary",
+  "sensitive",
+  "child_sensitive",
+];
+const SUGGESTED_NEXT_STEPS: SuggestedNextStep[] = [
+  "no_action",
+  "write_evaluator_case",
+  "add_backlog_item",
+  "create_evolution_proposal",
+  "needs_human_review",
+];
 
 function clampConfidence(confidence: number): number {
   if (Number.isNaN(confidence)) return 0;
@@ -183,6 +251,9 @@ export function createCapabilityLedger(options: { maxSignals?: number } = {}): C
       }
       return signal;
     },
+    clear() {
+      signals.length = 0;
+    },
     listRecent(limit = maxSignals) {
       return signals.slice(Math.max(0, signals.length - limit));
     },
@@ -197,6 +268,121 @@ export function appendCapabilitySignal(
   signal: ConversationCapabilitySignal,
 ): ConversationCapabilitySignal {
   return ledger.append(signal);
+}
+
+export function clearCapabilityLedger(ledger: CapabilityLedger) {
+  ledger.clear();
+}
+
+function isString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isOneOf<T extends string>(value: unknown, allowed: readonly T[]): value is T {
+  return typeof value === "string" && allowed.includes(value as T);
+}
+
+function sanitizeSignal(value: unknown): ConversationCapabilitySignal | null {
+  if (!value || typeof value !== "object") return null;
+  const candidate = value as Record<string, unknown>;
+  if (candidate.eventName !== "conversation_capability_signal") return null;
+  if (!isString(candidate.traceId) || !isString(candidate.conversationId) || !isString(candidate.turnId)) return null;
+  if (!isOneOf(candidate.profileMode, ["adult_owner", "child_protected_user", "guest", "collaborator"])) return null;
+  if (!isOneOf(candidate.channel, ["text", "voice", "avatar"])) return null;
+  if (
+    !isString(candidate.topicLabel) ||
+    !isString(candidate.intentLabel) ||
+    !isString(candidate.capabilityLabel)
+  ) {
+    return null;
+  }
+  if (!isOneOf(candidate.capabilityStatus, CAPABILITY_STATUSES)) return null;
+  if (!isOneOf(candidate.outcomeSignal, CAPABILITY_OUTCOMES)) return null;
+  if (!isNumber(candidate.confidence)) return null;
+  if (!Array.isArray(candidate.evidenceRefs) || !candidate.evidenceRefs.every(isString)) return null;
+  if (!isOneOf(candidate.architectureArea, CAPABILITY_ARCHITECTURE_AREAS)) return null;
+  if (!isOneOf(candidate.privacyClass, CAPABILITY_PRIVACY_CLASSES)) return null;
+  if (!isOneOf(candidate.suggestedNextStep, SUGGESTED_NEXT_STEPS)) return null;
+
+  return buildCapabilitySignal({
+    traceId: candidate.traceId,
+    conversationId: candidate.conversationId,
+    turnId: candidate.turnId,
+    profileMode: candidate.profileMode,
+    channel: candidate.channel,
+    topicLabel: candidate.topicLabel,
+    intentLabel: candidate.intentLabel,
+    capabilityLabel: candidate.capabilityLabel,
+    capabilityStatus: candidate.capabilityStatus,
+    outcomeSignal: candidate.outcomeSignal,
+    confidence: candidate.confidence,
+    evidenceRefs: [...candidate.evidenceRefs],
+    architectureArea: candidate.architectureArea,
+    privacyClass: candidate.privacyClass,
+    suggestedNextStep: candidate.suggestedNextStep,
+  });
+}
+
+function prunedSignals(signals: ConversationCapabilitySignal[], maxSignals: number): ConversationCapabilitySignal[] {
+  return signals.slice(Math.max(0, signals.length - Math.max(1, maxSignals)));
+}
+
+export function serializeCapabilityLedger(
+  ledger: CapabilityLedger,
+  options: { maxSignals?: number; generatedAt?: string } = {},
+): SerializedCapabilityLedger {
+  const maxSignals = Math.max(1, options.maxSignals ?? 250);
+  return {
+    schemaVersion: CAPABILITY_LEDGER_SCHEMA_VERSION,
+    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    privacyCaveat: CAPABILITY_LEDGER_PRIVACY_CAVEAT,
+    retention: { maxSignals },
+    signals: prunedSignals(ledger.listRecent(), maxSignals),
+  };
+}
+
+export function deserializeCapabilityLedger(
+  snapshot: unknown,
+  options: { maxSignals?: number } = {},
+): CapabilityLedger {
+  const maxSignals =
+    options.maxSignals ??
+    (snapshot &&
+    typeof snapshot === "object" &&
+    "retention" in snapshot &&
+    snapshot.retention &&
+    typeof snapshot.retention === "object" &&
+    "maxSignals" in snapshot.retention &&
+    typeof snapshot.retention.maxSignals === "number"
+      ? snapshot.retention.maxSignals
+      : 250);
+  const ledger = createCapabilityLedger({ maxSignals });
+  if (!snapshot || typeof snapshot !== "object") return ledger;
+  const candidate = snapshot as Record<string, unknown>;
+  if (candidate.schemaVersion !== CAPABILITY_LEDGER_SCHEMA_VERSION || !Array.isArray(candidate.signals)) return ledger;
+
+  for (const signal of prunedSignals(candidate.signals.map(sanitizeSignal).filter((s) => s !== null), maxSignals)) {
+    appendCapabilitySignal(ledger, signal);
+  }
+  return ledger;
+}
+
+export function exportCapabilityLedger(
+  ledger: CapabilityLedger,
+  options: { maxSignals?: number; generatedAt?: string } = {},
+): ExportedCapabilityLedger {
+  const maxSignals = Math.max(1, options.maxSignals ?? 250);
+  return {
+    schemaVersion: CAPABILITY_LEDGER_EXPORT_SCHEMA_VERSION,
+    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    privacyCaveat: CAPABILITY_LEDGER_EXPORT_PRIVACY_CAVEAT,
+    retention: { maxSignals },
+    signals: prunedSignals(ledger.listRecent(), maxSignals),
+  };
 }
 
 function increment(bucket: Record<string, number>, key: string) {

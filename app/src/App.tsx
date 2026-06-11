@@ -20,6 +20,11 @@ import {
 } from "./presentation";
 import { emitEvent, newTraceId } from "./telemetry";
 import { capabilityLedger } from "./telemetry";
+import {
+  CAPABILITY_LEDGER_MAX_SIGNALS,
+  clearPersistedCapabilityLedger,
+  exportCapabilityLedgerJson,
+} from "./capabilityLedgerStorage";
 import type { ConciergeMessage } from "./types";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
@@ -52,6 +57,14 @@ function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapa
   return `${answer.summary}\n\n${rows}\n\nEvidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
 }
 
+function browserStorage(): Storage | null {
+  try {
+    return typeof window === "undefined" ? null : window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 export function App() {
   const [messages, setMessages] = useState<ConciergeMessage[]>([
     {
@@ -70,7 +83,13 @@ export function App() {
   const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
   const [lastMemoryReviewState, setLastMemoryReviewState] = useState<MemoryProposalReviewState | null>(null);
   const [lastMemoryReview, setLastMemoryReview] = useState<ReturnType<typeof describeMemoryProposalReview> | null>(null);
+  const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
+  const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
   const descriptorStatus = validateChiefOfStaffDescriptor(defaultChiefOfStaffDescriptor);
+
+  function refreshCapabilityLedgerStatus() {
+    setCapabilitySignalCount(capabilityLedger.listRecent().length);
+  }
 
   function updateEndpoint(value: string) {
     setEndpoint(value);
@@ -141,6 +160,7 @@ export function App() {
       profile,
       requestId: preview.chiefOfStaffReviewPacket.requestId,
     });
+    refreshCapabilityLedgerStatus();
     if (preview.governanceReview.status === "review_needed") {
       emitEvent("governance_review_required", {
         traceId,
@@ -150,6 +170,7 @@ export function App() {
         outcome: preview.governanceReview.outcome,
         decisionId: preview.governanceReview.decisionId,
       });
+      refreshCapabilityLedgerStatus();
     }
     if (memoryReview) {
       emitEvent("memory_proposal_review_created", {
@@ -160,6 +181,7 @@ export function App() {
         memoryWritePerformed: memoryReviewState.memoryWritePerformed,
         approvalCaptured: memoryReviewState.approvalCaptured,
       });
+      refreshCapabilityLedgerStatus();
     }
     setPendingRehearsal({ content, traceId, turnId, preview, summary, review, memoryReviewState, memoryReview });
     setLastDecision(null);
@@ -209,6 +231,7 @@ export function App() {
         outcome: rehearsal.preview.governanceReview.outcome,
         decisionId: rehearsal.preview.governanceReview.decisionId,
       });
+      refreshCapabilityLedgerStatus();
       setLastReview(rehearsal.review);
       return;
     }
@@ -227,6 +250,7 @@ export function App() {
           outcome: reviewState.outcome,
           decisionId: reviewState.decisionId,
         });
+        refreshCapabilityLedgerStatus();
         setLastReview(reviewView);
         setLastDecision(
           describeGovernanceDecision({
@@ -280,6 +304,7 @@ export function App() {
         governanceOutcome: response.governanceDecision.outcome,
         auditId: response.auditEnvelope.audit_id,
       });
+      refreshCapabilityLedgerStatus();
       setLastDecision(decisionView);
       const responseReviewState = buildGovernanceReviewState(response.governanceDecision, profile);
       setLastReview(describeGovernanceReview(responseReviewState));
@@ -292,6 +317,7 @@ export function App() {
           outcome: responseReviewState.outcome,
           decisionId: responseReviewState.decisionId,
         });
+        refreshCapabilityLedgerStatus();
       }
       if (memoryReviewState.status === "none") {
         setLastMemoryReviewState(null);
@@ -307,6 +333,7 @@ export function App() {
           memoryWritePerformed: memoryReviewState.memoryWritePerformed,
           approvalCaptured: memoryReviewState.approvalCaptured,
         });
+        refreshCapabilityLedgerStatus();
       }
       setMessages((m) => [
         ...m,
@@ -324,6 +351,7 @@ export function App() {
       ]);
     } catch (error) {
       emitEvent("response_failed", { traceId, conversationId, turnId, error: String(error) });
+      refreshCapabilityLedgerStatus();
       setMessages((m) => [
         ...m,
         {
@@ -360,6 +388,7 @@ export function App() {
       decisionId: acknowledgedReview.decisionId,
       approvalCaptured: acknowledgedReview.approvalCaptured,
     });
+    refreshCapabilityLedgerStatus();
   }
 
   function updatePendingMemoryReview(status: "acknowledged_locally" | "dismissed_locally") {
@@ -376,6 +405,7 @@ export function App() {
       approvalCaptured: updated.approvalCaptured,
       localReview: updated.localReview,
     });
+    refreshCapabilityLedgerStatus();
   }
 
   function acknowledgeLastReview() {
@@ -402,6 +432,38 @@ export function App() {
       memoryWritePerformed: updated.memoryWritePerformed,
       approvalCaptured: updated.approvalCaptured,
       localReview: updated.localReview,
+    });
+    refreshCapabilityLedgerStatus();
+  }
+
+  function clearCapabilityHistory() {
+    const traceId = newTraceId();
+    clearPersistedCapabilityLedger(browserStorage(), capabilityLedger);
+    setCapabilityExportJson(null);
+    refreshCapabilityLedgerStatus();
+    emitEvent("capability_ledger_cleared", {
+      traceId,
+      conversationId,
+      evidenceCount: 0,
+      storage: "local_browser",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
+    });
+  }
+
+  function exportCapabilityHistory() {
+    const traceId = newTraceId();
+    const json = exportCapabilityLedgerJson(capabilityLedger);
+    setCapabilityExportJson(json);
+    emitEvent("capability_ledger_exported", {
+      traceId,
+      conversationId,
+      evidenceCount: capabilityLedger.listRecent().length,
+      storage: "local_browser",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
     });
   }
 
@@ -466,6 +528,27 @@ export function App() {
           <strong>Cache policy</strong>
           <span>{descriptorStatus.cachePolicy}</span>
         </div>
+      </section>
+
+      <section className="capability-ledger-controls">
+        <div>
+          <strong>Capability ledger</strong>
+          <span>
+            {capabilitySignalCount} local metadata signals retained in this browser, max {CAPABILITY_LEDGER_MAX_SIGNALS}.
+          </span>
+          <span>Export is local JSON only and does not grant permission to share externally.</span>
+        </div>
+        <div className="ledger-actions">
+          <button className="secondary" onClick={exportCapabilityHistory}>
+            Export local capability metadata
+          </button>
+          <button className="secondary" onClick={clearCapabilityHistory}>
+            Clear local capability ledger
+          </button>
+        </div>
+        {capabilityExportJson ? (
+          <pre aria-label="Exported local capability metadata">{capabilityExportJson}</pre>
+        ) : null}
       </section>
 
       <section className="messages">

@@ -1,10 +1,10 @@
 import {
   appendCapabilitySignal,
-  createCapabilityLedger,
   deriveCapabilitySignalFromEvent,
   type CapabilityLedger,
   type ConversationCapabilitySignal,
 } from "./capabilityLedger.js";
+import { loadCapabilityLedgerFromStorage, persistCapabilityLedgerToStorage } from "./capabilityLedgerStorage.js";
 
 export interface TelemetryPayload {
   ts: string;
@@ -12,7 +12,15 @@ export interface TelemetryPayload {
   attributes: Record<string, unknown>;
 }
 
-export const capabilityLedger: CapabilityLedger = createCapabilityLedger({ maxSignals: 250 });
+function browserStorage(): Storage | null {
+  try {
+    return typeof window === "undefined" ? null : window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+export const capabilityLedger: CapabilityLedger = loadCapabilityLedgerFromStorage(browserStorage());
 
 export function newTraceId(): string {
   return `trace_${Date.now()}_${Math.random().toString(16).slice(2)}`;
@@ -59,6 +67,18 @@ export function emitCapabilitySignal(
 
   const signal = deriveCapabilitySignalFromEvent(event, attributes);
   appendCapabilitySignal(capabilityLedger, signal);
+  if (persistCapabilityLedgerToStorage(browserStorage(), capabilityLedger)) {
+    emitPayload(
+      makeTelemetryPayload("capability_ledger_persisted", {
+        traceId: signal.traceId,
+        conversationId: signal.conversationId,
+        turnId: signal.turnId,
+        evidenceCount: capabilityLedger.listRecent().length,
+        privacyClass: signal.privacyClass,
+        storage: "local_browser",
+      }),
+    );
+  }
   emitPayload(makeTelemetryPayload(signal.eventName, signal as unknown as Record<string, unknown>));
   return signal;
 }

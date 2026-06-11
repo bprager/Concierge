@@ -71,6 +71,16 @@ Child protected memory proposals require guardian-appropriate review and must us
 - Child data minimized
 - Telemetry redacted before export
 
+Conversation Capability Intelligence persistence:
+
+- Stores derived metadata signals only by default, not raw user text, raw audio, or raw video.
+- Uses bounded browser-local retention for the latest capability signals.
+- Shows local retention status in the Text Concierge UI.
+- Provides a clear control that removes both persisted and in-memory capability signals.
+- Provides a local JSON export control with a privacy caveat; export does not grant permission to share externally.
+- Clear and export controls do not capture approval, write Napoleon memory, dispatch agents, send externally, or change governance authority.
+- Child protected records remain minimized and marked with `child_sensitive` privacy class.
+
 ## 6. Child mode rules
 
 Child protected mode must:

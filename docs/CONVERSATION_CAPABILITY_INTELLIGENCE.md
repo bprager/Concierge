@@ -28,7 +28,7 @@ Tracking only topics would be misleading. A frequent topic may already work well
 
 The local ledger should store derived metadata, not raw conversation transcripts by default.
 
-Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model and an in-memory bounded ledger. It is wired through `app/src/telemetry.ts` for current Text Concierge events. The ledger is local process memory for now; durable storage, deletion controls, and export controls are future work.
+Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model, bounded ledger, serialization, deserialization, validation, pruning, export, and clear helpers. It is wired through `app/src/telemetry.ts` for current Text Concierge events and uses browser-local storage through `app/src/capabilityLedgerStorage.ts`. The Text Concierge UI shows the retained local signal count and provides clear and export controls.
 
 Each turn can emit a `conversation_capability_signal` with:
 
@@ -49,6 +49,15 @@ Each turn can emit a `conversation_capability_signal` with:
 - `suggested_next_step`: `no_action`, `write_evaluator_case`, `add_backlog_item`, `create_evolution_proposal`, `needs_human_review`
 
 Raw content may be temporarily used to classify a turn, but it should not be retained in this ledger by default.
+
+Persistent local storage:
+
+- Schema version: `concierge.capability-ledger.v1`.
+- Export schema version: `concierge.capability-ledger.export.v1`.
+- Retention: bounded to the latest 250 derived metadata signals.
+- Clear control: removes the persisted snapshot and clears the in-memory ledger.
+- Export control: renders local JSON for derived metadata only and states that export does not grant permission to share externally.
+- Child protected records remain distinguishable through `profile_mode` and `privacy_class: child_sensitive`, without retaining raw child content.
 
 ## 4. Answer model
 
@@ -102,8 +111,8 @@ Defaults:
 
 - Local-only storage.
 - Metadata and redacted summaries only.
-- User-visible retention and deletion controls.
-- Opt-in export.
+- User-visible retention, deletion, and export controls.
+- Export is user-triggered local JSON and does not imply permission to send or share externally.
 - No raw audio, raw video, or raw child conversation storage.
 - Child protected signals are minimized and guardian-controlled.
 - No automatic self-evolution.
@@ -127,7 +136,7 @@ Initial components:
 This capability should be built in phases:
 
 1. Define schema and local derived event emission. Implemented in `app/src/capabilityLedger.ts` and `app/src/telemetry.ts`.
-2. Add bounded local ledger and redaction policy. Initial in-memory bounded ledger is implemented; persistent retention and deletion controls remain next.
+2. Add bounded local ledger and redaction policy. Bounded in-memory and browser-local persistence, deletion, and export controls are implemented; richer age-based retention and taxonomy editing remain next.
 3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next answers are implemented in the Text Concierge UI.
 4. Add architecture-area mapping and recommendation scoring. Initial deterministic local scoring is implemented from count, confidence, status, architecture area, and suggested next step; richer value, effort, risk, and trend scoring remain future work.
 5. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.

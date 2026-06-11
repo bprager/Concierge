@@ -25,6 +25,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added the first local `conversation_capability_signal` TypeScript model, bounded in-memory ledger, aggregation helpers, and telemetry wiring for Text Concierge flows.
 - Added the first Conversation Capability Intelligence query surface for local common-conversation and missing/blocked-capability answers.
 - Expanded Conversation Capability Intelligence answers with local working-well, easy-to-evolve, architecture-area, and recommended-next capability planning views.
+- Added browser-local Conversation Capability Intelligence persistence with retention, clear, and metadata-only JSON export controls.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.
