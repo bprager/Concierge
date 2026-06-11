@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Napoleon Bridge API
   version: 0.1.0
-  description: Local Concierge bridge contract aligned with Napoleon Chief of Staff contract-only integration surfaces.
+  description: Local Concierge bridge contract aligned with Napoleon Chief of Staff contract-only integration surfaces. The app accepts a Napoleon base URL and resolves operation-specific paths below.
 components:
   securitySchemes:
     NapoleonBearer:

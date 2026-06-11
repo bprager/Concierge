@@ -37,6 +37,7 @@ test("live bridge fails closed when no Napoleon endpoint is configured", async (
 test("live bridge request sends contract-first payload to configured endpoint", async () => {
   let posted: Record<string, unknown> | undefined;
   let headers: Record<string, string> | undefined;
+  let targetUrl: string | undefined;
 
   const response = await sendToNapoleon(
     {
@@ -51,7 +52,8 @@ test("live bridge request sends contract-first payload to configured endpoint", 
       getEndpoint: () => "https://napoleon.example/concierge",
       getAuthToken: () => "token_live",
       emit: () => undefined,
-      fetch: async (_url, init) => {
+      fetch: async (url, init) => {
+        targetUrl = url;
         posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
         headers = init?.headers;
         return {
@@ -110,6 +112,7 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "governance_review");
   assert.equal((posted?.governanceRequest as { requested_authority_tier: string }).requested_authority_tier, "advisory_review");
   assert.equal((posted?.traceEnvelope as { trace_id: string }).trace_id, "trace_live");
+  assert.equal(targetUrl, "https://napoleon.example/concierge/v1/concierge/turn");
   assert.equal(headers?.Authorization, "Bearer token_live");
   assert.equal(JSON.stringify(posted).includes("token_live"), false);
   assert.equal(response.governanceDecision.outcome, "requires_review");

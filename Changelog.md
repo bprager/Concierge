@@ -31,6 +31,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added local risk/value score components and scoring caveats for Conversation Capability Intelligence recommendations.
 - Added fail-closed live Napoleon bridge errors for missing endpoints, descriptor mismatch, auth failure, contract mismatch, no-go governance, bridge timeout, and HTTP failure.
 - Added optional local bridge bearer token support for live text turns and governed steering handoff, sent only as an authorization header.
+- Added canonical bridge endpoint resolution from a configured Napoleon base URL for text turns and Chief of Staff steering handoff.
 - Added first-class Napoleon descriptor connection state for discovered, missing, and checksum/signature mismatch cases.
 - Added strict live bridge provenance checks requiring Napoleon trace and audit envelopes to match governance and delegation attribution.
 - Added Napoleon delegation provenance support and a Text Concierge delegation panel that only attributes agent contributions when the bridge response includes them.
