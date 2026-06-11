@@ -248,6 +248,40 @@ paths:
                 type: object
                 required: [serviceId, ready, runtimeAuthority, cachePolicy, blockedEffects]
                 properties:
+                  descriptor:
+                    type: object
+                    required: [schemaVersion, serviceId, runtimeAuthority, commandExecution, cachePolicy, blockedEffects]
+                    properties:
+                      schemaVersion:
+                        type: string
+                      serviceId:
+                        type: string
+                        const: napoleon.chief_of_staff
+                      runtimeAuthority:
+                        type: boolean
+                        const: false
+                      commandExecution:
+                        type: boolean
+                        const: false
+                      cachePolicy:
+                        type: string
+                        const: fail_closed_to_review_required
+                      blockedEffects:
+                        type: array
+                        items:
+                          type: string
+                  checksum:
+                    type: object
+                    properties:
+                      expected:
+                        type: string
+                      actual:
+                        type: string
+                  signature:
+                    type: object
+                    properties:
+                      valid:
+                        type: boolean
                   serviceId:
                     type: string
                   ready:

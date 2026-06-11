@@ -155,7 +155,8 @@ Acceptance criteria:
 - Live sends fail closed when no endpoint is configured, descriptor validation fails, auth fails, the response contract is invalid, local governance is `no_go`, or the bridge times out.
 - Optional bridge tokens are sent only as `Authorization` headers and are not included in request bodies, telemetry, memory proposals, or capability exports.
 - Configured Napoleon base URLs resolve to canonical bridge paths for text turns and Chief of Staff steering handoff.
-- Descriptor discovery is visible as first-class connection state, including missing descriptor and checksum/signature mismatch states.
+- Descriptor discovery is visible as first-class connection state, including live-discovered, missing descriptor, and checksum/signature mismatch states.
+- Live descriptor discovery resolves the configured Napoleon base URL to `/v1/concierge/chief-of-staff/descriptor` and treats invalid results as blocked connection state, not authority.
 - Failures are visible as local blocked states and do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
 - Successful live responses may include a Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID.
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.

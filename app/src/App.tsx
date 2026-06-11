@@ -22,9 +22,11 @@ import {
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
   transitionMemoryProposalReviewState,
+  type DescriptorConnectionInput,
   type LocalProfile,
   type MemoryProposalReviewState,
 } from "./contractBridge";
+import { discoverNapoleonDescriptor } from "./descriptorDiscovery";
 import { NapoleonBridgeError, sendToNapoleon } from "./napoleonBridge";
 import {
   describeDelegation,
@@ -94,7 +96,9 @@ export function App() {
   const [input, setInput] = useState("");
   const [profile, setProfile] = useState<LocalProfile>("adult_owner");
   const [rehearsalMode, setRehearsalMode] = useState(true);
-  const [descriptorMode, setDescriptorMode] = useState<"discovered" | "missing" | "checksum_mismatch">("discovered");
+  const [descriptorMode, setDescriptorMode] = useState<"discovered" | "live" | "missing" | "checksum_mismatch">("discovered");
+  const [liveDescriptorInput, setLiveDescriptorInput] = useState<DescriptorConnectionInput | null>(null);
+  const [descriptorDiscoveryMessage, setDescriptorDiscoveryMessage] = useState<string | null>(null);
   const [pendingRehearsal, setPendingRehearsal] = useState<PendingRehearsal | null>(null);
   const [endpoint, setEndpoint] = useState(() =>
     typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_endpoint") ?? "",
@@ -117,13 +121,22 @@ export function App() {
   const [selectedTaxonomyLabel, setSelectedTaxonomyLabel] = useState("");
   const [taxonomyRenameValue, setTaxonomyRenameValue] = useState("");
   const [taxonomyMergeTarget, setTaxonomyMergeTarget] = useState("");
-  const descriptorConnection = buildDescriptorConnectionState({
-    endpointConfigured: Boolean(endpoint.trim()),
-    descriptor: descriptorMode === "missing" ? null : defaultChiefOfStaffDescriptor,
-    expectedChecksum: descriptorMode === "checksum_mismatch" ? "sha256:expected" : "sha256:local-static",
-    actualChecksum: descriptorMode === "checksum_mismatch" ? "sha256:actual" : "sha256:local-static",
-    signatureValid: descriptorMode === "checksum_mismatch" ? false : true,
-  });
+  function currentDescriptorInput(): DescriptorConnectionInput {
+    if (descriptorMode === "live" && liveDescriptorInput) {
+      return {
+        ...liveDescriptorInput,
+        endpointConfigured: Boolean(endpoint.trim()),
+      };
+    }
+    return {
+      endpointConfigured: Boolean(endpoint.trim()),
+      descriptor: descriptorMode === "missing" ? null : defaultChiefOfStaffDescriptor,
+      expectedChecksum: descriptorMode === "checksum_mismatch" ? "sha256:expected" : "sha256:local-static",
+      actualChecksum: descriptorMode === "checksum_mismatch" ? "sha256:actual" : "sha256:local-static",
+      signatureValid: descriptorMode === "checksum_mismatch" ? false : true,
+    };
+  }
+  const descriptorConnection = buildDescriptorConnectionState(currentDescriptorInput());
   const descriptorStatus = descriptorConnection.descriptorStatus;
 
   function refreshCapabilityLedgerStatus() {
@@ -174,6 +187,38 @@ export function App() {
       localStorage.setItem("napoleon_auth_token", value.trim());
     } else {
       localStorage.removeItem("napoleon_auth_token");
+    }
+  }
+
+  async function discoverDescriptor() {
+    try {
+      const result = await discoverNapoleonDescriptor({
+        getEndpoint: () => endpoint.trim() || null,
+        getAuthToken: () => authToken.trim() || null,
+      });
+      setLiveDescriptorInput(result.input);
+      setDescriptorMode("live");
+      setDescriptorDiscoveryMessage(result.connection.message);
+      emitEvent("descriptor_discovery_completed", {
+        traceId: newTraceId(),
+        conversationId,
+        state: result.connection.state,
+        checksumState: result.connection.checksumState,
+        signatureState: result.connection.signatureState,
+        canAttemptLiveBridge: result.connection.canAttemptLiveBridge,
+      });
+    } catch (error) {
+      const failedInput = { endpointConfigured: Boolean(endpoint.trim()), descriptor: null };
+      const failedConnection = buildDescriptorConnectionState(failedInput);
+      setLiveDescriptorInput(failedInput);
+      setDescriptorMode("live");
+      setDescriptorDiscoveryMessage("Descriptor discovery failed closed. Concierge will not attempt live bridge calls.");
+      emitEvent("descriptor_discovery_failed", {
+        traceId: newTraceId(),
+        conversationId,
+        state: failedConnection.state,
+        error: String(error),
+      });
     }
   }
 
@@ -365,13 +410,7 @@ export function App() {
         channel: "text",
         message: content,
       }, {
-        descriptorConnection: {
-          endpointConfigured: Boolean(endpoint.trim()),
-          descriptor: descriptorMode === "missing" ? null : defaultChiefOfStaffDescriptor,
-          expectedChecksum: descriptorMode === "checksum_mismatch" ? "sha256:expected" : "sha256:local-static",
-          actualChecksum: descriptorMode === "checksum_mismatch" ? "sha256:actual" : "sha256:local-static",
-          signatureValid: descriptorMode === "checksum_mismatch" ? false : true,
-        },
+        descriptorConnection: currentDescriptorInput(),
       });
 
       const decisionView = describeGovernanceDecision({
@@ -606,13 +645,7 @@ export function App() {
         conversationId,
         traceId,
         profile,
-        descriptorConnection: {
-          endpointConfigured: Boolean(endpoint.trim()),
-          descriptor: descriptorMode === "missing" ? null : defaultChiefOfStaffDescriptor,
-          expectedChecksum: descriptorMode === "checksum_mismatch" ? "sha256:expected" : "sha256:local-static",
-          actualChecksum: descriptorMode === "checksum_mismatch" ? "sha256:actual" : "sha256:local-static",
-          signatureValid: descriptorMode === "checksum_mismatch" ? false : true,
-        },
+        descriptorConnection: currentDescriptorInput(),
       });
       setSteeringSubmission(result);
       setSteeringFailure(null);
@@ -719,10 +752,14 @@ export function App() {
           Descriptor
           <select value={descriptorMode} onChange={(e) => setDescriptorMode(e.target.value as typeof descriptorMode)}>
             <option value="discovered">Discovered local descriptor</option>
+            <option value="live">Live discovered descriptor</option>
             <option value="missing">Missing descriptor</option>
             <option value="checksum_mismatch">Checksum/signature mismatch</option>
           </select>
         </label>
+        <button className="secondary" onClick={discoverDescriptor}>
+          Discover descriptor
+        </button>
         <label>
           Rehearsal Mode
           <input
@@ -749,6 +786,10 @@ export function App() {
         <div>
           <strong>Descriptor validation</strong>
           <span>{descriptorStatus?.ready ? "valid, contract-only" : descriptorConnection.message}</span>
+        </div>
+        <div>
+          <strong>Discovery source</strong>
+          <span>{descriptorMode === "live" ? descriptorDiscoveryMessage ?? "live descriptor selected" : "local simulation"}</span>
         </div>
         <div>
           <strong>Checksum</strong>
