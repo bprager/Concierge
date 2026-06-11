@@ -58,7 +58,7 @@ Evaluator coverage:
 | TX-009 | Add local settings and privacy panel | P1 | User can configure endpoint, telemetry, profile, camera, mic | settings_changed |
 | TX-010 | Add evaluator fixtures for text UI | P1 | Text mode can be smoke tested | text_smoke_eval_completed |
 | TX-011 | Add Rehearsal Mode for governed turns | P0 | User can preview understood request, proposed Napoleon path, CoS review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate before any live bridge call | rehearsal_preview_created |
-| TX-012 | Add capability intelligence query surface | P1 | User can ask what conversations are common, working, missing, architecture-blocked, and recommended next from local capability aggregates | capability_intelligence_answered |
+| TX-012 | Add capability intelligence query surface | P1 | Initial local query surface answers common conversation and missing/blocked capability questions; working-well, easy-to-evolve, and next-capability recommendation views remain future work | capability_intelligence_answered |
 
 ### TX-005 details
 
@@ -129,7 +129,8 @@ User value: The user can ask Concierge where it is useful, where it is failing, 
 
 Acceptance criteria:
 
-- Concierge can answer common, working, missing, architecture-blocked, and recommended-next capability questions from local aggregate signals.
+- Concierge can answer common and missing/blocked capability questions from local aggregate signals.
+- Future query views should add working-well, easy-to-evolve, architecture-blocked, and recommended-next answers.
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
 - Correctly blocked unsafe requests are classified separately from failed safe requests.
 - Recommendations are proposal-only and do not implement features, grant approval, write memory, dispatch agents, or send externally.

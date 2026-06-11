@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { answerCapabilityQuestion } from "./capabilityLedger";
 import {
   buildGovernanceReviewState,
   buildMemoryProposalReviewState,
@@ -18,6 +19,7 @@ import {
   summarizeRehearsalPreview,
 } from "./presentation";
 import { emitEvent, newTraceId } from "./telemetry";
+import { capabilityLedger } from "./telemetry";
 import type { ConciergeMessage } from "./types";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
@@ -31,6 +33,20 @@ interface PendingRehearsal {
   review: ReturnType<typeof describeGovernanceReview>;
   memoryReviewState: MemoryProposalReviewState;
   memoryReview: ReturnType<typeof describeMemoryProposalReview> | null;
+}
+
+function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapabilityQuestion>>): string {
+  const rows = answer.rows.length
+    ? answer.rows
+        .map((row) => {
+          const status = row.status ? `, ${row.status}` : "";
+          const area = row.architectureArea ? `, ${row.architectureArea}` : "";
+          return `${row.label}: ${row.count}${status}${area}`;
+        })
+        .join("\n")
+    : "No local signals yet.";
+
+  return `${answer.summary}\n\n${rows}\n\nEvidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
 }
 
 export function App() {
@@ -79,6 +95,29 @@ export function App() {
 
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
+    const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger);
+    if (capabilityAnswer) {
+      emitEvent("capability_intelligence_answered", {
+        traceId,
+        conversationId,
+        turnId,
+        profile,
+        kind: capabilityAnswer.kind,
+        evidenceCount: capabilityAnswer.evidenceCount,
+      });
+      setMessages((m) => [
+        ...m,
+        { role: "user", content },
+        { role: "assistant", content: formatCapabilityAnswer(capabilityAnswer) },
+      ]);
+      setInput("");
+      setPendingRehearsal(null);
+      setLastDecision(null);
+      setLastReview(null);
+      setLastMemoryReviewState(null);
+      setLastMemoryReview(null);
+      return;
+    }
     const contract = buildTextTurnContract({
       message: content,
       profile,
@@ -129,6 +168,35 @@ export function App() {
   async function submit(rehearsal: PendingRehearsal | null = null) {
     const content = rehearsal?.content ?? input.trim();
     if (!content) return;
+
+    if (!rehearsal) {
+      const traceId = newTraceId();
+      const turnId = `turn_${Date.now().toString(16)}`;
+      const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger);
+      if (capabilityAnswer) {
+        emitEvent("capability_intelligence_answered", {
+          traceId,
+          conversationId,
+          turnId,
+          profile,
+          kind: capabilityAnswer.kind,
+          evidenceCount: capabilityAnswer.evidenceCount,
+        });
+        setMessages((m) => [
+          ...m,
+          { role: "user", content },
+          { role: "assistant", content: formatCapabilityAnswer(capabilityAnswer) },
+        ]);
+        setInput("");
+        setPendingRehearsal(null);
+        setLastDecision(null);
+        setLastReview(null);
+        setLastMemoryReviewState(null);
+        setLastMemoryReview(null);
+        return;
+      }
+    }
+
     if (rehearsal && !rehearsal.preview.governanceReview.canSendAdvisory) {
       emitEvent("governance_review_blocked", {
         traceId: rehearsal.traceId,

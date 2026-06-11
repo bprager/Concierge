@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   appendCapabilitySignal,
+  answerCapabilityQuestion,
   aggregateCapabilitySignals,
   buildCapabilitySignal,
   createCapabilityLedger,
@@ -146,4 +147,107 @@ test("capability recommendations remain proposal-only and non-authoritative", ()
   assert.equal(signal.recommendationBoundary.memoryWriteAllowed, false);
   assert.equal(signal.recommendationBoundary.agentDispatchAllowed, false);
   assert.equal(signal.recommendationBoundary.externalSendAllowed, false);
+});
+
+test("answers common conversation questions from local aggregates", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_common_1",
+      conversationId: "conv_common",
+      turnId: "turn_common_1",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "deployment",
+      intentLabel: "summarize",
+      capabilityLabel: "text_response_generation",
+      capabilityStatus: "working",
+      outcomeSignal: "answered",
+      confidence: 0.8,
+      evidenceRefs: ["trace:trace_common_1"],
+      architectureArea: "text_ui",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "no_action",
+      rawMessage: "raw deployment content",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_common_2",
+      conversationId: "conv_common",
+      turnId: "turn_common_2",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "deployment",
+      intentLabel: "plan",
+      capabilityLabel: "rehearsal_mode",
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.84,
+      evidenceRefs: ["trace:trace_common_2"],
+      architectureArea: "text_ui",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "no_action",
+      rawMessage: "another raw deployment content",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What conversations are most common?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  assert.equal(answer.kind, "common_conversations");
+  assert.ok(answer.summary.includes("deployment"));
+  assert.equal(answer.rows[0].label, "deployment");
+  assert.equal(answer.rows[0].count, 2);
+  assert.ok(answer.caveat.includes("local metadata"));
+  assert.equal(answer.boundary.proposalOnly, true);
+  assert.equal(JSON.stringify(answer).includes("raw deployment content"), false);
+});
+
+test("answers missing or blocked capability questions separately from successful safety blocks", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("response_failed", {
+      traceId: "trace_missing",
+      conversationId: "conv_missing",
+      turnId: "turn_missing",
+      profile: "adult_owner",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("governance_review_blocked", {
+      traceId: "trace_blocked_query",
+      conversationId: "conv_blocked_query",
+      turnId: "turn_blocked_query",
+      profile: "adult_owner",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What capabilities are missing or blocked?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  assert.equal(answer.kind, "missing_or_blocked_capabilities");
+  assert.ok(answer.summary.includes("bridge_failure_handling"));
+  assert.ok(answer.summary.includes("governance_review"));
+  assert.equal(answer.rows.some((row) => row.status === "missing" && row.label === "bridge_failure_handling"), true);
+  assert.equal(answer.rows.some((row) => row.status === "blocked" && row.label === "governance_review"), true);
+  assert.ok(answer.caveat.includes("blocked can mean governance worked"));
+  assert.equal(answer.boundary.approvalCaptured, false);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+});
+
+test("does not answer unrelated questions as capability intelligence queries", () => {
+  const ledger = createCapabilityLedger();
+
+  const answer = answerCapabilityQuestion("Draft a bridge plan", ledger);
+
+  assert.equal(answer, null);
 });

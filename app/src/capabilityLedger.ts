@@ -94,6 +94,25 @@ export interface CapabilityLedger {
   aggregate(): CapabilityAggregate;
 }
 
+export type CapabilityQuestionKind = "common_conversations" | "missing_or_blocked_capabilities";
+
+export interface CapabilityAnswerRow {
+  label: string;
+  count: number;
+  status?: CapabilityStatus;
+  architectureArea?: CapabilityArchitectureArea;
+}
+
+export interface CapabilityQuestionAnswer {
+  kind: CapabilityQuestionKind;
+  question: string;
+  summary: string;
+  rows: CapabilityAnswerRow[];
+  evidenceCount: number;
+  caveat: string;
+  boundary: RecommendationBoundary;
+}
+
 const DEFAULT_RECOMMENDATION_BOUNDARY: RecommendationBoundary = {
   proposalOnly: true,
   approvalCaptured: false,
@@ -194,6 +213,81 @@ export function aggregateCapabilitySignals(signals: ConversationCapabilitySignal
   }
 
   return aggregate;
+}
+
+function sortedRows(bucket: Record<string, number>, limit = 5): CapabilityAnswerRow[] {
+  return Object.entries(bucket)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, limit)
+    .map(([label, count]) => ({ label, count }));
+}
+
+function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | null {
+  const lower = question.toLowerCase();
+  const asksAboutConversation = /\b(conversation|conversations|topics?)\b/.test(lower);
+  const asksCommon = /\b(common|most|frequent|popular)\b/.test(lower);
+  const asksCapability = /\b(capability|capabilities)\b/.test(lower);
+  const asksMissingOrBlocked = /\b(missing|blocked|not working|failed|failing|architecture)\b/.test(lower);
+
+  if (asksAboutConversation && asksCommon) return "common_conversations";
+  if (asksCapability && asksMissingOrBlocked) return "missing_or_blocked_capabilities";
+  return null;
+}
+
+function describeRows(rows: CapabilityAnswerRow[]): string {
+  if (rows.length === 0) return "No local signals yet.";
+  return rows.map((row) => `${row.label} (${row.count})`).join(", ");
+}
+
+export function answerCapabilityQuestion(
+  question: string,
+  ledger: CapabilityLedger,
+): CapabilityQuestionAnswer | null {
+  const kind = classifyCapabilityQuestion(question);
+  if (!kind) return null;
+
+  const signals = ledger.listRecent();
+  const aggregate = aggregateCapabilitySignals(signals);
+
+  if (kind === "common_conversations") {
+    const rows = sortedRows(aggregate.byTopic);
+    return {
+      kind,
+      question,
+      summary: `Most common local conversation topics: ${describeRows(rows)}.`,
+      rows,
+      evidenceCount: signals.length,
+      caveat: "Based on local metadata only; disabled telemetry periods and other devices are not included.",
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    };
+  }
+
+  const missingOrBlocked = signals.filter(
+    (signal) => signal.capabilityStatus === "missing" || signal.capabilityStatus === "blocked",
+  );
+  const grouped: Record<string, CapabilityAnswerRow> = {};
+  for (const signal of missingOrBlocked) {
+    const key = `${signal.capabilityLabel}:${signal.capabilityStatus}:${signal.architectureArea}`;
+    const row = grouped[key] ?? {
+      label: signal.capabilityLabel,
+      count: 0,
+      status: signal.capabilityStatus,
+      architectureArea: signal.architectureArea,
+    };
+    row.count += 1;
+    grouped[key] = row;
+  }
+  const rows = Object.values(grouped).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+
+  return {
+    kind,
+    question,
+    summary: `Missing or blocked local capabilities: ${describeRows(rows)}.`,
+    rows,
+    evidenceCount: missingOrBlocked.length,
+    caveat: "blocked can mean governance worked correctly; missing means a safe request path failed or is not implemented.",
+    boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+  };
 }
 
 function stringAttr(attributes: Record<string, unknown>, key: string, fallback: string): string {
