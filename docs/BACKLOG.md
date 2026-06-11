@@ -163,6 +163,7 @@ Acceptance criteria:
 - Descriptor discovery is visible as first-class connection state, including live-discovered, missing descriptor, and checksum/signature mismatch states.
 - Live descriptor discovery resolves the configured Napoleon base URL to `/v1/concierge/chief-of-staff/descriptor` and treats invalid results as blocked connection state, not authority.
 - Live text bridge calls can capture sanitized contract evidence for success and fail-closed outcomes without raw prompt text, response text, endpoint hosts, bearer tokens, request bodies, or response bodies.
+- `make bridge-evidence-capture` exercises one governed text evidence capture against the local harness.
 - `make bridge-evidence-compare` validates sample or captured bridge evidence against the OpenAPI-aligned bridge registry and rejects raw payload or secret fields.
 - Failures are visible as local blocked states and do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
 - Successful live responses may include a Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID.
