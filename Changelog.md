@@ -31,6 +31,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added local risk/value score components and scoring caveats for Conversation Capability Intelligence recommendations.
 - Added fail-closed live Napoleon bridge errors for missing endpoints, descriptor mismatch, auth failure, contract mismatch, no-go governance, bridge timeout, and HTTP failure.
 - Added sanitized live bridge contract evidence capture for success and fail-closed text bridge outcomes without storing raw prompt text, response text, endpoint hosts, or bearer tokens.
+- Added a bridge evidence comparator and sample evidence fixture that check captured bridge metadata against the OpenAPI-aligned bridge registry while rejecting raw payload or secret fields.
 - Added optional local bridge bearer token support for live text turns and governed steering handoff, sent only as an authorization header.
 - Added canonical bridge endpoint resolution from a configured Napoleon base URL for text turns and Chief of Staff steering handoff.
 - Added a bridge operation registry that is tested against the canonical OpenAPI Concierge paths.
