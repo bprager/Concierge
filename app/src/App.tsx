@@ -61,7 +61,8 @@ function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapa
           const confidence = row.confidence === undefined ? "" : `, confidence ${row.confidence}`;
           const score = row.score === undefined ? "" : `, score ${row.score}`;
           const nextStep = row.suggestedNextStep ? `, next ${row.suggestedNextStep}` : "";
-          return `${row.label}: ${row.count}${status}${area}${confidence}${score}${nextStep}`;
+          const scoreContext = row.scoreExplanation ? `, ${row.scoreExplanation}` : "";
+          return `${row.label}: ${row.count}${status}${area}${confidence}${score}${nextStep}${scoreContext}`;
         })
         .join("\n")
     : "No local signals yet.";

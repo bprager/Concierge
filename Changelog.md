@@ -28,6 +28,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added browser-local Conversation Capability Intelligence persistence with retention, clear, and metadata-only JSON export controls.
 - Added local Conversation Capability Intelligence taxonomy controls for rename, merge, deprecation, split-candidate marking, reset, persistence, and export.
 - Added age-based Conversation Capability Intelligence retention and local trend answers for increasing, worsening, recently working, and weekly-change questions.
+- Added local risk/value score components and scoring caveats for Conversation Capability Intelligence recommendations.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.

@@ -232,10 +232,12 @@ Acceptance criteria:
 - The taxonomy supports local merge, split-candidate, rename, reset, and deprecation review so labels do not drift.
 - Aggregates can identify common, working, degraded, missing, blocked, and unknown capability states.
 - Trend answers can compare the recent 7 day window with the previous 7 days for increasing conversations, worsening missing capabilities, recently working capabilities, and weekly changes.
+- Recommendation answers include deterministic local risk/value score components and remain proposal-only.
 
 Privacy and safety impact:
 
 - Capability analysis must not infer durable emotional traits or optimize engagement.
+- Recommendation scoring penalizes privacy, child safety, governance, and authority expansion risk.
 - Export is opt-in and redacted.
 
 Evaluator coverage:

@@ -25,6 +25,7 @@ function testSignal(
     architecture?: "text_ui" | "bridge" | "governance_ux" | "memory_review" | "settings_privacy" | "observability" | "evaluator" | "voice" | "avatar" | "napoleon_runtime" | "agent_registry";
     suggestedNextStep?: "no_action" | "write_evaluator_case" | "add_backlog_item" | "create_evolution_proposal" | "needs_human_review";
     profileMode?: "adult_owner" | "child_protected_user" | "guest" | "collaborator";
+    privacyClass?: "metadata_only" | "redacted_summary" | "sensitive" | "child_sensitive";
     rawMessage?: string;
   } = {},
 ): ConversationCapabilitySignal {
@@ -42,7 +43,7 @@ function testSignal(
     confidence: 0.8,
     evidenceRefs: [`trace:${traceId}`],
     architectureArea: options.architecture ?? "text_ui",
-    privacyClass: "metadata_only",
+    privacyClass: options.privacyClass ?? "metadata_only",
     suggestedNextStep: options.suggestedNextStep ?? "no_action",
     observedAt: options.observedAt,
     rawMessage: options.rawMessage,
@@ -846,4 +847,159 @@ test("child protected trend records remain minimized", () => {
   assert.equal(exported.signals[0].privacyClass, "child_sensitive");
   assert.equal(JSON.stringify(answer).includes("child raw trend phrase"), false);
   assert.equal(JSON.stringify(exported).includes("child raw trend phrase"), false);
+});
+
+test("risk value scoring ranks repeated low-risk missing capability above rare high-risk capability", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  for (const id of ["1", "2", "3"]) {
+    appendCapabilitySignal(ledger, testSignal(`trace_low_risk_${id}`, {
+      observedAt: `2026-06-0${6 + Number(id)}T12:00:00.000Z`,
+      topic: "deployment",
+      capability: "bridge_failure_handling",
+      status: "missing",
+      architecture: "bridge",
+      suggestedNextStep: "write_evaluator_case",
+    }));
+  }
+  appendCapabilitySignal(ledger, testSignal("trace_high_risk_delegate", {
+    observedAt: "2026-06-09T12:00:00.000Z",
+    topic: "delegation",
+    capability: "napoleon_delegation",
+    status: "missing",
+    architecture: "napoleon_runtime",
+    suggestedNextStep: "create_evolution_proposal",
+  }));
+
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, undefined, {
+    now: "2026-06-11T12:00:00.000Z",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected scored recommendation answer");
+  assert.equal(answer.rows[0].label, "bridge_failure_handling");
+  assert.ok(answer.rows[0].scoreComponents);
+  assert.equal(answer.rows[0].scoreComponents?.frequency, 3);
+  assert.equal(answer.rows[0].scoreComponents?.recentTrendDelta, 3);
+  assert.ok((answer.rows[0].score ?? 0) > (answer.rows.find((row) => row.label === "napoleon_delegation")?.score ?? 0));
+  assert.ok(answer.summary.includes("risk/value"));
+});
+
+test("risk value scoring penalizes privacy safety and authority expansion risk", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(ledger, testSignal("trace_safe_eval", {
+    observedAt: "2026-06-10T12:00:00.000Z",
+    topic: "evaluation",
+    capability: "eval_fixture_generation",
+    status: "missing",
+    architecture: "evaluator",
+    suggestedNextStep: "write_evaluator_case",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_sensitive_voice", {
+    observedAt: "2026-06-10T12:00:00.000Z",
+    topic: "voice",
+    capability: "ambient_voice_memory",
+    status: "missing",
+    architecture: "voice",
+    privacyClass: "sensitive",
+    suggestedNextStep: "create_evolution_proposal",
+  }));
+
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, undefined, {
+    now: "2026-06-11T12:00:00.000Z",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected scored recommendation answer");
+  const sensitive = answer.rows.find((row) => row.label === "ambient_voice_memory");
+  const safe = answer.rows.find((row) => row.label === "eval_fixture_generation");
+  if (!sensitive) throw new Error("expected sensitive recommendation row");
+  if (!safe) throw new Error("expected safe recommendation row");
+  assert.ok((safe.score ?? 0) > (sensitive.score ?? 0));
+  assert.ok((sensitive.scoreComponents?.privacyRisk ?? 0) > 0);
+  assert.ok((sensitive.scoreComponents?.authorityExpansionRisk ?? 0) > 0);
+});
+
+test("risk value scoring keeps correctly blocked unsafe requests out of implementation recommendations", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("governance_review_blocked", {
+      traceId: "trace_blocked_recommendation",
+      conversationId: "conv_blocked_recommendation",
+      turnId: "turn_blocked_recommendation",
+      profile: "adult_owner",
+    }),
+  );
+  appendCapabilitySignal(ledger, testSignal("trace_missing_safe", {
+    capability: "bridge_failure_handling",
+    status: "missing",
+    architecture: "bridge",
+    suggestedNextStep: "write_evaluator_case",
+  }));
+
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected scored recommendation answer");
+  assert.equal(answer.rows.some((row) => row.label === "governance_review"), false);
+});
+
+test("child protected evidence stays minimized and increases recommendation caution", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(ledger, testSignal("trace_child_score", {
+    topic: "school",
+    capability: "child_safe_response",
+    status: "missing",
+    architecture: "text_ui",
+    profileMode: "child_protected_user",
+    suggestedNextStep: "add_backlog_item",
+    rawMessage: "child scoring raw phrase",
+  }));
+
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger);
+  const exported = exportCapabilityLedger(ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected child scored recommendation answer");
+  assert.equal(answer.rows[0].label, "child_safe_response");
+  assert.ok((answer.rows[0].scoreComponents?.childSafetyRisk ?? 0) > 0);
+  assert.ok(answer.rows[0].scoreExplanation?.includes("child"));
+  assert.equal(exported.signals[0].privacyClass, "child_sensitive");
+  assert.equal(JSON.stringify(answer).includes("child scoring raw phrase"), false);
+  assert.equal(JSON.stringify(exported).includes("child scoring raw phrase"), false);
+});
+
+test("taxonomy edited labels appear in scored recommendations", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(ledger, testSignal("trace_taxonomy_score", {
+    capability: "bridge_failure_handling",
+    status: "missing",
+    architecture: "bridge",
+    suggestedNextStep: "write_evaluator_case",
+  }));
+  const taxonomy = createCapabilityTaxonomy();
+  renameTaxonomyLabel(taxonomy, "capability", "bridge_failure_handling", "bridge_recovery");
+
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, taxonomy);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected taxonomy scored recommendation answer");
+  assert.equal(answer.rows[0].label, "bridge_recovery");
+  assert.ok(answer.rows[0].scoreComponents);
+});
+
+test("export includes scoring caveat without raw recommendation text", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(ledger, testSignal("trace_scoring_export", {
+    capability: "eval_fixture_generation",
+    status: "missing",
+    architecture: "evaluator",
+    suggestedNextStep: "write_evaluator_case",
+    rawMessage: "raw scoring export secret",
+  }));
+
+  const exported = exportCapabilityLedger(ledger);
+
+  assert.ok(exported.scoringCaveat.includes("risk/value"));
+  assert.equal(JSON.stringify(exported).includes("raw scoring export secret"), false);
 });

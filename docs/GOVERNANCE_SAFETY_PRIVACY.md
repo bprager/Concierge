@@ -77,9 +77,10 @@ Conversation Capability Intelligence persistence:
 - Uses count and age bounded browser-local retention for the latest capability signals.
 - Shows local retention status in the Text Concierge UI, including maximum signal count and maximum age.
 - Provides a clear control that removes both persisted and in-memory capability signals.
-- Provides a local JSON export control with privacy, retention, and trend caveats; export does not grant permission to share externally.
+- Provides a local JSON export control with privacy, retention, trend, and scoring caveats; export does not grant permission to share externally.
 - Provides local taxonomy controls for rename, merge, deprecated markers, split-candidate markers, and reset.
-- Clear, export, taxonomy, retention pruning, and trend answers do not capture approval, write Napoleon memory, dispatch agents, send externally, change governance authority, or change Napoleon routing/policy.
+- Clear, export, taxonomy, retention pruning, trend answers, and recommendation scoring do not capture approval, write Napoleon memory, dispatch agents, send externally, change governance authority, or change Napoleon routing/policy.
+- Recommendation scoring penalizes privacy risk, child safety risk, governance risk, authority expansion, and high implementation effort.
 - Child protected records remain minimized and marked with `child_sensitive` privacy class.
 
 ## 6. Child mode rules

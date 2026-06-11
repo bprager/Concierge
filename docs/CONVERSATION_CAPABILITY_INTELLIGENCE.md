@@ -94,16 +94,19 @@ Recommended priority score:
 priority =
   user_value
   + frequency
+  + recent_trend_delta
   + failure_severity
-  + strategic_fit
   + evaluator_gap
   - implementation_effort
   - governance_risk
   - privacy_risk
   - child_safety_risk
+  - authority_expansion_risk
 ```
 
-The score must be explainable. Concierge should show the top reasons and the strongest counterarguments.
+Initial scoring implementation: recommended-next and easy-to-evolve answers use deterministic local risk/value components for user value, frequency, recent trend delta, failure severity, evaluator gap, implementation effort, governance risk, privacy risk, child safety risk, authority expansion risk, and final priority score. Score explanations are shown in Text Concierge answer rows. Correctly blocked unsafe requests are excluded from implementation recommendations. Child protected evidence remains minimized and raises caution instead of optimizing engagement.
+
+The score must be explainable. Concierge should show the top reasons and the strongest counterarguments. Scores are proposal-only heuristics, not approvals or automatic implementation decisions.
 
 ## 6. Missed requirements and edge cases
 
@@ -114,7 +117,7 @@ Important items not obvious in the initial request:
 - Child protected signals need stricter minimization and separate aggregation so child behavior is not optimized like adult-owner behavior.
 - The system needs a taxonomy review loop. Initial local rename, merge, split-candidate, deprecation, and reset controls are implemented; richer Chief of Staff-assisted taxonomy review remains future work.
 - Trends need age-aware retention. Initial count plus age pruning and 7 day trend windows are implemented; richer seasonal and cross-device trend analysis remains future work.
-- Recommendations can create perverse incentives if they optimize engagement or frequency alone. The ranking must penalize privacy risk, safety risk, and authority expansion.
+- Recommendations can create perverse incentives if they optimize engagement or frequency alone. Initial scoring penalizes privacy risk, child safety risk, governance risk, authority expansion, and implementation effort; richer human-reviewed value calibration remains future work.
 - Capability tracking should distinguish "blocked correctly" from "failed." A no-go result can be a success if the request was unsafe.
 - Evidence must be auditable without storing raw content. Use trace IDs, audit IDs, evaluator case IDs, and redacted summaries.
 - The UI should disclose when an answer is based only on local metadata and may miss conversations from other devices or disabled telemetry periods.
@@ -152,7 +155,7 @@ This capability should be built in phases:
 1. Define schema and local derived event emission. Implemented in `app/src/capabilityLedger.ts` and `app/src/telemetry.ts`.
 2. Add bounded local ledger and redaction policy. Bounded in-memory and browser-local persistence, deletion, export controls, local taxonomy editing, and count plus age retention are implemented.
 3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening-missing, recently-working, and weekly-change answers are implemented in the Text Concierge UI.
-4. Add architecture-area mapping and recommendation scoring. Initial deterministic local scoring is implemented from count, confidence, status, architecture area, suggested next step, and basic trend windows; richer value, effort, risk, and seasonal trend scoring remain future work.
+4. Add architecture-area mapping and recommendation scoring. Initial deterministic local risk/value scoring is implemented from evidence count, recent trend delta, confidence, status, evaluator gap, architecture area, suggested next step, implementation effort, privacy/safety/governance risk, and authority expansion risk; richer human-reviewed value calibration and seasonal trend scoring remain future work.
 5. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.
 6. Add governed handoff to Napoleon evolution proposals.
 

@@ -118,6 +118,7 @@ export interface SerializedCapabilityLedger {
   };
   signals: ConversationCapabilitySignal[];
   trendCaveat: string;
+  scoringCaveat: string;
   taxonomy?: SerializedCapabilityTaxonomy;
 }
 
@@ -131,7 +132,22 @@ export interface ExportedCapabilityLedger {
   };
   signals: ConversationCapabilitySignal[];
   trendCaveat: string;
+  scoringCaveat: string;
   taxonomy?: SerializedCapabilityTaxonomy;
+}
+
+export interface RecommendationScoreComponents {
+  userValue: number;
+  frequency: number;
+  recentTrendDelta: number;
+  failureSeverity: number;
+  evaluatorGap: number;
+  implementationEffort: number;
+  governanceRisk: number;
+  privacyRisk: number;
+  childSafetyRisk: number;
+  authorityExpansionRisk: number;
+  finalPriorityScore: number;
 }
 
 export type CapabilityQuestionKind =
@@ -154,6 +170,8 @@ export interface CapabilityAnswerRow {
   confidence?: number;
   suggestedNextStep?: SuggestedNextStep;
   score?: number;
+  scoreComponents?: RecommendationScoreComponents;
+  scoreExplanation?: string;
   previousCount?: number;
   delta?: number;
 }
@@ -184,6 +202,8 @@ const CAPABILITY_LEDGER_EXPORT_PRIVACY_CAVEAT =
   "Local metadata-only capability signals. This export does not grant permission to share externally and does not approve, implement, write memory, dispatch agents, or send.";
 const CAPABILITY_LEDGER_TREND_CAVEAT =
   "Trend summaries compare recent 7 days with the previous 7 days from local metadata only; sparse or disabled telemetry can distort trends.";
+const CAPABILITY_LEDGER_SCORING_CAVEAT =
+  "Recommendation scores are local risk/value heuristics only; they do not approve implementation, change policy, write memory, dispatch agents, or send externally.";
 
 const DEFAULT_MAX_SIGNALS = 250;
 const DEFAULT_MAX_AGE_DAYS = 90;
@@ -412,6 +432,7 @@ export function serializeCapabilityLedger(
     retention,
     signals: prunedSignals(ledger.listRecent(), retention, new Date(generatedAt)),
     trendCaveat: CAPABILITY_LEDGER_TREND_CAVEAT,
+    scoringCaveat: CAPABILITY_LEDGER_SCORING_CAVEAT,
     taxonomy: options.taxonomy ? serializeCapabilityTaxonomy(options.taxonomy, { generatedAt: options.generatedAt }) : undefined,
   };
 }
@@ -460,6 +481,7 @@ export function exportCapabilityLedger(
     retention,
     signals: prunedSignals(ledger.listRecent(), retention, new Date(generatedAt)),
     trendCaveat: CAPABILITY_LEDGER_TREND_CAVEAT,
+    scoringCaveat: CAPABILITY_LEDGER_SCORING_CAVEAT,
     taxonomy: options.taxonomy ? serializeCapabilityTaxonomy(options.taxonomy, { generatedAt: options.generatedAt }) : undefined,
   };
 }
@@ -559,18 +581,67 @@ function rounded(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
-function easeWeight(area: CapabilityArchitectureArea): number {
-  if (area === "bridge" || area === "text_ui" || area === "observability" || area === "evaluator") return 3;
-  if (area === "governance_ux" || area === "memory_review" || area === "settings_privacy") return 2;
+function userValueForSignal(signal: ConversationCapabilitySignal): number {
+  if (signal.architectureArea === "bridge" || signal.architectureArea === "text_ui") return 4;
+  if (signal.architectureArea === "evaluator" || signal.architectureArea === "observability") return 3;
+  if (signal.architectureArea === "governance_ux" || signal.architectureArea === "memory_review") return 2;
   return 1;
 }
 
-function suggestedStepWeight(step: SuggestedNextStep): number {
-  if (step === "write_evaluator_case") return 3;
-  if (step === "add_backlog_item") return 2;
-  if (step === "create_evolution_proposal") return 2;
-  if (step === "needs_human_review") return 1;
+function failureSeverityForSignal(signal: ConversationCapabilitySignal): number {
+  if (signal.capabilityStatus === "missing") return 3;
+  if (signal.capabilityStatus === "degraded") return 1.5;
   return 0;
+}
+
+function evaluatorGapForSignal(signal: ConversationCapabilitySignal): number {
+  if (signal.suggestedNextStep === "write_evaluator_case") return 3;
+  if (signal.suggestedNextStep === "add_backlog_item") return 2;
+  if (signal.suggestedNextStep === "create_evolution_proposal") return 1;
+  return 0;
+}
+
+function implementationEffortForSignal(signal: ConversationCapabilitySignal): number {
+  if (signal.architectureArea === "bridge" || signal.architectureArea === "text_ui" || signal.architectureArea === "evaluator") return 1;
+  if (
+    signal.architectureArea === "observability" ||
+    signal.architectureArea === "governance_ux" ||
+    signal.architectureArea === "settings_privacy"
+  ) {
+    return 2;
+  }
+  if (signal.architectureArea === "memory_review") return 3;
+  return 4;
+}
+
+function governanceRiskForSignal(signal: ConversationCapabilitySignal): number {
+  if (signal.architectureArea === "napoleon_runtime" || signal.architectureArea === "agent_registry") return 4;
+  if (signal.architectureArea === "governance_ux") return 3;
+  if (signal.architectureArea === "memory_review") return 2;
+  if (signal.architectureArea === "voice" || signal.architectureArea === "avatar") return 2;
+  return 1;
+}
+
+function privacyRiskForSignal(signal: ConversationCapabilitySignal): number {
+  const classRisk =
+    signal.privacyClass === "child_sensitive" ? 3 : signal.privacyClass === "sensitive" ? 3 : signal.privacyClass === "redacted_summary" ? 1 : 0;
+  const areaRisk =
+    signal.architectureArea === "voice" || signal.architectureArea === "avatar" || signal.architectureArea === "memory_review" ? 2 : 0;
+  return classRisk + areaRisk;
+}
+
+function authorityExpansionRiskForSignal(signal: ConversationCapabilitySignal): number {
+  const areaRisk =
+    signal.architectureArea === "napoleon_runtime" || signal.architectureArea === "agent_registry"
+      ? 5
+      : signal.architectureArea === "memory_review" || signal.architectureArea === "voice" || signal.architectureArea === "avatar"
+        ? 2
+        : 0;
+  return areaRisk + (signal.suggestedNextStep === "create_evolution_proposal" ? 1 : 0);
+}
+
+function childSafetyRiskForSignal(signal: ConversationCapabilitySignal): number {
+  return signal.profileMode === "child_protected_user" || signal.privacyClass === "child_sensitive" ? 4 : 0;
 }
 
 function groupedRows(
@@ -659,6 +730,121 @@ function trendRows(
   return Object.values(rows)
     .filter((row) => (row.delta ?? 0) > 0)
     .sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0) || b.count - a.count || a.label.localeCompare(b.label))
+    .slice(0, 5);
+}
+
+interface RecommendationGroup {
+  label: string;
+  key: string;
+  count: number;
+  status: CapabilityStatus;
+  architectureArea: CapabilityArchitectureArea;
+  suggestedNextStep: SuggestedNextStep;
+  confidenceTotal: number;
+  signals: ConversationCapabilitySignal[];
+}
+
+function strongestComponent<T extends string>(
+  signals: ConversationCapabilitySignal[],
+  valueForSignal: (signal: ConversationCapabilitySignal) => T,
+): T {
+  const counts: Record<string, number> = {};
+  for (const signal of signals) counts[valueForSignal(signal)] = (counts[valueForSignal(signal)] ?? 0) + 1;
+  return Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0] as T;
+}
+
+function maxBySignal(signals: ConversationCapabilitySignal[], valueForSignal: (signal: ConversationCapabilitySignal) => number): number {
+  return signals.reduce((max, signal) => Math.max(max, valueForSignal(signal)), 0);
+}
+
+function averageBySignal(signals: ConversationCapabilitySignal[], valueForSignal: (signal: ConversationCapabilitySignal) => number): number {
+  if (signals.length === 0) return 0;
+  return signals.reduce((sum, signal) => sum + valueForSignal(signal), 0) / signals.length;
+}
+
+function recommendationTrendDelta(label: string, windows: ReturnType<typeof trendWindows>): number {
+  const recent = windows.recent.filter((signal) => signal.capabilityLabel === label).length;
+  const previous = windows.previous.filter((signal) => signal.capabilityLabel === label).length;
+  return Math.max(0, recent - previous);
+}
+
+function recommendationExplanation(components: RecommendationScoreComponents): string {
+  const risks = components.governanceRisk + components.privacyRisk + components.childSafetyRisk + components.authorityExpansionRisk;
+  const childCaution = components.childSafetyRisk > 0 ? ", child safety caution" : "";
+  return `value ${components.userValue}, evidence ${components.frequency}, trend +${components.recentTrendDelta}, severity ${components.failureSeverity}, evaluator gap ${components.evaluatorGap}, effort ${components.implementationEffort}, risk ${rounded(risks)}${childCaution}`;
+}
+
+function scoredRecommendationRows(
+  signals: ConversationCapabilitySignal[],
+  windows: ReturnType<typeof trendWindows>,
+  options: { lowEffortBias?: boolean } = {},
+): CapabilityAnswerRow[] {
+  const groups: Record<string, RecommendationGroup> = {};
+
+  for (const signal of signals) {
+    const key = `${signal.capabilityLabel}:${signal.capabilityStatus}:${signal.architectureArea}`;
+    const group = groups[key] ?? {
+      key,
+      label: signal.capabilityLabel,
+      count: 0,
+      status: signal.capabilityStatus,
+      architectureArea: signal.architectureArea,
+      suggestedNextStep: signal.suggestedNextStep,
+      confidenceTotal: 0,
+      signals: [],
+    };
+    group.count += 1;
+    group.confidenceTotal += signal.confidence;
+    group.signals.push(signal);
+    groups[key] = group;
+  }
+
+  return Object.values(groups)
+    .map((group) => {
+      const implementationEffort = rounded(averageBySignal(group.signals, implementationEffortForSignal));
+      const componentsWithoutScore = {
+        userValue: rounded(maxBySignal(group.signals, userValueForSignal)),
+        frequency: group.count,
+        recentTrendDelta: recommendationTrendDelta(group.label, windows),
+        failureSeverity: rounded(maxBySignal(group.signals, failureSeverityForSignal)),
+        evaluatorGap: rounded(maxBySignal(group.signals, evaluatorGapForSignal)),
+        implementationEffort,
+        governanceRisk: rounded(maxBySignal(group.signals, governanceRiskForSignal)),
+        privacyRisk: rounded(maxBySignal(group.signals, privacyRiskForSignal)),
+        childSafetyRisk: rounded(maxBySignal(group.signals, childSafetyRiskForSignal)),
+        authorityExpansionRisk: rounded(maxBySignal(group.signals, authorityExpansionRiskForSignal)),
+      };
+      const riskTotal =
+        componentsWithoutScore.implementationEffort +
+        componentsWithoutScore.governanceRisk +
+        componentsWithoutScore.privacyRisk +
+        componentsWithoutScore.childSafetyRisk +
+        componentsWithoutScore.authorityExpansionRisk;
+      const valueTotal =
+        componentsWithoutScore.userValue +
+        componentsWithoutScore.frequency +
+        componentsWithoutScore.recentTrendDelta * 2 +
+        componentsWithoutScore.failureSeverity +
+        componentsWithoutScore.evaluatorGap +
+        (options.lowEffortBias ? Math.max(0, 4 - implementationEffort) : 0);
+      const finalPriorityScore = rounded(valueTotal - riskTotal);
+      const scoreComponents: RecommendationScoreComponents = {
+        ...componentsWithoutScore,
+        finalPriorityScore,
+      };
+      return {
+        label: group.label,
+        count: group.count,
+        status: strongestComponent(group.signals, (signal) => signal.capabilityStatus),
+        architectureArea: strongestComponent(group.signals, (signal) => signal.architectureArea),
+        suggestedNextStep: strongestComponent(group.signals, (signal) => signal.suggestedNextStep),
+        confidence: rounded(group.confidenceTotal / group.count),
+        score: finalPriorityScore,
+        scoreComponents,
+        scoreExplanation: recommendationExplanation(scoreComponents),
+      };
+    })
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || b.count - a.count || a.label.localeCompare(b.label))
     .slice(0, 5);
 }
 
@@ -805,20 +991,14 @@ export function answerCapabilityQuestion(
   }
 
   if (kind === "easy_to_evolve_missing_capabilities") {
-    const rows = groupedRows(
-      missingSafeRequests,
-      (signal) => `${signal.capabilityLabel}:${signal.architectureArea}`,
-      (signal) => signal.capabilityLabel,
-      (signal) => easeWeight(signal.architectureArea) + suggestedStepWeight(signal.suggestedNextStep) + signal.confidence,
-      { includeStatus: true, includeArchitectureArea: true, includeSuggestedNextStep: true },
-    );
+    const rows = scoredRecommendationRows(missingSafeRequests, windows, { lowEffortBias: true });
     return {
       kind,
       question,
-      summary: `Easy-to-evolve missing capabilities, proposal-only: ${describeRows(rows)}.`,
+      summary: `Easy-to-evolve missing capabilities by local risk/value score, proposal-only: ${describeRows(rows)}.`,
       rows,
       evidenceCount: missingSafeRequests.length,
-      caveat: MISSING_PROPOSAL_CAVEAT,
+      caveat: `${MISSING_PROPOSAL_CAVEAT} ${CAPABILITY_LEDGER_SCORING_CAVEAT}`,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
     };
   }
@@ -848,24 +1028,14 @@ export function answerCapabilityQuestion(
         signal.capabilityStatus === "missing" ||
         (signal.capabilityStatus === "degraded" && signal.suggestedNextStep !== "needs_human_review"),
     );
-    const rows = groupedRows(
-      candidateSignals,
-      (signal) => `${signal.capabilityLabel}:${signal.capabilityStatus}:${signal.architectureArea}`,
-      (signal) => signal.capabilityLabel,
-      (signal) =>
-        easeWeight(signal.architectureArea) +
-        suggestedStepWeight(signal.suggestedNextStep) +
-        signal.confidence +
-        (signal.capabilityStatus === "missing" ? 2 : 1),
-      { includeStatus: true, includeArchitectureArea: true, includeSuggestedNextStep: true },
-    );
+    const rows = scoredRecommendationRows(candidateSignals, windows);
     return {
       kind,
       question,
-      summary: `Recommended next capabilities, proposal-only: ${describeRows(rows)}.`,
+      summary: `Recommended next capabilities by local risk/value score, proposal-only: ${describeRows(rows)}.`,
       rows,
       evidenceCount: candidateSignals.length,
-      caveat: MISSING_PROPOSAL_CAVEAT,
+      caveat: `${MISSING_PROPOSAL_CAVEAT} ${CAPABILITY_LEDGER_SCORING_CAVEAT}`,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
     };
   }

@@ -110,6 +110,7 @@ test("storage adapter exports versioned metadata-only JSON", () => {
     schemaVersion: string;
     privacyCaveat: string;
     trendCaveat: string;
+    scoringCaveat: string;
     retention: { maxAgeDays: number };
     signals: unknown[];
   };
@@ -118,6 +119,7 @@ test("storage adapter exports versioned metadata-only JSON", () => {
   assert.equal(parsed.privacyCaveat.includes("does not grant permission to share externally"), true);
   assert.equal(parsed.retention.maxAgeDays, CAPABILITY_LEDGER_MAX_AGE_DAYS);
   assert.equal(parsed.trendCaveat.includes("recent 7 days"), true);
+  assert.equal(parsed.scoringCaveat.includes("risk/value"), true);
   assert.equal(parsed.signals.length, 1);
   assert.equal(json.includes("raw export adapter error"), false);
 });
