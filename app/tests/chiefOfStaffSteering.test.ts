@@ -146,13 +146,16 @@ test("steering handoff posts evolution review packet without applying proposal l
     endpointConfigured: true,
   });
   let posted: Record<string, unknown> | undefined;
+  let headers: Record<string, string> | undefined;
 
   const result = await submitChiefOfStaffSteeringDraft(draft, {
     conversationId: "conv_steering",
     traceId: "trace_submit",
     getEndpoint: () => "https://napoleon.example/concierge/evolution",
+    getAuthToken: () => "token_steering",
     fetch: async (_url, init) => {
       posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      headers = init?.headers;
       return {
         ok: true,
         json: async () => ({
@@ -193,6 +196,8 @@ test("steering handoff posts evolution review packet without applying proposal l
   assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "evolution_proposal_review");
   assert.equal((posted?.chiefOfStaffRequest as { requested_authority_tier: string }).requested_authority_tier, "advisory_review");
   assert.equal((posted?.evolutionProposal as { proposal_id: string }).proposal_id, draft.evolutionProposal.proposal_id);
+  assert.equal(headers?.Authorization, "Bearer token_steering");
+  assert.equal(JSON.stringify(posted).includes("token_steering"), false);
   assert.deepEqual((posted?.boundary as {
     proposalOnly: boolean;
     approvalCaptured: boolean;

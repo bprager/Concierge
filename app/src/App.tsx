@@ -99,6 +99,9 @@ export function App() {
   const [endpoint, setEndpoint] = useState(() =>
     typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_endpoint") ?? "",
   );
+  const [authToken, setAuthToken] = useState(() =>
+    typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_auth_token") ?? "",
+  );
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastDelegation, setLastDelegation] = useState<ReturnType<typeof describeDelegation> | null>(null);
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
@@ -161,6 +164,16 @@ export function App() {
       localStorage.setItem("napoleon_endpoint", value.trim());
     } else {
       localStorage.removeItem("napoleon_endpoint");
+    }
+  }
+
+  function updateAuthToken(value: string) {
+    setAuthToken(value);
+    if (typeof localStorage === "undefined") return;
+    if (value.trim()) {
+      localStorage.setItem("napoleon_auth_token", value.trim());
+    } else {
+      localStorage.removeItem("napoleon_auth_token");
     }
   }
 
@@ -691,6 +704,15 @@ export function App() {
             value={endpoint}
             onChange={(e) => updateEndpoint(e.target.value)}
             placeholder="Optional live endpoint"
+          />
+        </label>
+        <label>
+          Bridge token
+          <input
+            type="password"
+            value={authToken}
+            onChange={(e) => updateAuthToken(e.target.value)}
+            placeholder="Optional bearer token"
           />
         </label>
         <label>

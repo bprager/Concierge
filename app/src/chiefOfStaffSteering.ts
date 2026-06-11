@@ -81,6 +81,7 @@ interface SteeringSubmissionDependencies {
   traceId: string;
   profile?: LocalProfile;
   getEndpoint?: () => string | null;
+  getAuthToken?: () => string | null;
   descriptorConnection?: DescriptorConnectionInput;
   emit?: (payload: TelemetryPayload) => void;
   fetch?: SteeringFetch;
@@ -189,6 +190,18 @@ function getConfiguredEndpoint(dependencies: SteeringSubmissionDependencies): st
   return localStorage.getItem("napoleon_endpoint");
 }
 
+function getConfiguredAuthToken(dependencies: SteeringSubmissionDependencies): string | null {
+  if (dependencies.getAuthToken) return dependencies.getAuthToken();
+  if (dependencies.getEndpoint) return null;
+  if (typeof localStorage === "undefined") return null;
+  const token = localStorage.getItem("napoleon_auth_token");
+  return token?.trim() ? token.trim() : null;
+}
+
+function buildSteeringHeaders(authToken: string | null): Record<string, string> {
+  return authToken ? { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` } : { "Content-Type": "application/json" };
+}
+
 function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
@@ -279,6 +292,7 @@ export async function submitChiefOfStaffSteeringDraft(
   const localDecisionId = `local_steering_${dependencies.traceId}`;
   const localAuditId = `local_audit_${dependencies.traceId}`;
   const endpoint = getConfiguredEndpoint(dependencies);
+  const authToken = getConfiguredAuthToken(dependencies);
   const descriptorConnection = buildDescriptorConnectionState(
     dependencies.descriptorConnection ?? {
       endpointConfigured: Boolean(endpoint),
@@ -343,7 +357,7 @@ export async function submitChiefOfStaffSteeringDraft(
   try {
     response = await fetcher(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: buildSteeringHeaders(authToken),
       body: JSON.stringify({
         requestKind: "chief_of_staff_steering_handoff",
         profileMode,

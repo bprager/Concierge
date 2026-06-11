@@ -3,10 +3,18 @@ info:
   title: Napoleon Bridge API
   version: 0.1.0
   description: Local Concierge bridge contract aligned with Napoleon Chief of Staff contract-only integration surfaces.
+components:
+  securitySchemes:
+    NapoleonBearer:
+      type: http
+      scheme: bearer
+      description: Optional governed Napoleon bridge bearer token. Concierge sends it as an Authorization header only.
 paths:
   /v1/concierge/turn:
     post:
       summary: Submit a Text Concierge turn using CoS, governance, profile, and observability envelopes
+      security:
+        - NapoleonBearer: []
       requestBody:
         required: true
         content:
@@ -269,6 +277,8 @@ paths:
   /v1/concierge/chief-of-staff/steering:
     post:
       summary: Submit a proposal-only capability steering draft to Napoleon Chief of Staff review
+      security:
+        - NapoleonBearer: []
       requestBody:
         required: true
         content:

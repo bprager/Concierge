@@ -18,6 +18,7 @@ type BridgeFetch = (url: string, init?: { method?: string; headers?: Record<stri
 
 interface BridgeDependencies {
   getEndpoint?: () => string | null;
+  getAuthToken?: () => string | null;
   descriptorConnection?: DescriptorConnectionInput;
   emit?: (payload: TelemetryPayload) => void;
   fetch?: BridgeFetch;
@@ -60,6 +61,18 @@ function getConfiguredEndpoint(dependencies: BridgeDependencies): string | null 
   if (dependencies.getEndpoint) return dependencies.getEndpoint();
   if (typeof localStorage === "undefined") return null;
   return localStorage.getItem("napoleon_endpoint");
+}
+
+function getConfiguredAuthToken(dependencies: BridgeDependencies): string | null {
+  if (dependencies.getAuthToken) return dependencies.getAuthToken();
+  if (dependencies.getEndpoint) return null;
+  if (typeof localStorage === "undefined") return null;
+  const token = localStorage.getItem("napoleon_auth_token");
+  return token?.trim() ? token.trim() : null;
+}
+
+function buildBridgeHeaders(authToken: string | null): Record<string, string> {
+  return authToken ? { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` } : { "Content-Type": "application/json" };
 }
 
 function isGovernanceDecision(value: unknown): value is GovernanceDecision {
@@ -203,6 +216,7 @@ export async function sendToNapoleon(
   });
 
   const endpoint = getConfiguredEndpoint(dependencies);
+  const authToken = getConfiguredAuthToken(dependencies);
   const descriptorConnection = buildDescriptorConnectionState(
     dependencies.descriptorConnection ?? {
       endpointConfigured: Boolean(endpoint),
@@ -227,7 +241,7 @@ export async function sendToNapoleon(
   try {
     response = await fetcher(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: buildBridgeHeaders(authToken),
       body: JSON.stringify({
         ...request,
         profileMode: contract.profileMode,

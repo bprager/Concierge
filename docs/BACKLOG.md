@@ -55,7 +55,7 @@ Evaluator coverage:
 | TX-006 | Add text conversation trace | P0 | Every turn has trace_id and turn_id | user_message_received, response_generated |
 | TX-007 | Add child profile response rules | P0 | Child mode uses simple language and restricted authority | child_policy_applied |
 | TX-008 | Add memory update suggestion flow | P1 | Preferences are proposed, shown for review, and never silently stored or written directly | memory_update_proposed |
-| TX-009 | Add local settings and privacy panel | P1 | User can configure endpoint, telemetry, profile, camera, mic | settings_changed |
+| TX-009 | Add local settings and privacy panel | P1 | User can configure endpoint, optional local bridge token, telemetry, profile, camera, mic | settings_changed |
 | TX-010 | Add evaluator fixtures for text UI | P1 | Text mode can be smoke tested | text_smoke_eval_completed |
 | TX-011 | Add Rehearsal Mode for governed turns | P0 | User can preview understood request, proposed Napoleon path, CoS review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate before any live bridge call | rehearsal_preview_created |
 | TX-012 | Add capability intelligence query surface | P1 | Local query surface answers common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next capability questions from bounded local aggregates | capability_intelligence_answered |
@@ -153,6 +153,7 @@ User value: The user can tell whether a response came from Napoleon, which capab
 Acceptance criteria:
 
 - Live sends fail closed when no endpoint is configured, descriptor validation fails, auth fails, the response contract is invalid, local governance is `no_go`, or the bridge times out.
+- Optional bridge tokens are sent only as `Authorization` headers and are not included in request bodies, telemetry, memory proposals, or capability exports.
 - Descriptor discovery is visible as first-class connection state, including missing descriptor and checksum/signature mismatch states.
 - Failures are visible as local blocked states and do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
 - Successful live responses may include a Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID.
