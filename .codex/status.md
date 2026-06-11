@@ -40,7 +40,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added local risk/value scoring for capability recommendations, including score components, risk penalties, child-safety caution, and scoring caveats.
 - Added fail-closed live Napoleon bridge errors for missing endpoint, descriptor mismatch, auth failure, contract mismatch, governance no-go, timeout, and HTTP failure.
 - Added sanitized live text bridge contract evidence capture for success and fail-closed outcomes; records omit raw prompt text, response text, endpoint hosts, bearer tokens, request bodies, and response bodies.
-- Added a bridge evidence capture runner for one governed text turn against a configured endpoint, covered locally by the Napoleon-compatible harness.
+- Added a bridge evidence capture runner for one governed text turn against a configured endpoint, with descriptor discovery preflight and local Napoleon-compatible harness coverage.
 - Added a local bridge evidence comparator plus sample evidence fixture to check captured bridge metadata against the OpenAPI-aligned bridge registry and reject raw payload or secret fields.
 - Added optional local bridge bearer token support for text turns and governed steering handoff; tokens are sent only in authorization headers and excluded from payloads and telemetry.
 - Added canonical bridge endpoint resolution so configured Napoleon base URLs route text turns to `/v1/concierge/turn` and steering handoff to `/v1/concierge/chief-of-staff/steering`.

@@ -19,6 +19,7 @@ from scripts import bridge_evidence_compare
 
 
 DEFAULT_MESSAGE = "Ask Napoleon for a governed Concierge bridge evidence check."
+REQUIRED_DESCRIPTOR_BLOCKED_EFFECTS = {"runtime_authority", "memory_write"}
 
 
 def bridge_url(endpoint: str, path: str = "/v1/concierge/turn") -> str:
@@ -26,6 +27,20 @@ def bridge_url(endpoint: str, path: str = "/v1/concierge/turn") -> str:
     if base.endswith(path):
         return base
     return f"{base}{path}"
+
+
+def get_json(url: str, auth_token: str | None = None) -> tuple[int, dict[str, Any]]:
+    headers = {}
+    if auth_token:
+        headers["Authorization"] = f"Bearer {auth_token}"
+    req = request.Request(url, headers=headers, method="GET")
+    try:
+        with request.urlopen(req, timeout=10) as response:
+            return response.status, json.loads(response.read().decode("utf-8"))
+    except error.HTTPError as exc:
+        body = exc.read().decode("utf-8")
+        payload = json.loads(body) if body else {}
+        return exc.code, payload
 
 
 def post_json(url: str, payload: dict[str, Any], auth_token: str | None = None) -> tuple[int, dict[str, Any]]:
@@ -47,7 +62,49 @@ def post_json(url: str, payload: dict[str, Any], auth_token: str | None = None) 
         return exc.code, payload
 
 
-def request_payload(message: str) -> dict[str, Any]:
+def descriptor_connection_from_response(status_code: int, payload: dict[str, Any]) -> dict[str, Any]:
+    descriptor = payload.get("descriptor") if isinstance(payload.get("descriptor"), dict) else {}
+    blocked_effects = descriptor.get("blockedEffects") if isinstance(descriptor.get("blockedEffects"), list) else []
+    checksum = payload.get("checksum") if isinstance(payload.get("checksum"), dict) else {}
+    signature = payload.get("signature") if isinstance(payload.get("signature"), dict) else {}
+    checksum_state = (
+        "matched"
+        if checksum.get("expected") is not None and checksum.get("expected") == checksum.get("actual")
+        else "mismatch"
+        if checksum.get("expected") is not None or checksum.get("actual") is not None
+        else "not_checked"
+    )
+    signature_state = "valid" if signature.get("valid") is True else "invalid" if signature.get("valid") is False else "not_checked"
+    ready = (
+        status_code == 200
+        and descriptor.get("serviceId") == "napoleon.chief_of_staff"
+        and descriptor.get("runtimeAuthority") is False
+        and descriptor.get("commandExecution") is False
+        and descriptor.get("cachePolicy") == "fail_closed_to_review_required"
+        and REQUIRED_DESCRIPTOR_BLOCKED_EFFECTS.issubset(set(str(effect) for effect in blocked_effects))
+        and checksum_state != "mismatch"
+        and signature_state != "invalid"
+    )
+    state = "ready" if ready else "descriptor_mismatch"
+    return {
+        "descriptorStatus": {
+            "serviceId": str(descriptor.get("serviceId") or ""),
+            "ready": ready,
+            "runtimeAuthority": descriptor.get("runtimeAuthority") is True,
+            "cachePolicy": str(descriptor.get("cachePolicy") or ""),
+            "blockedEffects": [str(effect) for effect in blocked_effects],
+        },
+        "descriptorConnection": {
+            "state": state,
+            "checksumState": checksum_state,
+            "signatureState": signature_state,
+            "canAttemptLiveBridge": ready,
+            "message": "Descriptor discovery passed." if ready else "Descriptor discovery failed closed.",
+        },
+    }
+
+
+def request_payload(message: str, descriptor_preflight: dict[str, Any]) -> dict[str, Any]:
     trace_id = "trace_bridge_evidence_capture"
     request_id = "cos_bridge_evidence_capture"
     decision_id = "local_decision_bridge_evidence_capture"
@@ -62,20 +119,8 @@ def request_payload(message: str) -> dict[str, Any]:
         "profileMode": "adult_owner",
         "channel": "text",
         "message": message,
-        "descriptorStatus": {
-            "serviceId": "napoleon.chief_of_staff",
-            "ready": True,
-            "runtimeAuthority": False,
-            "cachePolicy": "fail_closed_to_review_required",
-            "blockedEffects": blocked_effects,
-        },
-        "descriptorConnection": {
-            "state": "ready",
-            "checksumState": "not_checked",
-            "signatureState": "not_checked",
-            "canAttemptLiveBridge": True,
-            "message": "Descriptor treated as ready for explicit bridge evidence capture.",
-        },
+        "descriptorStatus": descriptor_preflight["descriptorStatus"],
+        "descriptorConnection": descriptor_preflight["descriptorConnection"],
         "chiefOfStaffRequest": {
             "request_id": request_id,
             "requester": "concierge.text",
@@ -187,7 +232,20 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         print("bridge evidence capture requires --endpoint or NAPOLEON_EVAL_ENDPOINT", file=sys.stderr)
         return 2
 
-    status_code, response_payload = post_json(bridge_url(endpoint), request_payload(args.message), args.auth_token)
+    descriptor_status, descriptor_payload = get_json(
+        bridge_url(endpoint, "/v1/concierge/chief-of-staff/descriptor"),
+        args.auth_token,
+    )
+    descriptor_preflight = descriptor_connection_from_response(descriptor_status, descriptor_payload)
+    if not descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"]:
+        print("descriptor preflight failed; bridge evidence capture did not send text turn", file=sys.stderr)
+        return 1
+
+    status_code, response_payload = post_json(
+        bridge_url(endpoint),
+        request_payload(args.message, descriptor_preflight),
+        args.auth_token,
+    )
     records = [evidence_from_response(status_code, response_payload)]
     violations = bridge_evidence_compare.compare_bridge_evidence_records(records)
     if violations:

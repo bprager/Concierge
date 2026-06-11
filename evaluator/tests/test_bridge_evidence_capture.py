@@ -1,8 +1,10 @@
 import contextlib
 import io
 import json
+import threading
 import tempfile
 import unittest
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from scripts import bridge_evidence_capture, bridge_evidence_compare, local_bridge_harness
 
@@ -56,6 +58,136 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertIsInstance(payload, list)
         self.assertIn("captured 1 bridge evidence record", stdout.getvalue())
+
+    def test_capture_runner_discovers_descriptor_before_text_turn(self):
+        with RecordingBridgeHarness(descriptor_ready=True) as harness:
+            with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    exit_code = bridge_evidence_capture.main(["--endpoint", harness.base_url, "--out", handle.name])
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(harness.get_count, 1)
+        self.assertEqual(harness.post_count, 1)
+        self.assertEqual(harness.last_turn_payload["descriptorConnection"]["state"], "ready")
+        self.assertEqual(harness.last_turn_payload["descriptorConnection"]["checksumState"], "matched")
+        self.assertEqual(harness.last_turn_payload["descriptorConnection"]["signatureState"], "valid")
+
+    def test_capture_runner_fails_closed_when_descriptor_discovery_is_invalid(self):
+        with RecordingBridgeHarness(descriptor_ready=False) as harness:
+            with tempfile.NamedTemporaryFile("w", suffix=".json") as handle:
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    exit_code = bridge_evidence_capture.main(["--endpoint", harness.base_url, "--out", handle.name])
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(harness.get_count, 1)
+        self.assertEqual(harness.post_count, 0)
+        self.assertIn("descriptor preflight failed", stderr.getvalue())
+
+
+class RecordingBridgeHarness:
+    def __init__(self, descriptor_ready: bool):
+        self.descriptor_ready = descriptor_ready
+        self.get_count = 0
+        self.post_count = 0
+        self.last_turn_payload = {}
+
+    def __enter__(self):
+        parent = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                parent.get_count += 1
+                if self.path != "/v1/concierge/chief-of-staff/descriptor":
+                    self.write_json(404, {"error": "not_found"})
+                    return
+                self.write_json(
+                    200,
+                    {
+                        "descriptor": {
+                            "serviceId": "napoleon.chief_of_staff" if parent.descriptor_ready else "bad.service",
+                            "runtimeAuthority": False,
+                            "commandExecution": False,
+                            "cachePolicy": "fail_closed_to_review_required",
+                            "blockedEffects": ["runtime_authority", "memory_write", "external_send"],
+                        },
+                        "checksum": {"expected": "sha256:test", "actual": "sha256:test"},
+                        "signature": {"valid": True},
+                    },
+                )
+
+            def do_POST(self):
+                parent.post_count += 1
+                length = int(self.headers.get("Content-Length", "0"))
+                parent.last_turn_payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                trace_id = parent.last_turn_payload["traceId"]
+                request_id = parent.last_turn_payload["chiefOfStaffRequest"]["request_id"]
+                self.write_json(
+                    200,
+                    {
+                        "text": "Napoleon recommends governed review.",
+                        "profileMode": "adult_owner",
+                        "governanceDecision": {
+                            "decision_id": f"decision_{trace_id}",
+                            "request_id": request_id,
+                            "outcome": "requires_review",
+                            "authority_tier": "advisory_review",
+                            "approval_requirement": "chief_of_staff_and_owner_review",
+                            "rationale": "Governed review required.",
+                            "blocked_effects": ["memory_write", "external_send"],
+                            "trace_id": trace_id,
+                            "audit_id": f"audit_{trace_id}",
+                        },
+                        "traceEnvelope": {
+                            "trace_id": trace_id,
+                            "parent_trace_id": "local_test",
+                            "actor_id": "napoleon.test",
+                            "request_id": request_id,
+                            "decision_id": f"decision_{trace_id}",
+                            "timestamp": "2026-06-11T00:00:00.000Z",
+                        },
+                        "auditEnvelope": {
+                            "audit_id": f"audit_{trace_id}",
+                            "trace_id": trace_id,
+                            "decision_id": f"decision_{trace_id}",
+                            "actor_id": "napoleon.test",
+                            "authority_tier": "advisory_review",
+                            "approval_requirement": "chief_of_staff_and_owner_review",
+                            "evidence_links": [f"trace:{trace_id}"],
+                        },
+                        "delegation": {
+                            "selectedAgents": [],
+                            "allowedEffects": ["prepare_advisory_response"],
+                            "blockedEffects": ["memory_write", "external_send"],
+                            "governanceState": "requires_review",
+                            "traceId": trace_id,
+                            "auditId": f"audit_{trace_id}",
+                        },
+                    },
+                )
+
+            def write_json(self, status, payload):
+                body = json.dumps(payload).encode("utf-8")
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, _format, *_args):
+                return
+
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        host, port = self.server.server_address
+        self.base_url = f"http://{host}:{port}"
+        return self
+
+    def __exit__(self, *_args):
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join(timeout=5)
 
 
 if __name__ == "__main__":
