@@ -162,6 +162,7 @@ Acceptance criteria:
 - Repository validation scans runtime source for direct process execution, memory or graph access, and agent or tool dispatch outside the governed bridge.
 - Descriptor discovery is visible as first-class connection state, including live-discovered, missing descriptor, and checksum/signature mismatch states.
 - Live descriptor discovery resolves the configured Napoleon base URL to `/v1/concierge/chief-of-staff/descriptor` and treats invalid results as blocked connection state, not authority.
+- Live text bridge calls can capture sanitized contract evidence for success and fail-closed outcomes without raw prompt text, response text, endpoint hosts, bearer tokens, request bodies, or response bodies.
 - Failures are visible as local blocked states and do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
 - Successful live responses may include a Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID.
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.
@@ -171,6 +172,7 @@ Privacy and safety impact:
 
 - Missing or invalid bridge state cannot be converted into local authority.
 - Provenance prevents Concierge from hiding Napoleon's authority boundary or inventing agent contributions.
+- Bridge evidence supports later live-runtime comparison without becoming a local audit authority or leaking secrets.
 
 Evaluator coverage:
 

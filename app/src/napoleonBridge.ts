@@ -1,5 +1,6 @@
 import type { NapoleonDelegation, NapoleonRequest, NapoleonResponse } from "./types";
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
+import { getBridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
 import {
   buildDescriptorConnectionState,
   buildTextTurnContract,
@@ -17,11 +18,42 @@ type BridgeFetch = (url: string, init?: { method?: string; headers?: Record<stri
   json: () => Promise<unknown>;
 }>;
 
+export interface BridgeContractEvidence {
+  kind: "bridge_contract_evidence";
+  operationId: BridgeOperationId;
+  requestKind: string;
+  status: "success" | "fail_closed";
+  reason?: NapoleonBridgeFailureReason;
+  httpStatus?: number;
+  targetPath: string;
+  traceId: string;
+  requestId: string;
+  decisionId?: string;
+  auditId?: string;
+  governanceOutcome?: string;
+  descriptorStatus: string;
+  profileMode: string;
+  selectedAgentIds?: string[];
+  allowedEffects?: string[];
+  blockedEffects?: string[];
+  provenanceVerified: boolean;
+}
+
+interface BridgeEvidenceContext {
+  operationId: BridgeOperationId;
+  requestKind: string;
+  traceId: string;
+  requestId: string;
+  descriptorStatus: string;
+  profileMode: string;
+}
+
 interface BridgeDependencies {
   getEndpoint?: () => string | null;
   getAuthToken?: () => string | null;
   descriptorConnection?: DescriptorConnectionInput;
   emit?: (payload: TelemetryPayload) => void;
+  captureEvidence?: (record: BridgeContractEvidence) => void;
   fetch?: BridgeFetch;
 }
 
@@ -56,6 +88,10 @@ function emitBridgeEvent(dependencies: BridgeDependencies, event: string, attrib
     return;
   }
   emitEvent(event, attributes);
+}
+
+function captureBridgeEvidence(dependencies: BridgeDependencies, record: BridgeContractEvidence) {
+  dependencies.captureEvidence?.(record);
 }
 
 function getConfiguredEndpoint(dependencies: BridgeDependencies): string | null {
@@ -187,7 +223,24 @@ function failClosed(
   traceId: string,
   requestId: string,
   status?: number,
+  evidenceContext?: BridgeEvidenceContext,
 ): never {
+  if (evidenceContext) {
+    captureBridgeEvidence(dependencies, {
+      kind: "bridge_contract_evidence",
+      operationId: evidenceContext.operationId,
+      requestKind: evidenceContext.requestKind,
+      status: "fail_closed",
+      reason,
+      httpStatus: status,
+      targetPath: getBridgeOperation(evidenceContext.operationId).path,
+      traceId,
+      requestId,
+      descriptorStatus: evidenceContext.descriptorStatus,
+      profileMode: evidenceContext.profileMode,
+      provenanceVerified: false,
+    });
+  }
   emitBridgeEvent(dependencies, "bridge_request_failed", {
     traceId,
     requestId,
@@ -224,17 +277,39 @@ export async function sendToNapoleon(
       descriptor: defaultChiefOfStaffDescriptor,
     },
   );
+  const evidenceContext: BridgeEvidenceContext = {
+    operationId: "text_turn",
+    requestKind: "text_turn",
+    traceId: request.traceId,
+    requestId: contract.chiefOfStaffRequest.request_id,
+    descriptorStatus: descriptorConnection.state,
+    profileMode: contract.profileMode,
+  };
 
   if (!endpoint) {
-    failClosed(dependencies, "no_endpoint", request.traceId, contract.chiefOfStaffRequest.request_id);
+    failClosed(dependencies, "no_endpoint", request.traceId, contract.chiefOfStaffRequest.request_id, undefined, evidenceContext);
   }
 
   if (!descriptorConnection.canAttemptLiveBridge) {
-    failClosed(dependencies, "descriptor_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
+    failClosed(
+      dependencies,
+      "descriptor_mismatch",
+      request.traceId,
+      contract.chiefOfStaffRequest.request_id,
+      undefined,
+      evidenceContext,
+    );
   }
 
   if (contract.governanceDecision.outcome === "no_go") {
-    failClosed(dependencies, "governance_no_go", request.traceId, contract.chiefOfStaffRequest.request_id);
+    failClosed(
+      dependencies,
+      "governance_no_go",
+      request.traceId,
+      contract.chiefOfStaffRequest.request_id,
+      undefined,
+      evidenceContext,
+    );
   }
 
   const targetEndpoint = resolveNapoleonBridgeOperation(endpoint, "text_turn");
@@ -260,28 +335,28 @@ export async function sendToNapoleon(
     });
   } catch (error) {
     const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
-    failClosed(dependencies, reason, request.traceId, contract.chiefOfStaffRequest.request_id);
+    failClosed(dependencies, reason, request.traceId, contract.chiefOfStaffRequest.request_id, undefined, evidenceContext);
   }
 
   if (!response.ok) {
     const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
-    failClosed(dependencies, reason, request.traceId, contract.chiefOfStaffRequest.request_id, response.status);
+    failClosed(dependencies, reason, request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
 
   const payload = (await response.json()) as Partial<NapoleonResponse>;
   if (!isGovernanceDecision(payload.governanceDecision)) {
-    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
 
   const decision = payload.governanceDecision;
   if (!isTraceEnvelope(payload.traceEnvelope) || !isAuditEnvelope(payload.auditEnvelope)) {
-    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
 
   const traceEnvelope = payload.traceEnvelope;
   const auditEnvelope = payload.auditEnvelope;
   if (!envelopesMatchDecision(decision, traceEnvelope, auditEnvelope)) {
-    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
 
   const delegation =
@@ -292,7 +367,7 @@ export async function sendToNapoleon(
         ? payload.delegation
         : null;
   if (delegation === null) {
-    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
 
   const normalized: NapoleonResponse = {
@@ -313,6 +388,25 @@ export async function sendToNapoleon(
     outcome: normalized.governanceDecision.outcome,
     decisionId: normalized.governanceDecision.decision_id,
     auditId: normalized.auditEnvelope.audit_id,
+  });
+  captureBridgeEvidence(dependencies, {
+    kind: "bridge_contract_evidence",
+    operationId: "text_turn",
+    requestKind: "text_turn",
+    status: "success",
+    httpStatus: response.status ?? 200,
+    targetPath: getBridgeOperation("text_turn").path,
+    traceId: request.traceId,
+    requestId: normalized.governanceDecision.request_id,
+    decisionId: normalized.governanceDecision.decision_id,
+    auditId: normalized.auditEnvelope.audit_id,
+    governanceOutcome: normalized.governanceDecision.outcome,
+    descriptorStatus: descriptorConnection.state,
+    profileMode: normalized.profileMode,
+    selectedAgentIds: normalized.delegation?.selectedAgents.map((agent) => agent.agentId) ?? [],
+    allowedEffects: normalized.delegation?.allowedEffects ?? [],
+    blockedEffects: normalized.delegation?.blockedEffects ?? normalized.governanceDecision.blocked_effects,
+    provenanceVerified: true,
   });
   return normalized;
 }

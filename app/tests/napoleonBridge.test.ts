@@ -38,6 +38,7 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   let posted: Record<string, unknown> | undefined;
   let headers: Record<string, string> | undefined;
   let targetUrl: string | undefined;
+  const evidence: unknown[] = [];
 
   const response = await sendToNapoleon(
     {
@@ -52,6 +53,7 @@ test("live bridge request sends contract-first payload to configured endpoint", 
       getEndpoint: () => "https://napoleon.example/concierge",
       getAuthToken: () => "token_live",
       emit: () => undefined,
+      captureEvidence: (record) => evidence.push(record),
       fetch: async (url, init) => {
         targetUrl = url;
         posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
@@ -119,6 +121,78 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   assert.equal(response.requiresReview, true);
   assert.equal(response.delegation?.selectedAgents[0]?.displayName, "Passive Brain");
   assert.equal(response.delegation?.blockedEffects[0], "external_send");
+  assert.equal(evidence.length, 1);
+  assert.deepEqual(evidence[0], {
+    kind: "bridge_contract_evidence",
+    operationId: "text_turn",
+    requestKind: "text_turn",
+    status: "success",
+    httpStatus: 200,
+    targetPath: "/v1/concierge/turn",
+    traceId: "trace_live",
+    requestId: "cos_turn_live",
+    decisionId: "decision_remote",
+    auditId: "audit_remote",
+    governanceOutcome: "requires_review",
+    descriptorStatus: "ready",
+    profileMode: "adult_owner",
+    selectedAgentIds: ["napoleon.passive_brain"],
+    allowedEffects: ["prepare_advisory_response"],
+    blockedEffects: ["external_send", "memory_write"],
+    provenanceVerified: true,
+  });
+  assert.equal(JSON.stringify(evidence).includes("token_live"), false);
+  assert.equal(JSON.stringify(evidence).includes("Draft the bridge plan"), false);
+  assert.equal(JSON.stringify(evidence).includes("Prepared through Napoleon."), false);
+});
+
+test("live bridge captures sanitized fail-closed evidence on auth failure", async () => {
+  const evidence: unknown[] = [];
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_auth_evidence",
+          conversationId: "conv_auth_evidence",
+          turnId: "turn_auth_evidence",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Send a private deployment summary",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          getAuthToken: () => "secret_token",
+          emit: () => undefined,
+          captureEvidence: (record) => evidence.push(record),
+          fetch: async () => ({ ok: false, status: 401, json: async () => ({ text: "Unauthorized" }) }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("auth_failure"),
+  );
+
+  assert.deepEqual(evidence, [
+    {
+      kind: "bridge_contract_evidence",
+      operationId: "text_turn",
+      requestKind: "text_turn",
+      status: "fail_closed",
+      reason: "auth_failure",
+      httpStatus: 401,
+      targetPath: "/v1/concierge/turn",
+      traceId: "trace_auth_evidence",
+      requestId: "cos_turn_auth_evidence",
+      descriptorStatus: "ready",
+      profileMode: "adult_owner",
+      provenanceVerified: false,
+    },
+  ]);
+  assert.equal(JSON.stringify(evidence).includes("secret_token"), false);
+  assert.equal(JSON.stringify(evidence).includes("Send a private deployment summary"), false);
+  assert.equal(JSON.stringify(evidence).includes("Unauthorized"), false);
 });
 
 test("live bridge fails closed when Napoleon response omits trace or audit provenance", async () => {
