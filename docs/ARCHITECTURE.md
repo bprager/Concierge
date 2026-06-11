@@ -167,7 +167,7 @@ Descriptor discovery is treated as connection state, not authority. Text Concier
 
 When Napoleon returns delegation provenance, Concierge renders a separate Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID. Concierge only attributes statements such as "Passive Brain found..." when the bridge response contains that contribution and the delegation trace/audit IDs match the response envelopes. Missing or mismatched provenance is rejected rather than invented.
 
-Reusable local bridge fixtures live in `app/src/napoleonBridgeFixtures.ts`. They cover delegated success, auth failure, contract mismatch, and timeout behavior so bridge handling can be tested without a live Napoleon endpoint while preserving the same fail-closed semantics.
+Reusable local bridge fixtures live in `app/src/napoleonBridgeFixtures.ts`. They cover delegated success, auth failure, contract mismatch, and timeout behavior so bridge handling can be tested without a live Napoleon endpoint while preserving the same fail-closed semantics. A local HTTP bridge harness lives in `scripts/local_bridge_harness.py`; it serves Napoleon-compatible descriptor, text turn, steering, memory proposal, and evaluator endpoints for smoke validation, but it is not a substitute for a real Napoleon runtime.
 
 ```plantuml
 @startuml

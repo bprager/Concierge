@@ -123,7 +123,7 @@ The initial runner supports:
 
 Current local suite size: 17 scenarios. Stub mode is still a deterministic repository health check; live Napoleon quality requires `http` mode with a configured `NAPOLEON_EVAL_ENDPOINT`.
 
-The local repository check now includes a first contract-aware bridge gate. `make schema-check` validates that the app bridge operation registry matches `api/napoleon_bridge.openapi.yaml`, that governed bridge operations require `NapoleonBearer` security, that request-kind constants match the OpenAPI contract, and that bridge callers use named operations instead of free-form paths. This does not replace live Napoleon validation, but it catches local contract drift before a runtime endpoint is available.
+The local repository check now includes a first contract-aware bridge gate. `make schema-check` validates that the app bridge operation registry matches `api/napoleon_bridge.openapi.yaml`, that governed bridge operations require `NapoleonBearer` security, that request-kind constants match the OpenAPI contract, and that bridge callers use named operations instead of free-form paths. `make bridge-harness` starts a local Napoleon-compatible HTTP harness and exercises descriptor discovery, delegated text turns, Chief of Staff steering review, memory proposal review, and evaluator HTTP request-kind handling. These checks do not replace live Napoleon validation, but they catch local contract drift before a runtime endpoint is available.
 
 See:
 
