@@ -3,32 +3,34 @@ import test from "node:test";
 import { sendToNapoleon } from "../src/napoleonBridge.js";
 import type { TelemetryPayload } from "../src/telemetry.js";
 
-test("local stub response includes CoS governance and trace contracts", async () => {
+test("live bridge fails closed when no Napoleon endpoint is configured", async () => {
   const events: TelemetryPayload[] = [];
 
-  const response = await sendToNapoleon(
-    {
-      traceId: "trace_bridge",
-      conversationId: "conv_bridge",
-      turnId: "turn_bridge",
-      profile: "child_protected",
-      channel: "text",
-      message: "Can you send this to someone?",
-    },
-    {
-      getEndpoint: () => null,
-      emit: (event) => events.push(event),
-    },
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_bridge",
+          conversationId: "conv_bridge",
+          turnId: "turn_bridge",
+          profile: "child_protected",
+          channel: "text",
+          message: "Can you send this to someone?",
+        },
+        {
+          getEndpoint: () => null,
+          emit: (event) => events.push(event),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("no_endpoint"),
   );
 
-  assert.equal(response.profileMode, "child_protected_user");
-  assert.equal(response.governanceDecision.outcome, "requires_review");
-  assert.equal(response.governanceDecision.decision_id, "decision_turn_bridge");
-  assert.equal(response.auditEnvelope.audit_id, "audit_turn_bridge");
-  assert.ok(response.governanceDecision.blocked_effects.includes("external_send"));
-  assert.ok(response.text.includes("guardian"));
   assert.equal(events[0].event, "bridge_request_started");
-  assert.equal(events.at(-1)?.event, "bridge_request_completed");
+  assert.equal(events.at(-1)?.event, "bridge_request_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "no_endpoint");
 });
 
 test("live bridge request sends contract-first payload to configured endpoint", async () => {
@@ -63,6 +65,21 @@ test("live bridge request sends contract-first payload to configured endpoint", 
               trace_id: "trace_live",
               audit_id: "audit_remote",
             },
+            delegation: {
+              selectedAgents: [
+                {
+                  agentId: "napoleon.passive_brain",
+                  displayName: "Passive Brain",
+                  selectionReason: "Relevant deployment history was found.",
+                  contributionSummary: "Found the prior bridge rollout note.",
+                },
+              ],
+              allowedEffects: ["prepare_advisory_response"],
+              blockedEffects: ["external_send", "memory_write"],
+              governanceState: "requires_review",
+              traceId: "trace_live",
+              auditId: "audit_remote",
+            },
           }),
         };
       },
@@ -74,4 +91,6 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   assert.equal((posted?.traceEnvelope as { trace_id: string }).trace_id, "trace_live");
   assert.equal(response.governanceDecision.outcome, "requires_review");
   assert.equal(response.requiresReview, true);
+  assert.equal(response.delegation?.selectedAgents[0]?.displayName, "Passive Brain");
+  assert.equal(response.delegation?.blockedEffects[0], "external_send");
 });

@@ -161,6 +161,10 @@ UI -> User: text, voice, or avatar response
 
 Rehearsal Mode is a local preview step before a live Napoleon bridge call. It builds the same text turn contract shape used by the bridge, then displays the understood request, proposed Napoleon path, Chief of Staff review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate. It does not contact Napoleon, capture approval, write memory, send externally, dispatch agents, or execute commands.
 
+Live bridge calls fail closed when the Napoleon endpoint is missing, descriptor validation fails, authentication fails, the response contract is invalid, local governance is `no_go`, or the bridge times out. These failures are displayed locally and do not execute side effects, write memory, dispatch agents, send externally, append remote audit records, or capture approval.
+
+When Napoleon returns delegation provenance, Concierge renders a separate Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID. Concierge only attributes statements such as "Passive Brain found..." when the bridge response contains that contribution. Missing provenance is rendered as unavailable rather than invented.
+
 ```plantuml
 @startuml
 scale max 600 width
@@ -203,8 +207,10 @@ D -> CI: derived topic, intent, capability, outcome
 CI -> Buffer: conversation_capability_signal
 CI -> UI: aggregate answer or recommendation
 UI -> User: common, working, missing, next capability summary
-CI -> Eval: suggested evaluator case
-CI -> Evo: proposal-only recommendation
+CI -> UI: Chief of Staff steering draft
+UI -> User: recommendation, evaluator case candidate, evolution proposal draft
+CI -> Eval: suggested evaluator case candidate
+CI -> Evo: proposal-only draft, not applied
 
 @enduml
 ```

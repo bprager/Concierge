@@ -59,6 +59,7 @@ Evaluator coverage:
 | TX-010 | Add evaluator fixtures for text UI | P1 | Text mode can be smoke tested | text_smoke_eval_completed |
 | TX-011 | Add Rehearsal Mode for governed turns | P0 | User can preview understood request, proposed Napoleon path, CoS review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate before any live bridge call | rehearsal_preview_created |
 | TX-012 | Add capability intelligence query surface | P1 | Local query surface answers common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next capability questions from bounded local aggregates | capability_intelligence_answered |
+| TX-013 | Add live bridge fail-closed connection states and delegation panel | P0 | Missing endpoint, descriptor mismatch, auth failure, contract mismatch, no-go, timeout, and HTTP failure are blocked visibly; bridge-provided selected agents, reasons, effects, governance, trace, and audit references are shown without invented attribution | bridge_request_failed, bridge_request_completed |
 
 ### TX-005 details
 
@@ -145,6 +146,26 @@ Evaluator coverage:
 
 - Covered by `CAPABILITY-INTELLIGENCE-001`.
 
+### TX-013 details
+
+User value: The user can tell whether a response came from Napoleon, which capability or agent contributed, and why a live send was blocked.
+
+Acceptance criteria:
+
+- Live sends fail closed when no endpoint is configured, descriptor validation fails, auth fails, the response contract is invalid, local governance is `no_go`, or the bridge times out.
+- Failures are visible as local blocked states and do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
+- Successful live responses may include a Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID.
+- Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.
+
+Privacy and safety impact:
+
+- Missing or invalid bridge state cannot be converted into local authority.
+- Provenance prevents Concierge from hiding Napoleon's authority boundary or inventing agent contributions.
+
+Evaluator coverage:
+
+- Covered by bridge failure and contract mismatch scenarios; add a dedicated delegation provenance case when live fixtures are available.
+
 ## Milestone P2: Voice Concierge
 
 | ID | Story | Priority | Acceptance criteria | Observability |
@@ -185,6 +206,7 @@ Evaluator coverage:
 | SE-005 | Add rollout policy | P1 | Low-risk changes can roll out locally, high-risk changes require approval | rollout_decision_recorded |
 | SE-006 | Add rollback path | P1 | Last known good policy can be restored | rollback_completed |
 | SE-007 | Add capability recommendation handoff | P1 | Capability recommendations can become reviewed evolution proposals with evidence, evaluator cases, rollout, and rollback | capability_recommendation_created |
+| SE-008 | Add local Chief of Staff steering draft | P1 | Local capability signals can produce a proposal-only recommendation, evaluator case candidate, and evolution proposal draft; no send occurs unless a governed endpoint exists and permits it | capability_recommendation_created |
 
 ### SE-007 details
 
@@ -205,6 +227,25 @@ Privacy and safety impact:
 Evaluator coverage:
 
 - Covered by `CAPABILITY-INTELLIGENCE-001`.
+
+### SE-008 details
+
+User value: Repeated local capability gaps can be converted into a concrete review packet without letting Concierge change itself.
+
+Acceptance criteria:
+
+- The draft includes a capability recommendation, architecture area, evidence count, rationale, evaluator case candidate, evolution proposal draft, approval requirement, and rollback plan.
+- The draft remains local when no governed Napoleon endpoint is configured.
+- The draft cannot apply changes, write memory, dispatch agents, send externally, or capture approval.
+
+Privacy and safety impact:
+
+- Evidence uses local metadata references such as trace and audit IDs rather than raw transcripts.
+- Child protected evidence remains minimized and cannot be optimized for engagement.
+
+Evaluator coverage:
+
+- Covered by app tests for proposal-only steering draft boundaries; add evaluator scenario coverage before promotion.
 
 ## Milestone P5: Operations and observability
 

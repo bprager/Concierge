@@ -4,6 +4,7 @@ import type {
   MemoryProposalReviewState,
   RehearsalPreview,
 } from "./contractBridge.js";
+import type { NapoleonDelegation } from "./types.js";
 
 export interface GovernanceDecisionViewInput {
   outcome: GovernanceOutcome;
@@ -44,6 +45,43 @@ export interface MemoryProposalReviewView {
   canAcknowledge: boolean;
   canDismiss: boolean;
   details: Array<{ label: string; value: string }>;
+}
+
+export interface DelegationView {
+  heading: string;
+  body: string;
+  details: Array<{ label: string; value: string }>;
+}
+
+export function describeDelegation(delegation: NapoleonDelegation | undefined): DelegationView {
+  if (!delegation || delegation.selectedAgents.length === 0) {
+    return {
+      heading: "Napoleon delegation unavailable",
+      body: "No Napoleon delegation provenance was included with this response, so Concierge will not attribute the answer to a capability or agent.",
+      details: [],
+    };
+  }
+
+  const agentLabels = delegation.selectedAgents
+    .map((agent) => `${agent.displayName} (${agent.agentId}): ${agent.selectionReason}`)
+    .join("; ");
+  const contribution = delegation.selectedAgents
+    .filter((agent) => agent.contributionSummary)
+    .map((agent) => `${agent.displayName} found ${agent.contributionSummary}.`)
+    .join(" ");
+
+  return {
+    heading: "Napoleon delegation",
+    body: contribution || "Napoleon provided delegation provenance for this response.",
+    details: [
+      { label: "Selected agents", value: agentLabels },
+      { label: "Allowed effects", value: delegation.allowedEffects.join(", ") },
+      { label: "Blocked effects", value: delegation.blockedEffects.join(", ") },
+      { label: "Governance state", value: delegation.governanceState },
+      { label: "Trace", value: delegation.traceId },
+      { label: "Audit", value: delegation.auditId },
+    ],
+  };
 }
 
 export function describeGovernanceDecision(input: GovernanceDecisionViewInput): GovernanceDecisionView {

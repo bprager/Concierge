@@ -9,6 +9,7 @@ import {
   resetCapabilityTaxonomy,
   type TaxonomyDimension,
 } from "./capabilityTaxonomy";
+import { draftChiefOfStaffSteering } from "./chiefOfStaffSteering";
 import {
   buildGovernanceReviewState,
   buildMemoryProposalReviewState,
@@ -20,8 +21,9 @@ import {
   type LocalProfile,
   type MemoryProposalReviewState,
 } from "./contractBridge";
-import { sendToNapoleon } from "./napoleonBridge";
+import { NapoleonBridgeError, sendToNapoleon } from "./napoleonBridge";
 import {
+  describeDelegation,
   describeGovernanceDecision,
   describeGovernanceReview,
   describeMemoryProposalReview,
@@ -93,11 +95,14 @@ export function App() {
     typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_endpoint") ?? "",
   );
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
+  const [lastDelegation, setLastDelegation] = useState<ReturnType<typeof describeDelegation> | null>(null);
+  const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
   const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
   const [lastMemoryReviewState, setLastMemoryReviewState] = useState<MemoryProposalReviewState | null>(null);
   const [lastMemoryReview, setLastMemoryReview] = useState<ReturnType<typeof describeMemoryProposalReview> | null>(null);
   const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
+  const [steeringDraft, setSteeringDraft] = useState<ReturnType<typeof draftChiefOfStaffSteering> | null>(null);
   const [capabilityTaxonomy, setCapabilityTaxonomy] = useState(() => loadCapabilityTaxonomyFromStorage(browserStorage()));
   const [selectedTaxonomyLabel, setSelectedTaxonomyLabel] = useState("");
   const [taxonomyRenameValue, setTaxonomyRenameValue] = useState("");
@@ -179,6 +184,8 @@ export function App() {
       setInput("");
       setPendingRehearsal(null);
       setLastDecision(null);
+      setLastDelegation(null);
+      setLastBridgeFailure(null);
       setLastReview(null);
       setLastMemoryReviewState(null);
       setLastMemoryReview(null);
@@ -229,6 +236,8 @@ export function App() {
     }
     setPendingRehearsal({ content, traceId, turnId, preview, summary, review, memoryReviewState, memoryReview });
     setLastDecision(null);
+    setLastDelegation(null);
+    setLastBridgeFailure(null);
     setLastReview(null);
     setLastMemoryReviewState(null);
     setLastMemoryReview(null);
@@ -259,6 +268,8 @@ export function App() {
         setInput("");
         setPendingRehearsal(null);
         setLastDecision(null);
+        setLastDelegation(null);
+        setLastBridgeFailure(null);
         setLastReview(null);
         setLastMemoryReviewState(null);
         setLastMemoryReview(null);
@@ -277,6 +288,8 @@ export function App() {
       });
       refreshCapabilityLedgerStatus();
       setLastReview(rehearsal.review);
+      setLastDelegation(null);
+      setLastBridgeFailure(null);
       return;
     }
 
@@ -296,6 +309,8 @@ export function App() {
         });
         refreshCapabilityLedgerStatus();
         setLastReview(reviewView);
+        setLastDelegation(null);
+        setLastBridgeFailure(null);
         setLastDecision(
           describeGovernanceDecision({
             outcome: reviewState.outcome,
@@ -350,6 +365,8 @@ export function App() {
       });
       refreshCapabilityLedgerStatus();
       setLastDecision(decisionView);
+      setLastDelegation(describeDelegation(response.delegation));
+      setLastBridgeFailure(null);
       const responseReviewState = buildGovernanceReviewState(response.governanceDecision, profile);
       setLastReview(describeGovernanceReview(responseReviewState));
       if (responseReviewState.status === "review_needed") {
@@ -396,6 +413,11 @@ export function App() {
     } catch (error) {
       emitEvent("response_failed", { traceId, conversationId, turnId, error: String(error) });
       refreshCapabilityLedgerStatus();
+      const failure = error instanceof NapoleonBridgeError
+        ? `Live Napoleon bridge blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}. Concierge did not send externally, write memory, dispatch agents, or capture approval.`
+        : "Napoleon bridge failed closed. Concierge did not send externally, write memory, dispatch agents, or capture approval.";
+      setLastBridgeFailure(failure);
+      setLastDelegation(null);
       setMessages((m) => [
         ...m,
         {
@@ -513,6 +535,30 @@ export function App() {
       memoryWritePerformed: false,
       externalSendPerformed: false,
     });
+  }
+
+  function createSteeringDraft() {
+    const traceId = newTraceId();
+    const draft = draftChiefOfStaffSteering(capabilityLedger, {
+      conversationId,
+      traceId,
+      endpointConfigured: Boolean(endpoint.trim()),
+    });
+    setSteeringDraft(draft);
+    emitEvent("capability_recommendation_created", {
+      traceId,
+      conversationId,
+      capability: draft.recommendation.capabilityLabel,
+      architectureArea: draft.recommendation.architectureArea,
+      evidenceCount: draft.recommendation.evidenceCount,
+      proposalOnly: draft.boundary.proposalOnly,
+      approvalCaptured: draft.boundary.approvalCaptured,
+      memoryWriteAllowed: draft.boundary.memoryWriteAllowed,
+      agentDispatchAllowed: draft.boundary.agentDispatchAllowed,
+      externalSendAllowed: draft.boundary.externalSendAllowed,
+      canSendToNapoleon: draft.sendState.canSendToNapoleon,
+    });
+    refreshCapabilityLedgerStatus();
   }
 
   function renameSelectedTaxonomyLabel() {
@@ -642,11 +688,45 @@ export function App() {
           <button className="secondary" onClick={clearCapabilityHistory}>
             Clear local capability ledger
           </button>
+          <button className="secondary" onClick={createSteeringDraft}>
+            Draft Chief of Staff steering proposal
+          </button>
         </div>
         {capabilityExportJson ? (
           <pre aria-label="Exported local capability metadata">{capabilityExportJson}</pre>
         ) : null}
       </section>
+
+      {steeringDraft ? (
+        <section className="steering-draft">
+          <div>
+            <strong>Chief of Staff steering draft</strong>
+            <span>{steeringDraft.sendState.reason}</span>
+          </div>
+          <dl>
+            <dt>Recommendation</dt>
+            <dd>
+              {steeringDraft.recommendation.capabilityLabel}, {steeringDraft.recommendation.architectureArea},{" "}
+              confidence {steeringDraft.recommendation.confidence}
+            </dd>
+            <dt>Rationale</dt>
+            <dd>{steeringDraft.recommendation.rationale}</dd>
+            <dt>Evaluator case</dt>
+            <dd>
+              {steeringDraft.evaluatorCaseCandidate.caseId}: {steeringDraft.evaluatorCaseCandidate.expectedBehavior}
+            </dd>
+            <dt>Evolution proposal</dt>
+            <dd>
+              {steeringDraft.evolutionProposal.proposal_id}, risk {steeringDraft.evolutionProposal.risk_level},{" "}
+              approval required: {steeringDraft.evolutionProposal.approval_required}
+            </dd>
+            <dt>Boundary</dt>
+            <dd>
+              proposal only; no approval captured; no memory write; no agent dispatch; no external send.
+            </dd>
+          </dl>
+        </section>
+      ) : null}
 
       <section className="taxonomy-controls">
         <div>
@@ -736,6 +816,32 @@ export function App() {
           <strong>{lastDecision.status}</strong>
           <p>{lastDecision.detail}</p>
           <span>Blocked effects: {lastDecision.blockedEffectsLabel}</span>
+        </section>
+      ) : null}
+
+      {lastBridgeFailure ? (
+        <section className="bridge-failure">
+          <strong>Bridge blocked</strong>
+          <p>{lastBridgeFailure}</p>
+        </section>
+      ) : null}
+
+      {lastDelegation ? (
+        <section className="delegation">
+          <div className="review-heading">
+            <strong>{lastDelegation.heading}</strong>
+            <span>{lastDelegation.body}</span>
+          </div>
+          {lastDelegation.details.length ? (
+            <dl>
+              {lastDelegation.details.map((detail) => (
+                <div key={detail.label}>
+                  <dt>{detail.label}</dt>
+                  <dd>{detail.value}</dd>
+                </div>
+              ))}
+            </dl>
+          ) : null}
         </section>
       ) : null}
 

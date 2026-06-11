@@ -29,6 +29,22 @@ export interface NapoleonRequest {
   message: string;
 }
 
+export interface NapoleonDelegationAgent {
+  agentId: string;
+  displayName: string;
+  selectionReason: string;
+  contributionSummary?: string;
+}
+
+export interface NapoleonDelegation {
+  selectedAgents: NapoleonDelegationAgent[];
+  allowedEffects: string[];
+  blockedEffects: string[];
+  governanceState: string;
+  traceId: string;
+  auditId: string;
+}
+
 export interface NapoleonResponse {
   text: string;
   profileMode: NapoleonProfileMode;
@@ -37,5 +53,6 @@ export interface NapoleonResponse {
   auditEnvelope: AuditEnvelope;
   requiresReview: boolean;
   targetAgent?: string;
+  delegation?: NapoleonDelegation;
   stance?: string;
 }

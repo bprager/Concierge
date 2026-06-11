@@ -1,4 +1,4 @@
-import type { NapoleonRequest, NapoleonResponse } from "./types";
+import type { NapoleonDelegation, NapoleonRequest, NapoleonResponse } from "./types";
 import {
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
@@ -17,6 +17,31 @@ interface BridgeDependencies {
   getEndpoint?: () => string | null;
   emit?: (payload: TelemetryPayload) => void;
   fetch?: BridgeFetch;
+}
+
+export type NapoleonBridgeFailureReason =
+  | "no_endpoint"
+  | "descriptor_mismatch"
+  | "auth_failure"
+  | "contract_mismatch"
+  | "governance_no_go"
+  | "bridge_timeout"
+  | "http_failure";
+
+export class NapoleonBridgeError extends Error {
+  reason: NapoleonBridgeFailureReason;
+  status?: number;
+  traceId: string;
+  requestId: string;
+
+  constructor(reason: NapoleonBridgeFailureReason, traceId: string, requestId: string, status?: number) {
+    super(`Napoleon bridge fail-closed: ${reason}${status ? ` (${status})` : ""}`);
+    this.name = "NapoleonBridgeError";
+    this.reason = reason;
+    this.status = status;
+    this.traceId = traceId;
+    this.requestId = requestId;
+  }
 }
 
 function emitBridgeEvent(dependencies: BridgeDependencies, event: string, attributes: Record<string, unknown>) {
@@ -52,6 +77,49 @@ function requiresReview(decision: GovernanceDecision): boolean {
   return decision.outcome === "requires_review" || decision.outcome === "no_go";
 }
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function isNapoleonDelegation(value: unknown): value is NapoleonDelegation {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<NapoleonDelegation>;
+  const selectedAgents = candidate.selectedAgents;
+  return Boolean(
+    Array.isArray(selectedAgents) &&
+      selectedAgents.every(
+        (agent) =>
+          agent &&
+          typeof agent === "object" &&
+          typeof agent.agentId === "string" &&
+          typeof agent.displayName === "string" &&
+          typeof agent.selectionReason === "string" &&
+          (agent.contributionSummary === undefined || typeof agent.contributionSummary === "string"),
+      ) &&
+      isStringArray(candidate.allowedEffects) &&
+      isStringArray(candidate.blockedEffects) &&
+      typeof candidate.governanceState === "string" &&
+      typeof candidate.traceId === "string" &&
+      typeof candidate.auditId === "string",
+  );
+}
+
+function failClosed(
+  dependencies: BridgeDependencies,
+  reason: NapoleonBridgeFailureReason,
+  traceId: string,
+  requestId: string,
+  status?: number,
+): never {
+  emitBridgeEvent(dependencies, "bridge_request_failed", {
+    traceId,
+    requestId,
+    reason,
+    status,
+  });
+  throw new NapoleonBridgeError(reason, traceId, requestId, status);
+}
+
 export async function sendToNapoleon(
   request: NapoleonRequest,
   dependencies: BridgeDependencies = {},
@@ -76,57 +144,51 @@ export async function sendToNapoleon(
   const endpoint = getConfiguredEndpoint(dependencies);
 
   if (!endpoint) {
-    emitBridgeEvent(dependencies, "bridge_request_completed", {
-      traceId: request.traceId,
-      mode: "local_stub",
-      outcome: contract.governanceDecision.outcome,
-      auditId: contract.auditEnvelope.audit_id,
-    });
+    failClosed(dependencies, "no_endpoint", request.traceId, contract.chiefOfStaffRequest.request_id);
+  }
 
-    return {
-      text:
-        request.profile === "child_protected"
-          ? "I can prepare an answer, and I will keep it simple. I will not do anything outside this chat without guardian approval."
-          : "I prepared this as an advisory Concierge response. Configure a Napoleon endpoint to send it through live Chief of Staff review.",
-      profileMode: contract.profileMode,
-      governanceDecision: contract.governanceDecision,
-      traceEnvelope: contract.traceEnvelope,
-      auditEnvelope: contract.auditEnvelope,
-      requiresReview: requiresReview(contract.governanceDecision),
-      stance: request.profile === "child_protected" ? "neutral_warm" : "direct_strategic",
-    };
+  if (!descriptorStatus.ready) {
+    failClosed(dependencies, "descriptor_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
+  }
+
+  if (contract.governanceDecision.outcome === "no_go") {
+    failClosed(dependencies, "governance_no_go", request.traceId, contract.chiefOfStaffRequest.request_id);
   }
 
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
-  const response = await fetcher(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      ...request,
-      profileMode: contract.profileMode,
-      descriptorStatus,
-      chiefOfStaffRequest: contract.chiefOfStaffRequest,
-      governanceRequest: contract.governanceRequest,
-      traceEnvelope: contract.traceEnvelope,
-      auditEnvelope: contract.auditEnvelope,
-      blockedEffects: contract.blockedEffects,
-      sourceEvidence: contract.sourceEvidence,
-    }),
-  });
+  let response: Awaited<ReturnType<BridgeFetch>>;
+  try {
+    response = await fetcher(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...request,
+        profileMode: contract.profileMode,
+        descriptorStatus,
+        chiefOfStaffRequest: contract.chiefOfStaffRequest,
+        governanceRequest: contract.governanceRequest,
+        traceEnvelope: contract.traceEnvelope,
+        auditEnvelope: contract.auditEnvelope,
+        blockedEffects: contract.blockedEffects,
+        sourceEvidence: contract.sourceEvidence,
+      }),
+    });
+  } catch (error) {
+    const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
+    failClosed(dependencies, reason, request.traceId, contract.chiefOfStaffRequest.request_id);
+  }
 
   if (!response.ok) {
-    emitBridgeEvent(dependencies, "bridge_request_failed", {
-      traceId: request.traceId,
-      status: response.status,
-      requestId: contract.chiefOfStaffRequest.request_id,
-    });
-    throw new Error(`Napoleon bridge failed: ${response.status}`);
+    const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
+    failClosed(dependencies, reason, request.traceId, contract.chiefOfStaffRequest.request_id, response.status);
   }
 
   const payload = (await response.json()) as Partial<NapoleonResponse>;
-  const decision = isGovernanceDecision(payload.governanceDecision)
-    ? payload.governanceDecision
-    : contract.governanceDecision;
+  if (!isGovernanceDecision(payload.governanceDecision)) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id);
+  }
+
+  const decision = payload.governanceDecision;
 
   const normalized: NapoleonResponse = {
     text: payload.text ?? "Napoleon returned no response text.",
@@ -140,6 +202,7 @@ export async function sendToNapoleon(
     },
     requiresReview: requiresReview(decision),
     targetAgent: payload.targetAgent,
+    delegation: isNapoleonDelegation(payload.delegation) ? payload.delegation : undefined,
     stance: payload.stance,
   };
 

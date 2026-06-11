@@ -51,6 +51,10 @@ Local acknowledgement is not approval. It records that the review state was seen
 
 Child protected mode uses stricter wording. It must not imply secret-keeping, hidden external action, or guardian-bypassing approval.
 
+Live Napoleon bridge failures are fail-closed states. Missing endpoint, descriptor mismatch, authentication failure, contract mismatch, `no_go`, timeout, and HTTP failure must be shown as blocked local states. They must not be treated as Napoleon approval, and Concierge must preserve blocked effects rather than retrying into side effects.
+
+Delegation attribution requires bridge provenance. Concierge may say that Napoleon recommended something or that a selected agent found something only when the live bridge response includes that contribution, selected agent, governance state, trace ID, and audit ID. Without provenance, Concierge presents the response without inventing authority or agent involvement.
+
 ## 4. Memory proposal review
 
 Text Concierge may identify possible preferences or profile notes from a turn and show them as memory proposals.
@@ -80,6 +84,7 @@ Conversation Capability Intelligence persistence:
 - Provides a local JSON export control with privacy, retention, trend, and scoring caveats; export does not grant permission to share externally.
 - Provides local taxonomy controls for rename, merge, deprecated markers, split-candidate markers, and reset.
 - Clear, export, taxonomy, retention pruning, trend answers, and recommendation scoring do not capture approval, write Napoleon memory, dispatch agents, send externally, change governance authority, or change Napoleon routing/policy.
+- Chief of Staff steering drafts are local proposal packets only. They can contain a capability recommendation, evaluator case candidate, and evolution proposal draft, but they do not apply changes, write memory, dispatch agents, send externally, or capture approval.
 - Recommendation scoring penalizes privacy risk, child safety risk, governance risk, authority expansion, and high implementation effort.
 - Child protected records remain minimized and marked with `child_sensitive` privacy class.
 

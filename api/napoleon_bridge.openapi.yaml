@@ -136,6 +136,38 @@ paths:
                     type: string
                   targetAgent:
                     type: string
+                  delegation:
+                    type: object
+                    required: [selectedAgents, allowedEffects, blockedEffects, governanceState, traceId, auditId]
+                    properties:
+                      selectedAgents:
+                        type: array
+                        items:
+                          type: object
+                          required: [agentId, displayName, selectionReason]
+                          properties:
+                            agentId:
+                              type: string
+                            displayName:
+                              type: string
+                            selectionReason:
+                              type: string
+                            contributionSummary:
+                              type: string
+                      allowedEffects:
+                        type: array
+                        items:
+                          type: string
+                      blockedEffects:
+                        type: array
+                        items:
+                          type: string
+                      governanceState:
+                        type: string
+                      traceId:
+                        type: string
+                      auditId:
+                        type: string
                   stance:
                     type: string
                   requiresConfirmation:
