@@ -1,4 +1,4 @@
-import { MEMORY_PROPOSAL_REVIEW_PATH, resolveNapoleonBridgeEndpoint } from "./bridgeEndpoint.js";
+import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import {
   buildDescriptorConnectionState,
   defaultChiefOfStaffDescriptor,
@@ -243,7 +243,7 @@ export async function submitMemoryProposalForReview(
     profileMode,
   });
 
-  const targetEndpoint = resolveNapoleonBridgeEndpoint(endpoint, MEMORY_PROPOSAL_REVIEW_PATH);
+  const targetEndpoint = resolveNapoleonBridgeOperation(endpoint, "memory_proposal_review");
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<MemoryProposalFetch>>;
   try {

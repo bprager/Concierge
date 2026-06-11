@@ -1,4 +1,4 @@
-import { CHIEF_OF_STAFF_DESCRIPTOR_PATH, resolveNapoleonBridgeEndpoint } from "./bridgeEndpoint.js";
+import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import {
   buildDescriptorConnectionState,
   type ChiefOfStaffDescriptor,
@@ -105,7 +105,7 @@ export async function discoverNapoleonDescriptor(
   }
 
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
-  const response = await fetcher(resolveNapoleonBridgeEndpoint(endpoint, CHIEF_OF_STAFF_DESCRIPTOR_PATH), {
+  const response = await fetcher(resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_descriptor"), {
     method: "GET",
     headers: buildDescriptorHeaders(getConfiguredAuthToken(dependencies)),
   });

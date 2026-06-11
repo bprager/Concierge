@@ -4,7 +4,7 @@ import {
   type CapabilityLedger,
   type RecommendationBoundary,
 } from "./capabilityLedger.js";
-import { CHIEF_OF_STAFF_STEERING_PATH, resolveNapoleonBridgeEndpoint } from "./bridgeEndpoint.js";
+import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import {
   buildDescriptorConnectionState,
   defaultChiefOfStaffDescriptor,
@@ -353,7 +353,7 @@ export async function submitChiefOfStaffSteeringDraft(
     profileMode,
   });
 
-  const targetEndpoint = resolveNapoleonBridgeEndpoint(endpoint, CHIEF_OF_STAFF_STEERING_PATH);
+  const targetEndpoint = resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_steering");
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<SteeringFetch>>;
   try {

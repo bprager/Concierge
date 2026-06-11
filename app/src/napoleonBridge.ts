@@ -1,5 +1,5 @@
 import type { NapoleonDelegation, NapoleonRequest, NapoleonResponse } from "./types";
-import { resolveNapoleonBridgeEndpoint, TEXT_TURN_PATH } from "./bridgeEndpoint.js";
+import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import {
   buildDescriptorConnectionState,
   buildTextTurnContract,
@@ -237,7 +237,7 @@ export async function sendToNapoleon(
     failClosed(dependencies, "governance_no_go", request.traceId, contract.chiefOfStaffRequest.request_id);
   }
 
-  const targetEndpoint = resolveNapoleonBridgeEndpoint(endpoint, TEXT_TURN_PATH);
+  const targetEndpoint = resolveNapoleonBridgeOperation(endpoint, "text_turn");
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<BridgeFetch>>;
   try {
