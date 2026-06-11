@@ -245,6 +245,7 @@ export async function sendToNapoleon(
       method: "POST",
       headers: buildBridgeHeaders(authToken),
       body: JSON.stringify({
+        requestKind: "text_turn",
         ...request,
         profileMode: contract.profileMode,
         descriptorStatus: descriptorConnection.descriptorStatus,

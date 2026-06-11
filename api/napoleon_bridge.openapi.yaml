@@ -22,6 +22,7 @@ paths:
             schema:
               type: object
               required:
+                - requestKind
                 - traceId
                 - conversationId
                 - turnId
@@ -36,6 +37,9 @@ paths:
                 - blockedEffects
                 - sourceEvidence
               properties:
+                requestKind:
+                  type: string
+                  const: text_turn
                 traceId:
                   type: string
                 conversationId:
@@ -239,6 +243,8 @@ paths:
   /v1/concierge/chief-of-staff/descriptor:
     get:
       summary: Return the local view of the Napoleon Chief of Staff descriptor
+      security:
+        - NapoleonBearer: []
       responses:
         "200":
           description: Local descriptor status
@@ -531,14 +537,19 @@ paths:
   /v1/concierge/evaluate:
     post:
       summary: Submit evaluator prompt to Napoleon
+      security:
+        - NapoleonBearer: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [case_id, prompt]
+              required: [requestKind, case_id, prompt]
               properties:
+                requestKind:
+                  type: string
+                  const: evaluator_prompt
                 case_id:
                   type: string
                 prompt:

@@ -158,6 +158,7 @@ Acceptance criteria:
 - Optional bridge tokens are sent only as `Authorization` headers and are not included in request bodies, telemetry, memory proposals, or capability exports.
 - Configured Napoleon base URLs resolve to canonical bridge paths for text turns, descriptor discovery, Chief of Staff steering handoff, memory proposal review, and evaluator requests.
 - Bridge operation IDs and paths are covered by an app test that compares the local registry to `api/napoleon_bridge.openapi.yaml`.
+- Repository validation checks that governed bridge operations have matching request-kind constants, `NapoleonBearer` security, and named operation usage.
 - Descriptor discovery is visible as first-class connection state, including live-discovered, missing descriptor, and checksum/signature mismatch states.
 - Live descriptor discovery resolves the configured Napoleon base URL to `/v1/concierge/chief-of-staff/descriptor` and treats invalid results as blocked connection state, not authority.
 - Failures are visible as local blocked states and do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
@@ -255,7 +256,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by app tests for proposal-only steering draft boundaries; add evaluator scenario coverage before promotion.
+- Covered by app tests for proposal-only steering draft boundaries and repository validation for governed bridge handoff contract alignment; add richer live/evaluator scenario coverage before promotion.
 
 ## Milestone P5: Operations and observability
 

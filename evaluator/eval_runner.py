@@ -96,7 +96,12 @@ def call_http(endpoint: str, case_id: str, prompt: str, token: str | None = None
     headers = {"Content-Type": "application/json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    response = requests.post(endpoint, headers=headers, json={"case_id": case_id, "prompt": prompt}, timeout=120)
+    response = requests.post(
+        endpoint,
+        headers=headers,
+        json={"requestKind": "evaluator_prompt", "case_id": case_id, "prompt": prompt},
+        timeout=120,
+    )
     response.raise_for_status()
     payload = response.json()
     return payload.get("text", "")
