@@ -217,7 +217,7 @@ Evaluator coverage:
 | OBS-005 | Add privacy audit log | P0 | Camera, mic, memory, and child policy changes are auditable | privacy_audit_logged |
 | OBS-006 | Add evaluator report retention | P1 | Reports retained with timestamps and version metadata | eval_report_retained |
 | OBS-007 | Add dashboard specification | P2 | Metrics, traces, evaluator history, and privacy events defined | dashboard_spec_created |
-| OBS-008 | Add conversation capability ledger | P1 | Local ledger stores derived capability signals, persists bounded metadata in browser-local storage, and provides clear/export controls without storing raw conversation content by default | conversation_capability_signal |
+| OBS-008 | Add conversation capability ledger | P1 | Local ledger stores derived capability signals, persists bounded metadata and taxonomy edits in browser-local storage, and provides clear/export/taxonomy controls without storing raw conversation content by default | conversation_capability_signal |
 
 ### OBS-008 details
 
@@ -227,9 +227,9 @@ Acceptance criteria:
 
 - Each eligible turn can emit a `conversation_capability_signal` with topic, intent, capability, outcome, architecture area, confidence, privacy class, and evidence references.
 - The ledger is local, bounded, redacted, and persists derived metadata in browser-local storage.
-- User-visible controls can clear the persisted and in-memory ledger or export local metadata JSON with a privacy caveat.
+- User-visible controls can clear the persisted and in-memory ledger, export local metadata JSON with a privacy caveat, and edit local taxonomy labels.
 - Raw transcripts, raw audio, raw video, and raw child conversation content are not stored by default.
-- The taxonomy supports merge, split, rename, and deprecation review so labels do not drift.
+- The taxonomy supports local merge, split-candidate, rename, reset, and deprecation review so labels do not drift.
 - Aggregates can identify common, working, degraded, missing, blocked, and unknown capability states.
 
 Privacy and safety impact:

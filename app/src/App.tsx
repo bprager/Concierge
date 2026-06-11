@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { answerCapabilityQuestion } from "./capabilityLedger";
 import {
+  createCapabilityTaxonomy,
+  getTaxonomyLabelCounts,
+  markTaxonomyLabel,
+  mergeTaxonomyLabels,
+  renameTaxonomyLabel,
+  resetCapabilityTaxonomy,
+  type TaxonomyDimension,
+} from "./capabilityTaxonomy";
+import {
   buildGovernanceReviewState,
   buildMemoryProposalReviewState,
   buildRehearsalPreview,
@@ -24,6 +33,8 @@ import {
   CAPABILITY_LEDGER_MAX_SIGNALS,
   clearPersistedCapabilityLedger,
   exportCapabilityLedgerJson,
+  loadCapabilityTaxonomyFromStorage,
+  persistCapabilityTaxonomyToStorage,
 } from "./capabilityLedgerStorage";
 import type { ConciergeMessage } from "./types";
 
@@ -85,10 +96,41 @@ export function App() {
   const [lastMemoryReview, setLastMemoryReview] = useState<ReturnType<typeof describeMemoryProposalReview> | null>(null);
   const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
+  const [capabilityTaxonomy, setCapabilityTaxonomy] = useState(() => loadCapabilityTaxonomyFromStorage(browserStorage()));
+  const [selectedTaxonomyLabel, setSelectedTaxonomyLabel] = useState("");
+  const [taxonomyRenameValue, setTaxonomyRenameValue] = useState("");
+  const [taxonomyMergeTarget, setTaxonomyMergeTarget] = useState("");
   const descriptorStatus = validateChiefOfStaffDescriptor(defaultChiefOfStaffDescriptor);
 
   function refreshCapabilityLedgerStatus() {
     setCapabilitySignalCount(capabilityLedger.listRecent().length);
+  }
+
+  function taxonomySelection(value = selectedTaxonomyLabel): { dimension: TaxonomyDimension; label: string } | null {
+    const [dimension, ...labelParts] = value.split(":");
+    const label = labelParts.join(":");
+    if (!["topic", "intent", "capability", "architecture"].includes(dimension) || !label) return null;
+    return { dimension: dimension as TaxonomyDimension, label };
+  }
+
+  function updateCapabilityTaxonomy(
+    mutate: (taxonomy: ReturnType<typeof createCapabilityTaxonomy>) => void,
+    event: string,
+    attributes: Record<string, unknown>,
+  ) {
+    const next = createCapabilityTaxonomy(capabilityTaxonomy.entries);
+    mutate(next);
+    setCapabilityTaxonomy(next);
+    persistCapabilityTaxonomyToStorage(browserStorage(), next);
+    emitEvent(event, {
+      traceId: newTraceId(),
+      conversationId,
+      storage: "local_browser",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
+      ...attributes,
+    });
   }
 
   function updateEndpoint(value: string) {
@@ -117,7 +159,7 @@ export function App() {
 
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
-    const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger);
+    const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy);
     if (capabilityAnswer) {
       emitEvent("capability_intelligence_answered", {
         traceId,
@@ -197,7 +239,7 @@ export function App() {
     if (!rehearsal) {
       const traceId = newTraceId();
       const turnId = `turn_${Date.now().toString(16)}`;
-      const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger);
+      const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy);
       if (capabilityAnswer) {
         emitEvent("capability_intelligence_answered", {
           traceId,
@@ -438,8 +480,12 @@ export function App() {
 
   function clearCapabilityHistory() {
     const traceId = newTraceId();
-    clearPersistedCapabilityLedger(browserStorage(), capabilityLedger);
+    clearPersistedCapabilityLedger(browserStorage(), capabilityLedger, capabilityTaxonomy);
     setCapabilityExportJson(null);
+    setCapabilityTaxonomy(createCapabilityTaxonomy());
+    setSelectedTaxonomyLabel("");
+    setTaxonomyRenameValue("");
+    setTaxonomyMergeTarget("");
     refreshCapabilityLedgerStatus();
     emitEvent("capability_ledger_cleared", {
       traceId,
@@ -454,7 +500,7 @@ export function App() {
 
   function exportCapabilityHistory() {
     const traceId = newTraceId();
-    const json = exportCapabilityLedgerJson(capabilityLedger);
+    const json = exportCapabilityLedgerJson(capabilityLedger, capabilityTaxonomy);
     setCapabilityExportJson(json);
     emitEvent("capability_ledger_exported", {
       traceId,
@@ -467,11 +513,59 @@ export function App() {
     });
   }
 
+  function renameSelectedTaxonomyLabel() {
+    const selected = taxonomySelection();
+    if (!selected || !taxonomyRenameValue.trim()) return;
+    updateCapabilityTaxonomy(
+      (taxonomy) => renameTaxonomyLabel(taxonomy, selected.dimension, selected.label, taxonomyRenameValue),
+      "capability_taxonomy_label_renamed",
+      { dimension: selected.dimension, sourceLabel: selected.label, displayLabel: taxonomyRenameValue.trim() },
+    );
+    setTaxonomyRenameValue("");
+  }
+
+  function mergeSelectedTaxonomyLabel() {
+    const selected = taxonomySelection();
+    const target = taxonomySelection(taxonomyMergeTarget);
+    if (!selected || !target || selected.dimension !== target.dimension || selected.label === target.label) return;
+    updateCapabilityTaxonomy(
+      (taxonomy) => mergeTaxonomyLabels(taxonomy, selected.dimension, selected.label, target.label),
+      "capability_taxonomy_labels_merged",
+      { dimension: selected.dimension, sourceLabel: selected.label, targetLabel: target.label },
+    );
+  }
+
+  function markSelectedTaxonomyLabel(marker: "deprecated" | "splitCandidate", value: boolean) {
+    const selected = taxonomySelection();
+    if (!selected) return;
+    updateCapabilityTaxonomy(
+      (taxonomy) => markTaxonomyLabel(taxonomy, selected.dimension, selected.label, marker, value),
+      "capability_taxonomy_label_marked",
+      { dimension: selected.dimension, sourceLabel: selected.label, marker, value },
+    );
+  }
+
+  function resetTaxonomyEdits() {
+    updateCapabilityTaxonomy(
+      (taxonomy) => resetCapabilityTaxonomy(taxonomy),
+      "capability_taxonomy_reset",
+      { reset: true },
+    );
+    setSelectedTaxonomyLabel("");
+    setTaxonomyRenameValue("");
+    setTaxonomyMergeTarget("");
+  }
+
   const canSendRehearsal = Boolean(
     pendingRehearsal &&
       input.trim() === pendingRehearsal.content &&
       pendingRehearsal.preview.governanceReview.canSendAdvisory,
   );
+  const taxonomyCounts = getTaxonomyLabelCounts(capabilityLedger.listRecent(), capabilityTaxonomy);
+  const taxonomyRows = (Object.keys(taxonomyCounts) as TaxonomyDimension[]).flatMap((dimension) =>
+    taxonomyCounts[dimension].map((row) => ({ ...row, value: `${dimension}:${row.label}` })),
+  );
+  const selectedTaxonomyRow = taxonomyRows.find((row) => row.value === selectedTaxonomyLabel);
 
   return (
     <main className="shell">
@@ -549,6 +643,68 @@ export function App() {
         {capabilityExportJson ? (
           <pre aria-label="Exported local capability metadata">{capabilityExportJson}</pre>
         ) : null}
+      </section>
+
+      <section className="taxonomy-controls">
+        <div>
+          <strong>Capability taxonomy</strong>
+          <span>Local label edits affect Concierge summaries only. They do not change Napoleon policy or routing.</span>
+        </div>
+        <label>
+          Label
+          <select value={selectedTaxonomyLabel} onChange={(e) => setSelectedTaxonomyLabel(e.target.value)}>
+            <option value="">Select a local label</option>
+            {taxonomyRows.map((row) => (
+              <option key={row.value} value={row.value}>
+                {row.dimension}: {row.label} ({row.count})
+                {row.deprecated ? " deprecated" : ""}
+                {row.splitCandidate ? " split" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="taxonomy-actions">
+          <input
+            value={taxonomyRenameValue}
+            onChange={(e) => setTaxonomyRenameValue(e.target.value)}
+            placeholder="New local label"
+          />
+          <button className="secondary" disabled={!selectedTaxonomyLabel || !taxonomyRenameValue.trim()} onClick={renameSelectedTaxonomyLabel}>
+            Rename label
+          </button>
+        </div>
+        <div className="taxonomy-actions">
+          <select value={taxonomyMergeTarget} onChange={(e) => setTaxonomyMergeTarget(e.target.value)}>
+            <option value="">Merge into...</option>
+            {taxonomyRows
+              .filter((row) => !selectedTaxonomyRow || row.dimension === selectedTaxonomyRow.dimension)
+              .map((row) => (
+                <option key={`merge-${row.value}`} value={row.value}>
+                  {row.dimension}: {row.label} ({row.count})
+                </option>
+              ))}
+          </select>
+          <button className="secondary" disabled={!selectedTaxonomyLabel || !taxonomyMergeTarget} onClick={mergeSelectedTaxonomyLabel}>
+            Merge label
+          </button>
+        </div>
+        <div className="taxonomy-actions">
+          <button className="secondary" disabled={!selectedTaxonomyLabel} onClick={() => markSelectedTaxonomyLabel("deprecated", true)}>
+            Mark deprecated
+          </button>
+          <button className="secondary" disabled={!selectedTaxonomyLabel} onClick={() => markSelectedTaxonomyLabel("deprecated", false)}>
+            Unmark deprecated
+          </button>
+          <button className="secondary" disabled={!selectedTaxonomyLabel} onClick={() => markSelectedTaxonomyLabel("splitCandidate", true)}>
+            Mark split candidate
+          </button>
+          <button className="secondary" disabled={!selectedTaxonomyLabel} onClick={() => markSelectedTaxonomyLabel("splitCandidate", false)}>
+            Unmark split candidate
+          </button>
+          <button className="secondary" onClick={resetTaxonomyEdits}>
+            Reset taxonomy edits
+          </button>
+        </div>
       </section>
 
       <section className="messages">

@@ -1,4 +1,10 @@
 import type { LocalProfile, NapoleonProfileMode } from "./contractBridge.js";
+import {
+  applyTaxonomyToSignals,
+  serializeCapabilityTaxonomy,
+  type CapabilityTaxonomy,
+  type SerializedCapabilityTaxonomy,
+} from "./capabilityTaxonomy.js";
 
 export type CapabilityStatus = "working" | "degraded" | "missing" | "blocked" | "unknown";
 export type CapabilityOutcomeSignal =
@@ -103,6 +109,7 @@ export interface SerializedCapabilityLedger {
     maxSignals: number;
   };
   signals: ConversationCapabilitySignal[];
+  taxonomy?: SerializedCapabilityTaxonomy;
 }
 
 export interface ExportedCapabilityLedger {
@@ -113,6 +120,7 @@ export interface ExportedCapabilityLedger {
     maxSignals: number;
   };
   signals: ConversationCapabilitySignal[];
+  taxonomy?: SerializedCapabilityTaxonomy;
 }
 
 export type CapabilityQuestionKind =
@@ -333,7 +341,7 @@ function prunedSignals(signals: ConversationCapabilitySignal[], maxSignals: numb
 
 export function serializeCapabilityLedger(
   ledger: CapabilityLedger,
-  options: { maxSignals?: number; generatedAt?: string } = {},
+  options: { maxSignals?: number; generatedAt?: string; taxonomy?: CapabilityTaxonomy } = {},
 ): SerializedCapabilityLedger {
   const maxSignals = Math.max(1, options.maxSignals ?? 250);
   return {
@@ -342,6 +350,7 @@ export function serializeCapabilityLedger(
     privacyCaveat: CAPABILITY_LEDGER_PRIVACY_CAVEAT,
     retention: { maxSignals },
     signals: prunedSignals(ledger.listRecent(), maxSignals),
+    taxonomy: options.taxonomy ? serializeCapabilityTaxonomy(options.taxonomy, { generatedAt: options.generatedAt }) : undefined,
   };
 }
 
@@ -373,7 +382,7 @@ export function deserializeCapabilityLedger(
 
 export function exportCapabilityLedger(
   ledger: CapabilityLedger,
-  options: { maxSignals?: number; generatedAt?: string } = {},
+  options: { maxSignals?: number; generatedAt?: string; taxonomy?: CapabilityTaxonomy } = {},
 ): ExportedCapabilityLedger {
   const maxSignals = Math.max(1, options.maxSignals ?? 250);
   return {
@@ -382,6 +391,7 @@ export function exportCapabilityLedger(
     privacyCaveat: CAPABILITY_LEDGER_EXPORT_PRIVACY_CAVEAT,
     retention: { maxSignals },
     signals: prunedSignals(ledger.listRecent(), maxSignals),
+    taxonomy: options.taxonomy ? serializeCapabilityTaxonomy(options.taxonomy, { generatedAt: options.generatedAt }) : undefined,
   };
 }
 
@@ -389,7 +399,10 @@ function increment(bucket: Record<string, number>, key: string) {
   bucket[key] = (bucket[key] ?? 0) + 1;
 }
 
-export function aggregateCapabilitySignals(signals: ConversationCapabilitySignal[]): CapabilityAggregate {
+export function aggregateCapabilitySignals(
+  signals: ConversationCapabilitySignal[],
+  taxonomy?: CapabilityTaxonomy,
+): CapabilityAggregate {
   const aggregate: CapabilityAggregate = {
     total: signals.length,
     byTopic: {},
@@ -399,7 +412,7 @@ export function aggregateCapabilitySignals(signals: ConversationCapabilitySignal
     byArchitectureArea: {},
   };
 
-  for (const signal of signals) {
+  for (const signal of applyTaxonomyToSignals(signals, taxonomy)) {
     increment(aggregate.byTopic, signal.topicLabel);
     increment(aggregate.byIntent, signal.intentLabel);
     increment(aggregate.byCapability, signal.capabilityLabel);
@@ -518,12 +531,14 @@ function groupedRows(
 export function answerCapabilityQuestion(
   question: string,
   ledger: CapabilityLedger,
+  taxonomy?: CapabilityTaxonomy,
 ): CapabilityQuestionAnswer | null {
   const kind = classifyCapabilityQuestion(question);
   if (!kind) return null;
 
-  const signals = ledger.listRecent();
-  const aggregate = aggregateCapabilitySignals(signals);
+  const rawSignals = ledger.listRecent();
+  const signals = applyTaxonomyToSignals(rawSignals, taxonomy);
+  const aggregate = aggregateCapabilitySignals(rawSignals, taxonomy);
 
   if (kind === "common_conversations") {
     const rows = sortedRows(aggregate.byTopic);

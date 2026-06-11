@@ -106,6 +106,44 @@ header {
   overflow-wrap: anywhere;
 }
 
+.taxonomy-controls {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.taxonomy-controls > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.taxonomy-controls span {
+  font-size: 0.88rem;
+}
+
+.taxonomy-controls label {
+  display: grid;
+  gap: 6px;
+}
+
+.taxonomy-controls input,
+.taxonomy-controls select {
+  min-height: 34px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.taxonomy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .messages {
   margin-top: 16px;
   display: grid;

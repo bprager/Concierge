@@ -28,7 +28,7 @@ Tracking only topics would be misleading. A frequent topic may already work well
 
 The local ledger should store derived metadata, not raw conversation transcripts by default.
 
-Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model, bounded ledger, serialization, deserialization, validation, pruning, export, and clear helpers. It is wired through `app/src/telemetry.ts` for current Text Concierge events and uses browser-local storage through `app/src/capabilityLedgerStorage.ts`. The Text Concierge UI shows the retained local signal count and provides clear and export controls.
+Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model, bounded ledger, serialization, deserialization, validation, pruning, export, and clear helpers. It is wired through `app/src/telemetry.ts` for current Text Concierge events and uses browser-local storage through `app/src/capabilityLedgerStorage.ts`. `app/src/capabilityTaxonomy.ts` provides local taxonomy renames, merges, deprecation markers, split-candidate markers, reset, serialization, and export. The Text Concierge UI shows retained local signal count, taxonomy label counts, and clear/export/taxonomy controls.
 
 Each turn can emit a `conversation_capability_signal` with:
 
@@ -58,6 +58,14 @@ Persistent local storage:
 - Clear control: removes the persisted snapshot and clears the in-memory ledger.
 - Export control: renders local JSON for derived metadata only and states that export does not grant permission to share externally.
 - Child protected records remain distinguishable through `profile_mode` and `privacy_class: child_sensitive`, without retaining raw child content.
+
+Local taxonomy storage:
+
+- Schema version: `concierge.capability-taxonomy.v1`.
+- Supports local renames, merges, deprecated markers, and split-candidate markers for topic, intent, capability, and architecture labels.
+- Query answers apply edited labels to aggregates while preserving original derived signal records.
+- Taxonomy edits are local hints only. They do not change Napoleon policy, routing, memory, approval, dispatch, or external sends.
+- Reset restores derived labels by clearing local taxonomy edits.
 
 ## 4. Answer model
 
@@ -99,7 +107,7 @@ Important items not obvious in the initial request:
 - The system needs negative signals, not just successes. Retries, corrections, no-go decisions, bridge errors, dismissed proposals, and abandoned turns are often the best evidence of missing capabilities.
 - Rare high-impact misses must not be buried by frequent low-value topics.
 - Child protected signals need stricter minimization and separate aggregation so child behavior is not optimized like adult-owner behavior.
-- The system needs a taxonomy review loop. Capability labels will drift unless users or Chief of Staff can merge, split, rename, and deprecate labels.
+- The system needs a taxonomy review loop. Initial local rename, merge, split-candidate, deprecation, and reset controls are implemented; richer Chief of Staff-assisted taxonomy review remains future work.
 - Recommendations can create perverse incentives if they optimize engagement or frequency alone. The ranking must penalize privacy risk, safety risk, and authority expansion.
 - Capability tracking should distinguish "blocked correctly" from "failed." A no-go result can be a success if the request was unsafe.
 - Evidence must be auditable without storing raw content. Use trace IDs, audit IDs, evaluator case IDs, and redacted summaries.
@@ -125,7 +133,7 @@ Initial components:
 
 1. Signal emitter: emits derived capability signals from text turns, rehearsal previews, governance reviews, memory proposals, bridge failures, and user corrections.
 2. Local ledger: stores bounded, redacted metadata.
-3. Taxonomy mapper: maps topics, intents, capabilities, and architecture areas.
+3. Taxonomy mapper: maps topics, intents, capabilities, and architecture areas and applies local label edits during aggregation.
 4. Aggregator: computes counts, trends, success rates, failure clusters, and confidence.
 5. Recommendation engine: creates proposal-only capability improvement recommendations.
 6. Query surface: lets the user ask natural-language questions about common, working, missing, and next capabilities.
@@ -136,7 +144,7 @@ Initial components:
 This capability should be built in phases:
 
 1. Define schema and local derived event emission. Implemented in `app/src/capabilityLedger.ts` and `app/src/telemetry.ts`.
-2. Add bounded local ledger and redaction policy. Bounded in-memory and browser-local persistence, deletion, and export controls are implemented; richer age-based retention and taxonomy editing remain next.
+2. Add bounded local ledger and redaction policy. Bounded in-memory and browser-local persistence, deletion, export controls, and local taxonomy editing are implemented; richer age-based retention remains next.
 3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next answers are implemented in the Text Concierge UI.
 4. Add architecture-area mapping and recommendation scoring. Initial deterministic local scoring is implemented from count, confidence, status, architecture area, and suggested next step; richer value, effort, risk, and trend scoring remain future work.
 5. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.
