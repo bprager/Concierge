@@ -208,7 +208,7 @@ Evaluator coverage:
 | SE-005 | Add rollout policy | P1 | Low-risk changes can roll out locally, high-risk changes require approval | rollout_decision_recorded |
 | SE-006 | Add rollback path | P1 | Last known good policy can be restored | rollback_completed |
 | SE-007 | Add capability recommendation handoff | P1 | Capability recommendations can become reviewed evolution proposals with evidence, evaluator cases, rollout, and rollback | capability_recommendation_created |
-| SE-008 | Add local Chief of Staff steering draft | P1 | Local capability signals can produce a proposal-only recommendation, evaluator case candidate, and evolution proposal draft; no send occurs unless a governed endpoint exists and permits it | capability_recommendation_created |
+| SE-008 | Add local Chief of Staff steering draft | P1 | Local capability signals can produce a proposal-only recommendation, evaluator case candidate, and evolution proposal draft; governed submission is allowed only when endpoint and descriptor preflight pass, and it never applies the proposal locally | capability_recommendation_created |
 
 ### SE-007 details
 
@@ -237,7 +237,9 @@ User value: Repeated local capability gaps can be converted into a concrete revi
 Acceptance criteria:
 
 - The draft includes a capability recommendation, architecture area, evidence count, rationale, evaluator case candidate, evolution proposal draft, approval requirement, and rollback plan.
-- The draft remains local when no governed Napoleon endpoint is configured.
+- The draft remains local when no governed Napoleon endpoint is configured or descriptor preflight fails.
+- Governed submission posts an `evolution_proposal_review` packet with recommendation, evaluator case candidate, evolution proposal draft, proposal-only boundary, blocked effects, and trace/audit envelopes.
+- Napoleon submission responses require matching governance, trace, and audit proof before Concierge shows them as reviewed.
 - The draft cannot apply changes, write memory, dispatch agents, send externally, or capture approval.
 
 Privacy and safety impact:

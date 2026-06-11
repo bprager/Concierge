@@ -84,7 +84,7 @@ Conversation Capability Intelligence persistence:
 - Provides a local JSON export control with privacy, retention, trend, and scoring caveats; export does not grant permission to share externally.
 - Provides local taxonomy controls for rename, merge, deprecated markers, split-candidate markers, and reset.
 - Clear, export, taxonomy, retention pruning, trend answers, and recommendation scoring do not capture approval, write Napoleon memory, dispatch agents, send externally, change governance authority, or change Napoleon routing/policy.
-- Chief of Staff steering drafts are local proposal packets only. They can contain a capability recommendation, evaluator case candidate, and evolution proposal draft, but they do not apply changes, write memory, dispatch agents, send externally, or capture approval.
+- Chief of Staff steering drafts are proposal packets only. They can contain a capability recommendation, evaluator case candidate, and evolution proposal draft. Concierge may submit them to Napoleon Chief of Staff review only through the governed bridge after endpoint and descriptor preflight pass, but submission does not apply changes, write memory, dispatch agents, send externally, or capture approval.
 - Recommendation scoring penalizes privacy risk, child safety risk, governance risk, authority expansion, and high implementation effort.
 - Child protected records remain minimized and marked with `child_sensitive` privacy class.
 

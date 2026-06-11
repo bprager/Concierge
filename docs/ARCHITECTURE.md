@@ -193,6 +193,8 @@ UI -> "Napoleon Bridge": governed request
 
 Conversation Capability Intelligence records derived metadata about conversation capability performance. It is local-first and proposal-only. It can explain common conversations, working capabilities, missing capabilities, architecture blockers, and recommended next capabilities, but it cannot implement changes, grant approval, write memory, dispatch agents, or send externally.
 
+Chief of Staff steering converts the highest-ranked local capability recommendation into a proposal-only review packet with an evaluator case candidate and evolution proposal draft. The packet remains local unless a governed Napoleon endpoint is configured and descriptor preflight passes. When submitted, Concierge sends an `evolution_proposal_review` request through the governed bridge and requires Napoleon governance, trace, and audit proof before displaying the review response. Submission does not apply changes locally, write memory, dispatch agents, send externally, or capture approval.
+
 ```plantuml
 @startuml
 scale max 600 width

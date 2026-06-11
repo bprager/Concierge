@@ -36,6 +36,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added reusable Napoleon bridge contract fixtures for delegated success, auth failure, contract mismatch, and timeout cases.
 - Added evaluator coverage for bridge delegation provenance and reusable bridge fixture fail-closed cases.
 - Added a proposal-only Chief of Staff steering draft flow that turns local capability signals into a recommendation, evaluator case candidate, and evolution proposal draft without sending, writing memory, dispatching agents, or capturing approval.
+- Added governed Chief of Staff steering submission that sends evolution proposal review packets only after endpoint and descriptor preflight, without applying changes locally.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.

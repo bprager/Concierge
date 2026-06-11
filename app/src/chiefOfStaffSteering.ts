@@ -4,6 +4,26 @@ import {
   type CapabilityLedger,
   type RecommendationBoundary,
 } from "./capabilityLedger.js";
+import {
+  buildDescriptorConnectionState,
+  defaultChiefOfStaffDescriptor,
+  mapProfileToNapoleonMode,
+  type AuditEnvelope,
+  type ChiefOfStaffRequest,
+  type DescriptorConnectionInput,
+  type GovernanceDecision,
+  type GovernanceEvaluationRequest,
+  type LocalProfile,
+  type TraceEnvelope,
+} from "./contractBridge.js";
+import { NapoleonBridgeError } from "./napoleonBridge.js";
+import { emitEvent, makeTelemetryPayload, type TelemetryPayload } from "./telemetry.js";
+
+type SteeringFetch = (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => Promise<{
+  ok: boolean;
+  status?: number;
+  json: () => Promise<unknown>;
+}>;
 
 interface SteeringDraftOptions {
   conversationId: string;
@@ -54,6 +74,27 @@ export interface ChiefOfStaffSteeringDraft {
     reason: string;
   };
   boundary: RecommendationBoundary;
+}
+
+interface SteeringSubmissionDependencies {
+  conversationId: string;
+  traceId: string;
+  profile?: LocalProfile;
+  getEndpoint?: () => string | null;
+  descriptorConnection?: DescriptorConnectionInput;
+  emit?: (payload: TelemetryPayload) => void;
+  fetch?: SteeringFetch;
+}
+
+export interface ChiefOfStaffSteeringSubmissionResult {
+  text: string;
+  governanceDecision: GovernanceDecision;
+  traceEnvelope: TraceEnvelope;
+  auditEnvelope: AuditEnvelope;
+  appliedLocally: false;
+  memoryWritePerformed: false;
+  approvalCaptured: false;
+  externalSendPerformed: false;
 }
 
 const PROPOSAL_BOUNDARY: RecommendationBoundary = {
@@ -131,5 +172,235 @@ export function draftChiefOfStaffSteering(
         : "No governed Napoleon endpoint is configured, so this draft remains local.",
     },
     boundary: PROPOSAL_BOUNDARY,
+  };
+}
+
+function emitSteeringEvent(dependencies: SteeringSubmissionDependencies, event: string, attributes: Record<string, unknown>) {
+  if (dependencies.emit) {
+    dependencies.emit(makeTelemetryPayload(event, attributes));
+    return;
+  }
+  emitEvent(event, attributes);
+}
+
+function getConfiguredEndpoint(dependencies: SteeringSubmissionDependencies): string | null {
+  if (dependencies.getEndpoint) return dependencies.getEndpoint();
+  if (typeof localStorage === "undefined") return null;
+  return localStorage.getItem("napoleon_endpoint");
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function isGovernanceDecision(value: unknown): value is GovernanceDecision {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<GovernanceDecision>;
+  return Boolean(
+    typeof candidate.decision_id === "string" &&
+      typeof candidate.request_id === "string" &&
+      typeof candidate.outcome === "string" &&
+      typeof candidate.authority_tier === "string" &&
+      typeof candidate.approval_requirement === "string" &&
+      typeof candidate.rationale === "string" &&
+      isStringArray(candidate.blocked_effects) &&
+      typeof candidate.trace_id === "string" &&
+      typeof candidate.audit_id === "string",
+  );
+}
+
+function isTraceEnvelope(value: unknown): value is TraceEnvelope {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<TraceEnvelope>;
+  return Boolean(
+    typeof candidate.trace_id === "string" &&
+      typeof candidate.parent_trace_id === "string" &&
+      typeof candidate.actor_id === "string" &&
+      typeof candidate.request_id === "string" &&
+      typeof candidate.decision_id === "string" &&
+      typeof candidate.timestamp === "string",
+  );
+}
+
+function isAuditEnvelope(value: unknown): value is AuditEnvelope {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<AuditEnvelope>;
+  return Boolean(
+    typeof candidate.audit_id === "string" &&
+      typeof candidate.trace_id === "string" &&
+      typeof candidate.decision_id === "string" &&
+      typeof candidate.actor_id === "string" &&
+      typeof candidate.authority_tier === "string" &&
+      typeof candidate.approval_requirement === "string" &&
+      isStringArray(candidate.evidence_links),
+  );
+}
+
+function envelopesMatchDecision(
+  decision: GovernanceDecision,
+  traceEnvelope: TraceEnvelope,
+  auditEnvelope: AuditEnvelope,
+): boolean {
+  return (
+    traceEnvelope.trace_id === decision.trace_id &&
+    traceEnvelope.request_id === decision.request_id &&
+    traceEnvelope.decision_id === decision.decision_id &&
+    auditEnvelope.audit_id === decision.audit_id &&
+    auditEnvelope.trace_id === decision.trace_id &&
+    auditEnvelope.decision_id === decision.decision_id &&
+    auditEnvelope.authority_tier === decision.authority_tier &&
+    auditEnvelope.approval_requirement === decision.approval_requirement
+  );
+}
+
+function failSteeringClosed(
+  dependencies: SteeringSubmissionDependencies,
+  reason: ConstructorParameters<typeof NapoleonBridgeError>[0],
+  traceId: string,
+  requestId: string,
+  status?: number,
+): never {
+  emitSteeringEvent(dependencies, "capability_recommendation_send_failed", {
+    traceId,
+    requestId,
+    reason,
+    status,
+  });
+  throw new NapoleonBridgeError(reason, traceId, requestId, status);
+}
+
+export async function submitChiefOfStaffSteeringDraft(
+  draft: ChiefOfStaffSteeringDraft,
+  dependencies: SteeringSubmissionDependencies,
+): Promise<ChiefOfStaffSteeringSubmissionResult> {
+  const profile = dependencies.profile ?? "adult_owner";
+  const profileMode = mapProfileToNapoleonMode(profile);
+  const requestId = `cos_${dependencies.traceId}`;
+  const localDecisionId = `local_steering_${dependencies.traceId}`;
+  const localAuditId = `local_audit_${dependencies.traceId}`;
+  const endpoint = getConfiguredEndpoint(dependencies);
+  const descriptorConnection = buildDescriptorConnectionState(
+    dependencies.descriptorConnection ?? {
+      endpointConfigured: Boolean(endpoint),
+      descriptor: defaultChiefOfStaffDescriptor,
+    },
+  );
+
+  if (!endpoint) {
+    failSteeringClosed(dependencies, "no_endpoint", dependencies.traceId, requestId);
+  }
+  if (!descriptorConnection.canAttemptLiveBridge) {
+    failSteeringClosed(dependencies, "descriptor_mismatch", dependencies.traceId, requestId);
+  }
+
+  const chiefOfStaffRequest: ChiefOfStaffRequest = {
+    request_id: requestId,
+    requester: "concierge.capability_intelligence",
+    request_type: "evolution_proposal_review",
+    profile_mode: profileMode,
+    source_evidence: draft.evolutionProposal.evidence,
+    requested_authority_tier: "advisory_review",
+    trace_id: dependencies.traceId,
+    payload_schema: "schemas/evolution_proposal.schema.json",
+  };
+  const governanceRequest: GovernanceEvaluationRequest = {
+    request_id: `gov_${dependencies.traceId}`,
+    actor_id: "concierge.capability_intelligence",
+    action: "submit_evolution_proposal_for_review",
+    target: "napoleon.chief_of_staff",
+    requested_authority_tier: "advisory_review",
+    evidence_links: draft.evolutionProposal.evidence,
+    trace_id: dependencies.traceId,
+  };
+  const traceEnvelope: TraceEnvelope = {
+    trace_id: dependencies.traceId,
+    parent_trace_id: dependencies.conversationId,
+    actor_id: "concierge.capability_intelligence",
+    request_id: requestId,
+    decision_id: localDecisionId,
+    timestamp: new Date().toISOString(),
+  };
+  const auditEnvelope: AuditEnvelope = {
+    audit_id: localAuditId,
+    trace_id: dependencies.traceId,
+    decision_id: localDecisionId,
+    actor_id: "concierge.capability_intelligence",
+    authority_tier: "advisory_review",
+    approval_requirement: "Napoleon Chief of Staff and owner review before implementation or rollout.",
+    evidence_links: draft.evolutionProposal.evidence,
+  };
+  const blockedEffects = ["memory_write", "agent_dispatch", "external_send", "approval_capture", "runtime_authority"];
+
+  emitSteeringEvent(dependencies, "capability_recommendation_send_started", {
+    traceId: dependencies.traceId,
+    requestId,
+    proposalId: draft.evolutionProposal.proposal_id,
+    profileMode,
+  });
+
+  const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
+  let response: Awaited<ReturnType<SteeringFetch>>;
+  try {
+    response = await fetcher(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        requestKind: "chief_of_staff_steering_handoff",
+        profileMode,
+        descriptorStatus: descriptorConnection.descriptorStatus,
+        descriptorConnection,
+        chiefOfStaffRequest,
+        governanceRequest,
+        traceEnvelope,
+        auditEnvelope,
+        recommendation: draft.recommendation,
+        evaluatorCaseCandidate: draft.evaluatorCaseCandidate,
+        evolutionProposal: draft.evolutionProposal,
+        boundary: draft.boundary,
+        blockedEffects,
+      }),
+    });
+  } catch (error) {
+    const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
+    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId);
+  }
+
+  if (!response.ok) {
+    const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
+    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, response.status);
+  }
+
+  const payload = (await response.json()) as Partial<ChiefOfStaffSteeringSubmissionResult>;
+  if (
+    !isGovernanceDecision(payload.governanceDecision) ||
+    !isTraceEnvelope(payload.traceEnvelope) ||
+    !isAuditEnvelope(payload.auditEnvelope) ||
+    !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope)
+  ) {
+    failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId);
+  }
+
+  emitSteeringEvent(dependencies, "capability_recommendation_send_completed", {
+    traceId: dependencies.traceId,
+    requestId,
+    proposalId: draft.evolutionProposal.proposal_id,
+    decisionId: payload.governanceDecision.decision_id,
+    auditId: payload.auditEnvelope.audit_id,
+    outcome: payload.governanceDecision.outcome,
+    appliedLocally: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    externalSendPerformed: false,
+  });
+
+  return {
+    text: payload.text ?? "Napoleon accepted the evolution proposal for governed review.",
+    governanceDecision: payload.governanceDecision,
+    traceEnvelope: payload.traceEnvelope,
+    auditEnvelope: payload.auditEnvelope,
+    appliedLocally: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    externalSendPerformed: false,
   };
 }

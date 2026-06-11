@@ -9,7 +9,11 @@ import {
   resetCapabilityTaxonomy,
   type TaxonomyDimension,
 } from "./capabilityTaxonomy";
-import { draftChiefOfStaffSteering } from "./chiefOfStaffSteering";
+import {
+  draftChiefOfStaffSteering,
+  submitChiefOfStaffSteeringDraft,
+  type ChiefOfStaffSteeringSubmissionResult,
+} from "./chiefOfStaffSteering";
 import {
   buildDescriptorConnectionState,
   buildGovernanceReviewState,
@@ -104,6 +108,8 @@ export function App() {
   const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
   const [steeringDraft, setSteeringDraft] = useState<ReturnType<typeof draftChiefOfStaffSteering> | null>(null);
+  const [steeringSubmission, setSteeringSubmission] = useState<ChiefOfStaffSteeringSubmissionResult | null>(null);
+  const [steeringFailure, setSteeringFailure] = useState<string | null>(null);
   const [capabilityTaxonomy, setCapabilityTaxonomy] = useState(() => loadCapabilityTaxonomyFromStorage(browserStorage()));
   const [selectedTaxonomyLabel, setSelectedTaxonomyLabel] = useState("");
   const [taxonomyRenameValue, setTaxonomyRenameValue] = useState("");
@@ -561,6 +567,8 @@ export function App() {
       endpointConfigured: Boolean(endpoint.trim()),
     });
     setSteeringDraft(draft);
+    setSteeringSubmission(null);
+    setSteeringFailure(null);
     emitEvent("capability_recommendation_created", {
       traceId,
       conversationId,
@@ -575,6 +583,36 @@ export function App() {
       canSendToNapoleon: draft.sendState.canSendToNapoleon,
     });
     refreshCapabilityLedgerStatus();
+  }
+
+  async function submitSteeringDraft() {
+    if (!steeringDraft) return;
+    const traceId = newTraceId();
+    try {
+      const result = await submitChiefOfStaffSteeringDraft(steeringDraft, {
+        conversationId,
+        traceId,
+        profile,
+        descriptorConnection: {
+          endpointConfigured: Boolean(endpoint.trim()),
+          descriptor: descriptorMode === "missing" ? null : defaultChiefOfStaffDescriptor,
+          expectedChecksum: descriptorMode === "checksum_mismatch" ? "sha256:expected" : "sha256:local-static",
+          actualChecksum: descriptorMode === "checksum_mismatch" ? "sha256:actual" : "sha256:local-static",
+          signatureValid: descriptorMode === "checksum_mismatch" ? false : true,
+        },
+      });
+      setSteeringSubmission(result);
+      setSteeringFailure(null);
+      refreshCapabilityLedgerStatus();
+    } catch (error) {
+      const message =
+        error instanceof NapoleonBridgeError
+          ? `Chief of Staff steering handoff blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}. Concierge did not apply changes, write memory, dispatch agents, send externally, or capture approval.`
+          : "Chief of Staff steering handoff failed closed. Concierge did not apply changes, write memory, dispatch agents, send externally, or capture approval.";
+      setSteeringFailure(message);
+      setSteeringSubmission(null);
+      refreshCapabilityLedgerStatus();
+    }
   }
 
   function renameSelectedTaxonomyLabel() {
@@ -761,6 +799,31 @@ export function App() {
               proposal only; no approval captured; no memory write; no agent dispatch; no external send.
             </dd>
           </dl>
+          <button
+            className="secondary"
+            onClick={submitSteeringDraft}
+            disabled={!steeringDraft.sendState.canSendToNapoleon || !descriptorConnection.canAttemptLiveBridge}
+          >
+            Send steering draft to Napoleon review
+          </button>
+          {steeringFailure ? <p className="warning">{steeringFailure}</p> : null}
+          {steeringSubmission ? (
+            <dl>
+              <dt>Napoleon review response</dt>
+              <dd>{steeringSubmission.text}</dd>
+              <dt>Governance</dt>
+              <dd>
+                {steeringSubmission.governanceDecision.outcome}, decision{" "}
+                {steeringSubmission.governanceDecision.decision_id}
+              </dd>
+              <dt>Trace</dt>
+              <dd>{steeringSubmission.traceEnvelope.trace_id}</dd>
+              <dt>Audit</dt>
+              <dd>{steeringSubmission.auditEnvelope.audit_id}</dd>
+              <dt>Local effects</dt>
+              <dd>not applied; no memory write; no approval captured; no external send.</dd>
+            </dl>
+          ) : null}
         </section>
       ) : null}
 

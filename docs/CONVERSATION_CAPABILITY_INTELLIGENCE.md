@@ -108,7 +108,7 @@ Initial scoring implementation: recommended-next and easy-to-evolve answers use 
 
 The score must be explainable. Concierge should show the top reasons and the strongest counterarguments. Scores are proposal-only heuristics, not approvals or automatic implementation decisions.
 
-Initial Chief of Staff steering implementation: Text Concierge can draft a local review packet from the highest ranked local capability recommendation. The draft includes the capability recommendation, architecture area, evidence count, rationale, evaluator case candidate, and evolution proposal draft. The draft is local and proposal-only; it does not send to Napoleon unless a governed endpoint is configured and the bridge permits it, and it does not write memory, dispatch agents, send externally, capture approval, or apply the proposed change.
+Initial Chief of Staff steering implementation: Text Concierge can draft a local review packet from the highest ranked local capability recommendation. The draft includes the capability recommendation, architecture area, evidence count, rationale, evaluator case candidate, and evolution proposal draft. The draft is local and proposal-only by default. If a governed endpoint is configured and descriptor preflight passes, Concierge can submit the draft to Napoleon Chief of Staff review through the governed bridge. That submission still does not apply the proposed change, write memory, dispatch agents, send externally, or capture approval.
 
 ## 6. Missed requirements and edge cases
 
@@ -158,8 +158,8 @@ This capability should be built in phases:
 2. Add bounded local ledger and redaction policy. Bounded in-memory and browser-local persistence, deletion, export controls, local taxonomy editing, and count plus age retention are implemented.
 3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening-missing, recently-working, and weekly-change answers are implemented in the Text Concierge UI.
 4. Add architecture-area mapping and recommendation scoring. Initial deterministic local risk/value scoring is implemented from evidence count, recent trend delta, confidence, status, evaluator gap, architecture area, suggested next step, implementation effort, privacy/safety/governance risk, and authority expansion risk; richer human-reviewed value calibration and seasonal trend scoring remain future work.
-5. Add local Chief of Staff steering draft handoff. Initial draft generation is implemented in `app/src/chiefOfStaffSteering.ts`; it produces a recommendation, evaluator case candidate, and evolution proposal draft while preserving proposal-only boundaries.
+5. Add local Chief of Staff steering draft handoff. Initial draft generation and governed submission are implemented in `app/src/chiefOfStaffSteering.ts`; it produces a recommendation, evaluator case candidate, and evolution proposal draft while preserving proposal-only boundaries.
 6. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.
-7. Add governed handoff to Napoleon evolution proposals once a live Napoleon endpoint and contract permission are available.
+7. Replace the local endpoint configuration with live Napoleon descriptor discovery and auth once a runtime transport is available.
 
 Evaluator coverage should ensure Concierge does not store raw conversation content by default, does not treat recommendations as approval, and does not optimize for engagement over safety.

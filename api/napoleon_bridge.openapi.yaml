@@ -266,6 +266,107 @@ paths:
                         enum: [not_checked, valid, invalid]
                       canAttemptLiveBridge:
                         type: boolean
+  /v1/concierge/chief-of-staff/steering:
+    post:
+      summary: Submit a proposal-only capability steering draft to Napoleon Chief of Staff review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - requestKind
+                - profileMode
+                - chiefOfStaffRequest
+                - governanceRequest
+                - traceEnvelope
+                - auditEnvelope
+                - recommendation
+                - evaluatorCaseCandidate
+                - evolutionProposal
+                - boundary
+                - blockedEffects
+              properties:
+                requestKind:
+                  type: string
+                  const: chief_of_staff_steering_handoff
+                profileMode:
+                  type: string
+                  enum: [adult_owner, child_protected_user, guest, collaborator]
+                descriptorStatus:
+                  type: object
+                descriptorConnection:
+                  type: object
+                chiefOfStaffRequest:
+                  type: object
+                  required: [request_id, requester, request_type, profile_mode, source_evidence, requested_authority_tier, trace_id, payload_schema]
+                  properties:
+                    request_type:
+                      type: string
+                      const: evolution_proposal_review
+                    requested_authority_tier:
+                      type: string
+                      const: advisory_review
+                governanceRequest:
+                  type: object
+                  required: [request_id, actor_id, action, target, requested_authority_tier, evidence_links, trace_id]
+                traceEnvelope:
+                  type: object
+                  required: [trace_id, parent_trace_id, actor_id, request_id, decision_id, timestamp]
+                auditEnvelope:
+                  type: object
+                  required: [audit_id, trace_id, decision_id, actor_id, authority_tier, approval_requirement, evidence_links]
+                recommendation:
+                  type: object
+                evaluatorCaseCandidate:
+                  type: object
+                evolutionProposal:
+                  type: object
+                  required: [proposal_id, summary, risk_level, evidence, change, evaluator_cases, rollback_plan]
+                boundary:
+                  type: object
+                  required: [proposalOnly, approvalCaptured, memoryWriteAllowed, agentDispatchAllowed, externalSendAllowed]
+                  properties:
+                    proposalOnly:
+                      type: boolean
+                      const: true
+                    approvalCaptured:
+                      type: boolean
+                      const: false
+                    memoryWriteAllowed:
+                      type: boolean
+                      const: false
+                    agentDispatchAllowed:
+                      type: boolean
+                      const: false
+                    externalSendAllowed:
+                      type: boolean
+                      const: false
+                blockedEffects:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "200":
+          description: Napoleon review response with governance, trace, and audit proof; does not apply the proposal locally
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [text, governanceDecision, traceEnvelope, auditEnvelope]
+                properties:
+                  text:
+                    type: string
+                  governanceDecision:
+                    type: object
+                    required: [decision_id, request_id, outcome, authority_tier, approval_requirement, rationale, blocked_effects, trace_id, audit_id]
+                  traceEnvelope:
+                    type: object
+                    required: [trace_id, parent_trace_id, actor_id, request_id, decision_id, timestamp]
+                  auditEnvelope:
+                    type: object
+                    required: [audit_id, trace_id, decision_id, actor_id, authority_tier, approval_requirement, evidence_links]
   /v1/concierge/evaluate:
     post:
       summary: Submit evaluator prompt to Napoleon
