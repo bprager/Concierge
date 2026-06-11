@@ -165,6 +165,8 @@ Live bridge calls fail closed when the Napoleon endpoint is missing, descriptor 
 
 When Napoleon returns delegation provenance, Concierge renders a separate Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID. Concierge only attributes statements such as "Passive Brain found..." when the bridge response contains that contribution. Missing provenance is rendered as unavailable rather than invented.
 
+Reusable local bridge fixtures live in `app/src/napoleonBridgeFixtures.ts`. They cover delegated success, auth failure, contract mismatch, and timeout behavior so bridge handling can be tested without a live Napoleon endpoint while preserving the same fail-closed semantics.
+
 ```plantuml
 @startuml
 scale max 600 width
