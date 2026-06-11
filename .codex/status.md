@@ -6,7 +6,7 @@ Last updated: 2026-06-11
 
 Concierge is an initial scaffold for Napoleon's adaptive human interface. The repository contains product and architecture docs, evaluator design and runner, schemas, example profiles/traces, a Tauri + React app skeleton, bridge/perception service placeholders, GitHub templates, and an evaluator workflow scaffold.
 
-The initial scaffold is committed and pushed. The startup review reports under `docs/reports/` include Napoleon Chief of Staff integration evidence discovered over ssh from `bernd@mimir` at `~/Projects/Napoleon/docs/concierge-integration/`. The Text Concierge app now has a first-pass CoS-aware bridge path, UI status surface, local Rehearsal Mode preview, governance review UI states, proposal-only memory review, a bounded browser-local Conversation Capability Intelligence ledger with clear/export/taxonomy controls, and a local query surface for common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next capability questions. The evaluator now has 16 scenarios and meets the backlog breadth target, including memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, and conversation capability intelligence coverage.
+The initial scaffold is committed and pushed. The startup review reports under `docs/reports/` include Napoleon Chief of Staff integration evidence discovered over ssh from `bernd@mimir` at `~/Projects/Napoleon/docs/concierge-integration/`. The Text Concierge app now has a first-pass CoS-aware bridge path, UI status surface, local Rehearsal Mode preview, governance review UI states, proposal-only memory review, a count and age bounded browser-local Conversation Capability Intelligence ledger with clear/export/taxonomy controls, and a local query surface for common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening-missing, recently-working, and weekly-change capability questions. The evaluator now has 16 scenarios and meets the backlog breadth target, including memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, and conversation capability intelligence coverage.
 
 ## Recently Completed
 
@@ -36,6 +36,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Expanded the Text Concierge capability query surface with working-well, easy-to-evolve, architecture-area, and recommended-next local planning answers.
 - Added browser-local capability ledger persistence, retention, clear, and metadata-only JSON export controls.
 - Added local capability taxonomy rename, merge, deprecated marker, split-candidate marker, reset, persistence, and export controls.
+- Added age-based capability ledger retention and local trend answers for increasing conversations, worsening missing capabilities, recently working capabilities, and weekly changes.
 
 ## Current Blockers
 
@@ -53,7 +54,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Self-evolution language can be misread as permission for automatic production changes; it is proposal-only until gates and approval exist.
 - The Napoleon bridge contract has a first-pass CoS-aware Text Concierge adapter, local rehearsal preview, governance review display, and local memory proposal review, but live auth, Napoleon-side memory review submission, delegation, and richer error handling still need detail.
 - The evaluator has 16 scenarios and meets the current backlog breadth target, but it is still a deterministic local gate until live Napoleon HTTP mode is configured and validated.
-- The capability ledger is browser-local and bounded, with clear/export/taxonomy controls; richer age-based retention, trend analysis, risk/value scoring, Chief of Staff-assisted taxonomy review, and governed evolution handoff remain future work.
+- The capability ledger is browser-local, count and age bounded, with clear/export/taxonomy controls and basic 7 day trend answers; richer risk/value scoring, seasonal trend analysis, Chief of Staff-assisted taxonomy review, and governed evolution handoff remain future work.
 - Local Concierge contracts now include first-pass mirrors of Napoleon's CoS package for text turns. Remaining mismatches include live endpoint/auth, descriptor signature/checksum validation, Napoleon-side memory proposal submission, and full contract-aware evaluator coverage.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
 
@@ -63,7 +64,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 2. Add live governance review submission once Napoleon exposes a runtime transport.
 3. Add Napoleon-side memory proposal submission once a governed runtime contract exists.
 4. Add richer bridge error handling and contract fixtures for live Napoleon responses.
-5. Add richer age-based retention, Chief of Staff-assisted taxonomy review, and governed evolution handoff for Conversation Capability Intelligence.
+5. Add richer risk/value scoring, seasonal trend analysis, Chief of Staff-assisted taxonomy review, and governed evolution handoff for Conversation Capability Intelligence.
 
 ## Useful Validation Commands
 

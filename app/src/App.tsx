@@ -30,6 +30,7 @@ import {
 import { emitEvent, newTraceId } from "./telemetry";
 import { capabilityLedger } from "./telemetry";
 import {
+  CAPABILITY_LEDGER_MAX_AGE_DAYS,
   CAPABILITY_LEDGER_MAX_SIGNALS,
   clearPersistedCapabilityLedger,
   exportCapabilityLedgerJson,
@@ -628,7 +629,8 @@ export function App() {
         <div>
           <strong>Capability ledger</strong>
           <span>
-            {capabilitySignalCount} local metadata signals retained in this browser, max {CAPABILITY_LEDGER_MAX_SIGNALS}.
+            {capabilitySignalCount} local metadata signals retained in this browser, max {CAPABILITY_LEDGER_MAX_SIGNALS},
+            max age {CAPABILITY_LEDGER_MAX_AGE_DAYS} days.
           </span>
           <span>Export is local JSON only and does not grant permission to share externally.</span>
         </div>

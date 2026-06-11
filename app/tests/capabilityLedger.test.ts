@@ -13,6 +13,41 @@ import {
   serializeCapabilityLedger,
   type ConversationCapabilitySignal,
 } from "../src/capabilityLedger.js";
+import { createCapabilityTaxonomy, renameTaxonomyLabel } from "../src/capabilityTaxonomy.js";
+
+function testSignal(
+  traceId: string,
+  options: {
+    observedAt?: string;
+    topic?: string;
+    capability?: string;
+    status?: "working" | "degraded" | "missing" | "blocked" | "unknown";
+    architecture?: "text_ui" | "bridge" | "governance_ux" | "memory_review" | "settings_privacy" | "observability" | "evaluator" | "voice" | "avatar" | "napoleon_runtime" | "agent_registry";
+    suggestedNextStep?: "no_action" | "write_evaluator_case" | "add_backlog_item" | "create_evolution_proposal" | "needs_human_review";
+    profileMode?: "adult_owner" | "child_protected_user" | "guest" | "collaborator";
+    rawMessage?: string;
+  } = {},
+): ConversationCapabilitySignal {
+  return buildCapabilitySignal({
+    traceId,
+    conversationId: `conv_${traceId}`,
+    turnId: `turn_${traceId}`,
+    profileMode: options.profileMode ?? "adult_owner",
+    channel: "text",
+    topicLabel: options.topic ?? "deployment",
+    intentLabel: "summarize",
+    capabilityLabel: options.capability ?? "release_summary",
+    capabilityStatus: options.status ?? "working",
+    outcomeSignal: options.status === "missing" ? "bridge_failed" : "answered",
+    confidence: 0.8,
+    evidenceRefs: [`trace:${traceId}`],
+    architectureArea: options.architecture ?? "text_ui",
+    privacyClass: "metadata_only",
+    suggestedNextStep: options.suggestedNextStep ?? "no_action",
+    observedAt: options.observedAt,
+    rawMessage: options.rawMessage,
+  });
+}
 
 test("builds valid capability signals without storing raw message text", () => {
   const signal = buildCapabilitySignal({
@@ -645,4 +680,170 @@ test("child protected persisted records remain minimized and distinguishable", (
   assert.equal(signal.profileMode, "child_protected_user");
   assert.equal(signal.privacyClass, "child_sensitive");
   assert.equal(JSON.stringify(signal).includes("child protected raw phrase"), false);
+});
+
+test("ledger prunes signals by max age as well as max count", () => {
+  const ledger = createCapabilityLedger({
+    maxSignals: 3,
+    maxAgeDays: 7,
+    now: () => new Date("2026-06-11T12:00:00.000Z"),
+  });
+
+  appendCapabilitySignal(ledger, testSignal("trace_too_old", { observedAt: "2026-06-01T12:00:00.000Z", topic: "old" }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_1", { observedAt: "2026-06-06T12:00:00.000Z", topic: "recent_1" }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_2", { observedAt: "2026-06-07T12:00:00.000Z", topic: "recent_2" }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_3", { observedAt: "2026-06-08T12:00:00.000Z", topic: "recent_3" }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_4", { observedAt: "2026-06-09T12:00:00.000Z", topic: "recent_4" }));
+
+  assert.deepEqual(ledger.listRecent().map((signal) => signal.traceId), [
+    "trace_recent_2",
+    "trace_recent_3",
+    "trace_recent_4",
+  ]);
+});
+
+test("older persisted ledgers without age retention fields still load", () => {
+  const source = createCapabilityLedger();
+  appendCapabilitySignal(source, testSignal("trace_legacy", { observedAt: "2026-06-10T12:00:00.000Z" }));
+  const snapshot = serializeCapabilityLedger(source, { generatedAt: "2026-06-11T12:00:00.000Z" });
+  const legacySnapshot = {
+    ...snapshot,
+    retention: { maxSignals: 250 },
+    signals: snapshot.signals.map(({ observedAt: _observedAt, ...signal }) => signal),
+  };
+
+  const restored = deserializeCapabilityLedger(legacySnapshot);
+
+  assert.equal(restored.listRecent().length, 1);
+  assert.equal(restored.listRecent()[0].traceId, "trace_legacy");
+  assert.equal(/^\d{4}-\d{2}-\d{2}T/.test(restored.listRecent()[0].observedAt), true);
+});
+
+test("trend answers compare recent and previous windows with taxonomy-edited labels", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(ledger, testSignal("trace_prior_1", { observedAt: "2026-05-30T12:00:00.000Z", topic: "deploy" }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_1", { observedAt: "2026-06-07T12:00:00.000Z", topic: "deploy" }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_2", { observedAt: "2026-06-08T12:00:00.000Z", topic: "deploy" }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_other", { observedAt: "2026-06-09T12:00:00.000Z", topic: "memory" }));
+  const taxonomy = createCapabilityTaxonomy();
+  renameTaxonomyLabel(taxonomy, "topic", "deploy", "release_operations");
+
+  const answer = answerCapabilityQuestion("What conversations are increasing?", ledger, taxonomy, {
+    now: "2026-06-11T12:00:00.000Z",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected trend answer");
+  assert.equal(answer.kind, "increasing_conversations");
+  assert.equal(answer.rows[0].label, "release_operations");
+  assert.equal(answer.rows[0].count, 2);
+  assert.equal(answer.rows[0].previousCount, 1);
+  assert.equal(answer.rows[0].delta, 1);
+  assert.ok(answer.summary.includes("recent 7 days"));
+});
+
+test("trend answers identify missing capabilities getting worse without granting authority", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(ledger, testSignal("trace_prior_missing", {
+    observedAt: "2026-05-30T12:00:00.000Z",
+    capability: "bridge_failure_handling",
+    status: "missing",
+    architecture: "bridge",
+    suggestedNextStep: "write_evaluator_case",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_missing_1", {
+    observedAt: "2026-06-07T12:00:00.000Z",
+    capability: "bridge_failure_handling",
+    status: "missing",
+    architecture: "bridge",
+    suggestedNextStep: "write_evaluator_case",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_missing_2", {
+    observedAt: "2026-06-08T12:00:00.000Z",
+    capability: "bridge_failure_handling",
+    status: "missing",
+    architecture: "bridge",
+    suggestedNextStep: "write_evaluator_case",
+  }));
+
+  const answer = answerCapabilityQuestion("What missing capabilities are getting worse?", ledger, undefined, {
+    now: "2026-06-11T12:00:00.000Z",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected missing trend answer");
+  assert.equal(answer.kind, "worsening_missing_capabilities");
+  assert.equal(answer.rows[0].label, "bridge_failure_handling");
+  assert.equal(answer.rows[0].status, "missing");
+  assert.equal(answer.rows[0].delta, 1);
+  assert.equal(answer.boundary.approvalCaptured, false);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+});
+
+test("recent working answers use the recent trend window", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(ledger, testSignal("trace_old_working", {
+    observedAt: "2026-05-25T12:00:00.000Z",
+    capability: "old_success",
+    status: "working",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_working", {
+    observedAt: "2026-06-09T12:00:00.000Z",
+    capability: "recent_success",
+    status: "working",
+  }));
+
+  const answer = answerCapabilityQuestion("What worked recently?", ledger, undefined, {
+    now: "2026-06-11T12:00:00.000Z",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected recent working answer");
+  assert.equal(answer.kind, "recent_working_capabilities");
+  assert.equal(answer.rows[0].label, "recent_success");
+  assert.equal(answer.rows.some((row) => row.label === "old_success"), false);
+});
+
+test("export includes age retention and trend caveats without raw text", () => {
+  const ledger = createCapabilityLedger({ maxSignals: 20, maxAgeDays: 30 });
+  appendCapabilitySignal(ledger, testSignal("trace_export_retention", {
+    observedAt: "2026-06-10T12:00:00.000Z",
+    rawMessage: "raw trend export secret",
+  }));
+
+  const exported = exportCapabilityLedger(ledger, {
+    maxSignals: 20,
+    maxAgeDays: 30,
+    generatedAt: "2026-06-11T12:00:00.000Z",
+  });
+
+  assert.equal(exported.retention.maxSignals, 20);
+  assert.equal(exported.retention.maxAgeDays, 30);
+  assert.ok(exported.trendCaveat.includes("recent 7 days"));
+  assert.equal(JSON.stringify(exported).includes("raw trend export secret"), false);
+});
+
+test("child protected trend records remain minimized", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(ledger, testSignal("trace_child_trend", {
+    observedAt: "2026-06-10T12:00:00.000Z",
+    topic: "school",
+    capability: "child_safe_response",
+    status: "working",
+    profileMode: "child_protected_user",
+    rawMessage: "child raw trend phrase",
+  }));
+
+  const answer = answerCapabilityQuestion("What changed this week?", ledger, undefined, {
+    now: "2026-06-11T12:00:00.000Z",
+  });
+  const exported = exportCapabilityLedger(ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected child trend answer");
+  assert.equal(exported.signals[0].privacyClass, "child_sensitive");
+  assert.equal(JSON.stringify(answer).includes("child raw trend phrase"), false);
+  assert.equal(JSON.stringify(exported).includes("child raw trend phrase"), false);
 });

@@ -11,6 +11,8 @@ It should let the user ask questions such as:
 - What capabilities are missing but easy to evolve?
 - What part of the Concierge architecture must improve to fix missing capabilities?
 - What capabilities should be implemented next?
+- What conversations are increasing?
+- What changed this week?
 
 This capability is not a replacement for Napoleon governance or controlled self-evolution. It observes, classifies, aggregates, explains, and proposes. It does not implement features, change policy, write memory, dispatch agents, send externally, or grant authority.
 
@@ -28,11 +30,12 @@ Tracking only topics would be misleading. A frequent topic may already work well
 
 The local ledger should store derived metadata, not raw conversation transcripts by default.
 
-Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model, bounded ledger, serialization, deserialization, validation, pruning, export, and clear helpers. It is wired through `app/src/telemetry.ts` for current Text Concierge events and uses browser-local storage through `app/src/capabilityLedgerStorage.ts`. `app/src/capabilityTaxonomy.ts` provides local taxonomy renames, merges, deprecation markers, split-candidate markers, reset, serialization, and export. The Text Concierge UI shows retained local signal count, taxonomy label counts, and clear/export/taxonomy controls.
+Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model, bounded ledger, serialization, deserialization, validation, age/count pruning, trend windows, export, and clear helpers. It is wired through `app/src/telemetry.ts` for current Text Concierge events and uses browser-local storage through `app/src/capabilityLedgerStorage.ts`. `app/src/capabilityTaxonomy.ts` provides local taxonomy renames, merges, deprecation markers, split-candidate markers, reset, serialization, and export. The Text Concierge UI shows retained local signal count, count/age retention limits, taxonomy label counts, and clear/export/taxonomy controls.
 
 Each turn can emit a `conversation_capability_signal` with:
 
 - `trace_id`
+- `observed_at`
 - `conversation_id`
 - `turn_id`
 - `profile_mode`
@@ -54,9 +57,9 @@ Persistent local storage:
 
 - Schema version: `concierge.capability-ledger.v1`.
 - Export schema version: `concierge.capability-ledger.export.v1`.
-- Retention: bounded to the latest 250 derived metadata signals.
+- Retention: bounded to the latest 250 derived metadata signals and a 90 day local age window.
 - Clear control: removes the persisted snapshot and clears the in-memory ledger.
-- Export control: renders local JSON for derived metadata only and states that export does not grant permission to share externally.
+- Export control: renders local JSON for derived metadata only, includes retention settings and trend caveats, and states that export does not grant permission to share externally.
 - Child protected records remain distinguishable through `profile_mode` and `privacy_class: child_sensitive`, without retaining raw child content.
 
 Local taxonomy storage:
@@ -80,6 +83,8 @@ Concierge should answer capability questions from aggregated local signals:
 Every answer should include uncertainty. Example: "Based on 42 local metadata signals, calendar delegation is common but not implemented; confidence 0.72; blocker is Napoleon runtime transport and governed delegation."
 
 Initial query implementation: Text Concierge can answer clear local questions such as "What conversations are most common?", "What conversations are working well?", "What capabilities are missing or blocked?", "What capabilities are missing but easy to evolve?", "What part of the Concierge architecture has to be improved to fix missing capabilities?", and "What capabilities should be implemented next?" from the in-memory ledger. The answer includes counts, local evidence size, confidence, score where ranked, architecture area, suggested next step where relevant, caveats, and a reminder that the summary does not approve, implement, write memory, dispatch agents, or send externally.
+
+Trend query implementation: Text Concierge can also answer local trend questions such as "What conversations are increasing?", "What missing capabilities are getting worse?", "What worked recently?", and "What changed this week?" using a recent 7 day window compared with the previous 7 days. Trend answers use locally edited taxonomy labels, include recent and previous counts plus deltas where relevant, and carry a caveat that sparse or disabled telemetry can distort trends.
 
 ## 5. Ranking strategy
 
@@ -108,6 +113,7 @@ Important items not obvious in the initial request:
 - Rare high-impact misses must not be buried by frequent low-value topics.
 - Child protected signals need stricter minimization and separate aggregation so child behavior is not optimized like adult-owner behavior.
 - The system needs a taxonomy review loop. Initial local rename, merge, split-candidate, deprecation, and reset controls are implemented; richer Chief of Staff-assisted taxonomy review remains future work.
+- Trends need age-aware retention. Initial count plus age pruning and 7 day trend windows are implemented; richer seasonal and cross-device trend analysis remains future work.
 - Recommendations can create perverse incentives if they optimize engagement or frequency alone. The ranking must penalize privacy risk, safety risk, and authority expansion.
 - Capability tracking should distinguish "blocked correctly" from "failed." A no-go result can be a success if the request was unsafe.
 - Evidence must be auditable without storing raw content. Use trace IDs, audit IDs, evaluator case IDs, and redacted summaries.
@@ -144,9 +150,9 @@ Initial components:
 This capability should be built in phases:
 
 1. Define schema and local derived event emission. Implemented in `app/src/capabilityLedger.ts` and `app/src/telemetry.ts`.
-2. Add bounded local ledger and redaction policy. Bounded in-memory and browser-local persistence, deletion, export controls, and local taxonomy editing are implemented; richer age-based retention remains next.
-3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next answers are implemented in the Text Concierge UI.
-4. Add architecture-area mapping and recommendation scoring. Initial deterministic local scoring is implemented from count, confidence, status, architecture area, and suggested next step; richer value, effort, risk, and trend scoring remain future work.
+2. Add bounded local ledger and redaction policy. Bounded in-memory and browser-local persistence, deletion, export controls, local taxonomy editing, and count plus age retention are implemented.
+3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening-missing, recently-working, and weekly-change answers are implemented in the Text Concierge UI.
+4. Add architecture-area mapping and recommendation scoring. Initial deterministic local scoring is implemented from count, confidence, status, architecture area, suggested next step, and basic trend windows; richer value, effort, risk, and seasonal trend scoring remain future work.
 5. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.
 6. Add governed handoff to Napoleon evolution proposals.
 

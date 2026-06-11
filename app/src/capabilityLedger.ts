@@ -48,6 +48,7 @@ export interface RecommendationBoundary {
 
 export interface ConversationCapabilitySignal {
   eventName: "conversation_capability_signal";
+  observedAt: string;
   traceId: string;
   conversationId: string;
   turnId: string;
@@ -67,6 +68,7 @@ export interface ConversationCapabilitySignal {
 }
 
 export interface CapabilitySignalInput {
+  observedAt?: string;
   traceId: string;
   conversationId: string;
   turnId: string;
@@ -101,14 +103,21 @@ export interface CapabilityLedger {
   aggregate(): CapabilityAggregate;
 }
 
+export interface CapabilityRetentionSettings {
+  maxSignals: number;
+  maxAgeDays: number;
+}
+
 export interface SerializedCapabilityLedger {
   schemaVersion: "concierge.capability-ledger.v1";
   generatedAt: string;
   privacyCaveat: string;
   retention: {
     maxSignals: number;
+    maxAgeDays: number;
   };
   signals: ConversationCapabilitySignal[];
+  trendCaveat: string;
   taxonomy?: SerializedCapabilityTaxonomy;
 }
 
@@ -118,8 +127,10 @@ export interface ExportedCapabilityLedger {
   privacyCaveat: string;
   retention: {
     maxSignals: number;
+    maxAgeDays: number;
   };
   signals: ConversationCapabilitySignal[];
+  trendCaveat: string;
   taxonomy?: SerializedCapabilityTaxonomy;
 }
 
@@ -129,7 +140,11 @@ export type CapabilityQuestionKind =
   | "working_well_conversations"
   | "easy_to_evolve_missing_capabilities"
   | "architecture_improvement_areas"
-  | "recommended_next_capabilities";
+  | "recommended_next_capabilities"
+  | "increasing_conversations"
+  | "worsening_missing_capabilities"
+  | "recent_working_capabilities"
+  | "weekly_changes";
 
 export interface CapabilityAnswerRow {
   label: string;
@@ -139,6 +154,8 @@ export interface CapabilityAnswerRow {
   confidence?: number;
   suggestedNextStep?: SuggestedNextStep;
   score?: number;
+  previousCount?: number;
+  delta?: number;
 }
 
 export interface CapabilityQuestionAnswer {
@@ -165,6 +182,12 @@ const CAPABILITY_LEDGER_PRIVACY_CAVEAT =
   "Local metadata-only capability signals. Raw user text, raw audio, and raw video are not stored by default.";
 const CAPABILITY_LEDGER_EXPORT_PRIVACY_CAVEAT =
   "Local metadata-only capability signals. This export does not grant permission to share externally and does not approve, implement, write memory, dispatch agents, or send.";
+const CAPABILITY_LEDGER_TREND_CAVEAT =
+  "Trend summaries compare recent 7 days with the previous 7 days from local metadata only; sparse or disabled telemetry can distort trends.";
+
+const DEFAULT_MAX_SIGNALS = 250;
+const DEFAULT_MAX_AGE_DAYS = 90;
+const TREND_WINDOW_DAYS = 7;
 
 const CAPABILITY_STATUSES: CapabilityStatus[] = ["working", "degraded", "missing", "blocked", "unknown"];
 const CAPABILITY_OUTCOMES: CapabilityOutcomeSignal[] = [
@@ -228,6 +251,7 @@ export function buildCapabilitySignal(input: CapabilitySignalInput): Conversatio
 
   return {
     eventName: "conversation_capability_signal",
+    observedAt: input.observedAt ?? new Date().toISOString(),
     traceId: input.traceId,
     conversationId: input.conversationId,
     turnId: input.turnId,
@@ -247,25 +271,30 @@ export function buildCapabilitySignal(input: CapabilitySignalInput): Conversatio
   };
 }
 
-export function createCapabilityLedger(options: { maxSignals?: number } = {}): CapabilityLedger {
-  const maxSignals = Math.max(1, options.maxSignals ?? 250);
+export function createCapabilityLedger(
+  options: { maxSignals?: number; maxAgeDays?: number; now?: () => Date } = {},
+): CapabilityLedger {
+  const maxSignals = Math.max(1, options.maxSignals ?? DEFAULT_MAX_SIGNALS);
+  const maxAgeDays = Math.max(1, options.maxAgeDays ?? DEFAULT_MAX_AGE_DAYS);
+  const now = options.now ?? (() => new Date());
   const signals: ConversationCapabilitySignal[] = [];
+  const prune = () => pruneSignalsInPlace(signals, { maxSignals, maxAgeDays }, now());
 
   return {
     append(signal) {
       signals.push(signal);
-      while (signals.length > maxSignals) {
-        signals.shift();
-      }
+      prune();
       return signal;
     },
     clear() {
       signals.length = 0;
     },
     listRecent(limit = maxSignals) {
+      prune();
       return signals.slice(Math.max(0, signals.length - limit));
     },
     aggregate() {
+      prune();
       return aggregateCapabilitySignals(signals);
     },
   };
@@ -317,6 +346,9 @@ function sanitizeSignal(value: unknown): ConversationCapabilitySignal | null {
   if (!isOneOf(candidate.suggestedNextStep, SUGGESTED_NEXT_STEPS)) return null;
 
   return buildCapabilitySignal({
+    observedAt: typeof candidate.observedAt === "string" && candidate.observedAt.trim()
+      ? candidate.observedAt
+      : new Date().toISOString(),
     traceId: candidate.traceId,
     conversationId: candidate.conversationId,
     turnId: candidate.turnId,
@@ -335,46 +367,81 @@ function sanitizeSignal(value: unknown): ConversationCapabilitySignal | null {
   });
 }
 
-function prunedSignals(signals: ConversationCapabilitySignal[], maxSignals: number): ConversationCapabilitySignal[] {
-  return signals.slice(Math.max(0, signals.length - Math.max(1, maxSignals)));
+function observedTime(signal: ConversationCapabilitySignal): number {
+  const time = Date.parse(signal.observedAt);
+  return Number.isFinite(time) ? time : 0;
+}
+
+function retentionCutoffMs(retention: CapabilityRetentionSettings, now: Date): number {
+  return now.getTime() - Math.max(1, retention.maxAgeDays) * 24 * 60 * 60 * 1000;
+}
+
+function normalizeRetention(options: { maxSignals?: number; maxAgeDays?: number } = {}): CapabilityRetentionSettings {
+  return {
+    maxSignals: Math.max(1, options.maxSignals ?? DEFAULT_MAX_SIGNALS),
+    maxAgeDays: Math.max(1, options.maxAgeDays ?? DEFAULT_MAX_AGE_DAYS),
+  };
+}
+
+function prunedSignals(
+  signals: ConversationCapabilitySignal[],
+  retention: CapabilityRetentionSettings,
+  now: Date = new Date(),
+): ConversationCapabilitySignal[] {
+  const cutoff = retentionCutoffMs(retention, now);
+  const agePruned = signals.filter((signal) => observedTime(signal) >= cutoff);
+  return agePruned.slice(Math.max(0, agePruned.length - retention.maxSignals));
+}
+
+function pruneSignalsInPlace(signals: ConversationCapabilitySignal[], retention: CapabilityRetentionSettings, now: Date) {
+  const retained = prunedSignals(signals, retention, now);
+  signals.length = 0;
+  signals.push(...retained);
 }
 
 export function serializeCapabilityLedger(
   ledger: CapabilityLedger,
-  options: { maxSignals?: number; generatedAt?: string; taxonomy?: CapabilityTaxonomy } = {},
+  options: { maxSignals?: number; maxAgeDays?: number; generatedAt?: string; taxonomy?: CapabilityTaxonomy } = {},
 ): SerializedCapabilityLedger {
-  const maxSignals = Math.max(1, options.maxSignals ?? 250);
+  const retention = normalizeRetention(options);
+  const generatedAt = options.generatedAt ?? new Date().toISOString();
   return {
     schemaVersion: CAPABILITY_LEDGER_SCHEMA_VERSION,
-    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    generatedAt,
     privacyCaveat: CAPABILITY_LEDGER_PRIVACY_CAVEAT,
-    retention: { maxSignals },
-    signals: prunedSignals(ledger.listRecent(), maxSignals),
+    retention,
+    signals: prunedSignals(ledger.listRecent(), retention, new Date(generatedAt)),
+    trendCaveat: CAPABILITY_LEDGER_TREND_CAVEAT,
     taxonomy: options.taxonomy ? serializeCapabilityTaxonomy(options.taxonomy, { generatedAt: options.generatedAt }) : undefined,
   };
 }
 
 export function deserializeCapabilityLedger(
   snapshot: unknown,
-  options: { maxSignals?: number } = {},
+  options: { maxSignals?: number; maxAgeDays?: number; now?: () => Date } = {},
 ): CapabilityLedger {
-  const maxSignals =
-    options.maxSignals ??
-    (snapshot &&
+  const snapshotRetention =
+    snapshot &&
     typeof snapshot === "object" &&
     "retention" in snapshot &&
     snapshot.retention &&
-    typeof snapshot.retention === "object" &&
-    "maxSignals" in snapshot.retention &&
-    typeof snapshot.retention.maxSignals === "number"
-      ? snapshot.retention.maxSignals
-      : 250);
-  const ledger = createCapabilityLedger({ maxSignals });
+    typeof snapshot.retention === "object"
+      ? (snapshot.retention as Record<string, unknown>)
+      : {};
+  const retention = normalizeRetention({
+    maxSignals: options.maxSignals ?? (typeof snapshotRetention.maxSignals === "number" ? snapshotRetention.maxSignals : undefined),
+    maxAgeDays: options.maxAgeDays ?? (typeof snapshotRetention.maxAgeDays === "number" ? snapshotRetention.maxAgeDays : undefined),
+  });
+  const ledger = createCapabilityLedger({ ...retention, now: options.now });
   if (!snapshot || typeof snapshot !== "object") return ledger;
   const candidate = snapshot as Record<string, unknown>;
   if (candidate.schemaVersion !== CAPABILITY_LEDGER_SCHEMA_VERSION || !Array.isArray(candidate.signals)) return ledger;
 
-  for (const signal of prunedSignals(candidate.signals.map(sanitizeSignal).filter((s) => s !== null), maxSignals)) {
+  for (const signal of prunedSignals(
+    candidate.signals.map(sanitizeSignal).filter((s) => s !== null),
+    retention,
+    options.now?.() ?? new Date(),
+  )) {
     appendCapabilitySignal(ledger, signal);
   }
   return ledger;
@@ -382,15 +449,17 @@ export function deserializeCapabilityLedger(
 
 export function exportCapabilityLedger(
   ledger: CapabilityLedger,
-  options: { maxSignals?: number; generatedAt?: string; taxonomy?: CapabilityTaxonomy } = {},
+  options: { maxSignals?: number; maxAgeDays?: number; generatedAt?: string; taxonomy?: CapabilityTaxonomy } = {},
 ): ExportedCapabilityLedger {
-  const maxSignals = Math.max(1, options.maxSignals ?? 250);
+  const retention = normalizeRetention(options);
+  const generatedAt = options.generatedAt ?? new Date().toISOString();
   return {
     schemaVersion: CAPABILITY_LEDGER_EXPORT_SCHEMA_VERSION,
-    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    generatedAt,
     privacyCaveat: CAPABILITY_LEDGER_EXPORT_PRIVACY_CAVEAT,
-    retention: { maxSignals },
-    signals: prunedSignals(ledger.listRecent(), maxSignals),
+    retention,
+    signals: prunedSignals(ledger.listRecent(), retention, new Date(generatedAt)),
+    trendCaveat: CAPABILITY_LEDGER_TREND_CAVEAT,
     taxonomy: options.taxonomy ? serializeCapabilityTaxonomy(options.taxonomy, { generatedAt: options.generatedAt }) : undefined,
   };
 }
@@ -433,14 +502,22 @@ function sortedRows(bucket: Record<string, number>, limit = 5): CapabilityAnswer
 function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | null {
   const lower = question.toLowerCase();
   const asksAboutConversation = /\b(conversation|conversations|topics?)\b/.test(lower);
+  const asksIncreasing = /\b(increasing|rising|growing|more common|trending up)\b/.test(lower);
+  const asksWorse = /\b(worse|worsening|getting worse|regressing|increasing failures?)\b/.test(lower);
+  const asksRecent = /\b(recent|recently|this week|week|changed|changing)\b/.test(lower);
   const asksCommon = /\b(common|most|frequent|popular)\b/.test(lower);
   const asksWorkingWell = /\b(working well|works well|successful|succeeding|good)\b/.test(lower);
+  const asksWorked = /\b(worked|working)\b/.test(lower);
   const asksCapability = /\b(capability|capabilities)\b/.test(lower);
   const asksMissingOrBlocked = /\b(missing|blocked|not working|failed|failing|architecture)\b/.test(lower);
   const asksEasyToEvolve = /\b(easy|easiest|evolve|evolution|small)\b/.test(lower);
   const asksArchitecture = /\b(architecture|part|area|component|improved|improve|fix)\b/.test(lower);
   const asksNext = /\b(implement|implemented|next|recommend|recommended|prioritize|priority)\b/.test(lower);
 
+  if (asksAboutConversation && asksIncreasing) return "increasing_conversations";
+  if (asksCapability && asksMissingOrBlocked && asksWorse) return "worsening_missing_capabilities";
+  if (asksWorked && asksRecent) return "recent_working_capabilities";
+  if (asksRecent && /\b(changed|changing|this week|week)\b/.test(lower)) return "weekly_changes";
   if (asksCapability && asksNext) return "recommended_next_capabilities";
   if (asksCapability && asksMissingOrBlocked && asksEasyToEvolve) return "easy_to_evolve_missing_capabilities";
   if (asksArchitecture && asksMissingOrBlocked) return "architecture_improvement_areas";
@@ -453,6 +530,13 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
 function describeRows(rows: CapabilityAnswerRow[]): string {
   if (rows.length === 0) return "No local signals yet";
   return rows.map((row) => `${row.label} (${row.count})`).join(", ");
+}
+
+function describeTrendRows(rows: CapabilityAnswerRow[]): string {
+  if (rows.length === 0) return "No local trend changes yet";
+  return rows
+    .map((row) => `${row.label} (${row.count} recent, ${row.previousCount ?? 0} previous, delta ${row.delta ?? 0})`)
+    .join(", ");
 }
 
 const LOCAL_PROPOSAL_CAVEAT =
@@ -528,10 +612,61 @@ function groupedRows(
     .slice(0, 5);
 }
 
+function inWindow(signal: ConversationCapabilitySignal, startMs: number, endMs: number, includeEnd = false): boolean {
+  const time = observedTime(signal);
+  return time >= startMs && (includeEnd ? time <= endMs : time < endMs);
+}
+
+function trendWindows(signals: ConversationCapabilitySignal[], nowInput?: string | Date) {
+  const now = typeof nowInput === "string" ? new Date(nowInput) : nowInput ?? new Date();
+  const endMs = now.getTime();
+  const recentStartMs = endMs - TREND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  const previousStartMs = recentStartMs - TREND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  return {
+    recent: signals.filter((signal) => inWindow(signal, recentStartMs, endMs, true)),
+    previous: signals.filter((signal) => inWindow(signal, previousStartMs, recentStartMs)),
+  };
+}
+
+function trendRows(
+  recentSignals: ConversationCapabilitySignal[],
+  previousSignals: ConversationCapabilitySignal[],
+  labelForSignal: (signal: ConversationCapabilitySignal) => string,
+  options: { includeStatus?: boolean; includeArchitectureArea?: boolean } = {},
+): CapabilityAnswerRow[] {
+  const previous: Record<string, number> = {};
+  const rows: Record<string, CapabilityAnswerRow> = {};
+
+  for (const signal of previousSignals) {
+    const label = labelForSignal(signal);
+    previous[label] = (previous[label] ?? 0) + 1;
+  }
+  for (const signal of recentSignals) {
+    const label = labelForSignal(signal);
+    const row = rows[label] ?? {
+      label,
+      count: 0,
+      previousCount: previous[label] ?? 0,
+      delta: 0,
+      status: options.includeStatus ? signal.capabilityStatus : undefined,
+      architectureArea: options.includeArchitectureArea ? signal.architectureArea : undefined,
+    };
+    row.count += 1;
+    row.delta = row.count - (row.previousCount ?? 0);
+    rows[label] = row;
+  }
+
+  return Object.values(rows)
+    .filter((row) => (row.delta ?? 0) > 0)
+    .sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0) || b.count - a.count || a.label.localeCompare(b.label))
+    .slice(0, 5);
+}
+
 export function answerCapabilityQuestion(
   question: string,
   ledger: CapabilityLedger,
   taxonomy?: CapabilityTaxonomy,
+  options: { now?: string | Date } = {},
 ): CapabilityQuestionAnswer | null {
   const kind = classifyCapabilityQuestion(question);
   if (!kind) return null;
@@ -539,6 +674,71 @@ export function answerCapabilityQuestion(
   const rawSignals = ledger.listRecent();
   const signals = applyTaxonomyToSignals(rawSignals, taxonomy);
   const aggregate = aggregateCapabilitySignals(rawSignals, taxonomy);
+  const windows = trendWindows(signals, options.now);
+
+  if (kind === "increasing_conversations") {
+    const rows = trendRows(windows.recent, windows.previous, (signal) => signal.topicLabel);
+    return {
+      kind,
+      question,
+      summary: `Increasing local conversation topics over recent 7 days vs previous 7 days: ${describeTrendRows(rows)}.`,
+      rows,
+      evidenceCount: windows.recent.length + windows.previous.length,
+      caveat: CAPABILITY_LEDGER_TREND_CAVEAT,
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    };
+  }
+
+  if (kind === "worsening_missing_capabilities") {
+    const recentMissing = windows.recent.filter((signal) => signal.capabilityStatus === "missing");
+    const previousMissing = windows.previous.filter((signal) => signal.capabilityStatus === "missing");
+    const rows = trendRows(recentMissing, previousMissing, (signal) => signal.capabilityLabel, {
+      includeStatus: true,
+      includeArchitectureArea: true,
+    });
+    return {
+      kind,
+      question,
+      summary: `Missing capabilities getting worse over recent 7 days vs previous 7 days: ${describeTrendRows(rows)}.`,
+      rows,
+      evidenceCount: recentMissing.length + previousMissing.length,
+      caveat: `${CAPABILITY_LEDGER_TREND_CAVEAT} Recommendations are proposal-only.`,
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    };
+  }
+
+  if (kind === "recent_working_capabilities") {
+    const recentWorking = windows.recent.filter((signal) => signal.capabilityStatus === "working");
+    const rows = groupedRows(
+      recentWorking,
+      (signal) => `${signal.capabilityLabel}:${signal.architectureArea}`,
+      (signal) => signal.capabilityLabel,
+      (signal) => 1 + signal.confidence,
+      { includeStatus: true, includeArchitectureArea: true },
+    );
+    return {
+      kind,
+      question,
+      summary: `Recently working local capabilities from the recent 7 day window: ${describeRows(rows)}.`,
+      rows,
+      evidenceCount: recentWorking.length,
+      caveat: CAPABILITY_LEDGER_TREND_CAVEAT,
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    };
+  }
+
+  if (kind === "weekly_changes") {
+    const rows = trendRows(windows.recent, windows.previous, (signal) => signal.topicLabel);
+    return {
+      kind,
+      question,
+      summary: `Local capability changes this week: ${describeTrendRows(rows)}.`,
+      rows,
+      evidenceCount: windows.recent.length + windows.previous.length,
+      caveat: CAPABILITY_LEDGER_TREND_CAVEAT,
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    };
+  }
 
   if (kind === "common_conversations") {
     const rows = sortedRows(aggregate.byTopic);

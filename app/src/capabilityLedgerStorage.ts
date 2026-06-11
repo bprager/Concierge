@@ -16,6 +16,7 @@ import {
 export const CAPABILITY_LEDGER_STORAGE_KEY = "concierge_capability_ledger_v1";
 export const CAPABILITY_TAXONOMY_STORAGE_KEY = "concierge_capability_taxonomy_v1";
 export const CAPABILITY_LEDGER_MAX_SIGNALS = 250;
+export const CAPABILITY_LEDGER_MAX_AGE_DAYS = 90;
 
 export interface CapabilityLedgerStorage {
   getItem(key: string): string | null;
@@ -24,14 +25,30 @@ export interface CapabilityLedgerStorage {
 }
 
 export function loadCapabilityLedgerFromStorage(storage: CapabilityLedgerStorage | undefined | null): CapabilityLedger {
-  if (!storage) return deserializeCapabilityLedger(null, { maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS });
+  if (!storage) {
+    return deserializeCapabilityLedger(null, {
+      maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS,
+      maxAgeDays: CAPABILITY_LEDGER_MAX_AGE_DAYS,
+    });
+  }
   const raw = storage.getItem(CAPABILITY_LEDGER_STORAGE_KEY);
-  if (!raw) return deserializeCapabilityLedger(null, { maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS });
+  if (!raw) {
+    return deserializeCapabilityLedger(null, {
+      maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS,
+      maxAgeDays: CAPABILITY_LEDGER_MAX_AGE_DAYS,
+    });
+  }
 
   try {
-    return deserializeCapabilityLedger(JSON.parse(raw), { maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS });
+    return deserializeCapabilityLedger(JSON.parse(raw), {
+      maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS,
+      maxAgeDays: CAPABILITY_LEDGER_MAX_AGE_DAYS,
+    });
   } catch {
-    return deserializeCapabilityLedger(null, { maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS });
+    return deserializeCapabilityLedger(null, {
+      maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS,
+      maxAgeDays: CAPABILITY_LEDGER_MAX_AGE_DAYS,
+    });
   }
 }
 
@@ -40,7 +57,10 @@ export function persistCapabilityLedgerToStorage(
   ledger: CapabilityLedger,
 ): boolean {
   if (!storage) return false;
-  const snapshot = serializeCapabilityLedger(ledger, { maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS });
+  const snapshot = serializeCapabilityLedger(ledger, {
+    maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS,
+    maxAgeDays: CAPABILITY_LEDGER_MAX_AGE_DAYS,
+  });
   storage.setItem(CAPABILITY_LEDGER_STORAGE_KEY, JSON.stringify(snapshot));
   return true;
 }
@@ -80,5 +100,13 @@ export function clearPersistedCapabilityLedger(
 }
 
 export function exportCapabilityLedgerJson(ledger: CapabilityLedger, taxonomy?: CapabilityTaxonomy): string {
-  return JSON.stringify(exportCapabilityLedger(ledger, { maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS, taxonomy }), null, 2);
+  return JSON.stringify(
+    exportCapabilityLedger(ledger, {
+      maxSignals: CAPABILITY_LEDGER_MAX_SIGNALS,
+      maxAgeDays: CAPABILITY_LEDGER_MAX_AGE_DAYS,
+      taxonomy,
+    }),
+    null,
+    2,
+  );
 }

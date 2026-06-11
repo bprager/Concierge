@@ -8,6 +8,7 @@ import {
 import { createCapabilityTaxonomy, renameTaxonomyLabel } from "../src/capabilityTaxonomy.js";
 import {
   CAPABILITY_LEDGER_STORAGE_KEY,
+  CAPABILITY_LEDGER_MAX_AGE_DAYS,
   CAPABILITY_TAXONOMY_STORAGE_KEY,
   clearPersistedCapabilityLedger,
   exportCapabilityLedgerJson,
@@ -58,6 +59,18 @@ test("storage adapter persists metadata and restores queryable capability ledger
   assert.equal(answer.rows[0].label, "bridge_failure_handling");
 });
 
+test("storage adapter persists default age retention metadata", () => {
+  const storage = new MemoryStorage();
+  const ledger = loadCapabilityLedgerFromStorage(storage);
+
+  persistCapabilityLedgerToStorage(storage, ledger);
+  const snapshot = JSON.parse(storage.getItem(CAPABILITY_LEDGER_STORAGE_KEY) ?? "{}") as {
+    retention?: { maxSignals?: number; maxAgeDays?: number };
+  };
+
+  assert.equal(snapshot.retention?.maxAgeDays, CAPABILITY_LEDGER_MAX_AGE_DAYS);
+});
+
 test("storage adapter clears persisted and in-memory capability ledger", () => {
   const storage = new MemoryStorage();
   const ledger = loadCapabilityLedgerFromStorage(storage);
@@ -93,10 +106,18 @@ test("storage adapter exports versioned metadata-only JSON", () => {
   );
 
   const json = exportCapabilityLedgerJson(ledger);
-  const parsed = JSON.parse(json) as { schemaVersion: string; privacyCaveat: string; signals: unknown[] };
+  const parsed = JSON.parse(json) as {
+    schemaVersion: string;
+    privacyCaveat: string;
+    trendCaveat: string;
+    retention: { maxAgeDays: number };
+    signals: unknown[];
+  };
 
   assert.equal(parsed.schemaVersion, "concierge.capability-ledger.export.v1");
   assert.equal(parsed.privacyCaveat.includes("does not grant permission to share externally"), true);
+  assert.equal(parsed.retention.maxAgeDays, CAPABILITY_LEDGER_MAX_AGE_DAYS);
+  assert.equal(parsed.trendCaveat.includes("recent 7 days"), true);
   assert.equal(parsed.signals.length, 1);
   assert.equal(json.includes("raw export adapter error"), false);
 });

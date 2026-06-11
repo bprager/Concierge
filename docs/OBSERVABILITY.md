@@ -69,7 +69,7 @@ Every user turn has:
 | eval_case_started | evaluator | case_id |
 | eval_case_completed | evaluator | case_id, score |
 | evolution_proposal_created | evolution | proposal_id, risk_level |
-| conversation_capability_signal | capability_intelligence | conversation_id, turn_id, profile_mode, channel, topic_label, intent_label, capability_label, capability_status, outcome_signal, confidence, architecture_area, privacy_class |
+| conversation_capability_signal | capability_intelligence | observed_at, conversation_id, turn_id, profile_mode, channel, topic_label, intent_label, capability_label, capability_status, outcome_signal, confidence, architecture_area, privacy_class |
 | capability_recommendation_created | capability_intelligence | recommendation_id, capability_label, architecture_area, priority_score, risk_level, evidence_count, suggested_next_step |
 | capability_intelligence_answered | capability_intelligence | conversation_id, turn_id, profile_mode, kind, evidence_count |
 | capability_ledger_persisted | capability_intelligence | conversation_id, turn_id, evidence_count, privacy_class, storage |
@@ -80,7 +80,7 @@ Every user turn has:
 | capability_taxonomy_label_marked | capability_intelligence | conversation_id, dimension, source_label, marker, value, storage, approval_captured, memory_write_performed, external_send_performed |
 | capability_taxonomy_reset | capability_intelligence | conversation_id, storage, approval_captured, memory_write_performed, external_send_performed |
 
-Initial local implementation: Text Concierge emits `conversation_capability_signal` records from `rehearsal_preview_created`, governance review required/blocked/acknowledged events, memory proposal review events, bridge failures, and normal response generation. These records are stored in the bounded ledger in `app/src/capabilityLedger.ts` and persisted as browser-local metadata through `app/src/capabilityLedgerStorage.ts`. The query surface emits `capability_intelligence_answered` when Concierge answers common, working-well, missing/blocked, easy-to-evolve, architecture-area, or recommended-next capability questions from local aggregates. Clear, export, and taxonomy controls emit local audit events without granting approval, writing memory, dispatching agents, or sending externally.
+Initial local implementation: Text Concierge emits `conversation_capability_signal` records from `rehearsal_preview_created`, governance review required/blocked/acknowledged events, memory proposal review events, bridge failures, and normal response generation. These records are stored in the count and age bounded ledger in `app/src/capabilityLedger.ts` and persisted as browser-local metadata through `app/src/capabilityLedgerStorage.ts`. The query surface emits `capability_intelligence_answered` when Concierge answers common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening-missing, recently-working, or weekly-change capability questions from local aggregates and 7 day trend windows. Clear, export, and taxonomy controls emit local audit events without granting approval, writing memory, dispatching agents, or sending externally.
 
 ## 5. Metrics
 
@@ -149,7 +149,7 @@ Example:
 }
 ```
 
-Capability intelligence logs and persisted snapshots must avoid raw user content by default. Store labels, counts, confidence, privacy class, architecture area, suggested next step, taxonomy edits, and trace references rather than transcripts. Local export is JSON metadata only and does not grant permission to share externally.
+Capability intelligence logs and persisted snapshots must avoid raw user content by default. Store timestamps, labels, counts, trend deltas, confidence, privacy class, architecture area, suggested next step, taxonomy edits, retention settings, and trace references rather than transcripts. Local export is JSON metadata only and does not grant permission to share externally.
 
 ## 7. Redaction policy
 
