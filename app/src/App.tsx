@@ -41,7 +41,10 @@ function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapa
         .map((row) => {
           const status = row.status ? `, ${row.status}` : "";
           const area = row.architectureArea ? `, ${row.architectureArea}` : "";
-          return `${row.label}: ${row.count}${status}${area}`;
+          const confidence = row.confidence === undefined ? "" : `, confidence ${row.confidence}`;
+          const score = row.score === undefined ? "" : `, score ${row.score}`;
+          const nextStep = row.suggestedNextStep ? `, next ${row.suggestedNextStep}` : "";
+          return `${row.label}: ${row.count}${status}${area}${confidence}${score}${nextStep}`;
         })
         .join("\n")
     : "No local signals yet.";

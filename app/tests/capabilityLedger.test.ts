@@ -244,6 +244,257 @@ test("answers missing or blocked capability questions separately from successful
   assert.equal(answer.boundary.externalSendAllowed, false);
 });
 
+test("answers working-well conversation questions from local working signals", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_working_1",
+      conversationId: "conv_working",
+      turnId: "turn_working_1",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "memory",
+      intentLabel: "review_memory_proposal",
+      capabilityLabel: "memory_proposal_review",
+      capabilityStatus: "working",
+      outcomeSignal: "review_required",
+      confidence: 0.9,
+      evidenceRefs: ["trace:trace_working_1"],
+      architectureArea: "memory_review",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "no_action",
+      rawMessage: "raw memory content",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_working_2",
+      conversationId: "conv_working",
+      turnId: "turn_working_2",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "memory",
+      intentLabel: "review_memory_proposal",
+      capabilityLabel: "memory_proposal_review",
+      capabilityStatus: "working",
+      outcomeSignal: "review_required",
+      confidence: 0.82,
+      evidenceRefs: ["trace:trace_working_2"],
+      architectureArea: "memory_review",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "no_action",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("response_failed", {
+      traceId: "trace_not_working",
+      conversationId: "conv_not_working",
+      turnId: "turn_not_working",
+      profile: "adult_owner",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What conversations are working well?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  assert.equal(answer.kind, "working_well_conversations");
+  assert.ok(answer.summary.includes("memory_proposal_review"));
+  assert.equal(answer.rows[0].label, "memory_proposal_review");
+  assert.equal(answer.rows[0].count, 2);
+  assert.equal(answer.rows[0].status, "working");
+  assert.equal(answer.rows[0].architectureArea, "memory_review");
+  assert.ok(answer.caveat.includes("local metadata"));
+  assert.equal(JSON.stringify(answer).includes("raw memory content"), false);
+});
+
+test("answers easy-to-evolve missing capability questions with deterministic proposal ranking", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("response_failed", {
+      traceId: "trace_missing_easy_1",
+      conversationId: "conv_missing_easy",
+      turnId: "turn_missing_easy_1",
+      profile: "adult_owner",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("response_failed", {
+      traceId: "trace_missing_easy_2",
+      conversationId: "conv_missing_easy",
+      turnId: "turn_missing_easy_2",
+      profile: "adult_owner",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_missing_runtime",
+      conversationId: "conv_missing_runtime",
+      turnId: "turn_missing_runtime",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "delegation",
+      intentLabel: "delegate_task",
+      capabilityLabel: "napoleon_delegation",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.75,
+      evidenceRefs: ["trace:trace_missing_runtime"],
+      architectureArea: "napoleon_runtime",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "create_evolution_proposal",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("governance_review_blocked", {
+      traceId: "trace_correctly_blocked",
+      conversationId: "conv_correctly_blocked",
+      turnId: "turn_correctly_blocked",
+      profile: "adult_owner",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What capabilities are missing but easy to evolve?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  assert.equal(answer.kind, "easy_to_evolve_missing_capabilities");
+  assert.equal(answer.rows[0].label, "bridge_failure_handling");
+  assert.equal(answer.rows[0].status, "missing");
+  assert.equal(answer.rows[0].architectureArea, "bridge");
+  assert.equal(answer.rows.some((row) => row.label === "governance_review"), false);
+  assert.ok(answer.summary.includes("proposal-only"));
+  assert.ok(answer.caveat.includes("telemetry is disabled"));
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+});
+
+test("answers architecture improvement questions from missing safe request areas", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("response_failed", {
+      traceId: "trace_bridge_area_1",
+      conversationId: "conv_bridge_area",
+      turnId: "turn_bridge_area_1",
+      profile: "adult_owner",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("response_failed", {
+      traceId: "trace_bridge_area_2",
+      conversationId: "conv_bridge_area",
+      turnId: "turn_bridge_area_2",
+      profile: "adult_owner",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_eval_area",
+      conversationId: "conv_eval_area",
+      turnId: "turn_eval_area",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "evaluation",
+      intentLabel: "validate",
+      capabilityLabel: "live_eval_fixture",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.7,
+      evidenceRefs: ["trace:trace_eval_area"],
+      architectureArea: "evaluator",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("governance_review_blocked", {
+      traceId: "trace_blocked_area",
+      conversationId: "conv_blocked_area",
+      turnId: "turn_blocked_area",
+      profile: "adult_owner",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion(
+    "What part of the Concierge architecture has to be improved to fix missing capabilities?",
+    ledger,
+  );
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  assert.equal(answer.kind, "architecture_improvement_areas");
+  assert.equal(answer.rows[0].label, "bridge");
+  assert.equal(answer.rows[0].count, 2);
+  assert.equal(answer.rows.some((row) => row.label === "governance_ux"), false);
+  assert.ok(answer.summary.includes("Architecture areas"));
+  assert.ok(answer.caveat.includes("Correctly blocked unsafe requests are excluded"));
+});
+
+test("answers next capability recommendation questions without granting authority", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("response_failed", {
+      traceId: "trace_next_bridge",
+      conversationId: "conv_next_bridge",
+      turnId: "turn_next_bridge",
+      profile: "adult_owner",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_next_memory",
+      conversationId: "conv_next_memory",
+      turnId: "turn_next_memory",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "memory",
+      intentLabel: "review_memory_proposal",
+      capabilityLabel: "memory_proposal_review",
+      capabilityStatus: "working",
+      outcomeSignal: "review_required",
+      confidence: 0.9,
+      evidenceRefs: ["trace:trace_next_memory"],
+      architectureArea: "memory_review",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "create_evolution_proposal",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("governance_review_blocked", {
+      traceId: "trace_next_blocked",
+      conversationId: "conv_next_blocked",
+      turnId: "turn_next_blocked",
+      profile: "adult_owner",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  assert.equal(answer.kind, "recommended_next_capabilities");
+  assert.equal(answer.rows[0].label, "bridge_failure_handling");
+  assert.equal(answer.rows[0].status, "missing");
+  assert.equal(answer.rows.some((row) => row.label === "governance_review"), false);
+  assert.ok(answer.summary.includes("proposal-only"));
+  assert.equal(answer.boundary.approvalCaptured, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+});
+
 test("does not answer unrelated questions as capability intelligence queries", () => {
   const ledger = createCapabilityLedger();
 

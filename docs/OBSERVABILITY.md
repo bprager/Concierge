@@ -73,7 +73,7 @@ Every user turn has:
 | capability_recommendation_created | capability_intelligence | recommendation_id, capability_label, architecture_area, priority_score, risk_level, evidence_count, suggested_next_step |
 | capability_intelligence_answered | capability_intelligence | conversation_id, turn_id, profile_mode, kind, evidence_count |
 
-Initial local implementation: Text Concierge emits `conversation_capability_signal` records from `rehearsal_preview_created`, governance review required/blocked/acknowledged events, memory proposal review events, bridge failures, and normal response generation. These records are stored in the in-memory bounded ledger in `app/src/capabilityLedger.ts`. The first query surface emits `capability_intelligence_answered` when Concierge answers common conversation or missing/blocked capability questions from local aggregates.
+Initial local implementation: Text Concierge emits `conversation_capability_signal` records from `rehearsal_preview_created`, governance review required/blocked/acknowledged events, memory proposal review events, bridge failures, and normal response generation. These records are stored in the in-memory bounded ledger in `app/src/capabilityLedger.ts`. The query surface emits `capability_intelligence_answered` when Concierge answers common, working-well, missing/blocked, easy-to-evolve, architecture-area, or recommended-next capability questions from local aggregates.
 
 ## 5. Metrics
 

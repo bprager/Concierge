@@ -62,7 +62,7 @@ Concierge should answer capability questions from aggregated local signals:
 
 Every answer should include uncertainty. Example: "Based on 42 local metadata signals, calendar delegation is common but not implemented; confidence 0.72; blocker is Napoleon runtime transport and governed delegation."
 
-Initial query implementation: Text Concierge can answer clear local questions such as "What conversations are most common?" and "What capabilities are missing or blocked?" from the in-memory ledger. The answer includes counts, local evidence size, caveats, and a reminder that the summary does not approve, implement, write memory, dispatch agents, or send externally.
+Initial query implementation: Text Concierge can answer clear local questions such as "What conversations are most common?", "What conversations are working well?", "What capabilities are missing or blocked?", "What capabilities are missing but easy to evolve?", "What part of the Concierge architecture has to be improved to fix missing capabilities?", and "What capabilities should be implemented next?" from the in-memory ledger. The answer includes counts, local evidence size, confidence, score where ranked, architecture area, suggested next step where relevant, caveats, and a reminder that the summary does not approve, implement, write memory, dispatch agents, or send externally.
 
 ## 5. Ranking strategy
 
@@ -128,8 +128,8 @@ This capability should be built in phases:
 
 1. Define schema and local derived event emission. Implemented in `app/src/capabilityLedger.ts` and `app/src/telemetry.ts`.
 2. Add bounded local ledger and redaction policy. Initial in-memory bounded ledger is implemented; persistent retention and deletion controls remain next.
-3. Add query summaries for common, working, missing, and next capabilities. Initial common conversation and missing/blocked capability answers are implemented in the Text Concierge UI.
-4. Add architecture-area mapping and recommendation scoring.
+3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next answers are implemented in the Text Concierge UI.
+4. Add architecture-area mapping and recommendation scoring. Initial deterministic local scoring is implemented from count, confidence, status, architecture area, and suggested next step; richer value, effort, risk, and trend scoring remain future work.
 5. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.
 6. Add governed handoff to Napoleon evolution proposals.
 
