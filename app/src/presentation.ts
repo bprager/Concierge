@@ -84,6 +84,17 @@ export function describeBridgeFailure(error: unknown): string {
   return `Live Napoleon bridge blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}.${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
 }
 
+export function describeGovernedHandoffFailure(error: unknown, label: string, primaryEffect: string): string {
+  if (!(error instanceof NapoleonBridgeError)) {
+    return `${label} failed closed. Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
+  }
+
+  const blockedEffects = error.blockedEffects.length
+    ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
+    : "";
+  return `${label} blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}.${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
+}
+
 function describeEvidenceState(state: LiveBridgeEvidenceState | undefined): string {
   if (state === "passed") return "Passed in local validation";
   if (state === "failed") return "Failed in local validation";

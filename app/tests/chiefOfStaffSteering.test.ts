@@ -228,6 +228,7 @@ test("steering handoff fails closed when Napoleon returns no-go", async () => {
     traceId: "trace_steering",
     endpointConfigured: true,
   });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
   await assert.rejects(
     () =>
@@ -235,6 +236,7 @@ test("steering handoff fails closed when Napoleon returns no-go", async () => {
         conversationId: "conv_steering",
         traceId: "trace_submit",
         getEndpoint: () => "https://napoleon.example/concierge",
+        emit: (event) => events.push(event),
         fetch: async () => ({
           ok: true,
           status: 200,
@@ -274,6 +276,17 @@ test("steering handoff fails closed when Napoleon returns no-go", async () => {
     (error: unknown) =>
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
-      error.message.includes("governance_no_go"),
+      error.message.includes("governance_no_go") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(["memory_write", "agent_dispatch", "external_send", "approval_capture"]),
   );
+
+  assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
+    "memory_write",
+    "agent_dispatch",
+    "external_send",
+    "approval_capture",
+  ]);
 });

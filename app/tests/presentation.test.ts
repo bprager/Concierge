@@ -11,6 +11,7 @@ import {
 import {
   describeDelegation,
   describeBridgeFailure,
+  describeGovernedHandoffFailure,
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
@@ -253,5 +254,29 @@ test("describes bridge failure with blocked effects visible", () => {
   assert.ok(message.includes("did not send externally"));
   assert.ok(message.includes("did not write memory"));
   assert.ok(message.includes("did not dispatch agents"));
+  assert.ok(message.includes("did not capture approval"));
+});
+
+test("describes governed handoff failure with blocked effects visible", () => {
+  const error = new NapoleonBridgeError("governance_no_go", "trace_handoff", "request_handoff", 200, [
+    "memory_write",
+    "agent_dispatch",
+    "external_send",
+    "approval_capture",
+  ]);
+
+  const message = describeGovernedHandoffFailure(
+    error,
+    "Chief of Staff steering handoff",
+    "apply changes",
+  );
+
+  assert.ok(message.includes("Chief of Staff steering handoff blocked"));
+  assert.ok(message.includes("governance_no_go"));
+  assert.ok(message.includes("Blocked effects: memory_write, agent_dispatch, external_send, approval_capture"));
+  assert.ok(message.includes("did not apply changes"));
+  assert.ok(message.includes("did not write memory"));
+  assert.ok(message.includes("did not dispatch agents"));
+  assert.ok(message.includes("did not send externally"));
   assert.ok(message.includes("did not capture approval"));
 });

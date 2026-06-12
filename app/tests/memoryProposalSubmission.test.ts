@@ -147,6 +147,7 @@ test("memory proposal submission posts review packet without writing memory or c
 
 test("memory proposal submission fails closed when Napoleon denies review", async () => {
   const review = buildReview();
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
   await assert.rejects(
     () =>
@@ -154,6 +155,7 @@ test("memory proposal submission fails closed when Napoleon denies review", asyn
         conversationId: "conv_memory",
         traceId: "trace_submit",
         getEndpoint: () => "https://napoleon.example/concierge",
+        emit: (event) => events.push(event),
         fetch: async () => ({
           ok: true,
           status: 200,
@@ -193,8 +195,18 @@ test("memory proposal submission fails closed when Napoleon denies review", asyn
     (error: unknown) =>
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
-      error.message.includes("governance_denied"),
+      error.message.includes("governance_denied") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(["memory_write", "approval_capture", "external_send"]),
   );
+
+  assert.equal(events.at(-1)?.event, "memory_proposal_send_failed");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
+    "memory_write",
+    "approval_capture",
+    "external_send",
+  ]);
 });
 
 test("memory proposal submission rejects malformed Napoleon response", async () => {

@@ -35,7 +35,7 @@ import {
   submitMemoryProposalForReview,
   type MemoryProposalSubmissionResult,
 } from "./memoryProposalSubmission";
-import { NapoleonBridgeError, sendToNapoleon } from "./napoleonBridge";
+import { sendToNapoleon } from "./napoleonBridge";
 import {
   buildLocalHarnessEndpointPreset,
   isLocalHarnessEndpoint,
@@ -43,6 +43,7 @@ import {
 import {
   describeDelegation,
   describeBridgeFailure,
+  describeGovernedHandoffFailure,
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
@@ -631,11 +632,7 @@ export function App() {
       setMemorySubmissionFailure(null);
       refreshCapabilityLedgerStatus();
     } catch (error) {
-      const message =
-        error instanceof NapoleonBridgeError
-          ? `Memory proposal review handoff blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}. Concierge did not write memory, send externally, dispatch agents, or capture approval.`
-          : "Memory proposal review handoff failed closed. Concierge did not write memory, send externally, dispatch agents, or capture approval.";
-      setMemorySubmissionFailure(message);
+      setMemorySubmissionFailure(describeGovernedHandoffFailure(error, "Memory proposal review handoff", "write memory"));
       setMemorySubmission(null);
       refreshCapabilityLedgerStatus();
     }
@@ -716,11 +713,7 @@ export function App() {
       setSteeringFailure(null);
       refreshCapabilityLedgerStatus();
     } catch (error) {
-      const message =
-        error instanceof NapoleonBridgeError
-          ? `Chief of Staff steering handoff blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}. Concierge did not apply changes, write memory, dispatch agents, send externally, or capture approval.`
-          : "Chief of Staff steering handoff failed closed. Concierge did not apply changes, write memory, dispatch agents, send externally, or capture approval.";
-      setSteeringFailure(message);
+      setSteeringFailure(describeGovernedHandoffFailure(error, "Chief of Staff steering handoff", "apply changes"));
       setSteeringSubmission(null);
       refreshCapabilityLedgerStatus();
     }

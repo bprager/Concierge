@@ -154,6 +154,7 @@ function failMemoryProposalClosed(
   requestId: string,
   proposalId?: string,
   status?: number,
+  blockedEffects: string[] = [],
 ): never {
   emitMemoryProposalEvent(dependencies, "memory_proposal_send_failed", {
     traceId,
@@ -162,8 +163,9 @@ function failMemoryProposalClosed(
     proposalId,
     reason,
     status,
+    blockedEffects,
   });
-  throw new NapoleonBridgeError(reason, traceId, requestId, status);
+  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects);
 }
 
 export async function submitMemoryProposalForReview(
@@ -292,6 +294,7 @@ export async function submitMemoryProposalForReview(
       payload.governanceDecision.request_id,
       memoryProposal.proposalId,
       response.status,
+      payload.governanceDecision.blocked_effects,
     );
   }
 

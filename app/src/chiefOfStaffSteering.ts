@@ -273,14 +273,16 @@ function failSteeringClosed(
   traceId: string,
   requestId: string,
   status?: number,
+  blockedEffects: string[] = [],
 ): never {
   emitSteeringEvent(dependencies, "capability_recommendation_send_failed", {
     traceId,
     requestId,
     reason,
     status,
+    blockedEffects,
   });
-  throw new NapoleonBridgeError(reason, traceId, requestId, status);
+  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects);
 }
 
 export async function submitChiefOfStaffSteeringDraft(
@@ -403,6 +405,7 @@ export async function submitChiefOfStaffSteeringDraft(
       dependencies.traceId,
       payload.governanceDecision.request_id,
       response.status,
+      payload.governanceDecision.blocked_effects,
     );
   }
 

@@ -58,6 +58,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Show blocked effects from fail-closed memory proposal review and Chief of Staff steering handoff errors in telemetry and visible failure messages.
 - Show blocked effects from fail-closed live bridge errors in telemetry and the visible bridge-blocked message.
 - Reject live text responses that claim "Napoleon recommends..." unless matching recommendation provenance includes the recommended contribution and response trace/audit references.
 - Reject live text responses that claim selected-agent findings such as "Passive Brain found..." unless matching delegation provenance includes that agent contribution.
