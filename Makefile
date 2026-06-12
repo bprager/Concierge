@@ -1,6 +1,6 @@
-.PHONY: check eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare eval-http schema-check app-test app-build tauri-check zip
+.PHONY: check eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare eval-http schema-check app-test app-smoke app-build tauri-check zip
 
-check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare schema-check app-test app-build tauri-check
+check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare schema-check app-test app-smoke app-build tauri-check
 
 eval:
 	uv run --with PyYAML --with requests --with jsonschema python evaluator/eval_runner.py --mode stub --out evaluator/reports/latest.json
@@ -25,6 +25,9 @@ schema-check:
 
 app-test:
 	cd app && npm test
+
+app-smoke:
+	cd app && npm run smoke:local-harness
 
 app-build:
 	cd app && npm run build
