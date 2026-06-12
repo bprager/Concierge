@@ -11,6 +11,14 @@ import {
 } from "../src/chiefOfStaffSteering.js";
 import { defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
 
+const steeringBlockedEffects = [
+  "memory_write",
+  "agent_dispatch",
+  "external_send",
+  "approval_capture",
+  "runtime_authority",
+];
+
 test("drafts proposal-only Chief of Staff steering from capability signals", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(
@@ -62,6 +70,7 @@ test("steering handoff fails closed without endpoint and does not fetch", async 
     endpointConfigured: false,
   });
   let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
   await assert.rejects(
     () =>
@@ -69,6 +78,7 @@ test("steering handoff fails closed without endpoint and does not fetch", async 
         conversationId: "conv_steering",
         traceId: "trace_submit",
         getEndpoint: () => null,
+        emit: (event) => events.push(event),
         fetch: async () => {
           fetchCalled = true;
           return { ok: true, json: async () => ({}) };
@@ -77,10 +87,14 @@ test("steering handoff fails closed without endpoint and does not fetch", async 
     (error: unknown) =>
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
-      error.message.includes("no_endpoint"),
+      error.message.includes("no_endpoint") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, steeringBlockedEffects);
 });
 
 test("steering handoff fails closed before fetch when descriptor is not ready", async () => {

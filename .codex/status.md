@@ -64,7 +64,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened Napoleon recommendation attribution so live response text such as "Napoleon recommends..." fails closed unless matching recommendation provenance is present.
 - Added blocked-effect propagation for fail-closed live bridge errors so bridge failure telemetry and the visible bridge-blocked message can show denied effects.
 - Added blocked-effect propagation into sanitized bridge evidence for early fail-closed live text errors such as missing endpoint and auth failure.
-- Added blocked-effect propagation for fail-closed memory proposal review and Chief of Staff steering handoff errors so their visible failure messages can show denied effects.
+- Added blocked-effect propagation for fail-closed memory proposal review and Chief of Staff steering handoff errors so their visible failure messages and telemetry can show denied effects even before a network call is attempted.
 - Added transcript-visible live text bridge failure messages that include the fail-closed reason and blocked effects where available.
 - Added generated bridge operation registry output from the canonical OpenAPI bridge contract and repository validation that fails when the generated file is stale.
 - Added governed Chief of Staff steering submission for evolution proposal review packets, gated by endpoint and descriptor preflight and blocked from local application, memory writes, approval capture, agent dispatch, or external sends.

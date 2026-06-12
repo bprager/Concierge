@@ -184,12 +184,29 @@ export async function submitMemoryProposalForReview(
       descriptor: defaultChiefOfStaffDescriptor,
     },
   );
+  const blockedEffects = ["memory_write", "approval_capture", "external_send", "agent_dispatch", "runtime_authority"];
 
   if (!endpoint) {
-    failMemoryProposalClosed(dependencies, "no_endpoint", dependencies.traceId, requestId, memoryProposal.proposalId);
+    failMemoryProposalClosed(
+      dependencies,
+      "no_endpoint",
+      dependencies.traceId,
+      requestId,
+      memoryProposal.proposalId,
+      undefined,
+      blockedEffects,
+    );
   }
   if (!descriptorConnection.canAttemptLiveBridge) {
-    failMemoryProposalClosed(dependencies, "descriptor_mismatch", dependencies.traceId, requestId, memoryProposal.proposalId);
+    failMemoryProposalClosed(
+      dependencies,
+      "descriptor_mismatch",
+      dependencies.traceId,
+      requestId,
+      memoryProposal.proposalId,
+      undefined,
+      blockedEffects,
+    );
   }
 
   const evidenceLinks = [
@@ -235,8 +252,6 @@ export async function submitMemoryProposalForReview(
       : "napoleon_review_before_memory_write",
     evidence_links: evidenceLinks,
   };
-  const blockedEffects = ["memory_write", "approval_capture", "external_send", "agent_dispatch", "runtime_authority"];
-
   emitMemoryProposalEvent(dependencies, "memory_proposal_send_started", {
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,
@@ -268,12 +283,28 @@ export async function submitMemoryProposalForReview(
     });
   } catch (error) {
     const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
-    failMemoryProposalClosed(dependencies, reason, dependencies.traceId, requestId, memoryProposal.proposalId);
+    failMemoryProposalClosed(
+      dependencies,
+      reason,
+      dependencies.traceId,
+      requestId,
+      memoryProposal.proposalId,
+      undefined,
+      blockedEffects,
+    );
   }
 
   if (!response.ok) {
     const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
-    failMemoryProposalClosed(dependencies, reason, dependencies.traceId, requestId, memoryProposal.proposalId, response.status);
+    failMemoryProposalClosed(
+      dependencies,
+      reason,
+      dependencies.traceId,
+      requestId,
+      memoryProposal.proposalId,
+      response.status,
+      blockedEffects,
+    );
   }
 
   const payload = (await response.json()) as Partial<MemoryProposalSubmissionResult>;
@@ -283,7 +314,15 @@ export async function submitMemoryProposalForReview(
     !isAuditEnvelope(payload.auditEnvelope) ||
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope)
   ) {
-    failMemoryProposalClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, memoryProposal.proposalId);
+    failMemoryProposalClosed(
+      dependencies,
+      "contract_mismatch",
+      dependencies.traceId,
+      requestId,
+      memoryProposal.proposalId,
+      undefined,
+      blockedEffects,
+    );
   }
 
   if (payload.governanceDecision.outcome === "deny" || payload.governanceDecision.outcome === "no_go") {

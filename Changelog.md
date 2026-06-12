@@ -64,6 +64,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Show live text bridge failure reasons and blocked effects in the conversation transcript as well as the bridge failure panel.
 - Show blocked effects from fail-closed live bridge errors in telemetry and the visible bridge-blocked message.
 - Preserve the local governed text-turn blocked-effect list in early fail-closed bridge errors, telemetry, and sanitized contract evidence.
+- Preserve local memory proposal and Chief of Staff steering blocked-effect lists in early fail-closed governed handoff errors and telemetry.
 - Reject live text responses that claim "Napoleon recommends..." unless matching recommendation provenance includes the recommended contribution and response trace/audit references.
 - Reject live text responses that claim selected-agent findings such as "Passive Brain found..." unless matching delegation provenance includes that agent contribution.
 - Treat live Napoleon `deny` and `no_go` governance responses as fail-closed outcomes for text turns, memory proposal review, and Chief of Staff steering handoffs instead of normal successful responses, while retaining sanitized trace, audit, governance, and blocked-effect evidence where available.

@@ -302,12 +302,13 @@ export async function submitChiefOfStaffSteeringDraft(
       descriptor: defaultChiefOfStaffDescriptor,
     },
   );
+  const blockedEffects = ["memory_write", "agent_dispatch", "external_send", "approval_capture", "runtime_authority"];
 
   if (!endpoint) {
-    failSteeringClosed(dependencies, "no_endpoint", dependencies.traceId, requestId);
+    failSteeringClosed(dependencies, "no_endpoint", dependencies.traceId, requestId, undefined, blockedEffects);
   }
   if (!descriptorConnection.canAttemptLiveBridge) {
-    failSteeringClosed(dependencies, "descriptor_mismatch", dependencies.traceId, requestId);
+    failSteeringClosed(dependencies, "descriptor_mismatch", dependencies.traceId, requestId, undefined, blockedEffects);
   }
 
   const chiefOfStaffRequest: ChiefOfStaffRequest = {
@@ -346,8 +347,6 @@ export async function submitChiefOfStaffSteeringDraft(
     approval_requirement: "Napoleon Chief of Staff and owner review before implementation or rollout.",
     evidence_links: draft.evolutionProposal.evidence,
   };
-  const blockedEffects = ["memory_write", "agent_dispatch", "external_send", "approval_capture", "runtime_authority"];
-
   emitSteeringEvent(dependencies, "capability_recommendation_send_started", {
     traceId: dependencies.traceId,
     requestId,
@@ -380,12 +379,12 @@ export async function submitChiefOfStaffSteeringDraft(
     });
   } catch (error) {
     const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
-    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId);
+    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, undefined, blockedEffects);
   }
 
   if (!response.ok) {
     const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
-    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, response.status);
+    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, response.status, blockedEffects);
   }
 
   const payload = (await response.json()) as Partial<ChiefOfStaffSteeringSubmissionResult>;
@@ -395,7 +394,7 @@ export async function submitChiefOfStaffSteeringDraft(
     !isAuditEnvelope(payload.auditEnvelope) ||
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope)
   ) {
-    failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId);
+    failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, undefined, blockedEffects);
   }
 
   if (payload.governanceDecision.outcome === "deny" || payload.governanceDecision.outcome === "no_go") {

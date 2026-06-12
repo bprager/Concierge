@@ -9,6 +9,14 @@ import { submitMemoryProposalForReview } from "../src/memoryProposalSubmission.j
 
 type TestFetchInit = { method?: string; headers?: Record<string, string>; body?: string };
 
+const memoryProposalBlockedEffects = [
+  "memory_write",
+  "approval_capture",
+  "external_send",
+  "agent_dispatch",
+  "runtime_authority",
+];
+
 function buildReview() {
   const contract = buildTextTurnContract({
     message: "Remember that I prefer short deployment summaries",
@@ -23,6 +31,7 @@ function buildReview() {
 test("memory proposal submission fails closed without endpoint and does not fetch", async () => {
   const review = buildReview();
   let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
   await assert.rejects(
     () =>
@@ -30,6 +39,7 @@ test("memory proposal submission fails closed without endpoint and does not fetc
         conversationId: "conv_memory",
         traceId: "trace_submit",
         getEndpoint: () => null,
+        emit: (event) => events.push(event),
         fetch: async () => {
           fetchCalled = true;
           return { ok: true, json: async () => ({}) };
@@ -38,10 +48,15 @@ test("memory proposal submission fails closed without endpoint and does not fetc
     (error: unknown) =>
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
-      error.message.includes("no_endpoint"),
+      error.message.includes("no_endpoint") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(memoryProposalBlockedEffects),
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "memory_proposal_send_failed");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, memoryProposalBlockedEffects);
 });
 
 test("memory proposal submission fails closed before fetch when descriptor is not ready", async () => {
