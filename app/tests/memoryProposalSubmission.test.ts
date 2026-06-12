@@ -224,6 +224,72 @@ test("memory proposal submission fails closed when Napoleon denies review", asyn
   ]);
 });
 
+test("memory proposal submission rejects response claims that write memory or capture approval", async () => {
+  const review = buildReview();
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitMemoryProposalForReview(review, {
+        conversationId: "conv_memory",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon reviewed and wrote the memory proposal.",
+            governanceDecision: {
+              decision_id: "decision_memory_side_effect",
+              request_id: "cos_trace_submit",
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Memory review responses must not claim writes or approvals.",
+              blocked_effects: ["memory_write", "approval_capture", "external_send"],
+              trace_id: "trace_submit",
+              audit_id: "audit_memory_side_effect",
+            },
+            traceEnvelope: {
+              trace_id: "trace_submit",
+              parent_trace_id: "conv_memory",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_submit",
+              decision_id: "decision_memory_side_effect",
+              timestamp: "2026-06-12T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_memory_side_effect",
+              trace_id: "trace_submit",
+              decision_id: "decision_memory_side_effect",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:trace_submit"],
+            },
+            memoryWritePerformed: true,
+            approvalCaptured: true,
+            externalSendPerformed: true,
+            agentDispatchPerformed: true,
+            appliedLocally: true,
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(memoryProposalBlockedEffects),
+  );
+
+  assert.equal(events.at(-1)?.event, "memory_proposal_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, memoryProposalBlockedEffects);
+});
+
 test("memory proposal submission rejects malformed Napoleon response", async () => {
   const review = buildReview();
 

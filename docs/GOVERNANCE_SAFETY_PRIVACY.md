@@ -71,6 +71,8 @@ Memory proposal review is proposal-only. Local acknowledgement records that the 
 
 When a governed Napoleon endpoint is configured and descriptor preflight passes, Concierge may submit the proposal to Napoleon review through `/v1/concierge/memory-proposals`. That handoff is still proposal-only: Concierge must not write memory, capture approval, send externally, dispatch agents, or treat submission as permission. Rehearsal Mode remains local and must not use this handoff.
 
+Governed memory review responses that claim a memory write, approval capture, external send, agent dispatch, or local application must fail closed as contract mismatches.
+
 Child protected memory proposals require guardian-appropriate review and must use wording that rejects secret-keeping.
 
 ## 5. Privacy defaults

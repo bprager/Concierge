@@ -71,6 +71,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Show blocked effects from fail-closed live bridge errors in telemetry and the visible bridge-blocked message.
 - Preserve the local governed text-turn blocked-effect list in early fail-closed bridge errors, telemetry, and sanitized contract evidence.
 - Preserve local memory proposal and Chief of Staff steering blocked-effect lists in early fail-closed governed handoff errors and telemetry.
+- Reject governed memory proposal review responses that claim memory writes, approval capture, external sends, agent dispatch, or local application.
 - Reject governed Chief of Staff steering review responses that claim local application, memory writes, approval capture, agent dispatch, or external sends.
 - Reject live text responses that claim "Napoleon recommends..." unless matching recommendation provenance includes the recommended contribution and response trace/audit references.
 - Reject live text responses that claim selected-agent findings such as "Passive Brain found..." unless matching delegation provenance includes that agent contribution.

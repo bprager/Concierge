@@ -147,6 +147,19 @@ function envelopesMatchDecision(
   );
 }
 
+function hasForbiddenMemoryProposalSideEffectClaim(
+  payload: Partial<MemoryProposalSubmissionResult> & Record<string, unknown>,
+): boolean {
+  const forbiddenFalseFields = [
+    "memoryWritePerformed",
+    "approvalCaptured",
+    "externalSendPerformed",
+    "agentDispatchPerformed",
+    "appliedLocally",
+  ];
+  return forbiddenFalseFields.some((field) => payload[field] !== undefined && payload[field] !== false);
+}
+
 function failMemoryProposalClosed(
   dependencies: MemoryProposalSubmissionDependencies,
   reason: ConstructorParameters<typeof NapoleonBridgeError>[0],
@@ -312,7 +325,8 @@ export async function submitMemoryProposalForReview(
     !isGovernanceDecision(payload.governanceDecision) ||
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
-    !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope)
+    !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasForbiddenMemoryProposalSideEffectClaim(payload as Partial<MemoryProposalSubmissionResult> & Record<string, unknown>)
   ) {
     failMemoryProposalClosed(
       dependencies,

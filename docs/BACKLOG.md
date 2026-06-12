@@ -179,6 +179,7 @@ Acceptance criteria:
 - Successful text responses that claim selected-agent findings, such as "Passive Brain found...", must include matching selected-agent contribution provenance or fail closed as a contract mismatch.
 - Successful live responses require matching governance, trace, and audit envelopes; missing or mismatched response/delegation provenance fails closed as a contract mismatch.
 - Remote `deny` and `no_go` governance outcomes produce blocked bridge failures for text turns, memory proposal handoff, and Chief of Staff steering handoff instead of normal response or review completion; text bridge evidence remains sanitized and includes decision, audit, governance, and blocked-effect metadata where available.
+- Memory proposal review responses fail closed as contract mismatches if they claim memory writes, approval capture, external sends, agent dispatch, or local application.
 
 Privacy and safety impact:
 
