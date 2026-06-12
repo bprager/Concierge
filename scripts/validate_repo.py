@@ -208,6 +208,22 @@ def load_openapi_response_schema(path: str, status_code: str) -> dict[str, Any]:
     return schema
 
 
+def load_openapi_request_schema(path: str) -> dict[str, Any]:
+    openapi = load_openapi()
+    operation = openapi.get("paths", {}).get(path, {}).get("post") or openapi.get("paths", {}).get(path, {}).get("get")
+    if not operation:
+        raise SystemExit(f"OpenAPI operation not found: {path}")
+    schema = (
+        operation.get("requestBody", {})
+        .get("content", {})
+        .get("application/json", {})
+        .get("schema")
+    )
+    if not schema:
+        raise SystemExit(f"OpenAPI request schema not found: {path}")
+    return schema
+
+
 def validate_openapi_instance(schema: dict[str, Any], data: object) -> None:
     jsonschema.Draft202012Validator.check_schema(schema)
     jsonschema.validate(data, schema)
@@ -279,6 +295,60 @@ def validate_bridge_response_provenance(data: object) -> None:
             decision.get("audit_id"),
             "recommendationProvenance.auditId must match governance audit",
         )
+
+
+def validate_proposal_only_request_boundary(data: object) -> None:
+    if not isinstance(data, dict):
+        raise SystemExit("Governed handoff request example must be a JSON object")
+
+    boundary = data.get("boundary")
+    if not isinstance(boundary, dict):
+        raise SystemExit("Governed handoff request example must include a boundary object")
+    expected_boundary = {
+        "proposalOnly": True,
+        "approvalCaptured": False,
+        "memoryWriteAllowed": False,
+        "agentDispatchAllowed": False,
+        "externalSendAllowed": False,
+    }
+    for key, expected in expected_boundary.items():
+        require_equal(boundary.get(key), expected, f"boundary.{key} must preserve proposal-only semantics")
+
+    chief = data.get("chiefOfStaffRequest")
+    governance = data.get("governanceRequest")
+    trace = data.get("traceEnvelope")
+    audit = data.get("auditEnvelope")
+    if not isinstance(chief, dict) or not isinstance(governance, dict) or not isinstance(trace, dict) or not isinstance(audit, dict):
+        raise SystemExit("Governed handoff request example must include Chief of Staff, governance, trace, and audit objects")
+    require_equal(chief.get("requested_authority_tier"), "advisory_review", "Chief of Staff request must be advisory review")
+    require_equal(governance.get("requested_authority_tier"), "advisory_review", "Governance request must be advisory review")
+    require_equal(trace.get("trace_id"), chief.get("trace_id"), "traceEnvelope.trace_id must match Chief of Staff trace")
+    require_equal(trace.get("trace_id"), governance.get("trace_id"), "traceEnvelope.trace_id must match governance trace")
+    require_equal(trace.get("request_id"), chief.get("request_id"), "traceEnvelope.request_id must match Chief of Staff request")
+    require_equal(trace.get("request_id"), governance.get("request_id"), "traceEnvelope.request_id must match governance request")
+    require_equal(audit.get("trace_id"), trace.get("trace_id"), "auditEnvelope.trace_id must match request trace")
+    require_equal(audit.get("decision_id"), trace.get("decision_id"), "auditEnvelope.decision_id must match request trace")
+    require_equal(audit.get("authority_tier"), "advisory_review", "auditEnvelope.authority_tier must remain advisory review")
+
+    memory_proposal = data.get("memoryProposal")
+    if memory_proposal is not None:
+        if not isinstance(memory_proposal, dict):
+            raise SystemExit("memoryProposal must be an object")
+        require_equal(memory_proposal.get("memoryWritePerformed"), False, "memoryProposal.memoryWritePerformed must be false")
+        require_equal(memory_proposal.get("approvalCaptured"), False, "memoryProposal.approvalCaptured must be false")
+
+
+def validate_openapi_request_examples() -> None:
+    examples = [
+        ("/v1/concierge/memory-proposals", "examples/sample_memory_proposal_request.json"),
+        ("/v1/concierge/chief-of-staff/steering", "examples/sample_chief_of_staff_steering_request.json"),
+    ]
+    for path, example_path in examples:
+        data = load_json(example_path)
+        schema = load_openapi_request_schema(path)
+        validate_openapi_instance(schema, data)
+        validate_proposal_only_request_boundary(data)
+        print(f"valid OpenAPI request example: {example_path} against {path}")
 
 
 def validate_openapi_response_examples() -> None:
@@ -398,6 +468,7 @@ def main() -> int:
     validate_all_schemas()
     validate_json_pairs()
     validate_yaml()
+    validate_openapi_request_examples()
     validate_openapi_response_examples()
     validate_bridge_contract_alignment()
     validate_authority_boundary()

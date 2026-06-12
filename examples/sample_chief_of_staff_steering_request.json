@@ -1,0 +1,97 @@
+{
+  "requestKind": "chief_of_staff_steering_handoff",
+  "profileMode": "adult_owner",
+  "chiefOfStaffRequest": {
+    "request_id": "cos_steering_request_sample",
+    "requester": "concierge.text",
+    "request_type": "evolution_proposal_review",
+    "profile_mode": "adult_owner",
+    "source_evidence": [
+      "trace:trace_steering_request_sample",
+      "capability:bridge_descriptor_readiness"
+    ],
+    "requested_authority_tier": "advisory_review",
+    "trace_id": "trace_steering_request_sample",
+    "payload_schema": "napoleon/concierge/chief-of-staff-steering/v1"
+  },
+  "governanceRequest": {
+    "request_id": "cos_steering_request_sample",
+    "actor_id": "concierge.text",
+    "action": "review_capability_recommendation",
+    "target": "napoleon.chief_of_staff",
+    "requested_authority_tier": "advisory_review",
+    "evidence_links": [
+      "trace:trace_steering_request_sample",
+      "capability:bridge_descriptor_readiness"
+    ],
+    "trace_id": "trace_steering_request_sample"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_steering_request_sample",
+    "parent_trace_id": "conv_steering_request_sample",
+    "actor_id": "concierge.text",
+    "request_id": "cos_steering_request_sample",
+    "decision_id": "decision_steering_request_sample",
+    "timestamp": "2026-06-12T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_steering_request_sample",
+    "trace_id": "trace_steering_request_sample",
+    "decision_id": "decision_steering_request_sample",
+    "actor_id": "concierge.text",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "explicit_owner_approval",
+    "evidence_links": [
+      "trace:trace_steering_request_sample",
+      "capability:bridge_descriptor_readiness"
+    ]
+  },
+  "recommendation": {
+    "capability": "bridge_descriptor_readiness",
+    "summary": "Improve descriptor readiness evidence before live Napoleon validation.",
+    "evidenceCount": 3,
+    "confidence": 0.82,
+    "proposalOnly": true
+  },
+  "evaluatorCaseCandidate": {
+    "caseId": "CAPABILITY-BRIDGE-DESCRIPTOR-001",
+    "prompt": "Verify descriptor readiness and fail-closed bridge behavior before live Napoleon handoff.",
+    "expectedArtifacts": [
+      "bridge_contract_evidence",
+      "governance_decision",
+      "trace_envelope",
+      "audit_envelope"
+    ]
+  },
+  "evolutionProposal": {
+    "proposal_id": "evo_bridge_descriptor_readiness",
+    "summary": "Add stricter descriptor readiness evidence before live handoff.",
+    "risk_level": "low",
+    "evidence": [
+      "trace:trace_steering_request_sample",
+      "capability:bridge_descriptor_readiness"
+    ],
+    "change": {
+      "type": "evaluation_gate",
+      "target": "live_bridge_readiness"
+    },
+    "evaluator_cases": [
+      "CAPABILITY-BRIDGE-DESCRIPTOR-001"
+    ],
+    "rollback_plan": "Disable the new readiness gate and return to the previous descriptor preflight behavior."
+  },
+  "boundary": {
+    "proposalOnly": true,
+    "approvalCaptured": false,
+    "memoryWriteAllowed": false,
+    "agentDispatchAllowed": false,
+    "externalSendAllowed": false
+  },
+  "blockedEffects": [
+    "runtime_authority",
+    "agent_dispatch",
+    "memory_write",
+    "approval_capture",
+    "external_send"
+  ]
+}

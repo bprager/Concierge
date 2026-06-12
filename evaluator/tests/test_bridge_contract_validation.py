@@ -63,6 +63,20 @@ class BridgeContractValidationTest(unittest.TestCase):
         validate_repo.validate_openapi_instance(schema, response)
         validate_repo.validate_bridge_response_provenance(response)
 
+    def test_sample_memory_proposal_request_matches_openapi_request_contract(self):
+        request = validate_repo.load_json("examples/sample_memory_proposal_request.json")
+        schema = validate_repo.load_openapi_request_schema("/v1/concierge/memory-proposals")
+
+        validate_repo.validate_openapi_instance(schema, request)
+        validate_repo.validate_proposal_only_request_boundary(request)
+
+    def test_sample_chief_of_staff_steering_request_matches_openapi_request_contract(self):
+        request = validate_repo.load_json("examples/sample_chief_of_staff_steering_request.json")
+        schema = validate_repo.load_openapi_request_schema("/v1/concierge/chief-of-staff/steering")
+
+        validate_repo.validate_openapi_instance(schema, request)
+        validate_repo.validate_proposal_only_request_boundary(request)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -35,6 +35,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a bridge evidence comparator and sample evidence fixture that check captured bridge metadata against the OpenAPI-aligned bridge registry while rejecting raw payload or secret fields.
 - Added a local harness HTTP evaluator runner and `make eval-http-local-harness` target for validating evaluator HTTP plumbing without treating the harness as real Napoleon.
 - Added OpenAPI-validated governed response artifacts for text turns, memory proposal review, and Chief of Staff steering review, with governance, trace, audit, delegation, and recommendation provenance consistency checks where applicable.
+- Added OpenAPI-validated governed request artifacts for memory proposal and Chief of Staff steering handoffs, with proposal-only boundary checks.
 - Added optional local bridge bearer token support for live text turns and governed steering handoff, sent only as an authorization header.
 - Added canonical bridge endpoint resolution from a configured Napoleon base URL for text turns and Chief of Staff steering handoff.
 - Added a generated bridge operation registry derived from the canonical OpenAPI Concierge paths.

@@ -159,6 +159,7 @@ Acceptance criteria:
 - Configured Napoleon base URLs resolve to canonical bridge paths for text turns, descriptor discovery, Chief of Staff steering handoff, memory proposal review, and evaluator requests.
 - Bridge operation IDs and paths are generated from `api/napoleon_bridge.openapi.yaml`, and app plus repository checks fail if the generated registry drifts from the canonical contract.
 - Repository validation checks that governed bridge operations have matching request-kind constants, `NapoleonBearer` security, and named operation usage.
+- Repository validation checks canonical governed request examples for memory proposal and Chief of Staff steering handoffs against their OpenAPI request schemas and rejects approval capture, memory writes, agent dispatch, external sends, or non-proposal boundaries.
 - Repository validation checks canonical governed response examples for text turns, memory proposal review, and Chief of Staff steering review against their OpenAPI response schemas and rejects inconsistent governance, trace, audit, delegation, or recommendation provenance where applicable.
 - Repository validation scans runtime source for direct process execution, memory or graph access, and agent or tool dispatch outside the governed bridge.
 - Descriptor discovery is visible as first-class connection state, including live-discovered, missing descriptor, and checksum/signature mismatch states.
