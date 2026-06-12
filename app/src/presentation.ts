@@ -84,6 +84,17 @@ export function describeBridgeFailure(error: unknown): string {
   return `Live Napoleon bridge blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}.${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
 }
 
+export function describeBridgeFailureTranscriptMessage(error: unknown): string {
+  if (!(error instanceof NapoleonBridgeError)) {
+    return "Napoleon bridge failed closed. Concierge did not execute anything and remains in prepare-only mode.";
+  }
+
+  const blockedEffects = error.blockedEffects.length
+    ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
+    : "";
+  return `Napoleon bridge blocked: ${error.reason}.${blockedEffects} Concierge did not execute anything and remains in prepare-only mode.`;
+}
+
 export function describeGovernedHandoffFailure(error: unknown, label: string, primaryEffect: string): string {
   if (!(error instanceof NapoleonBridgeError)) {
     return `${label} failed closed. Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;

@@ -43,6 +43,7 @@ import {
 import {
   describeDelegation,
   describeBridgeFailure,
+  describeBridgeFailureTranscriptMessage,
   describeGovernedHandoffFailure,
   describeGovernanceDecision,
   describeGovernanceReview,
@@ -537,7 +538,7 @@ export function App() {
         ...m,
         {
           role: "assistant",
-          content: "Napoleon bridge failed. Concierge did not execute anything and remains in prepare-only mode.",
+          content: describeBridgeFailureTranscriptMessage(error),
         },
       ]);
     }

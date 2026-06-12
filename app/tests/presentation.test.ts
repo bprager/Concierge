@@ -11,6 +11,7 @@ import {
 import {
   describeDelegation,
   describeBridgeFailure,
+  describeBridgeFailureTranscriptMessage,
   describeGovernedHandoffFailure,
   describeGovernanceDecision,
   describeGovernanceReview,
@@ -255,6 +256,20 @@ test("describes bridge failure with blocked effects visible", () => {
   assert.ok(message.includes("did not write memory"));
   assert.ok(message.includes("did not dispatch agents"));
   assert.ok(message.includes("did not capture approval"));
+});
+
+test("describes bridge failure transcript message with reason and blocked effects", () => {
+  const error = new NapoleonBridgeError("bridge_timeout", "trace_timeout", "request_timeout", undefined, [
+    "external_send",
+    "memory_write",
+  ]);
+
+  const message = describeBridgeFailureTranscriptMessage(error);
+
+  assert.ok(message.includes("bridge_timeout"));
+  assert.ok(message.includes("Blocked effects: external_send, memory_write"));
+  assert.ok(message.includes("did not execute anything"));
+  assert.ok(message.includes("prepare-only mode"));
 });
 
 test("describes governed handoff failure with blocked effects visible", () => {
