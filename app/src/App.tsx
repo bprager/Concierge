@@ -777,6 +777,8 @@ export function App() {
     descriptorConnection,
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,
     evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
+    lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus,
+    lastFailureReason: bridgeEvidenceReadiness.lastFailureReason,
   });
 
   return (

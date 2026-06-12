@@ -221,6 +221,28 @@ test("describes live bridge readiness as ready only when descriptor and evidence
   assert.ok(view.caveat.includes("does not grant memory writes"));
 });
 
+test("describes last fail-closed live send in bridge readiness", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    lastEvidenceStatus: "fail_closed",
+    lastFailureReason: "governance_denied",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canSendLive, true);
+  assert.ok(view.summary.includes("failed closed"));
+  assert.ok(view.summary.includes("governance_denied"));
+  assert.ok(view.details.some((detail) => detail.label === "Last live send" && detail.value.includes("governance_denied")));
+});
+
 test("describes descriptor integrity mismatch as fail-closed readiness", () => {
   const view = describeLiveBridgeReadiness({
     descriptorConnection: buildDescriptorConnectionState({

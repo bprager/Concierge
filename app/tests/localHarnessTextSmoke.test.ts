@@ -185,5 +185,6 @@ test("smoke test returns fail-closed bridge details when harness denies a text t
   assert.ok(result.failureMessage?.includes("Blocked effects: external_send, memory_write, approval_capture, agent_dispatch"));
   assert.equal(result.readiness.captureState, "passed");
   assert.equal(result.readiness.comparisonState, "passed");
+  assert.equal(result.liveBridgeReadiness.status, "warning");
   assert.equal(result.liveBridgeReadiness.canSendLive, true);
 });

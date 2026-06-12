@@ -85,6 +85,8 @@ export async function runLocalHarnessTextSmoke(
       descriptorConnection: descriptor.connection,
       evidenceCaptureState: readiness.captureState,
       evidenceComparisonState: readiness.comparisonState,
+      lastEvidenceStatus: readiness.lastEvidenceStatus,
+      lastFailureReason: readiness.lastFailureReason,
     });
     return {
       status: "fail_closed",
@@ -100,6 +102,8 @@ export async function runLocalHarnessTextSmoke(
     descriptorConnection: descriptor.connection,
     evidenceCaptureState: readiness.captureState,
     evidenceComparisonState: readiness.comparisonState,
+    lastEvidenceStatus: readiness.lastEvidenceStatus,
+    lastFailureReason: readiness.lastFailureReason,
   });
 
   return {

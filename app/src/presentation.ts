@@ -61,6 +61,8 @@ export interface LiveBridgeReadinessInput {
   descriptorConnection: DescriptorConnectionState;
   evidenceCaptureState?: LiveBridgeEvidenceState;
   evidenceComparisonState?: LiveBridgeEvidenceState;
+  lastEvidenceStatus?: "success" | "fail_closed";
+  lastFailureReason?: string;
 }
 
 export interface LiveBridgeReadinessView {
@@ -129,10 +131,11 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
     descriptor.signatureState === "invalid";
   const evidenceFailed = evidenceCapture === "failed" || evidenceComparison === "failed";
   const evidencePending = evidenceCapture !== "passed" || evidenceComparison !== "passed";
+  const lastSendFailedClosed = input.lastEvidenceStatus === "fail_closed";
   const canSendLive = descriptor.canAttemptLiveBridge && !evidenceFailed;
   const status: LiveBridgeReadinessView["status"] = !canSendLive
     ? "blocked"
-    : evidencePending
+    : evidencePending || lastSendFailedClosed
       ? "warning"
       : "ready";
 
@@ -149,6 +152,8 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
     }
   } else if (evidenceFailed) {
     summary = "Local bridge evidence validation failed; Concierge should stay in rehearsal or review mode.";
+  } else if (lastSendFailedClosed) {
+    summary = `Last Napoleon live text turn failed closed${input.lastFailureReason ? `: ${input.lastFailureReason}` : ""}. Concierge remains prepare-only for blocked effects.`;
   } else if (evidencePending) {
     summary = "Descriptor preflight passes, but bridge evidence capture or comparison has not been verified in this UI session.";
   } else {
@@ -169,6 +174,15 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
       { label: "Signature", value: descriptor.signatureState },
       { label: "Evidence capture", value: describeEvidenceState(evidenceCapture) },
       { label: "Evidence comparison", value: describeEvidenceState(evidenceComparison) },
+      {
+        label: "Last live send",
+        value:
+          input.lastEvidenceStatus === "success"
+            ? "success"
+            : input.lastEvidenceStatus === "fail_closed"
+              ? `fail-closed${input.lastFailureReason ? `: ${input.lastFailureReason}` : ""}`
+              : "not run",
+      },
       { label: "Live send", value: canSendLive ? "governed bridge allowed" : "blocked" },
     ],
   };

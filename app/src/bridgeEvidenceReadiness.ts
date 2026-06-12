@@ -8,6 +8,7 @@ export interface BridgeEvidenceReadinessState {
   lastEvidenceStatus?: BridgeContractEvidence["status"];
   lastOperationId?: BridgeOperationId;
   lastTargetPath?: string;
+  lastFailureReason?: string;
   failureReason?: string;
 }
 
@@ -73,6 +74,7 @@ export function updateBridgeEvidenceReadinessState(
     lastEvidenceStatus: record.status,
     lastOperationId: record.operationId,
     lastTargetPath: record.targetPath,
+    lastFailureReason: record.reason,
     failureReason: failureReason ?? undefined,
   };
 }
