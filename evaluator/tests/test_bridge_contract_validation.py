@@ -1,3 +1,4 @@
+import copy
 import unittest
 
 from scripts import validate_repo
@@ -76,6 +77,22 @@ class BridgeContractValidationTest(unittest.TestCase):
 
         validate_repo.validate_openapi_instance(schema, request)
         validate_repo.validate_proposal_only_request_boundary(request)
+
+    def test_proposal_only_request_validator_rejects_nested_memory_write_claim(self):
+        request = validate_repo.load_json("examples/sample_memory_proposal_request.json")
+        unsafe_request = copy.deepcopy(request)
+        unsafe_request["memoryProposal"]["memoryWriteAllowed"] = True
+
+        with self.assertRaises(SystemExit):
+            validate_repo.validate_proposal_only_request_boundary(unsafe_request)
+
+    def test_proposal_only_request_validator_rejects_nested_steering_dispatch_claim(self):
+        request = validate_repo.load_json("examples/sample_chief_of_staff_steering_request.json")
+        unsafe_request = copy.deepcopy(request)
+        unsafe_request["recommendation"]["agentDispatchAllowed"] = True
+
+        with self.assertRaises(SystemExit):
+            validate_repo.validate_proposal_only_request_boundary(unsafe_request)
 
 
 if __name__ == "__main__":

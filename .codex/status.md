@@ -69,7 +69,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added generated bridge operation registry output from the canonical OpenAPI bridge contract and repository validation that fails when the generated file is stale.
 - Added governed Chief of Staff steering submission for evolution proposal review packets, gated by endpoint and descriptor preflight and blocked from local application, memory writes, approval capture, agent dispatch, or external sends.
 - Added governed memory proposal review submission for live memory proposals, gated by endpoint and descriptor preflight and blocked from local memory writes, approval capture, agent dispatch, or external sends.
-- Added OpenAPI-governed request artifact validation for memory proposal and Chief of Staff steering handoffs, including proposal-only boundary checks.
+- Added OpenAPI-governed request artifact validation for memory proposal and Chief of Staff steering handoffs, including proposal-only boundary checks that reject nested authority claims.
 
 ## Current Blockers
 

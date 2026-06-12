@@ -337,6 +337,30 @@ def validate_proposal_only_request_boundary(data: object) -> None:
         require_equal(memory_proposal.get("memoryWritePerformed"), False, "memoryProposal.memoryWritePerformed must be false")
         require_equal(memory_proposal.get("approvalCaptured"), False, "memoryProposal.approvalCaptured must be false")
 
+    forbidden_true_fields = {
+        "approvalCaptured",
+        "memoryWriteAllowed",
+        "memoryWritePerformed",
+        "agentDispatchAllowed",
+        "agentDispatchPerformed",
+        "externalSendAllowed",
+        "externalSendPerformed",
+        "appliedLocally",
+    }
+
+    def scan_forbidden_authority_claims(value: object, path: str) -> None:
+        if isinstance(value, dict):
+            for key, item in value.items():
+                child_path = f"{path}.{key}"
+                if key in forbidden_true_fields and item is not False:
+                    raise SystemExit(f"{child_path} must be false in proposal-only governed request examples")
+                scan_forbidden_authority_claims(item, child_path)
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                scan_forbidden_authority_claims(item, f"{path}[{index}]")
+
+    scan_forbidden_authority_claims(data, "request")
+
 
 def validate_openapi_request_examples() -> None:
     examples = [
