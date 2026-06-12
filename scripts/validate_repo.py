@@ -284,6 +284,12 @@ def validate_bridge_response_provenance(data: object) -> None:
 def validate_openapi_response_examples() -> None:
     examples = [
         ("/v1/concierge/turn", "200", "examples/sample_text_turn_response.json"),
+        ("/v1/concierge/memory-proposals", "200", "examples/sample_memory_proposal_response.json"),
+        (
+            "/v1/concierge/chief-of-staff/steering",
+            "200",
+            "examples/sample_chief_of_staff_steering_response.json",
+        ),
     ]
     for path, status_code, example_path in examples:
         data = load_json(example_path)

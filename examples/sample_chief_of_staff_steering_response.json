@@ -1,0 +1,40 @@
+{
+  "text": "Napoleon accepted the capability recommendation for Chief of Staff review only. Concierge did not apply the proposal.",
+  "governanceDecision": {
+    "decision_id": "decision_sample_steering",
+    "request_id": "cos_steering_sample",
+    "outcome": "requires_review",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "explicit_owner_approval",
+    "rationale": "Capability evolution proposals require governed review, regression evidence, rollout approval, and rollback planning.",
+    "blocked_effects": [
+      "runtime_authority",
+      "agent_dispatch",
+      "memory_write",
+      "approval_capture",
+      "external_send"
+    ],
+    "trace_id": "trace_sample_steering",
+    "audit_id": "audit_sample_steering"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_sample_steering",
+    "parent_trace_id": "conv_steering_sample",
+    "actor_id": "napoleon.chief_of_staff",
+    "request_id": "cos_steering_sample",
+    "decision_id": "decision_sample_steering",
+    "timestamp": "2026-06-12T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_sample_steering",
+    "trace_id": "trace_sample_steering",
+    "decision_id": "decision_sample_steering",
+    "actor_id": "napoleon.chief_of_staff",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "explicit_owner_approval",
+    "evidence_links": [
+      "trace:trace_sample_steering",
+      "fixture:sample_chief_of_staff_steering_response"
+    ]
+  }
+}

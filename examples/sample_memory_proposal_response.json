@@ -1,0 +1,39 @@
+{
+  "text": "Napoleon accepted the memory proposal for review only. No memory was written by Concierge.",
+  "governanceDecision": {
+    "decision_id": "decision_sample_memory",
+    "request_id": "cos_memory_sample",
+    "outcome": "requires_review",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "explicit_owner_approval",
+    "rationale": "Memory updates require governed Napoleon review before any durable write.",
+    "blocked_effects": [
+      "memory_write",
+      "approval_capture",
+      "external_send",
+      "agent_dispatch"
+    ],
+    "trace_id": "trace_sample_memory",
+    "audit_id": "audit_sample_memory"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_sample_memory",
+    "parent_trace_id": "conv_memory_sample",
+    "actor_id": "napoleon.chief_of_staff",
+    "request_id": "cos_memory_sample",
+    "decision_id": "decision_sample_memory",
+    "timestamp": "2026-06-12T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_sample_memory",
+    "trace_id": "trace_sample_memory",
+    "decision_id": "decision_sample_memory",
+    "actor_id": "napoleon.chief_of_staff",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "explicit_owner_approval",
+    "evidence_links": [
+      "trace:trace_sample_memory",
+      "fixture:sample_memory_proposal_response"
+    ]
+  }
+}

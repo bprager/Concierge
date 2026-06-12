@@ -49,6 +49,20 @@ class BridgeContractValidationTest(unittest.TestCase):
 
         validate_repo.validate_bridge_response_provenance(response)
 
+    def test_sample_memory_proposal_response_matches_openapi_response_contract(self):
+        response = validate_repo.load_json("examples/sample_memory_proposal_response.json")
+        schema = validate_repo.load_openapi_response_schema("/v1/concierge/memory-proposals", "200")
+
+        validate_repo.validate_openapi_instance(schema, response)
+        validate_repo.validate_bridge_response_provenance(response)
+
+    def test_sample_chief_of_staff_steering_response_matches_openapi_response_contract(self):
+        response = validate_repo.load_json("examples/sample_chief_of_staff_steering_response.json")
+        schema = validate_repo.load_openapi_response_schema("/v1/concierge/chief-of-staff/steering", "200")
+
+        validate_repo.validate_openapi_instance(schema, response)
+        validate_repo.validate_bridge_response_provenance(response)
+
 
 if __name__ == "__main__":
     unittest.main()
