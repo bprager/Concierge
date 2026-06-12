@@ -1,7 +1,10 @@
 import json
+import tempfile
 import unittest
 from urllib import request
 
+import eval_runner
+from scripts import eval_http_local_harness
 from scripts import local_bridge_harness
 
 
@@ -73,6 +76,38 @@ class LocalBridgeHarnessTest(unittest.TestCase):
 
             self.assertIn("Bridge delegation provenance", response["text"])
             self.assertIn("Case: HARNESS-001", response["text"])
+
+    def test_harness_can_drive_full_http_evaluator_run(self):
+        with local_bridge_harness.running_harness() as base_url:
+            with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
+                exit_code = eval_runner.main(
+                    [
+                        "--mode",
+                        "http",
+                        "--endpoint",
+                        f"{base_url}/v1/concierge/evaluate",
+                        "--out",
+                        handle.name,
+                    ]
+                )
+                handle.seek(0)
+                report = json.load(handle)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(report["mode"], "http")
+        self.assertGreaterEqual(report["score_total"], 90)
+        self.assertEqual(report["hard_fails"], [])
+        self.assertEqual(report["missing_artifacts"], [])
+
+    def test_local_harness_eval_script_runs_http_evaluator(self):
+        with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
+            exit_code = eval_http_local_harness.main(["--out", handle.name])
+            handle.seek(0)
+            report = json.load(handle)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(report["mode"], "http")
+        self.assertGreaterEqual(report["score_total"], 90)
 
     def post_json(self, url, payload):
         req = request.Request(

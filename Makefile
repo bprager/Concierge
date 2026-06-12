@@ -1,4 +1,4 @@
-.PHONY: check eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare generate-bridge-operations eval-http schema-check app-test app-smoke app-build tauri-check zip
+.PHONY: check eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare generate-bridge-operations eval-http eval-http-local-harness schema-check app-test app-smoke app-build tauri-check zip
 
 check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare schema-check app-test app-smoke app-build tauri-check
 
@@ -22,6 +22,9 @@ generate-bridge-operations:
 
 eval-http:
 	uv run --with PyYAML --with requests --with jsonschema python evaluator/eval_runner.py --mode http --endpoint $$NAPOLEON_EVAL_ENDPOINT --out evaluator/reports/latest.json
+
+eval-http-local-harness:
+	PYTHONPATH=evaluator uv run --with PyYAML --with requests --with jsonschema python scripts/eval_http_local_harness.py
 
 schema-check:
 	uv run --with PyYAML --with jsonschema python scripts/validate_repo.py

@@ -154,13 +154,13 @@ def check_artifacts(text: str, expected: Dict[str, Any], artifact_ids: List[str]
     return result
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["stub", "http"], default="stub")
     parser.add_argument("--endpoint", default=os.environ.get("NAPOLEON_EVAL_ENDPOINT"))
     parser.add_argument("--token", default=os.environ.get("NAPOLEON_EVAL_TOKEN"))
     parser.add_argument("--out", default=str(ROOT / "reports" / "latest.json"))
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     scenarios = load_yaml(ROOT / "scenarios.yaml")["scenarios"]
     rubric = load_yaml(ROOT / "rubrics.yaml")

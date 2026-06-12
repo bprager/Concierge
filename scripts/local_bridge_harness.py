@@ -6,8 +6,10 @@ from __future__ import annotations
 import argparse
 import contextlib
 import json
+import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from typing import Any, Iterator
 
 
@@ -62,12 +64,13 @@ def governance_response(trace_id: str, request_id: str, decision_id: str, audit_
 
 
 def evaluator_text(case_id: str, prompt: str) -> str:
-    return (
-        "Bridge delegation provenance: selected agents, why selected, allowed effects, blocked effects, "
-        "governance state, trace ID, and audit ID are present only when Napoleon bridge provenance exists. "
-        "Case: "
-        f"{case_id}. Prompt length: {len(prompt)}"
-    )
+    root = Path(__file__).resolve().parents[1]
+    evaluator_path = root / "evaluator"
+    if str(evaluator_path) not in sys.path:
+        sys.path.insert(0, str(evaluator_path))
+    from eval_runner import call_stub
+
+    return call_stub(case_id, prompt)
 
 
 class HarnessHandler(BaseHTTPRequestHandler):

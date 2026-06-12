@@ -73,7 +73,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Current Blockers
 
 - No runtime blocker is known from the handoff setup itself.
-- Real Napoleon HTTP evaluator mode requires a configured `NAPOLEON_EVAL_ENDPOINT`.
+- Real Napoleon HTTP evaluator mode requires a configured `NAPOLEON_EVAL_ENDPOINT`; `make eval-http-local-harness` only verifies local HTTP evaluator plumbing.
 - Live Chief of Staff/Napoleon runtime alignment could not be verified because the remote descriptor has no populated live HTTP/MCP/stdio base URL and no local `NAPOLEON_EVAL_ENDPOINT` is configured.
 - `LICENSE` is MIT, while `LICENSE-TODO.md` still says to choose a license.
 

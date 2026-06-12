@@ -37,6 +37,18 @@ Or run only the evaluator in stub mode:
 make eval
 ```
 
+To verify the evaluator's HTTP transport path against the local Napoleon-compatible harness:
+
+```bash
+make eval-http-local-harness
+```
+
+This local harness check does not replace validation against a real Napoleon endpoint. When one is available, set `NAPOLEON_EVAL_ENDPOINT` and run:
+
+```bash
+make eval-http
+```
+
 Review the core documents:
 
 - [PRD](docs/PRD.md)
