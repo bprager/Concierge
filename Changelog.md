@@ -52,6 +52,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a local Napoleon-compatible HTTP bridge harness for governed path smoke validation without a live runtime.
 - Added a proposal-only Chief of Staff steering draft flow that turns local capability signals into a recommendation, evaluator case candidate, and evolution proposal draft without sending, writing memory, dispatching agents, or capturing approval.
 - Added governed Chief of Staff steering submission that sends evolution proposal review packets only after endpoint and descriptor preflight, without applying changes locally.
+- Added child-protected safeguards to governed Chief of Staff steering submissions, including child-safety caution, child profile scope, and guardian/owner review wording.
 - Added governed memory proposal submission that sends review packets to Napoleon only after endpoint and descriptor preflight, without writing memory or capturing approval locally.
 - Added a Text Concierge live bridge readiness panel that combines endpoint, descriptor integrity, local evidence capture/comparison state, blocked effects, and the reminder that readiness is not Napoleon approval.
 - Added last live-send outcome and fail-closed reason rendering to the Text Concierge live bridge readiness panel.

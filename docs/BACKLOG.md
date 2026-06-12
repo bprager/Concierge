@@ -263,6 +263,7 @@ Acceptance criteria:
 - The draft includes a capability recommendation, architecture area, evidence count, rationale, evaluator case candidate, evolution proposal draft, approval requirement, and rollback plan.
 - The draft remains local when no governed Napoleon endpoint is configured or descriptor preflight fails.
 - Governed submission posts an `evolution_proposal_review` packet with recommendation, evaluator case candidate, evolution proposal draft, proposal-only boundary, blocked effects, and trace/audit envelopes.
+- Child-protected governed submission includes explicit child-safety caution, child-protected profile scope, and guardian/owner review wording.
 - Napoleon submission responses require matching governance, trace, and audit proof before Concierge shows them as reviewed.
 - The draft cannot apply changes, write memory, dispatch agents, send externally, or capture approval.
 

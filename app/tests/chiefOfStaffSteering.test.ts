@@ -235,6 +235,91 @@ test("steering handoff posts evolution review packet without applying proposal l
   assert.equal(result.governanceDecision.outcome, "requires_review");
 });
 
+test("child protected steering handoff includes child safety caution and child profile scope", async () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_child_steering_gap",
+      conversationId: "conv_child_steering_gap",
+      turnId: "turn_child_steering_gap",
+      profileMode: "child_protected_user",
+      channel: "text",
+      topicLabel: "homework help",
+      intentLabel: "explain_homework",
+      capabilityLabel: "child_safe_homework_steps",
+      capabilityStatus: "missing",
+      outcomeSignal: "user_retried",
+      confidence: 0.88,
+      evidenceRefs: ["trace:trace_child_steering_gap"],
+      architectureArea: "governance_ux",
+      privacyClass: "child_sensitive",
+      suggestedNextStep: "create_evolution_proposal",
+    }),
+  );
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_child_steering",
+    traceId: "trace_child_steering",
+    endpointConfigured: true,
+  });
+  let posted: Record<string, unknown> | undefined;
+
+  await submitChiefOfStaffSteeringDraft(draft, {
+    conversationId: "conv_child_steering",
+    traceId: "trace_child_submit",
+    profile: "child_protected",
+    getEndpoint: () => "https://napoleon.example/concierge",
+    fetch: async (_url, init) => {
+      posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return {
+        ok: true,
+        json: async () => ({
+          text: "Napoleon accepted the child-protected evolution proposal for review.",
+          governanceDecision: {
+            decision_id: "decision_child_steering",
+            request_id: "cos_trace_child_submit",
+            outcome: "requires_review",
+            authority_tier: "advisory_review",
+            approval_requirement: "guardian_and_owner_review",
+            rationale: "Child-protected capability changes require extra review.",
+            blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+            trace_id: "trace_child_submit",
+            audit_id: "audit_child_steering",
+          },
+          traceEnvelope: {
+            trace_id: "trace_child_submit",
+            parent_trace_id: "conv_child_steering",
+            actor_id: "napoleon.chief_of_staff",
+            request_id: "cos_trace_child_submit",
+            decision_id: "decision_child_steering",
+            timestamp: "2026-06-12T00:00:00.000Z",
+          },
+          auditEnvelope: {
+            audit_id: "audit_child_steering",
+            trace_id: "trace_child_submit",
+            decision_id: "decision_child_steering",
+            actor_id: "napoleon.chief_of_staff",
+            authority_tier: "advisory_review",
+            approval_requirement: "guardian_and_owner_review",
+            evidence_links: ["trace:trace_child_submit"],
+          },
+        }),
+      };
+    },
+  });
+
+  assert.equal(posted?.profileMode, "child_protected_user");
+  assert.equal((posted?.chiefOfStaffRequest as { profile_mode: string }).profile_mode, "child_protected_user");
+  assert.equal((posted?.recommendation as { childSafetyCaution?: boolean }).childSafetyCaution, true);
+  assert.deepEqual((posted?.evolutionProposal as { affected_profiles: string[] }).affected_profiles, [
+    "child_protected_user",
+  ]);
+  assert.equal(
+    (posted?.auditEnvelope as { approval_requirement: string }).approval_requirement,
+    "guardian_and_owner_review_required_before_child_protected_capability_change",
+  );
+});
+
 test("steering handoff fails closed when Napoleon returns no-go", async () => {
   const ledger = createCapabilityLedger();
   const draft = draftChiefOfStaffSteering(ledger, {
