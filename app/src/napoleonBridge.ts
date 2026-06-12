@@ -44,8 +44,13 @@ interface BridgeEvidenceContext {
   requestKind: string;
   traceId: string;
   requestId: string;
+  decisionId?: string;
+  auditId?: string;
+  governanceOutcome?: string;
   descriptorStatus: string;
   profileMode: string;
+  blockedEffects?: string[];
+  provenanceVerified?: boolean;
 }
 
 interface BridgeDependencies {
@@ -62,6 +67,7 @@ export type NapoleonBridgeFailureReason =
   | "descriptor_mismatch"
   | "auth_failure"
   | "contract_mismatch"
+  | "governance_denied"
   | "governance_no_go"
   | "bridge_timeout"
   | "http_failure";
@@ -92,6 +98,32 @@ function emitBridgeEvent(dependencies: BridgeDependencies, event: string, attrib
 
 function captureBridgeEvidence(dependencies: BridgeDependencies, record: BridgeContractEvidence) {
   dependencies.captureEvidence?.(record);
+}
+
+function buildFailClosedEvidence(
+  reason: NapoleonBridgeFailureReason,
+  status: number | undefined,
+  evidenceContext: BridgeEvidenceContext,
+): BridgeContractEvidence {
+  const record: BridgeContractEvidence = {
+    kind: "bridge_contract_evidence",
+    operationId: evidenceContext.operationId,
+    requestKind: evidenceContext.requestKind,
+    status: "fail_closed",
+    reason,
+    httpStatus: status,
+    targetPath: getBridgeOperation(evidenceContext.operationId).path,
+    traceId: evidenceContext.traceId,
+    requestId: evidenceContext.requestId,
+    descriptorStatus: evidenceContext.descriptorStatus,
+    profileMode: evidenceContext.profileMode,
+    provenanceVerified: evidenceContext.provenanceVerified ?? false,
+  };
+  if (evidenceContext.decisionId) record.decisionId = evidenceContext.decisionId;
+  if (evidenceContext.auditId) record.auditId = evidenceContext.auditId;
+  if (evidenceContext.governanceOutcome) record.governanceOutcome = evidenceContext.governanceOutcome;
+  if (evidenceContext.blockedEffects) record.blockedEffects = evidenceContext.blockedEffects;
+  return record;
 }
 
 function getConfiguredEndpoint(dependencies: BridgeDependencies): string | null {
@@ -226,20 +258,7 @@ function failClosed(
   evidenceContext?: BridgeEvidenceContext,
 ): never {
   if (evidenceContext) {
-    captureBridgeEvidence(dependencies, {
-      kind: "bridge_contract_evidence",
-      operationId: evidenceContext.operationId,
-      requestKind: evidenceContext.requestKind,
-      status: "fail_closed",
-      reason,
-      httpStatus: status,
-      targetPath: getBridgeOperation(evidenceContext.operationId).path,
-      traceId,
-      requestId,
-      descriptorStatus: evidenceContext.descriptorStatus,
-      profileMode: evidenceContext.profileMode,
-      provenanceVerified: false,
-    });
+    captureBridgeEvidence(dependencies, buildFailClosedEvidence(reason, status, evidenceContext));
   }
   emitBridgeEvent(dependencies, "bridge_request_failed", {
     traceId,
@@ -357,6 +376,24 @@ export async function sendToNapoleon(
   const auditEnvelope = payload.auditEnvelope;
   if (!envelopesMatchDecision(decision, traceEnvelope, auditEnvelope)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
+
+  if (decision.outcome === "deny" || decision.outcome === "no_go") {
+    failClosed(
+      dependencies,
+      decision.outcome === "deny" ? "governance_denied" : "governance_no_go",
+      request.traceId,
+      decision.request_id,
+      response.status,
+      {
+        ...evidenceContext,
+        requestId: decision.request_id,
+        decisionId: decision.decision_id,
+        auditId: decision.audit_id,
+        governanceOutcome: decision.outcome,
+        blockedEffects: decision.blocked_effects,
+      },
+    );
   }
 
   const delegation =

@@ -195,6 +195,98 @@ test("live bridge captures sanitized fail-closed evidence on auth failure", asyn
   assert.equal(JSON.stringify(evidence).includes("Unauthorized"), false);
 });
 
+test("live bridge fails closed when Napoleon returns deny or no-go governance", async () => {
+  for (const outcome of ["deny", "no_go"] as const) {
+    const evidence: unknown[] = [];
+    const events: TelemetryPayload[] = [];
+    await assert.rejects(
+      () =>
+        sendToNapoleon(
+          {
+            traceId: `trace_remote_${outcome}`,
+            conversationId: `conv_remote_${outcome}`,
+            turnId: `turn_remote_${outcome}`,
+            profile: "adult_owner",
+            channel: "text",
+            message: "Send a private update outside Concierge",
+          },
+          {
+            getEndpoint: () => "https://napoleon.example/concierge",
+            emit: (event) => events.push(event),
+            captureEvidence: (record) => evidence.push(record),
+            fetch: async () => ({
+              ok: true,
+              status: 200,
+              json: async () => ({
+                text: "Napoleon denied this request.",
+                governanceDecision: {
+                  decision_id: `decision_remote_${outcome}`,
+                  request_id: `cos_turn_remote_${outcome}`,
+                  outcome,
+                  authority_tier: "prohibited",
+                  approval_requirement: "not_available",
+                  rationale: "The request is not allowed through this path.",
+                  blocked_effects: ["external_send", "memory_write", "agent_dispatch", "approval_capture"],
+                  trace_id: `trace_remote_${outcome}`,
+                  audit_id: `audit_remote_${outcome}`,
+                },
+                traceEnvelope: {
+                  trace_id: `trace_remote_${outcome}`,
+                  parent_trace_id: `conv_remote_${outcome}`,
+                  actor_id: "napoleon.chief_of_staff",
+                  request_id: `cos_turn_remote_${outcome}`,
+                  decision_id: `decision_remote_${outcome}`,
+                  timestamp: "2026-06-12T00:00:00.000Z",
+                },
+                auditEnvelope: {
+                  audit_id: `audit_remote_${outcome}`,
+                  trace_id: `trace_remote_${outcome}`,
+                  decision_id: `decision_remote_${outcome}`,
+                  actor_id: "napoleon.chief_of_staff",
+                  authority_tier: "prohibited",
+                  approval_requirement: "not_available",
+                  evidence_links: [`trace:trace_remote_${outcome}`],
+                },
+              }),
+            }),
+          },
+        ),
+      (error: unknown) =>
+        error instanceof Error &&
+        error.name === "NapoleonBridgeError" &&
+        error.message.includes(outcome === "deny" ? "governance_denied" : "governance_no_go"),
+    );
+
+    assert.equal(events.at(-1)?.event, "bridge_request_failed");
+    assert.equal(
+      events.at(-1)?.attributes.reason,
+      outcome === "deny" ? "governance_denied" : "governance_no_go",
+    );
+    assert.deepEqual(evidence, [
+      {
+        kind: "bridge_contract_evidence",
+        operationId: "text_turn",
+        requestKind: "text_turn",
+        status: "fail_closed",
+        reason: outcome === "deny" ? "governance_denied" : "governance_no_go",
+        httpStatus: 200,
+        targetPath: "/v1/concierge/turn",
+        traceId: `trace_remote_${outcome}`,
+        requestId: `cos_turn_remote_${outcome}`,
+        decisionId: `decision_remote_${outcome}`,
+        auditId: `audit_remote_${outcome}`,
+        governanceOutcome: outcome,
+        descriptorStatus: "ready",
+        profileMode: "adult_owner",
+        blockedEffects: ["external_send", "memory_write", "agent_dispatch", "approval_capture"],
+        provenanceVerified: false,
+      },
+    ]);
+    assert.equal(JSON.stringify(evidence).includes("Send a private update outside Concierge"), false);
+    assert.equal(JSON.stringify(evidence).includes("Napoleon denied this request."), false);
+  }
+});
+
 test("live bridge fails closed when Napoleon response omits trace or audit provenance", async () => {
   await assert.rejects(
     () =>

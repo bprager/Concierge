@@ -154,7 +154,7 @@ User value: The user can tell whether a response came from Napoleon, which capab
 
 Acceptance criteria:
 
-- Live sends fail closed when no endpoint is configured, descriptor validation fails, auth fails, the response contract is invalid, local governance is `no_go`, or the bridge times out.
+- Live sends fail closed when no endpoint is configured, descriptor validation fails, auth fails, the response contract is invalid, local governance is `no_go`, Napoleon returns `deny` or `no_go`, or the bridge times out.
 - Optional bridge tokens are sent only as `Authorization` headers and are not included in request bodies, telemetry, memory proposals, or capability exports.
 - Configured Napoleon base URLs resolve to canonical bridge paths for text turns, descriptor discovery, Chief of Staff steering handoff, memory proposal review, and evaluator requests.
 - Bridge operation IDs and paths are covered by an app test that compares the local registry to `api/napoleon_bridge.openapi.yaml`.
@@ -173,6 +173,7 @@ Acceptance criteria:
 - Successful live responses may include a Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID.
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.
 - Successful live responses require matching governance, trace, and audit envelopes; missing or mismatched response/delegation provenance fails closed as a contract mismatch.
+- Remote `deny` and `no_go` governance outcomes produce blocked bridge failures for text turns, memory proposal handoff, and Chief of Staff steering handoff instead of normal response or review completion; text bridge evidence remains sanitized and includes decision, audit, governance, and blocked-effect metadata where available.
 
 Privacy and safety impact:
 

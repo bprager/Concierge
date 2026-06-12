@@ -396,6 +396,16 @@ export async function submitChiefOfStaffSteeringDraft(
     failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId);
   }
 
+  if (payload.governanceDecision.outcome === "deny" || payload.governanceDecision.outcome === "no_go") {
+    failSteeringClosed(
+      dependencies,
+      payload.governanceDecision.outcome === "deny" ? "governance_denied" : "governance_no_go",
+      dependencies.traceId,
+      payload.governanceDecision.request_id,
+      response.status,
+    );
+  }
+
   emitSteeringEvent(dependencies, "capability_recommendation_send_completed", {
     traceId: dependencies.traceId,
     requestId,

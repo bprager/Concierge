@@ -284,6 +284,17 @@ export async function submitMemoryProposalForReview(
     failMemoryProposalClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, memoryProposal.proposalId);
   }
 
+  if (payload.governanceDecision.outcome === "deny" || payload.governanceDecision.outcome === "no_go") {
+    failMemoryProposalClosed(
+      dependencies,
+      payload.governanceDecision.outcome === "deny" ? "governance_denied" : "governance_no_go",
+      dependencies.traceId,
+      payload.governanceDecision.request_id,
+      memoryProposal.proposalId,
+      response.status,
+    );
+  }
+
   emitMemoryProposalEvent(dependencies, "memory_proposal_send_completed", {
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,

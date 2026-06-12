@@ -145,6 +145,58 @@ test("memory proposal submission posts review packet without writing memory or c
   assert.equal(result.governanceDecision.outcome, "requires_review");
 });
 
+test("memory proposal submission fails closed when Napoleon denies review", async () => {
+  const review = buildReview();
+
+  await assert.rejects(
+    () =>
+      submitMemoryProposalForReview(review, {
+        conversationId: "conv_memory",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon denied the memory proposal.",
+            governanceDecision: {
+              decision_id: "decision_memory_denied",
+              request_id: "cos_trace_submit",
+              outcome: "deny",
+              authority_tier: "prohibited",
+              approval_requirement: "not_available",
+              rationale: "This memory proposal is not allowed.",
+              blocked_effects: ["memory_write", "approval_capture", "external_send"],
+              trace_id: "trace_submit",
+              audit_id: "audit_memory_denied",
+            },
+            traceEnvelope: {
+              trace_id: "trace_submit",
+              parent_trace_id: "conv_memory",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_submit",
+              decision_id: "decision_memory_denied",
+              timestamp: "2026-06-12T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_memory_denied",
+              trace_id: "trace_submit",
+              decision_id: "decision_memory_denied",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "prohibited",
+              approval_requirement: "not_available",
+              evidence_links: ["trace:trace_submit"],
+            },
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_denied"),
+  );
+});
+
 test("memory proposal submission rejects malformed Napoleon response", async () => {
   const review = buildReview();
 
