@@ -1,0 +1,67 @@
+{
+  "text": "Napoleon recommends preparing the bridge rollout plan for review.",
+  "profileMode": "adult_owner",
+  "governanceDecision": {
+    "decision_id": "decision_sample_delegate",
+    "request_id": "cos_turn_sample",
+    "outcome": "requires_review",
+    "authority_tier": "prepare_only",
+    "approval_requirement": "explicit_owner_approval",
+    "rationale": "External sends and memory writes require governed Napoleon review.",
+    "blocked_effects": [
+      "external_send",
+      "memory_write",
+      "agent_dispatch"
+    ],
+    "trace_id": "trace_sample_text_turn",
+    "audit_id": "audit_sample_delegate"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_sample_text_turn",
+    "parent_trace_id": "conv_sample",
+    "actor_id": "napoleon.chief_of_staff",
+    "request_id": "cos_turn_sample",
+    "decision_id": "decision_sample_delegate",
+    "timestamp": "2026-06-12T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_sample_delegate",
+    "trace_id": "trace_sample_text_turn",
+    "decision_id": "decision_sample_delegate",
+    "actor_id": "napoleon.chief_of_staff",
+    "authority_tier": "prepare_only",
+    "approval_requirement": "explicit_owner_approval",
+    "evidence_links": [
+      "trace:trace_sample_text_turn",
+      "fixture:sample_text_turn_response"
+    ]
+  },
+  "requiresReview": true,
+  "delegation": {
+    "selectedAgents": [
+      {
+        "agentId": "napoleon.passive_brain",
+        "displayName": "Passive Brain",
+        "selectionReason": "Prior rollout memory was relevant to the requested bridge plan.",
+        "contributionSummary": "Recovered the prior bridge rollout note."
+      }
+    ],
+    "allowedEffects": [
+      "prepare_advisory_response"
+    ],
+    "blockedEffects": [
+      "external_send",
+      "memory_write",
+      "agent_dispatch"
+    ],
+    "governanceState": "requires_review",
+    "traceId": "trace_sample_text_turn",
+    "auditId": "audit_sample_delegate"
+  },
+  "recommendationProvenance": {
+    "summary": "preparing the bridge rollout plan for review",
+    "traceId": "trace_sample_text_turn",
+    "auditId": "audit_sample_delegate"
+  },
+  "stance": "direct_strategic"
+}

@@ -38,6 +38,17 @@ class BridgeContractValidationTest(unittest.TestCase):
 
         self.assertEqual(offenders, [])
 
+    def test_sample_text_turn_response_matches_openapi_response_contract(self):
+        response = validate_repo.load_json("examples/sample_text_turn_response.json")
+        schema = validate_repo.load_openapi_response_schema("/v1/concierge/turn", "200")
+
+        validate_repo.validate_openapi_instance(schema, response)
+
+    def test_sample_text_turn_response_provenance_is_internally_consistent(self):
+        response = validate_repo.load_json("examples/sample_text_turn_response.json")
+
+        validate_repo.validate_bridge_response_provenance(response)
+
 
 if __name__ == "__main__":
     unittest.main()

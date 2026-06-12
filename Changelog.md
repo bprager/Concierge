@@ -34,6 +34,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a bridge evidence capture runner that discovers the Chief of Staff descriptor, sends one governed text turn to a configured endpoint, and validates the sanitized evidence path against the local harness.
 - Added a bridge evidence comparator and sample evidence fixture that check captured bridge metadata against the OpenAPI-aligned bridge registry while rejecting raw payload or secret fields.
 - Added a local harness HTTP evaluator runner and `make eval-http-local-harness` target for validating evaluator HTTP plumbing without treating the harness as real Napoleon.
+- Added an OpenAPI-validated sample text turn response artifact with governance, trace, audit, delegation, and recommendation provenance consistency checks.
 - Added optional local bridge bearer token support for live text turns and governed steering handoff, sent only as an authorization header.
 - Added canonical bridge endpoint resolution from a configured Napoleon base URL for text turns and Chief of Staff steering handoff.
 - Added a generated bridge operation registry derived from the canonical OpenAPI Concierge paths.

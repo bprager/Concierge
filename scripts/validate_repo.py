@@ -191,6 +191,108 @@ def load_openapi_bearer_security() -> dict[str, bool]:
     return security
 
 
+def load_openapi_response_schema(path: str, status_code: str) -> dict[str, Any]:
+    openapi = load_openapi()
+    operation = openapi.get("paths", {}).get(path, {}).get("post") or openapi.get("paths", {}).get(path, {}).get("get")
+    if not operation:
+        raise SystemExit(f"OpenAPI operation not found: {path}")
+    schema = (
+        operation.get("responses", {})
+        .get(status_code, {})
+        .get("content", {})
+        .get("application/json", {})
+        .get("schema")
+    )
+    if not schema:
+        raise SystemExit(f"OpenAPI response schema not found: {path} {status_code}")
+    return schema
+
+
+def validate_openapi_instance(schema: dict[str, Any], data: object) -> None:
+    jsonschema.Draft202012Validator.check_schema(schema)
+    jsonschema.validate(data, schema)
+
+
+def require_equal(left: Any, right: Any, message: str) -> None:
+    if left != right:
+        raise SystemExit(f"{message}: {left!r} != {right!r}")
+
+
+def validate_bridge_response_provenance(data: object) -> None:
+    if not isinstance(data, dict):
+        raise SystemExit("Bridge response example must be a JSON object")
+
+    decision = data.get("governanceDecision")
+    trace = data.get("traceEnvelope")
+    audit = data.get("auditEnvelope")
+    if not isinstance(decision, dict) or not isinstance(trace, dict) or not isinstance(audit, dict):
+        raise SystemExit("Bridge response example must include governanceDecision, traceEnvelope, and auditEnvelope objects")
+
+    require_equal(trace.get("trace_id"), decision.get("trace_id"), "traceEnvelope.trace_id must match governanceDecision.trace_id")
+    require_equal(trace.get("request_id"), decision.get("request_id"), "traceEnvelope.request_id must match governanceDecision.request_id")
+    require_equal(
+        trace.get("decision_id"),
+        decision.get("decision_id"),
+        "traceEnvelope.decision_id must match governanceDecision.decision_id",
+    )
+    require_equal(audit.get("audit_id"), decision.get("audit_id"), "auditEnvelope.audit_id must match governanceDecision.audit_id")
+    require_equal(audit.get("trace_id"), decision.get("trace_id"), "auditEnvelope.trace_id must match governanceDecision.trace_id")
+    require_equal(
+        audit.get("decision_id"),
+        decision.get("decision_id"),
+        "auditEnvelope.decision_id must match governanceDecision.decision_id",
+    )
+    require_equal(
+        audit.get("authority_tier"),
+        decision.get("authority_tier"),
+        "auditEnvelope.authority_tier must match governanceDecision.authority_tier",
+    )
+    require_equal(
+        audit.get("approval_requirement"),
+        decision.get("approval_requirement"),
+        "auditEnvelope.approval_requirement must match governanceDecision.approval_requirement",
+    )
+
+    delegation = data.get("delegation")
+    if delegation is not None:
+        if not isinstance(delegation, dict):
+            raise SystemExit("Bridge response delegation must be an object")
+        require_equal(delegation.get("traceId"), decision.get("trace_id"), "delegation.traceId must match governance trace")
+        require_equal(delegation.get("auditId"), decision.get("audit_id"), "delegation.auditId must match governance audit")
+        require_equal(
+            delegation.get("governanceState"),
+            decision.get("outcome"),
+            "delegation.governanceState must match governance outcome",
+        )
+
+    recommendation = data.get("recommendationProvenance")
+    if recommendation is not None:
+        if not isinstance(recommendation, dict):
+            raise SystemExit("Bridge response recommendationProvenance must be an object")
+        require_equal(
+            recommendation.get("traceId"),
+            decision.get("trace_id"),
+            "recommendationProvenance.traceId must match governance trace",
+        )
+        require_equal(
+            recommendation.get("auditId"),
+            decision.get("audit_id"),
+            "recommendationProvenance.auditId must match governance audit",
+        )
+
+
+def validate_openapi_response_examples() -> None:
+    examples = [
+        ("/v1/concierge/turn", "200", "examples/sample_text_turn_response.json"),
+    ]
+    for path, status_code, example_path in examples:
+        data = load_json(example_path)
+        schema = load_openapi_response_schema(path, status_code)
+        validate_openapi_instance(schema, data)
+        validate_bridge_response_provenance(data)
+        print(f"valid OpenAPI response example: {example_path} against {path} {status_code}")
+
+
 def find_freeform_bridge_path_callers() -> list[str]:
     offenders: list[str] = []
     for path in (ROOT / "app/src").glob("*.ts"):
@@ -290,6 +392,7 @@ def main() -> int:
     validate_all_schemas()
     validate_json_pairs()
     validate_yaml()
+    validate_openapi_response_examples()
     validate_bridge_contract_alignment()
     validate_authority_boundary()
     validate_markdown_links()
