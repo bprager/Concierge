@@ -37,6 +37,10 @@ import {
 } from "./memoryProposalSubmission";
 import { NapoleonBridgeError, sendToNapoleon } from "./napoleonBridge";
 import {
+  buildLocalHarnessEndpointPreset,
+  isLocalHarnessEndpoint,
+} from "./localHarnessEndpoint";
+import {
   describeDelegation,
   describeGovernanceDecision,
   describeGovernanceReview,
@@ -202,10 +206,11 @@ export function App() {
     }
   }
 
-  async function discoverDescriptor() {
+  async function discoverDescriptor(endpointOverride?: string) {
+    const selectedEndpoint = endpointOverride?.trim() || endpoint.trim();
     try {
       const result = await discoverNapoleonDescriptor({
-        getEndpoint: () => endpoint.trim() || null,
+        getEndpoint: () => selectedEndpoint || null,
         getAuthToken: () => authToken.trim() || null,
       });
       setLiveDescriptorInput(result.input);
@@ -220,7 +225,7 @@ export function App() {
         canAttemptLiveBridge: result.connection.canAttemptLiveBridge,
       });
     } catch (error) {
-      const failedInput = { endpointConfigured: Boolean(endpoint.trim()), descriptor: null };
+      const failedInput = { endpointConfigured: Boolean(selectedEndpoint), descriptor: null };
       const failedConnection = buildDescriptorConnectionState(failedInput);
       setLiveDescriptorInput(failedInput);
       setDescriptorMode("live");
@@ -232,6 +237,16 @@ export function App() {
         error: String(error),
       });
     }
+  }
+
+  function useLocalHarnessEndpoint() {
+    const preset = buildLocalHarnessEndpointPreset();
+    updateEndpoint(preset.endpoint);
+    updateAuthToken("");
+    setRehearsalMode(preset.rehearsalMode);
+    setPendingRehearsal(null);
+    setBridgeEvidenceReadiness(buildBridgeEvidenceReadinessState());
+    void discoverDescriptor(preset.endpoint);
   }
 
   function updateProfile(value: LocalProfile) {
@@ -814,8 +829,11 @@ export function App() {
             <option value="checksum_mismatch">Checksum/signature mismatch</option>
           </select>
         </label>
-        <button className="secondary" onClick={discoverDescriptor}>
+        <button className="secondary" onClick={() => void discoverDescriptor()}>
           Discover descriptor
+        </button>
+        <button className="secondary" onClick={useLocalHarnessEndpoint}>
+          Use local harness
         </button>
         <label>
           Rehearsal Mode
@@ -846,7 +864,15 @@ export function App() {
         </div>
         <div>
           <strong>Discovery source</strong>
-          <span>{descriptorMode === "live" ? descriptorDiscoveryMessage ?? "live descriptor selected" : "local simulation"}</span>
+          <span>
+            {isLocalHarnessEndpoint(endpoint)
+              ? descriptorMode === "live"
+                ? descriptorDiscoveryMessage ?? "local harness selected"
+                : "local harness preset"
+              : descriptorMode === "live"
+                ? descriptorDiscoveryMessage ?? "live descriptor selected"
+                : "local simulation"}
+          </span>
         </div>
         <div>
           <strong>Checksum</strong>

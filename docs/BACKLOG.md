@@ -164,6 +164,7 @@ Acceptance criteria:
 - Live descriptor discovery resolves the configured Napoleon base URL to `/v1/concierge/chief-of-staff/descriptor` and treats invalid results as blocked connection state, not authority.
 - Text Concierge shows a live bridge readiness summary that combines endpoint state, descriptor state, checksum/signature state, in-session sanitized evidence capture/comparison state, live-send status, and blocked effects.
 - Live text attempts update the readiness panel from captured `bridge_contract_evidence`; evidence comparison fails if the captured operation path or request kind drifts from the bridge registry or if raw/secret fields appear.
+- Text Concierge settings include a local harness endpoint preset for `http://127.0.0.1:8787`; selecting it only configures endpoint and descriptor preflight state, and does not start, stop, or control the harness process.
 - Live text bridge calls can capture sanitized contract evidence for success and fail-closed outcomes without raw prompt text, response text, endpoint hosts, bearer tokens, request bodies, or response bodies.
 - `make bridge-evidence-capture` exercises one governed text evidence capture against the local harness, including descriptor discovery before text turn submission.
 - `make bridge-evidence-compare` validates sample or captured bridge evidence against the OpenAPI-aligned bridge registry and rejects raw payload or secret fields.
@@ -176,6 +177,7 @@ Privacy and safety impact:
 
 - Missing or invalid bridge state cannot be converted into local authority.
 - Live bridge readiness is a local preflight summary only and cannot be treated as Napoleon approval, memory permission, agent dispatch permission, or external-send permission.
+- The local harness preset is a test endpoint convenience only; it must not be treated as live Napoleon authority or service control.
 - Provenance prevents Concierge from hiding Napoleon's authority boundary or inventing agent contributions.
 - Bridge evidence supports later live-runtime comparison without becoming a local audit authority or leaking secrets.
 
