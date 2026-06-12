@@ -71,6 +71,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added governed memory proposal review submission for live memory proposals, gated by endpoint and descriptor preflight and blocked from local memory writes, approval capture, agent dispatch, or external sends.
 - Added OpenAPI-governed request artifact validation for memory proposal and Chief of Staff steering handoffs, including proposal-only boundary checks that reject nested authority claims.
 - Added child-protected memory proposal request artifact validation with guardian review and child profile enforcement.
+- Added child-protected Chief of Staff steering request artifact validation with required child-safety caution and proposal-only boundary enforcement.
 
 ## Current Blockers
 

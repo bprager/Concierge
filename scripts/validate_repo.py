@@ -344,6 +344,16 @@ def validate_proposal_only_request_boundary(data: object) -> None:
             )
             require_equal(memory_proposal.get("profile"), "child_protected", "child memory proposal profile must stay child protected")
 
+    recommendation = data.get("recommendation")
+    if data.get("profileMode") == "child_protected_user" and recommendation is not None:
+        if not isinstance(recommendation, dict):
+            raise SystemExit("recommendation must be an object")
+        require_equal(
+            recommendation.get("childSafetyCaution"),
+            True,
+            "child protected steering recommendations must include child safety caution",
+        )
+
     forbidden_true_fields = {
         "approvalCaptured",
         "memoryWriteAllowed",
@@ -374,6 +384,7 @@ def validate_openapi_request_examples() -> None:
         ("/v1/concierge/memory-proposals", "examples/sample_memory_proposal_request.json"),
         ("/v1/concierge/memory-proposals", "examples/sample_child_memory_proposal_request.json"),
         ("/v1/concierge/chief-of-staff/steering", "examples/sample_chief_of_staff_steering_request.json"),
+        ("/v1/concierge/chief-of-staff/steering", "examples/sample_child_chief_of_staff_steering_request.json"),
     ]
     for path, example_path in examples:
         data = load_json(example_path)
