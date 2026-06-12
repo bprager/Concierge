@@ -315,7 +315,7 @@ export async function submitChiefOfStaffSteeringDraft(
   const descriptorConnection = buildDescriptorConnectionState(
     dependencies.descriptorConnection ?? {
       endpointConfigured: Boolean(endpoint),
-      descriptor: defaultChiefOfStaffDescriptor,
+      descriptor: null,
     },
   );
   const blockedEffects = ["memory_write", "agent_dispatch", "external_send", "approval_capture", "runtime_authority"];

@@ -17,6 +17,14 @@ const memoryProposalBlockedEffects = [
   "runtime_authority",
 ];
 
+const readyDescriptorConnection = {
+  endpointConfigured: true,
+  descriptor: defaultChiefOfStaffDescriptor,
+  expectedChecksum: "sha256:local-static",
+  actualChecksum: "sha256:local-static",
+  signatureValid: true,
+};
+
 function buildReview() {
   const contract = buildTextTurnContract({
     message: "Remember that I prefer short deployment summaries",
@@ -89,6 +97,33 @@ test("memory proposal submission fails closed before fetch when descriptor is no
   assert.equal(fetchCalled, false);
 });
 
+test("memory proposal submission fails closed before fetch when descriptor discovery has not completed", async () => {
+  const review = buildReview();
+  let fetchCalled = false;
+
+  await assert.rejects(
+    () =>
+      submitMemoryProposalForReview(review, {
+        conversationId: "conv_memory",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(memoryProposalBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+});
+
 test("memory proposal submission posts review packet without writing memory or capturing approval", async () => {
   const review = buildReview();
   let posted: Record<string, unknown> | undefined;
@@ -99,6 +134,7 @@ test("memory proposal submission posts review packet without writing memory or c
     conversationId: "conv_memory",
     traceId: "trace_submit",
     getEndpoint: () => "https://napoleon.example/concierge",
+    descriptorConnection: readyDescriptorConnection,
     getAuthToken: () => "token_memory",
     fetch: async (url: string, init?: TestFetchInit) => {
       targetUrl = url;
@@ -170,6 +206,7 @@ test("memory proposal submission fails closed when Napoleon denies review", asyn
         conversationId: "conv_memory",
         traceId: "trace_submit",
         getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
         emit: (event) => events.push(event),
         fetch: async () => ({
           ok: true,
@@ -234,6 +271,7 @@ test("memory proposal submission rejects response claims that write memory or ca
         conversationId: "conv_memory",
         traceId: "trace_submit",
         getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
         emit: (event) => events.push(event),
         fetch: async () => ({
           ok: true,
@@ -299,6 +337,7 @@ test("memory proposal submission rejects malformed Napoleon response", async () 
         conversationId: "conv_memory",
         traceId: "trace_submit",
         getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
         fetch: async () => ({
           ok: true,
           json: async () => ({

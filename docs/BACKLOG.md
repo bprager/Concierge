@@ -164,6 +164,7 @@ Acceptance criteria:
 - Repository validation scans runtime source for direct process execution, memory or graph access, and agent or tool dispatch outside the governed bridge.
 - Descriptor discovery is visible as first-class connection state, including live-discovered, missing descriptor, and checksum/signature mismatch states.
 - Live descriptor discovery resolves the configured Napoleon base URL to `/v1/concierge/chief-of-staff/descriptor` and treats invalid results as blocked connection state, not authority.
+- Live text turns, memory proposal handoff, and Chief of Staff steering handoff fail closed before request fetch when descriptor discovery has not completed; the built-in descriptor is not a live-send substitute.
 - Text Concierge shows a live bridge readiness summary that combines endpoint state, descriptor state, checksum/signature state, in-session sanitized evidence capture/comparison state, last live-send status and fail-closed reason, and blocked effects.
 - Live text attempts update the readiness panel from captured `bridge_contract_evidence`; evidence comparison fails if the captured operation path or request kind drifts from the bridge registry or if raw/secret fields appear.
 - Text Concierge settings include a local harness endpoint preset for `http://127.0.0.1:8787`; selecting it only configures endpoint and descriptor preflight state, and does not start, stop, or control the harness process.

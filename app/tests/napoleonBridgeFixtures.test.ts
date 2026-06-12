@@ -5,6 +5,7 @@ import {
   napoleonBridgeFixtures,
 } from "../src/napoleonBridgeFixtures.js";
 import { NapoleonBridgeError, sendToNapoleon } from "../src/napoleonBridge.js";
+import { defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
 
 const request = {
   traceId: "trace_fixture",
@@ -15,9 +16,18 @@ const request = {
   message: "Ask Napoleon for the bridge rollout recommendation",
 } as const;
 
+const readyDescriptorConnection = {
+  endpointConfigured: true,
+  descriptor: defaultChiefOfStaffDescriptor,
+  expectedChecksum: "sha256:local-static",
+  actualChecksum: "sha256:local-static",
+  signatureValid: true,
+};
+
 test("delegated success fixture exercises live bridge provenance contract", async () => {
   const response = await sendToNapoleon(request, {
     getEndpoint: () => "https://napoleon.example/v1/concierge/turn",
+    descriptorConnection: readyDescriptorConnection,
     emit: () => undefined,
     fetch: createNapoleonBridgeFixtureFetch(napoleonBridgeFixtures.delegatedSuccess),
   });
@@ -35,6 +45,7 @@ test("failure fixtures map to fail-closed bridge reasons", async () => {
     () =>
       sendToNapoleon(request, {
         getEndpoint: () => "https://napoleon.example/v1/concierge/turn",
+        descriptorConnection: readyDescriptorConnection,
         emit: () => undefined,
         fetch: createNapoleonBridgeFixtureFetch(napoleonBridgeFixtures.authFailure),
       }),
@@ -48,6 +59,7 @@ test("failure fixtures map to fail-closed bridge reasons", async () => {
     () =>
       sendToNapoleon(request, {
         getEndpoint: () => "https://napoleon.example/v1/concierge/turn",
+        descriptorConnection: readyDescriptorConnection,
         emit: () => undefined,
         fetch: createNapoleonBridgeFixtureFetch(napoleonBridgeFixtures.contractMismatch),
       }),
@@ -58,6 +70,7 @@ test("failure fixtures map to fail-closed bridge reasons", async () => {
     () =>
       sendToNapoleon(request, {
         getEndpoint: () => "https://napoleon.example/v1/concierge/turn",
+        descriptorConnection: readyDescriptorConnection,
         emit: () => undefined,
         fetch: createNapoleonBridgeFixtureFetch(napoleonBridgeFixtures.timeout),
       }),

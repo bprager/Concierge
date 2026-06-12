@@ -72,6 +72,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened governed Chief of Staff steering review responses so side-effect claims fail closed as contract mismatches.
 - Added governed memory proposal review submission for live memory proposals, gated by endpoint and descriptor preflight and blocked from local memory writes, approval capture, agent dispatch, or external sends.
 - Hardened governed memory proposal review responses so memory write, approval, external send, agent dispatch, or local-apply claims fail closed as contract mismatches.
+- Hardened live text turns, Chief of Staff steering handoff, and memory proposal handoff so they fail closed before request fetch when descriptor discovery has not completed, instead of using Concierge's built-in descriptor as live evidence.
 - Added OpenAPI-governed request artifact validation for memory proposal and Chief of Staff steering handoffs, including proposal-only boundary checks that reject nested authority claims.
 - Added child-protected memory proposal request artifact validation with guardian review and child profile enforcement.
 - Added child-protected Chief of Staff steering request artifact validation with required child-safety caution and proposal-only boundary enforcement.

@@ -20,6 +20,14 @@ const textTurnBlockedEffects = [
   "remediation",
 ];
 
+const readyDescriptorConnection = {
+  endpointConfigured: true,
+  descriptor: defaultChiefOfStaffDescriptor,
+  expectedChecksum: "sha256:local-static",
+  actualChecksum: "sha256:local-static",
+  signatureValid: true,
+};
+
 test("live bridge fails closed when no Napoleon endpoint is configured", async () => {
   const events: TelemetryPayload[] = [];
   const evidence: unknown[] = [];
@@ -56,6 +64,40 @@ test("live bridge fails closed when no Napoleon endpoint is configured", async (
   assert.deepEqual((evidence[0] as { blockedEffects?: string[] }).blockedEffects, textTurnBlockedEffects);
 });
 
+test("live bridge fails closed before fetch when descriptor discovery has not completed", async () => {
+  let fetchCalled = false;
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_missing_descriptor_discovery",
+          conversationId: "conv_missing_descriptor_discovery",
+          turnId: "turn_missing_descriptor_discovery",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          emit: () => undefined,
+          fetch: async () => {
+            fetchCalled = true;
+            return { ok: true, json: async () => ({}) };
+          },
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(textTurnBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+});
+
 test("live bridge request sends contract-first payload to configured endpoint", async () => {
   let posted: Record<string, unknown> | undefined;
   let headers: Record<string, string> | undefined;
@@ -73,6 +115,7 @@ test("live bridge request sends contract-first payload to configured endpoint", 
     },
     {
       getEndpoint: () => "https://napoleon.example/concierge",
+      descriptorConnection: readyDescriptorConnection,
       getAuthToken: () => "token_live",
       emit: () => undefined,
       captureEvidence: (record) => evidence.push(record),
@@ -182,9 +225,10 @@ test("live bridge captures sanitized fail-closed evidence on auth failure", asyn
           channel: "text",
           message: "Send a private deployment summary",
         },
-        {
-          getEndpoint: () => "https://napoleon.example/concierge",
-          getAuthToken: () => "secret_token",
+          {
+            getEndpoint: () => "https://napoleon.example/concierge",
+            descriptorConnection: readyDescriptorConnection,
+            getAuthToken: () => "secret_token",
           emit: () => undefined,
           captureEvidence: (record) => evidence.push(record),
           fetch: async () => ({ ok: false, status: 401, json: async () => ({ text: "Unauthorized" }) }),
@@ -235,6 +279,7 @@ test("live bridge fails closed when Napoleon returns deny or no-go governance", 
           },
           {
             getEndpoint: () => "https://napoleon.example/concierge",
+            descriptorConnection: readyDescriptorConnection,
             emit: (event) => events.push(event),
             captureEvidence: (record) => evidence.push(record),
             fetch: async () => ({
@@ -328,6 +373,7 @@ test("live bridge fails closed when Napoleon returns deny or no-go governance", 
           },
           {
             getEndpoint: () => "https://napoleon.example/concierge",
+            descriptorConnection: readyDescriptorConnection,
             emit: () => undefined,
             fetch: async () => ({
               ok: true,
@@ -390,6 +436,7 @@ test("live bridge fails closed when Napoleon response omits trace or audit prove
         },
         {
           getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
           emit: () => undefined,
           fetch: async () => ({
             ok: true,
@@ -431,6 +478,7 @@ test("live bridge fails closed when response text invents selected-agent attribu
         },
         {
           getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
           emit: () => undefined,
           fetch: async () => ({
             ok: true,
@@ -490,6 +538,7 @@ test("live bridge fails closed when response text invents Napoleon recommendatio
         },
         {
           getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
           emit: () => undefined,
           fetch: async () => ({
             ok: true,
@@ -547,6 +596,7 @@ test("live bridge accepts Napoleon recommendation text when provenance matches r
     },
     {
       getEndpoint: () => "https://napoleon.example/concierge",
+      descriptorConnection: readyDescriptorConnection,
       emit: () => undefined,
       fetch: async () => ({
         ok: true,
@@ -608,6 +658,7 @@ test("live bridge fails closed when delegation provenance disagrees with trace o
         },
         {
           getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
           emit: () => undefined,
           fetch: async () => ({
             ok: true,

@@ -4,7 +4,6 @@ import { getBridgeOperation, type BridgeOperationId } from "./bridgeOperations.j
 import {
   buildDescriptorConnectionState,
   buildTextTurnContract,
-  defaultChiefOfStaffDescriptor,
   type DescriptorConnectionInput,
   type AuditEnvelope,
   type GovernanceDecision,
@@ -356,7 +355,7 @@ export async function sendToNapoleon(
   const descriptorConnection = buildDescriptorConnectionState(
     dependencies.descriptorConnection ?? {
       endpointConfigured: Boolean(endpoint),
-      descriptor: defaultChiefOfStaffDescriptor,
+      descriptor: null,
     },
   );
   const evidenceContext: BridgeEvidenceContext = {

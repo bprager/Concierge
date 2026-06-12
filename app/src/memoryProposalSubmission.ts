@@ -194,7 +194,7 @@ export async function submitMemoryProposalForReview(
   const descriptorConnection = buildDescriptorConnectionState(
     dependencies.descriptorConnection ?? {
       endpointConfigured: Boolean(endpoint),
-      descriptor: defaultChiefOfStaffDescriptor,
+      descriptor: null,
     },
   );
   const blockedEffects = ["memory_write", "approval_capture", "external_send", "agent_dispatch", "runtime_authority"];

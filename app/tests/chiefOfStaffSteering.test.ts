@@ -19,6 +19,14 @@ const steeringBlockedEffects = [
   "runtime_authority",
 ];
 
+const readyDescriptorConnection = {
+  endpointConfigured: true,
+  descriptor: defaultChiefOfStaffDescriptor,
+  expectedChecksum: "sha256:local-static",
+  actualChecksum: "sha256:local-static",
+  signatureValid: true,
+};
+
 test("drafts proposal-only Chief of Staff steering from capability signals", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(
@@ -132,6 +140,37 @@ test("steering handoff fails closed before fetch when descriptor is not ready", 
   assert.equal(fetchCalled, false);
 });
 
+test("steering handoff fails closed before fetch when descriptor discovery has not completed", async () => {
+  const ledger = createCapabilityLedger();
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_steering",
+    endpointConfigured: true,
+  });
+  let fetchCalled = false;
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffSteeringDraft(draft, {
+        conversationId: "conv_steering",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge/evolution",
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+});
+
 test("steering handoff posts evolution review packet without applying proposal locally", async () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(
@@ -167,6 +206,7 @@ test("steering handoff posts evolution review packet without applying proposal l
     conversationId: "conv_steering",
     traceId: "trace_submit",
     getEndpoint: () => "https://napoleon.example/concierge",
+    descriptorConnection: readyDescriptorConnection,
     getAuthToken: () => "token_steering",
     fetch: async (url, init) => {
       targetUrl = url;
@@ -269,6 +309,7 @@ test("child protected steering handoff includes child safety caution and child p
     traceId: "trace_child_submit",
     profile: "child_protected",
     getEndpoint: () => "https://napoleon.example/concierge",
+    descriptorConnection: readyDescriptorConnection,
     fetch: async (_url, init) => {
       posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
       return {
@@ -335,6 +376,7 @@ test("steering handoff fails closed when Napoleon returns no-go", async () => {
         conversationId: "conv_steering",
         traceId: "trace_submit",
         getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
         emit: (event) => events.push(event),
         fetch: async () => ({
           ok: true,
@@ -405,6 +447,7 @@ test("steering handoff rejects response claims that apply proposal or side effec
         conversationId: "conv_steering",
         traceId: "trace_submit",
         getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
         emit: (event) => events.push(event),
         fetch: async () => ({
           ok: true,
