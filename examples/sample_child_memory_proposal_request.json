@@ -1,0 +1,91 @@
+{
+  "requestKind": "memory_proposal_review_handoff",
+  "profileMode": "child_protected_user",
+  "chiefOfStaffRequest": {
+    "request_id": "cos_child_memory_request_sample",
+    "requester": "concierge.text",
+    "request_type": "governance_review",
+    "profile_mode": "child_protected_user",
+    "source_evidence": [
+      "trace:trace_child_memory_request_sample",
+      "proposal:child_memory_request_sample",
+      "profile_mode:child_protected_user"
+    ],
+    "requested_authority_tier": "advisory_review",
+    "trace_id": "trace_child_memory_request_sample",
+    "payload_schema": "napoleon/concierge/memory-proposal-review/v1"
+  },
+  "governanceRequest": {
+    "request_id": "cos_child_memory_request_sample",
+    "actor_id": "concierge.text",
+    "action": "review_child_memory_proposal",
+    "target": "napoleon.chief_of_staff",
+    "requested_authority_tier": "advisory_review",
+    "evidence_links": [
+      "trace:trace_child_memory_request_sample",
+      "proposal:child_memory_request_sample",
+      "profile_mode:child_protected_user"
+    ],
+    "trace_id": "trace_child_memory_request_sample"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_child_memory_request_sample",
+    "parent_trace_id": "conv_child_memory_request_sample",
+    "actor_id": "concierge.text",
+    "request_id": "cos_child_memory_request_sample",
+    "decision_id": "decision_child_memory_request_sample",
+    "timestamp": "2026-06-12T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_child_memory_request_sample",
+    "trace_id": "trace_child_memory_request_sample",
+    "decision_id": "decision_child_memory_request_sample",
+    "actor_id": "concierge.text",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "guardian_approval_required",
+    "evidence_links": [
+      "trace:trace_child_memory_request_sample",
+      "proposal:child_memory_request_sample",
+      "profile_mode:child_protected_user"
+    ]
+  },
+  "memoryProposal": {
+    "status": "proposed",
+    "proposalId": "child_memory_request_sample",
+    "sourceTurnId": "turn_child_memory_request_sample",
+    "profile": "child_protected",
+    "proposedDiff": {
+      "kind": "child_profile_candidate",
+      "path": "child_profile.learning_support",
+      "value": "prefers_simple_steps"
+    },
+    "rationale": "The child repeatedly asked for homework help in smaller steps.",
+    "reviewRequired": true,
+    "guardianReviewRequired": true,
+    "blockedEffects": [
+      "memory_write",
+      "approval_capture",
+      "external_send",
+      "agent_dispatch",
+      "secret_keeping"
+    ],
+    "traceId": "trace_child_memory_request_sample",
+    "auditId": "audit_child_memory_request_sample",
+    "memoryWritePerformed": false,
+    "approvalCaptured": false
+  },
+  "boundary": {
+    "proposalOnly": true,
+    "approvalCaptured": false,
+    "memoryWriteAllowed": false,
+    "agentDispatchAllowed": false,
+    "externalSendAllowed": false
+  },
+  "blockedEffects": [
+    "memory_write",
+    "approval_capture",
+    "external_send",
+    "agent_dispatch",
+    "secret_keeping"
+  ]
+}

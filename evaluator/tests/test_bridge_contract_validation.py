@@ -71,6 +71,13 @@ class BridgeContractValidationTest(unittest.TestCase):
         validate_repo.validate_openapi_instance(schema, request)
         validate_repo.validate_proposal_only_request_boundary(request)
 
+    def test_sample_child_memory_proposal_request_matches_openapi_request_contract(self):
+        request = validate_repo.load_json("examples/sample_child_memory_proposal_request.json")
+        schema = validate_repo.load_openapi_request_schema("/v1/concierge/memory-proposals")
+
+        validate_repo.validate_openapi_instance(schema, request)
+        validate_repo.validate_proposal_only_request_boundary(request)
+
     def test_sample_chief_of_staff_steering_request_matches_openapi_request_contract(self):
         request = validate_repo.load_json("examples/sample_chief_of_staff_steering_request.json")
         schema = validate_repo.load_openapi_request_schema("/v1/concierge/chief-of-staff/steering")
@@ -82,6 +89,14 @@ class BridgeContractValidationTest(unittest.TestCase):
         request = validate_repo.load_json("examples/sample_memory_proposal_request.json")
         unsafe_request = copy.deepcopy(request)
         unsafe_request["memoryProposal"]["memoryWriteAllowed"] = True
+
+        with self.assertRaises(SystemExit):
+            validate_repo.validate_proposal_only_request_boundary(unsafe_request)
+
+    def test_proposal_only_request_validator_rejects_child_memory_without_guardian_review(self):
+        request = validate_repo.load_json("examples/sample_child_memory_proposal_request.json")
+        unsafe_request = copy.deepcopy(request)
+        unsafe_request["memoryProposal"]["guardianReviewRequired"] = False
 
         with self.assertRaises(SystemExit):
             validate_repo.validate_proposal_only_request_boundary(unsafe_request)
