@@ -366,6 +366,7 @@ export async function sendToNapoleon(
     requestId: contract.chiefOfStaffRequest.request_id,
     descriptorStatus: descriptorConnection.state,
     profileMode: contract.profileMode,
+    blockedEffects: contract.blockedEffects,
   };
 
   if (!endpoint) {

@@ -4,8 +4,25 @@ import { sendToNapoleon } from "../src/napoleonBridge.js";
 import { defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
 import type { TelemetryPayload } from "../src/telemetry.js";
 
+const textTurnBlockedEffects = [
+  "runtime_authority",
+  "command_execution",
+  "task_routing",
+  "agent_dispatch",
+  "registry_runtime_activation",
+  "graph_write",
+  "memory_write",
+  "audit_append",
+  "event_publication",
+  "approval_capture",
+  "external_send",
+  "service_control",
+  "remediation",
+];
+
 test("live bridge fails closed when no Napoleon endpoint is configured", async () => {
   const events: TelemetryPayload[] = [];
+  const evidence: unknown[] = [];
 
   await assert.rejects(
     () =>
@@ -21,17 +38,22 @@ test("live bridge fails closed when no Napoleon endpoint is configured", async (
         {
           getEndpoint: () => null,
           emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
         },
       ),
     (error: unknown) =>
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
-      error.message.includes("no_endpoint"),
+      error.message.includes("no_endpoint") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(textTurnBlockedEffects),
   );
 
   assert.equal(events[0].event, "bridge_request_started");
   assert.equal(events.at(-1)?.event, "bridge_request_failed");
   assert.equal(events.at(-1)?.attributes.reason, "no_endpoint");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, textTurnBlockedEffects);
+  assert.deepEqual((evidence[0] as { blockedEffects?: string[] }).blockedEffects, textTurnBlockedEffects);
 });
 
 test("live bridge request sends contract-first payload to configured endpoint", async () => {
@@ -188,6 +210,7 @@ test("live bridge captures sanitized fail-closed evidence on auth failure", asyn
       descriptorStatus: "ready",
       profileMode: "adult_owner",
       provenanceVerified: false,
+      blockedEffects: textTurnBlockedEffects,
     },
   ]);
   assert.equal(JSON.stringify(evidence).includes("secret_token"), false);
