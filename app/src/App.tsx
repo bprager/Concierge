@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { answerCapabilityQuestion } from "./capabilityLedger";
 import {
+  buildBridgeEvidenceReadinessState,
+  updateBridgeEvidenceReadinessState,
+} from "./bridgeEvidenceReadiness";
+import {
   createCapabilityTaxonomy,
   getTaxonomyLabelCounts,
   markTaxonomyLabel,
@@ -114,6 +118,7 @@ export function App() {
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastDelegation, setLastDelegation] = useState<ReturnType<typeof describeDelegation> | null>(null);
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
+  const [bridgeEvidenceReadiness, setBridgeEvidenceReadiness] = useState(buildBridgeEvidenceReadinessState);
   const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
   const [lastMemoryReviewState, setLastMemoryReviewState] = useState<MemoryProposalReviewState | null>(null);
   const [lastMemoryReview, setLastMemoryReview] = useState<ReturnType<typeof describeMemoryProposalReview> | null>(null);
@@ -426,6 +431,9 @@ export function App() {
         message: content,
       }, {
         descriptorConnection: currentDescriptorInput(),
+        captureEvidence: (record) => {
+          setBridgeEvidenceReadiness((current) => updateBridgeEvidenceReadinessState(current, record));
+        },
       });
 
       const decisionView = describeGovernanceDecision({
@@ -760,8 +768,8 @@ export function App() {
   const selectedTaxonomyRow = taxonomyRows.find((row) => row.value === selectedTaxonomyLabel);
   const liveBridgeReadiness = describeLiveBridgeReadiness({
     descriptorConnection,
-    evidenceCaptureState: "not_run",
-    evidenceComparisonState: "not_run",
+    evidenceCaptureState: bridgeEvidenceReadiness.captureState,
+    evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
   });
 
   return (
@@ -875,6 +883,12 @@ export function App() {
             <dt>Blocked effects</dt>
             <dd>{liveBridgeReadiness.blockedEffects.join(", ")}</dd>
           </div>
+          {bridgeEvidenceReadiness.failureReason ? (
+            <div>
+              <dt>Evidence issue</dt>
+              <dd>{bridgeEvidenceReadiness.failureReason}</dd>
+            </div>
+          ) : null}
         </dl>
       </section>
 

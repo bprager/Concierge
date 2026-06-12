@@ -49,6 +49,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added governed Chief of Staff steering submission that sends evolution proposal review packets only after endpoint and descriptor preflight, without applying changes locally.
 - Added governed memory proposal submission that sends review packets to Napoleon only after endpoint and descriptor preflight, without writing memory or capturing approval locally.
 - Added a Text Concierge live bridge readiness panel that combines endpoint, descriptor integrity, local evidence capture/comparison state, blocked effects, and the reminder that readiness is not Napoleon approval.
+- Added in-session bridge evidence readiness tracking so live text attempts update the readiness panel from sanitized evidence capture and local registry/secret-field comparison.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.
