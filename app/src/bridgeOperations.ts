@@ -1,3 +1,8 @@
+import {
+  GENERATED_BRIDGE_CONTRACT_SOURCE,
+  GENERATED_BRIDGE_OPERATIONS,
+} from "./generatedBridgeOperations.js";
+
 export type BridgeOperationId =
   | "text_turn"
   | "chief_of_staff_descriptor"
@@ -19,48 +24,9 @@ export interface BridgeOperation {
   tokenPlacement: "authorization_header_only";
 }
 
-export const BRIDGE_OPERATIONS: BridgeOperation[] = [
-  {
-    id: "text_turn",
-    path: "/v1/concierge/turn",
-    requestKind: "text_turn",
-    transport: "http_post",
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "chief_of_staff_descriptor",
-    path: "/v1/concierge/chief-of-staff/descriptor",
-    requestKind: "chief_of_staff_descriptor",
-    transport: "http_post",
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "chief_of_staff_steering",
-    path: "/v1/concierge/chief-of-staff/steering",
-    requestKind: "chief_of_staff_steering_handoff",
-    transport: "http_post",
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "memory_proposal_review",
-    path: "/v1/concierge/memory-proposals",
-    requestKind: "memory_proposal_review_handoff",
-    transport: "http_post",
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "evaluate",
-    path: "/v1/concierge/evaluate",
-    requestKind: "evaluator_prompt",
-    transport: "http_post",
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-];
+export { GENERATED_BRIDGE_CONTRACT_SOURCE };
+
+export const BRIDGE_OPERATIONS: BridgeOperation[] = [...GENERATED_BRIDGE_OPERATIONS];
 
 export function getBridgeOperation(id: BridgeOperationId): BridgeOperation {
   const operation = BRIDGE_OPERATIONS.find((candidate) => candidate.id === id);

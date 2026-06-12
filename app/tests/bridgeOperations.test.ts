@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   BRIDGE_OPERATIONS,
+  GENERATED_BRIDGE_CONTRACT_SOURCE,
   buildNapoleonBridgeUrl,
   getBridgeOperation,
 } from "../src/bridgeOperations.js";
@@ -25,6 +26,7 @@ function openApiPaths(): string[] {
 test("bridge operation registry matches canonical OpenAPI concierge paths", () => {
   const registryPaths = (BRIDGE_OPERATIONS as OperationShape[]).map((operation) => operation.path).sort();
 
+  assert.equal(GENERATED_BRIDGE_CONTRACT_SOURCE, "api/napoleon_bridge.openapi.yaml");
   assert.deepEqual(registryPaths, openApiPaths());
 });
 

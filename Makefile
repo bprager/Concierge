@@ -1,4 +1,4 @@
-.PHONY: check eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare eval-http schema-check app-test app-smoke app-build tauri-check zip
+.PHONY: check eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare generate-bridge-operations eval-http schema-check app-test app-smoke app-build tauri-check zip
 
 check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare schema-check app-test app-smoke app-build tauri-check
 
@@ -16,6 +16,9 @@ bridge-evidence-capture:
 
 bridge-evidence-compare:
 	PYTHONPATH=evaluator uv run --with PyYAML python scripts/bridge_evidence_compare.py examples/sample_bridge_contract_evidence.json
+
+generate-bridge-operations:
+	uv run --with PyYAML python scripts/generate_bridge_operations.py
 
 eval-http:
 	uv run --with PyYAML --with requests --with jsonschema python evaluator/eval_runner.py --mode http --endpoint $$NAPOLEON_EVAL_ENDPOINT --out evaluator/reports/latest.json

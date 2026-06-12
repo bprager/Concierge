@@ -157,7 +157,7 @@ Acceptance criteria:
 - Live sends fail closed when no endpoint is configured, descriptor validation fails, auth fails, the response contract is invalid, local governance is `no_go`, Napoleon returns `deny` or `no_go`, or the bridge times out.
 - Optional bridge tokens are sent only as `Authorization` headers and are not included in request bodies, telemetry, memory proposals, or capability exports.
 - Configured Napoleon base URLs resolve to canonical bridge paths for text turns, descriptor discovery, Chief of Staff steering handoff, memory proposal review, and evaluator requests.
-- Bridge operation IDs and paths are covered by an app test that compares the local registry to `api/napoleon_bridge.openapi.yaml`.
+- Bridge operation IDs and paths are generated from `api/napoleon_bridge.openapi.yaml`, and app plus repository checks fail if the generated registry drifts from the canonical contract.
 - Repository validation checks that governed bridge operations have matching request-kind constants, `NapoleonBearer` security, and named operation usage.
 - Repository validation scans runtime source for direct process execution, memory or graph access, and agent or tool dispatch outside the governed bridge.
 - Descriptor discovery is visible as first-class connection state, including live-discovered, missing descriptor, and checksum/signature mismatch states.

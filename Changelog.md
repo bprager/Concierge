@@ -35,7 +35,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a bridge evidence comparator and sample evidence fixture that check captured bridge metadata against the OpenAPI-aligned bridge registry while rejecting raw payload or secret fields.
 - Added optional local bridge bearer token support for live text turns and governed steering handoff, sent only as an authorization header.
 - Added canonical bridge endpoint resolution from a configured Napoleon base URL for text turns and Chief of Staff steering handoff.
-- Added a bridge operation registry that is tested against the canonical OpenAPI Concierge paths.
+- Added a generated bridge operation registry derived from the canonical OpenAPI Concierge paths.
 - Added contract-aware repository validation for bridge operation paths, request kinds, bearer security, and named bridge operation usage.
 - Added runtime source validation that fails when Concierge directly executes processes, accesses memory or graph systems, or dispatches agents/tools outside the governed bridge.
 - Added first-class Napoleon descriptor connection state for discovered, missing, and checksum/signature mismatch cases.

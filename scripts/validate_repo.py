@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
+import sys
 import warnings
 from pathlib import Path
 from typing import Any
@@ -121,7 +123,7 @@ def validate_markdown_links() -> None:
 
 
 def load_bridge_operations() -> list[dict[str, Any]]:
-    text = (ROOT / "app/src/bridgeOperations.ts").read_text(encoding="utf-8")
+    text = (ROOT / "app/src/generatedBridgeOperations.ts").read_text(encoding="utf-8")
     operations: list[dict[str, Any]] = []
     for match in re.finditer(r"\{\s*id:\s*\"([^\"]+)\"(?P<body>.*?)\n\s*\}", text, re.DOTALL):
         body = match.group("body")
@@ -135,8 +137,22 @@ def load_bridge_operations() -> list[dict[str, Any]]:
             operation["governedBridgeOnly"] = governed.group(1) == "true"
         operations.append(operation)
     if not operations:
-        raise SystemExit("No bridge operations found in app/src/bridgeOperations.ts")
+        raise SystemExit("No bridge operations found in app/src/generatedBridgeOperations.ts")
     return operations
+
+
+def validate_generated_bridge_operations() -> None:
+    result = subprocess.run(
+        [sys.executable, "scripts/generate_bridge_operations.py", "--check"],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        message = result.stderr.strip() or result.stdout.strip()
+        raise SystemExit(message)
+    print(result.stdout.strip())
 
 
 def load_openapi() -> dict[str, Any]:
@@ -232,6 +248,7 @@ def validate_authority_boundary() -> None:
 
 
 def validate_bridge_contract_alignment() -> None:
+    validate_generated_bridge_operations()
     operations = load_bridge_operations()
     openapi_paths = load_openapi_concierge_paths()
     registry_paths = sorted(operation.get("path") for operation in operations)
