@@ -88,6 +88,11 @@ test("smoke tests a governed text turn through a local Napoleon-compatible harne
           traceId,
           auditId: `audit_${traceId}`,
         },
+        recommendationProvenance: {
+          summary: "keeping this as a governed review draft",
+          traceId,
+          auditId: `audit_${traceId}`,
+        },
       });
     },
   });

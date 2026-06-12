@@ -45,6 +45,12 @@ export interface NapoleonDelegation {
   auditId: string;
 }
 
+export interface NapoleonRecommendationProvenance {
+  summary: string;
+  traceId: string;
+  auditId: string;
+}
+
 export interface NapoleonResponse {
   text: string;
   profileMode: NapoleonProfileMode;
@@ -54,5 +60,6 @@ export interface NapoleonResponse {
   requiresReview: boolean;
   targetAgent?: string;
   delegation?: NapoleonDelegation;
+  recommendationProvenance?: NapoleonRecommendationProvenance;
   stance?: string;
 }

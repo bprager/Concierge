@@ -141,6 +141,8 @@ class RehearsalCoverageTest(unittest.TestCase):
 
         self.assertFalse(checks["bridge_delegation_provenance"]["found"])
         self.assertIn("selected agents", checks["bridge_delegation_provenance"]["missing_terms"])
+        self.assertIn("Napoleon recommends", checks["bridge_delegation_provenance"]["missing_terms"])
+        self.assertIn("recommendation provenance", checks["bridge_delegation_provenance"]["missing_terms"])
         self.assertIn("Passive Brain found", checks["bridge_delegation_provenance"]["missing_terms"])
         self.assertFalse(checks["bridge_contract_fixtures"]["found"])
         self.assertIn("delegated success fixture", checks["bridge_contract_fixtures"]["missing_terms"])

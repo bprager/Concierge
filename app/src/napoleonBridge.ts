@@ -1,4 +1,4 @@
-import type { NapoleonDelegation, NapoleonRequest, NapoleonResponse } from "./types";
+import type { NapoleonDelegation, NapoleonRecommendationProvenance, NapoleonRequest, NapoleonResponse } from "./types";
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import { getBridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
 import {
@@ -217,6 +217,17 @@ function isNapoleonDelegation(value: unknown): value is NapoleonDelegation {
   );
 }
 
+function isNapoleonRecommendationProvenance(value: unknown): value is NapoleonRecommendationProvenance {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<NapoleonRecommendationProvenance>;
+  return Boolean(
+    typeof candidate.summary === "string" &&
+      candidate.summary.trim() &&
+      typeof candidate.traceId === "string" &&
+      typeof candidate.auditId === "string",
+  );
+}
+
 function envelopesMatchDecision(
   decision: GovernanceDecision,
   traceEnvelope: TraceEnvelope,
@@ -262,6 +273,34 @@ function hasUnprovenSelectedAgentAttribution(text: string | undefined, delegatio
     const agent = delegation?.selectedAgents.find((candidate) => candidate.displayName === displayName);
     return !agent?.contributionSummary;
   });
+}
+
+function recommendationMatchesProvenance(
+  text: string | undefined,
+  recommendationProvenance: NapoleonRecommendationProvenance | undefined,
+  decision: GovernanceDecision,
+  traceEnvelope: TraceEnvelope,
+  auditEnvelope: AuditEnvelope,
+): boolean {
+  if (!text || !recommendationProvenance) return false;
+  return (
+    recommendationProvenance.traceId === traceEnvelope.trace_id &&
+    recommendationProvenance.traceId === decision.trace_id &&
+    recommendationProvenance.auditId === auditEnvelope.audit_id &&
+    recommendationProvenance.auditId === decision.audit_id &&
+    text.toLocaleLowerCase().includes(recommendationProvenance.summary.toLocaleLowerCase())
+  );
+}
+
+function hasUnprovenNapoleonRecommendationAttribution(
+  text: string | undefined,
+  recommendationProvenance: NapoleonRecommendationProvenance | undefined,
+  decision: GovernanceDecision,
+  traceEnvelope: TraceEnvelope,
+  auditEnvelope: AuditEnvelope,
+): boolean {
+  if (!text || !/\bNapoleon\s+recommends\b/i.test(text)) return false;
+  return !recommendationMatchesProvenance(text, recommendationProvenance, decision, traceEnvelope, auditEnvelope);
 }
 
 function failClosed(
@@ -424,6 +463,23 @@ export async function sendToNapoleon(
   if (hasUnprovenSelectedAgentAttribution(payload.text, delegation)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
+  const recommendationProvenance =
+    payload.recommendationProvenance === undefined
+      ? undefined
+      : isNapoleonRecommendationProvenance(payload.recommendationProvenance)
+        ? payload.recommendationProvenance
+        : undefined;
+  if (
+    hasUnprovenNapoleonRecommendationAttribution(
+      payload.text,
+      recommendationProvenance,
+      decision,
+      traceEnvelope,
+      auditEnvelope,
+    )
+  ) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
 
   const normalized: NapoleonResponse = {
     text: payload.text ?? "Napoleon returned no response text.",
@@ -434,6 +490,7 @@ export async function sendToNapoleon(
     requiresReview: requiresReview(decision),
     targetAgent: payload.targetAgent,
     delegation,
+    recommendationProvenance,
     stance: payload.stance,
   };
 

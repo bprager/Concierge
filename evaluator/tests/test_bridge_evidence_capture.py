@@ -163,6 +163,11 @@ class RecordingBridgeHarness:
                             "traceId": trace_id,
                             "auditId": f"audit_{trace_id}",
                         },
+                        "recommendationProvenance": {
+                            "summary": "governed review",
+                            "traceId": trace_id,
+                            "auditId": f"audit_{trace_id}",
+                        },
                     },
                 )
 

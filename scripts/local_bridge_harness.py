@@ -132,6 +132,11 @@ class HarnessHandler(BaseHTTPRequestHandler):
                 "traceId": trace_id,
                 "auditId": f"audit_{trace_id}",
             },
+            "recommendationProvenance": {
+                "summary": "keeping this as a governed review draft",
+                "traceId": trace_id,
+                "auditId": f"audit_{trace_id}",
+            },
         }
         self.write_json(200, response)
 

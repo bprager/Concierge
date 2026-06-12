@@ -59,7 +59,7 @@ Live Napoleon bridge failures are fail-closed states. Missing endpoint, missing 
 
 The optional bridge bearer token is a local connection credential. Concierge sends it only in the `Authorization` header for governed bridge requests. It must not be included in request bodies, local capability exports, telemetry attributes, memory proposals, or user-visible provenance panels.
 
-Delegation attribution requires bridge provenance. Concierge may say that Napoleon recommended something or that a selected agent found something only when the live bridge response includes that contribution, selected agent, governance state, trace ID, and audit ID, and those IDs match the response trace and audit envelopes. Live text that claims a selected-agent finding without matching contribution provenance must be blocked as a contract mismatch. Missing or mismatched provenance fails closed rather than being repaired locally.
+Delegation and recommendation attribution require bridge provenance. Concierge may say that Napoleon recommended something only when the live bridge response includes matching recommendation provenance with that contribution, trace ID, and audit ID, and those IDs match the response trace and audit envelopes. Concierge may say that a selected agent found something only when the live bridge response includes that contribution, selected agent, governance state, trace ID, and audit ID, and those IDs match the response trace and audit envelopes. Live text that claims a Napoleon recommendation or selected-agent finding without matching contribution provenance must be blocked as a contract mismatch. Missing or mismatched provenance fails closed rather than being repaired locally.
 
 ## 4. Memory proposal review
 

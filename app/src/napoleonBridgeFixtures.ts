@@ -71,6 +71,11 @@ export const napoleonBridgeFixtures = {
         traceId: "trace_fixture",
         auditId: "audit_fixture_delegate",
       },
+      recommendationProvenance: {
+        summary: "preparing the bridge rollout plan for review",
+        traceId: "trace_fixture",
+        auditId: "audit_fixture_delegate",
+      },
       stance: "direct_strategic",
     },
   },

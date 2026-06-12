@@ -127,6 +127,8 @@ artifacts:
       - "governance state"
       - "trace ID"
       - "audit ID"
+      - "Napoleon recommends"
+      - "recommendation provenance"
       - "Passive Brain found"
       - "only when the bridge response contains that contribution"
   bridge_contract_fixtures:

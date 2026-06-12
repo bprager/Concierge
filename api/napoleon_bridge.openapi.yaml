@@ -236,6 +236,16 @@ paths:
                         type: string
                       auditId:
                         type: string
+                  recommendationProvenance:
+                    type: object
+                    required: [summary, traceId, auditId]
+                    properties:
+                      summary:
+                        type: string
+                      traceId:
+                        type: string
+                      auditId:
+                        type: string
                   stance:
                     type: string
                   requiresConfirmation:
