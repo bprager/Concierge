@@ -42,6 +42,7 @@ import {
 } from "./localHarnessEndpoint";
 import {
   describeDelegation,
+  describeBridgeFailure,
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
@@ -529,10 +530,7 @@ export function App() {
     } catch (error) {
       emitEvent("response_failed", { traceId, conversationId, turnId, error: String(error) });
       refreshCapabilityLedgerStatus();
-      const failure = error instanceof NapoleonBridgeError
-        ? `Live Napoleon bridge blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}. Concierge did not send externally, write memory, dispatch agents, or capture approval.`
-        : "Napoleon bridge failed closed. Concierge did not send externally, write memory, dispatch agents, or capture approval.";
-      setLastBridgeFailure(failure);
+      setLastBridgeFailure(describeBridgeFailure(error));
       setLastDelegation(null);
       setMessages((m) => [
         ...m,

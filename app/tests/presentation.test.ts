@@ -10,12 +10,14 @@ import {
 } from "../src/contractBridge.js";
 import {
   describeDelegation,
+  describeBridgeFailure,
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
   describeMemoryProposalReview,
   summarizeRehearsalPreview,
 } from "../src/presentation.js";
+import { NapoleonBridgeError } from "../src/napoleonBridge.js";
 
 test("summarizes prepare-only governance decisions without implying authority", () => {
   const summary = describeGovernanceDecision({
@@ -234,4 +236,22 @@ test("describes descriptor integrity mismatch as fail-closed readiness", () => {
   assert.equal(view.canSendLive, false);
   assert.ok(view.summary.includes("signature or checksum mismatch"));
   assert.ok(view.caveat.includes("No text turn should proceed"));
+});
+
+test("describes bridge failure with blocked effects visible", () => {
+  const error = new NapoleonBridgeError("governance_denied", "trace_blocked", "request_blocked", 200, [
+    "external_send",
+    "memory_write",
+    "agent_dispatch",
+    "approval_capture",
+  ]);
+
+  const message = describeBridgeFailure(error);
+
+  assert.ok(message.includes("governance_denied"));
+  assert.ok(message.includes("Blocked effects: external_send, memory_write, agent_dispatch, approval_capture"));
+  assert.ok(message.includes("did not send externally"));
+  assert.ok(message.includes("did not write memory"));
+  assert.ok(message.includes("did not dispatch agents"));
+  assert.ok(message.includes("did not capture approval"));
 });

@@ -77,14 +77,22 @@ export class NapoleonBridgeError extends Error {
   status?: number;
   traceId: string;
   requestId: string;
+  blockedEffects: string[];
 
-  constructor(reason: NapoleonBridgeFailureReason, traceId: string, requestId: string, status?: number) {
+  constructor(
+    reason: NapoleonBridgeFailureReason,
+    traceId: string,
+    requestId: string,
+    status?: number,
+    blockedEffects: string[] = [],
+  ) {
     super(`Napoleon bridge fail-closed: ${reason}${status ? ` (${status})` : ""}`);
     this.name = "NapoleonBridgeError";
     this.reason = reason;
     this.status = status;
     this.traceId = traceId;
     this.requestId = requestId;
+    this.blockedEffects = blockedEffects;
   }
 }
 
@@ -319,8 +327,9 @@ function failClosed(
     requestId,
     reason,
     status,
+    blockedEffects: evidenceContext?.blockedEffects ?? [],
   });
-  throw new NapoleonBridgeError(reason, traceId, requestId, status);
+  throw new NapoleonBridgeError(reason, traceId, requestId, status, evidenceContext?.blockedEffects ?? []);
 }
 
 export async function sendToNapoleon(

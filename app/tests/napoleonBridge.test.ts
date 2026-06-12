@@ -262,6 +262,13 @@ test("live bridge fails closed when Napoleon returns deny or no-go governance", 
       events.at(-1)?.attributes.reason,
       outcome === "deny" ? "governance_denied" : "governance_no_go",
     );
+    const failure = events.at(-1);
+    assert.deepEqual(failure?.attributes.blockedEffects, [
+      "external_send",
+      "memory_write",
+      "agent_dispatch",
+      "approval_capture",
+    ]);
     assert.deepEqual(evidence, [
       {
         kind: "bridge_contract_evidence",
@@ -284,6 +291,65 @@ test("live bridge fails closed when Napoleon returns deny or no-go governance", 
     ]);
     assert.equal(JSON.stringify(evidence).includes("Send a private update outside Concierge"), false);
     assert.equal(JSON.stringify(evidence).includes("Napoleon denied this request."), false);
+
+    await assert.rejects(
+      () =>
+        sendToNapoleon(
+          {
+            traceId: `trace_remote_${outcome}_error`,
+            conversationId: `conv_remote_${outcome}_error`,
+            turnId: `turn_remote_${outcome}_error`,
+            profile: "adult_owner",
+            channel: "text",
+            message: "Send a private update outside Concierge",
+          },
+          {
+            getEndpoint: () => "https://napoleon.example/concierge",
+            emit: () => undefined,
+            fetch: async () => ({
+              ok: true,
+              status: 200,
+              json: async () => ({
+                text: "Napoleon denied this request.",
+                governanceDecision: {
+                  decision_id: `decision_remote_${outcome}_error`,
+                  request_id: `cos_turn_remote_${outcome}_error`,
+                  outcome,
+                  authority_tier: "prohibited",
+                  approval_requirement: "not_available",
+                  rationale: "The request is not allowed through this path.",
+                  blocked_effects: ["external_send", "memory_write", "agent_dispatch", "approval_capture"],
+                  trace_id: `trace_remote_${outcome}_error`,
+                  audit_id: `audit_remote_${outcome}_error`,
+                },
+                traceEnvelope: {
+                  trace_id: `trace_remote_${outcome}_error`,
+                  parent_trace_id: `conv_remote_${outcome}_error`,
+                  actor_id: "napoleon.chief_of_staff",
+                  request_id: `cos_turn_remote_${outcome}_error`,
+                  decision_id: `decision_remote_${outcome}_error`,
+                  timestamp: "2026-06-12T00:00:00.000Z",
+                },
+                auditEnvelope: {
+                  audit_id: `audit_remote_${outcome}_error`,
+                  trace_id: `trace_remote_${outcome}_error`,
+                  decision_id: `decision_remote_${outcome}_error`,
+                  actor_id: "napoleon.chief_of_staff",
+                  authority_tier: "prohibited",
+                  approval_requirement: "not_available",
+                  evidence_links: [`trace:trace_remote_${outcome}_error`],
+                },
+              }),
+            }),
+          },
+        ),
+      (error: unknown) =>
+        error instanceof Error &&
+        error.name === "NapoleonBridgeError" &&
+        "blockedEffects" in error &&
+        JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+          JSON.stringify(["external_send", "memory_write", "agent_dispatch", "approval_capture"]),
+    );
   }
 });
 

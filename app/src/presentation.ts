@@ -6,6 +6,7 @@ import type {
   RehearsalPreview,
 } from "./contractBridge.js";
 import type { NapoleonDelegation } from "./types.js";
+import { NapoleonBridgeError } from "./napoleonBridge.js";
 
 export interface GovernanceDecisionViewInput {
   outcome: GovernanceOutcome;
@@ -70,6 +71,17 @@ export interface LiveBridgeReadinessView {
   caveat: string;
   blockedEffects: string[];
   details: Array<{ label: string; value: string }>;
+}
+
+export function describeBridgeFailure(error: unknown): string {
+  if (!(error instanceof NapoleonBridgeError)) {
+    return "Napoleon bridge failed closed. Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.";
+  }
+
+  const blockedEffects = error.blockedEffects.length
+    ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
+    : "";
+  return `Live Napoleon bridge blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}.${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
 }
 
 function describeEvidenceState(state: LiveBridgeEvidenceState | undefined): string {
