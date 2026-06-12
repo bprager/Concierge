@@ -265,6 +265,7 @@ Acceptance criteria:
 - Governed submission posts an `evolution_proposal_review` packet with recommendation, evaluator case candidate, evolution proposal draft, proposal-only boundary, blocked effects, and trace/audit envelopes.
 - Child-protected governed submission includes explicit child-safety caution, child-protected profile scope, and guardian/owner review wording.
 - Napoleon submission responses require matching governance, trace, and audit proof before Concierge shows them as reviewed.
+- Submission responses fail closed as contract mismatches if they claim local application, memory writes, approval capture, agent dispatch, or external sends.
 - The draft cannot apply changes, write memory, dispatch agents, send externally, or capture approval.
 
 Privacy and safety impact:

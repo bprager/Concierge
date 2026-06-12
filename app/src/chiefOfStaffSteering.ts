@@ -268,6 +268,17 @@ function envelopesMatchDecision(
   );
 }
 
+function hasForbiddenSteeringSideEffectClaim(payload: Partial<ChiefOfStaffSteeringSubmissionResult> & Record<string, unknown>): boolean {
+  const forbiddenFalseFields = [
+    "appliedLocally",
+    "memoryWritePerformed",
+    "approvalCaptured",
+    "externalSendPerformed",
+    "agentDispatchPerformed",
+  ];
+  return forbiddenFalseFields.some((field) => payload[field] !== undefined && payload[field] !== false);
+}
+
 function failSteeringClosed(
   dependencies: SteeringSubmissionDependencies,
   reason: ConstructorParameters<typeof NapoleonBridgeError>[0],
@@ -405,7 +416,8 @@ export async function submitChiefOfStaffSteeringDraft(
     !isGovernanceDecision(payload.governanceDecision) ||
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
-    !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope)
+    !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasForbiddenSteeringSideEffectClaim(payload as Partial<ChiefOfStaffSteeringSubmissionResult> & Record<string, unknown>)
   ) {
     failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, undefined, blockedEffects);
   }
