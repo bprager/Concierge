@@ -1,4 +1,5 @@
 import type {
+  DescriptorConnectionState,
   GovernanceOutcome,
   GovernanceReviewState,
   MemoryProposalReviewState,
@@ -51,6 +52,92 @@ export interface DelegationView {
   heading: string;
   body: string;
   details: Array<{ label: string; value: string }>;
+}
+
+export type LiveBridgeEvidenceState = "not_run" | "passed" | "failed";
+
+export interface LiveBridgeReadinessInput {
+  descriptorConnection: DescriptorConnectionState;
+  evidenceCaptureState?: LiveBridgeEvidenceState;
+  evidenceComparisonState?: LiveBridgeEvidenceState;
+}
+
+export interface LiveBridgeReadinessView {
+  heading: string;
+  status: "ready" | "blocked" | "warning";
+  canSendLive: boolean;
+  summary: string;
+  caveat: string;
+  blockedEffects: string[];
+  details: Array<{ label: string; value: string }>;
+}
+
+function describeEvidenceState(state: LiveBridgeEvidenceState | undefined): string {
+  if (state === "passed") return "Passed in local validation";
+  if (state === "failed") return "Failed in local validation";
+  return "Not run in this UI session";
+}
+
+export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): LiveBridgeReadinessView {
+  const descriptor = input.descriptorConnection;
+  const blockedEffects = descriptor.descriptorStatus?.blockedEffects ?? [
+    "runtime_authority",
+    "agent_dispatch",
+    "memory_write",
+    "approval_capture",
+    "external_send",
+  ];
+  const evidenceCapture = input.evidenceCaptureState ?? "not_run";
+  const evidenceComparison = input.evidenceComparisonState ?? "not_run";
+  const integrityMismatch =
+    descriptor.failClosedReason === "descriptor_signature_or_checksum_mismatch" ||
+    descriptor.checksumState === "mismatch" ||
+    descriptor.signatureState === "invalid";
+  const evidenceFailed = evidenceCapture === "failed" || evidenceComparison === "failed";
+  const evidencePending = evidenceCapture !== "passed" || evidenceComparison !== "passed";
+  const canSendLive = descriptor.canAttemptLiveBridge && !evidenceFailed;
+  const status: LiveBridgeReadinessView["status"] = !canSendLive
+    ? "blocked"
+    : evidencePending
+      ? "warning"
+      : "ready";
+
+  let summary: string;
+  if (!descriptor.canAttemptLiveBridge) {
+    if (descriptor.failClosedReason === "no_endpoint") {
+      summary = "No Napoleon endpoint is configured, so Concierge is blocked from live bridge sends.";
+    } else if (integrityMismatch) {
+      summary = "Napoleon descriptor signature or checksum mismatch detected; Concierge is fail-closed.";
+    } else if (descriptor.failClosedReason === "no_descriptor") {
+      summary = "Napoleon descriptor is missing, so Concierge is blocked from live bridge sends.";
+    } else {
+      summary = "Napoleon descriptor is invalid or grants authority, so Concierge is blocked from live bridge sends.";
+    }
+  } else if (evidenceFailed) {
+    summary = "Local bridge evidence validation failed; Concierge should stay in rehearsal or review mode.";
+  } else if (evidencePending) {
+    summary = "Descriptor preflight passes, but bridge evidence capture or comparison has not been verified in this UI session.";
+  } else {
+    summary = "Napoleon bridge is ready for a governed live text turn through the descriptor-verified contract.";
+  }
+
+  return {
+    heading: "Live bridge readiness",
+    status,
+    canSendLive,
+    summary,
+    caveat:
+      "This readiness check is not Napoleon approval, does not grant memory writes, does not dispatch agents, and does not allow external sends. No text turn should proceed when descriptor integrity or contract checks fail.",
+    blockedEffects,
+    details: [
+      { label: "Descriptor", value: descriptor.state },
+      { label: "Checksum", value: descriptor.checksumState },
+      { label: "Signature", value: descriptor.signatureState },
+      { label: "Evidence capture", value: describeEvidenceState(evidenceCapture) },
+      { label: "Evidence comparison", value: describeEvidenceState(evidenceComparison) },
+      { label: "Live send", value: canSendLive ? "governed bridge allowed" : "blocked" },
+    ],
+  };
 }
 
 export function describeDelegation(delegation: NapoleonDelegation | undefined): DelegationView {

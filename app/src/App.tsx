@@ -36,6 +36,7 @@ import {
   describeDelegation,
   describeGovernanceDecision,
   describeGovernanceReview,
+  describeLiveBridgeReadiness,
   describeMemoryProposalReview,
   summarizeRehearsalPreview,
 } from "./presentation";
@@ -757,6 +758,11 @@ export function App() {
     taxonomyCounts[dimension].map((row) => ({ ...row, value: `${dimension}:${row.label}` })),
   );
   const selectedTaxonomyRow = taxonomyRows.find((row) => row.value === selectedTaxonomyLabel);
+  const liveBridgeReadiness = describeLiveBridgeReadiness({
+    descriptorConnection,
+    evidenceCaptureState: "not_run",
+    evidenceComparisonState: "not_run",
+  });
 
   return (
     <main className="shell">
@@ -850,6 +856,26 @@ export function App() {
           <strong>Cache policy</strong>
           <span>{descriptorStatus?.cachePolicy ?? "unavailable"}</span>
         </div>
+      </section>
+
+      <section className={`bridge-readiness ${liveBridgeReadiness.status}`}>
+        <div>
+          <strong>{liveBridgeReadiness.heading}</strong>
+          <span>{liveBridgeReadiness.summary}</span>
+          <span>{liveBridgeReadiness.caveat}</span>
+        </div>
+        <dl>
+          {liveBridgeReadiness.details.map((detail) => (
+            <div key={detail.label}>
+              <dt>{detail.label}</dt>
+              <dd>{detail.value}</dd>
+            </div>
+          ))}
+          <div>
+            <dt>Blocked effects</dt>
+            <dd>{liveBridgeReadiness.blockedEffects.join(", ")}</dd>
+          </div>
+        </dl>
       </section>
 
       <section className="capability-ledger-controls">

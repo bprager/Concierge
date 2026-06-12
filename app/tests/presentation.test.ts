@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  buildDescriptorConnectionState,
   buildGovernanceReviewState,
   buildMemoryProposalReviewState,
   buildRehearsalPreview,
   buildTextTurnContract,
+  defaultChiefOfStaffDescriptor,
 } from "../src/contractBridge.js";
 import {
   describeDelegation,
   describeGovernanceDecision,
   describeGovernanceReview,
+  describeLiveBridgeReadiness,
   describeMemoryProposalReview,
   summarizeRehearsalPreview,
 } from "../src/presentation.js";
@@ -172,4 +175,63 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.equal(empty.heading, "Napoleon delegation unavailable");
   assert.ok(!empty.body.includes("Napoleon recommends"));
   assert.ok(!empty.body.includes("Passive Brain found"));
+});
+
+test("describes live bridge readiness as blocked when no endpoint is configured", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: false,
+      descriptor: defaultChiefOfStaffDescriptor,
+    }),
+    evidenceCaptureState: "not_run",
+    evidenceComparisonState: "not_run",
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canSendLive, false);
+  assert.ok(view.summary.includes("No Napoleon endpoint"));
+  assert.ok(view.caveat.includes("not Napoleon approval"));
+  assert.ok(view.blockedEffects.includes("memory_write"));
+  assert.ok(view.details.some((detail) => detail.label === "Evidence capture" && detail.value.includes("Not run")));
+});
+
+test("describes live bridge readiness as ready only when descriptor and evidence checks pass", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+  });
+
+  assert.equal(view.status, "ready");
+  assert.equal(view.canSendLive, true);
+  assert.ok(view.summary.includes("ready for a governed live text turn"));
+  assert.ok(view.details.some((detail) => detail.label === "Descriptor" && detail.value.includes("ready")));
+  assert.ok(view.details.some((detail) => detail.label === "Checksum" && detail.value === "matched"));
+  assert.ok(view.details.some((detail) => detail.label === "Evidence comparison" && detail.value.includes("Passed")));
+  assert.ok(view.caveat.includes("does not grant memory writes"));
+});
+
+test("describes descriptor integrity mismatch as fail-closed readiness", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:expected",
+      actualChecksum: "sha256:actual",
+      signatureValid: false,
+    }),
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canSendLive, false);
+  assert.ok(view.summary.includes("signature or checksum mismatch"));
+  assert.ok(view.caveat.includes("No text turn should proceed"));
 });

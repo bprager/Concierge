@@ -68,6 +68,63 @@ header {
   font-size: 0.88rem;
 }
 
+.bridge-readiness {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.bridge-readiness.ready {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.bridge-readiness.warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.bridge-readiness.blocked {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.bridge-readiness > div {
+  display: grid;
+  gap: 4px;
+}
+
+.bridge-readiness span {
+  font-size: 0.88rem;
+}
+
+.bridge-readiness dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.bridge-readiness dl div {
+  display: grid;
+  grid-template-columns: minmax(140px, max-content) 1fr;
+  gap: 8px;
+}
+
+.bridge-readiness dt {
+  color: #374151;
+  font-weight: 650;
+}
+
+.bridge-readiness dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .capability-ledger-controls {
   margin-top: 16px;
   display: grid;

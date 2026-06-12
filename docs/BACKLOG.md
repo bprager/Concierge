@@ -59,7 +59,7 @@ Evaluator coverage:
 | TX-010 | Add evaluator fixtures for text UI | P1 | Text mode can be smoke tested | text_smoke_eval_completed |
 | TX-011 | Add Rehearsal Mode for governed turns | P0 | User can preview understood request, proposed Napoleon path, CoS review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate before any live bridge call | rehearsal_preview_created |
 | TX-012 | Add capability intelligence query surface | P1 | Local query surface answers common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next capability questions from bounded local aggregates | capability_intelligence_answered |
-| TX-013 | Add live bridge fail-closed connection states and delegation panel | P0 | Missing endpoint, descriptor mismatch, auth failure, contract mismatch, no-go, timeout, and HTTP failure are blocked visibly; bridge-provided selected agents, reasons, effects, governance, trace, and audit references are shown without invented attribution | bridge_request_failed, bridge_request_completed |
+| TX-013 | Add live bridge fail-closed connection states and delegation panel | P0 | Missing endpoint, descriptor mismatch, auth failure, contract mismatch, no-go, timeout, and HTTP failure are blocked visibly; live bridge readiness summarizes endpoint, descriptor integrity, evidence capture/comparison state, and blocked effects without implying approval; bridge-provided selected agents, reasons, effects, governance, trace, and audit references are shown without invented attribution | bridge_request_failed, bridge_request_completed |
 
 ### TX-005 details
 
@@ -162,6 +162,7 @@ Acceptance criteria:
 - Repository validation scans runtime source for direct process execution, memory or graph access, and agent or tool dispatch outside the governed bridge.
 - Descriptor discovery is visible as first-class connection state, including live-discovered, missing descriptor, and checksum/signature mismatch states.
 - Live descriptor discovery resolves the configured Napoleon base URL to `/v1/concierge/chief-of-staff/descriptor` and treats invalid results as blocked connection state, not authority.
+- Text Concierge shows a live bridge readiness summary that combines endpoint state, descriptor state, checksum/signature state, local evidence capture/comparison state, live-send status, and blocked effects.
 - Live text bridge calls can capture sanitized contract evidence for success and fail-closed outcomes without raw prompt text, response text, endpoint hosts, bearer tokens, request bodies, or response bodies.
 - `make bridge-evidence-capture` exercises one governed text evidence capture against the local harness, including descriptor discovery before text turn submission.
 - `make bridge-evidence-compare` validates sample or captured bridge evidence against the OpenAPI-aligned bridge registry and rejects raw payload or secret fields.
@@ -173,6 +174,7 @@ Acceptance criteria:
 Privacy and safety impact:
 
 - Missing or invalid bridge state cannot be converted into local authority.
+- Live bridge readiness is a local preflight summary only and cannot be treated as Napoleon approval, memory permission, agent dispatch permission, or external-send permission.
 - Provenance prevents Concierge from hiding Napoleon's authority boundary or inventing agent contributions.
 - Bridge evidence supports later live-runtime comparison without becoming a local audit authority or leaking secrets.
 
