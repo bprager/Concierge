@@ -249,6 +249,21 @@ function delegationMatchesProvenance(
   );
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasUnprovenSelectedAgentAttribution(text: string | undefined, delegation: NapoleonDelegation | undefined): boolean {
+  if (!text) return false;
+  const protectedAgentNames = ["Passive Brain"];
+  return protectedAgentNames.some((displayName) => {
+    const claimsFinding = new RegExp(`\\b${escapeRegExp(displayName)}\\s+found\\b`, "i").test(text);
+    if (!claimsFinding) return false;
+    const agent = delegation?.selectedAgents.find((candidate) => candidate.displayName === displayName);
+    return !agent?.contributionSummary;
+  });
+}
+
 function failClosed(
   dependencies: BridgeDependencies,
   reason: NapoleonBridgeFailureReason,
@@ -404,6 +419,9 @@ export async function sendToNapoleon(
         ? payload.delegation
         : null;
   if (delegation === null) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
+  if (hasUnprovenSelectedAgentAttribution(payload.text, delegation)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
 

@@ -58,6 +58,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Reject live text responses that claim selected-agent findings such as "Passive Brain found..." unless matching delegation provenance includes that agent contribution.
 - Treat live Napoleon `deny` and `no_go` governance responses as fail-closed outcomes for text turns, memory proposal review, and Chief of Staff steering handoffs instead of normal successful responses, while retaining sanitized trace, audit, governance, and blocked-effect evidence where available.
 - Kept evaluator HTTP dependencies out of stub mode until HTTP evaluation is requested.
 - Aligned evaluator report schema with the structured hard-failure records written by the evaluator.

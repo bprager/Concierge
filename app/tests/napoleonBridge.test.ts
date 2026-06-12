@@ -328,6 +328,65 @@ test("live bridge fails closed when Napoleon response omits trace or audit prove
   );
 });
 
+test("live bridge fails closed when response text invents selected-agent attribution", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_unproven_agent_text",
+          conversationId: "conv_unproven_agent_text",
+          turnId: "turn_unproven_agent_text",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Passive Brain found the prior rollout note.",
+              governanceDecision: {
+                decision_id: "decision_unproven_agent_text",
+                request_id: "cos_turn_unproven_agent_text",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["external_send"],
+                trace_id: "trace_unproven_agent_text",
+                audit_id: "audit_unproven_agent_text",
+              },
+              traceEnvelope: {
+                trace_id: "trace_unproven_agent_text",
+                parent_trace_id: "conv_unproven_agent_text",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_unproven_agent_text",
+                decision_id: "decision_unproven_agent_text",
+                timestamp: "2026-06-12T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_unproven_agent_text",
+                trace_id: "trace_unproven_agent_text",
+                decision_id: "decision_unproven_agent_text",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_unproven_agent_text"],
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
 test("live bridge fails closed when delegation provenance disagrees with trace or audit envelope", async () => {
   await assert.rejects(
     () =>
