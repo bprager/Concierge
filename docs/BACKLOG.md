@@ -165,7 +165,7 @@ Acceptance criteria:
 - Text Concierge shows a live bridge readiness summary that combines endpoint state, descriptor state, checksum/signature state, in-session sanitized evidence capture/comparison state, live-send status, and blocked effects.
 - Live text attempts update the readiness panel from captured `bridge_contract_evidence`; evidence comparison fails if the captured operation path or request kind drifts from the bridge registry or if raw/secret fields appear.
 - Text Concierge settings include a local harness endpoint preset for `http://127.0.0.1:8787`; selecting it only configures endpoint and descriptor preflight state, and does not start, stop, or control the harness process.
-- `make app-smoke` covers the local harness text path through descriptor discovery, governed send, delegation presentation inputs, blocked effects, and readiness evidence.
+- `make app-smoke` covers the local harness text path through descriptor discovery, governed send, delegation presentation inputs, blocked effects, readiness evidence, and denied fail-closed text turn details.
 - Live text bridge calls can capture sanitized contract evidence for success and fail-closed outcomes without raw prompt text, response text, endpoint hosts, bearer tokens, request bodies, or response bodies.
 - `make bridge-evidence-capture` exercises one governed text evidence capture against the local harness, including descriptor discovery before text turn submission.
 - `make bridge-evidence-compare` validates sample or captured bridge evidence against the OpenAPI-aligned bridge registry and rejects raw payload or secret fields.
