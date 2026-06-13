@@ -64,6 +64,30 @@ class BridgeContractValidationTest(unittest.TestCase):
         validate_repo.validate_openapi_instance(schema, response)
         validate_repo.validate_bridge_response_provenance(response)
 
+    def test_response_validator_rejects_text_turn_side_effect_claims(self):
+        response = validate_repo.load_json("examples/sample_text_turn_response.json")
+        unsafe_response = copy.deepcopy(response)
+        unsafe_response["memoryWritePerformed"] = True
+
+        with self.assertRaises(SystemExit):
+            validate_repo.validate_bridge_response_provenance(unsafe_response)
+
+    def test_response_validator_rejects_memory_review_side_effect_claims(self):
+        response = validate_repo.load_json("examples/sample_memory_proposal_response.json")
+        unsafe_response = copy.deepcopy(response)
+        unsafe_response["approvalCaptured"] = True
+
+        with self.assertRaises(SystemExit):
+            validate_repo.validate_bridge_response_provenance(unsafe_response)
+
+    def test_response_validator_rejects_steering_local_application_claims(self):
+        response = validate_repo.load_json("examples/sample_chief_of_staff_steering_response.json")
+        unsafe_response = copy.deepcopy(response)
+        unsafe_response["appliedLocally"] = True
+
+        with self.assertRaises(SystemExit):
+            validate_repo.validate_bridge_response_provenance(unsafe_response)
+
     def test_sample_memory_proposal_request_matches_openapi_request_contract(self):
         request = validate_repo.load_json("examples/sample_memory_proposal_request.json")
         schema = validate_repo.load_openapi_request_schema("/v1/concierge/memory-proposals")

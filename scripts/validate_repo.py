@@ -296,6 +296,30 @@ def validate_bridge_response_provenance(data: object) -> None:
             "recommendationProvenance.auditId must match governance audit",
         )
 
+    forbidden_true_fields = {
+        "approvalCaptured",
+        "memoryWriteAllowed",
+        "memoryWritePerformed",
+        "agentDispatchAllowed",
+        "agentDispatchPerformed",
+        "externalSendAllowed",
+        "externalSendPerformed",
+        "appliedLocally",
+    }
+
+    def scan_forbidden_side_effect_claims(value: object, path: str) -> None:
+        if isinstance(value, dict):
+            for key, item in value.items():
+                child_path = f"{path}.{key}"
+                if key in forbidden_true_fields and item is not False:
+                    raise SystemExit(f"{child_path} must be false in governed bridge response examples")
+                scan_forbidden_side_effect_claims(item, child_path)
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                scan_forbidden_side_effect_claims(item, f"{path}[{index}]")
+
+    scan_forbidden_side_effect_claims(data, "response")
+
 
 def validate_proposal_only_request_boundary(data: object) -> None:
     if not isinstance(data, dict):
