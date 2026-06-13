@@ -63,6 +63,8 @@ Bridge readiness proof exports are local metadata only. They may include descrip
 
 Bridge readiness proof comparison is also local metadata only. It compares the current proof with the previous proof exported in the same app session using sanitized descriptor and evidence fields, and it must not expose raw prompts, endpoint hosts, tokens, request bodies, response bodies, or authority claims.
 
+The governed route panel is local contract metadata only. It may show canonical Napoleon bridge paths and request kinds from the generated registry, but it must not display configured endpoint hosts, bearer tokens, raw prompts, request bodies, response bodies, or any claim that Concierge can bypass Napoleon governance.
+
 Delegation and recommendation attribution require bridge provenance. Concierge may say that Napoleon recommended something only when the live bridge response includes matching recommendation provenance with that contribution, trace ID, and audit ID, and those IDs match the response trace and audit envelopes. Concierge may say that a selected agent found something only when the live bridge response includes that contribution, selected agent, governance state, trace ID, and audit ID, and those IDs match the response trace and audit envelopes. Live text that claims a Napoleon recommendation or selected-agent finding without matching contribution provenance must be blocked as a contract mismatch. Missing or mismatched provenance fails closed rather than being repaired locally.
 
 Live text responses that claim memory writes, approval capture, external sends, agent dispatch, or local application must also fail closed as contract mismatches. A response cannot convert a governed text turn into execution proof just by saying the side effect happened.

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { answerCapabilityQuestion } from "./capabilityLedger";
+import { describeBridgeOperationSummary } from "./bridgeOperations";
 import {
   buildBridgeEvidenceReadinessState,
   compareBridgeReadinessProofs,
@@ -822,6 +823,12 @@ export function App() {
     lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus,
     lastFailureReason: bridgeEvidenceReadiness.lastFailureReason,
   });
+  const governedOperationSummaries = [
+    describeBridgeOperationSummary("chief_of_staff_descriptor"),
+    describeBridgeOperationSummary("text_turn"),
+    describeBridgeOperationSummary("memory_proposal_review"),
+    describeBridgeOperationSummary("chief_of_staff_steering"),
+  ];
 
   return (
     <main className="shell">
@@ -932,6 +939,25 @@ export function App() {
           <strong>Cache policy</strong>
           <span>{descriptorStatus?.cachePolicy ?? "unavailable"}</span>
         </div>
+      </section>
+
+      <section className="bridge-operations">
+        <div>
+          <strong>Governed Napoleon routes</strong>
+          <span>These are the contract paths Concierge can use; endpoint hosts and tokens stay out of this view.</span>
+        </div>
+        <dl>
+          {governedOperationSummaries.map((operation) => (
+            <div key={operation.id}>
+              <dt>{operation.label}</dt>
+              <dd>
+                <span>{operation.path}</span>
+                <span>{operation.requestKind}</span>
+                <span>{operation.boundary}</span>
+              </dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <section className={`bridge-readiness ${liveBridgeReadiness.status}`}>

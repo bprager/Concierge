@@ -4,6 +4,7 @@ import {
   BRIDGE_OPERATIONS,
   GENERATED_BRIDGE_CONTRACT_SOURCE,
   buildNapoleonBridgeUrl,
+  describeBridgeOperationSummary,
   getBridgeOperation,
 } from "../src/bridgeOperations.js";
 
@@ -53,5 +54,42 @@ test("bridge URL builder resolves base URLs and already-specific operation URLs"
       "chief_of_staff_steering",
     ),
     "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering",
+  );
+});
+
+test("describes governed bridge operation routes without endpoint hosts or secrets", () => {
+  const summary = describeBridgeOperationSummary("text_turn");
+
+  assert.equal(summary.label, "Text turn");
+  assert.equal(summary.path, "/v1/concierge/turn");
+  assert.equal(summary.requestKind, "text_turn");
+  assert.equal(summary.transport, "HTTP POST");
+  assert.equal(summary.boundary, "Governed Napoleon bridge only");
+  assert.equal(summary.tokenHandling, "Bearer token is sent only in the Authorization header");
+  assert.equal(summary.sideEffects, "No memory write, approval capture, agent dispatch, or external send is performed by Concierge");
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
+});
+
+test("describes all core governed operation routes for the UI", () => {
+  const summaries = [
+    describeBridgeOperationSummary("chief_of_staff_descriptor"),
+    describeBridgeOperationSummary("text_turn"),
+    describeBridgeOperationSummary("memory_proposal_review"),
+    describeBridgeOperationSummary("chief_of_staff_steering"),
+  ];
+
+  assert.deepEqual(
+    summaries.map((summary) => summary.label),
+    ["Descriptor discovery", "Text turn", "Memory proposal review", "Chief of Staff steering"],
+  );
+  assert.deepEqual(
+    summaries.map((summary) => summary.path),
+    [
+      "/v1/concierge/chief-of-staff/descriptor",
+      "/v1/concierge/turn",
+      "/v1/concierge/memory-proposals",
+      "/v1/concierge/chief-of-staff/steering",
+    ],
   );
 });

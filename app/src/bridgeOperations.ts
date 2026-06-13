@@ -24,6 +24,17 @@ export interface BridgeOperation {
   tokenPlacement: "authorization_header_only";
 }
 
+export interface BridgeOperationSummary {
+  id: BridgeOperationId;
+  label: string;
+  path: string;
+  requestKind: BridgeOperation["requestKind"];
+  transport: "HTTP POST";
+  boundary: string;
+  tokenHandling: string;
+  sideEffects: string;
+}
+
 export { GENERATED_BRIDGE_CONTRACT_SOURCE };
 
 export const BRIDGE_OPERATIONS: BridgeOperation[] = [...GENERATED_BRIDGE_OPERATIONS];
@@ -41,4 +52,26 @@ export function buildNapoleonBridgeUrl(configuredEndpoint: string, operationId: 
   const trimmed = configuredEndpoint.trim().replace(/\/+$/, "");
   if (trimmed.endsWith(operation.path)) return trimmed;
   return `${trimmed}${operation.path}`;
+}
+
+const BRIDGE_OPERATION_LABELS: Record<BridgeOperationId, string> = {
+  chief_of_staff_descriptor: "Descriptor discovery",
+  chief_of_staff_steering: "Chief of Staff steering",
+  evaluate: "Evaluator request",
+  memory_proposal_review: "Memory proposal review",
+  text_turn: "Text turn",
+};
+
+export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOperationSummary {
+  const operation = getBridgeOperation(id);
+  return {
+    id: operation.id,
+    label: BRIDGE_OPERATION_LABELS[operation.id],
+    path: operation.path,
+    requestKind: operation.requestKind,
+    transport: "HTTP POST",
+    boundary: "Governed Napoleon bridge only",
+    tokenHandling: "Bearer token is sent only in the Authorization header",
+    sideEffects: "No memory write, approval capture, agent dispatch, or external send is performed by Concierge",
+  };
 }

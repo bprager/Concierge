@@ -78,6 +78,50 @@ header {
   border-radius: 8px;
 }
 
+.bridge-operations {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.bridge-operations > div {
+  display: grid;
+  gap: 4px;
+}
+
+.bridge-operations span {
+  font-size: 0.88rem;
+}
+
+.bridge-operations dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.bridge-operations dl div {
+  display: grid;
+  grid-template-columns: minmax(170px, max-content) 1fr;
+  gap: 8px;
+}
+
+.bridge-operations dt {
+  color: #374151;
+  font-weight: 650;
+}
+
+.bridge-operations dd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .bridge-readiness.ready {
   background: #ecfdf5;
   border-color: #a7f3d0;
