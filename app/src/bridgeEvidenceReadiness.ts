@@ -1,4 +1,5 @@
 import { getBridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
+import type { DescriptorConnectionState } from "./contractBridge.js";
 import type { BridgeContractEvidence } from "./napoleonBridge.js";
 import type { LiveBridgeEvidenceState } from "./presentation.js";
 
@@ -9,7 +10,14 @@ export interface BridgeEvidenceReadinessState {
   lastOperationId?: BridgeOperationId;
   lastTargetPath?: string;
   lastFailureReason?: string;
+  lastBlockedEffects?: string[];
   failureReason?: string;
+}
+
+export interface BridgeReadinessProofInput {
+  descriptorConnection: DescriptorConnectionState;
+  readiness: BridgeEvidenceReadinessState;
+  generatedAt?: string;
 }
 
 const FORBIDDEN_EVIDENCE_KEYS = new Set([
@@ -75,6 +83,53 @@ export function updateBridgeEvidenceReadinessState(
     lastOperationId: record.operationId,
     lastTargetPath: record.targetPath,
     lastFailureReason: record.reason,
+    lastBlockedEffects: record.blockedEffects,
     failureReason: failureReason ?? undefined,
   };
+}
+
+export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput): string {
+  const descriptorStatus = input.descriptorConnection.descriptorStatus;
+  const blockedEffects = input.readiness.lastBlockedEffects ?? descriptorStatus?.blockedEffects ?? [];
+
+  return JSON.stringify(
+    {
+      kind: "concierge_bridge_readiness_proof",
+      version: 1,
+      generatedAt: input.generatedAt ?? new Date().toISOString(),
+      caveat:
+        "Local readiness proof only. It is not Napoleon approval and does not grant memory writes, approval capture, agent dispatch, or external sends.",
+      descriptor: {
+        state: input.descriptorConnection.state,
+        checksumState: input.descriptorConnection.checksumState,
+        signatureState: input.descriptorConnection.signatureState,
+        canAttemptLiveBridge: input.descriptorConnection.canAttemptLiveBridge,
+        serviceId: descriptorStatus?.serviceId,
+        runtimeAuthority: descriptorStatus?.runtimeAuthority ?? false,
+        cachePolicy: descriptorStatus?.cachePolicy,
+        blockedEffects: descriptorStatus?.blockedEffects ?? [],
+        failClosedReason: input.descriptorConnection.failClosedReason,
+      },
+      evidence: {
+        captureState: input.readiness.captureState,
+        comparisonState: input.readiness.comparisonState,
+        lastEvidenceStatus: input.readiness.lastEvidenceStatus,
+        lastOperationId: input.readiness.lastOperationId,
+        lastTargetPath: input.readiness.lastTargetPath,
+        lastFailureReason: input.readiness.lastFailureReason,
+        failureReason: input.readiness.failureReason,
+        blockedEffects,
+      },
+      boundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        localApplicationPerformed: false,
+        proposalOnly: true,
+      },
+    },
+    null,
+    2,
+  );
 }

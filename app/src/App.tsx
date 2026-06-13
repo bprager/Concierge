@@ -2,6 +2,7 @@ import { useState } from "react";
 import { answerCapabilityQuestion } from "./capabilityLedger";
 import {
   buildBridgeEvidenceReadinessState,
+  exportBridgeReadinessProofJson,
   updateBridgeEvidenceReadinessState,
 } from "./bridgeEvidenceReadiness";
 import {
@@ -126,6 +127,7 @@ export function App() {
   const [lastDelegation, setLastDelegation] = useState<ReturnType<typeof describeDelegation> | null>(null);
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
   const [bridgeEvidenceReadiness, setBridgeEvidenceReadiness] = useState(buildBridgeEvidenceReadinessState);
+  const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
   const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
   const [lastMemoryReviewState, setLastMemoryReviewState] = useState<MemoryProposalReviewState | null>(null);
   const [lastMemoryReview, setLastMemoryReview] = useState<ReturnType<typeof describeMemoryProposalReview> | null>(null);
@@ -191,6 +193,7 @@ export function App() {
 
   function updateEndpoint(value: string) {
     setEndpoint(value);
+    setBridgeReadinessProofJson(null);
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_endpoint", value.trim());
@@ -201,6 +204,7 @@ export function App() {
 
   function updateAuthToken(value: string) {
     setAuthToken(value);
+    setBridgeReadinessProofJson(null);
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_auth_token", value.trim());
@@ -249,12 +253,14 @@ export function App() {
     setRehearsalMode(preset.rehearsalMode);
     setPendingRehearsal(null);
     setBridgeEvidenceReadiness(buildBridgeEvidenceReadinessState());
+    setBridgeReadinessProofJson(null);
     void discoverDescriptor(preset.endpoint);
   }
 
   function updateProfile(value: LocalProfile) {
     setProfile(value);
     setPendingRehearsal(null);
+    setBridgeReadinessProofJson(null);
   }
 
   function updateInput(value: string) {
@@ -674,6 +680,29 @@ export function App() {
     });
   }
 
+  function exportBridgeReadinessProof() {
+    const traceId = newTraceId();
+    const json = exportBridgeReadinessProofJson({
+      descriptorConnection,
+      readiness: bridgeEvidenceReadiness,
+    });
+    setBridgeReadinessProofJson(json);
+    emitEvent("bridge_readiness_proof_exported", {
+      traceId,
+      conversationId,
+      descriptorState: descriptorConnection.state,
+      checksumState: descriptorConnection.checksumState,
+      signatureState: descriptorConnection.signatureState,
+      evidenceCaptureState: bridgeEvidenceReadiness.captureState,
+      evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
+      lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus ?? "not_run",
+      lastFailureReason: bridgeEvidenceReadiness.lastFailureReason ?? "none",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
+    });
+  }
+
   function createSteeringDraft() {
     const traceId = newTraceId();
     const draft = draftChiefOfStaffSteering(capabilityLedger, {
@@ -816,7 +845,13 @@ export function App() {
         </label>
         <label>
           Descriptor
-          <select value={descriptorMode} onChange={(e) => setDescriptorMode(e.target.value as typeof descriptorMode)}>
+          <select
+            value={descriptorMode}
+            onChange={(e) => {
+              setDescriptorMode(e.target.value as typeof descriptorMode);
+              setBridgeReadinessProofJson(null);
+            }}
+          >
             <option value="discovered">Discovered local descriptor</option>
             <option value="live">Live discovered descriptor</option>
             <option value="missing">Missing descriptor</option>
@@ -910,6 +945,12 @@ export function App() {
             </div>
           ) : null}
         </dl>
+        <button className="secondary" onClick={exportBridgeReadinessProof}>
+          Export readiness proof
+        </button>
+        {bridgeReadinessProofJson ? (
+          <pre aria-label="Exported bridge readiness proof">{bridgeReadinessProofJson}</pre>
+        ) : null}
       </section>
 
       <section className="capability-ledger-controls">
