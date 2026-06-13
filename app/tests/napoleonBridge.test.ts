@@ -330,6 +330,9 @@ test("live bridge fails closed when Napoleon returns deny or no-go governance", 
       events.at(-1)?.attributes.reason,
       outcome === "deny" ? "governance_denied" : "governance_no_go",
     );
+    assert.equal(events.at(-1)?.attributes.decisionId, `decision_remote_${outcome}`);
+    assert.equal(events.at(-1)?.attributes.auditId, `audit_remote_${outcome}`);
+    assert.equal(events.at(-1)?.attributes.governanceOutcome, outcome);
     const failure = events.at(-1);
     assert.deepEqual(failure?.attributes.blockedEffects, [
       "external_send",
@@ -415,6 +418,9 @@ test("live bridge fails closed when Napoleon returns deny or no-go governance", 
       (error: unknown) =>
         error instanceof Error &&
         error.name === "NapoleonBridgeError" &&
+        (error as { decisionId?: string }).decisionId === `decision_remote_${outcome}_error` &&
+        (error as { auditId?: string }).auditId === `audit_remote_${outcome}_error` &&
+        (error as { governanceOutcome?: string }).governanceOutcome === outcome &&
         "blockedEffects" in error &&
         JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
           JSON.stringify(["external_send", "memory_write", "agent_dispatch", "approval_capture"]),

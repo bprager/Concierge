@@ -423,11 +423,18 @@ test("describes bridge failure with blocked effects visible", () => {
     "memory_write",
     "agent_dispatch",
     "approval_capture",
-  ]);
+  ], {
+    decisionId: "decision_blocked",
+    auditId: "audit_blocked",
+    governanceOutcome: "deny",
+  });
 
   const message = describeBridgeFailure(error);
 
   assert.ok(message.includes("governance_denied"));
+  assert.ok(message.includes("decision decision_blocked"));
+  assert.ok(message.includes("audit audit_blocked"));
+  assert.ok(message.includes("governance deny"));
   assert.ok(message.includes("Blocked effects: external_send, memory_write, agent_dispatch, approval_capture"));
   assert.ok(message.includes("did not send externally"));
   assert.ok(message.includes("did not write memory"));

@@ -130,7 +130,10 @@ export function describeBridgeFailure(error: unknown): string {
   const blockedEffects = error.blockedEffects.length
     ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
     : "";
-  return `Live Napoleon bridge blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}.${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
+  const decision = error.decisionId ? `, decision ${error.decisionId}` : "";
+  const audit = error.auditId ? `, audit ${error.auditId}` : "";
+  const governance = error.governanceOutcome ? `, governance ${error.governanceOutcome}` : "";
+  return `Live Napoleon bridge blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}${decision}${audit}${governance}.${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
 }
 
 export function describeBridgeFailureTranscriptMessage(error: unknown): string {
@@ -141,7 +144,10 @@ export function describeBridgeFailureTranscriptMessage(error: unknown): string {
   const blockedEffects = error.blockedEffects.length
     ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
     : "";
-  return `Napoleon bridge blocked: ${error.reason}.${blockedEffects} Concierge did not execute anything and remains in prepare-only mode.`;
+  const decision = error.decisionId ? ` Decision ${error.decisionId}.` : "";
+  const audit = error.auditId ? ` Audit ${error.auditId}.` : "";
+  const governance = error.governanceOutcome ? ` Governance ${error.governanceOutcome}.` : "";
+  return `Napoleon bridge blocked: ${error.reason}.${decision}${audit}${governance}${blockedEffects} Concierge did not execute anything and remains in prepare-only mode.`;
 }
 
 export function describeGovernedHandoffFailure(error: unknown, label: string, primaryEffect: string): string {

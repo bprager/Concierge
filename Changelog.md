@@ -93,6 +93,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 - Show blocked effects from fail-closed memory proposal review and Chief of Staff steering handoff errors in telemetry and visible failure messages.
 - Show live text bridge failure reasons and blocked effects in the conversation transcript as well as the bridge failure panel.
+- Show returned decision, audit, and governance references in live text bridge failure telemetry and visible fail-closed messages when Napoleon supplies them.
 - Show blocked effects from fail-closed live bridge errors in telemetry and the visible bridge-blocked message.
 - Preserve the local governed text-turn blocked-effect list in early fail-closed bridge errors, telemetry, and sanitized contract evidence.
 - Preserve local memory proposal and Chief of Staff steering blocked-effect lists in early fail-closed governed handoff errors and telemetry.

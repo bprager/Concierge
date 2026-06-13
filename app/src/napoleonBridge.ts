@@ -71,12 +71,21 @@ export type NapoleonBridgeFailureReason =
   | "bridge_timeout"
   | "http_failure";
 
+export interface NapoleonBridgeFailureMetadata {
+  decisionId?: string;
+  auditId?: string;
+  governanceOutcome?: string;
+}
+
 export class NapoleonBridgeError extends Error {
   reason: NapoleonBridgeFailureReason;
   status?: number;
   traceId: string;
   requestId: string;
   blockedEffects: string[];
+  decisionId?: string;
+  auditId?: string;
+  governanceOutcome?: string;
 
   constructor(
     reason: NapoleonBridgeFailureReason,
@@ -84,6 +93,7 @@ export class NapoleonBridgeError extends Error {
     requestId: string,
     status?: number,
     blockedEffects: string[] = [],
+    metadata: NapoleonBridgeFailureMetadata = {},
   ) {
     super(`Napoleon bridge fail-closed: ${reason}${status ? ` (${status})` : ""}`);
     this.name = "NapoleonBridgeError";
@@ -92,6 +102,9 @@ export class NapoleonBridgeError extends Error {
     this.traceId = traceId;
     this.requestId = requestId;
     this.blockedEffects = blockedEffects;
+    this.decisionId = metadata.decisionId;
+    this.auditId = metadata.auditId;
+    this.governanceOutcome = metadata.governanceOutcome;
   }
 }
 
@@ -332,14 +345,22 @@ function failClosed(
   if (evidenceContext) {
     captureBridgeEvidence(dependencies, buildFailClosedEvidence(reason, status, evidenceContext));
   }
-  emitBridgeEvent(dependencies, "bridge_request_failed", {
+  const failureAttributes: Record<string, unknown> = {
     traceId,
     requestId,
     reason,
     status,
     blockedEffects: evidenceContext?.blockedEffects ?? [],
+  };
+  if (evidenceContext?.decisionId) failureAttributes.decisionId = evidenceContext.decisionId;
+  if (evidenceContext?.auditId) failureAttributes.auditId = evidenceContext.auditId;
+  if (evidenceContext?.governanceOutcome) failureAttributes.governanceOutcome = evidenceContext.governanceOutcome;
+  emitBridgeEvent(dependencies, "bridge_request_failed", failureAttributes);
+  throw new NapoleonBridgeError(reason, traceId, requestId, status, evidenceContext?.blockedEffects ?? [], {
+    decisionId: evidenceContext?.decisionId,
+    auditId: evidenceContext?.auditId,
+    governanceOutcome: evidenceContext?.governanceOutcome,
   });
-  throw new NapoleonBridgeError(reason, traceId, requestId, status, evidenceContext?.blockedEffects ?? []);
 }
 
 export async function sendToNapoleon(
