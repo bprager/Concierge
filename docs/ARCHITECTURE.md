@@ -268,6 +268,7 @@ rectangle "Telemetry Destinations" {
 - Exposes local telemetry, camera, and microphone state in settings; camera and microphone default off and toggling them does not start capture or send media.
 - Shows voice readiness as local preflight state; explicit microphone permission can be requested, but any permission stream is stopped immediately until voice mode exists.
 - Shows a local voice activity detection sample that exercises segment detection from amplitude frames without starting microphone capture or storing raw audio.
+- Shows a local speech transcription sample that exercises transcript metadata from fixed local sample tokens without starting microphone capture or storing raw audio.
 - Shows camera readiness as local preflight state; explicit camera permission can be requested, but any permission stream is stopped immediately until avatar/camera mode exists.
 
 ### Local Perception Services

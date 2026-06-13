@@ -280,6 +280,28 @@ Evaluator coverage:
 
 - Covered by pure VAD detector tests and rendered app interaction tests for local sample execution without microphone capture.
 
+### VO-003 details
+
+User value: Speech transcription can be tested locally before full microphone capture, live STT, or voice mode exists.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local STT sample panel.
+- The local STT adapter produces a transcript from local sample metadata.
+- Running the local sample does not request microphone permission, start microphone capture, write memory, capture approval, dispatch agents, or send externally.
+- `stt_completed` events include model, latency, local-sample marker, capture-started false, raw-audio-stored false, and explicit false side-effect flags.
+- The STT sample does not store or display raw audio.
+- Child protected mode must not treat local STT output as permission for recording, guardian approval, or memory writes.
+
+Privacy and safety impact:
+
+- This is a local adapter baseline only, not live voice mode.
+- Raw audio remains unstored, and no always-on listening path is introduced.
+
+Evaluator coverage:
+
+- Covered by pure STT adapter tests and rendered app interaction tests for local sample execution without microphone capture.
+
 ## Milestone P3: Avatar Concierge
 
 | ID | Story | Priority | Acceptance criteria | Observability |

@@ -78,6 +78,11 @@ import {
   persistCapabilityTaxonomyToStorage,
 } from "./capabilityLedgerStorage.js";
 import type { ConciergeMessage } from "./types.js";
+import {
+  localSttSample,
+  transcribeLocalSpeechSample,
+  type LocalSpeechTranscriptionResult,
+} from "./speechTranscription.js";
 import { detectVoiceSegments, localVadSampleFrames, type VoiceActivitySegment } from "./voiceActivity.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
@@ -158,6 +163,7 @@ export function App() {
     useState<LocalMediaPermissionStatus>("not_requested");
   const [cameraPermissionStatus, setCameraPermissionStatus] = useState<LocalMediaPermissionStatus>("not_requested");
   const [vadSampleSegments, setVadSampleSegments] = useState<VoiceActivitySegment[] | null>(null);
+  const [sttSampleResult, setSttSampleResult] = useState<LocalSpeechTranscriptionResult | null>(null);
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
@@ -490,6 +496,24 @@ export function App() {
         externalSendPerformed: false,
       });
     }
+  }
+
+  function runLocalSttSample() {
+    const traceId = newTraceId();
+    const result = transcribeLocalSpeechSample(localSttSample);
+    setSttSampleResult(result);
+    emitEvent("stt_completed", {
+      traceId,
+      conversationId,
+      model: result.model,
+      latencyMs: result.latencyMs,
+      localSampleOnly: result.localSampleOnly,
+      captureStarted: false,
+      rawAudioStored: result.rawAudioStored,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
+    });
   }
 
   async function discoverDescriptor(endpointOverride?: string) {
@@ -1205,6 +1229,7 @@ export function App() {
     vadSampleSegments === null
       ? "VAD sample not run"
       : `Detected ${vadSampleSegments.length} local sample voice segments.`;
+  const sttSampleSummary = sttSampleResult === null ? "STT sample not run" : sttSampleResult.transcript;
   const cameraCaptureSummary = !cameraEnabled
     ? "Camera capture blocked: camera setting is off and OS permission is not granted."
     : cameraPermissionStatus !== "granted"
@@ -1356,6 +1381,34 @@ export function App() {
         </div>
         <button className="secondary" onClick={runLocalVadSample}>
           Run local VAD sample
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Speech transcription">
+        <div>
+          <strong>Speech transcription</strong>
+          <span>local sample only</span>
+        </div>
+        <div>
+          <strong>Sample state</strong>
+          <span>{sttSampleSummary}</span>
+        </div>
+        <div>
+          <strong>Capture state</strong>
+          <span>Microphone capture stopped; local sample only.</span>
+        </div>
+        {sttSampleResult ? (
+          <div>
+            <strong>Model</strong>
+            <span>Model: {sttSampleResult.model}</span>
+          </div>
+        ) : null}
+        <div>
+          <strong>Storage</strong>
+          <span>Raw audio stored: no</span>
+        </div>
+        <button className="secondary" onClick={runLocalSttSample}>
+          Run local STT sample
         </button>
       </section>
 

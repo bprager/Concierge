@@ -446,6 +446,47 @@ test("runs local voice activity sample without starting microphone capture", asy
   }
 });
 
+test("runs local speech transcription sample without starting microphone capture", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Speech transcription");
+    const sttReadiness = within(view.getByLabelText("Speech transcription"));
+    assert.ok(sttReadiness.getByText("STT sample not run"));
+    assert.ok(sttReadiness.getByText("Microphone capture stopped; local sample only."));
+
+    await user.click(view.getByRole("button", { name: "Run local STT sample" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.ok(sttReadiness.getByText("Concierge voice sample detected."));
+    assert.ok(sttReadiness.getByText("Model: local-sample-stt"));
+    assert.ok(sttReadiness.getByText("Raw audio stored: no"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("keeps camera capture blocked until explicit camera permission is granted", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
