@@ -6,6 +6,12 @@ import {
 import { discoverNapoleonDescriptor } from "./descriptorDiscovery.js";
 import { NapoleonBridgeError, sendToNapoleon, type BridgeContractEvidence } from "./napoleonBridge.js";
 import {
+  buildSuccessfulNapoleonResponsePresentation,
+  compareNapoleonResponseProofs,
+  exportNapoleonResponseProofJson,
+  type NapoleonResponseProofComparison,
+} from "./napoleonResponsePresentation.js";
+import {
   describeDelegation,
   describeBridgeFailureTranscriptMessage,
   describeLiveBridgeReadiness,
@@ -39,6 +45,9 @@ export interface LocalHarnessTextSmokeResult {
   response: NapoleonResponse;
   delegationView: DelegationView;
   proofView: NapoleonResponseProofView;
+  proofExportJson: string;
+  firstProofComparison: NapoleonResponseProofComparison;
+  secondProofComparison: NapoleonResponseProofComparison;
   readiness: BridgeEvidenceReadinessState;
   liveBridgeReadiness: LiveBridgeReadinessView;
 }
@@ -102,6 +111,12 @@ export async function runLocalHarnessTextSmoke(
   }
   const delegationView = describeDelegation(response.delegation);
   const proofView = describeNapoleonResponseProof(response);
+  const presentation = buildSuccessfulNapoleonResponsePresentation(response);
+  const proofExportJson = exportNapoleonResponseProofJson(presentation, {
+    conversationId: request.conversationId,
+  });
+  const firstProofComparison = compareNapoleonResponseProofs(null, proofExportJson);
+  const secondProofComparison = compareNapoleonResponseProofs(proofExportJson, proofExportJson);
   const liveBridgeReadiness = describeLiveBridgeReadiness({
     descriptorConnection: descriptor.connection,
     evidenceCaptureState: readiness.captureState,
@@ -116,6 +131,9 @@ export async function runLocalHarnessTextSmoke(
     response,
     delegationView,
     proofView,
+    proofExportJson,
+    firstProofComparison,
+    secondProofComparison,
     readiness,
     liveBridgeReadiness,
   };
