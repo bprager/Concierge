@@ -1,4 +1,18 @@
+import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import type { CapabilityArchitectureArea, ConversationCapabilitySignal, RecommendationBoundary } from "./capabilityLedger.js";
+import {
+  buildDescriptorConnectionState,
+  mapProfileToNapoleonMode,
+  type AuditEnvelope,
+  type ChiefOfStaffRequest,
+  type DescriptorConnectionInput,
+  type GovernanceDecision,
+  type GovernanceEvaluationRequest,
+  type LocalProfile,
+  type TraceEnvelope,
+} from "./contractBridge.js";
+import { NapoleonBridgeError } from "./napoleonBridge.js";
+import { emitEvent, makeTelemetryPayload, type TelemetryPayload } from "./telemetry.js";
 
 export type TaxonomyDimension = "topic" | "intent" | "capability" | "architecture";
 export type TaxonomyMarker = "deprecated" | "splitCandidate";
@@ -72,6 +86,37 @@ export interface ChiefOfStaffTaxonomyReviewDraft {
   boundary: RecommendationBoundary;
 }
 
+type TaxonomyReviewFetch = (
+  url: string,
+  init?: { method?: string; headers?: Record<string, string>; body?: string },
+) => Promise<{
+  ok: boolean;
+  status?: number;
+  json: () => Promise<unknown>;
+}>;
+
+export interface TaxonomyReviewSubmissionDependencies {
+  conversationId: string;
+  traceId: string;
+  profile?: LocalProfile;
+  getEndpoint?: () => string | null;
+  getAuthToken?: () => string | null;
+  descriptorConnection?: DescriptorConnectionInput;
+  emit?: (payload: TelemetryPayload) => void;
+  fetch?: TaxonomyReviewFetch;
+}
+
+export interface ChiefOfStaffTaxonomyReviewSubmissionResult {
+  text: string;
+  governanceDecision: GovernanceDecision;
+  traceEnvelope: TraceEnvelope;
+  auditEnvelope: AuditEnvelope;
+  appliedLocally: false;
+  memoryWritePerformed: false;
+  approvalCaptured: false;
+  externalSendPerformed: false;
+}
+
 const TAXONOMY_SCHEMA_VERSION = "concierge.capability-taxonomy.v1" as const;
 const TAXONOMY_PRIVACY_CAVEAT =
   "Local metadata-only taxonomy edits. Renames, merges, deprecated markers, and split-candidate markers are local hints only and do not change Napoleon policy, routing, memory, approval, dispatch, or external sends.";
@@ -82,6 +127,13 @@ const TAXONOMY_REVIEW_BOUNDARY: RecommendationBoundary = {
   agentDispatchAllowed: false,
   externalSendAllowed: false,
 };
+const TAXONOMY_REVIEW_BLOCKED_EFFECTS = [
+  "memory_write",
+  "agent_dispatch",
+  "external_send",
+  "approval_capture",
+  "runtime_authority",
+];
 
 export function createCapabilityTaxonomy(entries: TaxonomyEntry[] = []): CapabilityTaxonomy {
   return { entries: entries.map((entry) => ({ ...entry })) };
@@ -453,4 +505,280 @@ export function deserializeCapabilityTaxonomy(snapshot: unknown): CapabilityTaxo
     return createCapabilityTaxonomy();
   }
   return createCapabilityTaxonomy(candidate.entries.map(sanitizeEntry).filter((entry) => entry !== null));
+}
+
+function emitTaxonomyReviewEvent(
+  dependencies: TaxonomyReviewSubmissionDependencies,
+  event: string,
+  attributes: Record<string, unknown>,
+) {
+  if (dependencies.emit) {
+    dependencies.emit(makeTelemetryPayload(event, attributes));
+    return;
+  }
+  emitEvent(event, attributes);
+}
+
+function getConfiguredEndpoint(dependencies: TaxonomyReviewSubmissionDependencies): string | null {
+  if (dependencies.getEndpoint) return dependencies.getEndpoint();
+  if (typeof localStorage === "undefined") return null;
+  return localStorage.getItem("napoleon_endpoint");
+}
+
+function getConfiguredAuthToken(dependencies: TaxonomyReviewSubmissionDependencies): string | null {
+  if (dependencies.getAuthToken) return dependencies.getAuthToken();
+  if (dependencies.getEndpoint) return null;
+  if (typeof localStorage === "undefined") return null;
+  const token = localStorage.getItem("napoleon_auth_token");
+  return token?.trim() ? token.trim() : null;
+}
+
+function buildTaxonomyReviewHeaders(authToken: string | null): Record<string, string> {
+  return authToken
+    ? { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` }
+    : { "Content-Type": "application/json" };
+}
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
+}
+
+function isGovernanceDecision(value: unknown): value is GovernanceDecision {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<GovernanceDecision>;
+  return Boolean(
+    typeof candidate.decision_id === "string" &&
+      typeof candidate.request_id === "string" &&
+      typeof candidate.outcome === "string" &&
+      typeof candidate.authority_tier === "string" &&
+      typeof candidate.approval_requirement === "string" &&
+      typeof candidate.rationale === "string" &&
+      isStringArray(candidate.blocked_effects) &&
+      typeof candidate.trace_id === "string" &&
+      typeof candidate.audit_id === "string",
+  );
+}
+
+function isTraceEnvelope(value: unknown): value is TraceEnvelope {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<TraceEnvelope>;
+  return Boolean(
+    typeof candidate.trace_id === "string" &&
+      typeof candidate.parent_trace_id === "string" &&
+      typeof candidate.actor_id === "string" &&
+      typeof candidate.request_id === "string" &&
+      typeof candidate.decision_id === "string" &&
+      typeof candidate.timestamp === "string",
+  );
+}
+
+function isAuditEnvelope(value: unknown): value is AuditEnvelope {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<AuditEnvelope>;
+  return Boolean(
+    typeof candidate.audit_id === "string" &&
+      typeof candidate.trace_id === "string" &&
+      typeof candidate.decision_id === "string" &&
+      typeof candidate.actor_id === "string" &&
+      typeof candidate.authority_tier === "string" &&
+      typeof candidate.approval_requirement === "string" &&
+      isStringArray(candidate.evidence_links),
+  );
+}
+
+function envelopesMatchDecision(
+  decision: GovernanceDecision,
+  traceEnvelope: TraceEnvelope,
+  auditEnvelope: AuditEnvelope,
+): boolean {
+  return (
+    traceEnvelope.trace_id === decision.trace_id &&
+    traceEnvelope.request_id === decision.request_id &&
+    traceEnvelope.decision_id === decision.decision_id &&
+    auditEnvelope.audit_id === decision.audit_id &&
+    auditEnvelope.trace_id === decision.trace_id &&
+    auditEnvelope.decision_id === decision.decision_id &&
+    auditEnvelope.authority_tier === decision.authority_tier &&
+    auditEnvelope.approval_requirement === decision.approval_requirement
+  );
+}
+
+function hasForbiddenTaxonomyReviewSideEffectClaim(
+  payload: Partial<ChiefOfStaffTaxonomyReviewSubmissionResult> & Record<string, unknown>,
+): boolean {
+  const forbiddenFalseFields = [
+    "appliedLocally",
+    "memoryWritePerformed",
+    "approvalCaptured",
+    "externalSendPerformed",
+    "agentDispatchPerformed",
+  ];
+  return forbiddenFalseFields.some((field) => payload[field] !== undefined && payload[field] !== false);
+}
+
+function failTaxonomyReviewClosed(
+  dependencies: TaxonomyReviewSubmissionDependencies,
+  reason: ConstructorParameters<typeof NapoleonBridgeError>[0],
+  requestId: string,
+  status?: number,
+  blockedEffects: string[] = TAXONOMY_REVIEW_BLOCKED_EFFECTS,
+): never {
+  emitTaxonomyReviewEvent(dependencies, "capability_taxonomy_review_send_failed", {
+    traceId: dependencies.traceId,
+    conversationId: dependencies.conversationId,
+    requestId,
+    reason,
+    status,
+    blockedEffects,
+  });
+  throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, blockedEffects);
+}
+
+export async function submitChiefOfStaffTaxonomyReviewDraft(
+  draft: ChiefOfStaffTaxonomyReviewDraft,
+  dependencies: TaxonomyReviewSubmissionDependencies,
+): Promise<ChiefOfStaffTaxonomyReviewSubmissionResult> {
+  const profileMode = mapProfileToNapoleonMode(dependencies.profile ?? "adult_owner");
+  const requestId = `cos_${dependencies.traceId}`;
+  const localDecisionId = `local_taxonomy_review_${dependencies.traceId}`;
+  const localAuditId = `local_audit_${dependencies.traceId}`;
+  const endpoint = getConfiguredEndpoint(dependencies);
+  const authToken = getConfiguredAuthToken(dependencies);
+  const descriptorConnection = buildDescriptorConnectionState(
+    dependencies.descriptorConnection ?? {
+      endpointConfigured: Boolean(endpoint),
+      descriptor: null,
+    },
+  );
+
+  if (!endpoint) {
+    failTaxonomyReviewClosed(dependencies, "no_endpoint", requestId);
+  }
+  if (!descriptorConnection.canAttemptLiveBridge) {
+    failTaxonomyReviewClosed(dependencies, "descriptor_mismatch", requestId);
+  }
+
+  const chiefOfStaffRequest: ChiefOfStaffRequest = {
+    request_id: requestId,
+    requester: "concierge.capability_intelligence",
+    request_type: "evolution_proposal_review",
+    profile_mode: profileMode,
+    source_evidence: draft.evolutionProposal.evidence,
+    requested_authority_tier: "advisory_review",
+    trace_id: dependencies.traceId,
+    payload_schema: "schemas/evolution_proposal.schema.json",
+  };
+  const governanceRequest: GovernanceEvaluationRequest = {
+    request_id: `gov_${dependencies.traceId}`,
+    actor_id: "concierge.capability_intelligence",
+    action: "submit_taxonomy_review_for_review",
+    target: "napoleon.chief_of_staff",
+    requested_authority_tier: "advisory_review",
+    evidence_links: draft.evolutionProposal.evidence,
+    trace_id: dependencies.traceId,
+  };
+  const traceEnvelope: TraceEnvelope = {
+    trace_id: dependencies.traceId,
+    parent_trace_id: dependencies.conversationId,
+    actor_id: "concierge.capability_intelligence",
+    request_id: requestId,
+    decision_id: localDecisionId,
+    timestamp: new Date().toISOString(),
+  };
+  const auditEnvelope: AuditEnvelope = {
+    audit_id: localAuditId,
+    trace_id: dependencies.traceId,
+    decision_id: localDecisionId,
+    actor_id: "concierge.capability_intelligence",
+    authority_tier: "advisory_review",
+    approval_requirement: draft.evolutionProposal.approval_required,
+    evidence_links: draft.evolutionProposal.evidence,
+  };
+
+  emitTaxonomyReviewEvent(dependencies, "capability_taxonomy_review_send_started", {
+    traceId: dependencies.traceId,
+    conversationId: dependencies.conversationId,
+    requestId,
+    proposalId: draft.evolutionProposal.proposal_id,
+    recommendationCount: draft.recommendations.length,
+    profileMode,
+  });
+
+  const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
+  let response: Awaited<ReturnType<TaxonomyReviewFetch>>;
+  try {
+    response = await fetcher(resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_steering"), {
+      method: "POST",
+      headers: buildTaxonomyReviewHeaders(authToken),
+      body: JSON.stringify({
+        requestKind: "chief_of_staff_taxonomy_review_handoff",
+        profileMode,
+        descriptorStatus: descriptorConnection.descriptorStatus,
+        descriptorConnection,
+        chiefOfStaffRequest,
+        governanceRequest,
+        traceEnvelope,
+        auditEnvelope,
+        taxonomyReview: draft,
+        evaluatorCaseCandidate: draft.evaluatorCaseCandidate,
+        evolutionProposal: draft.evolutionProposal,
+        boundary: draft.boundary,
+        blockedEffects: TAXONOMY_REVIEW_BLOCKED_EFFECTS,
+      }),
+    });
+  } catch (error) {
+    const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
+    failTaxonomyReviewClosed(dependencies, reason, requestId);
+  }
+
+  if (!response.ok) {
+    const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
+    failTaxonomyReviewClosed(dependencies, reason, requestId, response.status);
+  }
+
+  const payload = (await response.json()) as Partial<ChiefOfStaffTaxonomyReviewSubmissionResult>;
+  if (
+    !isGovernanceDecision(payload.governanceDecision) ||
+    !isTraceEnvelope(payload.traceEnvelope) ||
+    !isAuditEnvelope(payload.auditEnvelope) ||
+    !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasForbiddenTaxonomyReviewSideEffectClaim(payload as Partial<ChiefOfStaffTaxonomyReviewSubmissionResult> & Record<string, unknown>)
+  ) {
+    failTaxonomyReviewClosed(dependencies, "contract_mismatch", requestId);
+  }
+
+  if (payload.governanceDecision.outcome === "deny" || payload.governanceDecision.outcome === "no_go") {
+    failTaxonomyReviewClosed(
+      dependencies,
+      payload.governanceDecision.outcome === "deny" ? "governance_denied" : "governance_no_go",
+      payload.governanceDecision.request_id,
+      response.status,
+      payload.governanceDecision.blocked_effects,
+    );
+  }
+
+  emitTaxonomyReviewEvent(dependencies, "capability_taxonomy_review_send_completed", {
+    traceId: dependencies.traceId,
+    conversationId: dependencies.conversationId,
+    requestId,
+    proposalId: draft.evolutionProposal.proposal_id,
+    decisionId: payload.governanceDecision.decision_id,
+    auditId: payload.auditEnvelope.audit_id,
+    outcome: payload.governanceDecision.outcome,
+    appliedLocally: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    externalSendPerformed: false,
+  });
+
+  return {
+    text: payload.text ?? "Napoleon accepted the taxonomy review packet for governed review.",
+    governanceDecision: payload.governanceDecision,
+    traceEnvelope: payload.traceEnvelope,
+    auditEnvelope: payload.auditEnvelope,
+    appliedLocally: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    externalSendPerformed: false,
+  };
 }

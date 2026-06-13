@@ -17,7 +17,9 @@ import {
   renameTaxonomyLabel,
   resetCapabilityTaxonomy,
   serializeCapabilityTaxonomy,
+  submitChiefOfStaffTaxonomyReviewDraft,
 } from "../src/capabilityTaxonomy.js";
+import { defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
 
 function addWorkingSignal(
   ledger: ReturnType<typeof createCapabilityLedger>,
@@ -199,4 +201,170 @@ test("drafts Chief of Staff taxonomy review without applying local edits", () =>
   assert.ok(draft.evolutionProposal.rollback_plan.includes("Keep current local taxonomy labels"));
   assert.equal(taxonomy.entries.some((entry) => entry.sourceLabel === "deploy" && entry.mergedInto === "deployment"), false);
   assert.equal(JSON.stringify(draft).includes("raw taxonomy text"), false);
+});
+
+test("submits taxonomy review draft through governed bridge without applying local edits", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_deployment_1", topic: "deployment", capability: "release_summary" });
+  const taxonomy = createCapabilityTaxonomy();
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), taxonomy, {
+    conversationId: "conv_taxonomy_review",
+    traceId: "trace_taxonomy_review",
+  });
+  let posted: Record<string, unknown> | undefined;
+  let targetUrl: string | undefined;
+  let headers: Record<string, string> | undefined;
+
+  const result = await submitChiefOfStaffTaxonomyReviewDraft(draft, {
+    conversationId: "conv_taxonomy_review",
+    traceId: "trace_taxonomy_submit",
+    getEndpoint: () => "https://napoleon.example/concierge",
+    getAuthToken: () => "taxonomy_token",
+    descriptorConnection: {
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:local-static",
+      actualChecksum: "sha256:local-static",
+      signatureValid: true,
+    },
+    fetch: async (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => {
+      targetUrl = url;
+      headers = init?.headers;
+      posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return {
+        ok: true,
+        json: async () => ({
+          text: "Napoleon accepted the taxonomy review packet for review.",
+          governanceDecision: {
+            decision_id: "decision_taxonomy_review",
+            request_id: "cos_trace_taxonomy_submit",
+            outcome: "requires_review",
+            authority_tier: "advisory_review",
+            approval_requirement: "chief_of_staff_and_owner_review",
+            rationale: "Taxonomy cleanup requires review before applying labels.",
+            blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+            trace_id: "trace_taxonomy_submit",
+            audit_id: "audit_taxonomy_review",
+          },
+          traceEnvelope: {
+            trace_id: "trace_taxonomy_submit",
+            parent_trace_id: "conv_taxonomy_review",
+            actor_id: "napoleon.chief_of_staff",
+            request_id: "cos_trace_taxonomy_submit",
+            decision_id: "decision_taxonomy_review",
+            timestamp: "2026-06-13T00:00:00.000Z",
+          },
+          auditEnvelope: {
+            audit_id: "audit_taxonomy_review",
+            trace_id: "trace_taxonomy_submit",
+            decision_id: "decision_taxonomy_review",
+            actor_id: "napoleon.chief_of_staff",
+            authority_tier: "advisory_review",
+            approval_requirement: "chief_of_staff_and_owner_review",
+            evidence_links: ["trace:trace_taxonomy_submit"],
+          },
+        }),
+      };
+    },
+  });
+
+  assert.equal(targetUrl, "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering");
+  assert.equal(headers?.Authorization, "Bearer taxonomy_token");
+  assert.equal(JSON.stringify(posted).includes("taxonomy_token"), false);
+  assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "evolution_proposal_review");
+  assert.equal((posted?.taxonomyReview as { reviewType: string }).reviewType, "chief_of_staff_taxonomy_review");
+  assert.equal((posted?.evolutionProposal as { proposal_id: string }).proposal_id, draft.evolutionProposal.proposal_id);
+  assert.deepEqual(posted?.boundary, {
+    proposalOnly: true,
+    approvalCaptured: false,
+    memoryWriteAllowed: false,
+    agentDispatchAllowed: false,
+    externalSendAllowed: false,
+  });
+  assert.equal(result.appliedLocally, false);
+  assert.equal(result.memoryWritePerformed, false);
+  assert.equal(result.approvalCaptured, false);
+  assert.equal(result.externalSendPerformed, false);
+});
+
+test("taxonomy review handoff rejects response claims that apply taxonomy or side effects", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_deployment_1", topic: "deployment", capability: "release_summary" });
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_taxonomy_review",
+    traceId: "trace_taxonomy_review",
+  });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffTaxonomyReviewDraft(draft, {
+        conversationId: "conv_taxonomy_review",
+        traceId: "trace_taxonomy_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: {
+          endpointConfigured: true,
+          descriptor: defaultChiefOfStaffDescriptor,
+          expectedChecksum: "sha256:local-static",
+          actualChecksum: "sha256:local-static",
+          signatureValid: true,
+        },
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          json: async () => ({
+            text: "Napoleon reviewed and applied the taxonomy cleanup.",
+            governanceDecision: {
+              decision_id: "decision_taxonomy_side_effect",
+              request_id: "cos_trace_taxonomy_submit",
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Review responses must not apply local taxonomy changes.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: "trace_taxonomy_submit",
+              audit_id: "audit_taxonomy_side_effect",
+            },
+            traceEnvelope: {
+              trace_id: "trace_taxonomy_submit",
+              parent_trace_id: "conv_taxonomy_review",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_taxonomy_submit",
+              decision_id: "decision_taxonomy_side_effect",
+              timestamp: "2026-06-13T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_taxonomy_side_effect",
+              trace_id: "trace_taxonomy_submit",
+              decision_id: "decision_taxonomy_side_effect",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:trace_taxonomy_submit"],
+            },
+            appliedLocally: true,
+            memoryWritePerformed: true,
+            approvalCaptured: true,
+            externalSendPerformed: true,
+            agentDispatchPerformed: true,
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
+    "memory_write",
+    "agent_dispatch",
+    "external_send",
+    "approval_capture",
+    "runtime_authority",
+  ]);
 });

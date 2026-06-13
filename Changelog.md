@@ -30,6 +30,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added browser-local Conversation Capability Intelligence persistence with retention, clear, and metadata-only JSON export controls.
 - Added local Conversation Capability Intelligence taxonomy controls for rename, merge, deprecation, split-candidate marking, reset, persistence, and export.
 - Added local Chief of Staff taxonomy review drafts with metadata-only merge, split, deprecation, evaluator-case, and evolution-proposal packets that do not apply edits or change Napoleon authority.
+- Added governed Chief of Staff taxonomy review submission for local capability taxonomy packets, gated by endpoint and descriptor preflight and blocked from applying taxonomy edits or side effects locally.
 - Added age-based Conversation Capability Intelligence retention and local trend answers for increasing, worsening, recently working, and weekly-change questions.
 - Added local seasonal Conversation Capability Intelligence trend answers that compare recent 28 day metadata with the previous 28 days without granting authority.
 - Added local risk/value score components and scoring caveats for Conversation Capability Intelligence recommendations.

@@ -17,6 +17,8 @@ import {
   renameTaxonomyLabel,
   resetCapabilityTaxonomy,
   type ChiefOfStaffTaxonomyReviewDraft,
+  submitChiefOfStaffTaxonomyReviewDraft,
+  type ChiefOfStaffTaxonomyReviewSubmissionResult,
   type TaxonomyDimension,
 } from "./capabilityTaxonomy.js";
 import {
@@ -159,6 +161,9 @@ export function App() {
   const [taxonomyRenameValue, setTaxonomyRenameValue] = useState("");
   const [taxonomyMergeTarget, setTaxonomyMergeTarget] = useState("");
   const [taxonomyReviewDraft, setTaxonomyReviewDraft] = useState<ChiefOfStaffTaxonomyReviewDraft | null>(null);
+  const [taxonomyReviewSubmission, setTaxonomyReviewSubmission] =
+    useState<ChiefOfStaffTaxonomyReviewSubmissionResult | null>(null);
+  const [taxonomyReviewFailure, setTaxonomyReviewFailure] = useState<string | null>(null);
 
   function clearNapoleonPresentation() {
     setLastNapoleonPresentation(clearNapoleonResponsePresentation());
@@ -863,6 +868,8 @@ export function App() {
       traceId,
     });
     setTaxonomyReviewDraft(draft);
+    setTaxonomyReviewSubmission(null);
+    setTaxonomyReviewFailure(null);
     emitEvent("capability_taxonomy_review_drafted", {
       traceId,
       conversationId,
@@ -875,6 +882,28 @@ export function App() {
       agentDispatchAllowed: draft.boundary.agentDispatchAllowed,
       externalSendAllowed: draft.boundary.externalSendAllowed,
     });
+  }
+
+  async function submitTaxonomyReviewDraft() {
+    if (!taxonomyReviewDraft) return;
+    const traceId = newTraceId();
+    try {
+      const result = await submitChiefOfStaffTaxonomyReviewDraft(taxonomyReviewDraft, {
+        conversationId,
+        traceId,
+        profile,
+        descriptorConnection: currentDescriptorInput(),
+      });
+      setTaxonomyReviewSubmission(result);
+      setTaxonomyReviewFailure(null);
+      refreshCapabilityLedgerStatus();
+    } catch (error) {
+      setTaxonomyReviewFailure(
+        describeGovernedHandoffFailure(error, "Chief of Staff taxonomy review handoff", "apply taxonomy edits"),
+      );
+      setTaxonomyReviewSubmission(null);
+      refreshCapabilityLedgerStatus();
+    }
   }
 
   const canSendRehearsal = Boolean(
@@ -1283,6 +1312,31 @@ export function App() {
           ) : (
             <p>No local taxonomy review recommendations yet.</p>
           )}
+          <button
+            className="secondary"
+            onClick={submitTaxonomyReviewDraft}
+            disabled={!descriptorConnection.canAttemptLiveBridge}
+          >
+            Send taxonomy review to Napoleon review
+          </button>
+          {taxonomyReviewFailure ? <p className="warning">{taxonomyReviewFailure}</p> : null}
+          {taxonomyReviewSubmission ? (
+            <dl>
+              <dt>Napoleon review response</dt>
+              <dd>{taxonomyReviewSubmission.text}</dd>
+              <dt>Governance</dt>
+              <dd>
+                {taxonomyReviewSubmission.governanceDecision.outcome}, decision{" "}
+                {taxonomyReviewSubmission.governanceDecision.decision_id}
+              </dd>
+              <dt>Trace</dt>
+              <dd>{taxonomyReviewSubmission.traceEnvelope.trace_id}</dd>
+              <dt>Audit</dt>
+              <dd>{taxonomyReviewSubmission.auditEnvelope.audit_id}</dd>
+              <dt>Local effects</dt>
+              <dd>not applied; no memory write; no approval captured; no external send.</dd>
+            </dl>
+          ) : null}
         </section>
       ) : null}
 
