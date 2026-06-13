@@ -137,6 +137,7 @@ Acceptance criteria:
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
 - Correctly blocked unsafe requests are classified separately from failed safe requests.
 - Recommendations are proposal-only and do not implement features, grant approval, write memory, dispatch agents, or send externally.
+- Local Chief of Staff taxonomy review drafts can recommend metadata-only merge, split, and deprecation review without applying taxonomy edits or changing Napoleon policy/routing.
 - Child protected aggregates are minimized and separated from adult-owner aggregates.
 
 Privacy and safety impact:

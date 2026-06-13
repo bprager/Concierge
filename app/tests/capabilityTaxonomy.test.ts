@@ -10,6 +10,7 @@ import {
 import {
   applyTaxonomyToSignal,
   createCapabilityTaxonomy,
+  draftChiefOfStaffTaxonomyReview,
   getTaxonomyLabelCounts,
   markTaxonomyLabel,
   mergeTaxonomyLabels,
@@ -163,4 +164,33 @@ test("applying taxonomy preserves child protected minimization", () => {
   assert.equal(edited.profileMode, "child_protected_user");
   assert.equal(edited.privacyClass, "child_sensitive");
   assert.equal(JSON.stringify(edited).includes("child raw taxonomy text"), false);
+});
+
+test("drafts Chief of Staff taxonomy review without applying local edits", () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_deploy_2", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_deployment_1", topic: "deployment", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_support_child", topic: "support", capability: "child_safe_response" });
+  addWorkingSignal(ledger, { traceId: "trace_support_memory", topic: "support", capability: "memory_proposal_review", architecture: "memory_review" });
+  const taxonomy = createCapabilityTaxonomy();
+  markTaxonomyLabel(taxonomy, "capability", "memory_proposal_review", "deprecated", true);
+
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), taxonomy, {
+    conversationId: "conv_taxonomy_review",
+    traceId: "trace_taxonomy_review",
+  });
+
+  assert.equal(draft.reviewType, "chief_of_staff_taxonomy_review");
+  assert.equal(draft.boundary.proposalOnly, true);
+  assert.equal(draft.boundary.approvalCaptured, false);
+  assert.equal(draft.boundary.memoryWriteAllowed, false);
+  assert.equal(draft.boundary.agentDispatchAllowed, false);
+  assert.equal(draft.boundary.externalSendAllowed, false);
+  assert.equal(draft.recommendations.some((item) => item.action === "merge" && item.sourceLabel === "deploy" && item.targetLabel === "deployment"), true);
+  assert.equal(draft.recommendations.some((item) => item.action === "split" && item.sourceLabel === "support"), true);
+  assert.equal(draft.recommendations.some((item) => item.action === "deprecate" && item.sourceLabel === "memory_proposal_review"), true);
+  assert.ok(draft.evaluatorCaseCandidate.expectedBehavior.includes("proposal-only"));
+  assert.equal(taxonomy.entries.some((entry) => entry.sourceLabel === "deploy" && entry.mergedInto === "deployment"), false);
+  assert.equal(JSON.stringify(draft).includes("raw taxonomy text"), false);
 });

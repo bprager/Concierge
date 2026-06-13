@@ -31,7 +31,7 @@ Tracking only topics would be misleading. A frequent topic may already work well
 
 The local ledger should store derived metadata, not raw conversation transcripts by default.
 
-Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model, bounded ledger, serialization, deserialization, validation, age/count pruning, trend windows, export, and clear helpers. It is wired through `app/src/telemetry.ts` for current Text Concierge events and uses browser-local storage through `app/src/capabilityLedgerStorage.ts`. `app/src/capabilityTaxonomy.ts` provides local taxonomy renames, merges, deprecation markers, split-candidate markers, reset, serialization, and export. The Text Concierge UI shows retained local signal count, count/age retention limits, taxonomy label counts, and clear/export/taxonomy controls.
+Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model, bounded ledger, serialization, deserialization, validation, age/count pruning, trend windows, export, and clear helpers. It is wired through `app/src/telemetry.ts` for current Text Concierge events and uses browser-local storage through `app/src/capabilityLedgerStorage.ts`. `app/src/capabilityTaxonomy.ts` provides local taxonomy renames, merges, deprecation markers, split-candidate markers, reset, serialization, export, and Chief of Staff taxonomy review drafts. The Text Concierge UI shows retained local signal count, count/age retention limits, taxonomy label counts, clear/export/taxonomy controls, and a local taxonomy review draft panel.
 
 Each turn can emit a `conversation_capability_signal` with:
 
@@ -70,6 +70,7 @@ Local taxonomy storage:
 - Query answers apply edited labels to aggregates while preserving original derived signal records.
 - Taxonomy edits are local hints only. They do not change Napoleon policy, routing, memory, approval, dispatch, or external sends.
 - Reset restores derived labels by clearing local taxonomy edits.
+- Chief of Staff taxonomy review drafts can recommend merge, split, or deprecation review from local metadata and evidence references without applying edits.
 
 ## 4. Answer model
 
@@ -118,7 +119,7 @@ Important items not obvious in the initial request:
 - The system needs negative signals, not just successes. Retries, corrections, no-go decisions, bridge errors, dismissed proposals, and abandoned turns are often the best evidence of missing capabilities.
 - Rare high-impact misses must not be buried by frequent low-value topics.
 - Child protected signals need stricter minimization and separate aggregation so child behavior is not optimized like adult-owner behavior.
-- The system needs a taxonomy review loop. Initial local rename, merge, split-candidate, deprecation, and reset controls are implemented; richer Chief of Staff-assisted taxonomy review remains future work.
+- The system needs a taxonomy review loop. Initial local rename, merge, split-candidate, deprecation, reset controls, and Chief of Staff-assisted taxonomy review drafts are implemented; governed submission of taxonomy review packets remains future work.
 - Trends need age-aware retention. Initial count plus age pruning, 7 day trend windows, and 28 day seasonal comparison are implemented; richer cross-device trend analysis remains future work.
 - Recommendations can create perverse incentives if they optimize engagement or frequency alone. Initial scoring penalizes privacy risk, child safety risk, governance risk, authority expansion, and implementation effort; richer human-reviewed value calibration remains future work.
 - Capability tracking should distinguish "blocked correctly" from "failed." A no-go result can be a success if the request was unsafe.
@@ -160,7 +161,8 @@ This capability should be built in phases:
 3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening-missing, recently-working, weekly-change, and seasonal-change answers are implemented in the Text Concierge UI.
 4. Add architecture-area mapping and recommendation scoring. Initial deterministic local risk/value scoring is implemented from evidence count, recent trend delta, confidence, status, evaluator gap, architecture area, suggested next step, implementation effort, privacy/safety/governance risk, and authority expansion risk; richer human-reviewed value calibration remains future work.
 5. Add local Chief of Staff steering draft handoff. Initial draft generation and governed submission are implemented in `app/src/chiefOfStaffSteering.ts`; it produces a recommendation, evaluator case candidate, and evolution proposal draft while preserving proposal-only boundaries.
-6. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.
-7. Replace the local endpoint configuration with live Napoleon descriptor discovery and auth once a runtime transport is available.
+6. Add local Chief of Staff taxonomy review drafts. Initial draft generation is implemented in `app/src/capabilityTaxonomy.ts`; it recommends taxonomy merge, split, and deprecation review from local metadata while preserving proposal-only boundaries and avoiding raw conversation storage.
+7. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.
+8. Replace the local endpoint configuration with live Napoleon descriptor discovery and auth once a runtime transport is available.
 
 Evaluator coverage should ensure Concierge does not store raw conversation content by default, does not treat recommendations as approval, and does not optimize for engagement over safety.

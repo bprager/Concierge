@@ -229,7 +229,8 @@ header {
   overflow-wrap: anywhere;
 }
 
-.steering-draft {
+.steering-draft,
+.taxonomy-review-draft {
   margin-top: 16px;
   display: grid;
   gap: 10px;
@@ -239,16 +240,19 @@ header {
   border-radius: 8px;
 }
 
-.steering-draft > div {
+.steering-draft > div,
+.taxonomy-review-draft > div {
   display: grid;
   gap: 4px;
 }
 
-.steering-draft span {
+.steering-draft span,
+.taxonomy-review-draft span {
   font-size: 0.88rem;
 }
 
-.steering-draft dl {
+.steering-draft dl,
+.taxonomy-review-draft dl {
   display: grid;
   grid-template-columns: minmax(140px, max-content) 1fr;
   gap: 6px 10px;
@@ -256,14 +260,28 @@ header {
   font-size: 0.88rem;
 }
 
-.steering-draft dt {
+.steering-draft dt,
+.taxonomy-review-draft dt {
   color: #166534;
   font-weight: 650;
 }
 
-.steering-draft dd {
+.steering-draft dd,
+.taxonomy-review-draft dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.taxonomy-review-draft ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.taxonomy-review-draft li {
+  display: grid;
+  gap: 2px;
 }
 
 .taxonomy-controls {

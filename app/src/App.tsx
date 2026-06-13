@@ -10,11 +10,13 @@ import {
 } from "./bridgeEvidenceReadiness.js";
 import {
   createCapabilityTaxonomy,
+  draftChiefOfStaffTaxonomyReview,
   getTaxonomyLabelCounts,
   markTaxonomyLabel,
   mergeTaxonomyLabels,
   renameTaxonomyLabel,
   resetCapabilityTaxonomy,
+  type ChiefOfStaffTaxonomyReviewDraft,
   type TaxonomyDimension,
 } from "./capabilityTaxonomy.js";
 import {
@@ -156,6 +158,7 @@ export function App() {
   const [selectedTaxonomyLabel, setSelectedTaxonomyLabel] = useState("");
   const [taxonomyRenameValue, setTaxonomyRenameValue] = useState("");
   const [taxonomyMergeTarget, setTaxonomyMergeTarget] = useState("");
+  const [taxonomyReviewDraft, setTaxonomyReviewDraft] = useState<ChiefOfStaffTaxonomyReviewDraft | null>(null);
 
   function clearNapoleonPresentation() {
     setLastNapoleonPresentation(clearNapoleonResponsePresentation());
@@ -853,6 +856,26 @@ export function App() {
     setTaxonomyMergeTarget("");
   }
 
+  function createTaxonomyReviewDraft() {
+    const traceId = newTraceId();
+    const draft = draftChiefOfStaffTaxonomyReview(capabilityLedger.listRecent(), capabilityTaxonomy, {
+      conversationId,
+      traceId,
+    });
+    setTaxonomyReviewDraft(draft);
+    emitEvent("capability_taxonomy_review_drafted", {
+      traceId,
+      conversationId,
+      recommendationCount: draft.recommendations.length,
+      evaluatorCaseId: draft.evaluatorCaseCandidate.caseId,
+      proposalOnly: draft.boundary.proposalOnly,
+      approvalCaptured: draft.boundary.approvalCaptured,
+      memoryWriteAllowed: draft.boundary.memoryWriteAllowed,
+      agentDispatchAllowed: draft.boundary.agentDispatchAllowed,
+      externalSendAllowed: draft.boundary.externalSendAllowed,
+    });
+  }
+
   const canSendRehearsal = Boolean(
     pendingRehearsal &&
       input.trim() === pendingRehearsal.content &&
@@ -1210,8 +1233,50 @@ export function App() {
           <button className="secondary" onClick={resetTaxonomyEdits}>
             Reset taxonomy edits
           </button>
+          <button className="secondary" onClick={createTaxonomyReviewDraft}>
+            Draft taxonomy review
+          </button>
         </div>
       </section>
+
+      {taxonomyReviewDraft ? (
+        <section className="taxonomy-review-draft">
+          <div>
+            <strong>Chief of Staff taxonomy review draft</strong>
+            <span>Local proposal only. It reviews labels without changing Napoleon policy or routing.</span>
+          </div>
+          <dl>
+            <dt>Recommendations</dt>
+            <dd>{taxonomyReviewDraft.recommendations.length}</dd>
+            <dt>Evaluator case</dt>
+            <dd>
+              {taxonomyReviewDraft.evaluatorCaseCandidate.caseId}:{" "}
+              {taxonomyReviewDraft.evaluatorCaseCandidate.expectedBehavior}
+            </dd>
+            <dt>Boundary</dt>
+            <dd>proposal only; no approval captured; no memory write; no agent dispatch; no external send.</dd>
+          </dl>
+          {taxonomyReviewDraft.recommendations.length ? (
+            <ol>
+              {taxonomyReviewDraft.recommendations.map((recommendation) => (
+                <li
+                  key={`${recommendation.action}:${recommendation.dimension}:${recommendation.sourceLabel}:${recommendation.targetLabel ?? ""}`}
+                >
+                  <strong>
+                    {recommendation.action} {recommendation.dimension} {recommendation.sourceLabel}
+                    {recommendation.targetLabel ? ` into ${recommendation.targetLabel}` : ""}
+                  </strong>
+                  <span>
+                    {recommendation.reason} Evidence: {recommendation.evidenceCount}.
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p>No local taxonomy review recommendations yet.</p>
+          )}
+        </section>
+      ) : null}
 
       <section className="messages">
         {messages.map((m, i) => (

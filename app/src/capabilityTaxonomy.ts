@@ -1,4 +1,4 @@
-import type { CapabilityArchitectureArea, ConversationCapabilitySignal } from "./capabilityLedger.js";
+import type { CapabilityArchitectureArea, ConversationCapabilitySignal, RecommendationBoundary } from "./capabilityLedger.js";
 
 export type TaxonomyDimension = "topic" | "intent" | "capability" | "architecture";
 export type TaxonomyMarker = "deprecated" | "splitCandidate";
@@ -31,9 +31,40 @@ export interface TaxonomyLabelCount {
   splitCandidate: boolean;
 }
 
+export type TaxonomyReviewAction = "merge" | "split" | "deprecate";
+
+export interface ChiefOfStaffTaxonomyRecommendation {
+  action: TaxonomyReviewAction;
+  dimension: TaxonomyDimension;
+  sourceLabel: string;
+  targetLabel?: string;
+  evidenceCount: number;
+  evidenceRefs: string[];
+  reason: string;
+}
+
+export interface ChiefOfStaffTaxonomyReviewDraft {
+  reviewType: "chief_of_staff_taxonomy_review";
+  conversationId: string;
+  traceId: string;
+  recommendations: ChiefOfStaffTaxonomyRecommendation[];
+  evaluatorCaseCandidate: {
+    caseId: string;
+    expectedBehavior: string;
+  };
+  boundary: RecommendationBoundary;
+}
+
 const TAXONOMY_SCHEMA_VERSION = "concierge.capability-taxonomy.v1" as const;
 const TAXONOMY_PRIVACY_CAVEAT =
   "Local metadata-only taxonomy edits. Renames, merges, deprecated markers, and split-candidate markers are local hints only and do not change Napoleon policy, routing, memory, approval, dispatch, or external sends.";
+const TAXONOMY_REVIEW_BOUNDARY: RecommendationBoundary = {
+  proposalOnly: true,
+  approvalCaptured: false,
+  memoryWriteAllowed: false,
+  agentDispatchAllowed: false,
+  externalSendAllowed: false,
+};
 
 export function createCapabilityTaxonomy(entries: TaxonomyEntry[] = []): CapabilityTaxonomy {
   return { entries: entries.map((entry) => ({ ...entry })) };
@@ -199,6 +230,149 @@ export function getTaxonomyLabelCounts(
 
 function sortedCounts(bucket: Record<string, TaxonomyLabelCount>): TaxonomyLabelCount[] {
   return Object.values(bucket).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+function valuesForDimension(signal: ConversationCapabilitySignal, dimension: TaxonomyDimension): string {
+  if (dimension === "topic") return signal.topicLabel;
+  if (dimension === "intent") return signal.intentLabel;
+  if (dimension === "capability") return signal.capabilityLabel;
+  return signal.architectureArea;
+}
+
+function taxonomyStem(label: string): string {
+  return cleanLabel(label)
+    .toLowerCase()
+    .replace(/_+/g, "")
+    .replace(/(ation|ment|ing|ed|s)$/g, "");
+}
+
+function evidenceRefsForLabel(
+  signals: ConversationCapabilitySignal[],
+  dimension: TaxonomyDimension,
+  label: string,
+): string[] {
+  return signals
+    .filter((signal) => valuesForDimension(signal, dimension) === label)
+    .flatMap((signal) => signal.evidenceRefs)
+    .slice(0, 8);
+}
+
+function groupedRawLabels(
+  signals: ConversationCapabilitySignal[],
+  dimension: TaxonomyDimension,
+): Record<string, TaxonomyLabelCount> {
+  const grouped: Record<string, TaxonomyLabelCount> = {};
+  for (const signal of signals) {
+    const label = valuesForDimension(signal, dimension);
+    const row = grouped[label] ?? {
+      dimension,
+      label,
+      count: 0,
+      deprecated: false,
+      splitCandidate: false,
+    };
+    row.count += 1;
+    grouped[label] = row;
+  }
+  return grouped;
+}
+
+function preferredMergeTarget(labels: TaxonomyLabelCount[]): TaxonomyLabelCount {
+  return [...labels].sort((a, b) => b.label.length - a.label.length || b.count - a.count || a.label.localeCompare(b.label))[0];
+}
+
+function mergeRecommendations(
+  signals: ConversationCapabilitySignal[],
+  dimension: TaxonomyDimension,
+): ChiefOfStaffTaxonomyRecommendation[] {
+  const byStem: Record<string, TaxonomyLabelCount[]> = {};
+  for (const row of Object.values(groupedRawLabels(signals, dimension))) {
+    const stem = taxonomyStem(row.label);
+    if (stem.length < 4) continue;
+    byStem[stem] = [...(byStem[stem] ?? []), row];
+  }
+
+  return Object.values(byStem).flatMap((labels) => {
+    if (labels.length < 2) return [];
+    const target = preferredMergeTarget(labels);
+    return labels
+      .filter((label) => label.label !== target.label)
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+      .map((label) => ({
+        action: "merge" as const,
+        dimension,
+        sourceLabel: label.label,
+        targetLabel: target.label,
+        evidenceCount: label.count + target.count,
+        evidenceRefs: [...evidenceRefsForLabel(signals, dimension, label.label), ...evidenceRefsForLabel(signals, dimension, target.label)]
+          .slice(0, 8),
+        reason: `Labels "${label.label}" and "${target.label}" look like variants and should be reviewed before any local merge.`,
+      }));
+  });
+}
+
+function splitRecommendations(signals: ConversationCapabilitySignal[]): ChiefOfStaffTaxonomyRecommendation[] {
+  const topicCapabilities: Record<string, Set<string>> = {};
+  const topicCounts = groupedRawLabels(signals, "topic");
+  for (const signal of signals) {
+    topicCapabilities[signal.topicLabel] = topicCapabilities[signal.topicLabel] ?? new Set<string>();
+    topicCapabilities[signal.topicLabel].add(signal.capabilityLabel);
+  }
+
+  return Object.entries(topicCapabilities)
+    .filter(([, capabilities]) => capabilities.size > 1)
+    .map(([label, capabilities]) => ({
+      action: "split" as const,
+      dimension: "topic" as const,
+      sourceLabel: label,
+      evidenceCount: topicCounts[label]?.count ?? 0,
+      evidenceRefs: evidenceRefsForLabel(signals, "topic", label),
+      reason: `Topic "${label}" spans ${capabilities.size} capability labels and may need split review.`,
+    }))
+    .sort((a, b) => b.evidenceCount - a.evidenceCount || a.sourceLabel.localeCompare(b.sourceLabel));
+}
+
+function deprecationRecommendations(
+  signals: ConversationCapabilitySignal[],
+  taxonomy: CapabilityTaxonomy,
+): ChiefOfStaffTaxonomyRecommendation[] {
+  return taxonomy.entries
+    .filter((entry) => entry.deprecated === true)
+    .map((entry) => ({
+      action: "deprecate" as const,
+      dimension: entry.dimension,
+      sourceLabel: entry.sourceLabel,
+      evidenceCount: signals.filter((signal) => valuesForDimension(signal, entry.dimension) === entry.sourceLabel).length,
+      evidenceRefs: evidenceRefsForLabel(signals, entry.dimension, entry.sourceLabel),
+      reason: `Label "${entry.sourceLabel}" is locally marked deprecated; Chief of Staff review can decide whether to keep, rename, or merge it.`,
+    }))
+    .sort((a, b) => b.evidenceCount - a.evidenceCount || a.sourceLabel.localeCompare(b.sourceLabel));
+}
+
+export function draftChiefOfStaffTaxonomyReview(
+  signals: ConversationCapabilitySignal[],
+  taxonomy: CapabilityTaxonomy = createCapabilityTaxonomy(),
+  options: { conversationId: string; traceId: string },
+): ChiefOfStaffTaxonomyReviewDraft {
+  const dimensions: TaxonomyDimension[] = ["topic", "intent", "capability", "architecture"];
+  const recommendations = [
+    ...dimensions.flatMap((dimension) => mergeRecommendations(signals, dimension)),
+    ...splitRecommendations(signals),
+    ...deprecationRecommendations(signals, taxonomy),
+  ].slice(0, 10);
+
+  return {
+    reviewType: "chief_of_staff_taxonomy_review",
+    conversationId: options.conversationId,
+    traceId: options.traceId,
+    recommendations,
+    evaluatorCaseCandidate: {
+      caseId: "capability_taxonomy_review_001",
+      expectedBehavior:
+        "Concierge drafts taxonomy cleanup as proposal-only local metadata; it does not apply edits, capture approval, write memory, dispatch agents, send externally, or change Napoleon routing.",
+    },
+    boundary: TAXONOMY_REVIEW_BOUNDARY,
+  };
 }
 
 export function serializeCapabilityTaxonomy(

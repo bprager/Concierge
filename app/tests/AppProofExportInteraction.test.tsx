@@ -152,3 +152,26 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     dom.window.close();
   }
 });
+
+test("drafts a proposal-only taxonomy review from rendered app controls", async () => {
+  const dom = installDom();
+  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Draft taxonomy review" }));
+
+    await view.findByText("Chief of Staff taxonomy review draft");
+    assert.ok(view.getByText(/proposal only; no approval captured; no memory write/));
+    assert.ok(view.getByText("No local taxonomy review recommendations yet."));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
