@@ -104,6 +104,16 @@ test("smoke tests a governed text turn through a local Napoleon-compatible harne
   assert.equal(result.response.governanceDecision.outcome, "requires_review");
   assert.equal(result.delegationView.heading, "Napoleon delegation");
   assert.ok(result.delegationView.body.includes("Passive Brain"));
+  assert.equal(result.proofView.heading, "Last successful Napoleon proof");
+  assert.equal(result.proofView.status, "verified");
+  assert.ok(result.proofView.summary.includes("Passive Brain"));
+  assert.ok(result.proofView.summary.includes("Napoleon recommendation"));
+  assert.ok(result.proofView.caveat.includes("not Napoleon approval"));
+  assert.ok(
+    result.proofView.details.some(
+      (detail) => detail.label === "Blocked effects" && detail.value.includes("memory_write"),
+    ),
+  );
   assert.ok(
     result.delegationView.details.some(
       (detail) => detail.label === "Blocked effects" && detail.value.includes("memory_write"),

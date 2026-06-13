@@ -9,8 +9,10 @@ import {
   describeDelegation,
   describeBridgeFailureTranscriptMessage,
   describeLiveBridgeReadiness,
+  describeNapoleonResponseProof,
   type DelegationView,
   type LiveBridgeReadinessView,
+  type NapoleonResponseProofView,
 } from "./presentation.js";
 import type { DescriptorConnectionState, LocalProfile } from "./contractBridge.js";
 import type { NapoleonResponse } from "./types.js";
@@ -36,6 +38,7 @@ export interface LocalHarnessTextSmokeResult {
   descriptorConnection: DescriptorConnectionState;
   response: NapoleonResponse;
   delegationView: DelegationView;
+  proofView: NapoleonResponseProofView;
   readiness: BridgeEvidenceReadinessState;
   liveBridgeReadiness: LiveBridgeReadinessView;
 }
@@ -98,6 +101,7 @@ export async function runLocalHarnessTextSmoke(
     };
   }
   const delegationView = describeDelegation(response.delegation);
+  const proofView = describeNapoleonResponseProof(response);
   const liveBridgeReadiness = describeLiveBridgeReadiness({
     descriptorConnection: descriptor.connection,
     evidenceCaptureState: readiness.captureState,
@@ -111,6 +115,7 @@ export async function runLocalHarnessTextSmoke(
     descriptorConnection: descriptor.connection,
     response,
     delegationView,
+    proofView,
     readiness,
     liveBridgeReadiness,
   };
