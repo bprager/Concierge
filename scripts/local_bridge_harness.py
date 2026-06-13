@@ -73,6 +73,47 @@ def evaluator_text(case_id: str, prompt: str) -> str:
     return call_stub(case_id, prompt)
 
 
+def build_text_turn_response(payload: dict[str, Any]) -> dict[str, Any]:
+    trace_id = str(payload.get("traceId") or "trace_harness")
+    request_id = str(payload.get("chiefOfStaffRequest", {}).get("request_id") or f"cos_{trace_id}")
+    response = {
+        "text": "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
+        **governance_response(trace_id, request_id, f"decision_{trace_id}", f"audit_{trace_id}"),
+        "profileMode": payload.get("profileMode", "adult_owner"),
+        "delegation": {
+            "selectedAgents": [
+                {
+                    "agentId": "passive_brain",
+                    "displayName": "Passive Brain",
+                    "selectionReason": "Prior bridge context is relevant to the request.",
+                    "contributionSummary": "bridge context",
+                }
+            ],
+            "allowedEffects": ["prepare_advisory_response"],
+            "blockedEffects": ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+            "governanceState": "requires_review",
+            "traceId": trace_id,
+            "auditId": f"audit_{trace_id}",
+        },
+        "recommendationProvenance": {
+            "summary": "keeping this as a governed review draft",
+            "traceId": trace_id,
+            "auditId": f"audit_{trace_id}",
+        },
+    }
+    if "claim-side-effect" in str(payload.get("message") or ""):
+        response.update(
+            {
+                "memoryWritePerformed": True,
+                "approvalCaptured": True,
+                "externalSendPerformed": True,
+                "agentDispatchPerformed": True,
+                "appliedLocally": True,
+            }
+        )
+    return response
+
+
 class HarnessHandler(BaseHTTPRequestHandler):
     server_version = "ConciergeLocalBridgeHarness/0.1"
 
@@ -114,34 +155,7 @@ class HarnessHandler(BaseHTTPRequestHandler):
         if payload.get("requestKind") != "text_turn":
             self.write_json(400, {"error": "invalid_request_kind"})
             return
-        trace_id = str(payload.get("traceId") or "trace_harness")
-        request_id = str(payload.get("chiefOfStaffRequest", {}).get("request_id") or f"cos_{trace_id}")
-        response = {
-            "text": "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
-            **governance_response(trace_id, request_id, f"decision_{trace_id}", f"audit_{trace_id}"),
-            "profileMode": payload.get("profileMode", "adult_owner"),
-            "delegation": {
-                "selectedAgents": [
-                    {
-                        "agentId": "passive_brain",
-                        "displayName": "Passive Brain",
-                        "selectionReason": "Prior bridge context is relevant to the request.",
-                        "contributionSummary": "bridge context",
-                    }
-                ],
-                "allowedEffects": ["prepare_advisory_response"],
-                "blockedEffects": ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
-                "governanceState": "requires_review",
-                "traceId": trace_id,
-                "auditId": f"audit_{trace_id}",
-            },
-            "recommendationProvenance": {
-                "summary": "keeping this as a governed review draft",
-                "traceId": trace_id,
-                "auditId": f"audit_{trace_id}",
-            },
-        }
-        self.write_json(200, response)
+        self.write_json(200, build_text_turn_response(payload))
 
     def handle_review(
         self,

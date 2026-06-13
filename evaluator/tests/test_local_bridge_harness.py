@@ -40,6 +40,24 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             self.assertEqual(response["delegation"]["selectedAgents"][0]["displayName"], "Passive Brain")
             self.assertIn("memory_write", response["delegation"]["blockedEffects"])
 
+    def test_harness_can_build_text_turn_response_with_forbidden_side_effect_claims(self):
+        payload = {
+            "requestKind": "text_turn",
+            "traceId": "trace_side_effect_claim_smoke",
+            "profileMode": "adult_owner",
+            "message": "claim-side-effect",
+            "chiefOfStaffRequest": {"request_id": "cos_side_effect_claim_smoke"},
+        }
+
+        response = local_bridge_harness.build_text_turn_response(payload)
+
+        self.assertEqual(response["governanceDecision"]["outcome"], "requires_review")
+        self.assertTrue(response["memoryWritePerformed"])
+        self.assertTrue(response["approvalCaptured"])
+        self.assertTrue(response["externalSendPerformed"])
+        self.assertTrue(response["agentDispatchPerformed"])
+        self.assertTrue(response["appliedLocally"])
+
     def test_harness_accepts_governed_review_handoffs_without_applying_them(self):
         with local_bridge_harness.running_harness() as base_url:
             steering = self.post_json(

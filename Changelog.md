@@ -61,6 +61,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a local harness endpoint preset in Text Concierge settings that points at the governed local bridge harness without starting services or granting authority.
 - Added an app-level local harness text smoke test that exercises descriptor discovery, governed text send, delegation provenance rendering inputs, blocked effects, and bridge readiness evidence.
 - Expanded the app-level local harness text smoke test to return denied fail-closed bridge details and blocked effects.
+- Expanded the local harness and app smoke coverage to prove text responses that claim forbidden side effects fail closed as contract mismatches.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.
