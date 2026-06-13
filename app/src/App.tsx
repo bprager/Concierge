@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { answerCapabilityQuestion } from "./capabilityLedger";
-import { describeBridgeOperationSummary } from "./bridgeOperations";
+import { answerCapabilityQuestion } from "./capabilityLedger.js";
+import { describeBridgeOperationSummary } from "./bridgeOperations.js";
 import {
   buildBridgeEvidenceReadinessState,
   compareBridgeReadinessProofs,
   exportBridgeReadinessProofJson,
   type BridgeReadinessProofComparison,
   updateBridgeEvidenceReadinessState,
-} from "./bridgeEvidenceReadiness";
+} from "./bridgeEvidenceReadiness.js";
 import {
   createCapabilityTaxonomy,
   getTaxonomyLabelCounts,
@@ -16,12 +16,12 @@ import {
   renameTaxonomyLabel,
   resetCapabilityTaxonomy,
   type TaxonomyDimension,
-} from "./capabilityTaxonomy";
+} from "./capabilityTaxonomy.js";
 import {
   draftChiefOfStaffSteering,
   submitChiefOfStaffSteeringDraft,
   type ChiefOfStaffSteeringSubmissionResult,
-} from "./chiefOfStaffSteering";
+} from "./chiefOfStaffSteering.js";
 import {
   buildDescriptorConnectionState,
   buildGovernanceReviewState,
@@ -33,24 +33,24 @@ import {
   type DescriptorConnectionInput,
   type LocalProfile,
   type MemoryProposalReviewState,
-} from "./contractBridge";
-import { discoverNapoleonDescriptor } from "./descriptorDiscovery";
+} from "./contractBridge.js";
+import { discoverNapoleonDescriptor } from "./descriptorDiscovery.js";
 import {
   submitMemoryProposalForReview,
   type MemoryProposalSubmissionResult,
-} from "./memoryProposalSubmission";
-import { sendToNapoleon } from "./napoleonBridge";
+} from "./memoryProposalSubmission.js";
+import { sendToNapoleon } from "./napoleonBridge.js";
 import {
   buildSuccessfulNapoleonResponsePresentation,
   clearNapoleonResponsePresentation,
   compareNapoleonResponseProofs,
   exportNapoleonResponseProofJson,
   type NapoleonResponseProofComparison,
-} from "./napoleonResponsePresentation";
+} from "./napoleonResponsePresentation.js";
 import {
   buildLocalHarnessEndpointPreset,
   isLocalHarnessEndpoint,
-} from "./localHarnessEndpoint";
+} from "./localHarnessEndpoint.js";
 import {
   describeBridgeFailure,
   describeBridgeFailureTranscriptMessage,
@@ -61,9 +61,9 @@ import {
   describeLiveSendPreflight,
   describeMemoryProposalReview,
   summarizeRehearsalPreview,
-} from "./presentation";
-import { emitEvent, newTraceId } from "./telemetry";
-import { capabilityLedger } from "./telemetry";
+} from "./presentation.js";
+import { emitEvent, newTraceId } from "./telemetry.js";
+import { capabilityLedger } from "./telemetry.js";
 import {
   CAPABILITY_LEDGER_MAX_AGE_DAYS,
   CAPABILITY_LEDGER_MAX_SIGNALS,
@@ -71,8 +71,8 @@ import {
   exportCapabilityLedgerJson,
   loadCapabilityTaxonomyFromStorage,
   persistCapabilityTaxonomyToStorage,
-} from "./capabilityLedgerStorage";
-import type { ConciergeMessage } from "./types";
+} from "./capabilityLedgerStorage.js";
+import type { ConciergeMessage } from "./types.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
 

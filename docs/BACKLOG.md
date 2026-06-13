@@ -173,6 +173,7 @@ Acceptance criteria:
 - Live text attempts update the readiness panel from captured `bridge_contract_evidence`; evidence comparison fails if the captured operation path or request kind drifts from the bridge registry or if raw/secret fields appear.
 - Text Concierge settings include a local harness endpoint preset for `http://127.0.0.1:8787`; selecting it only configures endpoint and descriptor preflight state, and does not start, stop, or control the harness process.
 - `make app-smoke` covers the local harness text path through descriptor discovery, governed send, delegation presentation inputs, last successful Napoleon proof view, sanitized Napoleon proof export comparison, blocked effects, readiness evidence, denied fail-closed text turn details, and response-side forbidden side-effect claims that fail closed as contract mismatches.
+- The app test suite also includes rendered React interaction coverage for the Napoleon proof export controls, proving the UI can click through descriptor discovery, governed send, repeated export comparison, and sanitized proof output without exposing prompts, endpoint hosts, or response text.
 - `make bridge-harness` covers local harness steering and memory proposal review responses that deliberately claim forbidden side effects, so those bad review shapes remain available for local contract checks.
 - Live text bridge calls can capture sanitized contract evidence for success and fail-closed outcomes without raw prompt text, response text, endpoint hosts, bearer tokens, request bodies, or response bodies.
 - `make bridge-evidence-capture` exercises one governed text evidence capture against the local harness, including descriptor discovery before text turn submission.
@@ -204,7 +205,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by bridge failure, contract mismatch, live text response side-effect-claim, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, timeout, local harness text proof/delegation/export comparison, steering, and memory response-side side-effect claims, sanitized bridge evidence capture, bridge evidence comparison, and repository validation for direct authority-boundary bypass attempts.
+- Covered by bridge failure, contract mismatch, live text response side-effect-claim, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, timeout, rendered proof export interaction, local harness text proof/delegation/export comparison, steering, and memory response-side side-effect claims, sanitized bridge evidence capture, bridge evidence comparison, and repository validation for direct authority-boundary bypass attempts.
 
 ## Milestone P2: Voice Concierge
 

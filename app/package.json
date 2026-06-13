@@ -12,17 +12,24 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@tauri-apps/api": "latest",
     "@opentelemetry/api": "latest",
     "@opentelemetry/sdk-trace-web": "latest",
     "@pixiv/three-vrm": "latest",
-    "three": "latest",
+    "@tauri-apps/api": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "three": "latest"
   },
   "devDependencies": {
     "@tauri-apps/cli": "latest",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jsdom": "^28.0.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "latest",
+    "jsdom": "^29.1.1",
     "typescript": "latest",
     "vite": "latest"
   }

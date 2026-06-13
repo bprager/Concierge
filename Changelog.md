@@ -69,6 +69,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Expanded the app-level local harness text smoke test to verify sanitized Napoleon proof export comparison without raw prompts, endpoint hosts, or response text.
 - Expanded the local harness and app smoke coverage to prove text responses that claim forbidden side effects fail closed as contract mismatches.
 - Expanded local harness coverage for Chief of Staff steering and memory proposal review responses that claim forbidden side effects.
+- Added rendered React interaction coverage for the Napoleon proof export comparison controls, including descriptor discovery, governed send, repeated proof export, and sanitized output checks.
 - Added a last successful Napoleon proof panel that summarizes returned governance, trace, audit, delegation, recommendation, allowed-effect, and blocked-effect metadata without treating it as approval or execution authority.
 - Added shared Text Concierge presentation state so Napoleon delegation and proof are set together after successful live responses and cleared together after local-only, blocked, or failed paths.
 - Added a sanitized export for the last successful Napoleon response proof without raw prompts, response text, endpoint hosts, or tokens.

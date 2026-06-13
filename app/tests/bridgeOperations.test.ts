@@ -8,7 +8,6 @@ import {
   getBridgeOperation,
 } from "../src/bridgeOperations.js";
 
-// @ts-expect-error The app test config omits Node fs typings, but the Node test runner provides this module.
 const { readFileSync } = await import("node:fs");
 
 type OperationShape = {
