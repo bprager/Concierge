@@ -218,6 +218,7 @@ Text Concierge shall:
 Voice Concierge shall:
 
 - Capture microphone input with explicit permission
+- Distinguish microphone setting, operating-system permission, and active recording in the UI
 - Detect speech boundaries
 - Transcribe speech locally when feasible
 - Synthesize responses with selectable voice

@@ -61,6 +61,8 @@ The optional bridge bearer token is a local connection credential. Concierge sen
 
 Text Concierge settings expose local telemetry, camera, and microphone switches. Telemetry defaults to on for local development signals; camera and microphone default to off. The camera and microphone switches persist local state only: they do not start capture, request operating-system permissions, store raw audio or video, send data externally, write memory, capture approval, or grant guardian consent. Privacy-setting events are local metadata and must carry explicit false side-effect flags.
 
+Voice readiness is also local preflight state. Concierge may request operating-system microphone permission only after an explicit user action, and any granted permission stream must be stopped immediately until voice mode starts. Permission granted is not active recording, not guardian approval, not Napoleon approval, and not permission to send raw audio externally.
+
 Bridge readiness proof exports are local metadata only. They may include descriptor state, checksum/signature state, evidence status, last operation path, blocked effects, and last fail-closed reason, but they must not include raw prompts, response bodies, endpoint hosts, bearer tokens, request bodies, or response bodies. Exporting a readiness proof is not Napoleon approval and does not grant memory writes, approval capture, agent dispatch, local application, or external sends.
 
 Bridge readiness proof comparison is also local metadata only. It compares the current proof with the previous proof exported in the same app session using sanitized descriptor and evidence fields, and it must not expose raw prompts, endpoint hosts, tokens, request bodies, response bodies, or authority claims.
@@ -105,6 +107,7 @@ Child protected memory proposals require guardian-appropriate review and must us
 - Child data minimized
 - Telemetry redacted before export
 - Local camera and microphone settings are not capture permission by themselves
+- Microphone permission readiness is not active recording by itself
 
 Conversation Capability Intelligence persistence:
 

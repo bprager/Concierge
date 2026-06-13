@@ -61,6 +61,8 @@ Every user turn has:
 | delegation_requested | Napoleon | target_agent, reason |
 | response_generated | UI | response_type, token_count |
 | bridge_request_failed | bridge | trace_id, request_id, reason, status, blocked_effects |
+| mic_permission_requested | voice | conversation_id, microphone_setting_enabled, local_only, capture_started, raw_audio_stored |
+| mic_permission_result | voice | conversation_id, result, capture_started, raw_audio_stored |
 | voice_segment_detected | voice | start_ms, end_ms |
 | stt_completed | voice | latency_ms, model |
 | tts_started | voice | voice_id, chars |

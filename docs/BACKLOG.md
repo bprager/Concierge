@@ -236,6 +236,28 @@ Evaluator coverage:
 | VO-008 | Add wake word option | P2 | Wake word can be enabled or disabled | wake_word_detected |
 | VO-009 | Add child voice constraints | P1 | Child mode has slower pacing and stricter side effect controls | child_voice_policy_applied |
 
+### VO-001 details
+
+User value: Voice readiness is visible before microphone capture exists, so the user can tell the difference between a local microphone preference, operating-system permission, and active recording.
+
+Acceptance criteria:
+
+- Text Concierge shows local voice readiness with microphone setting, OS permission state, and capture state.
+- Microphone setting defaults off and does not request OS permission by itself.
+- An explicit microphone permission action emits `mic_permission_requested` and `mic_permission_result`.
+- If permission is granted, Concierge immediately stops the permission stream and still reports voice capture as stopped until voice mode is implemented.
+- Permission checks do not write memory, capture approval, dispatch agents, send externally, or store raw audio.
+- Child protected mode must keep the same visible capture boundary and cannot treat microphone permission as guardian approval.
+
+Privacy and safety impact:
+
+- This is a preflight and consent surface only, not voice mode.
+- Raw audio remains unstored, and no always-on listening path is introduced.
+
+Evaluator coverage:
+
+- Covered by rendered app interaction tests for microphone setting, explicit permission request, and stopped capture state.
+
 ## Milestone P3: Avatar Concierge
 
 | ID | Story | Priority | Acceptance criteria | Observability |

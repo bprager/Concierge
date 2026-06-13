@@ -44,8 +44,12 @@ function localTelemetryEnabled(): boolean {
   return storage.getItem("concierge_telemetry_enabled") !== "false";
 }
 
+function isPrivacyAuditEvent(event: string): boolean {
+  return event === "privacy_setting_changed" || event === "mic_permission_requested" || event === "mic_permission_result";
+}
+
 export function emitEvent(event: string, attributes: Record<string, unknown>) {
-  if (!localTelemetryEnabled() && event !== "privacy_setting_changed") {
+  if (!localTelemetryEnabled() && !isPrivacyAuditEvent(event)) {
     return;
   }
 

@@ -356,3 +356,49 @@ test("renders local privacy controls for telemetry camera and microphone", async
     dom.window.close();
   }
 });
+
+test("keeps voice capture blocked until explicit microphone permission is granted", async () => {
+  const dom = installDom();
+  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Voice readiness");
+    assert.ok(view.getByText("Microphone setting off"));
+    assert.ok(view.getByText("Permission not requested"));
+    assert.ok(view.getByText("Voice capture blocked: microphone setting is off and OS permission is not granted."));
+
+    await user.click(view.getByLabelText("Microphone"));
+
+    assert.equal(permissionRequests, 0);
+    assert.ok(view.getByText("Microphone setting on"));
+    assert.ok(view.getByText("Voice capture blocked: OS microphone permission is not granted."));
+
+    await user.click(view.getByRole("button", { name: "Request microphone permission" }));
+
+    assert.equal(permissionRequests, 1);
+    assert.ok(view.getByText("Permission granted"));
+    assert.ok(view.getByText("Voice capture ready but stopped; voice mode is not active."));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});

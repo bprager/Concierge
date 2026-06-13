@@ -81,6 +81,8 @@ import type { ConciergeMessage } from "./types.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
 
+type MicrophonePermissionStatus = "not_requested" | "granted" | "denied" | "unavailable";
+
 function storedBoolean(key: string, fallback: boolean): boolean {
   if (typeof localStorage === "undefined") return fallback;
   const value = localStorage.getItem(key);
@@ -151,6 +153,8 @@ export function App() {
   const [microphoneEnabled, setMicrophoneEnabled] = useState(() =>
     storedBoolean("concierge_microphone_enabled", false),
   );
+  const [microphonePermissionStatus, setMicrophonePermissionStatus] =
+    useState<MicrophonePermissionStatus>("not_requested");
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
@@ -307,6 +311,81 @@ export function App() {
       memoryWritePerformed: false,
       externalSendPerformed: false,
     });
+  }
+
+  async function requestMicrophonePermission() {
+    const traceId = newTraceId();
+    emitEvent("mic_permission_requested", {
+      traceId,
+      conversationId,
+      microphoneSettingEnabled: microphoneEnabled,
+      localOnly: true,
+      captureStarted: false,
+      rawAudioStored: false,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
+    });
+
+    if (!microphoneEnabled) {
+      setMicrophonePermissionStatus("denied");
+      emitEvent("mic_permission_result", {
+        traceId,
+        conversationId,
+        result: "blocked_microphone_setting_off",
+        captureStarted: false,
+        rawAudioStored: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        externalSendPerformed: false,
+      });
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMicrophonePermissionStatus("unavailable");
+      emitEvent("mic_permission_result", {
+        traceId,
+        conversationId,
+        result: "unavailable",
+        captureStarted: false,
+        rawAudioStored: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        externalSendPerformed: false,
+      });
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      for (const track of stream.getTracks()) {
+        track.stop();
+      }
+      setMicrophonePermissionStatus("granted");
+      emitEvent("mic_permission_result", {
+        traceId,
+        conversationId,
+        result: "granted",
+        captureStarted: false,
+        rawAudioStored: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        externalSendPerformed: false,
+      });
+    } catch {
+      setMicrophonePermissionStatus("denied");
+      emitEvent("mic_permission_result", {
+        traceId,
+        conversationId,
+        result: "denied",
+        captureStarted: false,
+        rawAudioStored: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        externalSendPerformed: false,
+      });
+    }
   }
 
   async function discoverDescriptor(endpointOverride?: string) {
@@ -997,6 +1076,19 @@ export function App() {
     describeBridgeOperationSummary("memory_proposal_review"),
     describeBridgeOperationSummary("chief_of_staff_steering"),
   ];
+  const microphonePermissionLabel =
+    microphonePermissionStatus === "not_requested"
+      ? "Permission not requested"
+      : microphonePermissionStatus === "granted"
+        ? "Permission granted"
+        : microphonePermissionStatus === "unavailable"
+          ? "Permission unavailable"
+          : "Permission denied";
+  const voiceCaptureSummary = !microphoneEnabled
+    ? "Voice capture blocked: microphone setting is off and OS permission is not granted."
+    : microphonePermissionStatus !== "granted"
+      ? "Voice capture blocked: OS microphone permission is not granted."
+      : "Voice capture ready but stopped; voice mode is not active.";
 
   return (
     <main className="shell">
@@ -1092,6 +1184,28 @@ export function App() {
           Local telemetry {telemetryEnabled ? "on" : "off"}, camera {cameraEnabled ? "on" : "off"},
           microphone {microphoneEnabled ? "on" : "off"}
         </span>
+      </section>
+
+      <section className="contract-status" aria-label="Voice readiness">
+        <div>
+          <strong>Voice readiness</strong>
+          <span>local preflight only</span>
+        </div>
+        <div>
+          <strong>Microphone setting</strong>
+          <span>{microphoneEnabled ? "Microphone setting on" : "Microphone setting off"}</span>
+        </div>
+        <div>
+          <strong>OS permission</strong>
+          <span>{microphonePermissionLabel}</span>
+        </div>
+        <div>
+          <strong>Capture state</strong>
+          <span>{voiceCaptureSummary}</span>
+        </div>
+        <button className="secondary" onClick={() => void requestMicrophonePermission()}>
+          Request microphone permission
+        </button>
       </section>
 
       <section className="contract-status">
