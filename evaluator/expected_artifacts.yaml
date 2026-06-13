@@ -178,6 +178,23 @@ artifacts:
       - "does not capture approval"
       - "does not dispatch agents"
       - "does not execute side effects"
+  governed_review_response_semantics:
+    required_terms:
+      - "memory proposal review response"
+      - "Chief of Staff steering review response"
+      - "proposal-only after review"
+      - "matching trace"
+      - "matching audit"
+      - "blocked effects"
+      - "requires_review is not approval"
+      - "memoryWritePerformed false"
+      - "approvalCaptured false"
+      - "externalSendPerformed false"
+      - "agentDispatchPerformed false"
+      - "appliedLocally false"
+      - "fail closed as contract mismatch"
+      - "governance blocked state"
+      - "does not execute claimed side effects"
   privacy_settings_controls:
     required_terms:
       - "privacy settings controls"

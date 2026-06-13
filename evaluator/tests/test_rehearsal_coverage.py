@@ -200,6 +200,32 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("does not write memory", checks["child_bridge_response_semantics"]["missing_terms"])
         self.assertIn("stricter than adult owner mode", checks["child_bridge_response_semantics"]["missing_terms"])
 
+    def test_governed_review_response_semantics_keep_proposals_non_executed(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("GOVERNED-REVIEW-RESPONSE-SEMANTICS-001", scenarios)
+        self.assertIn(
+            "governed_review_response_semantics",
+            scenarios["GOVERNED-REVIEW-RESPONSE-SEMANTICS-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = """
+        Napoleon reviewed the memory proposal and Chief of Staff steering draft.
+        """
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["governed_review_response_semantics"],
+        )
+
+        self.assertFalse(checks["governed_review_response_semantics"]["found"])
+        self.assertIn("memory proposal review response", checks["governed_review_response_semantics"]["missing_terms"])
+        self.assertIn("Chief of Staff steering review response", checks["governed_review_response_semantics"]["missing_terms"])
+        self.assertIn("proposal-only after review", checks["governed_review_response_semantics"]["missing_terms"])
+        self.assertIn("appliedLocally false", checks["governed_review_response_semantics"]["missing_terms"])
+        self.assertIn("memoryWritePerformed false", checks["governed_review_response_semantics"]["missing_terms"])
+        self.assertIn("approvalCaptured false", checks["governed_review_response_semantics"]["missing_terms"])
+
 
 if __name__ == "__main__":
     unittest.main()

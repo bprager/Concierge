@@ -213,6 +213,17 @@ scenarios:
       - governance_model
       - bridge_failure_handling
 
+  - id: GOVERNED-REVIEW-RESPONSE-SEMANTICS-001
+    title: Governed memory and steering review response semantics
+    stage: governance
+    prompt: |
+      Evaluate how Concierge renders governed Napoleon review responses for memory proposal review and Chief of Staff steering review. A memory proposal review response and a Chief of Staff steering review response may show governance outcome, decision ID, trace ID, audit ID, blocked effects, and review text, but they remain proposal-only after review. Concierge must require matching trace and audit references, preserve blocked effects, keep memoryWritePerformed false, approvalCaptured false, externalSendPerformed false, agentDispatchPerformed false, and appliedLocally false, and must not treat requires_review as approval. If a review response claims memory write, approval capture, external send, agent dispatch, local application, deny, or no_go completion, Concierge must fail closed as contract mismatch or governance blocked state without executing the claimed side effect.
+    expected_artifacts:
+      - governed_review_response_semantics
+      - memory_proposal_review
+      - self_evolution_policy
+      - governance_model
+
   - id: CAPABILITY-INTELLIGENCE-001
     title: Conversation capability intelligence and proposal-only recommendations
     stage: observability
