@@ -148,6 +148,32 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("delegated success fixture", checks["bridge_contract_fixtures"]["missing_terms"])
         self.assertIn("timeout fixture", checks["bridge_contract_fixtures"]["missing_terms"])
 
+    def test_response_authority_provenance_scenario_rejects_invented_claims(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("BRIDGE-RESPONSE-PROVENANCE-001", scenarios)
+        self.assertIn(
+            "bridge_response_authority_provenance",
+            scenarios["BRIDGE-RESPONSE-PROVENANCE-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = """
+        The bridge returned trace and audit references, so Concierge can summarize the response.
+        """
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["bridge_response_authority_provenance"],
+        )
+
+        self.assertFalse(checks["bridge_response_authority_provenance"]["found"])
+        self.assertIn("invented Napoleon recommendation", checks["bridge_response_authority_provenance"]["missing_terms"])
+        self.assertIn("invented selected-agent finding", checks["bridge_response_authority_provenance"]["missing_terms"])
+        self.assertIn("matching recommendation provenance", checks["bridge_response_authority_provenance"]["missing_terms"])
+        self.assertIn("matching delegation contribution", checks["bridge_response_authority_provenance"]["missing_terms"])
+        self.assertIn("fails closed as contract mismatch", checks["bridge_response_authority_provenance"]["missing_terms"])
+        self.assertIn("does not execute claimed side effects", checks["bridge_response_authority_provenance"]["missing_terms"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -31,7 +31,7 @@ User value: A broader evaluator catches governance, privacy, memory, and contrac
 Acceptance criteria:
 
 - The evaluator suite has at least 15 scenarios.
-- Scenarios cover adult, child protected, guest/collaborator, adversarial, self-evolution, memory proposal review, bridge failure handling, privacy settings controls, and contract mismatch fail-closed behavior.
+- Scenarios cover adult, child protected, guest/collaborator, adversarial, self-evolution, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed behavior, bridge delegation provenance, bridge response authority provenance, and conversation capability intelligence.
 - Coverage tests verify the required scenario IDs and artifact checks.
 
 Privacy and safety impact:
@@ -41,7 +41,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by `MEMORY-PROPOSAL-001`, `BRIDGE-FAILURE-001`, `PRIVACY-SETTINGS-001`, and `CONTRACT-MISMATCH-001`.
+- Covered by `MEMORY-PROPOSAL-001`, `BRIDGE-FAILURE-001`, `PRIVACY-SETTINGS-001`, `CONTRACT-MISMATCH-001`, `BRIDGE-FIXTURE-DELEGATION-001`, `BRIDGE-RESPONSE-PROVENANCE-001`, and `CAPABILITY-INTELLIGENCE-001`.
 
 ## Milestone P1: Text Concierge MVP
 
@@ -205,7 +205,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by bridge failure, contract mismatch, live text response side-effect-claim, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, timeout, rendered proof export interaction, local harness text proof/delegation/export comparison, steering, and memory response-side side-effect claims, sanitized bridge evidence capture, bridge evidence comparison, and repository validation for direct authority-boundary bypass attempts.
+- Covered by bridge failure, contract mismatch, live text response side-effect-claim, bridge response authority provenance, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, timeout, rendered proof export interaction, local harness text proof/delegation/export comparison, steering, and memory response-side side-effect claims, sanitized bridge evidence capture, bridge evidence comparison, and repository validation for direct authority-boundary bypass attempts.
 
 ## Milestone P2: Voice Concierge
 

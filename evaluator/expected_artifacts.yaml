@@ -143,6 +143,23 @@ artifacts:
       - "does not dispatch agents"
       - "does not send externally"
       - "not treated as approval"
+  bridge_response_authority_provenance:
+    required_terms:
+      - "bridge response authority provenance"
+      - "invented Napoleon recommendation"
+      - "invented selected-agent finding"
+      - "matching recommendation provenance"
+      - "matching delegation contribution"
+      - "matching trace ID"
+      - "matching audit ID"
+      - "allowed effects"
+      - "blocked effects"
+      - "fails closed as contract mismatch"
+      - "does not execute claimed side effects"
+      - "does not write memory"
+      - "does not capture approval"
+      - "does not dispatch agents"
+      - "does not send externally"
   privacy_settings_controls:
     required_terms:
       - "privacy settings controls"
