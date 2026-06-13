@@ -58,6 +58,42 @@ class LocalBridgeHarnessTest(unittest.TestCase):
         self.assertTrue(response["agentDispatchPerformed"])
         self.assertTrue(response["appliedLocally"])
 
+    def test_harness_can_build_steering_response_with_forbidden_side_effect_claims(self):
+        response = local_bridge_harness.build_review_response(
+            {
+                "requestKind": "chief_of_staff_steering_handoff",
+                "traceEnvelope": {"trace_id": "trace_steering_side_effect", "request_id": "cos_steering"},
+                "evolutionProposal": {"proposal_id": "claim-side-effect"},
+            },
+            "chief_of_staff_steering_handoff",
+            applied_locally=False,
+        )
+
+        self.assertEqual(response["governanceDecision"]["outcome"], "requires_review")
+        self.assertTrue(response["appliedLocally"])
+        self.assertTrue(response["memoryWritePerformed"])
+        self.assertTrue(response["approvalCaptured"])
+        self.assertTrue(response["externalSendPerformed"])
+        self.assertTrue(response["agentDispatchPerformed"])
+
+    def test_harness_can_build_memory_response_with_forbidden_side_effect_claims(self):
+        response = local_bridge_harness.build_review_response(
+            {
+                "requestKind": "memory_proposal_review_handoff",
+                "traceEnvelope": {"trace_id": "trace_memory_side_effect", "request_id": "cos_memory"},
+                "memoryProposal": {"proposalId": "claim-side-effect"},
+            },
+            "memory_proposal_review_handoff",
+            memory_review=True,
+        )
+
+        self.assertEqual(response["governanceDecision"]["outcome"], "requires_review")
+        self.assertTrue(response["memoryWritePerformed"])
+        self.assertTrue(response["approvalCaptured"])
+        self.assertTrue(response["externalSendPerformed"])
+        self.assertTrue(response["agentDispatchPerformed"])
+        self.assertTrue(response["appliedLocally"])
+
     def test_harness_accepts_governed_review_handoffs_without_applying_them(self):
         with local_bridge_harness.running_harness() as base_url:
             steering = self.post_json(

@@ -90,7 +90,7 @@ Initial local implementation: Text Concierge emits `conversation_capability_sign
 
 Governed memory proposal review responses that claim memory writes, approval capture, external sends, agent dispatch, or local application are reported as `contract_mismatch` failures through `memory_proposal_send_failed`.
 
-Live text responses that claim memory writes, approval capture, external sends, agent dispatch, or local application are reported as `contract_mismatch` failures through `bridge_request_failed` and remain visible through the bridge-blocked transcript message.
+Live text responses that claim memory writes, approval capture, external sends, agent dispatch, or local application are reported as `contract_mismatch` failures through `bridge_request_failed` and remain visible through the bridge-blocked transcript message. The local harness can emit matching forbidden-claim response shapes for text, Chief of Staff steering, and memory proposal review paths so local checks can keep those failure signals exercised.
 
 When descriptor discovery has not completed, live text turns, memory proposal handoff, and Chief of Staff steering handoff fail closed before request fetch and report descriptor mismatch failures with the relevant blocked-effect list.
 

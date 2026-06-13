@@ -114,6 +114,42 @@ def build_text_turn_response(payload: dict[str, Any]) -> dict[str, Any]:
     return response
 
 
+def has_side_effect_claim_trigger(payload: dict[str, Any]) -> bool:
+    trigger = json.dumps(payload, sort_keys=True)
+    return "claim-side-effect" in trigger
+
+
+def build_review_response(
+    payload: dict[str, Any],
+    expected_request_kind: str,
+    applied_locally: bool | None = None,
+    memory_review: bool = False,
+) -> dict[str, Any]:
+    trace_id = str(payload.get("traceEnvelope", {}).get("trace_id") or "trace_harness_review")
+    request_id = str(payload.get("traceEnvelope", {}).get("request_id") or f"cos_{trace_id}")
+    response = {
+        "text": "Napoleon accepted the proposal for governed review only.",
+        **governance_response(trace_id, request_id, f"decision_{trace_id}", f"audit_{trace_id}"),
+        "approvalCaptured": False,
+        "externalSendPerformed": False,
+    }
+    if applied_locally is not None:
+        response["appliedLocally"] = applied_locally
+    if memory_review:
+        response["memoryWritePerformed"] = False
+    if has_side_effect_claim_trigger(payload):
+        response.update(
+            {
+                "memoryWritePerformed": True,
+                "approvalCaptured": True,
+                "externalSendPerformed": True,
+                "agentDispatchPerformed": True,
+                "appliedLocally": True,
+            }
+        )
+    return response
+
+
 class HarnessHandler(BaseHTTPRequestHandler):
     server_version = "ConciergeLocalBridgeHarness/0.1"
 
@@ -167,19 +203,7 @@ class HarnessHandler(BaseHTTPRequestHandler):
         if payload.get("requestKind") != expected_request_kind:
             self.write_json(400, {"error": "invalid_request_kind"})
             return
-        trace_id = str(payload.get("traceEnvelope", {}).get("trace_id") or "trace_harness_review")
-        request_id = str(payload.get("traceEnvelope", {}).get("request_id") or f"cos_{trace_id}")
-        response = {
-            "text": "Napoleon accepted the proposal for governed review only.",
-            **governance_response(trace_id, request_id, f"decision_{trace_id}", f"audit_{trace_id}"),
-            "approvalCaptured": False,
-            "externalSendPerformed": False,
-        }
-        if applied_locally is not None:
-            response["appliedLocally"] = applied_locally
-        if memory_review:
-            response["memoryWritePerformed"] = False
-        self.write_json(200, response)
+        self.write_json(200, build_review_response(payload, expected_request_kind, applied_locally, memory_review))
 
     def handle_evaluate(self, payload: dict[str, Any]) -> None:
         if payload.get("requestKind") != "evaluator_prompt":
