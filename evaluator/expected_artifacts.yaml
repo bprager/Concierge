@@ -195,6 +195,24 @@ artifacts:
       - "fail closed as contract mismatch"
       - "governance blocked state"
       - "does not execute claimed side effects"
+  profile_scope_drift_boundary:
+    required_terms:
+      - "profile scope drift"
+      - "guest remains guest"
+      - "collaborator remains collaborator"
+      - "child protected remains child protected"
+      - "does not upgrade to adult owner"
+      - "owner-only memory access"
+      - "guardian review"
+      - "limited collaborator scope"
+      - "local acknowledgement is not approval"
+      - "profile provenance"
+      - "fails closed on profile mismatch"
+      - "blocked effects"
+      - "does not write memory"
+      - "does not dispatch agents"
+      - "does not send externally"
+      - "does not capture approval"
   privacy_settings_controls:
     required_terms:
       - "privacy settings controls"
