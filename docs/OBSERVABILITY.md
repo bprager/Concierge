@@ -65,7 +65,7 @@ Every user turn has:
 | mic_permission_result | voice | conversation_id, result, capture_started, raw_audio_stored |
 | camera_permission_requested | avatar | conversation_id, camera_setting_enabled, local_only, capture_started, raw_video_stored |
 | camera_permission_result | avatar | conversation_id, result, capture_started, raw_video_stored |
-| voice_segment_detected | voice | start_ms, end_ms |
+| voice_segment_detected | voice | start_ms, end_ms, peak_rms, local_sample_only, capture_started, raw_audio_stored |
 | stt_completed | voice | latency_ms, model |
 | tts_started | voice | voice_id, chars |
 | tts_completed | voice | latency_ms, duration_ms |

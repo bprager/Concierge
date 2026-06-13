@@ -404,6 +404,48 @@ test("keeps voice capture blocked until explicit microphone permission is grante
   }
 });
 
+test("runs local voice activity sample without starting microphone capture", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Voice activity detection");
+    const vadReadiness = within(view.getByLabelText("Voice activity detection"));
+    assert.ok(vadReadiness.getByText("VAD sample not run"));
+    assert.ok(vadReadiness.getByText("Microphone capture stopped; local sample only."));
+
+    await user.click(view.getByRole("button", { name: "Run local VAD sample" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.ok(vadReadiness.getByText("Detected 2 local sample voice segments."));
+    assert.ok(vadReadiness.getByText("40-160 ms, peak 0.09"));
+    assert.ok(vadReadiness.getByText("280-400 ms, peak 0.07"));
+    assert.ok(vadReadiness.getByText("Raw audio stored: no"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("keeps camera capture blocked until explicit camera permission is granted", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

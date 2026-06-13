@@ -78,6 +78,7 @@ import {
   persistCapabilityTaxonomyToStorage,
 } from "./capabilityLedgerStorage.js";
 import type { ConciergeMessage } from "./types.js";
+import { detectVoiceSegments, localVadSampleFrames, type VoiceActivitySegment } from "./voiceActivity.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
 
@@ -156,6 +157,7 @@ export function App() {
   const [microphonePermissionStatus, setMicrophonePermissionStatus] =
     useState<LocalMediaPermissionStatus>("not_requested");
   const [cameraPermissionStatus, setCameraPermissionStatus] = useState<LocalMediaPermissionStatus>("not_requested");
+  const [vadSampleSegments, setVadSampleSegments] = useState<VoiceActivitySegment[] | null>(null);
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
@@ -455,6 +457,32 @@ export function App() {
         traceId,
         conversationId,
         result: "denied",
+        captureStarted: false,
+        rawAudioStored: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        externalSendPerformed: false,
+      });
+    }
+  }
+
+  function runLocalVadSample() {
+    const traceId = newTraceId();
+    const segments = detectVoiceSegments(localVadSampleFrames, {
+      thresholdRms: 0.05,
+      hangoverMs: 80,
+      minSpeechMs: 80,
+    });
+    setVadSampleSegments(segments);
+    for (const segment of segments) {
+      emitEvent("voice_segment_detected", {
+        traceId,
+        conversationId,
+        startMs: segment.startMs,
+        endMs: segment.endMs,
+        peakRms: segment.peakRms,
+        frameCount: segment.frameCount,
+        localSampleOnly: true,
         captureStarted: false,
         rawAudioStored: false,
         approvalCaptured: false,
@@ -1173,6 +1201,10 @@ export function App() {
     : microphonePermissionStatus !== "granted"
       ? "Voice capture blocked: OS microphone permission is not granted."
       : "Voice capture ready but stopped; voice mode is not active.";
+  const vadSampleSummary =
+    vadSampleSegments === null
+      ? "VAD sample not run"
+      : `Detected ${vadSampleSegments.length} local sample voice segments.`;
   const cameraCaptureSummary = !cameraEnabled
     ? "Camera capture blocked: camera setting is off and OS permission is not granted."
     : cameraPermissionStatus !== "granted"
@@ -1294,6 +1326,36 @@ export function App() {
         </div>
         <button className="secondary" onClick={() => void requestMicrophonePermission()}>
           Request microphone permission
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Voice activity detection">
+        <div>
+          <strong>Voice activity detection</strong>
+          <span>local sample only</span>
+        </div>
+        <div>
+          <strong>Sample state</strong>
+          <span>{vadSampleSummary}</span>
+        </div>
+        <div>
+          <strong>Capture state</strong>
+          <span>Microphone capture stopped; local sample only.</span>
+        </div>
+        {vadSampleSegments?.map((segment) => (
+          <div key={`${segment.startMs}-${segment.endMs}`}>
+            <strong>Segment</strong>
+            <span>
+              {segment.startMs}-{segment.endMs} ms, peak {segment.peakRms.toFixed(2)}
+            </span>
+          </div>
+        ))}
+        <div>
+          <strong>Storage</strong>
+          <span>Raw audio stored: no</span>
+        </div>
+        <button className="secondary" onClick={runLocalVadSample}>
+          Run local VAD sample
         </button>
       </section>
 
