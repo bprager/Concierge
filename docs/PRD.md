@@ -430,7 +430,7 @@ Default policy:
 ## 12. Open questions
 
 1. What is the exact Napoleon bridge API?
-2. Which user profiles are allowed beyond adult owner and child protected user?
+2. What governance workflow, if any, may change a user between adult owner, child protected, guest, and collaborator scopes?
 3. What telemetry backend will be used locally and remotely?
 4. What level of local LLM capability is required?
 5. What avatar visual style best preserves trust without being manipulative?

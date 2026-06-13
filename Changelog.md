@@ -16,6 +16,8 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added initial repository review, Chief of Staff alignment, architecture gap analysis, evaluator readiness, and recommended startup plan reports.
 - Updated startup planning reports with Napoleon Chief of Staff integration contracts discovered from `bernd@mimir`.
 - Added first-pass Text Concierge integration with Napoleon Chief of Staff contract envelopes, governance decisions, profile mapping, observability envelopes, blocked effects, and tests.
+- Added collaborator profile selection to the Text Concierge settings so the UI exposes every local profile mode supported by the governed contract mapping.
+- Clarified the PRD profile open question now that adult owner, child protected, guest, and collaborator modes are supported.
 - Added Rehearsal Mode for local, contract-only previews of governed text turns before live Napoleon bridge calls.
 - Added Rehearsal Mode evaluator coverage for adult owner, child protected, guest/collaborator, and adversarial preview paths.
 - Added governance review UI states for `requires_review`, `deny`, and `no_go`, with local-only acknowledgement that is not Napoleon approval.

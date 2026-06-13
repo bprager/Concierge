@@ -927,6 +927,7 @@ export function App() {
             <option value="adult_owner">Adult owner</option>
             <option value="child_protected">Child protected</option>
             <option value="guest">Guest</option>
+            <option value="collaborator">Collaborator</option>
           </select>
         </label>
         <label>

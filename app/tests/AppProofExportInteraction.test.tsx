@@ -177,3 +177,24 @@ test("drafts a proposal-only taxonomy review from rendered app controls", async 
     dom.window.close();
   }
 });
+
+test("exposes collaborator profile in rendered app controls", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App />);
+    const profileSelect = view.getByLabelText("User profile") as HTMLSelectElement;
+
+    assert.ok(view.getByRole("option", { name: "Collaborator" }));
+    fireEvent.change(profileSelect, { target: { value: "collaborator" } });
+
+    assert.equal(profileSelect.value, "collaborator");
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
