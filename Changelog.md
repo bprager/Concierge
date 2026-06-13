@@ -69,6 +69,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Expanded the local harness and app smoke coverage to prove text responses that claim forbidden side effects fail closed as contract mismatches.
 - Expanded local harness coverage for Chief of Staff steering and memory proposal review responses that claim forbidden side effects.
 - Added a last successful Napoleon proof panel that summarizes returned governance, trace, audit, delegation, recommendation, allowed-effect, and blocked-effect metadata without treating it as approval or execution authority.
+- Added shared Text Concierge presentation state so Napoleon delegation and proof are set together after successful live responses and cleared together after local-only, blocked, or failed paths.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.

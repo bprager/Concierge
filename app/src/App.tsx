@@ -41,11 +41,14 @@ import {
 } from "./memoryProposalSubmission";
 import { sendToNapoleon } from "./napoleonBridge";
 import {
+  buildSuccessfulNapoleonResponsePresentation,
+  clearNapoleonResponsePresentation,
+} from "./napoleonResponsePresentation";
+import {
   buildLocalHarnessEndpointPreset,
   isLocalHarnessEndpoint,
 } from "./localHarnessEndpoint";
 import {
-  describeDelegation,
   describeBridgeFailure,
   describeBridgeFailureTranscriptMessage,
   describeGovernedHandoffFailure,
@@ -54,7 +57,6 @@ import {
   describeLiveBridgeReadiness,
   describeLiveSendPreflight,
   describeMemoryProposalReview,
-  describeNapoleonResponseProof,
   summarizeRehearsalPreview,
 } from "./presentation";
 import { emitEvent, newTraceId } from "./telemetry";
@@ -129,8 +131,7 @@ export function App() {
     typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_auth_token") ?? "",
   );
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
-  const [lastDelegation, setLastDelegation] = useState<ReturnType<typeof describeDelegation> | null>(null);
-  const [lastNapoleonProof, setLastNapoleonProof] = useState<ReturnType<typeof describeNapoleonResponseProof> | null>(null);
+  const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
   const [bridgeEvidenceReadiness, setBridgeEvidenceReadiness] = useState(buildBridgeEvidenceReadinessState);
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
@@ -305,8 +306,7 @@ export function App() {
       setInput("");
       setPendingRehearsal(null);
       setLastDecision(null);
-      setLastDelegation(null);
-      setLastNapoleonProof(null);
+      setLastNapoleonPresentation(clearNapoleonResponsePresentation());
       setLastBridgeFailure(null);
       setLastReview(null);
       setLastMemoryReviewState(null);
@@ -360,8 +360,7 @@ export function App() {
     }
     setPendingRehearsal({ content, traceId, turnId, preview, summary, review, memoryReviewState, memoryReview });
     setLastDecision(null);
-    setLastDelegation(null);
-    setLastNapoleonProof(null);
+    setLastNapoleonPresentation(clearNapoleonResponsePresentation());
     setLastBridgeFailure(null);
     setLastReview(null);
     setLastMemoryReviewState(null);
@@ -395,8 +394,7 @@ export function App() {
         setInput("");
         setPendingRehearsal(null);
         setLastDecision(null);
-        setLastDelegation(null);
-        setLastNapoleonProof(null);
+        setLastNapoleonPresentation(clearNapoleonResponsePresentation());
         setLastBridgeFailure(null);
         setLastReview(null);
         setLastMemoryReviewState(null);
@@ -418,8 +416,7 @@ export function App() {
       });
       refreshCapabilityLedgerStatus();
       setLastReview(rehearsal.review);
-      setLastDelegation(null);
-      setLastNapoleonProof(null);
+      setLastNapoleonPresentation(clearNapoleonResponsePresentation());
       setLastBridgeFailure(null);
       setMemorySubmission(null);
       setMemorySubmissionFailure(null);
@@ -442,8 +439,7 @@ export function App() {
         });
         refreshCapabilityLedgerStatus();
         setLastReview(reviewView);
-        setLastDelegation(null);
-        setLastNapoleonProof(null);
+        setLastNapoleonPresentation(clearNapoleonResponsePresentation());
         setLastBridgeFailure(null);
         setLastDecision(
           describeGovernanceDecision({
@@ -504,8 +500,7 @@ export function App() {
       });
       refreshCapabilityLedgerStatus();
       setLastDecision(decisionView);
-      setLastDelegation(describeDelegation(response.delegation));
-      setLastNapoleonProof(describeNapoleonResponseProof(response));
+      setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response));
       setLastBridgeFailure(null);
       const responseReviewState = buildGovernanceReviewState(response.governanceDecision, profile);
       setLastReview(describeGovernanceReview(responseReviewState));
@@ -558,8 +553,7 @@ export function App() {
       emitEvent("response_failed", { traceId, conversationId, turnId, error: String(error) });
       refreshCapabilityLedgerStatus();
       setLastBridgeFailure(describeBridgeFailure(error));
-      setLastDelegation(null);
-      setLastNapoleonProof(null);
+      setLastNapoleonPresentation(clearNapoleonResponsePresentation());
       setMessages((m) => [
         ...m,
         {
@@ -1212,15 +1206,15 @@ export function App() {
         </section>
       ) : null}
 
-      {lastNapoleonProof ? (
-        <section className={`napoleon-proof ${lastNapoleonProof.status}`}>
+      {lastNapoleonPresentation.proof ? (
+        <section className={`napoleon-proof ${lastNapoleonPresentation.proof.status}`}>
           <div className="review-heading">
-            <strong>{lastNapoleonProof.heading}</strong>
-            <span>{lastNapoleonProof.summary}</span>
-            <span>{lastNapoleonProof.caveat}</span>
+            <strong>{lastNapoleonPresentation.proof.heading}</strong>
+            <span>{lastNapoleonPresentation.proof.summary}</span>
+            <span>{lastNapoleonPresentation.proof.caveat}</span>
           </div>
           <dl>
-            {lastNapoleonProof.details.map((detail) => (
+            {lastNapoleonPresentation.proof.details.map((detail) => (
               <div key={detail.label}>
                 <dt>{detail.label}</dt>
                 <dd>{detail.value}</dd>
@@ -1230,15 +1224,15 @@ export function App() {
         </section>
       ) : null}
 
-      {lastDelegation ? (
+      {lastNapoleonPresentation.delegation ? (
         <section className="delegation">
           <div className="review-heading">
-            <strong>{lastDelegation.heading}</strong>
-            <span>{lastDelegation.body}</span>
+            <strong>{lastNapoleonPresentation.delegation.heading}</strong>
+            <span>{lastNapoleonPresentation.delegation.body}</span>
           </div>
-          {lastDelegation.details.length ? (
+          {lastNapoleonPresentation.delegation.details.length ? (
             <dl>
-              {lastDelegation.details.map((detail) => (
+              {lastNapoleonPresentation.delegation.details.map((detail) => (
                 <div key={detail.label}>
                   <dt>{detail.label}</dt>
                   <dd>{detail.value}</dd>
