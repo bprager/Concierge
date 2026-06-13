@@ -160,6 +160,24 @@ artifacts:
       - "does not capture approval"
       - "does not dispatch agents"
       - "does not send externally"
+  child_bridge_response_semantics:
+    required_terms:
+      - "child protected bridge response"
+      - "stricter than adult owner mode"
+      - "child-appropriate wording"
+      - "guardian review"
+      - "no secret-keeping"
+      - "memory minimization"
+      - "blocked effects"
+      - "deny"
+      - "no_go"
+      - "fail closed"
+      - "local acknowledgement is not approval"
+      - "does not send externally"
+      - "does not write memory"
+      - "does not capture approval"
+      - "does not dispatch agents"
+      - "does not execute side effects"
   privacy_settings_controls:
     required_terms:
       - "privacy settings controls"
