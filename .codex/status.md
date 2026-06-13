@@ -103,6 +103,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added visible governed handoff readiness summaries for memory proposal review, Chief of Staff steering, and Chief of Staff taxonomy review so submit controls explain draft, endpoint, descriptor, and blocked-effect blockers before any Napoleon handoff.
 - Added local Text Concierge privacy controls for telemetry, camera, and microphone state; camera and microphone remain off by default, toggles persist local state only, and privacy-setting events do not store raw audio/video or claim side effects.
 - Added a local Voice readiness panel with explicit microphone permission request/result state; toggling the microphone setting does not request permission, granted permission is stopped immediately, and voice capture remains inactive until a future voice mode pipeline exists.
+- Added a local Camera readiness panel with explicit camera permission request/result state; toggling the camera setting does not request permission, granted permission is stopped immediately, and camera capture remains inactive until a future avatar/camera pipeline exists.
 
 ## Current Blockers
 

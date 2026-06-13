@@ -235,6 +235,7 @@ Avatar Concierge shall:
 - Map stance to expression and movement
 - Simulate gaze based on screen and camera geometry
 - Capture camera input only with explicit permission
+- Distinguish camera setting, operating-system permission, and active recording in the UI
 - Derive conservative user state signals
 - Avoid durable emotional labeling
 - Respect adult and child profile differences

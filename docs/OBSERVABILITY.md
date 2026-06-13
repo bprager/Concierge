@@ -63,6 +63,8 @@ Every user turn has:
 | bridge_request_failed | bridge | trace_id, request_id, reason, status, blocked_effects |
 | mic_permission_requested | voice | conversation_id, microphone_setting_enabled, local_only, capture_started, raw_audio_stored |
 | mic_permission_result | voice | conversation_id, result, capture_started, raw_audio_stored |
+| camera_permission_requested | avatar | conversation_id, camera_setting_enabled, local_only, capture_started, raw_video_stored |
+| camera_permission_result | avatar | conversation_id, result, capture_started, raw_video_stored |
 | voice_segment_detected | voice | start_ms, end_ms |
 | stt_completed | voice | latency_ms, model |
 | tts_started | voice | voice_id, chars |

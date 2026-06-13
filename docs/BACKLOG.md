@@ -273,6 +273,28 @@ Evaluator coverage:
 | AV-009 | Add avatar privacy dashboard | P0 | User can disable camera, affect, storage, and telemetry | privacy_setting_changed |
 | AV-010 | Add child avatar constraints | P0 | Child mode disables or restricts camera affect estimation by default | child_avatar_policy_applied |
 
+### AV-005 details
+
+User value: Camera readiness is visible before avatar camera capture exists, so the user can tell the difference between a local camera preference, operating-system permission, and active recording.
+
+Acceptance criteria:
+
+- Text Concierge shows local camera readiness with camera setting, OS permission state, and capture state.
+- Camera setting defaults off and does not request OS permission by itself.
+- An explicit camera permission action emits `camera_permission_requested` and `camera_permission_result`.
+- If permission is granted, Concierge immediately stops the permission stream and still reports camera capture as stopped until avatar/camera mode is implemented.
+- Permission checks do not write memory, capture approval, dispatch agents, send externally, or store raw video.
+- Child protected mode must keep the same visible capture boundary and cannot treat camera permission as guardian approval.
+
+Privacy and safety impact:
+
+- This is a preflight and consent surface only, not avatar mode.
+- Raw video remains unstored, and no always-on camera path is introduced.
+
+Evaluator coverage:
+
+- Covered by rendered app interaction tests for camera setting, explicit permission request, and stopped capture state.
+
 ## Milestone P4: Controlled self-evolution
 
 | ID | Story | Priority | Acceptance criteria | Observability |

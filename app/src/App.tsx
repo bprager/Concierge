@@ -81,7 +81,7 @@ import type { ConciergeMessage } from "./types.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
 
-type MicrophonePermissionStatus = "not_requested" | "granted" | "denied" | "unavailable";
+type LocalMediaPermissionStatus = "not_requested" | "granted" | "denied" | "unavailable";
 
 function storedBoolean(key: string, fallback: boolean): boolean {
   if (typeof localStorage === "undefined") return fallback;
@@ -154,7 +154,8 @@ export function App() {
     storedBoolean("concierge_microphone_enabled", false),
   );
   const [microphonePermissionStatus, setMicrophonePermissionStatus] =
-    useState<MicrophonePermissionStatus>("not_requested");
+    useState<LocalMediaPermissionStatus>("not_requested");
+  const [cameraPermissionStatus, setCameraPermissionStatus] = useState<LocalMediaPermissionStatus>("not_requested");
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
@@ -311,6 +312,81 @@ export function App() {
       memoryWritePerformed: false,
       externalSendPerformed: false,
     });
+  }
+
+  async function requestCameraPermission() {
+    const traceId = newTraceId();
+    emitEvent("camera_permission_requested", {
+      traceId,
+      conversationId,
+      cameraSettingEnabled: cameraEnabled,
+      localOnly: true,
+      captureStarted: false,
+      rawVideoStored: false,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
+    });
+
+    if (!cameraEnabled) {
+      setCameraPermissionStatus("denied");
+      emitEvent("camera_permission_result", {
+        traceId,
+        conversationId,
+        result: "blocked_camera_setting_off",
+        captureStarted: false,
+        rawVideoStored: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        externalSendPerformed: false,
+      });
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraPermissionStatus("unavailable");
+      emitEvent("camera_permission_result", {
+        traceId,
+        conversationId,
+        result: "unavailable",
+        captureStarted: false,
+        rawVideoStored: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        externalSendPerformed: false,
+      });
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+      for (const track of stream.getTracks()) {
+        track.stop();
+      }
+      setCameraPermissionStatus("granted");
+      emitEvent("camera_permission_result", {
+        traceId,
+        conversationId,
+        result: "granted",
+        captureStarted: false,
+        rawVideoStored: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        externalSendPerformed: false,
+      });
+    } catch {
+      setCameraPermissionStatus("denied");
+      emitEvent("camera_permission_result", {
+        traceId,
+        conversationId,
+        result: "denied",
+        captureStarted: false,
+        rawVideoStored: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        externalSendPerformed: false,
+      });
+    }
   }
 
   async function requestMicrophonePermission() {
@@ -1084,11 +1160,24 @@ export function App() {
         : microphonePermissionStatus === "unavailable"
           ? "Permission unavailable"
           : "Permission denied";
+  const cameraPermissionLabel =
+    cameraPermissionStatus === "not_requested"
+      ? "Permission not requested"
+      : cameraPermissionStatus === "granted"
+        ? "Permission granted"
+        : cameraPermissionStatus === "unavailable"
+          ? "Permission unavailable"
+          : "Permission denied";
   const voiceCaptureSummary = !microphoneEnabled
     ? "Voice capture blocked: microphone setting is off and OS permission is not granted."
     : microphonePermissionStatus !== "granted"
       ? "Voice capture blocked: OS microphone permission is not granted."
       : "Voice capture ready but stopped; voice mode is not active.";
+  const cameraCaptureSummary = !cameraEnabled
+    ? "Camera capture blocked: camera setting is off and OS permission is not granted."
+    : cameraPermissionStatus !== "granted"
+      ? "Camera capture blocked: OS camera permission is not granted."
+      : "Camera capture ready but stopped; avatar/camera mode is not active.";
 
   return (
     <main className="shell">
@@ -1205,6 +1294,28 @@ export function App() {
         </div>
         <button className="secondary" onClick={() => void requestMicrophonePermission()}>
           Request microphone permission
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Camera readiness">
+        <div>
+          <strong>Camera readiness</strong>
+          <span>local preflight only</span>
+        </div>
+        <div>
+          <strong>Camera setting</strong>
+          <span>{cameraEnabled ? "Camera setting on" : "Camera setting off"}</span>
+        </div>
+        <div>
+          <strong>OS permission</strong>
+          <span>{cameraPermissionLabel}</span>
+        </div>
+        <div>
+          <strong>Capture state</strong>
+          <span>{cameraCaptureSummary}</span>
+        </div>
+        <button className="secondary" onClick={() => void requestCameraPermission()}>
+          Request camera permission
         </button>
       </section>
 

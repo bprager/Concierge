@@ -87,6 +87,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added an in-session sanitized Napoleon response proof comparison that shows how returned governance, trace/audit, agents, and blocked effects changed since the previous export without treating it as approval.
 - Added local Text Concierge privacy controls for telemetry, camera, and microphone state, with camera and microphone off by default, local persistence, and privacy-setting events that do not store raw audio or video.
 - Added a local Voice readiness panel and explicit microphone permission request path so microphone settings cannot be mistaken for active voice capture.
+- Added a local Camera readiness panel and explicit camera permission request path so camera settings cannot be mistaken for active avatar/camera capture.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.

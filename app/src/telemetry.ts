@@ -45,7 +45,13 @@ function localTelemetryEnabled(): boolean {
 }
 
 function isPrivacyAuditEvent(event: string): boolean {
-  return event === "privacy_setting_changed" || event === "mic_permission_requested" || event === "mic_permission_result";
+  return (
+    event === "privacy_setting_changed" ||
+    event === "mic_permission_requested" ||
+    event === "mic_permission_result" ||
+    event === "camera_permission_requested" ||
+    event === "camera_permission_result"
+  );
 }
 
 export function emitEvent(event: string, attributes: Record<string, unknown>) {
