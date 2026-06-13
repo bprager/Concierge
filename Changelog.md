@@ -28,6 +28,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added browser-local Conversation Capability Intelligence persistence with retention, clear, and metadata-only JSON export controls.
 - Added local Conversation Capability Intelligence taxonomy controls for rename, merge, deprecation, split-candidate marking, reset, persistence, and export.
 - Added age-based Conversation Capability Intelligence retention and local trend answers for increasing, worsening, recently working, and weekly-change questions.
+- Added local seasonal Conversation Capability Intelligence trend answers that compare recent 28 day metadata with the previous 28 days without granting authority.
 - Added local risk/value score components and scoring caveats for Conversation Capability Intelligence recommendations.
 - Added fail-closed live Napoleon bridge errors for missing endpoints, descriptor mismatch, auth failure, contract mismatch, no-go governance, bridge timeout, and HTTP failure.
 - Added sanitized live bridge contract evidence capture for success and fail-closed text bridge outcomes without storing raw prompt text, response text, endpoint hosts, or bearer tokens.

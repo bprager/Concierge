@@ -132,7 +132,7 @@ User value: The user can ask Concierge where it is useful, where it is failing, 
 
 Acceptance criteria:
 
-- Concierge can answer common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next capability questions from local aggregate signals.
+- Concierge can answer common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening, recent, weekly-change, and seasonal-change capability questions from local aggregate signals.
 - Easy-to-evolve and recommended-next answers use deterministic local ranking from count, confidence, capability status, architecture area, and suggested next step.
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
 - Correctly blocked unsafe requests are classified separately from failed safe requests.

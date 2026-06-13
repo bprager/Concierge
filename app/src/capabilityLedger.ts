@@ -160,7 +160,8 @@ export type CapabilityQuestionKind =
   | "increasing_conversations"
   | "worsening_missing_capabilities"
   | "recent_working_capabilities"
-  | "weekly_changes";
+  | "weekly_changes"
+  | "seasonal_changes";
 
 export interface CapabilityAnswerRow {
   label: string;
@@ -202,12 +203,15 @@ const CAPABILITY_LEDGER_EXPORT_PRIVACY_CAVEAT =
   "Local metadata-only capability signals. This export does not grant permission to share externally and does not approve, implement, write memory, dispatch agents, or send.";
 const CAPABILITY_LEDGER_TREND_CAVEAT =
   "Trend summaries compare recent 7 days with the previous 7 days from local metadata only; sparse or disabled telemetry can distort trends.";
+const CAPABILITY_LEDGER_SEASONAL_CAVEAT =
+  "Seasonal summaries compare recent 28 days with the previous 28 days from local metadata only; sparse, disabled, or single-device telemetry can distort seasonal patterns.";
 const CAPABILITY_LEDGER_SCORING_CAVEAT =
   "Recommendation scores are local risk/value heuristics only; they do not approve implementation, change policy, write memory, dispatch agents, or send externally.";
 
 const DEFAULT_MAX_SIGNALS = 250;
 const DEFAULT_MAX_AGE_DAYS = 90;
 const TREND_WINDOW_DAYS = 7;
+const SEASONAL_WINDOW_DAYS = 28;
 
 const CAPABILITY_STATUSES: CapabilityStatus[] = ["working", "degraded", "missing", "blocked", "unknown"];
 const CAPABILITY_OUTCOMES: CapabilityOutcomeSignal[] = [
@@ -527,6 +531,7 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   const asksIncreasing = /\b(increasing|rising|growing|more common|trending up)\b/.test(lower);
   const asksWorse = /\b(worse|worsening|getting worse|regressing|increasing failures?)\b/.test(lower);
   const asksRecent = /\b(recent|recently|this week|week|changed|changing)\b/.test(lower);
+  const asksSeasonal = /\b(seasonal|season|monthly|month|28 days|four weeks|quarterly|longer term)\b/.test(lower);
   const asksCommon = /\b(common|most|frequent|popular)\b/.test(lower);
   const asksWorkingWell = /\b(working well|works well|successful|succeeding|good)\b/.test(lower);
   const asksWorked = /\b(worked|working)\b/.test(lower);
@@ -536,6 +541,7 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   const asksArchitecture = /\b(architecture|part|area|component|improved|improve|fix)\b/.test(lower);
   const asksNext = /\b(implement|implemented|next|recommend|recommended|prioritize|priority)\b/.test(lower);
 
+  if (asksSeasonal) return "seasonal_changes";
   if (asksAboutConversation && asksIncreasing) return "increasing_conversations";
   if (asksCapability && asksMissingOrBlocked && asksWorse) return "worsening_missing_capabilities";
   if (asksWorked && asksRecent) return "recent_working_capabilities";
@@ -688,11 +694,11 @@ function inWindow(signal: ConversationCapabilitySignal, startMs: number, endMs: 
   return time >= startMs && (includeEnd ? time <= endMs : time < endMs);
 }
 
-function trendWindows(signals: ConversationCapabilitySignal[], nowInput?: string | Date) {
+function trendWindows(signals: ConversationCapabilitySignal[], nowInput?: string | Date, windowDays = TREND_WINDOW_DAYS) {
   const now = typeof nowInput === "string" ? new Date(nowInput) : nowInput ?? new Date();
   const endMs = now.getTime();
-  const recentStartMs = endMs - TREND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
-  const previousStartMs = recentStartMs - TREND_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  const recentStartMs = endMs - windowDays * 24 * 60 * 60 * 1000;
+  const previousStartMs = recentStartMs - windowDays * 24 * 60 * 60 * 1000;
   return {
     recent: signals.filter((signal) => inWindow(signal, recentStartMs, endMs, true)),
     previous: signals.filter((signal) => inWindow(signal, previousStartMs, recentStartMs)),
@@ -922,6 +928,20 @@ export function answerCapabilityQuestion(
       rows,
       evidenceCount: windows.recent.length + windows.previous.length,
       caveat: CAPABILITY_LEDGER_TREND_CAVEAT,
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    };
+  }
+
+  if (kind === "seasonal_changes") {
+    const seasonalWindows = trendWindows(signals, options.now, SEASONAL_WINDOW_DAYS);
+    const rows = trendRows(seasonalWindows.recent, seasonalWindows.previous, (signal) => signal.topicLabel);
+    return {
+      kind,
+      question,
+      summary: `Seasonal local conversation changes over recent 28 days vs previous 28 days: ${describeTrendRows(rows)}.`,
+      rows,
+      evidenceCount: seasonalWindows.recent.length + seasonalWindows.previous.length,
+      caveat: `${CAPABILITY_LEDGER_SEASONAL_CAVEAT} Results remain proposal-only and do not grant authority.`,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
     };
   }

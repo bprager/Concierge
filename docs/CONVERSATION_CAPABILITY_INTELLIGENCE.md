@@ -13,6 +13,7 @@ It should let the user ask questions such as:
 - What capabilities should be implemented next?
 - What conversations are increasing?
 - What changed this week?
+- What seasonal conversation patterns changed?
 
 This capability is not a replacement for Napoleon governance or controlled self-evolution. It observes, classifies, aggregates, explains, and proposes. It does not implement features, change policy, write memory, dispatch agents, send externally, or grant authority.
 
@@ -84,7 +85,7 @@ Every answer should include uncertainty. Example: "Based on 42 local metadata si
 
 Initial query implementation: Text Concierge can answer clear local questions such as "What conversations are most common?", "What conversations are working well?", "What capabilities are missing or blocked?", "What capabilities are missing but easy to evolve?", "What part of the Concierge architecture has to be improved to fix missing capabilities?", and "What capabilities should be implemented next?" from the in-memory ledger. The answer includes counts, local evidence size, confidence, score where ranked, architecture area, suggested next step where relevant, caveats, and a reminder that the summary does not approve, implement, write memory, dispatch agents, or send externally.
 
-Trend query implementation: Text Concierge can also answer local trend questions such as "What conversations are increasing?", "What missing capabilities are getting worse?", "What worked recently?", and "What changed this week?" using a recent 7 day window compared with the previous 7 days. Trend answers use locally edited taxonomy labels, include recent and previous counts plus deltas where relevant, and carry a caveat that sparse or disabled telemetry can distort trends.
+Trend query implementation: Text Concierge can also answer local trend questions such as "What conversations are increasing?", "What missing capabilities are getting worse?", "What worked recently?", and "What changed this week?" using a recent 7 day window compared with the previous 7 days. It can answer seasonal questions such as "What seasonal conversation patterns changed?" using a recent 28 day window compared with the previous 28 days. Trend answers use locally edited taxonomy labels, include recent and previous counts plus deltas where relevant, and carry a caveat that sparse, disabled, or single-device telemetry can distort trends.
 
 ## 5. Ranking strategy
 
@@ -118,7 +119,7 @@ Important items not obvious in the initial request:
 - Rare high-impact misses must not be buried by frequent low-value topics.
 - Child protected signals need stricter minimization and separate aggregation so child behavior is not optimized like adult-owner behavior.
 - The system needs a taxonomy review loop. Initial local rename, merge, split-candidate, deprecation, and reset controls are implemented; richer Chief of Staff-assisted taxonomy review remains future work.
-- Trends need age-aware retention. Initial count plus age pruning and 7 day trend windows are implemented; richer seasonal and cross-device trend analysis remains future work.
+- Trends need age-aware retention. Initial count plus age pruning, 7 day trend windows, and 28 day seasonal comparison are implemented; richer cross-device trend analysis remains future work.
 - Recommendations can create perverse incentives if they optimize engagement or frequency alone. Initial scoring penalizes privacy risk, child safety risk, governance risk, authority expansion, and implementation effort; richer human-reviewed value calibration remains future work.
 - Capability tracking should distinguish "blocked correctly" from "failed." A no-go result can be a success if the request was unsafe.
 - Evidence must be auditable without storing raw content. Use trace IDs, audit IDs, evaluator case IDs, and redacted summaries.
@@ -156,8 +157,8 @@ This capability should be built in phases:
 
 1. Define schema and local derived event emission. Implemented in `app/src/capabilityLedger.ts` and `app/src/telemetry.ts`.
 2. Add bounded local ledger and redaction policy. Bounded in-memory and browser-local persistence, deletion, export controls, local taxonomy editing, and count plus age retention are implemented.
-3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening-missing, recently-working, and weekly-change answers are implemented in the Text Concierge UI.
-4. Add architecture-area mapping and recommendation scoring. Initial deterministic local risk/value scoring is implemented from evidence count, recent trend delta, confidence, status, evaluator gap, architecture area, suggested next step, implementation effort, privacy/safety/governance risk, and authority expansion risk; richer human-reviewed value calibration and seasonal trend scoring remain future work.
+3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening-missing, recently-working, weekly-change, and seasonal-change answers are implemented in the Text Concierge UI.
+4. Add architecture-area mapping and recommendation scoring. Initial deterministic local risk/value scoring is implemented from evidence count, recent trend delta, confidence, status, evaluator gap, architecture area, suggested next step, implementation effort, privacy/safety/governance risk, and authority expansion risk; richer human-reviewed value calibration remains future work.
 5. Add local Chief of Staff steering draft handoff. Initial draft generation and governed submission are implemented in `app/src/chiefOfStaffSteering.ts`; it produces a recommendation, evaluator case candidate, and evolution proposal draft while preserving proposal-only boundaries.
 6. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.
 7. Replace the local endpoint configuration with live Napoleon descriptor discovery and auth once a runtime transport is available.

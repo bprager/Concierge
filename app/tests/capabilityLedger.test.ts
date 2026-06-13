@@ -849,6 +849,55 @@ test("child protected trend records remain minimized", () => {
   assert.equal(JSON.stringify(exported).includes("child raw trend phrase"), false);
 });
 
+test("seasonal trend answers compare 28 day windows without granting authority", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-13T12:00:00.000Z") });
+  appendCapabilitySignal(ledger, testSignal("trace_season_prior_1", {
+    observedAt: "2026-04-25T12:00:00.000Z",
+    topic: "deploy",
+    capability: "release_summary",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_season_recent_1", {
+    observedAt: "2026-05-25T12:00:00.000Z",
+    topic: "deploy",
+    capability: "release_summary",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_season_recent_2", {
+    observedAt: "2026-06-01T12:00:00.000Z",
+    topic: "deploy",
+    capability: "release_summary",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_season_recent_child", {
+    observedAt: "2026-06-05T12:00:00.000Z",
+    topic: "school",
+    capability: "child_safe_response",
+    profileMode: "child_protected_user",
+    rawMessage: "child seasonal raw phrase",
+  }));
+  const taxonomy = createCapabilityTaxonomy();
+  renameTaxonomyLabel(taxonomy, "topic", "deploy", "release_operations");
+
+  const answer = answerCapabilityQuestion("What seasonal conversation patterns changed?", ledger, taxonomy, {
+    now: "2026-06-13T12:00:00.000Z",
+  });
+  const exported = exportCapabilityLedger(ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected seasonal trend answer");
+  assert.equal(answer.kind, "seasonal_changes");
+  assert.equal(answer.rows[0].label, "release_operations");
+  assert.equal(answer.rows[0].count, 2);
+  assert.equal(answer.rows[0].previousCount, 1);
+  assert.equal(answer.rows[0].delta, 1);
+  assert.ok(answer.summary.includes("recent 28 days"));
+  assert.ok(answer.caveat.includes("seasonal"));
+  assert.equal(answer.boundary.approvalCaptured, false);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+  assert.equal(JSON.stringify(answer).includes("child seasonal raw phrase"), false);
+  assert.equal(JSON.stringify(exported).includes("child seasonal raw phrase"), false);
+});
+
 test("risk value scoring ranks repeated low-risk missing capability above rare high-risk capability", () => {
   const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
   for (const id of ["1", "2", "3"]) {
