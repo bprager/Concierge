@@ -4,8 +4,54 @@ import { buildTextTurnContract } from "../src/contractBridge.js";
 import {
   buildSuccessfulNapoleonResponsePresentation,
   clearNapoleonResponsePresentation,
+  compareNapoleonResponseProofs,
   exportNapoleonResponseProofJson,
 } from "../src/napoleonResponsePresentation.js";
+
+function responseProofJson(input: {
+  traceId: string;
+  governanceOutcome?: "allow_prepare_only" | "requires_review";
+  agentName?: string;
+  blockedEffects?: string[];
+}): string {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge rollout",
+    profile: "adult_owner",
+    conversationId: `conv_${input.traceId}`,
+    turnId: `turn_${input.traceId}`,
+    traceId: input.traceId,
+    governanceOutcome: input.governanceOutcome ?? "requires_review",
+  });
+  const agentName = input.agentName ?? "Passive Brain";
+  const state = buildSuccessfulNapoleonResponsePresentation({
+    text: `${agentName} found bridge rollout context.`,
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: input.governanceOutcome === "requires_review",
+    delegation: {
+      selectedAgents: [
+        {
+          agentId: agentName.toLocaleLowerCase().replaceAll(" ", "_"),
+          displayName: agentName,
+          selectionReason: "Relevant context was returned.",
+          contributionSummary: "bridge rollout context",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: input.blockedEffects ?? ["memory_write", "external_send"],
+      governanceState: input.governanceOutcome ?? "requires_review",
+      traceId: input.traceId,
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+
+  return exportNapoleonResponseProofJson(state, {
+    generatedAt: "2026-06-13T00:00:00.000Z",
+    conversationId: `conv_${input.traceId}`,
+  });
+}
 
 test("successful Napoleon response presentation includes returned delegation and proof", () => {
   const contract = buildTextTurnContract({
@@ -145,4 +191,48 @@ test("exports last successful Napoleon response proof without raw text endpoint 
   assert.ok(!json.includes("Napoleon recommends keeping the rollout"));
   assert.ok(!json.includes("127.0.0.1"));
   assert.ok(!json.toLocaleLowerCase().includes("token"));
+});
+
+test("compares sanitized Napoleon response proof exports", () => {
+  const previous = responseProofJson({
+    traceId: "trace_previous",
+    governanceOutcome: "requires_review",
+    agentName: "Passive Brain",
+    blockedEffects: ["memory_write", "external_send"],
+  });
+  const current = responseProofJson({
+    traceId: "trace_current",
+    governanceOutcome: "allow_prepare_only",
+    agentName: "Planner",
+    blockedEffects: ["memory_write", "agent_dispatch"],
+  });
+
+  const comparison = compareNapoleonResponseProofs(previous, current);
+
+  assert.equal(comparison.status, "changed");
+  assert.ok(comparison.summary.includes("changed"));
+  assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Governance"));
+  assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Selected agents"));
+  assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Blocked effects"));
+  assert.ok(
+    comparison.changes.every(
+      (change: { current: string }) => !change.current.includes("Summarize the bridge rollout"),
+    ),
+  );
+});
+
+test("rejects missing or unsafe previous Napoleon response proof comparison input", () => {
+  const current = responseProofJson({ traceId: "trace_current" });
+
+  const missing = compareNapoleonResponseProofs(null, current);
+  assert.equal(missing.status, "not_available");
+
+  const unsafe = compareNapoleonResponseProofs(
+    JSON.stringify({
+      kind: "concierge_napoleon_response_proof",
+      responseProof: { rawPrompt: "secret prompt" },
+    }),
+    current,
+  );
+  assert.equal(unsafe.status, "invalid_previous");
 });

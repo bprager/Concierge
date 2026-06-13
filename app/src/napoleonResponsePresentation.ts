@@ -12,6 +12,34 @@ export interface NapoleonResponseProofExportInput {
   conversationId?: string;
 }
 
+export interface NapoleonResponseProofChange {
+  label: string;
+  previous: string;
+  current: string;
+}
+
+export interface NapoleonResponseProofComparison {
+  status: "not_available" | "unchanged" | "changed" | "invalid_previous" | "invalid_current";
+  summary: string;
+  changes: NapoleonResponseProofChange[];
+}
+
+const FORBIDDEN_RESPONSE_PROOF_KEYS = new Set([
+  "authToken",
+  "authorization",
+  "bearerToken",
+  "endpoint",
+  "host",
+  "message",
+  "prompt",
+  "rawPrompt",
+  "requestBody",
+  "responseBody",
+  "responseText",
+  "text",
+  "token",
+]);
+
 function proofDetailValue(proof: NapoleonResponseProofView, label: string): string {
   return proof.details.find((detail) => detail.label === label)?.value ?? "unavailable";
 }
@@ -110,4 +138,107 @@ export function exportNapoleonResponseProofJson(
     null,
     2,
   );
+}
+
+function containsForbiddenResponseProofKey(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false;
+
+  return Object.entries(value).some(([key, nested]) => {
+    if (FORBIDDEN_RESPONSE_PROOF_KEYS.has(key)) return true;
+    if (Array.isArray(nested)) return nested.some((item) => containsForbiddenResponseProofKey(item));
+    return containsForbiddenResponseProofKey(nested);
+  });
+}
+
+function parseNapoleonResponseProof(json: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(json) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const proof = parsed as Record<string, unknown>;
+    if (proof.kind !== "concierge_napoleon_response_proof") return null;
+    if (containsForbiddenResponseProofKey(proof)) return null;
+    return proof;
+  } catch {
+    return null;
+  }
+}
+
+function nestedRecord(value: unknown, key: string): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const nested = (value as Record<string, unknown>)[key];
+  if (!nested || typeof nested !== "object" || Array.isArray(nested)) return {};
+  return nested as Record<string, unknown>;
+}
+
+function proofField(proof: Record<string, unknown>, path: string[]): string {
+  let current: unknown = proof;
+  for (const key of path) {
+    if (!current || typeof current !== "object" || Array.isArray(current)) return "unavailable";
+    current = (current as Record<string, unknown>)[key];
+  }
+  if (Array.isArray(current)) return current.map(String).sort().join(", ") || "none";
+  if (current === undefined || current === null || current === "") return "unavailable";
+  return String(current);
+}
+
+export function compareNapoleonResponseProofs(
+  previousJson: string | null,
+  currentJson: string,
+): NapoleonResponseProofComparison {
+  const currentProof = parseNapoleonResponseProof(currentJson);
+  if (!currentProof) {
+    return {
+      status: "invalid_current",
+      summary: "The current Napoleon response proof is not valid sanitized proof JSON.",
+      changes: [],
+    };
+  }
+  if (!previousJson) {
+    return {
+      status: "not_available",
+      summary: "No previous Napoleon response proof is available in this app session.",
+      changes: [],
+    };
+  }
+
+  const previousProof = parseNapoleonResponseProof(previousJson);
+  if (!previousProof) {
+    return {
+      status: "invalid_previous",
+      summary: "The previous Napoleon response proof is not valid sanitized proof JSON.",
+      changes: [],
+    };
+  }
+
+  const comparedFields: Array<{ label: string; path: string[] }> = [
+    { label: "Proof status", path: ["responseProof", "status"] },
+    { label: "Governance", path: ["responseProof", "governance"] },
+    { label: "Decision", path: ["responseProof", "decisionId"] },
+    { label: "Trace", path: ["responseProof", "traceId"] },
+    { label: "Audit", path: ["responseProof", "auditId"] },
+    { label: "Selected agents", path: ["responseProof", "selectedAgents"] },
+    { label: "Allowed effects", path: ["responseProof", "allowedEffects"] },
+    { label: "Blocked effects", path: ["responseProof", "blockedEffects"] },
+  ];
+
+  const changes = comparedFields.flatMap(({ label, path }) => {
+    const previous = proofField(previousProof, path);
+    const current = proofField(currentProof, path);
+    return previous === current ? [] : [{ label, previous, current }];
+  });
+
+  const responseProof = nestedRecord(currentProof, "responseProof");
+  const status = changes.length === 0 ? "unchanged" : "changed";
+  const summary =
+    status === "unchanged"
+      ? "Napoleon response proof is unchanged from the previous export in this app session."
+      : `Napoleon response proof changed in ${changes.length} sanitized field${changes.length === 1 ? "" : "s"}.`;
+
+  return {
+    status,
+    summary: `${summary} Governance ${String(responseProof.governance ?? "unavailable")}; trace ${String(
+      responseProof.traceId ?? "unavailable",
+    )}.`,
+    changes,
+  };
 }

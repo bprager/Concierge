@@ -43,7 +43,9 @@ import { sendToNapoleon } from "./napoleonBridge";
 import {
   buildSuccessfulNapoleonResponsePresentation,
   clearNapoleonResponsePresentation,
+  compareNapoleonResponseProofs,
   exportNapoleonResponseProofJson,
+  type NapoleonResponseProofComparison,
 } from "./napoleonResponsePresentation";
 import {
   buildLocalHarnessEndpointPreset,
@@ -134,6 +136,7 @@ export function App() {
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
+  const [napoleonProofComparison, setNapoleonProofComparison] = useState<NapoleonResponseProofComparison | null>(null);
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
   const [bridgeEvidenceReadiness, setBridgeEvidenceReadiness] = useState(buildBridgeEvidenceReadinessState);
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
@@ -157,11 +160,13 @@ export function App() {
   function clearNapoleonPresentation() {
     setLastNapoleonPresentation(clearNapoleonResponsePresentation());
     setNapoleonProofExportJson(null);
+    setNapoleonProofComparison(null);
   }
 
   function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {
     setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response));
     setNapoleonProofExportJson(null);
+    setNapoleonProofComparison(null);
   }
 
   function currentDescriptorInput(): DescriptorConnectionInput {
@@ -739,7 +744,9 @@ export function App() {
     const json = exportNapoleonResponseProofJson(lastNapoleonPresentation, {
       conversationId,
     });
+    const comparison = compareNapoleonResponseProofs(napoleonProofExportJson, json);
     setNapoleonProofExportJson(json);
+    setNapoleonProofComparison(comparison);
     const proof = lastNapoleonPresentation.proof;
     emitEvent("napoleon_response_proof_exported", {
       traceId,
@@ -748,6 +755,8 @@ export function App() {
       governance: proof?.details.find((detail) => detail.label === "Governance")?.value ?? "unavailable",
       responseTraceId: proof?.details.find((detail) => detail.label === "Trace")?.value ?? "unavailable",
       responseAuditId: proof?.details.find((detail) => detail.label === "Audit")?.value ?? "unavailable",
+      proofComparisonStatus: comparison.status,
+      proofComparisonChangeCount: comparison.changes.length,
       approvalCaptured: false,
       memoryWritePerformed: false,
       agentDispatchPerformed: false,
@@ -1258,6 +1267,25 @@ export function App() {
           <button className="secondary" onClick={exportNapoleonProof}>
             Export Napoleon proof
           </button>
+          {napoleonProofComparison ? (
+            <div className={`proof-comparison ${napoleonProofComparison.status}`}>
+              <strong>Napoleon proof comparison</strong>
+              <span>{napoleonProofComparison.summary}</span>
+              <span>Comparison uses local sanitized proof metadata only and is not Napoleon approval.</span>
+              {napoleonProofComparison.changes.length > 0 ? (
+                <dl>
+                  {napoleonProofComparison.changes.map((change) => (
+                    <div key={change.label}>
+                      <dt>{change.label}</dt>
+                      <dd>
+                        {change.previous} {"->"} {change.current}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : null}
+            </div>
+          ) : null}
           {napoleonProofExportJson ? (
             <pre aria-label="Exported Napoleon response proof">{napoleonProofExportJson}</pre>
           ) : null}

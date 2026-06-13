@@ -71,6 +71,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a last successful Napoleon proof panel that summarizes returned governance, trace, audit, delegation, recommendation, allowed-effect, and blocked-effect metadata without treating it as approval or execution authority.
 - Added shared Text Concierge presentation state so Napoleon delegation and proof are set together after successful live responses and cleared together after local-only, blocked, or failed paths.
 - Added a sanitized export for the last successful Napoleon response proof without raw prompts, response text, endpoint hosts, or tokens.
+- Added an in-session sanitized Napoleon response proof comparison that shows how returned governance, trace/audit, agents, and blocked effects changed since the previous export without treating it as approval.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.

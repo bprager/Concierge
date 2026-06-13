@@ -73,6 +73,8 @@ The last successful Napoleon proof panel is local display of returned bridge met
 
 Last successful Napoleon proof exports are local metadata only. They may include generated time, conversation ID, proof status, governance outcome, decision ID, trace ID, audit ID, selected agent display names, allowed effects, blocked effects, and explicit false boundary flags, but they must not include raw prompts, response text, endpoint hosts, bearer tokens, request bodies, or response bodies.
 
+Last successful Napoleon proof comparison is also local metadata only. It compares the current proof with the previous proof exported in the same app session using returned governance, trace/audit, selected-agent, allowed-effect, and blocked-effect fields, and it must not expose raw prompts, response text, endpoint hosts, bearer tokens, request bodies, response bodies, or authority claims.
+
 Live text responses that claim memory writes, approval capture, external sends, agent dispatch, or local application must also fail closed as contract mismatches. A response cannot convert a governed text turn into execution proof just by saying the side effect happened.
 
 ## 4. Memory proposal review
