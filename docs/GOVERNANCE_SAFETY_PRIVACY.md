@@ -108,7 +108,7 @@ Conversation Capability Intelligence persistence:
 - Shows local retention status in the Text Concierge UI, including maximum signal count and maximum age.
 - Provides a clear control that removes both persisted and in-memory capability signals.
 - Provides a local JSON export control with privacy, retention, trend, and scoring caveats; export does not grant permission to share externally.
-- Provides local taxonomy controls for rename, merge, deprecated markers, split-candidate markers, reset, and Chief of Staff taxonomy review drafts.
+- Provides local taxonomy controls for rename, merge, deprecated markers, split-candidate markers, reset, and Chief of Staff taxonomy review drafts with evaluator-case and evolution-proposal packet details.
 - Clear, export, taxonomy, taxonomy review drafts, retention pruning, trend answers, and recommendation scoring do not capture approval, write Napoleon memory, dispatch agents, send externally, change governance authority, or change Napoleon routing/policy.
 - Weekly and seasonal trend answers compare local metadata windows only. They must not optimize engagement over safety, infer durable personal traits, or grant permission to implement, write memory, dispatch agents, send externally, or change Napoleon routing/policy.
 - Chief of Staff steering drafts are proposal packets only. They can contain a capability recommendation, evaluator case candidate, and evolution proposal draft. Concierge may submit them to Napoleon Chief of Staff review only through the governed bridge after endpoint and descriptor preflight pass, but submission does not apply changes, write memory, dispatch agents, send externally, or capture approval.

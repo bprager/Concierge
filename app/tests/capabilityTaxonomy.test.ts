@@ -191,6 +191,12 @@ test("drafts Chief of Staff taxonomy review without applying local edits", () =>
   assert.equal(draft.recommendations.some((item) => item.action === "split" && item.sourceLabel === "support"), true);
   assert.equal(draft.recommendations.some((item) => item.action === "deprecate" && item.sourceLabel === "memory_proposal_review"), true);
   assert.ok(draft.evaluatorCaseCandidate.expectedBehavior.includes("proposal-only"));
+  assert.equal(draft.evolutionProposal.proposal_id, "evo_capability_taxonomy_review_trace_taxonomy_review");
+  assert.equal(draft.evolutionProposal.change.requested_action, "review_taxonomy_cleanup");
+  assert.equal(draft.evolutionProposal.evaluator_cases.includes(draft.evaluatorCaseCandidate.caseId), true);
+  assert.equal(draft.evolutionProposal.evidence.includes("trace:trace_deploy_1"), true);
+  assert.ok(draft.evolutionProposal.approval_required.includes("Napoleon Chief of Staff"));
+  assert.ok(draft.evolutionProposal.rollback_plan.includes("Keep current local taxonomy labels"));
   assert.equal(taxonomy.entries.some((entry) => entry.sourceLabel === "deploy" && entry.mergedInto === "deployment"), false);
   assert.equal(JSON.stringify(draft).includes("raw taxonomy text"), false);
 });

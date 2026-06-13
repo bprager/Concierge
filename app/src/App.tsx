@@ -868,6 +868,7 @@ export function App() {
       conversationId,
       recommendationCount: draft.recommendations.length,
       evaluatorCaseId: draft.evaluatorCaseCandidate.caseId,
+      proposalId: draft.evolutionProposal.proposal_id,
       proposalOnly: draft.boundary.proposalOnly,
       approvalCaptured: draft.boundary.approvalCaptured,
       memoryWriteAllowed: draft.boundary.memoryWriteAllowed,
@@ -1252,6 +1253,12 @@ export function App() {
             <dd>
               {taxonomyReviewDraft.evaluatorCaseCandidate.caseId}:{" "}
               {taxonomyReviewDraft.evaluatorCaseCandidate.expectedBehavior}
+            </dd>
+            <dt>Evolution proposal</dt>
+            <dd>
+              {taxonomyReviewDraft.evolutionProposal.proposal_id}, risk{" "}
+              {taxonomyReviewDraft.evolutionProposal.risk_level}, approval required:{" "}
+              {taxonomyReviewDraft.evolutionProposal.approval_required}
             </dd>
             <dt>Boundary</dt>
             <dd>proposal only; no approval captured; no memory write; no agent dispatch; no external send.</dd>

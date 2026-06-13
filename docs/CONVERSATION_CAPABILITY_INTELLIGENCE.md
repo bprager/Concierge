@@ -70,7 +70,7 @@ Local taxonomy storage:
 - Query answers apply edited labels to aggregates while preserving original derived signal records.
 - Taxonomy edits are local hints only. They do not change Napoleon policy, routing, memory, approval, dispatch, or external sends.
 - Reset restores derived labels by clearing local taxonomy edits.
-- Chief of Staff taxonomy review drafts can recommend merge, split, or deprecation review from local metadata and evidence references without applying edits.
+- Chief of Staff taxonomy review drafts can recommend merge, split, or deprecation review from local metadata and evidence references, then package those recommendations with an evaluator case candidate and evolution proposal draft without applying edits.
 
 ## 4. Answer model
 
@@ -161,7 +161,7 @@ This capability should be built in phases:
 3. Add query summaries for common, working, missing, and next capabilities. Initial common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening-missing, recently-working, weekly-change, and seasonal-change answers are implemented in the Text Concierge UI.
 4. Add architecture-area mapping and recommendation scoring. Initial deterministic local risk/value scoring is implemented from evidence count, recent trend delta, confidence, status, evaluator gap, architecture area, suggested next step, implementation effort, privacy/safety/governance risk, and authority expansion risk; richer human-reviewed value calibration remains future work.
 5. Add local Chief of Staff steering draft handoff. Initial draft generation and governed submission are implemented in `app/src/chiefOfStaffSteering.ts`; it produces a recommendation, evaluator case candidate, and evolution proposal draft while preserving proposal-only boundaries.
-6. Add local Chief of Staff taxonomy review drafts. Initial draft generation is implemented in `app/src/capabilityTaxonomy.ts`; it recommends taxonomy merge, split, and deprecation review from local metadata while preserving proposal-only boundaries and avoiding raw conversation storage.
+6. Add local Chief of Staff taxonomy review drafts. Initial draft generation is implemented in `app/src/capabilityTaxonomy.ts`; it recommends taxonomy merge, split, and deprecation review from local metadata, packages an evaluator case candidate and evolution proposal draft, preserves proposal-only boundaries, and avoids raw conversation storage.
 7. Add evaluator scenarios for capability intelligence privacy, ranking, and proposal-only boundaries.
 8. Replace the local endpoint configuration with live Napoleon descriptor discovery and auth once a runtime transport is available.
 

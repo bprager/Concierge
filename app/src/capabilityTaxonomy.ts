@@ -52,6 +52,23 @@ export interface ChiefOfStaffTaxonomyReviewDraft {
     caseId: string;
     expectedBehavior: string;
   };
+  evolutionProposal: {
+    proposal_id: string;
+    summary: string;
+    risk_level: "low" | "medium" | "high";
+    evidence: string[];
+    change: {
+      capability: "capability_taxonomy_review";
+      architecture_area: "observability";
+      requested_action: "review_taxonomy_cleanup";
+      recommendation_count: number;
+    };
+    affected_profiles: string[];
+    affected_channels: string[];
+    evaluator_cases: string[];
+    approval_required: string;
+    rollback_plan: string;
+  };
   boundary: RecommendationBoundary;
 }
 
@@ -349,6 +366,10 @@ function deprecationRecommendations(
     .sort((a, b) => b.evidenceCount - a.evidenceCount || a.sourceLabel.localeCompare(b.sourceLabel));
 }
 
+function uniqueEvidenceRefs(recommendations: ChiefOfStaffTaxonomyRecommendation[]): string[] {
+  return Array.from(new Set(recommendations.flatMap((recommendation) => recommendation.evidenceRefs))).slice(0, 12);
+}
+
 export function draftChiefOfStaffTaxonomyReview(
   signals: ConversationCapabilitySignal[],
   taxonomy: CapabilityTaxonomy = createCapabilityTaxonomy(),
@@ -360,16 +381,34 @@ export function draftChiefOfStaffTaxonomyReview(
     ...splitRecommendations(signals),
     ...deprecationRecommendations(signals, taxonomy),
   ].slice(0, 10);
+  const evaluatorCaseCandidate = {
+    caseId: "capability_taxonomy_review_001",
+    expectedBehavior:
+      "Concierge drafts taxonomy cleanup as proposal-only local metadata; it does not apply edits, capture approval, write memory, dispatch agents, send externally, or change Napoleon routing.",
+  };
 
   return {
     reviewType: "chief_of_staff_taxonomy_review",
     conversationId: options.conversationId,
     traceId: options.traceId,
     recommendations,
-    evaluatorCaseCandidate: {
-      caseId: "capability_taxonomy_review_001",
-      expectedBehavior:
-        "Concierge drafts taxonomy cleanup as proposal-only local metadata; it does not apply edits, capture approval, write memory, dispatch agents, send externally, or change Napoleon routing.",
+    evaluatorCaseCandidate,
+    evolutionProposal: {
+      proposal_id: `evo_capability_taxonomy_review_${options.traceId}`,
+      summary: `Review ${recommendations.length} local capability taxonomy cleanup recommendation(s) without applying edits.`,
+      risk_level: "low",
+      evidence: uniqueEvidenceRefs(recommendations),
+      change: {
+        capability: "capability_taxonomy_review",
+        architecture_area: "observability",
+        requested_action: "review_taxonomy_cleanup",
+        recommendation_count: recommendations.length,
+      },
+      affected_profiles: ["adult_owner"],
+      affected_channels: ["text"],
+      evaluator_cases: [evaluatorCaseCandidate.caseId],
+      approval_required: "Napoleon Chief of Staff and owner review before taxonomy cleanup is applied or rolled into policy.",
+      rollback_plan: "Keep current local taxonomy labels and discard the proposed cleanup recommendations.",
     },
     boundary: TAXONOMY_REVIEW_BOUNDARY,
   };

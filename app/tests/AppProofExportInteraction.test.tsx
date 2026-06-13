@@ -169,6 +169,8 @@ test("drafts a proposal-only taxonomy review from rendered app controls", async 
 
     await view.findByText("Chief of Staff taxonomy review draft");
     assert.ok(view.getByText(/proposal only; no approval captured; no memory write/));
+    assert.ok(view.getByText("Evolution proposal"));
+    assert.ok(view.getByText(/evo_capability_taxonomy_review_/));
     assert.ok(view.getByText("No local taxonomy review recommendations yet."));
   } finally {
     cleanup();
