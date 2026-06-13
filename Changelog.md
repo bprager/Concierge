@@ -58,6 +58,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added governed memory proposal submission that sends review packets to Napoleon only after endpoint and descriptor preflight, without writing memory or capturing approval locally.
 - Added a Text Concierge live bridge readiness panel that combines endpoint, descriptor integrity, local evidence capture/comparison state, blocked effects, and the reminder that readiness is not Napoleon approval.
 - Added last live-send outcome and fail-closed reason rendering to the Text Concierge live bridge readiness panel.
+- Added a Text Concierge live-send preflight checklist beside the composer so endpoint, descriptor, governance, and rehearsal blockers are visible before a governed send attempt.
 - Added in-session bridge evidence readiness tracking so live text attempts update the readiness panel from sanitized evidence capture and local registry/secret-field comparison.
 - Added a local bridge readiness proof export with descriptor state, blocked effects, evidence status, and last failure reason, excluding raw prompts, endpoints, and secrets.
 - Added an in-session local bridge readiness proof comparison that shows sanitized changes since the previous export without treating readiness as Napoleon approval.

@@ -52,6 +52,7 @@ import {
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
+  describeLiveSendPreflight,
   describeMemoryProposalReview,
   summarizeRehearsalPreview,
 } from "./presentation";
@@ -823,6 +824,18 @@ export function App() {
     lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus,
     lastFailureReason: bridgeEvidenceReadiness.lastFailureReason,
   });
+  const currentInput = input.trim();
+  const currentContract = currentInput
+    ? buildTextTurnContract({ message: currentInput, profile, conversationId, turnId: "turn_preflight", traceId: "trace_preflight" })
+    : null;
+  const liveSendPreflight = describeLiveSendPreflight({
+    descriptorConnection,
+    inputReady: Boolean(currentInput),
+    governanceCanSendAdvisory: currentContract
+      ? buildGovernanceReviewState(currentContract.governanceDecision, profile).canSendAdvisory
+      : true,
+    rehearsalMode,
+  });
   const governedOperationSummaries = [
     describeBridgeOperationSummary("chief_of_staff_descriptor"),
     describeBridgeOperationSummary("text_turn"),
@@ -1385,6 +1398,21 @@ export function App() {
           onChange={(e) => updateInput(e.target.value)}
           placeholder="Ask Napoleon through Concierge..."
         />
+        <div className={`send-preflight ${liveSendPreflight.status}`}>
+          <div>
+            <strong>{liveSendPreflight.heading}</strong>
+            <span>{liveSendPreflight.summary}</span>
+            <span>{liveSendPreflight.caveat}</span>
+          </div>
+          <dl>
+            {liveSendPreflight.items.map((item) => (
+              <div key={item.label} className={item.status}>
+                <dt>{item.label}</dt>
+                <dd>{item.detail}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
         <div className="composer-actions">
           <button onClick={rehearsalMode ? rehearse : () => submit()}>
             {rehearsalMode ? "Rehearse" : "Send"}

@@ -16,6 +16,7 @@ import {
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
+  describeLiveSendPreflight,
   describeMemoryProposalReview,
   summarizeRehearsalPreview,
 } from "../src/presentation.js";
@@ -260,6 +261,49 @@ test("describes descriptor integrity mismatch as fail-closed readiness", () => {
   assert.equal(view.canSendLive, false);
   assert.ok(view.summary.includes("signature or checksum mismatch"));
   assert.ok(view.caveat.includes("No text turn should proceed"));
+});
+
+test("describes live send preflight blockers without granting authority", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: false,
+      descriptor: defaultChiefOfStaffDescriptor,
+    }),
+    inputReady: false,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: true,
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canAttemptLiveSend, false);
+  assert.ok(view.summary.includes("blocked"));
+  assert.ok(view.caveat.includes("not Napoleon approval"));
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Text ready" && item.status === "blocked"));
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Endpoint configured" && item.status === "blocked"));
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Descriptor discovered" && item.status === "ready"));
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Rehearsal Mode" && item.status === "warning"));
+});
+
+test("describes live send preflight as ready only for governed bridge attempt", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+  });
+
+  assert.equal(view.status, "ready");
+  assert.equal(view.canAttemptLiveSend, true);
+  assert.ok(view.summary.includes("governed bridge attempt"));
+  assert.ok(view.items.every((item: { status: string }) => item.status === "ready"));
+  assert.ok(view.caveat.includes("does not write memory"));
+  assert.ok(view.caveat.includes("does not dispatch agents"));
 });
 
 test("describes bridge failure with blocked effects visible", () => {

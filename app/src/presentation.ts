@@ -75,6 +75,28 @@ export interface LiveBridgeReadinessView {
   details: Array<{ label: string; value: string }>;
 }
 
+export interface LiveSendPreflightInput {
+  descriptorConnection: DescriptorConnectionState;
+  inputReady: boolean;
+  governanceCanSendAdvisory: boolean;
+  rehearsalMode: boolean;
+}
+
+export interface LiveSendPreflightItem {
+  label: string;
+  status: "ready" | "blocked" | "warning";
+  detail: string;
+}
+
+export interface LiveSendPreflightView {
+  heading: string;
+  status: "ready" | "blocked" | "warning";
+  canAttemptLiveSend: boolean;
+  summary: string;
+  caveat: string;
+  items: LiveSendPreflightItem[];
+}
+
 export function describeBridgeFailure(error: unknown): string {
   if (!(error instanceof NapoleonBridgeError)) {
     return "Napoleon bridge failed closed. Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.";
@@ -185,6 +207,72 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
       },
       { label: "Live send", value: canSendLive ? "governed bridge allowed" : "blocked" },
     ],
+  };
+}
+
+export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSendPreflightView {
+  const descriptor = input.descriptorConnection;
+  const items: LiveSendPreflightItem[] = [
+    {
+      label: "Text ready",
+      status: input.inputReady ? "ready" : "blocked",
+      detail: input.inputReady ? "Text is ready for a governed request." : "Enter text before attempting a live send.",
+    },
+    {
+      label: "Endpoint configured",
+      status: descriptor.failClosedReason === "no_endpoint" ? "blocked" : "ready",
+      detail:
+        descriptor.failClosedReason === "no_endpoint"
+          ? "No Napoleon endpoint is configured."
+          : "A Napoleon endpoint is configured locally.",
+    },
+    {
+      label: "Descriptor discovered",
+      status: descriptor.failClosedReason === "no_descriptor" ? "blocked" : "ready",
+      detail:
+        descriptor.failClosedReason === "no_descriptor"
+          ? "No Napoleon Chief of Staff descriptor has been discovered."
+          : "Descriptor state is available for preflight.",
+    },
+    {
+      label: "Descriptor integrity",
+      status:
+        descriptor.failClosedReason === "descriptor_signature_or_checksum_mismatch" ||
+        descriptor.failClosedReason === "descriptor_invalid"
+          ? "blocked"
+          : "ready",
+      detail: `Checksum ${descriptor.checksumState}; signature ${descriptor.signatureState}.`,
+    },
+    {
+      label: "Governance send gate",
+      status: input.governanceCanSendAdvisory ? "ready" : "blocked",
+      detail: input.governanceCanSendAdvisory
+        ? "Local governance allows preparing an advisory bridge request."
+        : "Local governance blocks sending this request.",
+    },
+    {
+      label: "Rehearsal Mode",
+      status: input.rehearsalMode ? "warning" : "ready",
+      detail: input.rehearsalMode
+        ? "Rehearsal Mode is on; preview first and send separately."
+        : "Rehearsal Mode is off for direct governed send attempts.",
+    },
+  ];
+  const hasBlocked = items.some((item) => item.status === "blocked") || !descriptor.canAttemptLiveBridge;
+  const hasWarning = items.some((item) => item.status === "warning");
+  const canAttemptLiveSend = !hasBlocked && input.inputReady && input.governanceCanSendAdvisory;
+  const status: LiveSendPreflightView["status"] = hasBlocked ? "blocked" : hasWarning ? "warning" : "ready";
+
+  return {
+    heading: "Live send preflight",
+    status,
+    canAttemptLiveSend,
+    summary: canAttemptLiveSend
+      ? "Ready for a governed bridge attempt through Napoleon."
+      : "Live send is blocked until required preflight items pass.",
+    caveat:
+      "This checklist is not Napoleon approval, does not write memory, does not dispatch agents, does not capture approval, and does not send externally by itself.",
+    items,
   };
 }
 

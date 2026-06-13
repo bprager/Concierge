@@ -540,6 +540,62 @@ article dd {
   gap: 8px;
 }
 
+.send-preflight {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.send-preflight.ready {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.send-preflight.warning {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.send-preflight.blocked {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.send-preflight > div {
+  display: grid;
+  gap: 4px;
+}
+
+.send-preflight span {
+  font-size: 0.88rem;
+}
+
+.send-preflight dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.send-preflight dl div {
+  display: grid;
+  grid-template-columns: minmax(150px, max-content) 1fr;
+  gap: 8px;
+}
+
+.send-preflight dt {
+  color: #374151;
+  font-weight: 650;
+}
+
+.send-preflight dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 textarea {
   min-height: 100px;
   padding: 12px;
