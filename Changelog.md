@@ -59,6 +59,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added last live-send outcome and fail-closed reason rendering to the Text Concierge live bridge readiness panel.
 - Added in-session bridge evidence readiness tracking so live text attempts update the readiness panel from sanitized evidence capture and local registry/secret-field comparison.
 - Added a local bridge readiness proof export with descriptor state, blocked effects, evidence status, and last failure reason, excluding raw prompts, endpoints, and secrets.
+- Added an in-session local bridge readiness proof comparison that shows sanitized changes since the previous export without treating readiness as Napoleon approval.
 - Added a local harness endpoint preset in Text Concierge settings that points at the governed local bridge harness without starting services or granting authority.
 - Added an app-level local harness text smoke test that exercises descriptor discovery, governed text send, delegation provenance rendering inputs, blocked effects, and bridge readiness evidence.
 - Expanded the app-level local harness text smoke test to return denied fail-closed bridge details and blocked effects.

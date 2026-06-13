@@ -125,6 +125,28 @@ header {
   overflow-wrap: anywhere;
 }
 
+.proof-comparison {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+}
+
+.proof-comparison.changed {
+  border-color: #fbbf24;
+}
+
+.proof-comparison.invalid_previous,
+.proof-comparison.invalid_current {
+  border-color: #f87171;
+}
+
+.proof-comparison dl {
+  margin-top: 4px;
+}
+
 .capability-ledger-controls {
   margin-top: 16px;
   display: grid;

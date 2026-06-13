@@ -2,7 +2,9 @@ import { useState } from "react";
 import { answerCapabilityQuestion } from "./capabilityLedger";
 import {
   buildBridgeEvidenceReadinessState,
+  compareBridgeReadinessProofs,
   exportBridgeReadinessProofJson,
+  type BridgeReadinessProofComparison,
   updateBridgeEvidenceReadinessState,
 } from "./bridgeEvidenceReadiness";
 import {
@@ -128,6 +130,8 @@ export function App() {
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
   const [bridgeEvidenceReadiness, setBridgeEvidenceReadiness] = useState(buildBridgeEvidenceReadinessState);
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
+  const [bridgeReadinessProofComparison, setBridgeReadinessProofComparison] =
+    useState<BridgeReadinessProofComparison | null>(null);
   const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
   const [lastMemoryReviewState, setLastMemoryReviewState] = useState<MemoryProposalReviewState | null>(null);
   const [lastMemoryReview, setLastMemoryReview] = useState<ReturnType<typeof describeMemoryProposalReview> | null>(null);
@@ -191,9 +195,14 @@ export function App() {
     });
   }
 
+  function clearBridgeReadinessProof() {
+    setBridgeReadinessProofJson(null);
+    setBridgeReadinessProofComparison(null);
+  }
+
   function updateEndpoint(value: string) {
     setEndpoint(value);
-    setBridgeReadinessProofJson(null);
+    clearBridgeReadinessProof();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_endpoint", value.trim());
@@ -204,7 +213,7 @@ export function App() {
 
   function updateAuthToken(value: string) {
     setAuthToken(value);
-    setBridgeReadinessProofJson(null);
+    clearBridgeReadinessProof();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_auth_token", value.trim());
@@ -253,14 +262,14 @@ export function App() {
     setRehearsalMode(preset.rehearsalMode);
     setPendingRehearsal(null);
     setBridgeEvidenceReadiness(buildBridgeEvidenceReadinessState());
-    setBridgeReadinessProofJson(null);
+    clearBridgeReadinessProof();
     void discoverDescriptor(preset.endpoint);
   }
 
   function updateProfile(value: LocalProfile) {
     setProfile(value);
     setPendingRehearsal(null);
-    setBridgeReadinessProofJson(null);
+    clearBridgeReadinessProof();
   }
 
   function updateInput(value: string) {
@@ -686,7 +695,9 @@ export function App() {
       descriptorConnection,
       readiness: bridgeEvidenceReadiness,
     });
+    const comparison = compareBridgeReadinessProofs(bridgeReadinessProofJson, json);
     setBridgeReadinessProofJson(json);
+    setBridgeReadinessProofComparison(comparison);
     emitEvent("bridge_readiness_proof_exported", {
       traceId,
       conversationId,
@@ -695,6 +706,8 @@ export function App() {
       signatureState: descriptorConnection.signatureState,
       evidenceCaptureState: bridgeEvidenceReadiness.captureState,
       evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
+      proofComparisonStatus: comparison.status,
+      proofComparisonChangeCount: comparison.changes.length,
       lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus ?? "not_run",
       lastFailureReason: bridgeEvidenceReadiness.lastFailureReason ?? "none",
       approvalCaptured: false,
@@ -849,7 +862,7 @@ export function App() {
             value={descriptorMode}
             onChange={(e) => {
               setDescriptorMode(e.target.value as typeof descriptorMode);
-              setBridgeReadinessProofJson(null);
+              clearBridgeReadinessProof();
             }}
           >
             <option value="discovered">Discovered local descriptor</option>
@@ -948,6 +961,25 @@ export function App() {
         <button className="secondary" onClick={exportBridgeReadinessProof}>
           Export readiness proof
         </button>
+        {bridgeReadinessProofComparison ? (
+          <div className={`proof-comparison ${bridgeReadinessProofComparison.status}`}>
+            <strong>Readiness proof comparison</strong>
+            <span>{bridgeReadinessProofComparison.summary}</span>
+            <span>Comparison uses local sanitized proof metadata only and is not Napoleon approval.</span>
+            {bridgeReadinessProofComparison.changes.length > 0 ? (
+              <dl>
+                {bridgeReadinessProofComparison.changes.map((change) => (
+                  <div key={change.label}>
+                    <dt>{change.label}</dt>
+                    <dd>
+                      {change.previous} {"->"} {change.current}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+          </div>
+        ) : null}
         {bridgeReadinessProofJson ? (
           <pre aria-label="Exported bridge readiness proof">{bridgeReadinessProofJson}</pre>
         ) : null}

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   buildBridgeEvidenceReadinessState,
+  compareBridgeReadinessProofs,
   exportBridgeReadinessProofJson,
   updateBridgeEvidenceReadinessState,
 } from "../src/bridgeEvidenceReadiness.js";
@@ -115,4 +116,122 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
   for (const key of forbiddenKeys) {
     assert.equal(exported.includes(key), false);
   }
+});
+
+test("reports unavailable comparison for the first exported bridge readiness proof", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+  const currentProof = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+
+  const comparison = compareBridgeReadinessProofs(null, currentProof);
+
+  assert.equal(comparison.status, "not_available");
+  assert.equal(comparison.changes.length, 0);
+  assert.ok(comparison.summary.includes("No previous"));
+});
+
+test("compares sanitized bridge readiness proofs and reports meaningful changed fields", () => {
+  const previousDescriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: false,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+  const currentDescriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+  const previousProof = exportBridgeReadinessProofJson({
+    descriptorConnection: previousDescriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const currentProof = exportBridgeReadinessProofJson({
+    descriptorConnection: currentDescriptorConnection,
+    readiness: updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+      ...validEvidence,
+      status: "fail_closed",
+      reason: "auth_failure",
+      blockedEffects: ["memory_write", "approval_capture", "external_send"],
+    }),
+    generatedAt: "2026-06-13T00:05:00.000Z",
+  });
+
+  const comparison = compareBridgeReadinessProofs(previousProof, currentProof);
+
+  assert.equal(comparison.status, "changed");
+  assert.deepEqual(
+    comparison.changes.map((change: { label: string }) => change.label),
+    [
+      "Descriptor state",
+      "Can attempt live bridge",
+      "Evidence capture",
+      "Evidence comparison",
+      "Last evidence status",
+      "Last operation path",
+      "Last failure reason",
+      "Evidence blocked effects",
+    ],
+  );
+  assert.equal(JSON.stringify(comparison).includes("127.0.0.1"), false);
+  assert.equal(JSON.stringify(comparison).includes("token"), false);
+  assert.equal(JSON.stringify(comparison).includes("raw user text"), false);
+});
+
+test("rejects invalid previous bridge readiness proof for comparison", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+  const currentProof = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+
+  const comparison = compareBridgeReadinessProofs("{not-json", currentProof);
+
+  assert.equal(comparison.status, "invalid_previous");
+  assert.equal(comparison.changes.length, 0);
+});
+
+test("rejects previous bridge readiness proof containing forbidden raw fields", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+  const currentProof = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const previousProofWithRawField = JSON.stringify({
+    kind: "concierge_bridge_readiness_proof",
+    descriptor: { state: "ready" },
+    evidence: { requestBody: { message: "raw user text" } },
+  });
+
+  const comparison = compareBridgeReadinessProofs(previousProofWithRawField, currentProof);
+
+  assert.equal(comparison.status, "invalid_previous");
+  assert.equal(JSON.stringify(comparison).includes("raw user text"), false);
 });

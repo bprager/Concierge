@@ -20,6 +20,18 @@ export interface BridgeReadinessProofInput {
   generatedAt?: string;
 }
 
+export interface BridgeReadinessProofChange {
+  label: string;
+  previous: string;
+  current: string;
+}
+
+export interface BridgeReadinessProofComparison {
+  status: "not_available" | "unchanged" | "changed" | "invalid_previous" | "invalid_current";
+  summary: string;
+  changes: BridgeReadinessProofChange[];
+}
+
 const FORBIDDEN_EVIDENCE_KEYS = new Set([
   "authToken",
   "authorization",
@@ -132,4 +144,101 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
     null,
     2,
   );
+}
+
+function parseBridgeReadinessProof(json: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(json) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const proof = parsed as Record<string, unknown>;
+    if (proof.kind !== "concierge_bridge_readiness_proof") return null;
+    if (containsForbiddenEvidenceKey(proof)) return null;
+    return proof;
+  } catch {
+    return null;
+  }
+}
+
+function nestedRecord(value: unknown, key: string): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const nested = (value as Record<string, unknown>)[key];
+  if (!nested || typeof nested !== "object" || Array.isArray(nested)) return {};
+  return nested as Record<string, unknown>;
+}
+
+function proofField(proof: Record<string, unknown>, path: string[]): string {
+  let current: unknown = proof;
+  for (const key of path) {
+    if (!current || typeof current !== "object" || Array.isArray(current)) return "unavailable";
+    current = (current as Record<string, unknown>)[key];
+  }
+  if (Array.isArray(current)) return current.map(String).sort().join(", ") || "none";
+  if (current === undefined || current === null || current === "") return "unavailable";
+  return String(current);
+}
+
+export function compareBridgeReadinessProofs(
+  previousJson: string | null,
+  currentJson: string,
+): BridgeReadinessProofComparison {
+  const currentProof = parseBridgeReadinessProof(currentJson);
+  if (!currentProof) {
+    return {
+      status: "invalid_current",
+      summary: "The current bridge readiness proof is not valid JSON for comparison.",
+      changes: [],
+    };
+  }
+  if (!previousJson) {
+    return {
+      status: "not_available",
+      summary: "No previous bridge readiness proof is available in this app session.",
+      changes: [],
+    };
+  }
+
+  const previousProof = parseBridgeReadinessProof(previousJson);
+  if (!previousProof) {
+    return {
+      status: "invalid_previous",
+      summary: "The previous bridge readiness proof is not valid JSON for comparison.",
+      changes: [],
+    };
+  }
+
+  const comparedFields: Array<{ label: string; path: string[] }> = [
+    { label: "Descriptor state", path: ["descriptor", "state"] },
+    { label: "Checksum state", path: ["descriptor", "checksumState"] },
+    { label: "Signature state", path: ["descriptor", "signatureState"] },
+    { label: "Can attempt live bridge", path: ["descriptor", "canAttemptLiveBridge"] },
+    { label: "Service ID", path: ["descriptor", "serviceId"] },
+    { label: "Evidence capture", path: ["evidence", "captureState"] },
+    { label: "Evidence comparison", path: ["evidence", "comparisonState"] },
+    { label: "Last evidence status", path: ["evidence", "lastEvidenceStatus"] },
+    { label: "Last operation path", path: ["evidence", "lastTargetPath"] },
+    { label: "Last failure reason", path: ["evidence", "lastFailureReason"] },
+    { label: "Evidence blocked effects", path: ["evidence", "blockedEffects"] },
+  ];
+
+  const changes = comparedFields.flatMap(({ label, path }) => {
+    const previous = proofField(previousProof, path);
+    const current = proofField(currentProof, path);
+    return previous === current ? [] : [{ label, previous, current }];
+  });
+
+  const descriptor = nestedRecord(currentProof, "descriptor");
+  const evidence = nestedRecord(currentProof, "evidence");
+  const status = changes.length === 0 ? "unchanged" : "changed";
+  const summary =
+    status === "unchanged"
+      ? "Bridge readiness proof is unchanged from the previous export in this app session."
+      : `Bridge readiness proof changed in ${changes.length} sanitized field${changes.length === 1 ? "" : "s"}.`;
+
+  return {
+    status,
+    summary: `${summary} Descriptor ${String(descriptor.state ?? "unavailable")}; evidence ${String(
+      evidence.comparisonState ?? "unavailable",
+    )}.`,
+    changes,
+  };
 }
