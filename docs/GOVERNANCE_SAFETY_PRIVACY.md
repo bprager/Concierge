@@ -61,6 +61,8 @@ The optional bridge bearer token is a local connection credential. Concierge sen
 
 Delegation and recommendation attribution require bridge provenance. Concierge may say that Napoleon recommended something only when the live bridge response includes matching recommendation provenance with that contribution, trace ID, and audit ID, and those IDs match the response trace and audit envelopes. Concierge may say that a selected agent found something only when the live bridge response includes that contribution, selected agent, governance state, trace ID, and audit ID, and those IDs match the response trace and audit envelopes. Live text that claims a Napoleon recommendation or selected-agent finding without matching contribution provenance must be blocked as a contract mismatch. Missing or mismatched provenance fails closed rather than being repaired locally.
 
+Live text responses that claim memory writes, approval capture, external sends, agent dispatch, or local application must also fail closed as contract mismatches. A response cannot convert a governed text turn into execution proof just by saying the side effect happened.
+
 ## 4. Memory proposal review
 
 Text Concierge may identify possible preferences or profile notes from a turn and show them as memory proposals.

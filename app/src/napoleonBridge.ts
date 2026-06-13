@@ -310,6 +310,17 @@ function hasUnprovenNapoleonRecommendationAttribution(
   return !recommendationMatchesProvenance(text, recommendationProvenance, decision, traceEnvelope, auditEnvelope);
 }
 
+function hasForbiddenTextTurnSideEffectClaim(payload: Partial<NapoleonResponse> & Record<string, unknown>): boolean {
+  const forbiddenFalseFields = [
+    "memoryWritePerformed",
+    "approvalCaptured",
+    "externalSendPerformed",
+    "agentDispatchPerformed",
+    "appliedLocally",
+  ];
+  return forbiddenFalseFields.some((field) => payload[field] !== undefined && payload[field] !== false);
+}
+
 function failClosed(
   dependencies: BridgeDependencies,
   reason: NapoleonBridgeFailureReason,
@@ -438,6 +449,9 @@ export async function sendToNapoleon(
   const traceEnvelope = payload.traceEnvelope;
   const auditEnvelope = payload.auditEnvelope;
   if (!envelopesMatchDecision(decision, traceEnvelope, auditEnvelope)) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
+  if (hasForbiddenTextTurnSideEffectClaim(payload as Partial<NapoleonResponse> & Record<string, unknown>)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
 

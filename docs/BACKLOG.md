@@ -178,6 +178,7 @@ Acceptance criteria:
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.
 - Successful text responses that claim Napoleon recommendations, such as "Napoleon recommends...", must include matching recommendation provenance with the recommended contribution and response trace/audit references or fail closed as a contract mismatch.
 - Successful text responses that claim selected-agent findings, such as "Passive Brain found...", must include matching selected-agent contribution provenance or fail closed as a contract mismatch.
+- Successful text responses must fail closed as contract mismatches if they claim memory writes, approval capture, external sends, agent dispatch, or local application.
 - Successful live responses require matching governance, trace, and audit envelopes; missing or mismatched response/delegation provenance fails closed as a contract mismatch.
 - Remote `deny` and `no_go` governance outcomes produce blocked bridge failures for text turns, memory proposal handoff, and Chief of Staff steering handoff instead of normal response or review completion; text bridge evidence remains sanitized and includes decision, audit, governance, and blocked-effect metadata where available.
 - Memory proposal review responses fail closed as contract mismatches if they claim memory writes, approval capture, external sends, agent dispatch, or local application.
@@ -192,7 +193,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by bridge failure, contract mismatch, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, timeout, sanitized bridge evidence capture, bridge evidence comparison, and repository validation for direct authority-boundary bypass attempts.
+- Covered by bridge failure, contract mismatch, live text response side-effect-claim, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, timeout, sanitized bridge evidence capture, bridge evidence comparison, and repository validation for direct authority-boundary bypass attempts.
 
 ## Milestone P2: Voice Concierge
 

@@ -584,6 +584,83 @@ test("live bridge fails closed when response text invents Napoleon recommendatio
   );
 });
 
+test("live bridge fails closed when text response claims side effects were performed", async () => {
+  const events: TelemetryPayload[] = [];
+  const evidence: unknown[] = [];
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_text_side_effect_claim",
+          conversationId: "conv_text_side_effect_claim",
+          turnId: "turn_text_side_effect_claim",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Prepare and send the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Napoleon prepared the bridge plan and sent it.",
+              governanceDecision: {
+                decision_id: "decision_text_side_effect_claim",
+                request_id: "cos_turn_text_side_effect_claim",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["external_send", "memory_write", "agent_dispatch", "approval_capture"],
+                trace_id: "trace_text_side_effect_claim",
+                audit_id: "audit_text_side_effect_claim",
+              },
+              traceEnvelope: {
+                trace_id: "trace_text_side_effect_claim",
+                parent_trace_id: "conv_text_side_effect_claim",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_text_side_effect_claim",
+                decision_id: "decision_text_side_effect_claim",
+                timestamp: "2026-06-13T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_text_side_effect_claim",
+                trace_id: "trace_text_side_effect_claim",
+                decision_id: "decision_text_side_effect_claim",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_text_side_effect_claim"],
+              },
+              memoryWritePerformed: true,
+              approvalCaptured: true,
+              externalSendPerformed: true,
+              agentDispatchPerformed: true,
+              appliedLocally: true,
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(textTurnBlockedEffects),
+  );
+
+  assert.equal(events.at(-1)?.event, "bridge_request_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, textTurnBlockedEffects);
+  assert.equal((evidence.at(-1) as { status?: string; reason?: string }).status, "fail_closed");
+  assert.equal((evidence.at(-1) as { status?: string; reason?: string }).reason, "contract_mismatch");
+});
+
 test("live bridge accepts Napoleon recommendation text when provenance matches response envelopes", async () => {
   const response = await sendToNapoleon(
     {

@@ -100,7 +100,7 @@ Create a trace contract that can be validated by tests before the UI grows.
 Current state:
 
 - The docs describe evaluator quality gates, hard fails, regression, reports, and human review.
-- The implementation is a deterministic keyword/artifact checker with 16 scenarios, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, and conversation capability intelligence coverage.
+- The implementation is a deterministic keyword/artifact checker with 18 scenarios, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, and conversation capability intelligence coverage.
 
 Missing:
 
