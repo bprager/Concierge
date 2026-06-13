@@ -59,7 +59,7 @@ Evaluator coverage:
 | TX-010 | Add evaluator fixtures for text UI | P1 | Text mode can be smoke tested | text_smoke_eval_completed |
 | TX-011 | Add Rehearsal Mode for governed turns | P0 | User can preview understood request, proposed Napoleon path, CoS review packet, allowed effects, blocked effects, approval state, memory proposal, trace/audit preview, and evaluator-case candidate before any live bridge call | rehearsal_preview_created |
 | TX-012 | Add capability intelligence query surface | P1 | Local query surface answers common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next capability questions from bounded local aggregates | capability_intelligence_answered |
-| TX-013 | Add live bridge fail-closed connection states and delegation panel | P0 | Missing endpoint, descriptor mismatch, auth failure, contract mismatch, no-go, timeout, and HTTP failure are blocked visibly; live bridge readiness and composer preflight summarize endpoint, descriptor integrity, governed routes, local governance send gate, rehearsal state, evidence capture/comparison state, and blocked effects without implying approval; sanitized local readiness proof export and in-session comparison exclude raw prompts, endpoints, and secrets; bridge-provided selected agents, reasons, effects, governance, trace, and audit references are shown without invented attribution | bridge_request_failed, bridge_request_completed |
+| TX-013 | Add live bridge fail-closed connection states and delegation panel | P0 | Missing endpoint, descriptor mismatch, auth failure, contract mismatch, no-go, timeout, and HTTP failure are blocked visibly; live bridge readiness and composer preflight summarize endpoint, descriptor integrity, governed routes, local governance send gate, rehearsal state, evidence capture/comparison state, and blocked effects without implying approval; sanitized local readiness proof export and in-session comparison exclude raw prompts, endpoints, and secrets; bridge-provided selected agents, reasons, effects, governance, trace, audit, and last-success proof metadata are shown without invented attribution | bridge_request_failed, bridge_request_completed |
 
 ### TX-005 details
 
@@ -180,6 +180,7 @@ Acceptance criteria:
 - `make eval-http-local-harness` exercises evaluator HTTP mode against the local Napoleon-compatible harness without treating it as live Napoleon validation.
 - Failures are visible as local blocked states with blocked effects. Early local failures preserve the relevant text-turn, memory proposal, or Chief of Staff steering blocked-effect list, and remote failures preserve Napoleon-supplied blocked effects where available. Failures do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
 - Successful live responses may include a Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID.
+- Successful live text responses show a last successful Napoleon proof panel summarizing returned governance, decision, trace, audit, capability or agent provenance, allowed effects, and blocked effects; it is display-only and must be cleared by local-only answers, blocked preflight paths, and failed bridge calls.
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.
 - Successful text responses that claim Napoleon recommendations, such as "Napoleon recommends...", must include matching recommendation provenance with the recommended contribution and response trace/audit references or fail closed as a contract mismatch.
 - Successful text responses that claim selected-agent findings, such as "Passive Brain found...", must include matching selected-agent contribution provenance or fail closed as a contract mismatch.
@@ -192,6 +193,7 @@ Privacy and safety impact:
 
 - Missing or invalid bridge state cannot be converted into local authority.
 - Live bridge readiness is a local preflight summary only and cannot be treated as Napoleon approval, memory permission, agent dispatch permission, or external-send permission.
+- Last successful Napoleon proof is local returned-provenance display only and cannot be treated as Napoleon approval, memory permission, agent dispatch permission, external-send permission, or evidence that Concierge executed a side effect.
 - The local harness preset is a test endpoint convenience only; it must not be treated as live Napoleon authority or service control.
 - Provenance prevents Concierge from hiding Napoleon's authority boundary or inventing agent contributions.
 - Bridge evidence supports later live-runtime comparison without becoming a local audit authority or leaking secrets.

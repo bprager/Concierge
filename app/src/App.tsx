@@ -54,6 +54,7 @@ import {
   describeLiveBridgeReadiness,
   describeLiveSendPreflight,
   describeMemoryProposalReview,
+  describeNapoleonResponseProof,
   summarizeRehearsalPreview,
 } from "./presentation";
 import { emitEvent, newTraceId } from "./telemetry";
@@ -129,6 +130,7 @@ export function App() {
   );
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastDelegation, setLastDelegation] = useState<ReturnType<typeof describeDelegation> | null>(null);
+  const [lastNapoleonProof, setLastNapoleonProof] = useState<ReturnType<typeof describeNapoleonResponseProof> | null>(null);
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
   const [bridgeEvidenceReadiness, setBridgeEvidenceReadiness] = useState(buildBridgeEvidenceReadinessState);
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
@@ -304,6 +306,7 @@ export function App() {
       setPendingRehearsal(null);
       setLastDecision(null);
       setLastDelegation(null);
+      setLastNapoleonProof(null);
       setLastBridgeFailure(null);
       setLastReview(null);
       setLastMemoryReviewState(null);
@@ -358,6 +361,7 @@ export function App() {
     setPendingRehearsal({ content, traceId, turnId, preview, summary, review, memoryReviewState, memoryReview });
     setLastDecision(null);
     setLastDelegation(null);
+    setLastNapoleonProof(null);
     setLastBridgeFailure(null);
     setLastReview(null);
     setLastMemoryReviewState(null);
@@ -392,6 +396,7 @@ export function App() {
         setPendingRehearsal(null);
         setLastDecision(null);
         setLastDelegation(null);
+        setLastNapoleonProof(null);
         setLastBridgeFailure(null);
         setLastReview(null);
         setLastMemoryReviewState(null);
@@ -414,6 +419,7 @@ export function App() {
       refreshCapabilityLedgerStatus();
       setLastReview(rehearsal.review);
       setLastDelegation(null);
+      setLastNapoleonProof(null);
       setLastBridgeFailure(null);
       setMemorySubmission(null);
       setMemorySubmissionFailure(null);
@@ -437,6 +443,7 @@ export function App() {
         refreshCapabilityLedgerStatus();
         setLastReview(reviewView);
         setLastDelegation(null);
+        setLastNapoleonProof(null);
         setLastBridgeFailure(null);
         setLastDecision(
           describeGovernanceDecision({
@@ -498,6 +505,7 @@ export function App() {
       refreshCapabilityLedgerStatus();
       setLastDecision(decisionView);
       setLastDelegation(describeDelegation(response.delegation));
+      setLastNapoleonProof(describeNapoleonResponseProof(response));
       setLastBridgeFailure(null);
       const responseReviewState = buildGovernanceReviewState(response.governanceDecision, profile);
       setLastReview(describeGovernanceReview(responseReviewState));
@@ -551,6 +559,7 @@ export function App() {
       refreshCapabilityLedgerStatus();
       setLastBridgeFailure(describeBridgeFailure(error));
       setLastDelegation(null);
+      setLastNapoleonProof(null);
       setMessages((m) => [
         ...m,
         {
@@ -1200,6 +1209,24 @@ export function App() {
         <section className="bridge-failure">
           <strong>Bridge blocked</strong>
           <p>{lastBridgeFailure}</p>
+        </section>
+      ) : null}
+
+      {lastNapoleonProof ? (
+        <section className={`napoleon-proof ${lastNapoleonProof.status}`}>
+          <div className="review-heading">
+            <strong>{lastNapoleonProof.heading}</strong>
+            <span>{lastNapoleonProof.summary}</span>
+            <span>{lastNapoleonProof.caveat}</span>
+          </div>
+          <dl>
+            {lastNapoleonProof.details.map((detail) => (
+              <div key={detail.label}>
+                <dt>{detail.label}</dt>
+                <dd>{detail.value}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
       ) : null}
 

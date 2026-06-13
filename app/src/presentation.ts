@@ -6,6 +6,7 @@ import type {
   RehearsalPreview,
 } from "./contractBridge.js";
 import type { NapoleonDelegation } from "./types.js";
+import type { NapoleonResponse } from "./types.js";
 import { NapoleonBridgeError } from "./napoleonBridge.js";
 
 export interface GovernanceDecisionViewInput {
@@ -52,6 +53,14 @@ export interface MemoryProposalReviewView {
 export interface DelegationView {
   heading: string;
   body: string;
+  details: Array<{ label: string; value: string }>;
+}
+
+export interface NapoleonResponseProofView {
+  heading: string;
+  status: "verified" | "limited";
+  summary: string;
+  caveat: string;
   details: Array<{ label: string; value: string }>;
 }
 
@@ -303,6 +312,46 @@ export function describeDelegation(delegation: NapoleonDelegation | undefined): 
       { label: "Governance state", value: delegation.governanceState },
       { label: "Trace", value: delegation.traceId },
       { label: "Audit", value: delegation.auditId },
+    ],
+  };
+}
+
+export function describeNapoleonResponseProof(response: NapoleonResponse): NapoleonResponseProofView {
+  const agentLabels = response.delegation?.selectedAgents.map((agent) => agent.displayName).join(", ") || "";
+  const recommendation = response.recommendationProvenance?.summary;
+  const status: NapoleonResponseProofView["status"] = agentLabels || recommendation ? "verified" : "limited";
+  const proofParts = [
+    agentLabels ? `Agents: ${agentLabels}` : "",
+    recommendation ? `Napoleon recommendation: ${recommendation}` : "",
+  ].filter(Boolean);
+
+  return {
+    heading: "Last successful Napoleon proof",
+    status,
+    summary: proofParts.length
+      ? proofParts.join(". ")
+      : "No agent or recommendation provenance was returned with the successful response.",
+    caveat:
+      "This proof summarizes bridge-returned provenance only. It is not Napoleon approval, does not write memory, does not dispatch agents, and does not send externally.",
+    details: [
+      { label: "Governance", value: response.governanceDecision.outcome },
+      { label: "Decision", value: response.governanceDecision.decision_id },
+      { label: "Trace", value: response.traceEnvelope.trace_id },
+      { label: "Audit", value: response.auditEnvelope.audit_id },
+      {
+        label: "Capability or agents",
+        value: agentLabels || "No selected-agent provenance returned",
+      },
+      {
+        label: "Allowed effects",
+        value: response.delegation?.allowedEffects.join(", ") || "prepare_advisory_response",
+      },
+      {
+        label: "Blocked effects",
+        value:
+          response.delegation?.blockedEffects.join(", ") ||
+          response.governanceDecision.blocked_effects.join(", "),
+      },
     ],
   };
 }

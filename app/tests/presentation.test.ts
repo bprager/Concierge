@@ -18,6 +18,7 @@ import {
   describeLiveBridgeReadiness,
   describeLiveSendPreflight,
   describeMemoryProposalReview,
+  describeNapoleonResponseProof,
   summarizeRehearsalPreview,
 } from "../src/presentation.js";
 import { NapoleonBridgeError } from "../src/napoleonBridge.js";
@@ -180,6 +181,76 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.equal(empty.heading, "Napoleon delegation unavailable");
   assert.ok(!empty.body.includes("Napoleon recommends"));
   assert.ok(!empty.body.includes("Passive Brain found"));
+});
+
+test("describes successful Napoleon response proof from returned provenance only", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the deployment risk",
+    profile: "adult_owner",
+    conversationId: "conv_proof",
+    turnId: "turn_proof",
+    traceId: "trace_proof",
+  });
+  const view = describeNapoleonResponseProof({
+    text: "Passive Brain found the previous deployment risk note.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: false,
+    delegation: {
+      selectedAgents: [
+        {
+          agentId: "napoleon.passive_brain",
+          displayName: "Passive Brain",
+          selectionReason: "Relevant deployment history was found.",
+          contributionSummary: "Found the previous deployment risk note.",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["memory_write", "external_send"],
+      governanceState: "allow_prepare_only",
+      traceId: "trace_proof",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+    recommendationProvenance: {
+      summary: "Prepare a deployment risk summary for review.",
+      traceId: "trace_proof",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+
+  assert.equal(view.heading, "Last successful Napoleon proof");
+  assert.equal(view.status, "verified");
+  assert.ok(view.summary.includes("Passive Brain"));
+  assert.ok(view.summary.includes("Napoleon recommendation"));
+  assert.ok(view.caveat.includes("not Napoleon approval"));
+  assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Governance" && detail.value === "allow_prepare_only"));
+  assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Trace" && detail.value === "trace_proof"));
+  assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
+});
+
+test("does not invent agent or recommendation proof when provenance is absent", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the deployment risk",
+    profile: "adult_owner",
+    conversationId: "conv_no_proof",
+    turnId: "turn_no_proof",
+    traceId: "trace_no_proof",
+  });
+  const view = describeNapoleonResponseProof({
+    text: "Here is the summary.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: false,
+  });
+
+  assert.equal(view.status, "limited");
+  assert.ok(view.summary.includes("No agent or recommendation provenance"));
+  assert.ok(!view.summary.includes("Passive Brain"));
+  assert.ok(!view.summary.includes("Napoleon recommends"));
 });
 
 test("describes live bridge readiness as blocked when no endpoint is configured", () => {

@@ -370,6 +370,46 @@ article dd {
   margin: 6px 0 0;
 }
 
+.napoleon-proof {
+  margin-top: 16px;
+  padding: 12px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 8px;
+}
+
+.napoleon-proof.limited {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.napoleon-proof dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.napoleon-proof dl div {
+  display: grid;
+  grid-template-columns: minmax(140px, max-content) 1fr;
+  gap: 8px;
+}
+
+.napoleon-proof dt {
+  color: #3730a3;
+  font-weight: 650;
+}
+
+.napoleon-proof.limited dt {
+  color: #475569;
+}
+
+.napoleon-proof dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .delegation {
   margin-top: 16px;
   padding: 12px;
