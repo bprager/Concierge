@@ -59,6 +59,8 @@ Live Napoleon bridge failures are fail-closed states. Missing endpoint, missing 
 
 The optional bridge bearer token is a local connection credential. Concierge sends it only in the `Authorization` header for governed bridge requests. It must not be included in request bodies, local capability exports, telemetry attributes, memory proposals, or user-visible provenance panels.
 
+Text Concierge settings expose local telemetry, camera, and microphone switches. Telemetry defaults to on for local development signals; camera and microphone default to off. The camera and microphone switches persist local state only: they do not start capture, request operating-system permissions, store raw audio or video, send data externally, write memory, capture approval, or grant guardian consent. Privacy-setting events are local metadata and must carry explicit false side-effect flags.
+
 Bridge readiness proof exports are local metadata only. They may include descriptor state, checksum/signature state, evidence status, last operation path, blocked effects, and last fail-closed reason, but they must not include raw prompts, response bodies, endpoint hosts, bearer tokens, request bodies, or response bodies. Exporting a readiness proof is not Napoleon approval and does not grant memory writes, approval capture, agent dispatch, local application, or external sends.
 
 Bridge readiness proof comparison is also local metadata only. It compares the current proof with the previous proof exported in the same app session using sanitized descriptor and evidence fields, and it must not expose raw prompts, endpoint hosts, tokens, request bodies, response bodies, or authority claims.
@@ -102,6 +104,7 @@ Child protected memory proposals require guardian-appropriate review and must us
 - Derived signals stored only when useful
 - Child data minimized
 - Telemetry redacted before export
+- Local camera and microphone settings are not capture permission by themselves
 
 Conversation Capability Intelligence persistence:
 

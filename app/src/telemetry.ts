@@ -38,7 +38,17 @@ export function emitPayload(payload: TelemetryPayload) {
   console.info("[concierge.telemetry]", payload);
 }
 
+function localTelemetryEnabled(): boolean {
+  const storage = browserStorage();
+  if (!storage) return true;
+  return storage.getItem("concierge_telemetry_enabled") !== "false";
+}
+
 export function emitEvent(event: string, attributes: Record<string, unknown>) {
+  if (!localTelemetryEnabled() && event !== "privacy_setting_changed") {
+    return;
+  }
+
   const payload = makeTelemetryPayload(event, attributes);
 
   // P1 target: write to local buffer and optionally export via OTLP.

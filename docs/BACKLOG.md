@@ -61,6 +61,19 @@ Evaluator coverage:
 | TX-012 | Add capability intelligence query surface | P1 | Local query surface answers common, working-well, missing/blocked, easy-to-evolve, architecture-area, and recommended-next capability questions from bounded local aggregates | capability_intelligence_answered |
 | TX-013 | Add live bridge fail-closed connection states and delegation panel | P0 | Missing endpoint, descriptor mismatch, auth failure, contract mismatch, no-go, timeout, and HTTP failure are blocked visibly; live bridge readiness and composer preflight summarize endpoint, descriptor integrity, governed routes, local governance send gate, rehearsal state, evidence capture/comparison state, and blocked effects without implying approval; memory proposal, Chief of Staff steering, and taxonomy review handoffs show draft, endpoint, descriptor, and blocked-effect readiness before submission; sanitized local readiness proof export and in-session comparison exclude raw prompts, endpoints, and secrets; bridge-provided selected agents, reasons, effects, governance, trace, audit, and last-success proof metadata are shown without invented attribution | bridge_request_failed, bridge_request_completed |
 
+### TX-009 details
+
+User value: The settings and privacy panel makes local connection and capture state visible before voice, camera, or live bridge behavior can be mistaken for hidden permission.
+
+Acceptance criteria:
+
+- Endpoint, optional local bridge token, profile mode, telemetry, camera, and microphone controls are visible in Text Concierge settings.
+- Camera and microphone default to off.
+- Telemetry defaults to on for local development signals and can be turned off in local settings.
+- Camera and microphone toggles persist local state but do not start capture, request operating-system permissions, store raw audio/video, or send data externally.
+- Privacy setting changes emit local metadata with explicit false side-effect flags for approval capture, memory writes, and external sends.
+- Child protected mode remains stricter than adult owner mode and must not treat a local toggle as guardian approval.
+
 ### TX-005 details
 
 User value: Governance confirmation UI makes Napoleon review outcomes visible before a user mistakes a draft or acknowledgement for permission to act.

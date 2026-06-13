@@ -85,6 +85,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added shared Text Concierge presentation state so Napoleon delegation and proof are set together after successful live responses and cleared together after local-only, blocked, or failed paths.
 - Added a sanitized export for the last successful Napoleon response proof without raw prompts, response text, endpoint hosts, or tokens.
 - Added an in-session sanitized Napoleon response proof comparison that shows how returned governance, trace/audit, agents, and blocked effects changed since the previous export without treating it as approval.
+- Added local Text Concierge privacy controls for telemetry, camera, and microphone state, with camera and microphone off by default, local persistence, and privacy-setting events that do not store raw audio or video.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { emitCapabilitySignal } from "../src/telemetry.js";
+import { JSDOM } from "jsdom";
+import { emitCapabilitySignal, emitEvent } from "../src/telemetry.js";
 
 test("telemetry emits capability signals for tracked text concierge events", () => {
   const signal = emitCapabilitySignal("response_generated", {
@@ -42,4 +43,43 @@ test("untracked telemetry events do not create capability signals", () => {
   });
 
   assert.equal(signal, null);
+});
+
+test("telemetry off setting suppresses ordinary local telemetry events", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  const payloads: unknown[] = [];
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  localStorage.setItem("concierge_telemetry_enabled", "false");
+  console.info = (...args: unknown[]) => {
+    payloads.push(args);
+  };
+
+  try {
+    emitEvent("response_generated", {
+      traceId: "trace_suppressed",
+      conversationId: "conv_suppressed",
+      turnId: "turn_suppressed",
+    });
+
+    assert.equal(payloads.length, 0);
+  } finally {
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
 });

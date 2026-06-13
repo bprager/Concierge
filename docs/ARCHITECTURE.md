@@ -265,6 +265,7 @@ rectangle "Telemetry Destinations" {
 - Owns UI, capture permissions, local rendering, and user controls.
 - Does not own Napoleon authority.
 - Does not silently retain raw camera or microphone data.
+- Exposes local telemetry, camera, and microphone state in settings; camera and microphone default off and toggling them does not start capture or send media.
 
 ### Local Perception Services
 
@@ -310,6 +311,7 @@ Napoleon bridge
 
 1. Camera and microphone are owned by local front-end.
 2. Raw capture remains local unless user explicitly records or streams.
-3. Napoleon receives derived signals, transcripts, and user-approved context.
-4. External actions go through Napoleon governance.
-5. Child mode is stricter than adult mode.
+3. A local camera or microphone toggle is not operating-system permission, capture start, guardian approval, or permission to send media.
+4. Napoleon receives derived signals, transcripts, and user-approved context.
+5. External actions go through Napoleon governance.
+6. Child mode is stricter than adult mode.

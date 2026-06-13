@@ -81,6 +81,14 @@ import type { ConciergeMessage } from "./types.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
 
+function storedBoolean(key: string, fallback: boolean): boolean {
+  if (typeof localStorage === "undefined") return fallback;
+  const value = localStorage.getItem(key);
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return fallback;
+}
+
 interface PendingRehearsal {
   content: string;
   traceId: string;
@@ -137,6 +145,11 @@ export function App() {
   );
   const [authToken, setAuthToken] = useState(() =>
     typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_auth_token") ?? "",
+  );
+  const [telemetryEnabled, setTelemetryEnabled] = useState(() => storedBoolean("concierge_telemetry_enabled", true));
+  const [cameraEnabled, setCameraEnabled] = useState(() => storedBoolean("concierge_camera_enabled", false));
+  const [microphoneEnabled, setMicrophoneEnabled] = useState(() =>
+    storedBoolean("concierge_microphone_enabled", false),
   );
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
@@ -267,6 +280,33 @@ export function App() {
     } else {
       localStorage.removeItem("napoleon_auth_token");
     }
+  }
+
+  function updatePrivacySetting(kind: "telemetry" | "camera" | "microphone", enabled: boolean) {
+    const storageKey =
+      kind === "telemetry"
+        ? "concierge_telemetry_enabled"
+        : kind === "camera"
+          ? "concierge_camera_enabled"
+          : "concierge_microphone_enabled";
+    if (kind === "telemetry") setTelemetryEnabled(enabled);
+    if (kind === "camera") setCameraEnabled(enabled);
+    if (kind === "microphone") setMicrophoneEnabled(enabled);
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem(storageKey, String(enabled));
+    }
+    emitEvent("privacy_setting_changed", {
+      traceId: newTraceId(),
+      conversationId,
+      setting: kind,
+      enabled,
+      localOnly: true,
+      rawAudioStored: false,
+      rawVideoStored: false,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
+    });
   }
 
   async function discoverDescriptor(endpointOverride?: string) {
@@ -1024,7 +1064,34 @@ export function App() {
             }}
           />
         </label>
-        <span className="capture">Camera off, microphone off</span>
+        <label>
+          Local telemetry
+          <input
+            type="checkbox"
+            checked={telemetryEnabled}
+            onChange={(e) => updatePrivacySetting("telemetry", e.target.checked)}
+          />
+        </label>
+        <label>
+          Camera
+          <input
+            type="checkbox"
+            checked={cameraEnabled}
+            onChange={(e) => updatePrivacySetting("camera", e.target.checked)}
+          />
+        </label>
+        <label>
+          Microphone
+          <input
+            type="checkbox"
+            checked={microphoneEnabled}
+            onChange={(e) => updatePrivacySetting("microphone", e.target.checked)}
+          />
+        </label>
+        <span className="capture">
+          Local telemetry {telemetryEnabled ? "on" : "off"}, camera {cameraEnabled ? "on" : "off"},
+          microphone {microphoneEnabled ? "on" : "off"}
+        </span>
       </section>
 
       <section className="contract-status">

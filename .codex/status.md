@@ -101,6 +101,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added local Chief of Staff taxonomy review drafts for Conversation Capability Intelligence, including merge, split, deprecation, evaluator-case, and evolution-proposal packet details from local metadata evidence while preserving proposal-only boundaries.
 - Added governed Chief of Staff taxonomy review submission for Conversation Capability Intelligence, gated by endpoint and descriptor preflight and blocked from applying taxonomy edits, writing memory, capturing approval, dispatching agents, or sending externally.
 - Added visible governed handoff readiness summaries for memory proposal review, Chief of Staff steering, and Chief of Staff taxonomy review so submit controls explain draft, endpoint, descriptor, and blocked-effect blockers before any Napoleon handoff.
+- Added local Text Concierge privacy controls for telemetry, camera, and microphone state; camera and microphone remain off by default, toggles persist local state only, and privacy-setting events do not store raw audio/video or claim side effects.
 
 ## Current Blockers
 

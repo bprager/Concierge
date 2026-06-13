@@ -322,3 +322,37 @@ test("exposes collaborator profile in rendered app controls", async () => {
     dom.window.close();
   }
 });
+
+test("renders local privacy controls for telemetry camera and microphone", async () => {
+  const dom = installDom();
+  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+    const telemetry = view.getByLabelText("Local telemetry") as HTMLInputElement;
+    const camera = view.getByLabelText("Camera") as HTMLInputElement;
+    const microphone = view.getByLabelText("Microphone") as HTMLInputElement;
+
+    assert.equal(telemetry.checked, true);
+    assert.equal(camera.checked, false);
+    assert.equal(microphone.checked, false);
+    assert.ok(view.getByText("Local telemetry on, camera off, microphone off"));
+
+    await user.click(camera);
+    await user.click(microphone);
+    await user.click(telemetry);
+
+    assert.equal(localStorage.getItem("concierge_camera_enabled"), "true");
+    assert.equal(localStorage.getItem("concierge_microphone_enabled"), "true");
+    assert.equal(localStorage.getItem("concierge_telemetry_enabled"), "false");
+    assert.ok(view.getByText("Local telemetry off, camera on, microphone on"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
