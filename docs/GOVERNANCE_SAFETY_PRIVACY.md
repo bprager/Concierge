@@ -71,6 +71,8 @@ Delegation and recommendation attribution require bridge provenance. Concierge m
 
 The last successful Napoleon proof panel is local display of returned bridge metadata only. It may summarize governance, decision, trace, audit, returned capability or agent provenance, allowed effects, and blocked effects from the last successful live text turn, but it must not be treated as Napoleon approval, execution proof, memory-write permission, agent dispatch permission, or external-send permission. Local-only answers, blocked preflight paths, and failed bridge calls must clear stale proof and delegation presentation together instead of reusing them.
 
+Last successful Napoleon proof exports are local metadata only. They may include generated time, conversation ID, proof status, governance outcome, decision ID, trace ID, audit ID, selected agent display names, allowed effects, blocked effects, and explicit false boundary flags, but they must not include raw prompts, response text, endpoint hosts, bearer tokens, request bodies, or response bodies.
+
 Live text responses that claim memory writes, approval capture, external sends, agent dispatch, or local application must also fail closed as contract mismatches. A response cannot convert a governed text turn into execution proof just by saying the side effect happened.
 
 ## 4. Memory proposal review

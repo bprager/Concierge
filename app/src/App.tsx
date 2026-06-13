@@ -43,6 +43,7 @@ import { sendToNapoleon } from "./napoleonBridge";
 import {
   buildSuccessfulNapoleonResponsePresentation,
   clearNapoleonResponsePresentation,
+  exportNapoleonResponseProofJson,
 } from "./napoleonResponsePresentation";
 import {
   buildLocalHarnessEndpointPreset,
@@ -132,6 +133,7 @@ export function App() {
   );
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
+  const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
   const [bridgeEvidenceReadiness, setBridgeEvidenceReadiness] = useState(buildBridgeEvidenceReadinessState);
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
@@ -151,6 +153,17 @@ export function App() {
   const [selectedTaxonomyLabel, setSelectedTaxonomyLabel] = useState("");
   const [taxonomyRenameValue, setTaxonomyRenameValue] = useState("");
   const [taxonomyMergeTarget, setTaxonomyMergeTarget] = useState("");
+
+  function clearNapoleonPresentation() {
+    setLastNapoleonPresentation(clearNapoleonResponsePresentation());
+    setNapoleonProofExportJson(null);
+  }
+
+  function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {
+    setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response));
+    setNapoleonProofExportJson(null);
+  }
+
   function currentDescriptorInput(): DescriptorConnectionInput {
     if (descriptorMode === "live" && liveDescriptorInput) {
       return {
@@ -306,7 +319,7 @@ export function App() {
       setInput("");
       setPendingRehearsal(null);
       setLastDecision(null);
-      setLastNapoleonPresentation(clearNapoleonResponsePresentation());
+      clearNapoleonPresentation();
       setLastBridgeFailure(null);
       setLastReview(null);
       setLastMemoryReviewState(null);
@@ -360,7 +373,7 @@ export function App() {
     }
     setPendingRehearsal({ content, traceId, turnId, preview, summary, review, memoryReviewState, memoryReview });
     setLastDecision(null);
-    setLastNapoleonPresentation(clearNapoleonResponsePresentation());
+    clearNapoleonPresentation();
     setLastBridgeFailure(null);
     setLastReview(null);
     setLastMemoryReviewState(null);
@@ -394,7 +407,7 @@ export function App() {
         setInput("");
         setPendingRehearsal(null);
         setLastDecision(null);
-        setLastNapoleonPresentation(clearNapoleonResponsePresentation());
+        clearNapoleonPresentation();
         setLastBridgeFailure(null);
         setLastReview(null);
         setLastMemoryReviewState(null);
@@ -416,7 +429,7 @@ export function App() {
       });
       refreshCapabilityLedgerStatus();
       setLastReview(rehearsal.review);
-      setLastNapoleonPresentation(clearNapoleonResponsePresentation());
+      clearNapoleonPresentation();
       setLastBridgeFailure(null);
       setMemorySubmission(null);
       setMemorySubmissionFailure(null);
@@ -439,7 +452,7 @@ export function App() {
         });
         refreshCapabilityLedgerStatus();
         setLastReview(reviewView);
-        setLastNapoleonPresentation(clearNapoleonResponsePresentation());
+        clearNapoleonPresentation();
         setLastBridgeFailure(null);
         setLastDecision(
           describeGovernanceDecision({
@@ -500,7 +513,7 @@ export function App() {
       });
       refreshCapabilityLedgerStatus();
       setLastDecision(decisionView);
-      setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response));
+      setSuccessfulNapoleonPresentation(response);
       setLastBridgeFailure(null);
       const responseReviewState = buildGovernanceReviewState(response.governanceDecision, profile);
       setLastReview(describeGovernanceReview(responseReviewState));
@@ -553,7 +566,7 @@ export function App() {
       emitEvent("response_failed", { traceId, conversationId, turnId, error: String(error) });
       refreshCapabilityLedgerStatus();
       setLastBridgeFailure(describeBridgeFailure(error));
-      setLastNapoleonPresentation(clearNapoleonResponsePresentation());
+      clearNapoleonPresentation();
       setMessages((m) => [
         ...m,
         {
@@ -717,6 +730,27 @@ export function App() {
       lastFailureReason: bridgeEvidenceReadiness.lastFailureReason ?? "none",
       approvalCaptured: false,
       memoryWritePerformed: false,
+      externalSendPerformed: false,
+    });
+  }
+
+  function exportNapoleonProof() {
+    const traceId = newTraceId();
+    const json = exportNapoleonResponseProofJson(lastNapoleonPresentation, {
+      conversationId,
+    });
+    setNapoleonProofExportJson(json);
+    const proof = lastNapoleonPresentation.proof;
+    emitEvent("napoleon_response_proof_exported", {
+      traceId,
+      conversationId,
+      status: proof?.status ?? "not_available",
+      governance: proof?.details.find((detail) => detail.label === "Governance")?.value ?? "unavailable",
+      responseTraceId: proof?.details.find((detail) => detail.label === "Trace")?.value ?? "unavailable",
+      responseAuditId: proof?.details.find((detail) => detail.label === "Audit")?.value ?? "unavailable",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
       externalSendPerformed: false,
     });
   }
@@ -1221,6 +1255,12 @@ export function App() {
               </div>
             ))}
           </dl>
+          <button className="secondary" onClick={exportNapoleonProof}>
+            Export Napoleon proof
+          </button>
+          {napoleonProofExportJson ? (
+            <pre aria-label="Exported Napoleon response proof">{napoleonProofExportJson}</pre>
+          ) : null}
         </section>
       ) : null}
 

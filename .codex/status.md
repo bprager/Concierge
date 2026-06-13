@@ -86,6 +86,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added child-protected Chief of Staff steering request artifact validation with required child-safety caution and proposal-only boundary enforcement.
 - Added a last successful Napoleon proof panel that displays returned governance, trace, audit, delegation, recommendation, allowed-effect, and blocked-effect metadata without treating it as approval or execution authority.
 - Centralized Text Concierge Napoleon response presentation state so local-only, blocked, and failed paths clear stale delegation and proof together.
+- Added sanitized local export for the last successful Napoleon response proof, excluding raw prompts, response text, endpoint hosts, tokens, request bodies, and response bodies.
 
 ## Current Blockers
 

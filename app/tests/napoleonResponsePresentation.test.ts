@@ -4,6 +4,7 @@ import { buildTextTurnContract } from "../src/contractBridge.js";
 import {
   buildSuccessfulNapoleonResponsePresentation,
   clearNapoleonResponsePresentation,
+  exportNapoleonResponseProofJson,
 } from "../src/napoleonResponsePresentation.js";
 
 test("successful Napoleon response presentation includes returned delegation and proof", () => {
@@ -63,4 +64,85 @@ test("non-live response presentation clears stale delegation and proof together"
 
   assert.equal(state.delegation, null);
   assert.equal(state.proof, null);
+});
+
+test("exports last successful Napoleon response proof without raw text endpoint or secrets", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge rollout",
+    profile: "adult_owner",
+    conversationId: "conv_response_export",
+    turnId: "turn_response_export",
+    traceId: "trace_response_export",
+    governanceOutcome: "requires_review",
+  });
+  const state = buildSuccessfulNapoleonResponsePresentation({
+    text: "Napoleon recommends keeping the rollout in review. Passive Brain found bridge rollout context.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: true,
+    delegation: {
+      selectedAgents: [
+        {
+          agentId: "passive_brain",
+          displayName: "Passive Brain",
+          selectionReason: "Prior bridge rollout context is relevant.",
+          contributionSummary: "bridge rollout context",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["memory_write", "external_send", "agent_dispatch"],
+      governanceState: "requires_review",
+      traceId: "trace_response_export",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+    recommendationProvenance: {
+      summary: "keeping the rollout in review",
+      traceId: "trace_response_export",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+
+  const json = exportNapoleonResponseProofJson(state, {
+    generatedAt: "2026-06-13T00:00:00.000Z",
+    conversationId: "conv_response_export",
+  });
+  const proof = JSON.parse(json) as {
+    kind: string;
+    generatedAt: string;
+    responseProof: {
+      status: string;
+      heading: string;
+      governance: string;
+      traceId: string;
+      auditId: string;
+      selectedAgents: string[];
+      allowedEffects: string[];
+      blockedEffects: string[];
+    };
+    boundary: {
+      approvalCaptured: boolean;
+      memoryWritePerformed: boolean;
+      agentDispatchPerformed: boolean;
+      externalSendPerformed: boolean;
+    };
+  };
+
+  assert.equal(proof.kind, "concierge_napoleon_response_proof");
+  assert.equal(proof.generatedAt, "2026-06-13T00:00:00.000Z");
+  assert.equal(proof.responseProof.status, "verified");
+  assert.equal(proof.responseProof.traceId, "trace_response_export");
+  assert.equal(proof.responseProof.governance, "requires_review");
+  assert.deepEqual(proof.responseProof.selectedAgents, ["Passive Brain"]);
+  assert.ok(proof.responseProof.blockedEffects.includes("memory_write"));
+  assert.equal(proof.boundary.approvalCaptured, false);
+  assert.equal(proof.boundary.memoryWritePerformed, false);
+  assert.equal(proof.boundary.agentDispatchPerformed, false);
+  assert.equal(proof.boundary.externalSendPerformed, false);
+
+  assert.ok(!json.includes("Summarize the bridge rollout"));
+  assert.ok(!json.includes("Napoleon recommends keeping the rollout"));
+  assert.ok(!json.includes("127.0.0.1"));
+  assert.ok(!json.toLocaleLowerCase().includes("token"));
 });
