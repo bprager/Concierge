@@ -302,6 +302,28 @@ Evaluator coverage:
 
 - Covered by pure STT adapter tests and rendered app interaction tests for local sample execution without microphone capture.
 
+### VO-004 details
+
+User value: Speech output can be tested locally before live audio playback, full voice mode, or spoken Napoleon responses exist.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local TTS sample panel.
+- The local TTS adapter produces speech-preparation metadata from fixed local sample text.
+- Running the local sample does not start audio playback, request microphone permission, write memory, capture approval, dispatch agents, or send externally.
+- `tts_started` and `tts_completed` events include voice, character count, duration or latency, local-sample marker, playback-started false, raw-audio-stored false, and explicit false side-effect flags.
+- The TTS sample does not store, play, or display raw audio.
+- Child protected mode must not treat local TTS preparation as guardian approval, permission to record, or permission to speak externally.
+
+Privacy and safety impact:
+
+- This is a local speech-preparation baseline only, not live voice mode.
+- Raw audio remains unstored, and no automatic speaker output path is introduced.
+
+Evaluator coverage:
+
+- Covered by pure TTS adapter tests and rendered app interaction tests for local sample execution without audio playback.
+
 ## Milestone P3: Avatar Concierge
 
 | ID | Story | Priority | Acceptance criteria | Observability |

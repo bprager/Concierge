@@ -67,6 +67,8 @@ Voice activity detection may run against local sample amplitude frames before li
 
 Speech transcription may run against fixed local sample metadata before live voice mode exists. Sample STT output is transcript metadata only: it must not request microphone permission, start capture, store raw audio, write memory, capture approval, dispatch agents, send externally, or imply guardian consent.
 
+Text to speech may run against fixed local sample text before live voice mode exists. Sample TTS output is speech-preparation metadata only: it must not start audio playback, request microphone permission, store raw audio, write memory, capture approval, dispatch agents, send externally, or imply guardian consent.
+
 Bridge readiness proof exports are local metadata only. They may include descriptor state, checksum/signature state, evidence status, last operation path, blocked effects, and last fail-closed reason, but they must not include raw prompts, response bodies, endpoint hosts, bearer tokens, request bodies, or response bodies. Exporting a readiness proof is not Napoleon approval and does not grant memory writes, approval capture, agent dispatch, local application, or external sends.
 
 Bridge readiness proof comparison is also local metadata only. It compares the current proof with the previous proof exported in the same app session using sanitized descriptor and evidence fields, and it must not expose raw prompts, endpoint hosts, tokens, request bodies, response bodies, or authority claims.

@@ -67,8 +67,8 @@ Every user turn has:
 | camera_permission_result | avatar | conversation_id, result, capture_started, raw_video_stored |
 | voice_segment_detected | voice | start_ms, end_ms, peak_rms, local_sample_only, capture_started, raw_audio_stored |
 | stt_completed | voice | latency_ms, model, local_sample_only, capture_started, raw_audio_stored |
-| tts_started | voice | voice_id, chars |
-| tts_completed | voice | latency_ms, duration_ms |
+| tts_started | voice | voice_id, chars, local_sample_only, audio_playback_started, raw_audio_stored |
+| tts_completed | voice | latency_ms, duration_ms, local_sample_only, audio_playback_started, raw_audio_stored |
 | avatar_expression_set | avatar | stance, expression |
 | camera_state_estimated | perception | present, looking_at_screen, confidence |
 | eval_case_started | evaluator | case_id |

@@ -487,6 +487,48 @@ test("runs local speech transcription sample without starting microphone capture
   }
 });
 
+test("runs local text to speech sample without starting audio playback", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Text to speech");
+    const ttsReadiness = within(view.getByLabelText("Text to speech"));
+    assert.ok(ttsReadiness.getByText("TTS sample not run"));
+    assert.ok(ttsReadiness.getByText("Audio playback stopped; local sample only."));
+
+    await user.click(view.getByRole("button", { name: "Run local TTS sample" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.ok(ttsReadiness.getByText("Prepared 32 characters for local sample speech."));
+    assert.ok(ttsReadiness.getByText("Voice: local-sample-voice"));
+    assert.ok(ttsReadiness.getByText("Audio playback started: no"));
+    assert.ok(ttsReadiness.getByText("Raw audio stored: no"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("keeps camera capture blocked until explicit camera permission is granted", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

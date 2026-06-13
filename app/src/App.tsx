@@ -83,6 +83,11 @@ import {
   transcribeLocalSpeechSample,
   type LocalSpeechTranscriptionResult,
 } from "./speechTranscription.js";
+import {
+  localTtsSample,
+  synthesizeLocalSpeechSample,
+  type LocalTextToSpeechResult,
+} from "./textToSpeech.js";
 import { detectVoiceSegments, localVadSampleFrames, type VoiceActivitySegment } from "./voiceActivity.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
@@ -164,6 +169,7 @@ export function App() {
   const [cameraPermissionStatus, setCameraPermissionStatus] = useState<LocalMediaPermissionStatus>("not_requested");
   const [vadSampleSegments, setVadSampleSegments] = useState<VoiceActivitySegment[] | null>(null);
   const [sttSampleResult, setSttSampleResult] = useState<LocalSpeechTranscriptionResult | null>(null);
+  const [ttsSampleResult, setTtsSampleResult] = useState<LocalTextToSpeechResult | null>(null);
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
@@ -509,6 +515,36 @@ export function App() {
       latencyMs: result.latencyMs,
       localSampleOnly: result.localSampleOnly,
       captureStarted: false,
+      rawAudioStored: result.rawAudioStored,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
+    });
+  }
+
+  function runLocalTtsSample() {
+    const traceId = newTraceId();
+    const result = synthesizeLocalSpeechSample(localTtsSample);
+    setTtsSampleResult(result);
+    emitEvent("tts_started", {
+      traceId,
+      conversationId,
+      voiceId: result.voiceId,
+      chars: result.chars,
+      localSampleOnly: result.localSampleOnly,
+      audioPlaybackStarted: result.audioPlaybackStarted,
+      rawAudioStored: result.rawAudioStored,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
+    });
+    emitEvent("tts_completed", {
+      traceId,
+      conversationId,
+      latencyMs: result.latencyMs,
+      durationMs: result.durationMs,
+      localSampleOnly: result.localSampleOnly,
+      audioPlaybackStarted: result.audioPlaybackStarted,
       rawAudioStored: result.rawAudioStored,
       approvalCaptured: false,
       memoryWritePerformed: false,
@@ -1230,6 +1266,10 @@ export function App() {
       ? "VAD sample not run"
       : `Detected ${vadSampleSegments.length} local sample voice segments.`;
   const sttSampleSummary = sttSampleResult === null ? "STT sample not run" : sttSampleResult.transcript;
+  const ttsSampleSummary =
+    ttsSampleResult === null
+      ? "TTS sample not run"
+      : `Prepared ${ttsSampleResult.chars} characters for local sample speech.`;
   const cameraCaptureSummary = !cameraEnabled
     ? "Camera capture blocked: camera setting is off and OS permission is not granted."
     : cameraPermissionStatus !== "granted"
@@ -1409,6 +1449,40 @@ export function App() {
         </div>
         <button className="secondary" onClick={runLocalSttSample}>
           Run local STT sample
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Text to speech">
+        <div>
+          <strong>Text to speech</strong>
+          <span>local sample only</span>
+        </div>
+        <div>
+          <strong>Sample state</strong>
+          <span>{ttsSampleSummary}</span>
+        </div>
+        <div>
+          <strong>Playback state</strong>
+          <span>Audio playback stopped; local sample only.</span>
+        </div>
+        {ttsSampleResult ? (
+          <>
+            <div>
+              <strong>Voice</strong>
+              <span>Voice: {ttsSampleResult.voiceId}</span>
+            </div>
+            <div>
+              <strong>Playback</strong>
+              <span>Audio playback started: no</span>
+            </div>
+          </>
+        ) : null}
+        <div>
+          <strong>Storage</strong>
+          <span>Raw audio stored: no</span>
+        </div>
+        <button className="secondary" onClick={runLocalTtsSample}>
+          Run local TTS sample
         </button>
       </section>
 

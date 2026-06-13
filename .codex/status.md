@@ -106,6 +106,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added a local Camera readiness panel with explicit camera permission request/result state; toggling the camera setting does not request permission, granted permission is stopped immediately, and camera capture remains inactive until a future avatar/camera pipeline exists.
 - Added a local Voice Activity Detection sample panel and deterministic detector; running the sample emits segment metadata only and does not request microphone permission, start capture, store raw audio, or claim side effects.
 - Added a local Speech Transcription sample panel and deterministic adapter; running the sample emits transcript metadata only and does not request microphone permission, start capture, store raw audio, or claim side effects.
+- Added a local Text to Speech sample panel and deterministic adapter; running the sample emits speech-preparation metadata only and does not start audio playback, store raw audio, or claim side effects.
 
 ## Current Blockers
 
