@@ -106,6 +106,22 @@ export interface LiveSendPreflightView {
   items: LiveSendPreflightItem[];
 }
 
+export interface GovernedHandoffReadinessInput {
+  label: string;
+  descriptorConnection: DescriptorConnectionState;
+  draftReady: boolean;
+}
+
+export interface GovernedHandoffReadinessView {
+  heading: string;
+  status: "ready" | "blocked";
+  canSubmit: boolean;
+  summary: string;
+  caveat: string;
+  blockedEffects: string[];
+  items: LiveSendPreflightItem[];
+}
+
 export function describeBridgeFailure(error: unknown): string {
   if (!(error instanceof NapoleonBridgeError)) {
     return "Napoleon bridge failed closed. Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.";
@@ -353,6 +369,59 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
           response.governanceDecision.blocked_effects.join(", "),
       },
     ],
+  };
+}
+
+export function describeGovernedHandoffReadiness(
+  input: GovernedHandoffReadinessInput,
+): GovernedHandoffReadinessView {
+  const descriptor = input.descriptorConnection;
+  const blockedEffects = descriptor.descriptorStatus?.blockedEffects ?? [
+    "runtime_authority",
+    "agent_dispatch",
+    "memory_write",
+    "approval_capture",
+    "external_send",
+  ];
+  const endpointReady = descriptor.failClosedReason !== "no_endpoint";
+  const descriptorReady =
+    descriptor.failClosedReason === "no_endpoint"
+      ? Boolean(descriptor.descriptorStatus?.ready) &&
+        descriptor.checksumState !== "mismatch" &&
+        descriptor.signatureState !== "invalid"
+      : descriptor.canAttemptLiveBridge;
+  const canSubmit = input.draftReady && endpointReady && descriptorReady;
+  const items: LiveSendPreflightItem[] = [
+    {
+      label: "Review draft",
+      status: input.draftReady ? "ready" : "blocked",
+      detail: input.draftReady ? "A proposal-only review draft is available." : "Create a review draft before handoff.",
+    },
+    {
+      label: "Endpoint configured",
+      status: endpointReady ? "ready" : "blocked",
+      detail: endpointReady ? "A Napoleon endpoint is configured locally." : "No Napoleon endpoint is configured.",
+    },
+    {
+      label: "Descriptor preflight",
+      status: descriptorReady ? "ready" : "blocked",
+      detail: descriptorReady
+        ? "Descriptor discovery and integrity checks allow a governed bridge attempt."
+        : descriptor.message,
+    },
+  ];
+
+  return {
+    heading: `${input.label} readiness`,
+    status: canSubmit ? "ready" : "blocked",
+    canSubmit,
+    summary: canSubmit
+      ? `${input.label} can be submitted through the governed bridge for Napoleon review.`
+      : `${input.label} is blocked until the review draft, endpoint, and descriptor preflight are ready.`,
+    caveat:
+      "This handoff readiness check is not Napoleon approval, does not apply changes, does not write memory, does not dispatch agents, and does not send externally.",
+    blockedEffects,
+    items,
   };
 }
 

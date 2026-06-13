@@ -13,6 +13,7 @@ import {
   describeBridgeFailure,
   describeBridgeFailureTranscriptMessage,
   describeGovernedHandoffFailure,
+  describeGovernedHandoffReadiness,
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
@@ -375,6 +376,45 @@ test("describes live send preflight as ready only for governed bridge attempt", 
   assert.ok(view.items.every((item: { status: string }) => item.status === "ready"));
   assert.ok(view.caveat.includes("does not write memory"));
   assert.ok(view.caveat.includes("does not dispatch agents"));
+});
+
+test("describes governed handoff readiness with endpoint and descriptor blockers", () => {
+  const blocked = describeGovernedHandoffReadiness({
+    label: "Chief of Staff taxonomy review",
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: false,
+      descriptor: defaultChiefOfStaffDescriptor,
+    }),
+    draftReady: true,
+  });
+
+  assert.equal(blocked.status, "blocked");
+  assert.equal(blocked.canSubmit, false);
+  assert.ok(blocked.summary.includes("blocked"));
+  assert.ok(blocked.caveat.includes("not Napoleon approval"));
+  assert.ok(blocked.items.some((item: { label: string; status: string }) => item.label === "Endpoint configured" && item.status === "blocked"));
+  assert.ok(blocked.items.some((item: { label: string; status: string }) => item.label === "Descriptor preflight" && item.status === "ready"));
+  assert.ok(blocked.items.some((item: { label: string; status: string }) => item.label === "Review draft" && item.status === "ready"));
+  for (const effect of ["runtime_authority", "agent_dispatch", "memory_write", "approval_capture", "external_send"]) {
+    assert.ok(blocked.blockedEffects.includes(effect));
+  }
+
+  const ready = describeGovernedHandoffReadiness({
+    label: "Chief of Staff taxonomy review",
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    draftReady: true,
+  });
+
+  assert.equal(ready.status, "ready");
+  assert.equal(ready.canSubmit, true);
+  assert.ok(ready.summary.includes("can be submitted through the governed bridge"));
+  assert.ok(ready.items.every((item: { status: string }) => item.status === "ready"));
 });
 
 test("describes bridge failure with blocked effects visible", () => {

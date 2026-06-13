@@ -59,6 +59,7 @@ import {
   describeBridgeFailure,
   describeBridgeFailureTranscriptMessage,
   describeGovernedHandoffFailure,
+  describeGovernedHandoffReadiness,
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
@@ -194,6 +195,21 @@ export function App() {
   }
   const descriptorConnection = buildDescriptorConnectionState(currentDescriptorInput());
   const descriptorStatus = descriptorConnection.descriptorStatus;
+  const memoryHandoffReadiness = describeGovernedHandoffReadiness({
+    label: "Memory proposal review",
+    descriptorConnection,
+    draftReady: Boolean(lastMemoryReviewState && lastMemoryReviewState.status !== "dismissed_locally"),
+  });
+  const steeringHandoffReadiness = describeGovernedHandoffReadiness({
+    label: "Chief of Staff steering",
+    descriptorConnection,
+    draftReady: Boolean(steeringDraft?.sendState.canSendToNapoleon),
+  });
+  const taxonomyHandoffReadiness = describeGovernedHandoffReadiness({
+    label: "Chief of Staff taxonomy review",
+    descriptorConnection,
+    draftReady: Boolean(taxonomyReviewDraft),
+  });
 
   function refreshCapabilityLedgerStatus() {
     setCapabilitySignalCount(capabilityLedger.listRecent().length);
@@ -1177,10 +1193,31 @@ export function App() {
               proposal only; no approval captured; no memory write; no agent dispatch; no external send.
             </dd>
           </dl>
+          <section className={`send-preflight ${steeringHandoffReadiness.status}`}>
+            <div>
+              <strong>{steeringHandoffReadiness.heading}</strong>
+              <span>{steeringHandoffReadiness.summary}</span>
+              <span>{steeringHandoffReadiness.caveat}</span>
+            </div>
+            <dl>
+              {steeringHandoffReadiness.items.map((item) => (
+                <div key={item.label}>
+                  <dt>{item.label}</dt>
+                  <dd>
+                    {item.status}: {item.detail}
+                  </dd>
+                </div>
+              ))}
+              <div>
+                <dt>Blocked effects</dt>
+                <dd>{steeringHandoffReadiness.blockedEffects.join(", ")}</dd>
+              </div>
+            </dl>
+          </section>
           <button
             className="secondary"
             onClick={submitSteeringDraft}
-            disabled={!steeringDraft.sendState.canSendToNapoleon || !descriptorConnection.canAttemptLiveBridge}
+            disabled={!steeringDraft.sendState.canSendToNapoleon || !steeringHandoffReadiness.canSubmit}
           >
             Send steering draft to Napoleon review
           </button>
@@ -1312,10 +1349,31 @@ export function App() {
           ) : (
             <p>No local taxonomy review recommendations yet.</p>
           )}
+          <section className={`send-preflight ${taxonomyHandoffReadiness.status}`}>
+            <div>
+              <strong>{taxonomyHandoffReadiness.heading}</strong>
+              <span>{taxonomyHandoffReadiness.summary}</span>
+              <span>{taxonomyHandoffReadiness.caveat}</span>
+            </div>
+            <dl>
+              {taxonomyHandoffReadiness.items.map((item) => (
+                <div key={item.label}>
+                  <dt>{item.label}</dt>
+                  <dd>
+                    {item.status}: {item.detail}
+                  </dd>
+                </div>
+              ))}
+              <div>
+                <dt>Blocked effects</dt>
+                <dd>{taxonomyHandoffReadiness.blockedEffects.join(", ")}</dd>
+              </div>
+            </dl>
+          </section>
           <button
             className="secondary"
             onClick={submitTaxonomyReviewDraft}
-            disabled={!descriptorConnection.canAttemptLiveBridge}
+            disabled={!taxonomyHandoffReadiness.canSubmit}
           >
             Send taxonomy review to Napoleon review
           </button>
@@ -1472,6 +1530,27 @@ export function App() {
               </div>
             ))}
           </dl>
+          <section className={`send-preflight ${memoryHandoffReadiness.status}`}>
+            <div>
+              <strong>{memoryHandoffReadiness.heading}</strong>
+              <span>{memoryHandoffReadiness.summary}</span>
+              <span>{memoryHandoffReadiness.caveat}</span>
+            </div>
+            <dl>
+              {memoryHandoffReadiness.items.map((item) => (
+                <div key={item.label}>
+                  <dt>{item.label}</dt>
+                  <dd>
+                    {item.status}: {item.detail}
+                  </dd>
+                </div>
+              ))}
+              <div>
+                <dt>Blocked effects</dt>
+                <dd>{memoryHandoffReadiness.blockedEffects.join(", ")}</dd>
+              </div>
+            </dl>
+          </section>
           <div className="review-actions">
             <button
               className="secondary"
@@ -1492,7 +1571,7 @@ export function App() {
               disabled={
                 !lastMemoryReviewState ||
                 lastMemoryReviewState.status === "dismissed_locally" ||
-                !descriptorConnection.canAttemptLiveBridge
+                !memoryHandoffReadiness.canSubmit
               }
               onClick={submitLastMemoryProposal}
             >

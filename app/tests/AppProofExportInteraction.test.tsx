@@ -178,6 +178,36 @@ test("drafts a proposal-only taxonomy review from rendered app controls", async 
   }
 });
 
+test("blocks taxonomy review handoff visibly when no Napoleon endpoint is configured", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Draft taxonomy review" }));
+
+    const heading = await view.findByText("Chief of Staff taxonomy review readiness");
+    const readiness = heading.closest("section") as HTMLElement;
+    assert.ok(readiness);
+    assert.ok(within(readiness).getByText(/blocked until the review draft, endpoint, and descriptor preflight are ready/));
+    assert.ok(within(readiness).getByText("Endpoint configured"));
+    assert.ok(within(readiness).getByText(/blocked: No Napoleon endpoint is configured/));
+    assert.ok(within(readiness).getByText("Descriptor preflight"));
+    assert.ok(within(readiness).getByText(/ready: Descriptor discovery and integrity checks/));
+    assert.ok(within(readiness).getByText(/not Napoleon approval/));
+    assert.equal(view.getByRole("button", { name: "Send taxonomy review to Napoleon review" }).hasAttribute("disabled"), true);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("submits a taxonomy review draft through rendered governed controls", async () => {
   const dom = installDom();
   const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
