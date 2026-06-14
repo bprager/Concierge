@@ -88,6 +88,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Expanded local harness coverage for Chief of Staff steering and memory proposal review responses that claim forbidden side effects.
 - Added rendered React interaction coverage for the Napoleon proof export comparison controls, including descriptor discovery, governed send, repeated proof export, and sanitized output checks.
 - Added rendered React interaction coverage for live Napoleon bridge timeout failures, including fail-closed transcript metadata and transport-error redaction.
+- Added rendered React interaction coverage for contract-mismatch live Napoleon responses that claim forbidden side effects.
 - Added a last successful Napoleon proof panel that summarizes returned governance, trace, audit, delegation, recommendation, allowed-effect, and blocked-effect metadata without treating it as approval or execution authority.
 - Added shared Text Concierge presentation state so Napoleon delegation and proof are set together after successful live responses and cleared together after local-only, blocked, or failed paths.
 - Added a sanitized export for the last successful Napoleon response proof without raw prompts, response text, endpoint hosts, or tokens.
@@ -113,6 +114,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- Reject live Napoleon text responses that claim memory writes, approval capture, agent dispatch, local application, or external sends even when those claims appear only in response text.
 - Show blocked effects from fail-closed memory proposal review and Chief of Staff steering handoff errors in telemetry and visible failure messages.
 - Show live text bridge failure reasons and blocked effects in the conversation transcript as well as the bridge failure panel.
 - Show returned decision, audit, and governance references in live text bridge failure telemetry and visible fail-closed messages when Napoleon supplies them.
