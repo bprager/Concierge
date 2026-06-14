@@ -90,6 +90,11 @@ import {
   type LocalTextToSpeechResult,
 } from "./textToSpeech.js";
 import { rehearseLocalVoiceTurnSample, type LocalVoiceTurnRehearsalResult } from "./voiceTurnRehearsal.js";
+import {
+  localVoiceResponseShapeSample,
+  shapeVoiceResponseForSpeech,
+  type VoiceResponseShapeResult,
+} from "./voiceResponseShaping.js";
 import { detectVoiceSegments, localVadSampleFrames, type VoiceActivitySegment } from "./voiceActivity.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
@@ -174,6 +179,7 @@ export function App() {
   const [ttsSampleResult, setTtsSampleResult] = useState<LocalTextToSpeechResult | null>(null);
   const [voiceTurnRehearsalResult, setVoiceTurnRehearsalResult] = useState<LocalVoiceTurnRehearsalResult | null>(null);
   const [bargeInRehearsalResult, setBargeInRehearsalResult] = useState<LocalBargeInRehearsalResult | null>(null);
+  const [voiceResponseShapeResult, setVoiceResponseShapeResult] = useState<VoiceResponseShapeResult | null>(null);
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
@@ -590,6 +596,29 @@ export function App() {
       interruptedOutput: result.interruptedOutput,
       interruptAtMs: result.interruptAtMs,
       nextTurnPrepared: result.nextTurnPrepared,
+      audioPlaybackStarted: result.audioPlaybackStarted,
+      microphoneCaptureStarted: result.microphoneCaptureStarted,
+      rawAudioStored: result.rawAudioStored,
+      liveNapoleonContacted: result.liveNapoleonContacted,
+      memoryWritePerformed: result.memoryWritePerformed,
+      approvalCaptured: result.approvalCaptured,
+      externalSendPerformed: result.externalSendPerformed,
+      blockedEffects: result.blockedEffects,
+    });
+  }
+
+  function runLocalVoiceResponseShaping() {
+    const traceId = newTraceId();
+    const result = shapeVoiceResponseForSpeech(localVoiceResponseShapeSample);
+    setVoiceResponseShapeResult(result);
+    emitEvent("voice_response_shaped", {
+      traceId,
+      conversationId,
+      localPreparationOnly: result.localPreparationOnly,
+      wasShortened: result.wasShortened,
+      originalChars: result.originalChars,
+      spokenChars: result.spokenChars,
+      bridgeProvidedProvenance: localVoiceResponseShapeSample.bridgeProvidedProvenance,
       audioPlaybackStarted: result.audioPlaybackStarted,
       microphoneCaptureStarted: result.microphoneCaptureStarted,
       rawAudioStored: result.rawAudioStored,
@@ -1327,6 +1356,10 @@ export function App() {
     bargeInRehearsalResult === null
       ? "Barge-in rehearsal not run"
       : `Barge-in detected: ${bargeInRehearsalResult.bargeInDetected ? "yes" : "no"}`;
+  const voiceResponseShapeSummary =
+    voiceResponseShapeResult === null
+      ? "Voice response not shaped"
+      : `Shortened for speech: ${voiceResponseShapeResult.wasShortened ? "yes" : "no"}`;
   const cameraCaptureSummary = !cameraEnabled
     ? "Camera capture blocked: camera setting is off and OS permission is not granted."
     : cameraPermissionStatus !== "granted"
@@ -1619,6 +1652,44 @@ export function App() {
         ) : null}
         <button className="secondary" onClick={runLocalBargeInRehearsal}>
           Run local barge-in rehearsal
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Voice response shaping">
+        <div>
+          <strong>Voice response shaping</strong>
+          <span>local preparation only</span>
+        </div>
+        <div>
+          <strong>Sample state</strong>
+          <span>{voiceResponseShapeSummary}</span>
+        </div>
+        <div>
+          <strong>Playback state</strong>
+          <span>Audio playback state: stopped</span>
+        </div>
+        {voiceResponseShapeResult ? (
+          <>
+            <div>
+              <strong>Spoken summary</strong>
+              <span>Spoken summary: {voiceResponseShapeResult.spokenText}</span>
+            </div>
+            <div>
+              <strong>Authority boundary</strong>
+              <span>Authority boundary: {voiceResponseShapeResult.authorityBoundary}</span>
+            </div>
+            <div>
+              <strong>Playback</strong>
+              <span>Audio playback started: no</span>
+            </div>
+            <div>
+              <strong>Blocked effects</strong>
+              <span>Blocked effects: {voiceResponseShapeResult.blockedEffects.join(", ")}</span>
+            </div>
+          </>
+        ) : null}
+        <button className="secondary" onClick={runLocalVoiceResponseShaping}>
+          Shape sample response for voice
         </button>
       </section>
 

@@ -369,6 +369,30 @@ Evaluator coverage:
 
 - Covered by pure barge-in rehearsal tests and rendered app interaction tests for local dry-run execution without media or Napoleon contact.
 
+### VO-007 details
+
+User value: Long Napoleon text responses can be prepared for future speech without becoming rambling, misleading, or falsely attributed.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local voice response shaping panel.
+- Long bridge-provenance text is shortened into a concise spoken summary.
+- "Napoleon says" or delegated-agent wording is preserved only when matching bridge provenance exists.
+- When bridge provenance is absent, the spoken summary must not claim Napoleon or delegated-agent authority.
+- Running the preparation does not start audio playback, request microphone permission, start microphone capture, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `voice_response_shaped` includes local-preparation marker, shortened state, original and spoken character counts, bridge-provenance marker, capture/playback/storage false, live-Napoleon-contact false, and explicit false side-effect flags.
+- All blocked effects are visible in the UI.
+- Child protected mode must not treat shaped speech text as guardian approval, recording permission, external speech permission, or Napoleon approval.
+
+Privacy and safety impact:
+
+- This is local speech preparation only, not live voice mode.
+- Raw audio remains unstored, no speaker output path is introduced, and no Napoleon bridge call occurs.
+
+Evaluator coverage:
+
+- Covered by pure voice response shaping tests and rendered app interaction tests for local preparation without media or Napoleon contact.
+
 ## Milestone P3: Avatar Concierge
 
 | ID | Story | Priority | Acceptance criteria | Observability |

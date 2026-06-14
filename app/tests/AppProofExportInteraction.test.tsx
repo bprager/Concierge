@@ -633,6 +633,58 @@ test("runs local barge-in rehearsal without contacting Napoleon or starting medi
   }
 });
 
+test("shapes a local voice response preview without contacting Napoleon or starting media", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("voice response shaping must stay local");
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Voice response shaping");
+    const shaping = within(view.getByLabelText("Voice response shaping"));
+    assert.ok(shaping.getByText("Voice response not shaped"));
+    assert.ok(shaping.getByText("Audio playback state: stopped"));
+
+    await user.click(view.getByRole("button", { name: "Shape sample response for voice" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    assert.ok(shaping.getByText("Shortened for speech: yes"));
+    assert.ok(shaping.getByText("Spoken summary: Napoleon says: Prepare the bridge rollout plan for owner review. Passive Brain found that descriptor discovery is ready."));
+    assert.ok(shaping.getByText("Authority boundary: Bridge-provided Napoleon provenance preserved for speech."));
+    assert.ok(shaping.getByText("Audio playback started: no"));
+    assert.ok(shaping.getByText("Blocked effects: audio_playback, microphone_capture, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("keeps camera capture blocked until explicit camera permission is granted", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
