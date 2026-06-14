@@ -87,6 +87,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Expanded the local harness and app smoke coverage to prove text responses that claim forbidden side effects fail closed as contract mismatches.
 - Expanded local harness coverage for Chief of Staff steering and memory proposal review responses that claim forbidden side effects.
 - Added rendered React interaction coverage for the Napoleon proof export comparison controls, including descriptor discovery, governed send, repeated proof export, and sanitized output checks.
+- Added rendered React interaction coverage for no-endpoint and missing-descriptor live bridge preflight failures before any Napoleon turn request is made.
 - Added rendered React interaction coverage for live Napoleon bridge timeout failures, including fail-closed transcript metadata and transport-error redaction.
 - Added rendered React interaction coverage for contract-mismatch live Napoleon responses that claim forbidden side effects.
 - Added a last successful Napoleon proof panel that summarizes returned governance, trace, audit, delegation, recommendation, allowed-effect, and blocked-effect metadata without treating it as approval or execution authority.
