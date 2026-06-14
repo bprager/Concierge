@@ -19,6 +19,7 @@ import {
   describeLiveBridgeReadiness,
   describeLiveSendPreflight,
   describeMemoryProposalReview,
+  describeNapoleonTranscriptMetadata,
   describeNapoleonResponseProof,
   summarizeRehearsalPreview,
 } from "../src/presentation.js";
@@ -235,6 +236,35 @@ test("describes successful Napoleon response proof from returned provenance only
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Governance" && detail.value === "allow_prepare_only"));
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Trace" && detail.value === "trace_proof"));
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
+});
+
+test("describes transcript metadata with returned target capability provenance", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge readiness",
+    profile: "adult_owner",
+    conversationId: "conv_transcript_capability",
+    turnId: "turn_transcript_capability",
+    traceId: "trace_transcript_capability",
+    governanceOutcome: "requires_review",
+  });
+
+  const metadata = describeNapoleonTranscriptMetadata({
+    text: "Napoleon prepared a bridge readiness summary.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: true,
+    targetAgent: "napoleon.chief_of_staff",
+  });
+
+  assert.equal(metadata.source, "Napoleon governed bridge");
+  assert.equal(metadata.attributionBoundary, "Returned bridge provenance only; not local authority.");
+  assert.equal(metadata.targetCapability, "napoleon.chief_of_staff");
+  assert.equal(metadata.governanceOutcome, "requires_review");
+  assert.equal(metadata.decisionId, contract.governanceDecision.decision_id);
+  assert.equal(metadata.auditId, contract.auditEnvelope.audit_id);
+  assert.deepEqual(metadata.blockedEffects, contract.governanceDecision.blocked_effects);
 });
 
 test("does not invent agent or recommendation proof when provenance is absent", () => {

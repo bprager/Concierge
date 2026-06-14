@@ -14,6 +14,7 @@ export interface ConciergeMessage {
   metadata?: {
     source?: string;
     attributionBoundary?: string;
+    targetCapability?: string;
     governanceOutcome?: string;
     decisionId?: string;
     auditId?: string;

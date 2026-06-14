@@ -82,6 +82,7 @@ import {
   describeLiveBridgeReadiness,
   describeLiveSendPreflight,
   describeMemoryProposalReview,
+  describeNapoleonTranscriptMetadata,
   summarizeRehearsalPreview,
 } from "./presentation.js";
 import { emitEvent, newTraceId } from "./telemetry.js";
@@ -1105,15 +1106,7 @@ export function App() {
         {
           role: "assistant",
           content: response.text,
-          metadata: {
-            source: "Napoleon governed bridge",
-            attributionBoundary: "Returned bridge provenance only; not local authority.",
-            governanceOutcome: response.governanceDecision.outcome,
-            decisionId: response.governanceDecision.decision_id,
-            auditId: response.auditEnvelope.audit_id,
-            profileMode: response.profileMode,
-            blockedEffects: response.governanceDecision.blocked_effects,
-          },
+          metadata: describeNapoleonTranscriptMetadata(response),
         },
       ]);
     } catch (error) {
@@ -2537,6 +2530,12 @@ export function App() {
                   <>
                     <dt>Attribution</dt>
                     <dd>{m.metadata.attributionBoundary}</dd>
+                  </>
+                ) : null}
+                {m.metadata.targetCapability ? (
+                  <>
+                    <dt>Capability</dt>
+                    <dd>{m.metadata.targetCapability}</dd>
                   </>
                 ) : null}
                 {m.metadata.governanceOutcome ? (

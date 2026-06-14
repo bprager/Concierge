@@ -5,8 +5,7 @@ import type {
   MemoryProposalReviewState,
   RehearsalPreview,
 } from "./contractBridge.js";
-import type { NapoleonDelegation } from "./types.js";
-import type { NapoleonResponse } from "./types.js";
+import type { ConciergeMessage, NapoleonDelegation, NapoleonResponse } from "./types.js";
 import { NapoleonBridgeError } from "./napoleonBridge.js";
 
 export interface GovernanceDecisionViewInput {
@@ -62,6 +61,21 @@ export interface NapoleonResponseProofView {
   summary: string;
   caveat: string;
   details: Array<{ label: string; value: string }>;
+}
+
+export function describeNapoleonTranscriptMetadata(
+  response: NapoleonResponse,
+): NonNullable<ConciergeMessage["metadata"]> {
+  return {
+    source: "Napoleon governed bridge",
+    attributionBoundary: "Returned bridge provenance only; not local authority.",
+    ...(response.targetAgent ? { targetCapability: response.targetAgent } : {}),
+    governanceOutcome: response.governanceDecision.outcome,
+    decisionId: response.governanceDecision.decision_id,
+    auditId: response.auditEnvelope.audit_id,
+    profileMode: response.profileMode,
+    blockedEffects: response.governanceDecision.blocked_effects,
+  };
 }
 
 export type LiveBridgeEvidenceState = "not_run" | "passed" | "failed";
