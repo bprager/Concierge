@@ -1031,6 +1031,7 @@ export function App() {
     setMessages((m) => [...m, { role: "user", content }]);
     setInput("");
     setPendingRehearsal(null);
+    const activeProfileMode = mapProfileToNapoleonMode(profile);
 
     try {
       const response = await sendToNapoleon({
@@ -1067,8 +1068,11 @@ export function App() {
         traceId,
         conversationId,
         turnId,
+        profile,
+        profileMode: activeProfileMode,
         responseType: "text",
         governanceOutcome: response.governanceDecision.outcome,
+        decisionId: response.governanceDecision.decision_id,
         auditId: response.auditEnvelope.audit_id,
       });
       refreshCapabilityLedgerStatus();
@@ -1117,7 +1121,25 @@ export function App() {
         },
       ]);
     } catch (error) {
-      emitEvent("response_failed", { traceId, conversationId, turnId, error: String(error) });
+      const bridgeError = error instanceof NapoleonBridgeError ? error : null;
+      emitEvent("response_failed", {
+        traceId,
+        conversationId,
+        turnId,
+        profile,
+        profileMode: activeProfileMode,
+        error: String(error),
+        ...(bridgeError
+          ? {
+              bridgeFailureReason: bridgeError.reason,
+              status: bridgeError.status,
+              blockedEffects: bridgeError.blockedEffects,
+              decisionId: bridgeError.decisionId,
+              auditId: bridgeError.auditId,
+              governanceOutcome: bridgeError.governanceOutcome,
+            }
+          : {}),
+      });
       refreshCapabilityLedgerStatus();
       setLastBridgeFailure(describeBridgeFailure(error));
       clearNapoleonPresentation();
@@ -1126,7 +1148,7 @@ export function App() {
         {
           role: "assistant",
           content: describeBridgeFailureTranscriptMessage(error),
-          metadata: buildBridgeFailureMessageMetadata(error, mapProfileToNapoleonMode(profile)),
+          metadata: buildBridgeFailureMessageMetadata(error, activeProfileMode),
         },
       ]);
     }

@@ -95,6 +95,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Required runtime governed review responses to carry those explicit false side-effect fields, failing closed as contract mismatches when Napoleon omits them.
 - Required live text responses to keep the returned profile mode aligned with the active Concierge user profile, failing closed as a contract mismatch on profile-scope drift.
 - Added fail-closed transcript metadata for active profile mode so blocked profile-drift responses show the preserved child, guest, collaborator, or owner scope.
+- Added active profile and bridge failure metadata to Text Concierge response telemetry so local capability signals preserve child-protected, guest, collaborator, or owner scope for successful and fail-closed bridge turns.
 - Added rendered React interaction coverage for live Napoleon bridge timeout failures, including fail-closed transcript metadata and transport-error redaction.
 - Added rendered React interaction coverage for contract-mismatch live Napoleon responses that claim forbidden side effects.
 - Added a last successful Napoleon proof panel that summarizes returned governance, trace, audit, delegation, recommendation, allowed-effect, and blocked-effect metadata without treating it as approval or execution authority.
@@ -127,6 +128,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Show live text bridge failure reasons and blocked effects in the conversation transcript as well as the bridge failure panel.
 - Show returned decision, audit, and governance references in live text bridge failure telemetry and visible fail-closed messages when Napoleon supplies them.
 - Show blocked effects from fail-closed live bridge errors in telemetry and the visible bridge-blocked message.
+- Preserve the active profile boundary in `response_generated`, `response_failed`, and derived `conversation_capability_signal` records so blocked child-protected bridge turns are not classified as adult-owner capability gaps.
 - Preserve the local governed text-turn blocked-effect list in early fail-closed bridge errors, telemetry, and sanitized contract evidence.
 - Preserve local memory proposal and Chief of Staff steering blocked-effect lists in early fail-closed governed handoff errors and telemetry.
 - Require discovered descriptor evidence before live text turns, governed memory proposal handoff, or Chief of Staff steering handoff can attempt a live bridge request.

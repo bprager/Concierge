@@ -725,9 +725,23 @@ test("shows active profile boundary when Napoleon response tries to drift profil
   ]);
   const user = userEventModule.default.setup();
   const requestedUrls: string[] = [];
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
   const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
 
   try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
     globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
       const url = String(input);
       requestedUrls.push(url);
@@ -815,8 +829,28 @@ test("shows active profile boundary when Napoleon response tries to drift profil
     assert.ok(within(blockedReply).getByText("No Napoleon response was accepted; fail-closed local state only."));
     assert.ok(within(blockedReply).getByText("Profile mode"));
     assert.ok(within(blockedReply).getByText("child_protected_user"));
+    const responseFailed = telemetryPayloads.find((payload) => payload.event === "response_failed");
+    assert.ok(responseFailed);
+    assert.equal(responseFailed.attributes.profile, "child_protected");
+    assert.equal(responseFailed.attributes.profileMode, "child_protected_user");
+    assert.equal(responseFailed.attributes.bridgeFailureReason, "contract_mismatch");
+    const blockedEffects = responseFailed.attributes.blockedEffects as string[];
+    assert.ok(blockedEffects.includes("memory_write"));
+    assert.ok(blockedEffects.includes("approval_capture"));
+    assert.ok(blockedEffects.includes("external_send"));
+    assert.ok(blockedEffects.includes("agent_dispatch"));
+    const capabilitySignal = telemetryPayloads.find(
+      (payload) =>
+        payload.event === "conversation_capability_signal" &&
+        payload.attributes.traceId === responseFailed.attributes.traceId &&
+        payload.attributes.outcomeSignal === "bridge_failed",
+    );
+    assert.ok(capabilitySignal);
+    assert.equal(capabilitySignal.attributes.profileMode, "child_protected_user");
+    assert.equal(capabilitySignal.attributes.privacyClass, "child_sensitive");
   } finally {
     globalThis.fetch = originalFetch;
+    console.info = originalInfo;
     cleanup();
     dom.window.close();
   }
