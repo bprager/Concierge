@@ -496,6 +496,27 @@ Evaluator coverage:
 
 - Covered by pure avatar renderer readiness tests and rendered app interaction tests for local renderer preflight without canvas allocation, render loop, camera, perception, Napoleon contact, approval, guardian approval, or side effects.
 
+### AV-003 details
+
+User value: The user can inspect how Concierge would present stance through avatar expression before animation or perception exists.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local avatar expression panel.
+- Direct, warm, concerned, playful, and somber stance labels map to distinct expression metadata.
+- Mapping expression does not start animation, allocate a canvas, request camera permission, start camera capture, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `avatar_expression_set` includes local-metadata marker, stance, expression, profile mode, child-protected marker, bridge-provenance marker, false animation/affect/capture/face/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- Child protected expression mapping stays conservative, shows guardian-review wording, and must not treat mapping as guardian approval.
+
+Privacy and safety impact:
+
+- This is local stance metadata only, not live animation or affect inference.
+- No raw video, affect signal, bridge call, memory write, approval capture, guardian approval capture, or external send is introduced.
+
+Evaluator coverage:
+
+- Covered by pure avatar expression tests and rendered app interaction tests for local expression mapping without animation, camera, perception, Napoleon contact, approval, guardian approval, or side effects.
+
 ### AV-010 details
 
 User value: Child protected avatar behavior is visibly stricter before live avatar camera or perception features exist.

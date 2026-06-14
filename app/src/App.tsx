@@ -1,7 +1,10 @@
 import { useState } from "react";
 import {
   buildLocalNeutralAvatarState,
+  localAvatarExpressionSample,
   localNeutralAvatarStateSample,
+  mapLocalAvatarExpression,
+  type LocalAvatarExpressionResult,
   type LocalNeutralAvatarStateResult,
 } from "./avatarState.js";
 import {
@@ -193,6 +196,7 @@ export function App() {
   const [bargeInRehearsalResult, setBargeInRehearsalResult] = useState<LocalBargeInRehearsalResult | null>(null);
   const [voiceResponseShapeResult, setVoiceResponseShapeResult] = useState<VoiceResponseShapeResult | null>(null);
   const [neutralAvatarStateResult, setNeutralAvatarStateResult] = useState<LocalNeutralAvatarStateResult | null>(null);
+  const [avatarExpressionResult, setAvatarExpressionResult] = useState<LocalAvatarExpressionResult | null>(null);
   const [avatarModelResult, setAvatarModelResult] = useState<LocalAvatarModelReferenceResult | null>(null);
   const [avatarRendererReadinessResult, setAvatarRendererReadinessResult] =
     useState<LocalAvatarRendererReadinessResult | null>(null);
@@ -679,6 +683,32 @@ export function App() {
       liveNapoleonContacted: result.liveNapoleonContacted,
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
+      externalSendPerformed: result.externalSendPerformed,
+      blockedEffects: result.blockedEffects,
+    });
+  }
+
+  function runLocalAvatarExpressionMapping() {
+    const traceId = newTraceId();
+    const result = mapLocalAvatarExpression({ ...localAvatarExpressionSample, profileMode: profile });
+    setAvatarExpressionResult(result);
+    emitEvent("avatar_expression_set", {
+      traceId,
+      conversationId,
+      localMetadataOnly: result.localMetadataOnly,
+      stance: result.stance,
+      expression: result.expression,
+      profileMode: result.profileMode,
+      childProtected: result.childProtected,
+      bridgeProvidedProvenance: result.bridgeProvidedProvenance,
+      avatarAnimationStarted: result.avatarAnimationStarted,
+      affectInferred: result.affectInferred,
+      cameraCaptureStarted: result.cameraCaptureStarted,
+      faceDetectionStarted: result.faceDetectionStarted,
+      liveNapoleonContacted: result.liveNapoleonContacted,
+      memoryWritePerformed: result.memoryWritePerformed,
+      approvalCaptured: result.approvalCaptured,
+      guardianApprovalCaptured: result.guardianApprovalCaptured,
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });
@@ -1477,6 +1507,10 @@ export function App() {
     neutralAvatarStateResult === null
       ? "Avatar state not prepared"
       : `Avatar state: ${neutralAvatarStateResult.avatarState}`;
+  const avatarExpressionSummary =
+    avatarExpressionResult === null
+      ? "Expression not mapped"
+      : `Expression: ${avatarExpressionResult.expression}`;
   const avatarModelSummary =
     avatarModelResult === null
       ? "Avatar model not loaded"
@@ -1901,6 +1935,56 @@ export function App() {
         ) : null}
         <button className="secondary" onClick={runLocalNeutralAvatarState}>
           Prepare neutral avatar state
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Avatar expression">
+        <div>
+          <strong>Avatar expression</strong>
+          <span>local stance metadata only</span>
+        </div>
+        <div>
+          <strong>Expression state</strong>
+          <span>{avatarExpressionSummary}</span>
+        </div>
+        <div>
+          <strong>Animation</strong>
+          <span>Avatar animation started: no</span>
+        </div>
+        {avatarExpressionResult ? (
+          <>
+            <div>
+              <strong>Stance</strong>
+              <span>Stance: {avatarExpressionResult.stance}</span>
+            </div>
+            <div>
+              <strong>Profile</strong>
+              <span>Profile: {avatarExpressionResult.profileMode}</span>
+            </div>
+            <div>
+              <strong>Child protected</strong>
+              <span>Child protected: {avatarExpressionResult.childProtected ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Affect</strong>
+              <span>Affect inferred: no</span>
+            </div>
+            <div>
+              <strong>Authority boundary</strong>
+              <span>Authority boundary: {avatarExpressionResult.authorityBoundary}</span>
+            </div>
+            <div>
+              <strong>Guardian reminder</strong>
+              <span>Guardian reminder: {avatarExpressionResult.guardianReviewReminder}</span>
+            </div>
+            <div>
+              <strong>Blocked effects</strong>
+              <span>Blocked effects: {avatarExpressionResult.blockedEffects.join(", ")}</span>
+            </div>
+          </>
+        ) : null}
+        <button className="secondary" onClick={runLocalAvatarExpressionMapping}>
+          Map sample stance to expression
         </button>
       </section>
 

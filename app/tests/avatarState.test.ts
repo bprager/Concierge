@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildLocalNeutralAvatarState } from "../src/avatarState.js";
+import { buildLocalNeutralAvatarState, mapLocalAvatarExpression } from "../src/avatarState.js";
 
 test("builds local neutral avatar state from bridge provenance without camera or emotion inference", () => {
   const result = buildLocalNeutralAvatarState({
@@ -66,6 +66,72 @@ test("applies child protected avatar constraints without treating state as guard
   assert.equal(result.guardianApprovalCaptured, false);
   assert.equal(result.cameraCaptureStarted, false);
   assert.equal(result.faceDetectionStarted, false);
+  assert.equal(result.affectInferred, false);
+  assert.ok(result.blockedEffects.includes("guardian_approval_capture"));
+});
+
+test("maps stance to local expression metadata without emotion inference or animation", () => {
+  const direct = mapLocalAvatarExpression({
+    stance: "direct",
+    profileMode: "adult_owner",
+    bridgeProvidedProvenance: true,
+  });
+  const warm = mapLocalAvatarExpression({
+    stance: "warm",
+    profileMode: "adult_owner",
+    bridgeProvidedProvenance: true,
+  });
+  const concerned = mapLocalAvatarExpression({
+    stance: "concerned",
+    profileMode: "adult_owner",
+    bridgeProvidedProvenance: true,
+  });
+  const playful = mapLocalAvatarExpression({
+    stance: "playful",
+    profileMode: "adult_owner",
+    bridgeProvidedProvenance: true,
+  });
+  const somber = mapLocalAvatarExpression({
+    stance: "somber",
+    profileMode: "adult_owner",
+    bridgeProvidedProvenance: true,
+  });
+
+  assert.equal(direct.expression, "focused_neutral");
+  assert.equal(warm.expression, "soft_neutral");
+  assert.equal(concerned.expression, "concerned_neutral");
+  assert.equal(playful.expression, "light_neutral");
+  assert.equal(somber.expression, "low_neutral");
+  assert.equal(direct.localMetadataOnly, true);
+  assert.equal(direct.affectInferred, false);
+  assert.equal(direct.avatarAnimationStarted, false);
+  assert.equal(direct.liveNapoleonContacted, false);
+  assert.equal(direct.authorityBoundary, "Expression reflects local stance metadata only; it is not emotion inference, approval, or agent action.");
+  assert.deepEqual(direct.blockedEffects, [
+    "avatar_animation",
+    "affect_inference",
+    "camera_capture",
+    "face_detection",
+    "live_napoleon_contact",
+    "memory_write",
+    "approval_capture",
+    "external_send",
+    "agent_dispatch",
+  ]);
+});
+
+test("keeps child protected expression mapping stricter and non-authorizing", () => {
+  const result = mapLocalAvatarExpression({
+    stance: "playful",
+    profileMode: "child_protected",
+    bridgeProvidedProvenance: true,
+  });
+
+  assert.equal(result.profileMode, "child_protected");
+  assert.equal(result.childProtected, true);
+  assert.equal(result.expression, "soft_neutral");
+  assert.equal(result.guardianReviewReminder, "Guardian review is required before child avatar expression animation.");
+  assert.equal(result.guardianApprovalCaptured, false);
   assert.equal(result.affectInferred, false);
   assert.ok(result.blockedEffects.includes("guardian_approval_capture"));
 });

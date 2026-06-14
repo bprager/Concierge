@@ -75,7 +75,7 @@ Every user turn has:
 | avatar_state_changed | avatar | local_display_only, avatar_state, expression, gaze_target, profile_mode, child_protected, camera_policy, affect_policy, stance, bridge_provided_provenance, camera_capture_started, face_detection_started, affect_inferred, avatar_animation_started, live_napoleon_contacted, guardian_approval_captured, blocked_effects |
 | avatar_model_loaded | avatar | local_reference_only, model_loaded, model_format, model_path, display_name, profile_mode, child_protected, renderer_started, camera_capture_started, face_detection_started, affect_inferred, live_napoleon_contacted, guardian_approval_captured, blocked_effects |
 | avatar_renderer_readiness_prepared | avatar | local_readiness_only, renderer_ready, renderer_started, render_loop_started, canvas_allocated, model_display_name, model_format, profile_mode, child_protected, camera_capture_started, face_detection_started, affect_inferred, live_napoleon_contacted, guardian_approval_captured, blocked_effects |
-| avatar_expression_set | avatar | stance, expression |
+| avatar_expression_set | avatar | local_metadata_only, stance, expression, profile_mode, child_protected, bridge_provided_provenance, avatar_animation_started, affect_inferred, camera_capture_started, face_detection_started, live_napoleon_contacted, guardian_approval_captured, blocked_effects |
 | camera_state_estimated | perception | present, looking_at_screen, confidence |
 | eval_case_started | evaluator | case_id |
 | eval_case_completed | evaluator | case_id, score |

@@ -998,3 +998,55 @@ test("prepares avatar renderer readiness without starting rendering camera or Na
     dom.window.close();
   }
 });
+
+test("maps avatar stance to expression metadata without animation or emotion inference", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("avatar expression mapping must stay local");
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Avatar expression");
+    const avatarExpression = within(view.getByLabelText("Avatar expression"));
+    assert.ok(avatarExpression.getByText("Expression not mapped"));
+    assert.ok(avatarExpression.getByText("Avatar animation started: no"));
+
+    await user.click(view.getByRole("button", { name: "Map sample stance to expression" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    assert.ok(avatarExpression.getByText("Expression: focused_neutral"));
+    assert.ok(avatarExpression.getByText("Stance: direct"));
+    assert.ok(avatarExpression.getByText("Affect inferred: no"));
+    assert.ok(avatarExpression.getByText("Authority boundary: Expression reflects local stance metadata only; it is not emotion inference, approval, or agent action."));
+    assert.ok(avatarExpression.getByText("Blocked effects: avatar_animation, affect_inference, camera_capture, face_detection, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});

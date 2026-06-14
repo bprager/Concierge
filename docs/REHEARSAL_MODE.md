@@ -46,6 +46,8 @@ Avatar model loading is local metadata preparation only, not live rendering. It 
 
 Avatar renderer readiness is local preflight only, not live rendering. It may confirm that loaded model metadata is sufficient to prepare a future renderer, but it must not allocate a canvas, start a render loop, animate a model, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected readiness remains blocked on guardian review and does not capture guardian approval.
 
+Avatar expression mapping is local stance metadata only, not animation or emotion inference. It may map direct, warm, concerned, playful, or somber stance labels to expression labels, but it must not start animation, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected mapping stays conservative and does not capture guardian approval.
+
 Sending an advisory request is a separate user action after the preview exists. That send still goes through the governed bridge path and remains subject to Chief of Staff and governance decisions.
 
 If the rehearsed turn is `no_go` or denied, Concierge blocks the send action. If the turn is `requires_review`, Concierge shows a review panel. A local acknowledgement can record that the review was seen, but it is not Napoleon approval and does not grant authority.

@@ -32,9 +32,42 @@ export interface LocalNeutralAvatarStateResult {
   blockedEffects: string[];
 }
 
+export interface LocalAvatarExpressionInput {
+  stance: string;
+  profileMode?: LocalProfile;
+  bridgeProvidedProvenance: boolean;
+}
+
+export interface LocalAvatarExpressionResult {
+  localMetadataOnly: true;
+  stance: string;
+  expression: "focused_neutral" | "soft_neutral" | "concerned_neutral" | "light_neutral" | "low_neutral" | "neutral";
+  profileMode: LocalProfile;
+  childProtected: boolean;
+  bridgeProvidedProvenance: boolean;
+  authorityBoundary: string;
+  guardianReviewReminder: string;
+  avatarAnimationStarted: false;
+  affectInferred: false;
+  cameraCaptureStarted: false;
+  faceDetectionStarted: false;
+  liveNapoleonContacted: false;
+  memoryWritePerformed: false;
+  approvalCaptured: false;
+  guardianApprovalCaptured: false;
+  externalSendPerformed: false;
+  blockedEffects: string[];
+}
+
 export const localNeutralAvatarStateSample: LocalNeutralAvatarStateInput = {
   responseText: "Napoleon recommends preparing the bridge rollout plan for owner review.",
   stance: "direct_strategic",
+  bridgeProvidedProvenance: true,
+};
+
+export const localAvatarExpressionSample: LocalAvatarExpressionInput = {
+  stance: "direct",
+  profileMode: "adult_owner",
   bridgeProvidedProvenance: true,
 };
 
@@ -90,4 +123,63 @@ export function buildLocalNeutralAvatarState(input: LocalNeutralAvatarStateInput
     externalSendPerformed: false,
     blockedEffects,
   };
+}
+
+export function mapLocalAvatarExpression(input: LocalAvatarExpressionInput): LocalAvatarExpressionResult {
+  const profileMode = input.profileMode ?? "adult_owner";
+  const childProtected = profileMode === "child_protected";
+  const stance = input.stance.trim() || "neutral";
+  const expression = expressionForStance(stance, childProtected);
+  const blockedEffects = [
+    "avatar_animation",
+    "affect_inference",
+    "camera_capture",
+    "face_detection",
+    "live_napoleon_contact",
+    "memory_write",
+    "approval_capture",
+    "external_send",
+    "agent_dispatch",
+  ];
+  if (childProtected) {
+    blockedEffects.splice(7, 0, "guardian_approval_capture");
+  }
+
+  return {
+    localMetadataOnly: true,
+    stance,
+    expression,
+    profileMode,
+    childProtected,
+    bridgeProvidedProvenance: input.bridgeProvidedProvenance,
+    authorityBoundary:
+      "Expression reflects local stance metadata only; it is not emotion inference, approval, or agent action.",
+    guardianReviewReminder: childProtected
+      ? "Guardian review is required before child avatar expression animation."
+      : "No guardian review reminder for this profile.",
+    avatarAnimationStarted: false,
+    affectInferred: false,
+    cameraCaptureStarted: false,
+    faceDetectionStarted: false,
+    liveNapoleonContacted: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    guardianApprovalCaptured: false,
+    externalSendPerformed: false,
+    blockedEffects,
+  };
+}
+
+function expressionForStance(
+  stance: string,
+  childProtected: boolean,
+): LocalAvatarExpressionResult["expression"] {
+  const normalized = stance.toLowerCase();
+  if (childProtected && normalized === "playful") return "soft_neutral";
+  if (normalized.includes("direct")) return "focused_neutral";
+  if (normalized.includes("warm")) return "soft_neutral";
+  if (normalized.includes("concerned")) return "concerned_neutral";
+  if (normalized.includes("playful")) return "light_neutral";
+  if (normalized.includes("somber")) return "low_neutral";
+  return "neutral";
 }
