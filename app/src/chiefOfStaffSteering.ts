@@ -97,6 +97,7 @@ export interface ChiefOfStaffSteeringSubmissionResult {
   appliedLocally: false;
   memoryWritePerformed: false;
   approvalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
 }
 
@@ -443,6 +444,7 @@ export async function submitChiefOfStaffSteeringDraft(
     appliedLocally: false,
     approvalCaptured: false,
     memoryWritePerformed: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
   });
 
@@ -454,6 +456,7 @@ export async function submitChiefOfStaffSteeringDraft(
     appliedLocally: false,
     memoryWritePerformed: false,
     approvalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
   };
 }
