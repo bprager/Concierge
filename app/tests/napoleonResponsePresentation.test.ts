@@ -167,7 +167,7 @@ test("non-live response presentation clears stale delegation and proof together"
 test("exports last successful Napoleon response proof without raw text endpoint or secrets", () => {
   const contract = buildTextTurnContract({
     message: "Summarize the bridge rollout",
-    profile: "adult_owner",
+    profile: "child_protected",
     conversationId: "conv_response_export",
     turnId: "turn_response_export",
     traceId: "trace_response_export",
@@ -175,7 +175,7 @@ test("exports last successful Napoleon response proof without raw text endpoint 
   });
   const state = buildSuccessfulNapoleonResponsePresentation({
     text: "Napoleon recommends keeping the rollout in review. Passive Brain found bridge rollout context.",
-    profileMode: "adult_owner",
+    profileMode: "child_protected_user",
     governanceDecision: contract.governanceDecision,
     traceEnvelope: contract.traceEnvelope,
     auditEnvelope: contract.auditEnvelope,
@@ -213,6 +213,7 @@ test("exports last successful Napoleon response proof without raw text endpoint 
       status: string;
       heading: string;
       governance: string;
+      profileMode: string;
       traceId: string;
       auditId: string;
       selectedAgents: string[];
@@ -232,6 +233,7 @@ test("exports last successful Napoleon response proof without raw text endpoint 
   assert.equal(proof.responseProof.status, "verified");
   assert.equal(proof.responseProof.traceId, "trace_response_export");
   assert.equal(proof.responseProof.governance, "requires_review");
+  assert.equal(proof.responseProof.profileMode, "child_protected_user");
   assert.deepEqual(proof.responseProof.selectedAgents, ["Passive Brain"]);
   assert.ok(proof.responseProof.blockedEffects.includes("memory_write"));
   assert.equal(proof.boundary.approvalCaptured, false);

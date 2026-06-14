@@ -399,6 +399,7 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
       "This proof summarizes bridge-returned provenance only. It is not Napoleon approval, does not write memory, does not dispatch agents, and does not send externally.",
     details: [
       { label: "Governance", value: response.governanceDecision.outcome },
+      { label: "Profile mode", value: response.profileMode },
       { label: "Decision", value: response.governanceDecision.decision_id },
       { label: "Trace", value: response.traceEnvelope.trace_id },
       { label: "Audit", value: response.auditEnvelope.audit_id },

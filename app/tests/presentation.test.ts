@@ -201,7 +201,7 @@ test("describes successful Napoleon response proof from returned provenance only
   });
   const view = describeNapoleonResponseProof({
     text: "Passive Brain found the previous deployment risk note.",
-    profileMode: "adult_owner",
+    profileMode: "child_protected_user",
     governanceDecision: contract.governanceDecision,
     traceEnvelope: contract.traceEnvelope,
     auditEnvelope: contract.auditEnvelope,
@@ -234,6 +234,7 @@ test("describes successful Napoleon response proof from returned provenance only
   assert.ok(view.summary.includes("Napoleon recommendation"));
   assert.ok(view.caveat.includes("not Napoleon approval"));
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Governance" && detail.value === "allow_prepare_only"));
+  assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Profile mode" && detail.value === "child_protected_user"));
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Trace" && detail.value === "trace_proof"));
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
 });

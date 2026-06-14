@@ -86,6 +86,7 @@ export function exportNapoleonResponseProofJson(
           status: "not_available",
           heading: "No successful Napoleon proof",
           governance: "unavailable",
+          profileMode: "unavailable",
           decisionId: "unavailable",
           traceId: "unavailable",
           auditId: "unavailable",
@@ -118,6 +119,7 @@ export function exportNapoleonResponseProofJson(
         status: proof.status,
         heading: proof.heading,
         governance: proofDetailValue(proof, "Governance"),
+        profileMode: proofDetailValue(proof, "Profile mode"),
         decisionId: proofDetailValue(proof, "Decision"),
         traceId: proofDetailValue(proof, "Trace"),
         auditId: proofDetailValue(proof, "Audit"),
@@ -213,6 +215,7 @@ export function compareNapoleonResponseProofs(
   const comparedFields: Array<{ label: string; path: string[] }> = [
     { label: "Proof status", path: ["responseProof", "status"] },
     { label: "Governance", path: ["responseProof", "governance"] },
+    { label: "Profile mode", path: ["responseProof", "profileMode"] },
     { label: "Decision", path: ["responseProof", "decisionId"] },
     { label: "Trace", path: ["responseProof", "traceId"] },
     { label: "Audit", path: ["responseProof", "auditId"] },

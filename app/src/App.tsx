@@ -1325,6 +1325,7 @@ export function App() {
       conversationId,
       status: proof?.status ?? "not_available",
       governance: proof?.details.find((detail) => detail.label === "Governance")?.value ?? "unavailable",
+      profileMode: proof?.details.find((detail) => detail.label === "Profile mode")?.value ?? "unavailable",
       responseTraceId: proof?.details.find((detail) => detail.label === "Trace")?.value ?? "unavailable",
       responseAuditId: proof?.details.find((detail) => detail.label === "Audit")?.value ?? "unavailable",
       proofComparisonStatus: comparison.status,
