@@ -64,6 +64,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     return harnessJsonResponse(200, {
       text: "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
       profileMode: body.profileMode,
+      targetAgent: "napoleon.chief_of_staff",
       governanceDecision: {
         decision_id: `decision_${body.traceId}`,
         request_id: body.chiefOfStaffRequest.request_id,
@@ -139,6 +140,8 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(napoleonReply).getByText("Napoleon governed bridge"));
     assert.ok(within(napoleonReply).getByText("Attribution"));
     assert.ok(within(napoleonReply).getByText("Returned bridge provenance only; not local authority."));
+    assert.ok(within(napoleonReply).getByText("Capability"));
+    assert.ok(within(napoleonReply).getByText("napoleon.chief_of_staff"));
     assert.ok(within(napoleonReply).getByText("Blocked effects"));
     assert.ok(within(napoleonReply).getByText("memory_write, approval_capture, external_send, agent_dispatch"));
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));
