@@ -40,6 +40,7 @@ export interface MemoryProposalSubmissionResult {
   auditEnvelope: AuditEnvelope;
   memoryWritePerformed: false;
   approvalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
 }
 
@@ -361,6 +362,7 @@ export async function submitMemoryProposalForReview(
     outcome: payload.governanceDecision.outcome,
     memoryWritePerformed: false,
     approvalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
   });
 
@@ -371,6 +373,7 @@ export async function submitMemoryProposalForReview(
     auditEnvelope: payload.auditEnvelope,
     memoryWritePerformed: false,
     approvalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
   };
 }

@@ -285,6 +285,7 @@ test("submits taxonomy review draft through governed bridge without applying loc
   assert.equal(result.appliedLocally, false);
   assert.equal(result.memoryWritePerformed, false);
   assert.equal(result.approvalCaptured, false);
+  assert.equal(result.agentDispatchPerformed, false);
   assert.equal(result.externalSendPerformed, false);
 });
 

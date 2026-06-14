@@ -114,6 +114,7 @@ export interface ChiefOfStaffTaxonomyReviewSubmissionResult {
   appliedLocally: false;
   memoryWritePerformed: false;
   approvalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
 }
 
@@ -768,6 +769,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     appliedLocally: false,
     approvalCaptured: false,
     memoryWritePerformed: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
   });
 
@@ -779,6 +781,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     appliedLocally: false,
     memoryWritePerformed: false,
     approvalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
   };
 }

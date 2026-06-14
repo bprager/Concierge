@@ -192,6 +192,7 @@ test("memory proposal submission posts review packet without writing memory or c
   });
   assert.equal(result.memoryWritePerformed, false);
   assert.equal(result.approvalCaptured, false);
+  assert.equal(result.agentDispatchPerformed, false);
   assert.equal(result.externalSendPerformed, false);
   assert.equal(result.governanceDecision.outcome, "requires_review");
 });

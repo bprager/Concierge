@@ -2507,7 +2507,7 @@ export function App() {
               <dt>Audit</dt>
               <dd>{taxonomyReviewSubmission.auditEnvelope.audit_id}</dd>
               <dt>Local effects</dt>
-              <dd>not applied; no memory write; no approval captured; no external send.</dd>
+              <dd>not applied; no memory write; no approval captured; no agent dispatch; no external send.</dd>
             </dl>
           ) : null}
         </section>
@@ -2744,7 +2744,7 @@ export function App() {
               <dt>Audit</dt>
               <dd>{memorySubmission.auditEnvelope.audit_id}</dd>
               <dt>Local effects</dt>
-              <dd>no memory write; no approval captured; no external send.</dd>
+              <dd>no memory write; no approval captured; no agent dispatch; no external send.</dd>
             </dl>
           ) : null}
         </section>
