@@ -36,5 +36,10 @@
       "trace:trace_sample_steering",
       "fixture:sample_chief_of_staff_steering_response"
     ]
-  }
+  },
+  "appliedLocally": false,
+  "memoryWritePerformed": false,
+  "approvalCaptured": false,
+  "agentDispatchPerformed": false,
+  "externalSendPerformed": false
 }

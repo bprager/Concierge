@@ -414,7 +414,16 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [text, governanceDecision, traceEnvelope, auditEnvelope]
+                required:
+                  - text
+                  - governanceDecision
+                  - traceEnvelope
+                  - auditEnvelope
+                  - appliedLocally
+                  - memoryWritePerformed
+                  - approvalCaptured
+                  - agentDispatchPerformed
+                  - externalSendPerformed
                 properties:
                   text:
                     type: string
@@ -427,6 +436,21 @@ paths:
                   auditEnvelope:
                     type: object
                     required: [audit_id, trace_id, decision_id, actor_id, authority_tier, approval_requirement, evidence_links]
+                  appliedLocally:
+                    type: boolean
+                    const: false
+                  memoryWritePerformed:
+                    type: boolean
+                    const: false
+                  approvalCaptured:
+                    type: boolean
+                    const: false
+                  agentDispatchPerformed:
+                    type: boolean
+                    const: false
+                  externalSendPerformed:
+                    type: boolean
+                    const: false
   /v1/concierge/memory-proposals:
     post:
       summary: Submit a proposal-only memory update candidate to Napoleon review
@@ -531,7 +555,15 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [text, governanceDecision, traceEnvelope, auditEnvelope]
+                required:
+                  - text
+                  - governanceDecision
+                  - traceEnvelope
+                  - auditEnvelope
+                  - memoryWritePerformed
+                  - approvalCaptured
+                  - agentDispatchPerformed
+                  - externalSendPerformed
                 properties:
                   text:
                     type: string
@@ -544,6 +576,18 @@ paths:
                   auditEnvelope:
                     type: object
                     required: [audit_id, trace_id, decision_id, actor_id, authority_tier, approval_requirement, evidence_links]
+                  memoryWritePerformed:
+                    type: boolean
+                    const: false
+                  approvalCaptured:
+                    type: boolean
+                    const: false
+                  agentDispatchPerformed:
+                    type: boolean
+                    const: false
+                  externalSendPerformed:
+                    type: boolean
+                    const: false
   /v1/concierge/evaluate:
     post:
       summary: Submit evaluator prompt to Napoleon

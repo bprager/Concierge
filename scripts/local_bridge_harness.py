@@ -130,13 +130,13 @@ def build_review_response(
     response = {
         "text": "Napoleon accepted the proposal for governed review only.",
         **governance_response(trace_id, request_id, f"decision_{trace_id}", f"audit_{trace_id}"),
+        "memoryWritePerformed": False,
         "approvalCaptured": False,
+        "agentDispatchPerformed": False,
         "externalSendPerformed": False,
     }
     if applied_locally is not None:
         response["appliedLocally"] = applied_locally
-    if memory_review:
-        response["memoryWritePerformed"] = False
     if has_side_effect_claim_trigger(payload):
         response.update(
             {

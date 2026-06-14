@@ -64,6 +64,25 @@ class BridgeContractValidationTest(unittest.TestCase):
         validate_repo.validate_openapi_instance(schema, response)
         validate_repo.validate_bridge_response_provenance(response)
 
+    def test_governed_review_responses_carry_explicit_false_side_effect_boundaries(self):
+        examples = [
+            "examples/sample_memory_proposal_response.json",
+            "examples/sample_chief_of_staff_steering_response.json",
+        ]
+        required_false_fields = [
+            "memoryWritePerformed",
+            "approvalCaptured",
+            "agentDispatchPerformed",
+            "externalSendPerformed",
+        ]
+
+        for example_path in examples:
+            response = validate_repo.load_json(example_path)
+            with self.subTest(example=example_path):
+                for field in required_false_fields:
+                    self.assertIn(field, response)
+                    self.assertFalse(response[field])
+
     def test_response_validator_rejects_text_turn_side_effect_claims(self):
         response = validate_repo.load_json("examples/sample_text_turn_response.json")
         unsafe_response = copy.deepcopy(response)

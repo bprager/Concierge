@@ -118,8 +118,14 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             self.assertEqual(steering["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(memory["governanceDecision"]["outcome"], "requires_review")
             self.assertFalse(steering["appliedLocally"])
+            self.assertFalse(steering["memoryWritePerformed"])
+            self.assertFalse(steering["approvalCaptured"])
+            self.assertFalse(steering["agentDispatchPerformed"])
+            self.assertFalse(steering["externalSendPerformed"])
             self.assertFalse(memory["memoryWritePerformed"])
             self.assertFalse(memory["approvalCaptured"])
+            self.assertFalse(memory["agentDispatchPerformed"])
+            self.assertFalse(memory["externalSendPerformed"])
 
     def test_harness_supports_evaluator_http_request_kind(self):
         with local_bridge_harness.running_harness() as base_url:

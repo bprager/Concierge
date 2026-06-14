@@ -35,5 +35,9 @@
       "trace:trace_sample_memory",
       "fixture:sample_memory_proposal_response"
     ]
-  }
+  },
+  "memoryWritePerformed": false,
+  "approvalCaptured": false,
+  "agentDispatchPerformed": false,
+  "externalSendPerformed": false
 }
