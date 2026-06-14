@@ -244,6 +244,11 @@ test("steering handoff posts evolution review packet without applying proposal l
             approval_requirement: "chief_of_staff_and_owner_review",
             evidence_links: ["trace:trace_submit"],
           },
+          appliedLocally: false,
+          memoryWritePerformed: false,
+          approvalCaptured: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
         }),
       };
     },
@@ -344,6 +349,11 @@ test("child protected steering handoff includes child safety caution and child p
             approval_requirement: "guardian_and_owner_review",
             evidence_links: ["trace:trace_child_submit"],
           },
+          appliedLocally: false,
+          memoryWritePerformed: false,
+          approvalCaptured: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
         }),
       };
     },
@@ -411,6 +421,11 @@ test("steering handoff fails closed when Napoleon returns no-go", async () => {
               approval_requirement: "not_available",
               evidence_links: ["trace:trace_submit"],
             },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
           }),
         }),
       }),
@@ -501,4 +516,67 @@ test("steering handoff rejects response claims that apply proposal or side effec
   assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
   assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, steeringBlockedEffects);
+});
+
+test("steering handoff rejects review responses that omit explicit false side-effect boundaries", async () => {
+  const ledger = createCapabilityLedger();
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_steering",
+    endpointConfigured: true,
+  });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffSteeringDraft(draft, {
+        conversationId: "conv_steering",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge/evolution",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon accepted the capability recommendation for review.",
+            governanceDecision: {
+              decision_id: "decision_steering_omitted_boundaries",
+              request_id: "cos_trace_submit",
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Review responses must carry explicit side-effect boundaries.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: "trace_submit",
+              audit_id: "audit_steering_omitted_boundaries",
+            },
+            traceEnvelope: {
+              trace_id: "trace_submit",
+              parent_trace_id: "conv_steering",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_submit",
+              decision_id: "decision_steering_omitted_boundaries",
+              timestamp: "2026-06-12T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_steering_omitted_boundaries",
+              trace_id: "trace_submit",
+              decision_id: "decision_steering_omitted_boundaries",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:trace_submit"],
+            },
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
 });

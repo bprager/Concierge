@@ -151,14 +151,14 @@ function envelopesMatchDecision(
 function hasForbiddenMemoryProposalSideEffectClaim(
   payload: Partial<MemoryProposalSubmissionResult> & Record<string, unknown>,
 ): boolean {
-  const forbiddenFalseFields = [
+  const requiredFalseFields = [
     "memoryWritePerformed",
     "approvalCaptured",
     "externalSendPerformed",
     "agentDispatchPerformed",
-    "appliedLocally",
   ];
-  return forbiddenFalseFields.some((field) => payload[field] !== undefined && payload[field] !== false);
+  if (requiredFalseFields.some((field) => payload[field] !== false)) return true;
+  return payload.appliedLocally !== undefined && payload.appliedLocally !== false;
 }
 
 function failMemoryProposalClosed(

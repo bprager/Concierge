@@ -270,14 +270,14 @@ function envelopesMatchDecision(
 }
 
 function hasForbiddenSteeringSideEffectClaim(payload: Partial<ChiefOfStaffSteeringSubmissionResult> & Record<string, unknown>): boolean {
-  const forbiddenFalseFields = [
+  const requiredFalseFields = [
     "appliedLocally",
     "memoryWritePerformed",
     "approvalCaptured",
     "externalSendPerformed",
     "agentDispatchPerformed",
   ];
-  return forbiddenFalseFields.some((field) => payload[field] !== undefined && payload[field] !== false);
+  return requiredFalseFields.some((field) => payload[field] !== false);
 }
 
 function failSteeringClosed(
