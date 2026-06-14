@@ -347,6 +347,28 @@ Evaluator coverage:
 
 - Covered by pure voice-turn rehearsal tests and rendered app interaction tests for local dry-run execution without media or Napoleon contact.
 
+### VO-005 details
+
+User value: Barge-in interruption behavior can be inspected before live TTS, microphone capture, or spoken Napoleon responses exist.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local barge-in rehearsal panel.
+- The local model marks planned sample TTS output as interrupted at a deterministic offset and prepares next-turn state.
+- Running the dry run does not start audio playback, request microphone permission, start microphone capture, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `barge_in_rehearsed` includes local-rehearsal marker, detected true, interrupted output, interrupt offset, next-turn-prepared, capture/playback/storage false, live-Napoleon-contact false, and explicit false side-effect flags.
+- All blocked effects are visible in the UI.
+- Child protected mode must not treat barge-in rehearsal as guardian approval, recording permission, external speech permission, or Napoleon approval.
+
+Privacy and safety impact:
+
+- This is a local dry run only, not live voice mode.
+- Raw audio remains unstored, no automatic speaker output path is introduced, and no Napoleon bridge call occurs.
+
+Evaluator coverage:
+
+- Covered by pure barge-in rehearsal tests and rendered app interaction tests for local dry-run execution without media or Napoleon contact.
+
 ## Milestone P3: Avatar Concierge
 
 | ID | Story | Priority | Acceptance criteria | Observability |

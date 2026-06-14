@@ -581,6 +581,58 @@ test("runs local voice turn rehearsal without contacting Napoleon or starting me
   }
 });
 
+test("runs local barge-in rehearsal without contacting Napoleon or starting media", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("barge-in rehearsal must stay local");
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Barge-in rehearsal");
+    const rehearsal = within(view.getByLabelText("Barge-in rehearsal"));
+    assert.ok(rehearsal.getByText("Barge-in rehearsal not run"));
+    assert.ok(rehearsal.getByText("Playback state: stopped"));
+
+    await user.click(view.getByRole("button", { name: "Run local barge-in rehearsal" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    assert.ok(rehearsal.getByText("Barge-in detected: yes"));
+    assert.ok(rehearsal.getByText("Interrupted output: local-sample-voice at 480 ms"));
+    assert.ok(rehearsal.getByText("Next turn prepared: yes"));
+    assert.ok(rehearsal.getByText("Napoleon contact: no"));
+    assert.ok(rehearsal.getByText("Blocked effects: audio_playback, microphone_capture, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("keeps camera capture blocked until explicit camera permission is granted", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

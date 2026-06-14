@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
 import { answerCapabilityQuestion } from "./capabilityLedger.js";
 import { describeBridgeOperationSummary } from "./bridgeOperations.js";
 import {
@@ -172,6 +173,7 @@ export function App() {
   const [sttSampleResult, setSttSampleResult] = useState<LocalSpeechTranscriptionResult | null>(null);
   const [ttsSampleResult, setTtsSampleResult] = useState<LocalTextToSpeechResult | null>(null);
   const [voiceTurnRehearsalResult, setVoiceTurnRehearsalResult] = useState<LocalVoiceTurnRehearsalResult | null>(null);
+  const [bargeInRehearsalResult, setBargeInRehearsalResult] = useState<LocalBargeInRehearsalResult | null>(null);
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
@@ -569,6 +571,29 @@ export function App() {
       microphoneCaptureStarted: result.microphoneCaptureStarted,
       audioPlaybackStarted: result.audioPlaybackStarted,
       rawAudioStored: result.rawAudioStored,
+      memoryWritePerformed: result.memoryWritePerformed,
+      approvalCaptured: result.approvalCaptured,
+      externalSendPerformed: result.externalSendPerformed,
+      blockedEffects: result.blockedEffects,
+    });
+  }
+
+  function runLocalBargeInRehearsal() {
+    const traceId = newTraceId();
+    const result = rehearseLocalBargeInSample();
+    setBargeInRehearsalResult(result);
+    emitEvent("barge_in_rehearsed", {
+      traceId,
+      conversationId,
+      localRehearsalOnly: result.localRehearsalOnly,
+      bargeInDetected: result.bargeInDetected,
+      interruptedOutput: result.interruptedOutput,
+      interruptAtMs: result.interruptAtMs,
+      nextTurnPrepared: result.nextTurnPrepared,
+      audioPlaybackStarted: result.audioPlaybackStarted,
+      microphoneCaptureStarted: result.microphoneCaptureStarted,
+      rawAudioStored: result.rawAudioStored,
+      liveNapoleonContacted: result.liveNapoleonContacted,
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
       externalSendPerformed: result.externalSendPerformed,
@@ -1298,6 +1323,10 @@ export function App() {
     voiceTurnRehearsalResult === null
       ? "Voice rehearsal not run"
       : `VAD: ${voiceTurnRehearsalResult.vad.segments.length} segments`;
+  const bargeInRehearsalSummary =
+    bargeInRehearsalResult === null
+      ? "Barge-in rehearsal not run"
+      : `Barge-in detected: ${bargeInRehearsalResult.bargeInDetected ? "yes" : "no"}`;
   const cameraCaptureSummary = !cameraEnabled
     ? "Camera capture blocked: camera setting is off and OS permission is not granted."
     : cameraPermissionStatus !== "granted"
@@ -1549,6 +1578,47 @@ export function App() {
         ) : null}
         <button className="secondary" onClick={runLocalVoiceTurnRehearsal}>
           Run local voice rehearsal
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Barge-in rehearsal">
+        <div>
+          <strong>Barge-in rehearsal</strong>
+          <span>local dry run only</span>
+        </div>
+        <div>
+          <strong>Sample state</strong>
+          <span>{bargeInRehearsalSummary}</span>
+        </div>
+        <div>
+          <strong>Playback state</strong>
+          <span>Playback state: stopped</span>
+        </div>
+        {bargeInRehearsalResult ? (
+          <>
+            <div>
+              <strong>Interrupted output</strong>
+              <span>
+                Interrupted output: {bargeInRehearsalResult.interruptedOutput} at{" "}
+                {bargeInRehearsalResult.interruptAtMs} ms
+              </span>
+            </div>
+            <div>
+              <strong>Next turn</strong>
+              <span>Next turn prepared: {bargeInRehearsalResult.nextTurnPrepared ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Napoleon contact</strong>
+              <span>Napoleon contact: no</span>
+            </div>
+            <div>
+              <strong>Blocked effects</strong>
+              <span>Blocked effects: {bargeInRehearsalResult.blockedEffects.join(", ")}</span>
+            </div>
+          </>
+        ) : null}
+        <button className="secondary" onClick={runLocalBargeInRehearsal}>
+          Run local barge-in rehearsal
         </button>
       </section>
 

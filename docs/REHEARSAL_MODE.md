@@ -36,6 +36,8 @@ Preview creation is local. It builds a text turn contract from the current typed
 
 Voice-turn rehearsal is also local, but it is not a spoken Napoleon turn. It chains local sample VAD, STT, an explicit text authority boundary, and TTS metadata so the user can inspect the future voice path before live capture or playback exists. It must show that Napoleon was not contacted, that no delegated agent response exists, and that recording, playback, raw audio storage, memory writes, approval capture, agent dispatch, and external sends are blocked.
 
+Barge-in rehearsal is local state modeling only, not live interruption of a spoken Napoleon turn. It may mark planned sample speech as interrupted and prepare next-turn state, but it must not start playback, request microphone permission, capture audio, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+
 Sending an advisory request is a separate user action after the preview exists. That send still goes through the governed bridge path and remains subject to Chief of Staff and governance decisions.
 
 If the rehearsed turn is `no_go` or denied, Concierge blocks the send action. If the turn is `requires_review`, Concierge shows a review panel. A local acknowledgement can record that the review was seen, but it is not Napoleon approval and does not grant authority.

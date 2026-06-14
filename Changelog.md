@@ -88,6 +88,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added local Text Concierge privacy controls for telemetry, camera, and microphone state, with camera and microphone off by default, local persistence, and privacy-setting events that do not store raw audio or video.
 - Added a local Voice readiness panel and explicit microphone permission request path so microphone settings cannot be mistaken for active voice capture.
 - Added a local Camera readiness panel and explicit camera permission request path so camera settings cannot be mistaken for active avatar/camera capture.
+- Added a local Barge-in Rehearsal panel and deterministic interruption state model that marks sample speech as interrupted without playback, capture, live Napoleon contact, or side effects.
 - Added a local Voice Activity Detection sample panel and deterministic VAD detector that emits segment metadata without starting microphone capture or storing raw audio.
 - Added a local Speech Transcription sample panel and deterministic STT adapter that emits transcript metadata without starting microphone capture or storing raw audio.
 - Added a local Text to Speech sample panel and deterministic TTS adapter that emits speech-preparation metadata without starting audio playback or storing raw audio.

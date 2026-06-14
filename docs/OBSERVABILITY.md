@@ -70,6 +70,7 @@ Every user turn has:
 | tts_started | voice | voice_id, chars, local_sample_only, audio_playback_started, raw_audio_stored |
 | tts_completed | voice | latency_ms, duration_ms, local_sample_only, audio_playback_started, raw_audio_stored |
 | voice_turn_rehearsed | voice | local_rehearsal_only, vad_segment_count, stt_model, tts_voice_id, live_napoleon_contacted, microphone_capture_started, audio_playback_started, raw_audio_stored, blocked_effects |
+| barge_in_rehearsed | voice | local_rehearsal_only, barge_in_detected, interrupted_output, interrupt_at_ms, next_turn_prepared, microphone_capture_started, audio_playback_started, raw_audio_stored, live_napoleon_contacted, blocked_effects |
 | avatar_expression_set | avatar | stance, expression |
 | camera_state_estimated | perception | present, looking_at_screen, confidence |
 | eval_case_started | evaluator | case_id |
