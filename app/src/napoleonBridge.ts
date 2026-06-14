@@ -489,6 +489,9 @@ export async function sendToNapoleon(
   if (!envelopesMatchDecision(decision, traceEnvelope, auditEnvelope)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
+  if (payload.profileMode !== undefined && payload.profileMode !== contract.profileMode) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
   if (hasForbiddenTextTurnSideEffectClaim(payload as Partial<NapoleonResponse> & Record<string, unknown>)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }

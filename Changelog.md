@@ -93,6 +93,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added rendered React interaction coverage for memory proposal and Chief of Staff taxonomy review submissions, including visible no-agent-dispatch local effects after review.
 - Required canonical governed review response examples to carry explicit false side-effect fields for memory writes, approval capture, agent dispatch, external sends, and local application where applicable.
 - Required runtime governed review responses to carry those explicit false side-effect fields, failing closed as contract mismatches when Napoleon omits them.
+- Required live text responses to keep the returned profile mode aligned with the active Concierge user profile, failing closed as a contract mismatch on profile-scope drift.
 - Added rendered React interaction coverage for live Napoleon bridge timeout failures, including fail-closed transcript metadata and transport-error redaction.
 - Added rendered React interaction coverage for contract-mismatch live Napoleon responses that claim forbidden side effects.
 - Added a last successful Napoleon proof panel that summarizes returned governance, trace, audit, delegation, recommendation, allowed-effect, and blocked-effect metadata without treating it as approval or execution authority.

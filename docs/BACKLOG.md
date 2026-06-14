@@ -207,6 +207,7 @@ Acceptance criteria:
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.
 - Successful text responses that claim Napoleon recommendations, such as "Napoleon recommends...", must include matching recommendation provenance with the recommended contribution and response trace/audit references or fail closed as a contract mismatch.
 - Successful text responses that claim selected-agent findings, such as "Passive Brain found...", must include matching selected-agent contribution provenance or fail closed as a contract mismatch.
+- Successful text responses must fail closed as contract mismatches when returned profile mode differs from the active Concierge user profile, so child protected, guest, and collaborator responses cannot widen themselves into adult owner scope.
 - Successful text responses must fail closed as contract mismatches if they claim memory writes, approval capture, external sends, agent dispatch, or local application.
 - Successful live responses require matching governance, trace, and audit envelopes; missing or mismatched response/delegation provenance fails closed as a contract mismatch.
 - Remote `deny` and `no_go` governance outcomes produce blocked bridge failures for text turns, memory proposal handoff, and Chief of Staff steering handoff instead of normal response or review completion; text bridge evidence remains sanitized and includes decision, audit, governance, and blocked-effect metadata where available.

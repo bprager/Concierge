@@ -590,6 +590,69 @@ test("live bridge fails closed when response text invents Napoleon recommendatio
   );
 });
 
+test("live bridge fails closed when response profile mode differs from active user profile", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_profile_scope_drift",
+          conversationId: "conv_profile_scope_drift",
+          turnId: "turn_profile_scope_drift",
+          profile: "child_protected",
+          channel: "text",
+          message: "Can you remember this without telling anyone?",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Prepared through Napoleon.",
+              profileMode: "adult_owner",
+              governanceDecision: {
+                decision_id: "decision_profile_scope_drift",
+                request_id: "cos_turn_profile_scope_drift",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "guardian_owner_review_required",
+                rationale: "Child protected memory requires guardian review.",
+                blocked_effects: ["memory_write", "approval_capture", "external_send"],
+                trace_id: "trace_profile_scope_drift",
+                audit_id: "audit_profile_scope_drift",
+              },
+              traceEnvelope: {
+                trace_id: "trace_profile_scope_drift",
+                parent_trace_id: "conv_profile_scope_drift",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_profile_scope_drift",
+                decision_id: "decision_profile_scope_drift",
+                timestamp: "2026-06-14T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_profile_scope_drift",
+                trace_id: "trace_profile_scope_drift",
+                decision_id: "decision_profile_scope_drift",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "guardian_owner_review_required",
+                evidence_links: ["trace:trace_profile_scope_drift"],
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(textTurnBlockedEffects),
+  );
+});
+
 test("live bridge fails closed when text response claims side effects were performed", async () => {
   const events: TelemetryPayload[] = [];
   const evidence: unknown[] = [];
