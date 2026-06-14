@@ -125,6 +125,36 @@ class RehearsalCoverageTest(unittest.TestCase):
             checks["conversation_capability_intelligence"]["missing_terms"],
         )
 
+    def test_chief_of_staff_steering_draft_scenario_requires_proposal_only_handoff(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("CHIEF-OF-STAFF-STEERING-DRAFT-001", scenarios)
+        self.assertIn(
+            "chief_of_staff_steering_draft",
+            scenarios["CHIEF-OF-STAFF-STEERING-DRAFT-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = """
+        Concierge recommends the next capability and sends it to Chief of Staff review.
+        """
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["chief_of_staff_steering_draft"],
+        )
+
+        self.assertFalse(checks["chief_of_staff_steering_draft"]["found"])
+        self.assertIn("Chief of Staff steering draft", checks["chief_of_staff_steering_draft"]["missing_terms"])
+        self.assertIn("capability recommendation", checks["chief_of_staff_steering_draft"]["missing_terms"])
+        self.assertIn("evaluator case candidate", checks["chief_of_staff_steering_draft"]["missing_terms"])
+        self.assertIn("evolution proposal draft", checks["chief_of_staff_steering_draft"]["missing_terms"])
+        self.assertIn("endpoint and descriptor preflight", checks["chief_of_staff_steering_draft"]["missing_terms"])
+        self.assertIn("does not apply changes locally", checks["chief_of_staff_steering_draft"]["missing_terms"])
+        self.assertIn("does not write memory", checks["chief_of_staff_steering_draft"]["missing_terms"])
+        self.assertIn("does not dispatch agents", checks["chief_of_staff_steering_draft"]["missing_terms"])
+        self.assertIn("does not send externally", checks["chief_of_staff_steering_draft"]["missing_terms"])
+        self.assertIn("does not capture approval", checks["chief_of_staff_steering_draft"]["missing_terms"])
+
     def test_bridge_fixture_scenarios_cover_delegation_and_fail_closed_cases(self):
         scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
 

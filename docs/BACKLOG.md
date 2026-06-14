@@ -619,7 +619,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by app tests for proposal-only steering draft boundaries and repository validation for governed bridge handoff contract alignment; add richer live/evaluator scenario coverage before promotion.
+- Covered by `CHIEF-OF-STAFF-STEERING-DRAFT-001`, app tests for proposal-only steering draft boundaries, and repository validation for governed bridge handoff contract alignment.
 
 ## Milestone P5: Operations and observability
 

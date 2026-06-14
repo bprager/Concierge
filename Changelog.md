@@ -65,6 +65,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added evaluator coverage for bridge response authority provenance, including invented Napoleon recommendations, invented selected-agent findings, and claimed side effects without matching provenance.
 - Added evaluator coverage for child protected bridge response semantics, including guardian review, no secret-keeping, memory minimization, and stricter-than-adult fail-closed behavior.
 - Added evaluator coverage for governed memory proposal and Chief of Staff steering review response semantics, keeping reviewed packets proposal-only and non-executed.
+- Added evaluator coverage for Chief of Staff steering draft boundaries, including proposal-only handoff, endpoint and descriptor preflight, evaluator case candidates, rollback plan, and blocked effects.
 - Added evaluator coverage for profile-scope drift so guest, collaborator, and child protected bridge responses cannot upgrade themselves into adult owner authority.
 - Added evaluator coverage for live-runtime artifact semantics so bridge evidence and Napoleon proof exports stay sanitized, traceable, and non-authorizing.
 - Added a local Napoleon-compatible HTTP bridge harness for governed path smoke validation without a live runtime.

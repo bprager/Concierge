@@ -195,6 +195,27 @@ artifacts:
       - "fail closed as contract mismatch"
       - "governance blocked state"
       - "does not execute claimed side effects"
+  chief_of_staff_steering_draft:
+    required_terms:
+      - "Chief of Staff steering draft"
+      - "capability recommendation"
+      - "architecture area"
+      - "evidence count"
+      - "rationale"
+      - "evaluator case candidate"
+      - "evolution proposal draft"
+      - "approval requirement"
+      - "rollback plan"
+      - "proposal-only boundary"
+      - "blocked effects"
+      - "endpoint and descriptor preflight"
+      - "trace and audit envelopes"
+      - "child-safety caution"
+      - "does not apply changes locally"
+      - "does not write memory"
+      - "does not dispatch agents"
+      - "does not send externally"
+      - "does not capture approval"
   profile_scope_drift_boundary:
     required_terms:
       - "profile scope drift"
