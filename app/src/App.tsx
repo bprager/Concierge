@@ -74,6 +74,7 @@ import {
 import {
   describeBridgeFailure,
   describeBridgeFailureTranscriptMessage,
+  describeDelegation,
   describeGovernedHandoffFailure,
   describeGovernedHandoffReadiness,
   describeGovernanceDecision,
@@ -1524,6 +1525,7 @@ export function App() {
     : cameraPermissionStatus !== "granted"
       ? "Camera capture blocked: OS camera permission is not granted."
       : "Camera capture ready but stopped; avatar/camera mode is not active.";
+  const napoleonDelegationView = lastNapoleonPresentation.delegation ?? describeDelegation(undefined);
 
   return (
     <main className="shell">
@@ -2576,24 +2578,20 @@ export function App() {
         </section>
       ) : null}
 
-      {lastNapoleonPresentation.delegation ? (
-        <section className="delegation">
-          <div className="review-heading">
-            <strong>{lastNapoleonPresentation.delegation.heading}</strong>
-            <span>{lastNapoleonPresentation.delegation.body}</span>
-          </div>
-          {lastNapoleonPresentation.delegation.details.length ? (
-            <dl>
-              {lastNapoleonPresentation.delegation.details.map((detail) => (
-                <div key={detail.label}>
-                  <dt>{detail.label}</dt>
-                  <dd>{detail.value}</dd>
-                </div>
-              ))}
-            </dl>
-          ) : null}
-        </section>
-      ) : null}
+      <section className="delegation" aria-label="Napoleon delegation">
+        <div className="review-heading">
+          <strong>{napoleonDelegationView.heading}</strong>
+          <span>{napoleonDelegationView.body}</span>
+        </div>
+        <dl>
+          {napoleonDelegationView.details.map((detail) => (
+            <div key={detail.label}>
+              <dt>{detail.label}</dt>
+              <dd>{detail.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       {lastReview ? (
         <section className={`review ${lastReview.sendBlocked ? "blocked" : ""}`}>

@@ -312,7 +312,14 @@ export function describeDelegation(delegation: NapoleonDelegation | undefined): 
     return {
       heading: "Napoleon delegation unavailable",
       body: "No Napoleon delegation provenance was included with this response, so Concierge will not attribute the answer to a capability or agent.",
-      details: [],
+      details: [
+        { label: "Selected agents", value: "not returned" },
+        { label: "Allowed effects", value: "not returned" },
+        { label: "Blocked effects", value: "not returned" },
+        { label: "Governance state", value: "not returned" },
+        { label: "Trace", value: "not returned" },
+        { label: "Audit", value: "not returned" },
+      ],
     };
   }
 

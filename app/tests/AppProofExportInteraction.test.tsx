@@ -153,6 +153,32 @@ test("exports and compares Napoleon proof through rendered app controls", async 
   }
 });
 
+test("shows Napoleon delegation panel before bridge provenance is returned", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App />);
+    const delegationPanel = within(view.getByLabelText("Napoleon delegation"));
+
+    await delegationPanel.findByText("Napoleon delegation unavailable");
+    assert.ok(
+      delegationPanel.getByText(
+        "No Napoleon delegation provenance was included with this response, so Concierge will not attribute the answer to a capability or agent.",
+      ),
+    );
+    assert.equal(delegationPanel.getAllByText("not returned").length, 6);
+    assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
+    assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("drafts a proposal-only taxonomy review from rendered app controls", async () => {
   const dom = installDom();
   const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
