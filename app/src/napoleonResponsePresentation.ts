@@ -45,11 +45,16 @@ function proofDetailValue(proof: NapoleonResponseProofView, label: string): stri
 }
 
 function splitList(value: string): string[] {
-  if (!value || value === "unavailable") return [];
+  if (!value || value === "unavailable" || value === "not returned") return [];
   return value
     .split(",")
     .map((item) => item.trim())
-    .filter(Boolean);
+    .filter((item) => item && item !== "not returned" && item !== "No selected-agent provenance returned");
+}
+
+function optionalProofDetailValue(proof: NapoleonResponseProofView, label: string): string {
+  const value = proofDetailValue(proof, label);
+  return value === "not returned" || value === "No selected-agent provenance returned" ? "unavailable" : value;
 }
 
 export function buildSuccessfulNapoleonResponsePresentation(
@@ -90,6 +95,7 @@ export function exportNapoleonResponseProofJson(
           decisionId: "unavailable",
           traceId: "unavailable",
           auditId: "unavailable",
+          targetCapability: "unavailable",
           selectedAgents: [],
           allowedEffects: [],
           blockedEffects: [],
@@ -123,9 +129,8 @@ export function exportNapoleonResponseProofJson(
         decisionId: proofDetailValue(proof, "Decision"),
         traceId: proofDetailValue(proof, "Trace"),
         auditId: proofDetailValue(proof, "Audit"),
-        selectedAgents: splitList(proofDetailValue(proof, "Capability or agents")).filter(
-          (agent) => agent !== "No selected-agent provenance returned",
-        ),
+        targetCapability: optionalProofDetailValue(proof, "Target capability"),
+        selectedAgents: splitList(proofDetailValue(proof, "Selected agents")),
         allowedEffects: splitList(proofDetailValue(proof, "Allowed effects")),
         blockedEffects: splitList(proofDetailValue(proof, "Blocked effects")),
       },
@@ -219,6 +224,7 @@ export function compareNapoleonResponseProofs(
     { label: "Decision", path: ["responseProof", "decisionId"] },
     { label: "Trace", path: ["responseProof", "traceId"] },
     { label: "Audit", path: ["responseProof", "auditId"] },
+    { label: "Target capability", path: ["responseProof", "targetCapability"] },
     { label: "Selected agents", path: ["responseProof", "selectedAgents"] },
     { label: "Allowed effects", path: ["responseProof", "allowedEffects"] },
     { label: "Blocked effects", path: ["responseProof", "blockedEffects"] },

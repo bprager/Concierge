@@ -10,6 +10,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 - Added transcript-level source, attribution-boundary, and blocked-effect rendering for successful Napoleon bridge responses.
 - Added transcript-level target capability rendering for successful Napoleon responses when Napoleon returns a capability ID without selected-agent delegation.
+- Changed sanitized Napoleon response proof export and comparison to keep returned target capability separate from selected-agent provenance.
 - Added transcript-level source, fail-closed attribution boundary, and blocked-effect metadata for blocked Napoleon bridge attempts.
 - Added Napoleon delegation panel rendering for returned target capability IDs when selected-agent delegation is not returned.
 - Added last-success proof rendering and sanitized proof export for returned Napoleon target capability IDs when selected-agent delegation is not returned.

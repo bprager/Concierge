@@ -403,6 +403,8 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
       { label: "Decision", value: response.governanceDecision.decision_id },
       { label: "Trace", value: response.traceEnvelope.trace_id },
       { label: "Audit", value: response.auditEnvelope.audit_id },
+      { label: "Target capability", value: targetCapability || "not returned" },
+      { label: "Selected agents", value: agentLabels || "not returned" },
       {
         label: "Capability or agents",
         value: agentLabels || targetCapability || "No selected-agent provenance returned",

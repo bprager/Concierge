@@ -152,9 +152,10 @@ test("successful Napoleon response proof includes returned target capability wit
       generatedAt: "2026-06-13T00:00:00.000Z",
       conversationId: "conv_target_capability",
     }),
-  ) as { responseProof: { selectedAgents: string[] } };
+  ) as { responseProof: { targetCapability: string; selectedAgents: string[] } };
 
-  assert.deepEqual(exported.responseProof.selectedAgents, ["napoleon.chief_of_staff"]);
+  assert.equal(exported.responseProof.targetCapability, "napoleon.chief_of_staff");
+  assert.deepEqual(exported.responseProof.selectedAgents, []);
 });
 
 test("non-live response presentation clears stale delegation and proof together", () => {
