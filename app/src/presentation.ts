@@ -307,8 +307,27 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
   };
 }
 
-export function describeDelegation(delegation: NapoleonDelegation | undefined): DelegationView {
+export function describeDelegation(
+  delegation: NapoleonDelegation | undefined,
+  targetCapability?: string,
+): DelegationView {
   if (!delegation || delegation.selectedAgents.length === 0) {
+    if (targetCapability) {
+      return {
+        heading: "Napoleon target capability",
+        body: `Napoleon returned target capability ${targetCapability}, but did not include selected-agent delegation provenance.`,
+        details: [
+          { label: "Target capability", value: targetCapability },
+          { label: "Selected agents", value: "not returned" },
+          { label: "Allowed effects", value: "not returned" },
+          { label: "Blocked effects", value: "not returned" },
+          { label: "Governance state", value: "not returned" },
+          { label: "Trace", value: "not returned" },
+          { label: "Audit", value: "not returned" },
+        ],
+      };
+    }
+
     return {
       heading: "Napoleon delegation unavailable",
       body: "No Napoleon delegation provenance was included with this response, so Concierge will not attribute the answer to a capability or agent.",

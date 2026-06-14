@@ -56,7 +56,7 @@ export function buildSuccessfulNapoleonResponsePresentation(
   response: NapoleonResponse,
 ): NapoleonResponsePresentationState {
   return {
-    delegation: describeDelegation(response.delegation),
+    delegation: describeDelegation(response.delegation, response.targetAgent),
     proof: describeNapoleonResponseProof(response),
   };
 }

@@ -124,6 +124,20 @@ test("successful Napoleon response proof includes returned target capability wit
     targetAgent: "napoleon.chief_of_staff",
   });
 
+  assert.equal(state.delegation?.heading, "Napoleon target capability");
+  assert.ok(state.delegation?.body.includes("napoleon.chief_of_staff"));
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Target capability" && detail.value === "napoleon.chief_of_staff",
+    ),
+  );
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Selected agents" && detail.value === "not returned",
+    ),
+  );
   assert.equal(state.proof?.status, "verified");
   assert.ok(state.proof?.summary.includes("Capability: napoleon.chief_of_staff"));
   assert.ok(
