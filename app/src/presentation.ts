@@ -347,9 +347,11 @@ export function describeDelegation(delegation: NapoleonDelegation | undefined): 
 
 export function describeNapoleonResponseProof(response: NapoleonResponse): NapoleonResponseProofView {
   const agentLabels = response.delegation?.selectedAgents.map((agent) => agent.displayName).join(", ") || "";
+  const targetCapability = response.targetAgent ?? "";
   const recommendation = response.recommendationProvenance?.summary;
-  const status: NapoleonResponseProofView["status"] = agentLabels || recommendation ? "verified" : "limited";
+  const status: NapoleonResponseProofView["status"] = agentLabels || targetCapability || recommendation ? "verified" : "limited";
   const proofParts = [
+    targetCapability ? `Capability: ${targetCapability}` : "",
     agentLabels ? `Agents: ${agentLabels}` : "",
     recommendation ? `Napoleon recommendation: ${recommendation}` : "",
   ].filter(Boolean);
@@ -369,7 +371,7 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
       { label: "Audit", value: response.auditEnvelope.audit_id },
       {
         label: "Capability or agents",
-        value: agentLabels || "No selected-agent provenance returned",
+        value: agentLabels || targetCapability || "No selected-agent provenance returned",
       },
       {
         label: "Allowed effects",

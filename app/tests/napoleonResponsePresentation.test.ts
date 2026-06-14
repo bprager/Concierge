@@ -105,6 +105,44 @@ test("successful Napoleon response presentation includes returned delegation and
   );
 });
 
+test("successful Napoleon response proof includes returned target capability without delegation", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge readiness",
+    profile: "adult_owner",
+    conversationId: "conv_target_capability",
+    turnId: "turn_target_capability",
+    traceId: "trace_target_capability",
+    governanceOutcome: "requires_review",
+  });
+  const state = buildSuccessfulNapoleonResponsePresentation({
+    text: "Napoleon prepared a bridge readiness summary.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: true,
+    targetAgent: "napoleon.chief_of_staff",
+  });
+
+  assert.equal(state.proof?.status, "verified");
+  assert.ok(state.proof?.summary.includes("Capability: napoleon.chief_of_staff"));
+  assert.ok(
+    state.proof?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Capability or agents" && detail.value === "napoleon.chief_of_staff",
+    ),
+  );
+
+  const exported = JSON.parse(
+    exportNapoleonResponseProofJson(state, {
+      generatedAt: "2026-06-13T00:00:00.000Z",
+      conversationId: "conv_target_capability",
+    }),
+  ) as { responseProof: { selectedAgents: string[] } };
+
+  assert.deepEqual(exported.responseProof.selectedAgents, ["napoleon.chief_of_staff"]);
+});
+
 test("non-live response presentation clears stale delegation and proof together", () => {
   const state = clearNapoleonResponsePresentation();
 
