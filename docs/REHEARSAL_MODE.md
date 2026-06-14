@@ -40,6 +40,8 @@ Barge-in rehearsal is local state modeling only, not live interruption of a spok
 
 Voice response shaping is local preparation only, not spoken output. It may shorten bridge-provenance text for a future speech surface, but it must not start playback, request microphone permission, capture audio, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. It must not add Napoleon or delegated-agent attribution unless matching bridge provenance exists. Child protected shaping uses a shorter speech budget, slower pacing metadata, and a guardian-review reminder while remaining non-authorizing.
 
+Avatar state preparation is local display state only, not live avatar mode. It may prepare a neutral avatar-facing state from returned text provenance and stance, but it must not request camera permission, capture video, run face detection, infer affect, animate an avatar, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. It must not claim Napoleon or delegated-agent authority unless bridge provenance supports that claim.
+
 Sending an advisory request is a separate user action after the preview exists. That send still goes through the governed bridge path and remains subject to Chief of Staff and governance decisions.
 
 If the rehearsed turn is `no_go` or denied, Concierge blocks the send action. If the turn is `requires_review`, Concierge shows a review panel. A local acknowledgement can record that the review was seen, but it is not Napoleon approval and does not grant authority.

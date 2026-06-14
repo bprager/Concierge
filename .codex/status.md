@@ -130,6 +130,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Local voice work now includes deterministic barge-in rehearsal state and a rendered Text Concierge panel that shows planned sample speech interruption and blocked effects without playback, capture, raw audio storage, Napoleon contact, approval capture, memory writes, agent dispatch, or external sends.
 - Local voice work now includes voice response shaping that shortens long bridge-provenance text for future speech while refusing to invent Napoleon or delegated-agent attribution when provenance is absent.
 - Child protected voice shaping is stricter than adult owner shaping, with shorter speech, slower pacing metadata, visible guardian-review reminders, and the same local-only blocked side-effect boundary.
+- Local avatar work now includes a neutral display-only avatar state panel derived from returned text provenance and stance, with camera capture, face detection, affect inference, animation, live Napoleon contact, approval capture, memory writes, agent dispatch, and external sends blocked.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
 
 ## Next 3 To 5 Priorities

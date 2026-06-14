@@ -431,6 +431,28 @@ Evaluator coverage:
 | AV-009 | Add avatar privacy dashboard | P0 | User can disable camera, affect, storage, and telemetry | privacy_setting_changed |
 | AV-010 | Add child avatar constraints | P0 | Child mode disables or restricts camera affect estimation by default | child_avatar_policy_applied |
 
+### AV-001 details
+
+User value: Local avatar state makes future avatar behavior inspectable before a renderer, camera capture, perception, or animation pipeline exists.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local avatar state panel.
+- The state is `neutral_listening` with neutral expression and user-interface gaze, derived from returned text provenance and stance.
+- Running the state preparation does not request camera permission, start camera capture, run face detection, infer affect, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `avatar_state_changed` includes local-display marker, avatar state, expression, gaze target, stance, bridge-provenance marker, false capture/face/affect/animation/live-Napoleon-contact flags, and blocked effects.
+- Provenance wording must not claim Napoleon or delegated-agent authority without bridge proof.
+- Child protected mode must not treat avatar state as guardian approval or emotion inference.
+
+Privacy and safety impact:
+
+- This is local display state only, not live avatar mode.
+- Raw video remains absent, affect is not inferred, and no bridge call is made.
+
+Evaluator coverage:
+
+- Covered by pure avatar state tests and rendered app interaction tests for local preparation without camera, perception, animation, Napoleon contact, or side effects.
+
 ### AV-005 details
 
 User value: Camera readiness is visible before avatar camera capture exists, so the user can tell the difference between a local camera preference, operating-system permission, and active recording.

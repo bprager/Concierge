@@ -1,4 +1,9 @@
 import { useState } from "react";
+import {
+  buildLocalNeutralAvatarState,
+  localNeutralAvatarStateSample,
+  type LocalNeutralAvatarStateResult,
+} from "./avatarState.js";
 import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
 import { answerCapabilityQuestion } from "./capabilityLedger.js";
 import { describeBridgeOperationSummary } from "./bridgeOperations.js";
@@ -180,6 +185,7 @@ export function App() {
   const [voiceTurnRehearsalResult, setVoiceTurnRehearsalResult] = useState<LocalVoiceTurnRehearsalResult | null>(null);
   const [bargeInRehearsalResult, setBargeInRehearsalResult] = useState<LocalBargeInRehearsalResult | null>(null);
   const [voiceResponseShapeResult, setVoiceResponseShapeResult] = useState<VoiceResponseShapeResult | null>(null);
+  const [neutralAvatarStateResult, setNeutralAvatarStateResult] = useState<LocalNeutralAvatarStateResult | null>(null);
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
@@ -630,6 +636,31 @@ export function App() {
       audioPlaybackStarted: result.audioPlaybackStarted,
       microphoneCaptureStarted: result.microphoneCaptureStarted,
       rawAudioStored: result.rawAudioStored,
+      liveNapoleonContacted: result.liveNapoleonContacted,
+      memoryWritePerformed: result.memoryWritePerformed,
+      approvalCaptured: result.approvalCaptured,
+      externalSendPerformed: result.externalSendPerformed,
+      blockedEffects: result.blockedEffects,
+    });
+  }
+
+  function runLocalNeutralAvatarState() {
+    const traceId = newTraceId();
+    const result = buildLocalNeutralAvatarState(localNeutralAvatarStateSample);
+    setNeutralAvatarStateResult(result);
+    emitEvent("avatar_state_changed", {
+      traceId,
+      conversationId,
+      localDisplayOnly: result.localDisplayOnly,
+      avatarState: result.avatarState,
+      expression: result.expression,
+      gazeTarget: result.gazeTarget,
+      stance: result.stance,
+      bridgeProvidedProvenance: localNeutralAvatarStateSample.bridgeProvidedProvenance,
+      cameraCaptureStarted: result.cameraCaptureStarted,
+      faceDetectionStarted: result.faceDetectionStarted,
+      affectInferred: result.affectInferred,
+      avatarAnimationStarted: result.avatarAnimationStarted,
       liveNapoleonContacted: result.liveNapoleonContacted,
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
@@ -1368,6 +1399,10 @@ export function App() {
     voiceResponseShapeResult === null
       ? "Voice response not shaped"
       : `Shortened for speech: ${voiceResponseShapeResult.wasShortened ? "yes" : "no"}`;
+  const neutralAvatarStateSummary =
+    neutralAvatarStateResult === null
+      ? "Avatar state not prepared"
+      : `Avatar state: ${neutralAvatarStateResult.avatarState}`;
   const cameraCaptureSummary = !cameraEnabled
     ? "Camera capture blocked: camera setting is off and OS permission is not granted."
     : cameraPermissionStatus !== "granted"
@@ -1710,6 +1745,56 @@ export function App() {
         ) : null}
         <button className="secondary" onClick={runLocalVoiceResponseShaping}>
           Shape sample response for voice
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Avatar state">
+        <div>
+          <strong>Avatar state</strong>
+          <span>local display only</span>
+        </div>
+        <div>
+          <strong>Sample state</strong>
+          <span>{neutralAvatarStateSummary}</span>
+        </div>
+        <div>
+          <strong>Camera capture</strong>
+          <span>Camera capture: stopped</span>
+        </div>
+        {neutralAvatarStateResult ? (
+          <>
+            <div>
+              <strong>Expression</strong>
+              <span>Expression: {neutralAvatarStateResult.expression}</span>
+            </div>
+            <div>
+              <strong>Stance</strong>
+              <span>Stance: {neutralAvatarStateResult.stance}</span>
+            </div>
+            <div>
+              <strong>Provenance</strong>
+              <span>Provenance: {neutralAvatarStateResult.provenanceLabel}</span>
+            </div>
+            <div>
+              <strong>Authority boundary</strong>
+              <span>Authority boundary: {neutralAvatarStateResult.authorityBoundary}</span>
+            </div>
+            <div>
+              <strong>Face detection</strong>
+              <span>Face detection started: no</span>
+            </div>
+            <div>
+              <strong>Affect</strong>
+              <span>Affect inferred: no</span>
+            </div>
+            <div>
+              <strong>Blocked effects</strong>
+              <span>Blocked effects: {neutralAvatarStateResult.blockedEffects.join(", ")}</span>
+            </div>
+          </>
+        ) : null}
+        <button className="secondary" onClick={runLocalNeutralAvatarState}>
+          Prepare neutral avatar state
         </button>
       </section>
 

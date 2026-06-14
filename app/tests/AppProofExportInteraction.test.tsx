@@ -783,3 +783,58 @@ test("keeps camera capture blocked until explicit camera permission is granted",
     dom.window.close();
   }
 });
+
+test("builds local neutral avatar state without camera capture or Napoleon contact", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("avatar state preview must stay local");
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Avatar state");
+    const avatarState = within(view.getByLabelText("Avatar state"));
+    assert.ok(avatarState.getByText("Avatar state not prepared"));
+    assert.ok(avatarState.getByText("Camera capture: stopped"));
+
+    await user.click(view.getByRole("button", { name: "Prepare neutral avatar state" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    assert.ok(avatarState.getByText("Avatar state: neutral_listening"));
+    assert.ok(avatarState.getByText("Expression: neutral"));
+    assert.ok(avatarState.getByText("Stance: direct_strategic"));
+    assert.ok(avatarState.getByText("Provenance: Bridge-provided Napoleon response"));
+    assert.ok(avatarState.getByText("Authority boundary: Avatar reflects returned text provenance only; it is not Napoleon approval or an agent action."));
+    assert.ok(avatarState.getByText("Face detection started: no"));
+    assert.ok(avatarState.getByText("Affect inferred: no"));
+    assert.ok(avatarState.getByText("Blocked effects: camera_capture, face_detection, affect_inference, avatar_animation, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
