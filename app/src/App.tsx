@@ -59,7 +59,7 @@ import {
   submitMemoryProposalForReview,
   type MemoryProposalSubmissionResult,
 } from "./memoryProposalSubmission.js";
-import { sendToNapoleon } from "./napoleonBridge.js";
+import { NapoleonBridgeError, sendToNapoleon } from "./napoleonBridge.js";
 import {
   buildSuccessfulNapoleonResponsePresentation,
   clearNapoleonResponsePresentation,
@@ -134,6 +134,24 @@ interface PendingRehearsal {
   review: ReturnType<typeof describeGovernanceReview>;
   memoryReviewState: MemoryProposalReviewState;
   memoryReview: ReturnType<typeof describeMemoryProposalReview> | null;
+}
+
+export function buildBridgeFailureMessageMetadata(error: unknown): ConciergeMessage["metadata"] {
+  if (!(error instanceof NapoleonBridgeError)) {
+    return {
+      source: "Blocked Napoleon governed bridge attempt",
+      attributionBoundary: "No Napoleon response was accepted; fail-closed local state only.",
+    };
+  }
+
+  return {
+    source: "Blocked Napoleon governed bridge attempt",
+    attributionBoundary: "No Napoleon response was accepted; fail-closed local state only.",
+    governanceOutcome: error.governanceOutcome,
+    decisionId: error.decisionId,
+    auditId: error.auditId,
+    blockedEffects: error.blockedEffects,
+  };
 }
 
 function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapabilityQuestion>>): string {
@@ -1108,6 +1126,7 @@ export function App() {
         {
           role: "assistant",
           content: describeBridgeFailureTranscriptMessage(error),
+          metadata: buildBridgeFailureMessageMetadata(error),
         },
       ]);
     }
@@ -2520,14 +2539,30 @@ export function App() {
                     <dd>{m.metadata.attributionBoundary}</dd>
                   </>
                 ) : null}
-                <dt>Governance</dt>
-                <dd>{m.metadata.governanceOutcome}</dd>
-                <dt>Profile mode</dt>
-                <dd>{m.metadata.profileMode}</dd>
-                <dt>Decision</dt>
-                <dd>{m.metadata.decisionId}</dd>
-                <dt>Audit</dt>
-                <dd>{m.metadata.auditId}</dd>
+                {m.metadata.governanceOutcome ? (
+                  <>
+                    <dt>Governance</dt>
+                    <dd>{m.metadata.governanceOutcome}</dd>
+                  </>
+                ) : null}
+                {m.metadata.profileMode ? (
+                  <>
+                    <dt>Profile mode</dt>
+                    <dd>{m.metadata.profileMode}</dd>
+                  </>
+                ) : null}
+                {m.metadata.decisionId ? (
+                  <>
+                    <dt>Decision</dt>
+                    <dd>{m.metadata.decisionId}</dd>
+                  </>
+                ) : null}
+                {m.metadata.auditId ? (
+                  <>
+                    <dt>Audit</dt>
+                    <dd>{m.metadata.auditId}</dd>
+                  </>
+                ) : null}
                 {m.metadata.blockedEffects ? (
                   <>
                     <dt>Blocked effects</dt>

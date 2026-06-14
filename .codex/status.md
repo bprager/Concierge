@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-06-13
+Last updated: 2026-06-14
 
 ## Current Project State
 
@@ -134,6 +134,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Local avatar work now includes stance-to-expression metadata mapping for direct, warm, concerned, playful, and somber stance labels without animation, emotion inference, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - The Text Concierge Napoleon delegation panel now stays visible even before bridge provenance is returned, with selected agents, allowed effects, blocked effects, governance state, trace ID, and audit ID shown as not returned until Napoleon supplies matching provenance.
 - Successful Napoleon bridge responses now show transcript-level source, returned-provenance attribution boundary, and blocked effects on the assistant message itself, not only in the proof and delegation panels.
+- Fail-closed Napoleon bridge attempts now show transcript-level blocked bridge source, no-accepted-response attribution boundary, and blocked effects on the assistant failure message when available.
 - Local avatar work now includes a metadata-only VRM model reference loader and Avatar Model panel that validates the local model reference without starting rendering, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - Local avatar work now includes an Avatar Renderer readiness panel that prepares renderer preflight metadata from the loaded model without allocating a canvas, starting a render loop, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.

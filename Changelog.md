@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Added transcript-level source, attribution-boundary, and blocked-effect rendering for successful Napoleon bridge responses.
+- Added transcript-level source, fail-closed attribution boundary, and blocked-effect metadata for blocked Napoleon bridge attempts.
 - Added a persistent Napoleon delegation panel empty state so selected agents, effects, governance, trace, and audit fields stay visible as "not returned" until bridge provenance exists.
 - Added initial project scaffold with product docs, governance and safety docs, architecture notes, backlog, risk register, roadmap, and ADRs.
 - Added evaluator scenarios, rubrics, expected artifacts, CI workflow, and report output handling.
