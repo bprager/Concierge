@@ -131,6 +131,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Local voice work now includes voice response shaping that shortens long bridge-provenance text for future speech while refusing to invent Napoleon or delegated-agent attribution when provenance is absent.
 - Child protected voice shaping is stricter than adult owner shaping, with shorter speech, slower pacing metadata, visible guardian-review reminders, and the same local-only blocked side-effect boundary.
 - Local avatar work now includes a neutral display-only avatar state panel derived from returned text provenance, stance, and active profile, with child protected avatar camera and affect paths disabled until guardian review and camera capture, face detection, affect inference, animation, live Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, and external sends blocked.
+- Local avatar work now includes a metadata-only VRM model reference loader and Avatar Model panel that validates the local model reference without starting rendering, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
 
 ## Next 3 To 5 Priorities

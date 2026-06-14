@@ -453,6 +453,28 @@ Evaluator coverage:
 
 - Covered by pure avatar state tests and rendered app interaction tests for local preparation without camera, perception, animation, Napoleon contact, or side effects.
 
+### AV-002 details
+
+User value: The user can verify which avatar model would be used before any renderer, camera, perception, or animation pipeline exists.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local avatar model panel.
+- The panel can load a local `.vrm` model reference and display model name, path, format, active profile, and child-protected status.
+- Loading the model reference does not start a renderer, request camera permission, start camera capture, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- Non-`.vrm` model references are rejected before metadata is loaded.
+- `avatar_model_loaded` includes local-reference marker, model-loaded marker, model format, model path, display name, profile mode, child-protected marker, false renderer/capture/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- Child protected model loading shows guardian-review wording and must not treat model loading as guardian approval.
+
+Privacy and safety impact:
+
+- This is local model metadata only, not live avatar rendering.
+- No raw video, affect signal, bridge call, memory write, approval capture, or external send is introduced.
+
+Evaluator coverage:
+
+- Covered by pure avatar model tests and rendered app interaction tests for local model loading without renderer, camera, perception, Napoleon contact, approval, guardian approval, or side effects.
+
 ### AV-010 details
 
 User value: Child protected avatar behavior is visibly stricter before live avatar camera or perception features exist.

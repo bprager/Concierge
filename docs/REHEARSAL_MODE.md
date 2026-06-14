@@ -42,6 +42,8 @@ Voice response shaping is local preparation only, not spoken output. It may shor
 
 Avatar state preparation is local display state only, not live avatar mode. It may prepare a neutral avatar-facing state from returned text provenance, stance, and active profile, but it must not request camera permission, capture video, run face detection, infer affect, animate an avatar, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. It must not claim Napoleon or delegated-agent authority unless bridge provenance supports that claim. In child protected mode, avatar camera and affect paths stay disabled until guardian review and the state must show that guardian approval was not captured.
 
+Avatar model loading is local metadata preparation only, not live rendering. It may validate a `.vrm` model reference and show model metadata, but it must not start a renderer, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected model loading stays non-authorizing and must show that guardian review is still required before rendering, camera, or affect features.
+
 Sending an advisory request is a separate user action after the preview exists. That send still goes through the governed bridge path and remains subject to Chief of Staff and governance decisions.
 
 If the rehearsed turn is `no_go` or denied, Concierge blocks the send action. If the turn is `requires_review`, Concierge shows a review panel. A local acknowledgement can record that the review was seen, but it is not Napoleon approval and does not grant authority.

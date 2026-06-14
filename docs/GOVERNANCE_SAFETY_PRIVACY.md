@@ -97,6 +97,8 @@ Live text responses that claim memory writes, approval capture, external sends, 
 
 Local avatar state preparation is display-only. It may map returned text provenance, stance, and active profile into a neutral avatar-facing state before live avatar rendering exists, but it must not start camera capture, face detection, affect inference, animation, storage, live Napoleon contact, memory writes, approval capture, agent dispatch, or external sends. It must not infer emotion as fact, claim Napoleon or delegated-agent authority without bridge proof, or treat child protected avatar state as guardian approval. Child protected avatar state must keep avatar camera and affect paths disabled until guardian review and must record that no guardian approval was captured.
 
+Local avatar model loading is metadata-only until a real renderer exists. It may validate a local `.vrm` reference and show display metadata, but it must not start rendering, read files through privileged side channels, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected model loading must show guardian-review wording and record that no guardian approval was captured.
+
 ## 4. Memory proposal review
 
 Text Concierge may identify possible preferences or profile notes from a turn and show them as memory proposals.
