@@ -529,6 +529,58 @@ test("runs local text to speech sample without starting audio playback", async (
   }
 });
 
+test("runs local voice turn rehearsal without contacting Napoleon or starting media", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("voice turn rehearsal must stay local");
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Voice turn rehearsal");
+    const rehearsal = within(view.getByLabelText("Voice turn rehearsal"));
+    assert.ok(rehearsal.getByText("Voice rehearsal not run"));
+    assert.ok(rehearsal.getByText("Napoleon contact: no"));
+
+    await user.click(view.getByRole("button", { name: "Run local voice rehearsal" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    assert.ok(rehearsal.getByText("VAD: 2 segments"));
+    assert.ok(rehearsal.getByText("STT: Concierge voice sample detected."));
+    assert.ok(rehearsal.getByText("Text boundary: Napoleon not contacted; no delegated agent response."));
+    assert.ok(rehearsal.getByText("TTS: local-sample-voice prepared without playback."));
+    assert.ok(rehearsal.getByText("Blocked effects: microphone_capture, audio_playback, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("keeps camera capture blocked until explicit camera permission is granted", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

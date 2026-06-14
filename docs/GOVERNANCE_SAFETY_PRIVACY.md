@@ -69,6 +69,8 @@ Speech transcription may run against fixed local sample metadata before live voi
 
 Text to speech may run against fixed local sample text before live voice mode exists. Sample TTS output is speech-preparation metadata only: it must not start audio playback, request microphone permission, store raw audio, write memory, capture approval, dispatch agents, send externally, or imply guardian consent.
 
+Voice-turn rehearsal may chain local VAD, STT, text-boundary, and TTS sample metadata before live voice mode exists. It is a local dry run only: it must not request microphone permission, start capture, start playback, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, send externally, or imply guardian consent. Its text boundary must state when Napoleon was not contacted and no delegated agent response exists.
+
 Bridge readiness proof exports are local metadata only. They may include descriptor state, checksum/signature state, evidence status, last operation path, blocked effects, and last fail-closed reason, but they must not include raw prompts, response bodies, endpoint hosts, bearer tokens, request bodies, or response bodies. Exporting a readiness proof is not Napoleon approval and does not grant memory writes, approval capture, agent dispatch, local application, or external sends.
 
 Bridge readiness proof comparison is also local metadata only. It compares the current proof with the previous proof exported in the same app session using sanitized descriptor and evidence fields, and it must not expose raw prompts, endpoint hosts, tokens, request bodies, response bodies, or authority claims.

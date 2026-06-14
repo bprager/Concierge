@@ -324,6 +324,29 @@ Evaluator coverage:
 
 - Covered by pure TTS adapter tests and rendered app interaction tests for local sample execution without audio playback.
 
+### VO-006 details
+
+User value: A full voice turn can be rehearsed locally before live microphone capture, audio playback, or spoken Napoleon responses exist.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local voice-turn rehearsal panel.
+- The dry run chains local VAD, local STT, an explicit text authority boundary, and local TTS metadata.
+- The text boundary states that Napoleon was not contacted and no delegated agent response exists.
+- Running the dry run does not request microphone permission, start microphone capture, start audio playback, write memory, capture approval, dispatch agents, contact Napoleon, or send externally.
+- `voice_turn_rehearsed` includes local-rehearsal marker, VAD segment count, STT model, TTS voice, live-Napoleon-contact false, capture/playback/storage false, and explicit false side-effect flags.
+- All blocked effects are visible in the UI.
+- Child protected mode must not treat local voice rehearsal as guardian approval, recording permission, external speech permission, or Napoleon approval.
+
+Privacy and safety impact:
+
+- This is a local dry run only, not live voice mode.
+- Raw audio remains unstored, no automatic speaker output path is introduced, and no Napoleon bridge call occurs.
+
+Evaluator coverage:
+
+- Covered by pure voice-turn rehearsal tests and rendered app interaction tests for local dry-run execution without media or Napoleon contact.
+
 ## Milestone P3: Avatar Concierge
 
 | ID | Story | Priority | Acceptance criteria | Observability |

@@ -88,6 +88,7 @@ import {
   synthesizeLocalSpeechSample,
   type LocalTextToSpeechResult,
 } from "./textToSpeech.js";
+import { rehearseLocalVoiceTurnSample, type LocalVoiceTurnRehearsalResult } from "./voiceTurnRehearsal.js";
 import { detectVoiceSegments, localVadSampleFrames, type VoiceActivitySegment } from "./voiceActivity.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
@@ -170,6 +171,7 @@ export function App() {
   const [vadSampleSegments, setVadSampleSegments] = useState<VoiceActivitySegment[] | null>(null);
   const [sttSampleResult, setSttSampleResult] = useState<LocalSpeechTranscriptionResult | null>(null);
   const [ttsSampleResult, setTtsSampleResult] = useState<LocalTextToSpeechResult | null>(null);
+  const [voiceTurnRehearsalResult, setVoiceTurnRehearsalResult] = useState<LocalVoiceTurnRehearsalResult | null>(null);
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
@@ -549,6 +551,28 @@ export function App() {
       approvalCaptured: false,
       memoryWritePerformed: false,
       externalSendPerformed: false,
+    });
+  }
+
+  function runLocalVoiceTurnRehearsal() {
+    const traceId = newTraceId();
+    const result = rehearseLocalVoiceTurnSample();
+    setVoiceTurnRehearsalResult(result);
+    emitEvent("voice_turn_rehearsed", {
+      traceId,
+      conversationId,
+      localRehearsalOnly: result.localRehearsalOnly,
+      vadSegmentCount: result.vad.segments.length,
+      sttModel: result.stt.model,
+      ttsVoiceId: result.tts.voiceId,
+      liveNapoleonContacted: result.liveNapoleonContacted,
+      microphoneCaptureStarted: result.microphoneCaptureStarted,
+      audioPlaybackStarted: result.audioPlaybackStarted,
+      rawAudioStored: result.rawAudioStored,
+      memoryWritePerformed: result.memoryWritePerformed,
+      approvalCaptured: result.approvalCaptured,
+      externalSendPerformed: result.externalSendPerformed,
+      blockedEffects: result.blockedEffects,
     });
   }
 
@@ -1270,6 +1294,10 @@ export function App() {
     ttsSampleResult === null
       ? "TTS sample not run"
       : `Prepared ${ttsSampleResult.chars} characters for local sample speech.`;
+  const voiceTurnRehearsalSummary =
+    voiceTurnRehearsalResult === null
+      ? "Voice rehearsal not run"
+      : `VAD: ${voiceTurnRehearsalResult.vad.segments.length} segments`;
   const cameraCaptureSummary = !cameraEnabled
     ? "Camera capture blocked: camera setting is off and OS permission is not granted."
     : cameraPermissionStatus !== "granted"
@@ -1483,6 +1511,44 @@ export function App() {
         </div>
         <button className="secondary" onClick={runLocalTtsSample}>
           Run local TTS sample
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Voice turn rehearsal">
+        <div>
+          <strong>Voice turn rehearsal</strong>
+          <span>local dry run only</span>
+        </div>
+        <div>
+          <strong>Sample state</strong>
+          <span>{voiceTurnRehearsalSummary}</span>
+        </div>
+        <div>
+          <strong>Napoleon contact</strong>
+          <span>Napoleon contact: no</span>
+        </div>
+        {voiceTurnRehearsalResult ? (
+          <>
+            <div>
+              <strong>Transcript</strong>
+              <span>STT: {voiceTurnRehearsalResult.stt.transcript}</span>
+            </div>
+            <div>
+              <strong>Text boundary</strong>
+              <span>Text boundary: {voiceTurnRehearsalResult.textBoundary.authorityBoundary}</span>
+            </div>
+            <div>
+              <strong>Speech output</strong>
+              <span>TTS: {voiceTurnRehearsalResult.tts.voiceId} prepared without playback.</span>
+            </div>
+            <div>
+              <strong>Blocked effects</strong>
+              <span>Blocked effects: {voiceTurnRehearsalResult.blockedEffects.join(", ")}</span>
+            </div>
+          </>
+        ) : null}
+        <button className="secondary" onClick={runLocalVoiceTurnRehearsal}>
+          Run local voice rehearsal
         </button>
       </section>
 

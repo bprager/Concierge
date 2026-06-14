@@ -107,6 +107,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added a local Voice Activity Detection sample panel and deterministic detector; running the sample emits segment metadata only and does not request microphone permission, start capture, store raw audio, or claim side effects.
 - Added a local Speech Transcription sample panel and deterministic adapter; running the sample emits transcript metadata only and does not request microphone permission, start capture, store raw audio, or claim side effects.
 - Added a local Text to Speech sample panel and deterministic adapter; running the sample emits speech-preparation metadata only and does not start audio playback, store raw audio, or claim side effects.
+- Added a local Voice Turn Rehearsal panel and deterministic adapter; running the dry run chains VAD, STT, text boundary, and TTS metadata while keeping Napoleon contact, media capture, playback, storage, approval, memory, dispatch, and external sends blocked.
 
 ## Current Blockers
 

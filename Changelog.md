@@ -91,6 +91,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a local Voice Activity Detection sample panel and deterministic VAD detector that emits segment metadata without starting microphone capture or storing raw audio.
 - Added a local Speech Transcription sample panel and deterministic STT adapter that emits transcript metadata without starting microphone capture or storing raw audio.
 - Added a local Text to Speech sample panel and deterministic TTS adapter that emits speech-preparation metadata without starting audio playback or storing raw audio.
+- Added a local Voice Turn Rehearsal panel that chains VAD, STT, text authority boundary, and TTS metadata without recording, playback, live Napoleon contact, or side effects.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Started maintaining this changelog.
