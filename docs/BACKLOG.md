@@ -475,6 +475,27 @@ Evaluator coverage:
 
 - Covered by pure avatar model tests and rendered app interaction tests for local model loading without renderer, camera, perception, Napoleon contact, approval, guardian approval, or side effects.
 
+### AV-002A details
+
+User value: The user can see whether the avatar renderer is ready before Concierge starts any visual rendering or media path.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local avatar renderer readiness panel.
+- Renderer readiness can be prepared from loaded avatar model metadata.
+- Preparing readiness does not allocate a canvas, start a render loop, start animation, request camera permission, start camera capture, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `avatar_renderer_readiness_prepared` includes local-readiness marker, renderer-ready marker, false renderer-started/render-loop/canvas flags, model display name, model format, profile mode, child-protected marker, false capture/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- Child protected renderer readiness shows guardian-review wording and must not treat readiness as guardian approval.
+
+Privacy and safety impact:
+
+- This is local readiness metadata only, not live avatar rendering.
+- No raw video, affect signal, bridge call, memory write, approval capture, guardian approval capture, or external send is introduced.
+
+Evaluator coverage:
+
+- Covered by pure avatar renderer readiness tests and rendered app interaction tests for local renderer preflight without canvas allocation, render loop, camera, perception, Napoleon contact, approval, guardian approval, or side effects.
+
 ### AV-010 details
 
 User value: Child protected avatar behavior is visibly stricter before live avatar camera or perception features exist.

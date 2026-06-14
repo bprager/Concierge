@@ -275,6 +275,7 @@ rectangle "Telemetry Destinations" {
 - Shows local voice response shaping that shortens long bridge-provenance text for future speech without inventing Napoleon or delegated-agent attribution and without starting capture, playback, storage, or Napoleon contact; child protected mode applies shorter speech, slower pacing metadata, and guardian-review reminders.
 - Shows local neutral avatar state from returned text provenance, stance, and active profile without starting camera capture, face detection, affect inference, animation, storage, Napoleon contact, or side effects; child protected mode disables avatar camera and affect paths until guardian review and never treats avatar state as approval.
 - Shows a local avatar model reference loader for VRM metadata without starting a renderer, reading raw camera signals, contacting Napoleon, writing memory, capturing approval, dispatching agents, or sending externally.
+- Shows local avatar renderer readiness from loaded model metadata without allocating a canvas, starting a render loop, reading camera signals, contacting Napoleon, writing memory, capturing approval, dispatching agents, or sending externally.
 - Shows camera readiness as local preflight state; explicit camera permission can be requested, but any permission stream is stopped immediately until avatar/camera mode exists.
 
 ### Local Perception Services

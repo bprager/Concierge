@@ -94,6 +94,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a local neutral Avatar State panel that reflects bridge-provenance text and stance without camera capture, face detection, affect inference, animation, live Napoleon contact, or side effects.
 - Added child-protected Avatar State constraints that disable avatar camera and affect paths until guardian review without treating avatar state as approval.
 - Added a local Avatar Model panel and VRM reference loader that records model metadata without starting rendering, camera capture, perception, live Napoleon contact, or side effects.
+- Added a local Avatar Renderer readiness panel that verifies renderer preflight state without allocating canvas, starting a render loop, contacting Napoleon, or starting side effects.
 - Added a local Voice Activity Detection sample panel and deterministic VAD detector that emits segment metadata without starting microphone capture or storing raw audio.
 - Added a local Speech Transcription sample panel and deterministic STT adapter that emits transcript metadata without starting microphone capture or storing raw audio.
 - Added a local Text to Speech sample panel and deterministic TTS adapter that emits speech-preparation metadata without starting audio playback or storing raw audio.

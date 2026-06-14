@@ -27,6 +27,32 @@ export interface LocalAvatarModelReferenceResult {
   blockedEffects: string[];
 }
 
+export interface LocalAvatarRendererReadinessInput {
+  model: LocalAvatarModelReferenceResult;
+}
+
+export interface LocalAvatarRendererReadinessResult {
+  localReadinessOnly: true;
+  rendererReady: true;
+  rendererStarted: false;
+  renderLoopStarted: false;
+  canvasAllocated: false;
+  modelDisplayName: string;
+  modelFormat: "vrm";
+  profileMode: LocalProfile;
+  childProtected: boolean;
+  guardianReviewReminder: string;
+  cameraCaptureStarted: false;
+  faceDetectionStarted: false;
+  affectInferred: false;
+  liveNapoleonContacted: false;
+  memoryWritePerformed: false;
+  approvalCaptured: false;
+  guardianApprovalCaptured: false;
+  externalSendPerformed: false;
+  blockedEffects: string[];
+}
+
 export const localAvatarModelSample: LocalAvatarModelReferenceInput = {
   modelPath: "avatars/concierge-neutral.vrm",
   displayName: "Concierge Neutral",
@@ -74,6 +100,52 @@ export function loadLocalAvatarModelReference(
       ? "Guardian review is required before child avatar rendering, camera, or affect features."
       : "No guardian review reminder for this profile.",
     rendererStarted: false,
+    cameraCaptureStarted: false,
+    faceDetectionStarted: false,
+    affectInferred: false,
+    liveNapoleonContacted: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    guardianApprovalCaptured: false,
+    externalSendPerformed: false,
+    blockedEffects,
+  };
+}
+
+export function buildLocalAvatarRendererReadiness(
+  input: LocalAvatarRendererReadinessInput,
+): LocalAvatarRendererReadinessResult {
+  const childProtected = input.model.childProtected;
+  const blockedEffects = [
+    "renderer_start",
+    "render_loop",
+    "canvas_allocation",
+    "camera_capture",
+    "face_detection",
+    "affect_inference",
+    "live_napoleon_contact",
+    "memory_write",
+    "approval_capture",
+    "external_send",
+    "agent_dispatch",
+  ];
+  if (childProtected) {
+    blockedEffects.splice(9, 0, "guardian_approval_capture");
+  }
+
+  return {
+    localReadinessOnly: true,
+    rendererReady: true,
+    rendererStarted: false,
+    renderLoopStarted: false,
+    canvasAllocated: false,
+    modelDisplayName: input.model.displayName,
+    modelFormat: input.model.modelFormat,
+    profileMode: input.model.profileMode,
+    childProtected,
+    guardianReviewReminder: childProtected
+      ? "Guardian review is required before child avatar rendering can start."
+      : "No guardian review reminder for this profile.",
     cameraCaptureStarted: false,
     faceDetectionStarted: false,
     affectInferred: false,

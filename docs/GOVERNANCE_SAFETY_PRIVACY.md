@@ -99,6 +99,8 @@ Local avatar state preparation is display-only. It may map returned text provena
 
 Local avatar model loading is metadata-only until a real renderer exists. It may validate a local `.vrm` reference and show display metadata, but it must not start rendering, read files through privileged side channels, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected model loading must show guardian-review wording and record that no guardian approval was captured.
 
+Local avatar renderer readiness is preflight display state only. It may show that a renderer could be prepared from loaded model metadata, but it must not allocate a canvas, start a render loop, animate a model, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected renderer readiness must remain blocked until guardian review and must record that no guardian approval was captured.
+
 ## 4. Memory proposal review
 
 Text Concierge may identify possible preferences or profile notes from a turn and show them as memory proposals.

@@ -74,6 +74,7 @@ Every user turn has:
 | voice_response_shaped | voice | local_preparation_only, profile_mode, child_protected, was_shortened, original_chars, spoken_chars, max_spoken_chars_applied, pacing, requires_guardian_review_reminder, bridge_provided_provenance, microphone_capture_started, audio_playback_started, raw_audio_stored, live_napoleon_contacted, blocked_effects |
 | avatar_state_changed | avatar | local_display_only, avatar_state, expression, gaze_target, profile_mode, child_protected, camera_policy, affect_policy, stance, bridge_provided_provenance, camera_capture_started, face_detection_started, affect_inferred, avatar_animation_started, live_napoleon_contacted, guardian_approval_captured, blocked_effects |
 | avatar_model_loaded | avatar | local_reference_only, model_loaded, model_format, model_path, display_name, profile_mode, child_protected, renderer_started, camera_capture_started, face_detection_started, affect_inferred, live_napoleon_contacted, guardian_approval_captured, blocked_effects |
+| avatar_renderer_readiness_prepared | avatar | local_readiness_only, renderer_ready, renderer_started, render_loop_started, canvas_allocated, model_display_name, model_format, profile_mode, child_protected, camera_capture_started, face_detection_started, affect_inferred, live_napoleon_contacted, guardian_approval_captured, blocked_effects |
 | avatar_expression_set | avatar | stance, expression |
 | camera_state_estimated | perception | present, looking_at_screen, confidence |
 | eval_case_started | evaluator | case_id |

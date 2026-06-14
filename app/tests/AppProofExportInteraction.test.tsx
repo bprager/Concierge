@@ -943,3 +943,58 @@ test("loads local avatar model metadata without renderer camera or Napoleon cont
     dom.window.close();
   }
 });
+
+test("prepares avatar renderer readiness without starting rendering camera or Napoleon contact", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("avatar renderer readiness must stay local");
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Avatar renderer");
+    const avatarRenderer = within(view.getByLabelText("Avatar renderer"));
+    assert.ok(avatarRenderer.getByText("Renderer readiness not prepared"));
+    assert.ok(avatarRenderer.getByText("Renderer started: no"));
+
+    await user.click(view.getByRole("button", { name: "Load local avatar model" }));
+    await user.click(view.getByRole("button", { name: "Prepare renderer readiness" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    assert.ok(avatarRenderer.getByText("Renderer ready: yes"));
+    assert.ok(avatarRenderer.getByText("Model: Concierge Neutral"));
+    assert.ok(avatarRenderer.getByText("Render loop started: no"));
+    assert.ok(avatarRenderer.getByText("Canvas allocated: no"));
+    assert.ok(avatarRenderer.getByText("Camera capture started: no"));
+    assert.ok(avatarRenderer.getByText("Live Napoleon contacted: no"));
+    assert.ok(avatarRenderer.getByText("Blocked effects: renderer_start, render_loop, canvas_allocation, camera_capture, face_detection, affect_inference, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});

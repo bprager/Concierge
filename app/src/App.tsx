@@ -5,8 +5,10 @@ import {
   type LocalNeutralAvatarStateResult,
 } from "./avatarState.js";
 import {
+  buildLocalAvatarRendererReadiness,
   loadLocalAvatarModelReference,
   localAvatarModelSample,
+  type LocalAvatarRendererReadinessResult,
   type LocalAvatarModelReferenceResult,
 } from "./avatarModel.js";
 import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
@@ -192,6 +194,8 @@ export function App() {
   const [voiceResponseShapeResult, setVoiceResponseShapeResult] = useState<VoiceResponseShapeResult | null>(null);
   const [neutralAvatarStateResult, setNeutralAvatarStateResult] = useState<LocalNeutralAvatarStateResult | null>(null);
   const [avatarModelResult, setAvatarModelResult] = useState<LocalAvatarModelReferenceResult | null>(null);
+  const [avatarRendererReadinessResult, setAvatarRendererReadinessResult] =
+    useState<LocalAvatarRendererReadinessResult | null>(null);
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
@@ -695,6 +699,38 @@ export function App() {
       profileMode: result.profileMode,
       childProtected: result.childProtected,
       rendererStarted: result.rendererStarted,
+      cameraCaptureStarted: result.cameraCaptureStarted,
+      faceDetectionStarted: result.faceDetectionStarted,
+      affectInferred: result.affectInferred,
+      liveNapoleonContacted: result.liveNapoleonContacted,
+      memoryWritePerformed: result.memoryWritePerformed,
+      approvalCaptured: result.approvalCaptured,
+      guardianApprovalCaptured: result.guardianApprovalCaptured,
+      externalSendPerformed: result.externalSendPerformed,
+      blockedEffects: result.blockedEffects,
+    });
+  }
+
+  function runLocalAvatarRendererReadiness() {
+    const traceId = newTraceId();
+    const model = avatarModelResult ?? loadLocalAvatarModelReference({ ...localAvatarModelSample, profileMode: profile });
+    if (avatarModelResult === null) {
+      setAvatarModelResult(model);
+    }
+    const result = buildLocalAvatarRendererReadiness({ model });
+    setAvatarRendererReadinessResult(result);
+    emitEvent("avatar_renderer_readiness_prepared", {
+      traceId,
+      conversationId,
+      localReadinessOnly: result.localReadinessOnly,
+      rendererReady: result.rendererReady,
+      rendererStarted: result.rendererStarted,
+      renderLoopStarted: result.renderLoopStarted,
+      canvasAllocated: result.canvasAllocated,
+      modelDisplayName: result.modelDisplayName,
+      modelFormat: result.modelFormat,
+      profileMode: result.profileMode,
+      childProtected: result.childProtected,
       cameraCaptureStarted: result.cameraCaptureStarted,
       faceDetectionStarted: result.faceDetectionStarted,
       affectInferred: result.affectInferred,
@@ -1445,6 +1481,10 @@ export function App() {
     avatarModelResult === null
       ? "Avatar model not loaded"
       : `Model loaded: ${avatarModelResult.displayName}`;
+  const avatarRendererReadinessSummary =
+    avatarRendererReadinessResult === null
+      ? "Renderer readiness not prepared"
+      : `Renderer ready: ${avatarRendererReadinessResult.rendererReady ? "yes" : "no"}`;
   const cameraCaptureSummary = !cameraEnabled
     ? "Camera capture blocked: camera setting is off and OS permission is not granted."
     : cameraPermissionStatus !== "granted"
@@ -1919,6 +1959,64 @@ export function App() {
         ) : null}
         <button className="secondary" onClick={runLocalAvatarModelLoad}>
           Load local avatar model
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Avatar renderer">
+        <div>
+          <strong>Avatar renderer</strong>
+          <span>local readiness only</span>
+        </div>
+        <div>
+          <strong>Renderer state</strong>
+          <span>{avatarRendererReadinessSummary}</span>
+        </div>
+        <div>
+          <strong>Renderer started</strong>
+          <span>Renderer started: no</span>
+        </div>
+        {avatarRendererReadinessResult ? (
+          <>
+            <div>
+              <strong>Model</strong>
+              <span>Model: {avatarRendererReadinessResult.modelDisplayName}</span>
+            </div>
+            <div>
+              <strong>Render loop</strong>
+              <span>Render loop started: no</span>
+            </div>
+            <div>
+              <strong>Canvas</strong>
+              <span>Canvas allocated: no</span>
+            </div>
+            <div>
+              <strong>Profile</strong>
+              <span>Profile: {avatarRendererReadinessResult.profileMode}</span>
+            </div>
+            <div>
+              <strong>Child protected</strong>
+              <span>Child protected: {avatarRendererReadinessResult.childProtected ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Guardian reminder</strong>
+              <span>Guardian reminder: {avatarRendererReadinessResult.guardianReviewReminder}</span>
+            </div>
+            <div>
+              <strong>Camera capture</strong>
+              <span>Camera capture started: no</span>
+            </div>
+            <div>
+              <strong>Napoleon contact</strong>
+              <span>Live Napoleon contacted: no</span>
+            </div>
+            <div>
+              <strong>Blocked effects</strong>
+              <span>Blocked effects: {avatarRendererReadinessResult.blockedEffects.join(", ")}</span>
+            </div>
+          </>
+        ) : null}
+        <button className="secondary" onClick={runLocalAvatarRendererReadiness}>
+          Prepare renderer readiness
         </button>
       </section>
 
