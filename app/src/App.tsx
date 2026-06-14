@@ -1088,6 +1088,8 @@ export function App() {
           role: "assistant",
           content: response.text,
           metadata: {
+            source: "Napoleon governed bridge",
+            attributionBoundary: "Returned bridge provenance only; not local authority.",
             governanceOutcome: response.governanceDecision.outcome,
             decisionId: response.governanceDecision.decision_id,
             auditId: response.auditEnvelope.audit_id,
@@ -2506,6 +2508,18 @@ export function App() {
             <p>{m.content}</p>
             {m.metadata ? (
               <dl>
+                {m.metadata.source ? (
+                  <>
+                    <dt>Source</dt>
+                    <dd>{m.metadata.source}</dd>
+                  </>
+                ) : null}
+                {m.metadata.attributionBoundary ? (
+                  <>
+                    <dt>Attribution</dt>
+                    <dd>{m.metadata.attributionBoundary}</dd>
+                  </>
+                ) : null}
                 <dt>Governance</dt>
                 <dd>{m.metadata.governanceOutcome}</dd>
                 <dt>Profile mode</dt>
@@ -2514,6 +2528,12 @@ export function App() {
                 <dd>{m.metadata.decisionId}</dd>
                 <dt>Audit</dt>
                 <dd>{m.metadata.auditId}</dd>
+                {m.metadata.blockedEffects ? (
+                  <>
+                    <dt>Blocked effects</dt>
+                    <dd>{m.metadata.blockedEffects.join(", ")}</dd>
+                  </>
+                ) : null}
               </dl>
             ) : null}
           </article>

@@ -131,6 +131,16 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     await user.click(screen.getByRole("button", { name: "Send" }));
 
     await screen.findByText("Last successful Napoleon proof");
+    const napoleonReply = screen.getByText(
+      "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
+    ).closest("article") as HTMLElement;
+    assert.ok(napoleonReply);
+    assert.ok(within(napoleonReply).getByText("Source"));
+    assert.ok(within(napoleonReply).getByText("Napoleon governed bridge"));
+    assert.ok(within(napoleonReply).getByText("Attribution"));
+    assert.ok(within(napoleonReply).getByText("Returned bridge provenance only; not local authority."));
+    assert.ok(within(napoleonReply).getByText("Blocked effects"));
+    assert.ok(within(napoleonReply).getByText("memory_write, approval_capture, external_send, agent_dispatch"));
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));
     await screen.findByText("No previous Napoleon response proof is available in this app session.");
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));
