@@ -49,3 +49,23 @@ test("does not claim Napoleon provenance when avatar input lacks bridge proof", 
   assert.equal(result.expression, "neutral");
   assert.equal(result.affectInferred, false);
 });
+
+test("applies child protected avatar constraints without treating state as guardian approval", () => {
+  const result = buildLocalNeutralAvatarState({
+    responseText: "Napoleon recommends preparing the bridge rollout plan for guardian review.",
+    stance: "direct_strategic",
+    bridgeProvidedProvenance: true,
+    profileMode: "child_protected",
+  });
+
+  assert.equal(result.profileMode, "child_protected");
+  assert.equal(result.childProtected, true);
+  assert.equal(result.cameraPolicy, "disabled_until_guardian_review");
+  assert.equal(result.affectPolicy, "disabled");
+  assert.equal(result.guardianReviewReminder, "Guardian review is required before child avatar camera or affect features.");
+  assert.equal(result.guardianApprovalCaptured, false);
+  assert.equal(result.cameraCaptureStarted, false);
+  assert.equal(result.faceDetectionStarted, false);
+  assert.equal(result.affectInferred, false);
+  assert.ok(result.blockedEffects.includes("guardian_approval_capture"));
+});

@@ -646,7 +646,7 @@ export function App() {
 
   function runLocalNeutralAvatarState() {
     const traceId = newTraceId();
-    const result = buildLocalNeutralAvatarState(localNeutralAvatarStateSample);
+    const result = buildLocalNeutralAvatarState({ ...localNeutralAvatarStateSample, profileMode: profile });
     setNeutralAvatarStateResult(result);
     emitEvent("avatar_state_changed", {
       traceId,
@@ -655,6 +655,11 @@ export function App() {
       avatarState: result.avatarState,
       expression: result.expression,
       gazeTarget: result.gazeTarget,
+      profileMode: result.profileMode,
+      childProtected: result.childProtected,
+      cameraPolicy: result.cameraPolicy,
+      affectPolicy: result.affectPolicy,
+      guardianApprovalCaptured: result.guardianApprovalCaptured,
       stance: result.stance,
       bridgeProvidedProvenance: localNeutralAvatarStateSample.bridgeProvidedProvenance,
       cameraCaptureStarted: result.cameraCaptureStarted,
@@ -1768,6 +1773,26 @@ export function App() {
               <span>Expression: {neutralAvatarStateResult.expression}</span>
             </div>
             <div>
+              <strong>Profile</strong>
+              <span>Profile: {neutralAvatarStateResult.profileMode}</span>
+            </div>
+            <div>
+              <strong>Child protected</strong>
+              <span>Child protected: {neutralAvatarStateResult.childProtected ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Camera policy</strong>
+              <span>Camera policy: {neutralAvatarStateResult.cameraPolicy}</span>
+            </div>
+            <div>
+              <strong>Affect policy</strong>
+              <span>Affect policy: {neutralAvatarStateResult.affectPolicy}</span>
+            </div>
+            <div>
+              <strong>Guardian reminder</strong>
+              <span>Guardian reminder: {neutralAvatarStateResult.guardianReviewReminder}</span>
+            </div>
+            <div>
               <strong>Stance</strong>
               <span>Stance: {neutralAvatarStateResult.stance}</span>
             </div>
@@ -1786,6 +1811,10 @@ export function App() {
             <div>
               <strong>Affect</strong>
               <span>Affect inferred: no</span>
+            </div>
+            <div>
+              <strong>Guardian approval</strong>
+              <span>Guardian approval captured: no</span>
             </div>
             <div>
               <strong>Blocked effects</strong>

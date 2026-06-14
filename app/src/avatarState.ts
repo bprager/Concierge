@@ -1,7 +1,10 @@
+import type { LocalProfile } from "./contractBridge.js";
+
 export interface LocalNeutralAvatarStateInput {
   responseText: string;
   stance: string;
   bridgeProvidedProvenance: boolean;
+  profileMode?: LocalProfile;
 }
 
 export interface LocalNeutralAvatarStateResult {
@@ -9,6 +12,11 @@ export interface LocalNeutralAvatarStateResult {
   avatarState: "neutral_listening";
   expression: "neutral";
   gazeTarget: "user_interface";
+  profileMode: LocalProfile;
+  childProtected: boolean;
+  cameraPolicy: "explicit_permission_required" | "disabled_until_guardian_review";
+  affectPolicy: "disabled";
+  guardianReviewReminder: string;
   stance: string;
   provenanceLabel: string;
   authorityBoundary: string;
@@ -19,6 +27,7 @@ export interface LocalNeutralAvatarStateResult {
   liveNapoleonContacted: false;
   memoryWritePerformed: false;
   approvalCaptured: false;
+  guardianApprovalCaptured: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -34,11 +43,35 @@ export function buildLocalNeutralAvatarState(input: LocalNeutralAvatarStateInput
     throw new Error("avatar response text is empty");
   }
 
+  const profileMode = input.profileMode ?? "adult_owner";
+  const childProtected = profileMode === "child_protected";
+  const blockedEffects = [
+    "camera_capture",
+    "face_detection",
+    "affect_inference",
+    "avatar_animation",
+    "live_napoleon_contact",
+    "memory_write",
+    "approval_capture",
+    "external_send",
+    "agent_dispatch",
+  ];
+  if (childProtected) {
+    blockedEffects.splice(7, 0, "guardian_approval_capture");
+  }
+
   return {
     localDisplayOnly: true,
     avatarState: "neutral_listening",
     expression: "neutral",
     gazeTarget: "user_interface",
+    profileMode,
+    childProtected,
+    cameraPolicy: childProtected ? "disabled_until_guardian_review" : "explicit_permission_required",
+    affectPolicy: "disabled",
+    guardianReviewReminder: childProtected
+      ? "Guardian review is required before child avatar camera or affect features."
+      : "No guardian review reminder for this profile.",
     stance: input.stance.trim() || "neutral",
     provenanceLabel: input.bridgeProvidedProvenance
       ? "Bridge-provided Napoleon response"
@@ -53,17 +86,8 @@ export function buildLocalNeutralAvatarState(input: LocalNeutralAvatarStateInput
     liveNapoleonContacted: false,
     memoryWritePerformed: false,
     approvalCaptured: false,
+    guardianApprovalCaptured: false,
     externalSendPerformed: false,
-    blockedEffects: [
-      "camera_capture",
-      "face_detection",
-      "affect_inference",
-      "avatar_animation",
-      "live_napoleon_contact",
-      "memory_write",
-      "approval_capture",
-      "external_send",
-      "agent_dispatch",
-    ],
+    blockedEffects,
   };
 }

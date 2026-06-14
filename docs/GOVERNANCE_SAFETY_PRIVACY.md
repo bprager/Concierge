@@ -95,7 +95,7 @@ Last successful Napoleon proof comparison is also local metadata only. It compar
 
 Live text responses that claim memory writes, approval capture, external sends, agent dispatch, or local application must also fail closed as contract mismatches. A response cannot convert a governed text turn into execution proof just by saying the side effect happened.
 
-Local avatar state preparation is display-only. It may map returned text provenance and stance into a neutral avatar-facing state before live avatar rendering exists, but it must not start camera capture, face detection, affect inference, animation, storage, live Napoleon contact, memory writes, approval capture, agent dispatch, or external sends. It must not infer emotion as fact, claim Napoleon or delegated-agent authority without bridge proof, or treat child protected avatar state as guardian approval.
+Local avatar state preparation is display-only. It may map returned text provenance, stance, and active profile into a neutral avatar-facing state before live avatar rendering exists, but it must not start camera capture, face detection, affect inference, animation, storage, live Napoleon contact, memory writes, approval capture, agent dispatch, or external sends. It must not infer emotion as fact, claim Napoleon or delegated-agent authority without bridge proof, or treat child protected avatar state as guardian approval. Child protected avatar state must keep avatar camera and affect paths disabled until guardian review and must record that no guardian approval was captured.
 
 ## 4. Memory proposal review
 

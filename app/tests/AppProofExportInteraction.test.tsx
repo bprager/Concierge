@@ -838,3 +838,53 @@ test("builds local neutral avatar state without camera capture or Napoleon conta
     dom.window.close();
   }
 });
+
+test("applies child protected avatar state constraints from rendered profile controls", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("child avatar state preview must stay local");
+    },
+  });
+
+  try {
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+
+    await user.click(view.getByRole("button", { name: "Prepare neutral avatar state" }));
+
+    const avatarState = within(view.getByLabelText("Avatar state"));
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    assert.ok(avatarState.getByText("Profile: child_protected"));
+    assert.ok(avatarState.getByText("Child protected: yes"));
+    assert.ok(avatarState.getByText("Camera policy: disabled_until_guardian_review"));
+    assert.ok(avatarState.getByText("Affect policy: disabled"));
+    assert.ok(avatarState.getByText("Guardian reminder: Guardian review is required before child avatar camera or affect features."));
+    assert.ok(avatarState.getByText("Guardian approval captured: no"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});

@@ -453,6 +453,28 @@ Evaluator coverage:
 
 - Covered by pure avatar state tests and rendered app interaction tests for local preparation without camera, perception, animation, Napoleon contact, or side effects.
 
+### AV-010 details
+
+User value: Child protected avatar behavior is visibly stricter before live avatar camera or perception features exist.
+
+Acceptance criteria:
+
+- Local avatar state reads the active profile.
+- Child protected avatar state marks `child_protected` as true.
+- Child protected avatar state keeps camera policy disabled until guardian review and affect policy disabled.
+- Child protected avatar state displays a guardian-review reminder.
+- Running child protected avatar state does not request camera permission, start camera capture, run face detection, infer affect, start animation, contact Napoleon, write memory, capture approval, capture guardian approval, dispatch agents, or send externally.
+- `avatar_state_changed` includes profile mode, child-protected marker, camera policy, affect policy, guardian-approval-captured false, and blocked effects including guardian approval capture.
+
+Privacy and safety impact:
+
+- This is local display state only, not live child avatar mode.
+- Child protected state cannot become consent, guardian approval, emotion inference, or camera authorization.
+
+Evaluator coverage:
+
+- Covered by pure avatar state tests and rendered app interaction tests for child protected local preparation without camera, perception, animation, Napoleon contact, approval, guardian approval, or side effects.
+
 ### AV-005 details
 
 User value: Camera readiness is visible before avatar camera capture exists, so the user can tell the difference between a local camera preference, operating-system permission, and active recording.
