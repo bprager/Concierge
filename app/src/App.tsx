@@ -49,9 +49,11 @@ import {
   buildRehearsalPreview,
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
+  mapProfileToNapoleonMode,
   transitionMemoryProposalReviewState,
   type DescriptorConnectionInput,
   type LocalProfile,
+  type NapoleonProfileMode,
   type MemoryProposalReviewState,
 } from "./contractBridge.js";
 import { discoverNapoleonDescriptor } from "./descriptorDiscovery.js";
@@ -137,11 +139,15 @@ interface PendingRehearsal {
   memoryReview: ReturnType<typeof describeMemoryProposalReview> | null;
 }
 
-export function buildBridgeFailureMessageMetadata(error: unknown): ConciergeMessage["metadata"] {
+export function buildBridgeFailureMessageMetadata(
+  error: unknown,
+  activeProfileMode?: NapoleonProfileMode,
+): ConciergeMessage["metadata"] {
   if (!(error instanceof NapoleonBridgeError)) {
     return {
       source: "Blocked Napoleon governed bridge attempt",
       attributionBoundary: "No Napoleon response was accepted; fail-closed local state only.",
+      ...(activeProfileMode ? { profileMode: activeProfileMode } : {}),
     };
   }
 
@@ -149,6 +155,7 @@ export function buildBridgeFailureMessageMetadata(error: unknown): ConciergeMess
     source: "Blocked Napoleon governed bridge attempt",
     attributionBoundary: "No Napoleon response was accepted; fail-closed local state only.",
     governanceOutcome: error.governanceOutcome,
+    ...(activeProfileMode ? { profileMode: activeProfileMode } : {}),
     decisionId: error.decisionId,
     auditId: error.auditId,
     blockedEffects: error.blockedEffects,
@@ -1119,7 +1126,7 @@ export function App() {
         {
           role: "assistant",
           content: describeBridgeFailureTranscriptMessage(error),
-          metadata: buildBridgeFailureMessageMetadata(error),
+          metadata: buildBridgeFailureMessageMetadata(error, mapProfileToNapoleonMode(profile)),
         },
       ]);
     }

@@ -17,12 +17,14 @@ test("builds fail-closed transcript metadata for Napoleon bridge errors", () => 
         governanceOutcome: "deny",
       },
     ),
+    "child_protected_user",
   );
 
   assert.deepEqual(metadata, {
     source: "Blocked Napoleon governed bridge attempt",
     attributionBoundary: "No Napoleon response was accepted; fail-closed local state only.",
     governanceOutcome: "deny",
+    profileMode: "child_protected_user",
     decisionId: "decision_auth",
     auditId: "audit_auth",
     blockedEffects: ["runtime_authority", "command_execution", "task_routing"],

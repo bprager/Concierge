@@ -716,6 +716,112 @@ test("shows fail-closed transcript metadata when Napoleon response mismatches th
   }
 });
 
+test("shows active profile boundary when Napoleon response tries to drift profile scope", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      requestedUrls.push(url);
+      if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+        return harnessJsonResponse(200, {
+          descriptor: {
+            schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+            serviceId: "napoleon.chief_of_staff",
+            runtimeAuthority: false,
+            commandExecution: false,
+            cachePolicy: "fail_closed_to_review_required",
+            blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+          },
+          checksum: { expected: "sha256:ui", actual: "sha256:ui" },
+          signature: { valid: true },
+        });
+      }
+
+      assert.equal(url, "http://127.0.0.1:8787/v1/concierge/turn");
+      const body = JSON.parse(String(init?.body ?? "{}")) as {
+        traceId: string;
+        profileMode: string;
+        chiefOfStaffRequest: { request_id: string };
+      };
+      assert.equal(body.profileMode, "child_protected_user");
+      return harnessJsonResponse(200, {
+        text: "Prepared through Napoleon.",
+        profileMode: "adult_owner",
+        governanceDecision: {
+          decision_id: `decision_${body.traceId}`,
+          request_id: body.chiefOfStaffRequest.request_id,
+          outcome: "requires_review",
+          authority_tier: "advisory_review",
+          approval_requirement: "guardian_owner_review_required",
+          rationale: "Profile scope drift must fail closed.",
+          blocked_effects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+          trace_id: body.traceId,
+          audit_id: `audit_${body.traceId}`,
+        },
+        traceEnvelope: {
+          trace_id: body.traceId,
+          parent_trace_id: "local_harness",
+          actor_id: "napoleon.local_harness",
+          request_id: body.chiefOfStaffRequest.request_id,
+          decision_id: `decision_${body.traceId}`,
+          timestamp: "2026-06-14T00:00:00.000Z",
+        },
+        auditEnvelope: {
+          audit_id: `audit_${body.traceId}`,
+          trace_id: body.traceId,
+          decision_id: `decision_${body.traceId}`,
+          actor_id: "napoleon.local_harness",
+          authority_tier: "advisory_review",
+          approval_requirement: "guardian_owner_review_required",
+          evidence_links: [`trace:${body.traceId}`, "harness:local"],
+        },
+      });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+    await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Remember this without telling anyone" } });
+    await waitFor(() => assert.equal(composer.value, "Remember this without telling anyone"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    await waitFor(() => assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/turn")));
+
+    const blockedMessages = await view.findAllByText(/Napoleon bridge blocked: contract_mismatch/);
+    const blockedReply = blockedMessages.find((message) => message.closest("article"))?.closest("article") as HTMLElement | null;
+    assert.ok(blockedReply);
+    assert.equal(view.queryByText("Prepared through Napoleon."), null);
+    assert.ok(within(blockedReply).getByText("Blocked Napoleon governed bridge attempt"));
+    assert.ok(within(blockedReply).getByText("No Napoleon response was accepted; fail-closed local state only."));
+    assert.ok(within(blockedReply).getByText("Profile mode"));
+    assert.ok(within(blockedReply).getByText("child_protected_user"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("drafts a proposal-only taxonomy review from rendered app controls", async () => {
   const dom = installDom();
   const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
