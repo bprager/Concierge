@@ -64,7 +64,7 @@ Reviewed documentation and handoff files:
 | Observability requirements are broader than implementation | High | The helper logs console events but does not assemble complete traces, redact, buffer, retain, export, or audit. |
 | Local and Napoleon contracts can diverge | High | Local Concierge currently has `/v1/concierge/turn`; Napoleon's package defines `/chief-of-staff/requests`, `/agents`, `/governance/evaluate`, `/profiles/{profile_id}`, `/observability/traces`, and `/evolution/proposals`. |
 | Contract-only package could be mistaken for operational authority | High | The remote descriptor explicitly blocks runtime authority, command execution, routing, dispatch, memory writes, graph writes, approval capture, external sends, and audit append. |
-| License docs contradict each other | Medium | `LICENSE` is MIT, while `LICENSE-TODO.md` says a license must be chosen. |
+| License docs alignment | Resolved | `LICENSE` is MIT, and `LICENSE-TODO.md` now tracks third-party asset license review only. |
 | Handoff drift can recur | Medium | `.codex/status.md` is now updated, but future integration passes should refresh it whenever source authority changes. |
 | Voice/avatar can distract from P1 safety | Medium | The docs correctly defer them, but the project must keep resisting feature-first expansion. |
 
@@ -79,7 +79,7 @@ Reviewed documentation and handoff files:
 7. Local telemetry retention defaults, redaction rules, encryption expectation, and export controls.
 8. Guardian approval workflow for `child_protected_user`, which is Napoleon's profile-mode name for the child protected profile.
 9. Evaluator regression baseline storage and promotion gate rules.
-10. Whether `LICENSE-TODO.md` should be removed or replaced with third-party license review notes now that `LICENSE` is MIT.
+10. Resolved: `LICENSE-TODO.md` has been replaced with third-party license review notes now that `LICENSE` is MIT.
 
 ## Contradictions And Drift
 
@@ -90,7 +90,7 @@ Reviewed documentation and handoff files:
 - Local Concierge uses `child_protected`; Napoleon's profile contract uses `child_protected_user`. This needs an explicit mapping before contract tests.
 - Local Concierge's OpenAPI describes `/v1/concierge/turn`; Napoleon's integration OpenAPI describes review/discovery/governance/profile/observability/evolution endpoints and is marked `contract_only`.
 - Napoleon's `concierge-evidence.yaml` says no local Concierge repository or report files were found during its contract-generation task. That remote evidence is now stale relative to this Concierge repo and should be superseded by the current reports.
-- `LICENSE` is MIT; `LICENSE-TODO.md` still says to choose a license before publishing.
+- Resolved: `LICENSE` is MIT, and `LICENSE-TODO.md` now covers third-party asset license review instead of license selection.
 - `.codex/status.md` was previously stale; it now needs to stay synchronized with the Napoleon CoS integration state.
 
 ## Contributor Readiness
@@ -107,4 +107,4 @@ A new contributor can now see both sides of the intended integration: local Conc
 4. Expand contract tests around the reconciled local Text Concierge bridge path.
 5. Add live endpoint/auth validation once Napoleon provides a runtime transport.
 6. Harden evaluator scenarios and scoring before phase promotion.
-7. Resolve the license TODO contradiction.
+7. Resolved the license TODO drift.

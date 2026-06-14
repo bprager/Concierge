@@ -1,11 +1,12 @@
-# License TODO
+# Third-Party License Review
 
-Choose a repository license before publishing.
+The repository license is MIT. See `LICENSE`.
 
-Recommended options to consider:
+Before publishing releases that include bundled non-source assets, review and document licenses for:
 
-- Apache-2.0 if patent grant clarity matters
-- MIT if maximum simplicity matters
-- Private repository until Napoleon integration details are ready
+- Third-party model files
+- Avatar or VRM assets
+- Voice, speech, or sample media assets
+- Icons, fonts, and other bundled UI assets
 
-Third-party model and avatar asset licenses must be reviewed separately.
+Do not treat the project MIT license as covering third-party assets unless their source licenses explicitly allow that use.

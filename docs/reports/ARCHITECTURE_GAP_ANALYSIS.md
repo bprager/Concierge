@@ -167,7 +167,7 @@ Keep self-evolution proposal-only. Do not build runtime adaptation until evaluat
 | Observability | Required events are broad; sample trace and telemetry helper are minimal. | Add trace completeness tests. |
 | Contract surface | Local `/v1/concierge/turn` does not match Napoleon's contract-only review/discovery/governance/profile/evolution API. | Define a local adapter or revise local OpenAPI to reference Napoleon contracts. |
 | Profile naming | Local profile enum uses `child_protected`; Napoleon uses `child_protected_user`. | Add explicit mapping and tests. |
-| License | `LICENSE` is MIT; `LICENSE-TODO.md` says choose a license. | Replace TODO with third-party license review note. |
+| License | Resolved: `LICENSE` is MIT; `LICENSE-TODO.md` now covers third-party asset license review. | Keep third-party model, avatar, voice, icon, font, and bundled UI asset licenses reviewed before release. |
 | `.codex/status.md` | Says scaffold is uncommitted and build status unknown. | Refresh status after this review. |
 
 ## Missing Interfaces And Contracts

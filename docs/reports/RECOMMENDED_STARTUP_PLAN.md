@@ -243,7 +243,7 @@ Defer until P1 governance and trace behavior are stable:
 8. Implement text turn trace assembly.
 9. Implement governance confirmation UI.
 10. Implement settings/privacy panel.
-11. Resolve `LICENSE-TODO.md` versus MIT `LICENSE` drift.
+11. Resolved `LICENSE-TODO.md` versus MIT `LICENSE` drift.
 
 ## Startup Verdict
 

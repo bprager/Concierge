@@ -121,7 +121,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - No runtime blocker is known from the handoff setup itself.
 - Real Napoleon HTTP evaluator mode requires a configured `NAPOLEON_EVAL_ENDPOINT`; `make eval-http-local-harness` only verifies local HTTP evaluator plumbing.
 - Live Chief of Staff/Napoleon runtime alignment could not be verified because the remote descriptor has no populated live HTTP/MCP/stdio base URL and no local `NAPOLEON_EVAL_ENDPOINT` is configured.
-- `LICENSE` is MIT, while `LICENSE-TODO.md` still says to choose a license.
+- License docs are now consistent: `LICENSE` is MIT, and `LICENSE-TODO.md` tracks only third-party asset license review.
 
 ## Known Bugs Or Risks
 
@@ -145,6 +145,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Last successful Napoleon proof rendering and sanitized proof export now preserve returned target capability IDs when selected-agent delegation is not returned.
 - Sanitized Napoleon response proof export and comparison now keep returned target capability separate from selected-agent provenance.
 - The Napoleon delegation panel now also displays a returned target capability ID when selected-agent delegation is not returned, while keeping selected agents marked as not returned.
+- Resolved the license documentation drift by replacing the obsolete license-choice TODO with third-party asset license review guidance.
 - Local avatar work now includes a metadata-only VRM model reference loader and Avatar Model panel that validates the local model reference without starting rendering, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - Local avatar work now includes an Avatar Renderer readiness panel that prepares renderer preflight metadata from the loaded model without allocating a canvas, starting a render loop, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
