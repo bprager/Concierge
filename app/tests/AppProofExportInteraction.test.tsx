@@ -180,7 +180,7 @@ test("drafts a proposal-only taxonomy review from rendered app controls", async 
 
 test("blocks taxonomy review handoff visibly when no Napoleon endpoint is configured", async () => {
   const dom = installDom();
-  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+  const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([
     import("@testing-library/react"),
     import("@testing-library/user-event"),
     import("../src/App.js"),
@@ -359,7 +359,7 @@ test("renders local privacy controls for telemetry camera and microphone", async
 
 test("keeps voice capture blocked until explicit microphone permission is granted", async () => {
   const dom = installDom();
-  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+  const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([
     import("@testing-library/react"),
     import("@testing-library/user-event"),
     import("../src/App.js"),
@@ -679,6 +679,58 @@ test("shapes a local voice response preview without contacting Napoleon or start
     assert.ok(shaping.getByText("Authority boundary: Bridge-provided Napoleon provenance preserved for speech."));
     assert.ok(shaping.getByText("Audio playback started: no"));
     assert.ok(shaping.getByText("Blocked effects: audio_playback, microphone_capture, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
+test("uses stricter child protected voice shaping without contacting Napoleon or starting media", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("child voice shaping must stay local");
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+    await view.findByText("Voice response shaping");
+    const shaping = within(view.getByLabelText("Voice response shaping"));
+
+    await user.click(view.getByRole("button", { name: "Shape sample response for voice" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    assert.ok(shaping.getByText("Profile: child protected"));
+    assert.ok(shaping.getByText("Pacing: slow"));
+    assert.ok(shaping.getByText("Guardian review reminder: yes"));
+    assert.ok(shaping.getByText("Spoken summary: Napoleon says: Prepare the bridge rollout plan for owner review. Please check this with your guardian review."));
+    assert.ok(shaping.getByText("Authority boundary: Child protected speech preview is shortened, slower, and still requires guardian/owner review; it is not Napoleon approval."));
+    assert.ok(shaping.getByText("Audio playback started: no"));
   } finally {
     cleanup();
     dom.window.close();

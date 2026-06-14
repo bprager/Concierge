@@ -3,13 +3,19 @@ export interface VoiceResponseShapeInput {
   speakerLabel: string;
   bridgeProvidedProvenance: boolean;
   maxSpokenChars: number;
+  profileMode?: "adult_owner" | "child_protected" | "guest" | "collaborator";
 }
 
 export interface VoiceResponseShapeResult {
   localPreparationOnly: true;
+  profileMode: "adult_owner" | "child_protected" | "guest" | "collaborator";
+  childProtected: boolean;
   wasShortened: boolean;
   originalChars: number;
   spokenChars: number;
+  maxSpokenCharsApplied: number;
+  pacing: "standard" | "slow";
+  requiresGuardianReviewReminder: boolean;
   spokenText: string;
   authorityBoundary: string;
   audioPlaybackStarted: false;
@@ -62,20 +68,31 @@ export function shapeVoiceResponseForSpeech(input: VoiceResponseShapeInput): Voi
     throw new Error("max spoken characters is too small");
   }
 
+  const profileMode = input.profileMode ?? "adult_owner";
+  const childProtected = profileMode === "child_protected";
+  const maxSpokenCharsApplied = childProtected ? Math.min(input.maxSpokenChars, 120) : input.maxSpokenChars;
   const prefix = input.bridgeProvidedProvenance ? `${input.speakerLabel.trim() || "Napoleon"} says: ` : "";
-  const bodyMax = Math.max(1, input.maxSpokenChars - prefix.length);
+  const guardianReminder = childProtected ? " Please check this with your guardian review." : "";
+  const bodyMax = Math.max(1, maxSpokenCharsApplied - prefix.length - guardianReminder.length);
   const spokenBody = firstSpokenSentences(trimmedText, bodyMax);
-  const spokenText = `${prefix}${spokenBody}`;
+  const spokenText = `${prefix}${spokenBody}${guardianReminder}`;
 
   return {
     localPreparationOnly: true,
+    profileMode,
+    childProtected,
     wasShortened: spokenText.length < trimmedText.length,
     originalChars: trimmedText.length,
     spokenChars: spokenText.length,
+    maxSpokenCharsApplied,
+    pacing: childProtected ? "slow" : "standard",
+    requiresGuardianReviewReminder: childProtected,
     spokenText,
-    authorityBoundary: input.bridgeProvidedProvenance
-      ? "Bridge-provided Napoleon provenance preserved for speech."
-      : "No bridge provenance; speech summary must not claim Napoleon or delegated-agent authority.",
+    authorityBoundary: childProtected
+      ? "Child protected speech preview is shortened, slower, and still requires guardian/owner review; it is not Napoleon approval."
+      : input.bridgeProvidedProvenance
+        ? "Bridge-provided Napoleon provenance preserved for speech."
+        : "No bridge provenance; speech summary must not claim Napoleon or delegated-agent authority.",
     audioPlaybackStarted: false,
     microphoneCaptureStarted: false,
     rawAudioStored: false,

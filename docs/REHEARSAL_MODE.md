@@ -38,7 +38,7 @@ Voice-turn rehearsal is also local, but it is not a spoken Napoleon turn. It cha
 
 Barge-in rehearsal is local state modeling only, not live interruption of a spoken Napoleon turn. It may mark planned sample speech as interrupted and prepare next-turn state, but it must not start playback, request microphone permission, capture audio, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 
-Voice response shaping is local preparation only, not spoken output. It may shorten bridge-provenance text for a future speech surface, but it must not start playback, request microphone permission, capture audio, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. It must not add Napoleon or delegated-agent attribution unless matching bridge provenance exists.
+Voice response shaping is local preparation only, not spoken output. It may shorten bridge-provenance text for a future speech surface, but it must not start playback, request microphone permission, capture audio, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. It must not add Napoleon or delegated-agent attribution unless matching bridge provenance exists. Child protected shaping uses a shorter speech budget, slower pacing metadata, and a guardian-review reminder while remaining non-authorizing.
 
 Sending an advisory request is a separate user action after the preview exists. That send still goes through the governed bridge path and remains subject to Chief of Staff and governance decisions.
 

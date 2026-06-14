@@ -393,6 +393,29 @@ Evaluator coverage:
 
 - Covered by pure voice response shaping tests and rendered app interaction tests for local preparation without media or Napoleon contact.
 
+### VO-009 details
+
+User value: Child protected voice behavior is stricter before any live speech path exists, so spoken previews cannot imply secrecy, approval, or permission to act.
+
+Acceptance criteria:
+
+- Voice response shaping receives the active local profile.
+- Child protected shaping uses a shorter spoken character budget than adult owner shaping.
+- Child protected shaping emits slower pacing metadata and a guardian-review reminder.
+- The UI displays profile, pacing, guardian-review reminder, authority boundary, and blocked effects.
+- Running child protected shaping does not start audio playback, request microphone permission, start microphone capture, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `voice_response_shaped` includes profile mode, child-protected marker, applied character budget, pacing, guardian-review reminder state, bridge-provenance marker, and explicit false side-effect flags.
+- Child protected shaped speech remains a local preview only and must not be treated as Napoleon approval, guardian approval, recording permission, external speech permission, or permission to keep secrets.
+
+Privacy and safety impact:
+
+- This is local speech preparation only, not live voice mode.
+- Child protected output remains minimized, review-oriented, and non-authorizing.
+
+Evaluator coverage:
+
+- Covered by pure child protected voice shaping tests and rendered app interaction tests for local preparation without media or Napoleon contact.
+
 ## Milestone P3: Avatar Concierge
 
 | ID | Story | Priority | Acceptance criteria | Observability |

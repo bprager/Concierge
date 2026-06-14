@@ -272,7 +272,7 @@ rectangle "Telemetry Destinations" {
 - Shows a local text-to-speech sample that exercises speech-preparation metadata from fixed local sample text without starting audio playback or storing raw audio.
 - Shows a local voice-turn rehearsal that chains VAD, STT, an explicit text authority boundary, and TTS metadata without starting capture, playback, storage, or Napoleon contact.
 - Shows a local barge-in rehearsal that marks planned sample speech as interrupted and prepares next-turn state without starting capture, playback, storage, or Napoleon contact.
-- Shows local voice response shaping that shortens long bridge-provenance text for future speech without inventing Napoleon or delegated-agent attribution and without starting capture, playback, storage, or Napoleon contact.
+- Shows local voice response shaping that shortens long bridge-provenance text for future speech without inventing Napoleon or delegated-agent attribution and without starting capture, playback, storage, or Napoleon contact; child protected mode applies shorter speech, slower pacing metadata, and guardian-review reminders.
 - Shows camera readiness as local preflight state; explicit camera permission can be requested, but any permission stream is stopped immediately until avatar/camera mode exists.
 
 ### Local Perception Services

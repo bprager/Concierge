@@ -609,7 +609,10 @@ export function App() {
 
   function runLocalVoiceResponseShaping() {
     const traceId = newTraceId();
-    const result = shapeVoiceResponseForSpeech(localVoiceResponseShapeSample);
+    const result = shapeVoiceResponseForSpeech({
+      ...localVoiceResponseShapeSample,
+      profileMode: profile,
+    });
     setVoiceResponseShapeResult(result);
     emitEvent("voice_response_shaped", {
       traceId,
@@ -618,6 +621,11 @@ export function App() {
       wasShortened: result.wasShortened,
       originalChars: result.originalChars,
       spokenChars: result.spokenChars,
+      maxSpokenCharsApplied: result.maxSpokenCharsApplied,
+      profileMode: result.profileMode,
+      childProtected: result.childProtected,
+      pacing: result.pacing,
+      requiresGuardianReviewReminder: result.requiresGuardianReviewReminder,
       bridgeProvidedProvenance: localVoiceResponseShapeSample.bridgeProvidedProvenance,
       audioPlaybackStarted: result.audioPlaybackStarted,
       microphoneCaptureStarted: result.microphoneCaptureStarted,
@@ -1670,6 +1678,18 @@ export function App() {
         </div>
         {voiceResponseShapeResult ? (
           <>
+            <div>
+              <strong>Profile</strong>
+              <span>Profile: {voiceResponseShapeResult.childProtected ? "child protected" : voiceResponseShapeResult.profileMode}</span>
+            </div>
+            <div>
+              <strong>Pacing</strong>
+              <span>Pacing: {voiceResponseShapeResult.pacing}</span>
+            </div>
+            <div>
+              <strong>Guardian review</strong>
+              <span>Guardian review reminder: {voiceResponseShapeResult.requiresGuardianReviewReminder ? "yes" : "no"}</span>
+            </div>
             <div>
               <strong>Spoken summary</strong>
               <span>Spoken summary: {voiceResponseShapeResult.spokenText}</span>

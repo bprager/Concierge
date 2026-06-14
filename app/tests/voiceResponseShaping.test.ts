@@ -48,3 +48,33 @@ test("does not invent Napoleon attribution when bridge provenance is absent", ()
   assert.equal(result.liveNapoleonContacted, false);
   assert.equal(result.audioPlaybackStarted, false);
 });
+
+test("applies stricter child protected voice shaping constraints", () => {
+  const adult = shapeVoiceResponseForSpeech({
+    responseText:
+      "Prepare the bridge rollout plan for owner review. Passive Brain found that descriptor discovery is ready. Keep the proof export visible before the next governed send.",
+    speakerLabel: "Napoleon",
+    bridgeProvidedProvenance: true,
+    maxSpokenChars: 150,
+    profileMode: "adult_owner",
+  });
+  const child = shapeVoiceResponseForSpeech({
+    responseText:
+      "Prepare the bridge rollout plan for owner review. Passive Brain found that descriptor discovery is ready. Keep the proof export visible before the next governed send.",
+    speakerLabel: "Napoleon",
+    bridgeProvidedProvenance: true,
+    maxSpokenChars: 150,
+    profileMode: "child_protected",
+  });
+
+  assert.equal(child.profileMode, "child_protected");
+  assert.equal(child.childProtected, true);
+  assert.equal(child.maxSpokenCharsApplied, 120);
+  assert.equal(child.pacing, "slow");
+  assert.equal(child.requiresGuardianReviewReminder, true);
+  assert.ok(child.spokenChars < adult.spokenChars);
+  assert.ok(child.spokenText.includes("guardian review"));
+  assert.equal(child.authorityBoundary, "Child protected speech preview is shortened, slower, and still requires guardian/owner review; it is not Napoleon approval.");
+  assert.equal(child.audioPlaybackStarted, false);
+  assert.equal(child.microphoneCaptureStarted, false);
+});
