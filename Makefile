@@ -39,7 +39,7 @@ eval-http-local-harness:
 	PYTHONPATH=evaluator uv run --with PyYAML --with requests --with jsonschema python scripts/eval_http_local_harness.py
 
 live-runtime-validation:
-	PYTHONPATH=evaluator uv run --with PyYAML --with requests --with jsonschema python scripts/live_runtime_validation.py --bridge-endpoint $$NAPOLEON_BRIDGE_ENDPOINT --eval-endpoint $$NAPOLEON_EVAL_ENDPOINT
+	PYTHONPATH=evaluator uv run --with PyYAML --with requests --with jsonschema python scripts/live_runtime_validation.py
 
 live-runtime-local-harness:
 	PYTHONPATH=evaluator uv run --with PyYAML --with requests --with jsonschema python -m unittest evaluator.tests.test_live_runtime_validation

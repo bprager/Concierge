@@ -59,6 +59,24 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(bridge, "http://127.0.0.1:8787/v1/concierge/turn")
         self.assertEqual(evaluator, "http://127.0.0.1:8787/v1/concierge/evaluate")
 
+    def test_runs_from_bridge_endpoint_environment_without_eval_endpoint(self):
+        with local_bridge_harness.running_harness() as base_url:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                stdout = io.StringIO()
+                with contextlib.redirect_stdout(stdout):
+                    exit_code = live_runtime_validation.main(
+                        ["--out-dir", tmpdir],
+                        env={"NAPOLEON_BRIDGE_ENDPOINT": base_url},
+                    )
+
+                summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(summary["bridgeEvidence"]["status"], "passed")
+        self.assertEqual(summary["httpEvaluator"]["status"], "passed")
+        self.assertNotIn(base_url, json.dumps(summary))
+        self.assertIn("http_evaluator_status", stdout.getvalue())
+
     def test_fails_without_any_endpoint_and_writes_no_artifacts(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             stderr = io.StringIO()
