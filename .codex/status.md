@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-06-14
+Last updated: 2026-06-15
 
 ## Current Project State
 
@@ -45,7 +45,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added a bridge evidence capture runner for one governed text turn against a configured endpoint, with descriptor discovery preflight and local Napoleon-compatible harness coverage.
 - Added a local bridge evidence comparator plus sample evidence fixture to check captured bridge metadata against the OpenAPI-aligned bridge registry and reject raw payload or secret fields.
 - Added optional local bridge bearer token support for text turns and governed steering handoff; tokens are sent only in authorization headers and excluded from payloads and telemetry.
-- Hardened live governed handoffs so Napoleon `deny` and `no_go` responses become blocked outcomes for text turns, memory proposal review, and Chief of Staff steering instead of normal successful responses or completed reviews.
+- Hardened live governed handoffs so Napoleon `deny` and `no_go` responses become blocked outcomes for text turns, memory proposal review, Chief of Staff steering, and taxonomy review instead of normal successful responses or completed reviews.
 - Added canonical bridge endpoint resolution so configured Napoleon base URLs route text turns to `/v1/concierge/turn` and steering handoff to `/v1/concierge/chief-of-staff/steering`.
 - Added a named bridge operation registry for text turns, descriptor discovery, Chief of Staff steering, memory proposal review, and evaluator requests, with app tests that compare registry paths to `api/napoleon_bridge.openapi.yaml`.
 - Added a Text Concierge governed route panel that shows descriptor discovery, text turn, memory proposal review, and Chief of Staff steering paths from the generated registry without endpoint hosts or tokens.

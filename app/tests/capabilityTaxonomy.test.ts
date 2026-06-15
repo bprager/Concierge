@@ -440,6 +440,85 @@ test("taxonomy review handoff fails closed while Rehearsal Mode is active", asyn
   ]);
 });
 
+test("taxonomy review handoff fails closed when Napoleon returns no-go", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_deployment_1", topic: "deployment", capability: "release_summary" });
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_taxonomy_review",
+    traceId: "trace_taxonomy_review",
+  });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const blockedEffects = ["memory_write", "agent_dispatch", "external_send", "approval_capture"];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffTaxonomyReviewDraft(draft, {
+        conversationId: "conv_taxonomy_review",
+        traceId: "trace_taxonomy_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: {
+          endpointConfigured: true,
+          descriptor: defaultChiefOfStaffDescriptor,
+          expectedChecksum: "sha256:local-static",
+          actualChecksum: "sha256:local-static",
+          signatureValid: true,
+        },
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon blocked the taxonomy review packet.",
+            governanceDecision: {
+              decision_id: "decision_taxonomy_no_go",
+              request_id: "cos_trace_taxonomy_submit",
+              outcome: "no_go",
+              authority_tier: "prohibited",
+              approval_requirement: "not_available",
+              rationale: "Taxonomy review is not executable for this request.",
+              blocked_effects: blockedEffects,
+              trace_id: "trace_taxonomy_submit",
+              audit_id: "audit_taxonomy_no_go",
+            },
+            traceEnvelope: {
+              trace_id: "trace_taxonomy_submit",
+              parent_trace_id: "conv_taxonomy_review",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_taxonomy_submit",
+              decision_id: "decision_taxonomy_no_go",
+              timestamp: "2026-06-15T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_taxonomy_no_go",
+              trace_id: "trace_taxonomy_submit",
+              decision_id: "decision_taxonomy_no_go",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "prohibited",
+              approval_requirement: "not_available",
+              evidence_links: ["trace:trace_taxonomy_submit"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(blockedEffects),
+  );
+
+  assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, blockedEffects);
+});
+
 test("taxonomy review handoff rejects response claims that apply taxonomy or side effects", async () => {
   const ledger = createCapabilityLedger();
   addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });
