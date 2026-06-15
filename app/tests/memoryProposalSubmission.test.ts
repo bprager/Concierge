@@ -124,6 +124,40 @@ test("memory proposal submission fails closed before fetch when descriptor disco
   assert.equal(fetchCalled, false);
 });
 
+test("memory proposal submission fails closed while Rehearsal Mode is active", async () => {
+  const review = buildReview();
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitMemoryProposalForReview(review, {
+        conversationId: "conv_memory",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        rehearsalMode: true,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(memoryProposalBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "memory_proposal_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, memoryProposalBlockedEffects);
+});
+
 test("memory proposal submission posts review packet without writing memory or capturing approval", async () => {
   const review = buildReview();
   let posted: Record<string, unknown> | undefined;

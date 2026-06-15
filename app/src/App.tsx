@@ -1250,6 +1250,7 @@ export function App() {
       const result = await submitMemoryProposalForReview(lastMemoryReviewState, {
         conversationId,
         traceId,
+        rehearsalMode,
         descriptorConnection: currentDescriptorInput(),
       });
       setMemorySubmission(result);
@@ -1384,6 +1385,7 @@ export function App() {
         conversationId,
         traceId,
         profile,
+        rehearsalMode,
         descriptorConnection: currentDescriptorInput(),
       });
       setSteeringSubmission(result);
@@ -1471,6 +1473,7 @@ export function App() {
         conversationId,
         traceId,
         profile,
+        rehearsalMode,
         descriptorConnection: currentDescriptorInput(),
       });
       setTaxonomyReviewSubmission(result);

@@ -82,6 +82,7 @@ interface SteeringSubmissionDependencies {
   conversationId: string;
   traceId: string;
   profile?: LocalProfile;
+  rehearsalMode?: boolean;
   getEndpoint?: () => string | null;
   getAuthToken?: () => string | null;
   descriptorConnection?: DescriptorConnectionInput;
@@ -329,6 +330,9 @@ export async function submitChiefOfStaffSteeringDraft(
       }
     : draft.evolutionProposal;
 
+  if (dependencies.rehearsalMode) {
+    failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, undefined, blockedEffects);
+  }
   if (!endpoint) {
     failSteeringClosed(dependencies, "no_endpoint", dependencies.traceId, requestId, undefined, blockedEffects);
   }

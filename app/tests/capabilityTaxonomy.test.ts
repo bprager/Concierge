@@ -379,6 +379,64 @@ test("child protected taxonomy review handoff keeps child scope and guardian rev
   );
 });
 
+test("taxonomy review handoff fails closed while Rehearsal Mode is active", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_deployment_1", topic: "deployment", capability: "release_summary" });
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_taxonomy_review",
+    traceId: "trace_taxonomy_review",
+  });
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffTaxonomyReviewDraft(draft, {
+        conversationId: "conv_taxonomy_review",
+        traceId: "trace_taxonomy_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: {
+          endpointConfigured: true,
+          descriptor: defaultChiefOfStaffDescriptor,
+          expectedChecksum: "sha256:local-static",
+          actualChecksum: "sha256:local-static",
+          signatureValid: true,
+        },
+        rehearsalMode: true,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify([
+          "memory_write",
+          "agent_dispatch",
+          "external_send",
+          "approval_capture",
+          "runtime_authority",
+        ]),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
+    "memory_write",
+    "agent_dispatch",
+    "external_send",
+    "approval_capture",
+    "runtime_authority",
+  ]);
+});
+
 test("taxonomy review handoff rejects response claims that apply taxonomy or side effects", async () => {
   const ledger = createCapabilityLedger();
   addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });

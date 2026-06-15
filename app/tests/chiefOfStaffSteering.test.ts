@@ -171,6 +171,44 @@ test("steering handoff fails closed before fetch when descriptor discovery has n
   assert.equal(fetchCalled, false);
 });
 
+test("steering handoff fails closed while Rehearsal Mode is active", async () => {
+  const ledger = createCapabilityLedger();
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_steering",
+    endpointConfigured: true,
+  });
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffSteeringDraft(draft, {
+        conversationId: "conv_steering",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge/evolution",
+        descriptorConnection: readyDescriptorConnection,
+        rehearsalMode: true,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, steeringBlockedEffects);
+});
+
 test("steering handoff posts evolution review packet without applying proposal locally", async () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(

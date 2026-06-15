@@ -99,6 +99,7 @@ export interface TaxonomyReviewSubmissionDependencies {
   conversationId: string;
   traceId: string;
   profile?: LocalProfile;
+  rehearsalMode?: boolean;
   getEndpoint?: () => string | null;
   getAuthToken?: () => string | null;
   descriptorConnection?: DescriptorConnectionInput;
@@ -674,6 +675,9 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     },
   );
 
+  if (dependencies.rehearsalMode) {
+    failTaxonomyReviewClosed(dependencies, "governance_no_go", requestId);
+  }
   if (!endpoint) {
     failTaxonomyReviewClosed(dependencies, "no_endpoint", requestId);
   }

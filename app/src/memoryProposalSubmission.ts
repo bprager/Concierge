@@ -26,6 +26,7 @@ type MemoryProposalFetch = (
 interface MemoryProposalSubmissionDependencies {
   conversationId: string;
   traceId: string;
+  rehearsalMode?: boolean;
   getEndpoint?: () => string | null;
   getAuthToken?: () => string | null;
   descriptorConnection?: DescriptorConnectionInput;
@@ -200,6 +201,17 @@ export async function submitMemoryProposalForReview(
   );
   const blockedEffects = ["memory_write", "approval_capture", "external_send", "agent_dispatch", "runtime_authority"];
 
+  if (dependencies.rehearsalMode) {
+    failMemoryProposalClosed(
+      dependencies,
+      "governance_no_go",
+      dependencies.traceId,
+      requestId,
+      memoryProposal.proposalId,
+      undefined,
+      blockedEffects,
+    );
+  }
   if (!endpoint) {
     failMemoryProposalClosed(
       dependencies,

@@ -107,6 +107,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Tightened live descriptor preflight so endpoint or bearer-token changes clear fetched descriptor state and live text sends fail closed until descriptor discovery succeeds again.
 - Added visible governed handoff readiness summaries for memory proposal review, Chief of Staff steering, and Chief of Staff taxonomy review so submit controls explain draft, endpoint, descriptor, and blocked-effect blockers before any Napoleon handoff.
 - Tightened governed handoff readiness so memory proposal review, Chief of Staff steering, and Chief of Staff taxonomy review submit controls stay disabled while Rehearsal Mode is active.
+- Tightened governed handoff submit helpers so memory proposal review, Chief of Staff steering, and Chief of Staff taxonomy review fail closed before request fetch while Rehearsal Mode is active.
 - Tightened canonical governed review response contracts and examples so memory proposal and Chief of Staff steering review responses must carry explicit false side-effect fields for memory writes, approval capture, agent dispatch, external sends, and local application where applicable.
 - Tightened runtime governed review handling so memory proposal, Chief of Staff steering, and Chief of Staff taxonomy review responses fail closed when required explicit false side-effect fields are omitted.
 - Tightened live text bridge handling so returned profile-mode drift fails closed instead of widening child protected, guest, or collaborator turns into another scope.

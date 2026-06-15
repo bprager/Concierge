@@ -105,7 +105,7 @@ Governed memory proposal review responses that claim memory writes, approval cap
 
 Live text responses that claim memory writes, approval capture, external sends, agent dispatch, or local application are reported as `contract_mismatch` failures through `bridge_request_failed` and remain visible through the bridge-blocked transcript message. The local harness can emit matching forbidden-claim response shapes for text, Chief of Staff steering, and memory proposal review paths so local checks can keep those failure signals exercised.
 
-When descriptor discovery has not completed, live text turns, memory proposal handoff, and Chief of Staff steering handoff fail closed before request fetch and report descriptor mismatch failures with the relevant blocked-effect list.
+When descriptor discovery has not completed, live text turns, memory proposal handoff, Chief of Staff steering handoff, and Chief of Staff taxonomy review handoff fail closed before request fetch and report descriptor mismatch failures with the relevant blocked-effect list. When Rehearsal Mode is active, memory proposal review, Chief of Staff steering, and taxonomy review submit helpers fail closed before request fetch and emit their governed handoff failure events with blocked effects.
 
 ## 5. Metrics
 
