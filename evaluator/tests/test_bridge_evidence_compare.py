@@ -42,6 +42,14 @@ class BridgeEvidenceCompareTest(unittest.TestCase):
         self.assertTrue(any("forbidden evidence field message" in violation for violation in violations))
         self.assertTrue(any("secret-like evidence value" in violation for violation in violations))
 
+    def test_rejects_invalid_runtime_validation_source(self):
+        record = self.valid_record()
+        record["runtimeValidationSource"] = "localhost_but_probably_real"
+
+        violations = bridge_evidence_compare.compare_bridge_evidence_records([record])
+
+        self.assertTrue(any("runtimeValidationSource must be one of" in violation for violation in violations))
+
     def test_command_exits_nonzero_for_invalid_evidence_file(self):
         record = self.valid_record()
         record["targetPath"] = "https://napoleon.example/v1/concierge/turn"
@@ -70,6 +78,7 @@ class BridgeEvidenceCompareTest(unittest.TestCase):
             "governanceOutcome": "requires_review",
             "descriptorStatus": "ready",
             "profileMode": "adult_owner",
+            "runtimeValidationSource": "real_runtime",
             "selectedAgentIds": ["napoleon.passive_brain"],
             "allowedEffects": ["prepare_advisory_response"],
             "blockedEffects": ["external_send", "memory_write"],

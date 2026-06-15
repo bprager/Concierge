@@ -32,6 +32,7 @@ export interface BridgeContractEvidence {
   governanceOutcome?: string;
   descriptorStatus: string;
   profileMode: string;
+  runtimeValidationSource?: "real_runtime" | "local_harness" | "local_simulation";
   selectedAgentIds?: string[];
   allowedEffects?: string[];
   blockedEffects?: string[];

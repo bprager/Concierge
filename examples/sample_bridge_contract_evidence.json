@@ -13,6 +13,7 @@
     "governanceOutcome": "requires_review",
     "descriptorStatus": "ready",
     "profileMode": "adult_owner",
+    "runtimeValidationSource": "real_runtime",
     "selectedAgentIds": ["napoleon.passive_brain"],
     "allowedEffects": ["prepare_advisory_response"],
     "blockedEffects": ["external_send", "memory_write"],
@@ -30,6 +31,7 @@
     "requestId": "cos_turn_auth_fixture",
     "descriptorStatus": "ready",
     "profileMode": "adult_owner",
+    "runtimeValidationSource": "real_runtime",
     "provenanceVerified": false
   }
 ]

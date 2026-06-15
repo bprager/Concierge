@@ -36,6 +36,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertNotIn("PRD: Concierge", json.dumps(report))
         self.assertGreater(report["live_runtime_sanitization"]["responseExcerptsRemoved"], 0)
         self.assertEqual(evidence[0]["targetPath"], "/v1/concierge/turn")
+        self.assertEqual(evidence[0]["runtimeValidationSource"], "local_harness")
         self.assertIn("not Napoleon approval", summary["boundary"])
         self.assertFalse(summary["promotionBoundary"]["approvalCaptured"])
         self.assertFalse(summary["promotionBoundary"]["memoryWritePerformed"])

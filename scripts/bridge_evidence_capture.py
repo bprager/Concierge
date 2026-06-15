@@ -20,6 +20,7 @@ from scripts import bridge_evidence_compare
 
 DEFAULT_MESSAGE = "Ask Napoleon for a governed Concierge bridge evidence check."
 REQUIRED_DESCRIPTOR_BLOCKED_EFFECTS = {"runtime_authority", "memory_write"}
+RUNTIME_VALIDATION_SOURCES = ("real_runtime", "local_harness", "local_simulation")
 
 
 def bridge_url(endpoint: str, path: str = "/v1/concierge/turn") -> str:
@@ -162,7 +163,11 @@ def request_payload(message: str, descriptor_preflight: dict[str, Any]) -> dict[
     }
 
 
-def evidence_from_response(status_code: int, response_payload: dict[str, Any]) -> dict[str, Any]:
+def evidence_from_response(
+    status_code: int,
+    response_payload: dict[str, Any],
+    runtime_validation_source: str,
+) -> dict[str, Any]:
     decision = response_payload.get("governanceDecision") if isinstance(response_payload, dict) else {}
     trace_id = str(decision.get("trace_id") or "trace_bridge_evidence_capture")
     request_id = str(decision.get("request_id") or "cos_bridge_evidence_capture")
@@ -179,6 +184,7 @@ def evidence_from_response(status_code: int, response_payload: dict[str, Any]) -
             "requestId": request_id,
             "descriptorStatus": "ready",
             "profileMode": "adult_owner",
+            "runtimeValidationSource": runtime_validation_source,
             "provenanceVerified": False,
         }
 
@@ -198,6 +204,7 @@ def evidence_from_response(status_code: int, response_payload: dict[str, Any]) -
         "governanceOutcome": str(decision.get("outcome") or ""),
         "descriptorStatus": "ready",
         "profileMode": str(response_payload.get("profileMode") or "adult_owner"),
+        "runtimeValidationSource": runtime_validation_source,
         "selectedAgentIds": [
             str(agent.get("agentId"))
             for agent in agents
@@ -224,6 +231,12 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     parser.add_argument("--out", required=True, help="Where to write the sanitized bridge evidence JSON")
     parser.add_argument("--message", default=DEFAULT_MESSAGE, help="Text request used for the governed capture")
     parser.add_argument("--auth-token", help="Optional local bearer token for the governed bridge")
+    parser.add_argument(
+        "--runtime-validation-source",
+        choices=RUNTIME_VALIDATION_SOURCES,
+        default="real_runtime",
+        help="Evidence source label written to sanitized bridge evidence records",
+    )
     args = parser.parse_args(argv)
 
     active_env = os.environ if env is None else env
@@ -246,7 +259,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         request_payload(args.message, descriptor_preflight),
         args.auth_token,
     )
-    records = [evidence_from_response(status_code, response_payload)]
+    records = [evidence_from_response(status_code, response_payload, args.runtime_validation_source)]
     violations = bridge_evidence_compare.compare_bridge_evidence_records(records)
     if violations:
         print("captured bridge evidence failed comparison:", file=sys.stderr)

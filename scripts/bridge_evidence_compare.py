@@ -35,6 +35,7 @@ FORBIDDEN_EVIDENCE_FIELDS = {
     "url",
 }
 SECRET_VALUE_PATTERN = re.compile(r"bearer\s+\S+|secret[_\-\s]?\w*", re.IGNORECASE)
+RUNTIME_VALIDATION_SOURCES = {"real_runtime", "local_harness", "local_simulation"}
 
 
 def load_evidence_records(path: Path) -> list[dict[str, Any]]:
@@ -114,6 +115,9 @@ def compare_bridge_evidence_records(records: list[dict[str, Any]]) -> list[str]:
         require_string(record, "requestId", index, violations)
         require_string(record, "descriptorStatus", index, violations)
         require_string(record, "profileMode", index, violations)
+        runtime_validation_source = record.get("runtimeValidationSource")
+        if runtime_validation_source is not None and runtime_validation_source not in RUNTIME_VALIDATION_SOURCES:
+            violations.append(f"{prefix}: runtimeValidationSource must be one of {sorted(RUNTIME_VALIDATION_SOURCES)}")
         provenance_verified = require_bool(record, "provenanceVerified", index, violations)
         require_string_list(record, "selectedAgentIds", index, violations)
         require_string_list(record, "allowedEffects", index, violations)

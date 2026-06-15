@@ -76,10 +76,22 @@ def resolve_endpoints(
     return bridge, evaluator
 
 
-def run_bridge_capture(bridge_endpoint: str, out_path: Path, auth_token: str | None) -> tuple[int, str, str]:
+def run_bridge_capture(
+    bridge_endpoint: str,
+    out_path: Path,
+    auth_token: str | None,
+    runtime_validation_source: str,
+) -> tuple[int, str, str]:
     stdout = io.StringIO()
     stderr = io.StringIO()
-    args = ["--endpoint", bridge_endpoint, "--out", str(out_path)]
+    args = [
+        "--endpoint",
+        bridge_endpoint,
+        "--out",
+        str(out_path),
+        "--runtime-validation-source",
+        runtime_validation_source,
+    ]
     if auth_token:
         args.extend(["--auth-token", auth_token])
     with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
@@ -237,7 +249,12 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     eval_report_path = out_dir / "eval_http.json"
     summary_path = out_dir / "summary.json"
 
-    bridge_exit_code, bridge_stdout, bridge_stderr = run_bridge_capture(bridge_endpoint, evidence_path, auth_token)
+    bridge_exit_code, bridge_stdout, bridge_stderr = run_bridge_capture(
+        bridge_endpoint,
+        evidence_path,
+        auth_token,
+        args.runtime_validation_source,
+    )
     if bridge_stdout:
         print(bridge_stdout, end="")
     if bridge_stderr:

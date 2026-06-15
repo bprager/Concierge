@@ -22,6 +22,8 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
                             handle.name,
                             "--message",
                             "Draft the private Napoleon bridge rollout note",
+                            "--runtime-validation-source",
+                            "local_harness",
                         ]
                     )
                 handle.seek(0)
@@ -34,6 +36,7 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertEqual(records[0]["targetPath"], "/v1/concierge/turn")
         self.assertEqual(records[0]["requestKind"], "text_turn")
         self.assertEqual(records[0]["governanceOutcome"], "requires_review")
+        self.assertEqual(records[0]["runtimeValidationSource"], "local_harness")
         self.assertEqual(records[0]["selectedAgentIds"], ["passive_brain"])
         self.assertFalse("Draft the private Napoleon bridge rollout note" in json.dumps(records))
         self.assertFalse(base_url in json.dumps(records))
@@ -51,19 +54,38 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
             with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
                 stdout = io.StringIO()
                 with contextlib.redirect_stdout(stdout):
-                    exit_code = bridge_evidence_capture.main(["--endpoint", base_url, "--out", handle.name])
+                    exit_code = bridge_evidence_capture.main(
+                        [
+                            "--endpoint",
+                            base_url,
+                            "--out",
+                            handle.name,
+                            "--runtime-validation-source",
+                            "local_harness",
+                        ]
+                    )
                 handle.seek(0)
                 payload = json.load(handle)
 
         self.assertEqual(exit_code, 0)
         self.assertIsInstance(payload, list)
+        self.assertEqual(payload[0]["runtimeValidationSource"], "local_harness")
         self.assertIn("captured 1 bridge evidence record", stdout.getvalue())
 
     def test_capture_runner_discovers_descriptor_before_text_turn(self):
         with RecordingBridgeHarness(descriptor_ready=True) as harness:
             with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
                 with contextlib.redirect_stdout(io.StringIO()):
-                    exit_code = bridge_evidence_capture.main(["--endpoint", harness.base_url, "--out", handle.name])
+                    exit_code = bridge_evidence_capture.main(
+                        [
+                            "--endpoint",
+                            harness.base_url,
+                            "--out",
+                            handle.name,
+                            "--runtime-validation-source",
+                            "local_simulation",
+                        ]
+                    )
 
         self.assertEqual(exit_code, 0)
         self.assertEqual(harness.get_count, 1)

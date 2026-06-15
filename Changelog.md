@@ -69,6 +69,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added runtime-validation source labeling to live bridge readiness and readiness proof export so local harness and simulation checks are not mistaken for real Napoleon runtime validation.
 - Fixed the live-runtime validation make target so `NAPOLEON_BRIDGE_ENDPOINT` alone can drive descriptor, bridge evidence, and evaluator validation with the evaluator endpoint derived from the bridge base URL.
 - Added runtime-validation source labeling to live-runtime validation summaries so local harness and simulation artifacts remain distinct from real Napoleon runtime validation evidence.
+- Added runtime-validation source labels to sanitized bridge evidence capture, with comparator validation for invalid labels.
 - Added runtime source validation that fails when Concierge directly executes processes, accesses memory or graph systems, or dispatches agents/tools outside the governed bridge.
 - Added first-class Napoleon descriptor connection state for discovered, missing, and checksum/signature mismatch cases.
 - Added live Napoleon Chief of Staff descriptor discovery from the canonical descriptor endpoint, with invalid or mismatched descriptors kept fail-closed.
