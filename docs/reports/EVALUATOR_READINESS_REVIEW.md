@@ -13,13 +13,13 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Artifact | Current state |
 |---|---|
 | Runner | `evaluator/eval_runner.py`, supports `stub` and `http` modes |
-| Scenarios | 18 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, and conversation capability intelligence coverage |
+| Scenarios | 24 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, and conversation capability intelligence coverage |
 | Rubric | 10 weighted dimensions in `evaluator/rubrics.yaml` |
 | Hard fails | 5 hard fail rules |
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
 | Prompts | Full design prompt and critique prompt |
 | CI | Weekly/manual GitHub Actions workflow |
-| Report | JSON report with scores, hard fails, missing artifacts, cases |
+| Report | JSON report with scores, hard fails, missing artifacts, regressions, cases, accepted baseline support, and a generated local human review record |
 | Napoleon contract evidence | Remote CoS integration package with descriptor, OpenAPI, and schema files ingested over ssh from `bernd@mimir` |
 
 ## Latest Local Evidence
@@ -27,10 +27,11 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 The existing stub report at `evaluator/reports/latest.json` shows:
 
 - Mode: `stub`
-- Scenario count: 16
-- Score total: 97.5
+- Scenario count: 24
+- Score total: 100.0
 - Hard failures: 0
 - Missing artifacts: 0
+- Regressions against accepted baseline: 0
 
 This is useful evidence that the runner works. It is not evidence that Napoleon or Chief of Staff is ready, because stub mode returns a deliberately complete response.
 
@@ -45,12 +46,12 @@ Specific limitations:
 - Keyword matching can reward shallow mentions.
 - The suite now meets the backlog target of at least 15 scenarios, but the cases are still deterministic artifact checks.
 - There are no negative tests that assert unsafe designs fail.
-- Regression comparison now exists and a clean local report can be accepted as `evaluator/reports/accepted_baseline.json`; human review records are still missing.
-- There is no human review artifact.
+- Regression comparison now exists and a clean local report can be accepted as `evaluator/reports/accepted_baseline.json`; `make eval-human-review` generates a local human review record for promotion decisions.
+- Human review exists as a local non-authorizing artifact, but actual reviewed records and any required Napoleon or release approval are still separate.
 - There is no golden answer comparison.
-- There is no bridge contract or trace validation.
-- There is no evaluator coverage for the actual P1 UI flow.
-- There is no validation against Napoleon's `napoleon.chief_of_staff` descriptor, governance decision schema, agent manifest schema, profile contract, observability envelopes, or evolution proposal contract.
+- Local bridge contract, trace/audit envelope, governed request/response artifact, and runtime authority-boundary validation now exist, but they still rely on local fixtures and repository scans.
+- App-level local harness coverage exists for the P1 text bridge path, but live Napoleon runtime behavior is still unverified.
+- There is no live validation against a real Napoleon endpoint for the `napoleon.chief_of_staff` descriptor, governance decisions, agent manifests, profile contract, observability envelopes, or evolution proposals.
 
 ## Scenario Gaps
 

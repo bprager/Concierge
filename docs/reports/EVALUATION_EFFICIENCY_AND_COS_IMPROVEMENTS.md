@@ -15,8 +15,8 @@ The best improvement is to make the evaluator contract-aware. Instead of asking 
 | Runtime cost | Stub mode runs quickly and does not need a live Napoleon endpoint. | Efficient for local health checks. |
 | Signal quality | Keyword and artifact checks catch missing concepts. | Useful but easy to game. |
 | Contract coverage | The evaluator does not validate CoS descriptor, governance, profile, observability, or evolution schemas. | Low efficiency for integration readiness. |
-| Regression support | Reports include scores, regression fields, optional baseline comparison, and an accepted local baseline file. | Still needs human review records and live-runtime baseline policy. |
-| Human review | No structured review packet is generated. | Inefficient for Chief of Staff review. |
+| Regression support | Reports include scores, regression fields, optional baseline comparison, an accepted local baseline file, and a generated local human review record. | Still needs live-runtime baseline policy and actual reviewed records for promoted runs. |
+| Human review | `make eval-human-review` generates a structured local review record with run evidence, baseline evidence, decision fields, checklist, and non-authority boundary. | Useful for owner review, but still not Napoleon approval or release approval by itself. |
 | Failure localization | Missing artifacts and hard fails are reported, but failures are not tied to specific contract fields. | Moderate for planning, weak for implementation. |
 
 ## How CoS Can Improve The Process
@@ -30,7 +30,7 @@ Chief of Staff can improve evaluator support by turning review into a contract-b
 5. Require `blocked_effects` and `audit_id` coverage for authority-sensitive cases.
 6. Compare each run against the previous accepted baseline.
 7. Return a ChiefOfStaffResponse with `accept_for_review`, `request_changes`, `reject`, `defer`, or `no_go`.
-8. Generate a compact human review summary that explains what changed, what failed, and what cannot be activated.
+8. Generate or attach the compact human review record that explains what changed, what failed, what cannot be activated, and whether the owner approved, rejected, or requested revision.
 
 ## Recommended Evaluation Pipeline
 
@@ -78,7 +78,7 @@ The local repo now stores the last accepted evaluator report and compares:
 - trace completeness
 - governance boundary violations
 
-Regression should block promotion unless Chief of Staff and owner review explicitly accept the risk. The stored local baseline is evaluator evidence only; it is not Napoleon approval or release approval.
+Regression should block promotion unless Chief of Staff and owner review explicitly accept the risk. The stored local baseline and generated human review record are evaluator evidence only; they are not Napoleon approval or release approval.
 
 ### Add CoS Review Packets
 
