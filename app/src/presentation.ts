@@ -325,7 +325,7 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
   ];
   const hasBlocked = items.some((item) => item.status === "blocked") || !descriptor.canAttemptLiveBridge;
   const hasWarning = items.some((item) => item.status === "warning");
-  const canAttemptLiveSend = !hasBlocked && input.inputReady && input.governanceCanSendAdvisory;
+  const canAttemptLiveSend = !hasBlocked && !input.rehearsalMode && input.inputReady && input.governanceCanSendAdvisory;
   const status: LiveSendPreflightView["status"] = hasBlocked ? "blocked" : hasWarning ? "warning" : "ready";
 
   return {
@@ -334,7 +334,9 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
     canAttemptLiveSend,
     summary: canAttemptLiveSend
       ? "Ready for a governed bridge attempt through Napoleon."
-      : "Live send is blocked until required preflight items pass.",
+      : input.rehearsalMode && !hasBlocked
+        ? "Rehearsal Mode is active; preview locally before any separate governed bridge send."
+        : "Live send is blocked until required preflight items pass.",
     caveat:
       "This checklist is not Napoleon approval, does not write memory, does not dispatch agents, does not capture approval, and does not send externally by itself.",
     items,

@@ -459,6 +459,30 @@ test("describes live send preflight as ready only for governed bridge attempt", 
   assert.ok(view.caveat.includes("does not dispatch agents"));
 });
 
+test("describes rehearsal mode as not directly live-send attemptable", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: true,
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canAttemptLiveSend, false);
+  assert.ok(view.summary.includes("Rehearsal Mode"));
+  assert.ok(
+    view.items.some(
+      (item: { label: string; status: string }) => item.label === "Rehearsal Mode" && item.status === "warning",
+    ),
+  );
+});
+
 test("describes governed handoff readiness with endpoint and descriptor blockers", () => {
   const blocked = describeGovernedHandoffReadiness({
     label: "Chief of Staff taxonomy review",
