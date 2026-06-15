@@ -73,6 +73,17 @@ test("builds first-class descriptor discovery connection states", () => {
   assert.equal(noEndpoint.state, "no_endpoint");
   assert.equal(noEndpoint.canAttemptLiveBridge, false);
   assert.equal(noEndpoint.descriptorStatus?.ready, true);
+
+  const authFailure = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: null,
+    failClosedReason: "auth_failure",
+  });
+
+  assert.equal(authFailure.state, "auth_failure");
+  assert.equal(authFailure.canAttemptLiveBridge, false);
+  assert.equal(authFailure.failClosedReason, "auth_failure");
+  assert.match(authFailure.message, /authentication/);
 });
 
 test("builds a text turn contract with governance and observability identifiers", () => {

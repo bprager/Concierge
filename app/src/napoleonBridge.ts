@@ -5,6 +5,7 @@ import {
   buildDescriptorConnectionState,
   buildTextTurnContract,
   type DescriptorConnectionInput,
+  type DescriptorFailClosedReason,
   type AuditEnvelope,
   type GovernanceDecision,
   type TraceEnvelope,
@@ -71,6 +72,14 @@ export type NapoleonBridgeFailureReason =
   | "governance_no_go"
   | "bridge_timeout"
   | "http_failure";
+
+export function descriptorFailClosedReasonToBridgeFailure(
+  reason?: DescriptorFailClosedReason,
+): NapoleonBridgeFailureReason {
+  if (reason === "auth_failure" || reason === "bridge_timeout" || reason === "http_failure") return reason;
+  if (reason === "no_endpoint") return "no_endpoint";
+  return "descriptor_mismatch";
+}
 
 export interface NapoleonBridgeFailureMetadata {
   decisionId?: string;
@@ -425,7 +434,7 @@ export async function sendToNapoleon(
   if (!descriptorConnection.canAttemptLiveBridge) {
     failClosed(
       dependencies,
-      "descriptor_mismatch",
+      descriptorFailClosedReasonToBridgeFailure(descriptorConnection.failClosedReason),
       request.traceId,
       contract.chiefOfStaffRequest.request_id,
       undefined,

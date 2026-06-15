@@ -2,6 +2,7 @@ import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import {
   buildDescriptorConnectionState,
   type ChiefOfStaffDescriptor,
+  type DescriptorFailClosedReason,
   type DescriptorConnectionInput,
   type DescriptorConnectionState,
 } from "./contractBridge.js";
@@ -95,6 +96,14 @@ function buildInputFromPayload(endpointConfigured: boolean, payload: unknown): D
   };
 }
 
+function failureInput(endpointConfigured: boolean, failClosedReason: DescriptorFailClosedReason): DescriptorConnectionInput {
+  return { endpointConfigured, descriptor: null, failClosedReason };
+}
+
+function httpFailureReason(status?: number): DescriptorFailClosedReason {
+  return status === 401 || status === 403 ? "auth_failure" : "http_failure";
+}
+
 export async function discoverNapoleonDescriptor(
   dependencies: DescriptorDiscoveryDependencies = {},
 ): Promise<DescriptorDiscoveryResult> {
@@ -105,12 +114,18 @@ export async function discoverNapoleonDescriptor(
   }
 
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
-  const response = await fetcher(resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_descriptor"), {
-    method: "GET",
-    headers: buildDescriptorHeaders(getConfiguredAuthToken(dependencies)),
-  });
+  let response: Awaited<ReturnType<DescriptorFetch>>;
+  try {
+    response = await fetcher(resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_descriptor"), {
+      method: "GET",
+      headers: buildDescriptorHeaders(getConfiguredAuthToken(dependencies)),
+    });
+  } catch (error) {
+    const input = failureInput(true, error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure");
+    return { input, connection: buildDescriptorConnectionState(input), source: "live" };
+  }
   if (!response.ok) {
-    const input = { endpointConfigured: true, descriptor: null };
+    const input = failureInput(true, httpFailureReason(response.status));
     return { input, connection: buildDescriptorConnectionState(input), source: "live" };
   }
 

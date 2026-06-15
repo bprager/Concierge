@@ -11,7 +11,7 @@ import {
   type LocalProfile,
   type TraceEnvelope,
 } from "./contractBridge.js";
-import { NapoleonBridgeError } from "./napoleonBridge.js";
+import { NapoleonBridgeError, descriptorFailClosedReasonToBridgeFailure } from "./napoleonBridge.js";
 import { emitEvent, makeTelemetryPayload, type TelemetryPayload } from "./telemetry.js";
 
 export type TaxonomyDimension = "topic" | "intent" | "capability" | "architecture";
@@ -690,7 +690,11 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     failTaxonomyReviewClosed(dependencies, "no_endpoint", requestId);
   }
   if (!descriptorConnection.canAttemptLiveBridge) {
-    failTaxonomyReviewClosed(dependencies, "descriptor_mismatch", requestId);
+    failTaxonomyReviewClosed(
+      dependencies,
+      descriptorFailClosedReasonToBridgeFailure(descriptorConnection.failClosedReason),
+      requestId,
+    );
   }
 
   const chiefOfStaffRequest: ChiefOfStaffRequest = {

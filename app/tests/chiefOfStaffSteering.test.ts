@@ -171,6 +171,42 @@ test("steering handoff fails closed before fetch when descriptor discovery has n
   assert.equal(fetchCalled, false);
 });
 
+test("steering handoff preserves descriptor discovery auth failure before fetch", async () => {
+  const ledger = createCapabilityLedger();
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_steering",
+    endpointConfigured: true,
+  });
+  let fetchCalled = false;
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffSteeringDraft(draft, {
+        conversationId: "conv_steering",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge/evolution",
+        descriptorConnection: {
+          endpointConfigured: true,
+          descriptor: null,
+          failClosedReason: "auth_failure",
+        },
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("auth_failure") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+});
+
 test("steering handoff fails closed while Rehearsal Mode is active", async () => {
   const ledger = createCapabilityLedger();
   const draft = draftChiefOfStaffSteering(ledger, {

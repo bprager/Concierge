@@ -399,6 +399,23 @@ test("describes descriptor integrity mismatch as fail-closed readiness", () => {
   assert.ok(view.caveat.includes("No text turn should proceed"));
 });
 
+test("describes descriptor auth failure as fail-closed readiness", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: null,
+      failClosedReason: "auth_failure",
+    }),
+    evidenceCaptureState: "not_run",
+    evidenceComparisonState: "not_run",
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canSendLive, false);
+  assert.ok(view.summary.includes("failed authentication"));
+  assert.ok(view.details.some((detail) => detail.label === "Descriptor" && detail.value.includes("auth_failure")));
+});
+
 test("describes live send preflight blockers without granting authority", () => {
   const view = describeLiveSendPreflight({
     descriptorConnection: buildDescriptorConnectionState({

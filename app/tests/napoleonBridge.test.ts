@@ -98,6 +98,45 @@ test("live bridge fails closed before fetch when descriptor discovery has not co
   assert.equal(fetchCalled, false);
 });
 
+test("live bridge preserves descriptor discovery auth failure before fetch", async () => {
+  let fetchCalled = false;
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_descriptor_auth_failure",
+          conversationId: "conv_descriptor_auth_failure",
+          turnId: "turn_descriptor_auth_failure",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: {
+            endpointConfigured: true,
+            descriptor: null,
+            failClosedReason: "auth_failure",
+          },
+          emit: () => undefined,
+          fetch: async () => {
+            fetchCalled = true;
+            return { ok: true, json: async () => ({}) };
+          },
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("auth_failure") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(textTurnBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+});
+
 test("live bridge request sends contract-first payload to configured endpoint", async () => {
   let posted: Record<string, unknown> | undefined;
   let headers: Record<string, string> | undefined;

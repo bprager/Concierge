@@ -97,3 +97,35 @@ test("descriptor discovery reports malformed descriptor as missing descriptor", 
   assert.equal(result.connection.state, "missing_descriptor");
   assert.equal(result.connection.canAttemptLiveBridge, false);
 });
+
+test("descriptor discovery preserves auth failure as fail-closed connection state", async () => {
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "https://napoleon.example/concierge",
+    fetch: async () => ({
+      ok: false,
+      status: 401,
+      json: async () => ({}),
+    }),
+  });
+
+  assert.equal(result.connection.state, "auth_failure");
+  assert.equal(result.connection.failClosedReason, "auth_failure");
+  assert.equal(result.connection.canAttemptLiveBridge, false);
+  assert.match(result.connection.message, /authentication/);
+});
+
+test("descriptor discovery preserves timeout as fail-closed connection state", async () => {
+  const error = new Error("timed out");
+  error.name = "AbortError";
+
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "https://napoleon.example/concierge",
+    fetch: async () => {
+      throw error;
+    },
+  });
+
+  assert.equal(result.connection.state, "bridge_timeout");
+  assert.equal(result.connection.failClosedReason, "bridge_timeout");
+  assert.equal(result.connection.canAttemptLiveBridge, false);
+});

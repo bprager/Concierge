@@ -30,6 +30,9 @@ export type DescriptorConnectionStateKind =
   | "no_endpoint"
   | "missing_descriptor"
   | "descriptor_mismatch"
+  | "auth_failure"
+  | "bridge_timeout"
+  | "http_failure"
   | "ready";
 export type DescriptorChecksumState = "not_checked" | "matched" | "mismatch";
 export type DescriptorSignatureState = "not_checked" | "valid" | "invalid";
@@ -37,7 +40,10 @@ export type DescriptorFailClosedReason =
   | "no_endpoint"
   | "no_descriptor"
   | "descriptor_invalid"
-  | "descriptor_signature_or_checksum_mismatch";
+  | "descriptor_signature_or_checksum_mismatch"
+  | "auth_failure"
+  | "bridge_timeout"
+  | "http_failure";
 
 export interface DescriptorConnectionInput {
   endpointConfigured: boolean;
@@ -45,6 +51,7 @@ export interface DescriptorConnectionInput {
   expectedChecksum?: string;
   actualChecksum?: string;
   signatureValid?: boolean;
+  failClosedReason?: DescriptorFailClosedReason;
 }
 
 export interface DescriptorConnectionState {
@@ -294,6 +301,26 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
   }
 
   if (!descriptorStatus) {
+    if (
+      input.failClosedReason === "auth_failure" ||
+      input.failClosedReason === "bridge_timeout" ||
+      input.failClosedReason === "http_failure"
+    ) {
+      const messages: Record<typeof input.failClosedReason, string> = {
+        auth_failure: "Napoleon descriptor discovery failed authentication, so Concierge is blocked from live bridge sends.",
+        bridge_timeout: "Napoleon descriptor discovery timed out, so Concierge is blocked from live bridge sends.",
+        http_failure: "Napoleon descriptor discovery failed over HTTP, so Concierge is blocked from live bridge sends.",
+      };
+      return {
+        state: input.failClosedReason,
+        descriptorStatus: null,
+        checksumState,
+        signatureState,
+        canAttemptLiveBridge: false,
+        failClosedReason: input.failClosedReason,
+        message: messages[input.failClosedReason],
+      };
+    }
     return {
       state: "missing_descriptor",
       descriptorStatus: null,

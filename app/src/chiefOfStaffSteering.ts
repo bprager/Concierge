@@ -17,7 +17,7 @@ import {
   type LocalProfile,
   type TraceEnvelope,
 } from "./contractBridge.js";
-import { NapoleonBridgeError } from "./napoleonBridge.js";
+import { NapoleonBridgeError, descriptorFailClosedReasonToBridgeFailure } from "./napoleonBridge.js";
 import { emitEvent, makeTelemetryPayload, type TelemetryPayload } from "./telemetry.js";
 
 type SteeringFetch = (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => Promise<{
@@ -337,7 +337,14 @@ export async function submitChiefOfStaffSteeringDraft(
     failSteeringClosed(dependencies, "no_endpoint", dependencies.traceId, requestId, undefined, blockedEffects);
   }
   if (!descriptorConnection.canAttemptLiveBridge) {
-    failSteeringClosed(dependencies, "descriptor_mismatch", dependencies.traceId, requestId, undefined, blockedEffects);
+    failSteeringClosed(
+      dependencies,
+      descriptorFailClosedReasonToBridgeFailure(descriptorConnection.failClosedReason),
+      dependencies.traceId,
+      requestId,
+      undefined,
+      blockedEffects,
+    );
   }
 
   const chiefOfStaffRequest: ChiefOfStaffRequest = {

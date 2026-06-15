@@ -11,7 +11,7 @@ import {
   type MemoryProposalReviewState,
   type TraceEnvelope,
 } from "./contractBridge.js";
-import { NapoleonBridgeError } from "./napoleonBridge.js";
+import { NapoleonBridgeError, descriptorFailClosedReasonToBridgeFailure } from "./napoleonBridge.js";
 import { emitEvent, makeTelemetryPayload, type TelemetryPayload } from "./telemetry.js";
 
 type MemoryProposalFetch = (
@@ -226,7 +226,7 @@ export async function submitMemoryProposalForReview(
   if (!descriptorConnection.canAttemptLiveBridge) {
     failMemoryProposalClosed(
       dependencies,
-      "descriptor_mismatch",
+      descriptorFailClosedReasonToBridgeFailure(descriptorConnection.failClosedReason),
       dependencies.traceId,
       requestId,
       memoryProposal.proposalId,
