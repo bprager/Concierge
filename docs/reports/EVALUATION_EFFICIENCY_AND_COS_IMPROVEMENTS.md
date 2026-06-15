@@ -15,7 +15,7 @@ The best improvement is to make the evaluator contract-aware. Instead of asking 
 | Runtime cost | Stub mode runs quickly and does not need a live Napoleon endpoint. | Efficient for local health checks. |
 | Signal quality | Keyword and artifact checks catch missing concepts. | Useful but easy to game. |
 | Contract coverage | The evaluator does not validate CoS descriptor, governance, profile, observability, or evolution schemas. | Low efficiency for integration readiness. |
-| Regression support | Reports include scores but no baseline comparison. | Inefficient for release decisions. |
+| Regression support | Reports include scores, regression fields, optional baseline comparison, and an accepted local baseline file. | Still needs human review records and live-runtime baseline policy. |
 | Human review | No structured review packet is generated. | Inefficient for Chief of Staff review. |
 | Failure localization | Missing artifacts and hard fails are reported, but failures are not tied to specific contract fields. | Moderate for planning, weak for implementation. |
 
@@ -68,7 +68,7 @@ Each evaluator run should validate:
 
 ### Add Regression Comparison
 
-Store the last accepted evaluator report and compare:
+The local repo now stores the last accepted evaluator report and compares:
 
 - total score
 - hard fail count
@@ -78,7 +78,7 @@ Store the last accepted evaluator report and compare:
 - trace completeness
 - governance boundary violations
 
-Regression should block promotion unless Chief of Staff and owner review explicitly accept the risk.
+Regression should block promotion unless Chief of Staff and owner review explicitly accept the risk. The stored local baseline is evaluator evidence only; it is not Napoleon approval or release approval.
 
 ### Add CoS Review Packets
 

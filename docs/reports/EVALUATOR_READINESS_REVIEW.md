@@ -45,7 +45,7 @@ Specific limitations:
 - Keyword matching can reward shallow mentions.
 - The suite now meets the backlog target of at least 15 scenarios, but the cases are still deterministic artifact checks.
 - There are no negative tests that assert unsafe designs fail.
-- Regression comparison now exists when a previous report is supplied, but accepted baseline storage is still missing.
+- Regression comparison now exists and a clean local report can be accepted as `evaluator/reports/accepted_baseline.json`; human review records are still missing.
 - There is no human review artifact.
 - There is no golden answer comparison.
 - There is no bridge contract or trace validation.
@@ -180,8 +180,8 @@ Missing or weak report fields:
 Before treating the evaluator as a phase gate:
 
 1. Add more negative scenarios for unsafe behavior.
-2. Add regression baseline storage for accepted reports.
-3. Add human review records for accepted baselines.
+2. Add human review records for accepted baselines.
+3. Add release-gate policy for when a local baseline is allowed to replace the prior accepted report.
 4. Add schema validation for reports and examples.
 5. Add trace completeness checks.
 6. Add governance-specific hard fails.
@@ -196,7 +196,7 @@ Before treating the evaluator as a phase gate:
 1. Add a `make check` target that runs evaluator stub mode and schema validation.
 2. Add at least nine more scenarios to meet the backlog target.
 3. Add hard fails for bridge auth, direct tool calls, memory writes, raw capture, child guardian approval, missing blocked effects, and contract-only authority violations.
-4. Add accepted-baseline report storage and contract-conformance promotion gates.
+4. Add human-review records and contract-conformance promotion gates.
 5. Add a Markdown summary output for human review.
 6. Add first HTTP/MCP/local stdio mode run once Napoleon provides an endpoint.
 

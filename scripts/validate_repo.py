@@ -71,6 +71,7 @@ def load_json(path: str) -> object:
 def validate_json_pairs() -> None:
     pairs = [
         ("schemas/evaluator_run.schema.json", "evaluator/reports/latest.json"),
+        ("schemas/evaluator_run.schema.json", "evaluator/reports/accepted_baseline.json"),
         ("schemas/user_profile.schema.json", "examples/adult_owner_profile.json"),
         ("schemas/user_profile.schema.json", "examples/child_protected_profile.json"),
         ("schemas/interaction_trace.schema.json", "examples/sample_interaction_trace.json"),

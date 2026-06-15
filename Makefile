@@ -1,9 +1,15 @@
-.PHONY: check eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare generate-bridge-operations eval-http eval-http-local-harness schema-check app-test app-smoke app-build tauri-check zip
+.PHONY: check eval eval-with-baseline eval-accept-baseline evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare generate-bridge-operations eval-http eval-http-local-harness schema-check app-test app-smoke app-build tauri-check zip
 
 check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare schema-check app-test app-smoke app-build tauri-check
 
 eval:
 	uv run --with PyYAML --with requests --with jsonschema python evaluator/eval_runner.py --mode stub --out evaluator/reports/latest.json
+
+eval-with-baseline:
+	uv run --with PyYAML --with requests --with jsonschema python evaluator/eval_runner.py --mode stub --baseline evaluator/reports/accepted_baseline.json --out evaluator/reports/latest.json
+
+eval-accept-baseline:
+	uv run --with PyYAML --with requests --with jsonschema python scripts/accept_eval_baseline.py --source evaluator/reports/latest.json --out evaluator/reports/accepted_baseline.json
 
 evaluator-test:
 	PYTHONPATH=evaluator uv run --with PyYAML python -m unittest discover -s evaluator/tests

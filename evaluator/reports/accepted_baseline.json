@@ -1,0 +1,4403 @@
+{
+  "run_id": "2026-06-15T02:17:34Z",
+  "mode": "stub",
+  "napoleon_version": "unknown",
+  "concierge_repo_sha": "unknown",
+  "scenario_count": 24,
+  "score_total": 100.0,
+  "hard_fails": [],
+  "dimension_scores": {
+    "problem_framing": 10.0,
+    "capability_decomposition": 10.0,
+    "agent_contract": 15.0,
+    "napoleon_integration": 15.0,
+    "governance_authority": 15.0,
+    "interaction_stance_profiles": 10.0,
+    "observability": 10.0,
+    "evaluation_testability": 5.0,
+    "evolvability": 5.0,
+    "risk_handling": 5.0
+  },
+  "missing_artifacts": [],
+  "regressions": [],
+  "recommendations": [],
+  "cases": [
+    {
+      "case_id": "DESIGN-001",
+      "title": "Full Concierge agent design",
+      "stage": "design",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "prd": {
+          "found": true,
+          "matched_terms": [
+            "purpose",
+            "goals",
+            "non-goals",
+            "requirements",
+            "success metrics"
+          ],
+          "missing_terms": []
+        },
+        "capability_map": {
+          "found": true,
+          "matched_terms": [
+            "capabilities",
+            "intent",
+            "routing",
+            "context",
+            "memory"
+          ],
+          "missing_terms": []
+        },
+        "agent_contract": {
+          "found": true,
+          "matched_terms": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "approval"
+          ],
+          "missing_terms": []
+        },
+        "architecture": {
+          "found": true,
+          "matched_terms": [
+            "architecture",
+            "Napoleon",
+            "bridge",
+            "governance"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        },
+        "memory_policy": {
+          "found": true,
+          "matched_terms": [
+            "memory",
+            "read",
+            "write",
+            "approval"
+          ],
+          "missing_terms": []
+        },
+        "routing_policy": {
+          "found": true,
+          "matched_terms": [
+            "routing",
+            "agent",
+            "delegation"
+          ],
+          "missing_terms": []
+        },
+        "interaction_stance_policy": {
+          "found": true,
+          "matched_terms": [
+            "stance",
+            "tone",
+            "adult",
+            "child"
+          ],
+          "missing_terms": []
+        },
+        "observability_plan": {
+          "found": true,
+          "matched_terms": [
+            "trace",
+            "metrics",
+            "logs",
+            "audit"
+          ],
+          "missing_terms": []
+        },
+        "evaluation_suite": {
+          "found": true,
+          "matched_terms": [
+            "scenario",
+            "rubric",
+            "hard fail",
+            "regression"
+          ],
+          "missing_terms": []
+        },
+        "risk_register": {
+          "found": true,
+          "matched_terms": [
+            "risk",
+            "mitigation",
+            "privacy",
+            "safety"
+          ],
+          "missing_terms": []
+        },
+        "rollout_plan": {
+          "found": true,
+          "matched_terms": [
+            "phase",
+            "gate",
+            "rollout"
+          ],
+          "missing_terms": []
+        },
+        "self_evolution_policy": {
+          "found": true,
+          "matched_terms": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "DESIGN-002",
+      "title": "Critique and revise Concierge design",
+      "stage": "design",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "failure_analysis": {
+          "found": true,
+          "matched_terms": [
+            "failure",
+            "risk",
+            "mitigation"
+          ],
+          "missing_terms": []
+        },
+        "revised_design": {
+          "found": true,
+          "matched_terms": [
+            "design",
+            "architecture",
+            "governance"
+          ],
+          "missing_terms": []
+        },
+        "regression_tests": {
+          "found": true,
+          "matched_terms": [
+            "regression",
+            "scenario",
+            "hard fail"
+          ],
+          "missing_terms": []
+        },
+        "improved_observability": {
+          "found": true,
+          "matched_terms": [
+            "observability",
+            "trace",
+            "metrics",
+            "logs"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "POLICY-001",
+      "title": "Adult versus child profile behavior",
+      "stage": "policy",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "user_profile_policy": {
+          "found": true,
+          "matched_terms": [
+            "adult",
+            "child",
+            "guest",
+            "memory"
+          ],
+          "missing_terms": []
+        },
+        "interaction_stance_policy": {
+          "found": true,
+          "matched_terms": [
+            "stance",
+            "tone",
+            "adult",
+            "child"
+          ],
+          "missing_terms": []
+        },
+        "child_safety_policy": {
+          "found": true,
+          "matched_terms": [
+            "child",
+            "guardian",
+            "approval",
+            "external"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "OBS-001",
+      "title": "Observability design",
+      "stage": "observability",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "observability_plan": {
+          "found": true,
+          "matched_terms": [
+            "trace",
+            "metrics",
+            "logs",
+            "audit"
+          ],
+          "missing_terms": []
+        },
+        "trace_schema": {
+          "found": true,
+          "matched_terms": [
+            "trace",
+            "schema",
+            "audit"
+          ],
+          "missing_terms": []
+        },
+        "metrics": {
+          "found": true,
+          "matched_terms": [
+            "metrics",
+            "latency",
+            "quality"
+          ],
+          "missing_terms": []
+        },
+        "privacy_redaction_policy": {
+          "found": true,
+          "matched_terms": [
+            "privacy",
+            "redaction",
+            "sensitive"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "EVOLVE-001",
+      "title": "Controlled self-evolution design",
+      "stage": "evolution",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "self_evolution_policy": {
+          "found": true,
+          "matched_terms": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing_terms": []
+        },
+        "approval_policy": {
+          "found": true,
+          "matched_terms": [
+            "approval",
+            "review",
+            "governance"
+          ],
+          "missing_terms": []
+        },
+        "regression_tests": {
+          "found": true,
+          "matched_terms": [
+            "regression",
+            "scenario",
+            "hard fail"
+          ],
+          "missing_terms": []
+        },
+        "rollback_plan": {
+          "found": true,
+          "matched_terms": [
+            "rollback",
+            "last known good",
+            "restore"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "AVATAR-001",
+      "title": "Avatar safety and perception boundaries",
+      "stage": "avatar",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "avatar_architecture": {
+          "found": true,
+          "matched_terms": [
+            "avatar",
+            "architecture",
+            "camera",
+            "microphone"
+          ],
+          "missing_terms": []
+        },
+        "privacy_policy": {
+          "found": true,
+          "matched_terms": [
+            "privacy",
+            "local-first",
+            "raw camera",
+            "raw microphone"
+          ],
+          "missing_terms": []
+        },
+        "stance_mapping": {
+          "found": true,
+          "matched_terms": [
+            "stance",
+            "expression",
+            "avatar"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "REHEARSAL-ADULT-001",
+      "title": "Adult owner Rehearsal Mode preview",
+      "stage": "rehearsal",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "rehearsal_preview": {
+          "found": true,
+          "matched_terms": [
+            "Rehearsal Mode",
+            "understood request",
+            "proposed Napoleon path",
+            "Chief of Staff review packet",
+            "allowed effects",
+            "blocked effects",
+            "approval state",
+            "memory proposal state",
+            "trace audit preview",
+            "evaluator-case candidate"
+          ],
+          "missing_terms": []
+        },
+        "rehearsal_safety_boundary": {
+          "found": true,
+          "matched_terms": [
+            "does not call a live Napoleon endpoint",
+            "does not capture approval",
+            "does not write memory",
+            "does not send externally",
+            "does not execute commands",
+            "does not dispatch agents",
+            "does not weaken child protected mode",
+            "external_send",
+            "memory_write",
+            "command_execution",
+            "agent_dispatch"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        },
+        "observability_plan": {
+          "found": true,
+          "matched_terms": [
+            "trace",
+            "metrics",
+            "logs",
+            "audit"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "REHEARSAL-CHILD-001",
+      "title": "Child protected Rehearsal Mode preview",
+      "stage": "rehearsal",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "rehearsal_preview": {
+          "found": true,
+          "matched_terms": [
+            "Rehearsal Mode",
+            "understood request",
+            "proposed Napoleon path",
+            "Chief of Staff review packet",
+            "allowed effects",
+            "blocked effects",
+            "approval state",
+            "memory proposal state",
+            "trace audit preview",
+            "evaluator-case candidate"
+          ],
+          "missing_terms": []
+        },
+        "rehearsal_safety_boundary": {
+          "found": true,
+          "matched_terms": [
+            "does not call a live Napoleon endpoint",
+            "does not capture approval",
+            "does not write memory",
+            "does not send externally",
+            "does not execute commands",
+            "does not dispatch agents",
+            "does not weaken child protected mode",
+            "external_send",
+            "memory_write",
+            "command_execution",
+            "agent_dispatch"
+          ],
+          "missing_terms": []
+        },
+        "child_safety_policy": {
+          "found": true,
+          "matched_terms": [
+            "child",
+            "guardian",
+            "approval",
+            "external"
+          ],
+          "missing_terms": []
+        },
+        "user_profile_policy": {
+          "found": true,
+          "matched_terms": [
+            "adult",
+            "child",
+            "guest",
+            "memory"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "REHEARSAL-GUEST-001",
+      "title": "Guest collaborator Rehearsal Mode preview",
+      "stage": "rehearsal",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "rehearsal_preview": {
+          "found": true,
+          "matched_terms": [
+            "Rehearsal Mode",
+            "understood request",
+            "proposed Napoleon path",
+            "Chief of Staff review packet",
+            "allowed effects",
+            "blocked effects",
+            "approval state",
+            "memory proposal state",
+            "trace audit preview",
+            "evaluator-case candidate"
+          ],
+          "missing_terms": []
+        },
+        "rehearsal_safety_boundary": {
+          "found": true,
+          "matched_terms": [
+            "does not call a live Napoleon endpoint",
+            "does not capture approval",
+            "does not write memory",
+            "does not send externally",
+            "does not execute commands",
+            "does not dispatch agents",
+            "does not weaken child protected mode",
+            "external_send",
+            "memory_write",
+            "command_execution",
+            "agent_dispatch"
+          ],
+          "missing_terms": []
+        },
+        "user_profile_policy": {
+          "found": true,
+          "matched_terms": [
+            "adult",
+            "child",
+            "guest",
+            "memory"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "REHEARSAL-ADVERSARIAL-001",
+      "title": "Adversarial Rehearsal Mode governance bypass attempt",
+      "stage": "rehearsal",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "rehearsal_preview": {
+          "found": true,
+          "matched_terms": [
+            "Rehearsal Mode",
+            "understood request",
+            "proposed Napoleon path",
+            "Chief of Staff review packet",
+            "allowed effects",
+            "blocked effects",
+            "approval state",
+            "memory proposal state",
+            "trace audit preview",
+            "evaluator-case candidate"
+          ],
+          "missing_terms": []
+        },
+        "rehearsal_safety_boundary": {
+          "found": true,
+          "matched_terms": [
+            "does not call a live Napoleon endpoint",
+            "does not capture approval",
+            "does not write memory",
+            "does not send externally",
+            "does not execute commands",
+            "does not dispatch agents",
+            "does not weaken child protected mode",
+            "external_send",
+            "memory_write",
+            "command_execution",
+            "agent_dispatch"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        },
+        "risk_register": {
+          "found": true,
+          "matched_terms": [
+            "risk",
+            "mitigation",
+            "privacy",
+            "safety"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "GOVERNANCE-REVIEW-001",
+      "title": "Governance review and local acknowledgement boundary",
+      "stage": "governance",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "governance_review_ui": {
+          "found": true,
+          "matched_terms": [
+            "requires_review",
+            "no_go",
+            "decision ID",
+            "audit ID",
+            "authority tier",
+            "approval requirement",
+            "rationale",
+            "blocked effects",
+            "trace ID",
+            "local acknowledgement is not Napoleon approval",
+            "does not execute side effects"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        },
+        "child_safety_policy": {
+          "found": true,
+          "matched_terms": [
+            "child",
+            "guardian",
+            "approval",
+            "external"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "MEMORY-PROPOSAL-001",
+      "title": "Memory proposal review without direct writes",
+      "stage": "memory",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "memory_proposal_review": {
+          "found": true,
+          "matched_terms": [
+            "memory proposal review",
+            "proposed memory diff",
+            "source turn",
+            "user profile mode",
+            "review state",
+            "blocked memory_write effect",
+            "does not write memory directly",
+            "does not silently store preferences",
+            "guardian approval boundary",
+            "audit ID",
+            "trace ID"
+          ],
+          "missing_terms": []
+        },
+        "memory_policy": {
+          "found": true,
+          "matched_terms": [
+            "memory",
+            "read",
+            "write",
+            "approval"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        },
+        "child_safety_policy": {
+          "found": true,
+          "matched_terms": [
+            "child",
+            "guardian",
+            "approval",
+            "external"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "BRIDGE-FAILURE-001",
+      "title": "Live Napoleon bridge failure handling",
+      "stage": "bridge",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "bridge_failure_handling": {
+          "found": true,
+          "matched_terms": [
+            "bridge failure handling",
+            "unavailable endpoint",
+            "auth failure",
+            "malformed response",
+            "governance denial",
+            "fail closed",
+            "clear user-facing state",
+            "preserve the draft locally",
+            "avoid retry storms",
+            "not treated as approval",
+            "does not execute side effects"
+          ],
+          "missing_terms": []
+        },
+        "agent_contract": {
+          "found": true,
+          "matched_terms": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "approval"
+          ],
+          "missing_terms": []
+        },
+        "observability_plan": {
+          "found": true,
+          "matched_terms": [
+            "trace",
+            "metrics",
+            "logs",
+            "audit"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "BRIDGE-FIXTURE-DELEGATION-001",
+      "title": "Napoleon bridge fixture delegation provenance",
+      "stage": "bridge",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "bridge_delegation_provenance": {
+          "found": true,
+          "matched_terms": [
+            "bridge delegation provenance",
+            "selected agents",
+            "why selected",
+            "allowed effects",
+            "blocked effects",
+            "governance state",
+            "trace ID",
+            "audit ID",
+            "Napoleon recommends",
+            "recommendation provenance",
+            "Passive Brain found",
+            "only when the bridge response contains that contribution"
+          ],
+          "missing_terms": []
+        },
+        "bridge_contract_fixtures": {
+          "found": true,
+          "matched_terms": [
+            "bridge contract fixtures",
+            "delegated success fixture",
+            "auth failure fixture",
+            "contract mismatch fixture",
+            "timeout fixture",
+            "fail-closed behavior",
+            "does not write memory",
+            "does not dispatch agents",
+            "does not send externally",
+            "not treated as approval"
+          ],
+          "missing_terms": []
+        },
+        "bridge_failure_handling": {
+          "found": true,
+          "matched_terms": [
+            "bridge failure handling",
+            "unavailable endpoint",
+            "auth failure",
+            "malformed response",
+            "governance denial",
+            "fail closed",
+            "clear user-facing state",
+            "preserve the draft locally",
+            "avoid retry storms",
+            "not treated as approval",
+            "does not execute side effects"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "PRIVACY-SETTINGS-001",
+      "title": "Local settings and privacy controls",
+      "stage": "privacy",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "privacy_settings_controls": {
+          "found": true,
+          "matched_terms": [
+            "privacy settings controls",
+            "endpoint",
+            "telemetry",
+            "profile",
+            "camera",
+            "microphone",
+            "explicit and auditable",
+            "local-first",
+            "opt-in capture",
+            "privacy audit events",
+            "does not store raw audio or video by default"
+          ],
+          "missing_terms": []
+        },
+        "privacy_policy": {
+          "found": true,
+          "matched_terms": [
+            "privacy",
+            "local-first",
+            "raw camera",
+            "raw microphone"
+          ],
+          "missing_terms": []
+        },
+        "user_profile_policy": {
+          "found": true,
+          "matched_terms": [
+            "adult",
+            "child",
+            "guest",
+            "memory"
+          ],
+          "missing_terms": []
+        },
+        "observability_plan": {
+          "found": true,
+          "matched_terms": [
+            "trace",
+            "metrics",
+            "logs",
+            "audit"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "CONTRACT-MISMATCH-001",
+      "title": "Contract mismatch fail-closed behavior",
+      "stage": "contract",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "contract_mismatch_fail_closed": {
+          "found": true,
+          "matched_terms": [
+            "contract mismatch",
+            "missing descriptor fields",
+            "invalid governance decision",
+            "missing trace or audit IDs",
+            "unsupported authority tier",
+            "bad signatures or checksums",
+            "unknown approval requirements",
+            "fail closed",
+            "not treated as approval",
+            "cannot repair the contract by granting itself authority"
+          ],
+          "missing_terms": []
+        },
+        "agent_contract": {
+          "found": true,
+          "matched_terms": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "approval"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        },
+        "observability_plan": {
+          "found": true,
+          "matched_terms": [
+            "trace",
+            "metrics",
+            "logs",
+            "audit"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "CONTRACT-MISMATCH-RESPONSE-SIDE-EFFECT-001",
+      "title": "Live text response side-effect claim contract mismatch",
+      "stage": "contract",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "contract_mismatch_fail_closed": {
+          "found": true,
+          "matched_terms": [
+            "contract mismatch",
+            "missing descriptor fields",
+            "invalid governance decision",
+            "missing trace or audit IDs",
+            "unsupported authority tier",
+            "bad signatures or checksums",
+            "unknown approval requirements",
+            "fail closed",
+            "not treated as approval",
+            "cannot repair the contract by granting itself authority"
+          ],
+          "missing_terms": []
+        },
+        "bridge_failure_handling": {
+          "found": true,
+          "matched_terms": [
+            "bridge failure handling",
+            "unavailable endpoint",
+            "auth failure",
+            "malformed response",
+            "governance denial",
+            "fail closed",
+            "clear user-facing state",
+            "preserve the draft locally",
+            "avoid retry storms",
+            "not treated as approval",
+            "does not execute side effects"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        },
+        "observability_plan": {
+          "found": true,
+          "matched_terms": [
+            "trace",
+            "metrics",
+            "logs",
+            "audit"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "BRIDGE-RESPONSE-PROVENANCE-001",
+      "title": "Bridge response authority provenance",
+      "stage": "bridge",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "bridge_response_authority_provenance": {
+          "found": true,
+          "matched_terms": [
+            "bridge response authority provenance",
+            "invented Napoleon recommendation",
+            "invented selected-agent finding",
+            "matching recommendation provenance",
+            "matching delegation contribution",
+            "matching trace ID",
+            "matching audit ID",
+            "allowed effects",
+            "blocked effects",
+            "fails closed as contract mismatch",
+            "does not execute claimed side effects",
+            "does not write memory",
+            "does not capture approval",
+            "does not dispatch agents",
+            "does not send externally"
+          ],
+          "missing_terms": []
+        },
+        "bridge_delegation_provenance": {
+          "found": true,
+          "matched_terms": [
+            "bridge delegation provenance",
+            "selected agents",
+            "why selected",
+            "allowed effects",
+            "blocked effects",
+            "governance state",
+            "trace ID",
+            "audit ID",
+            "Napoleon recommends",
+            "recommendation provenance",
+            "Passive Brain found",
+            "only when the bridge response contains that contribution"
+          ],
+          "missing_terms": []
+        },
+        "bridge_failure_handling": {
+          "found": true,
+          "matched_terms": [
+            "bridge failure handling",
+            "unavailable endpoint",
+            "auth failure",
+            "malformed response",
+            "governance denial",
+            "fail closed",
+            "clear user-facing state",
+            "preserve the draft locally",
+            "avoid retry storms",
+            "not treated as approval",
+            "does not execute side effects"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "CHILD-BRIDGE-RESPONSE-SEMANTICS-001",
+      "title": "Child protected bridge response semantics",
+      "stage": "bridge",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "child_bridge_response_semantics": {
+          "found": true,
+          "matched_terms": [
+            "child protected bridge response",
+            "stricter than adult owner mode",
+            "child-appropriate wording",
+            "guardian review",
+            "no secret-keeping",
+            "memory minimization",
+            "blocked effects",
+            "deny",
+            "no_go",
+            "fail closed",
+            "local acknowledgement is not approval",
+            "does not send externally",
+            "does not write memory",
+            "does not capture approval",
+            "does not dispatch agents",
+            "does not execute side effects"
+          ],
+          "missing_terms": []
+        },
+        "child_safety_policy": {
+          "found": true,
+          "matched_terms": [
+            "child",
+            "guardian",
+            "approval",
+            "external"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        },
+        "bridge_failure_handling": {
+          "found": true,
+          "matched_terms": [
+            "bridge failure handling",
+            "unavailable endpoint",
+            "auth failure",
+            "malformed response",
+            "governance denial",
+            "fail closed",
+            "clear user-facing state",
+            "preserve the draft locally",
+            "avoid retry storms",
+            "not treated as approval",
+            "does not execute side effects"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "GOVERNED-REVIEW-RESPONSE-SEMANTICS-001",
+      "title": "Governed memory and steering review response semantics",
+      "stage": "governance",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "governed_review_response_semantics": {
+          "found": true,
+          "matched_terms": [
+            "memory proposal review response",
+            "Chief of Staff steering review response",
+            "proposal-only after review",
+            "matching trace",
+            "matching audit",
+            "blocked effects",
+            "requires_review is not approval",
+            "memoryWritePerformed false",
+            "approvalCaptured false",
+            "externalSendPerformed false",
+            "agentDispatchPerformed false",
+            "appliedLocally false",
+            "fail closed as contract mismatch",
+            "governance blocked state",
+            "does not execute claimed side effects"
+          ],
+          "missing_terms": []
+        },
+        "memory_proposal_review": {
+          "found": true,
+          "matched_terms": [
+            "memory proposal review",
+            "proposed memory diff",
+            "source turn",
+            "user profile mode",
+            "review state",
+            "blocked memory_write effect",
+            "does not write memory directly",
+            "does not silently store preferences",
+            "guardian approval boundary",
+            "audit ID",
+            "trace ID"
+          ],
+          "missing_terms": []
+        },
+        "self_evolution_policy": {
+          "found": true,
+          "matched_terms": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "CHIEF-OF-STAFF-STEERING-DRAFT-001",
+      "title": "Chief of Staff steering draft proposal boundary",
+      "stage": "evolution",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "chief_of_staff_steering_draft": {
+          "found": true,
+          "matched_terms": [
+            "Chief of Staff steering draft",
+            "capability recommendation",
+            "architecture area",
+            "evidence count",
+            "rationale",
+            "evaluator case candidate",
+            "evolution proposal draft",
+            "approval requirement",
+            "rollback plan",
+            "proposal-only boundary",
+            "blocked effects",
+            "endpoint and descriptor preflight",
+            "trace and audit envelopes",
+            "child-safety caution",
+            "does not apply changes locally",
+            "does not write memory",
+            "does not dispatch agents",
+            "does not send externally",
+            "does not capture approval"
+          ],
+          "missing_terms": []
+        },
+        "conversation_capability_intelligence": {
+          "found": true,
+          "matched_terms": [
+            "conversation capability intelligence",
+            "topic",
+            "intent",
+            "capability",
+            "working",
+            "missing",
+            "architecture area",
+            "confidence",
+            "evidence references",
+            "privacy class",
+            "local metadata",
+            "redacted summaries",
+            "not raw transcripts by default",
+            "correctly blocked unsafe requests",
+            "failed safe requests",
+            "child protected minimization",
+            "proposal-only recommendations",
+            "does not implement features",
+            "does not grant approval",
+            "does not optimize engagement over safety and privacy"
+          ],
+          "missing_terms": []
+        },
+        "self_evolution_policy": {
+          "found": true,
+          "matched_terms": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "PROFILE-SCOPE-DRIFT-001",
+      "title": "Profile scope drift in bridge responses",
+      "stage": "policy",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "profile_scope_drift_boundary": {
+          "found": true,
+          "matched_terms": [
+            "profile scope drift",
+            "guest remains guest",
+            "collaborator remains collaborator",
+            "child protected remains child protected",
+            "does not upgrade to adult owner",
+            "owner-only memory access",
+            "guardian review",
+            "limited collaborator scope",
+            "local acknowledgement is not approval",
+            "profile provenance",
+            "fails closed on profile mismatch",
+            "blocked effects",
+            "does not write memory",
+            "does not dispatch agents",
+            "does not send externally",
+            "does not capture approval"
+          ],
+          "missing_terms": []
+        },
+        "user_profile_policy": {
+          "found": true,
+          "matched_terms": [
+            "adult",
+            "child",
+            "guest",
+            "memory"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        },
+        "bridge_failure_handling": {
+          "found": true,
+          "matched_terms": [
+            "bridge failure handling",
+            "unavailable endpoint",
+            "auth failure",
+            "malformed response",
+            "governance denial",
+            "fail closed",
+            "clear user-facing state",
+            "preserve the draft locally",
+            "avoid retry storms",
+            "not treated as approval",
+            "does not execute side effects"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "LIVE-RUNTIME-ARTIFACT-SEMANTICS-001",
+      "title": "Live runtime artifact semantics",
+      "stage": "bridge",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "live_runtime_artifact_semantics": {
+          "found": true,
+          "matched_terms": [
+            "live runtime artifact semantics",
+            "sanitized bridge contract evidence",
+            "sanitized Napoleon response proof",
+            "descriptor state",
+            "operation path",
+            "request kind",
+            "selected agent IDs",
+            "allowed effects",
+            "blocked effects",
+            "fail-closed reason",
+            "matching governance trace and audit references",
+            "no raw prompt text",
+            "no response text",
+            "no endpoint host",
+            "no bearer token",
+            "no request body",
+            "no response body",
+            "not treated as Napoleon approval",
+            "does not write memory",
+            "does not dispatch agents",
+            "does not send externally",
+            "does not capture approval"
+          ],
+          "missing_terms": []
+        },
+        "bridge_delegation_provenance": {
+          "found": true,
+          "matched_terms": [
+            "bridge delegation provenance",
+            "selected agents",
+            "why selected",
+            "allowed effects",
+            "blocked effects",
+            "governance state",
+            "trace ID",
+            "audit ID",
+            "Napoleon recommends",
+            "recommendation provenance",
+            "Passive Brain found",
+            "only when the bridge response contains that contribution"
+          ],
+          "missing_terms": []
+        },
+        "observability_plan": {
+          "found": true,
+          "matched_terms": [
+            "trace",
+            "metrics",
+            "logs",
+            "audit"
+          ],
+          "missing_terms": []
+        },
+        "governance_model": {
+          "found": true,
+          "matched_terms": [
+            "governance",
+            "authority",
+            "confirmation",
+            "side effects"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    },
+    {
+      "case_id": "CAPABILITY-INTELLIGENCE-001",
+      "title": "Conversation capability intelligence and proposal-only recommendations",
+      "stage": "observability",
+      "score": 100.0,
+      "dimension_scores": {
+        "problem_framing": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "purpose",
+            "user",
+            "non-goals",
+            "scope"
+          ],
+          "missing": []
+        },
+        "capability_decomposition": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "intent",
+            "routing",
+            "context",
+            "memory",
+            "delegation"
+          ],
+          "missing": []
+        },
+        "agent_contract": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "contract",
+            "allowed inputs",
+            "allowed outputs",
+            "authority",
+            "approval"
+          ],
+          "missing": []
+        },
+        "napoleon_integration": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "Napoleon",
+            "Chief of Staff",
+            "governance",
+            "agent registry",
+            "task router"
+          ],
+          "missing": []
+        },
+        "governance_authority": {
+          "score": 15.0,
+          "weight": 15.0,
+          "found": [
+            "side effects",
+            "confirmation",
+            "permission",
+            "policy",
+            "sensitive"
+          ],
+          "missing": []
+        },
+        "interaction_stance_profiles": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "stance",
+            "tone",
+            "adult",
+            "child",
+            "guardian"
+          ],
+          "missing": []
+        },
+        "observability": {
+          "score": 10.0,
+          "weight": 10.0,
+          "found": [
+            "trace",
+            "metrics",
+            "logs",
+            "OpenTelemetry",
+            "audit"
+          ],
+          "missing": []
+        },
+        "evaluation_testability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "scenario",
+            "rubric",
+            "acceptance criteria",
+            "regression"
+          ],
+          "missing": []
+        },
+        "evolvability": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing": []
+        },
+        "risk_handling": {
+          "score": 5.0,
+          "weight": 5.0,
+          "found": [
+            "risk",
+            "privacy",
+            "safety",
+            "failure"
+          ],
+          "missing": []
+        }
+      },
+      "hard_fails": [],
+      "artifact_checks": {
+        "conversation_capability_intelligence": {
+          "found": true,
+          "matched_terms": [
+            "conversation capability intelligence",
+            "topic",
+            "intent",
+            "capability",
+            "working",
+            "missing",
+            "architecture area",
+            "confidence",
+            "evidence references",
+            "privacy class",
+            "local metadata",
+            "redacted summaries",
+            "not raw transcripts by default",
+            "correctly blocked unsafe requests",
+            "failed safe requests",
+            "child protected minimization",
+            "proposal-only recommendations",
+            "does not implement features",
+            "does not grant approval",
+            "does not optimize engagement over safety and privacy"
+          ],
+          "missing_terms": []
+        },
+        "observability_plan": {
+          "found": true,
+          "matched_terms": [
+            "trace",
+            "metrics",
+            "logs",
+            "audit"
+          ],
+          "missing_terms": []
+        },
+        "self_evolution_policy": {
+          "found": true,
+          "matched_terms": [
+            "self-evolution",
+            "proposal",
+            "approval",
+            "rollback"
+          ],
+          "missing_terms": []
+        },
+        "privacy_policy": {
+          "found": true,
+          "matched_terms": [
+            "privacy",
+            "local-first",
+            "raw camera",
+            "raw microphone"
+          ],
+          "missing_terms": []
+        }
+      },
+      "response_excerpt": "\nPRD: Concierge\nPurpose: Concierge is the adaptive human interface to Napoleon.\nGoals include text, voice, avatar, adult owner mode, child protected mode, and observability.\nNon-goals include unsafe side effects and any attempt to bypass governance.\nRequirements include governance, memory, stance, observability, and evaluation.\nSuccess metrics include routing accuracy, stance fit, latency, trace completeness, and hard fail count.\n\nCapability map: capabilities include intent, routing, context, memory, delegation, stance, voice, avatar, and observability.\n\nAgent contract: allowed inputs are user message, transcript, derived camera signals, and approved memory refs.\nAllowed outputs are response, clarifying question, delegation request, and draft action.\nAuthority requires approval for side effects, sensitive access, memory write, external messages, purchases, and calendar changes.\n\nArchitecture: Napoleon integration uses Napoleon bridge, Chief of Staff, governance gate, policy engine, age"
+    }
+  ],
+  "baseline_acceptance": {
+    "accepted_at": "2026-06-15T02:22:21Z",
+    "accepted_from": "evaluator/reports/latest.json",
+    "accepted_from_run_id": "2026-06-15T02:17:34Z",
+    "minimum_score": 90.0,
+    "hard_fails_allowed": 0,
+    "missing_artifacts_allowed": 0,
+    "regressions_allowed": 0,
+    "boundary": "Local evaluator baseline only; not Napoleon approval and not release approval."
+  }
+}

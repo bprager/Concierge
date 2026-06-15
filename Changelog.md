@@ -14,6 +14,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Changed the license TODO into third-party asset license review guidance now that the repository license is MIT.
 - Updated startup reports to reflect the implemented header-only bearer-token bridge contract and the remaining live credential-validation gap.
 - Added evaluator regression reporting with optional baseline comparison for score, hard-fail, missing-artifact, and scenario-count regressions.
+- Added accepted evaluator baseline storage and `make eval-with-baseline` / `make eval-accept-baseline` targets for local regression gates.
 - Added transcript-level source, fail-closed attribution boundary, and blocked-effect metadata for blocked Napoleon bridge attempts.
 - Added Napoleon delegation panel rendering for returned target capability IDs when selected-agent delegation is not returned.
 - Added last-success proof rendering and sanitized proof export for returned Napoleon target capability IDs when selected-agent delegation is not returned.

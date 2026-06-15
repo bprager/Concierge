@@ -17,6 +17,7 @@ app/src-tauri/gen/
 # Reports
 evaluator/reports/*.json
 evaluator/reports/*.html
+!evaluator/reports/accepted_baseline.json
 !evaluator/reports/.gitkeep
 
 # Local secrets
