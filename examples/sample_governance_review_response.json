@@ -1,0 +1,47 @@
+{
+  "text": "Napoleon accepted the governance review packet for review only. Concierge did not capture approval or apply any change.",
+  "governanceDecision": {
+    "decision_id": "decision_sample_governance_review",
+    "request_id": "cos_governance_review_request_sample",
+    "outcome": "requires_review",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "guardian_and_owner_review_before_external_or_durable_effects",
+    "rationale": "Governance review packets for child protected mode require Napoleon review and guardian or owner approval before any durable or external effect.",
+    "blocked_effects": [
+      "approval_capture",
+      "memory_write",
+      "agent_dispatch",
+      "external_send",
+      "runtime_authority",
+      "audit_append"
+    ],
+    "trace_id": "trace_governance_review_response_sample",
+    "audit_id": "audit_governance_review_response_sample"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_governance_review_response_sample",
+    "parent_trace_id": "trace_governance_review_request_sample",
+    "actor_id": "napoleon.chief_of_staff",
+    "request_id": "cos_governance_review_request_sample",
+    "decision_id": "decision_sample_governance_review",
+    "timestamp": "2026-06-15T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_governance_review_response_sample",
+    "trace_id": "trace_governance_review_response_sample",
+    "decision_id": "decision_sample_governance_review",
+    "actor_id": "napoleon.chief_of_staff",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "guardian_and_owner_review_before_external_or_durable_effects",
+    "evidence_links": [
+      "trace:trace_governance_review_response_sample",
+      "fixture:sample_governance_review_response",
+      "profile:child_protected_user"
+    ]
+  },
+  "appliedLocally": false,
+  "memoryWritePerformed": false,
+  "approvalCaptured": false,
+  "agentDispatchPerformed": false,
+  "externalSendPerformed": false
+}
