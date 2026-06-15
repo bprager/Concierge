@@ -99,6 +99,7 @@ export async function runLocalHarnessTextSmoke(
       evidenceComparisonState: readiness.comparisonState,
       lastEvidenceStatus: readiness.lastEvidenceStatus,
       lastFailureReason: readiness.lastFailureReason,
+      runtimeValidationSource: "local_harness",
     });
     return {
       status: "fail_closed",
@@ -123,6 +124,7 @@ export async function runLocalHarnessTextSmoke(
     evidenceComparisonState: readiness.comparisonState,
     lastEvidenceStatus: readiness.lastEvidenceStatus,
     lastFailureReason: readiness.lastFailureReason,
+    runtimeValidationSource: "local_harness",
   });
 
   return {

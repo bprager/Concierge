@@ -124,6 +124,13 @@ test("exports and compares Napoleon proof through rendered app controls", async 
       assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
     );
     assert.ok(screen.getAllByText("ready").length > 0);
+    const readinessPanel = screen.getByText("Live bridge readiness").closest("section") as HTMLElement;
+    assert.ok(readinessPanel);
+    assert.ok(within(readinessPanel).getByText("Local harness only; not real Napoleon runtime validation"));
+    await user.click(screen.getByRole("button", { name: "Export readiness proof" }));
+    const readinessExport = screen.getByLabelText("Exported bridge readiness proof");
+    assert.ok(readinessExport.textContent?.includes('"source": "local_harness"'));
+    assert.ok(!readinessExport.textContent?.includes("127.0.0.1"));
     const rehearsalCheckbox = screen.getByLabelText("Rehearsal Mode");
     if ((rehearsalCheckbox as HTMLInputElement).checked) {
       await user.click(rehearsalCheckbox);

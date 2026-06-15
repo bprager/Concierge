@@ -86,6 +86,7 @@ export interface LiveBridgeReadinessInput {
   evidenceComparisonState?: LiveBridgeEvidenceState;
   lastEvidenceStatus?: "success" | "fail_closed";
   lastFailureReason?: string;
+  runtimeValidationSource?: "real_runtime" | "local_harness" | "local_simulation";
 }
 
 export interface LiveBridgeReadinessView {
@@ -182,6 +183,12 @@ function describeEvidenceState(state: LiveBridgeEvidenceState | undefined): stri
   return "Not run in this UI session";
 }
 
+function describeRuntimeValidationSource(source: LiveBridgeReadinessInput["runtimeValidationSource"]): string {
+  if (source === "local_harness") return "Local harness only; not real Napoleon runtime validation";
+  if (source === "local_simulation") return "Local simulation only; not real Napoleon runtime validation";
+  return "Real Napoleon runtime";
+}
+
 export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): LiveBridgeReadinessView {
   const descriptor = input.descriptorConnection;
   const blockedEffects = descriptor.descriptorStatus?.blockedEffects ?? [
@@ -193,6 +200,8 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
   ];
   const evidenceCapture = input.evidenceCaptureState ?? "not_run";
   const evidenceComparison = input.evidenceComparisonState ?? "not_run";
+  const runtimeValidationSource = input.runtimeValidationSource ?? "real_runtime";
+  const localOnlyValidation = runtimeValidationSource === "local_harness" || runtimeValidationSource === "local_simulation";
   const integrityMismatch =
     descriptor.failClosedReason === "descriptor_signature_or_checksum_mismatch" ||
     descriptor.checksumState === "mismatch" ||
@@ -203,7 +212,7 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
   const canSendLive = descriptor.canAttemptLiveBridge && !evidenceFailed;
   const status: LiveBridgeReadinessView["status"] = !canSendLive
     ? "blocked"
-    : evidencePending || lastSendFailedClosed
+    : evidencePending || lastSendFailedClosed || localOnlyValidation
       ? "warning"
       : "ready";
 
@@ -222,6 +231,9 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
     summary = "Local bridge evidence validation failed; Concierge should stay in rehearsal or review mode.";
   } else if (lastSendFailedClosed) {
     summary = `Last Napoleon live text turn failed closed${input.lastFailureReason ? `: ${input.lastFailureReason}` : ""}. Concierge remains prepare-only for blocked effects.`;
+  } else if (localOnlyValidation && !evidencePending) {
+    summary =
+      "Local harness or simulation checks pass, but real Napoleon runtime validation has not been proven in this UI session.";
   } else if (evidencePending) {
     summary = "Descriptor preflight passes, but bridge evidence capture or comparison has not been verified in this UI session.";
   } else {
@@ -242,6 +254,7 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
       { label: "Signature", value: descriptor.signatureState },
       { label: "Evidence capture", value: describeEvidenceState(evidenceCapture) },
       { label: "Evidence comparison", value: describeEvidenceState(evidenceComparison) },
+      { label: "Runtime validation", value: describeRuntimeValidationSource(runtimeValidationSource) },
       {
         label: "Last live send",
         value:

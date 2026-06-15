@@ -121,7 +121,16 @@ test("smoke tests a governed text turn through a local Napoleon-compatible harne
   );
   assert.equal(result.readiness.captureState, "passed");
   assert.equal(result.readiness.comparisonState, "passed");
+  assert.equal(result.liveBridgeReadiness.status, "warning");
   assert.equal(result.liveBridgeReadiness.canSendLive, true);
+  assert.ok(result.liveBridgeReadiness.summary.includes("real Napoleon runtime validation has not been proven"));
+  assert.ok(
+    result.liveBridgeReadiness.details.some(
+      (detail) =>
+        detail.label === "Runtime validation" &&
+        detail.value === "Local harness only; not real Napoleon runtime validation",
+    ),
+  );
   assert.ok(result.liveBridgeReadiness.blockedEffects.includes("memory_write"));
 });
 

@@ -1303,6 +1303,11 @@ export function App() {
     const json = exportBridgeReadinessProofJson({
       descriptorConnection,
       readiness: bridgeEvidenceReadiness,
+      runtimeValidationSource: isLocalHarnessEndpoint(endpoint)
+        ? "local_harness"
+        : descriptorMode === "live"
+          ? "real_runtime"
+          : "local_simulation",
     });
     const comparison = compareBridgeReadinessProofs(bridgeReadinessProofJson, json);
     setBridgeReadinessProofJson(json);
@@ -1315,6 +1320,11 @@ export function App() {
       signatureState: descriptorConnection.signatureState,
       evidenceCaptureState: bridgeEvidenceReadiness.captureState,
       evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
+      runtimeValidationSource: isLocalHarnessEndpoint(endpoint)
+        ? "local_harness"
+        : descriptorMode === "live"
+          ? "real_runtime"
+          : "local_simulation",
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
       lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus ?? "not_run",
@@ -1504,6 +1514,11 @@ export function App() {
     evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
     lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus,
     lastFailureReason: bridgeEvidenceReadiness.lastFailureReason,
+    runtimeValidationSource: isLocalHarnessEndpoint(endpoint)
+      ? "local_harness"
+      : descriptorMode === "live"
+        ? "real_runtime"
+        : "local_simulation",
   });
   const currentInput = input.trim();
   const currentContract = currentInput

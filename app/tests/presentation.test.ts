@@ -328,7 +328,34 @@ test("describes live bridge readiness as ready only when descriptor and evidence
   assert.ok(view.details.some((detail) => detail.label === "Descriptor" && detail.value.includes("ready")));
   assert.ok(view.details.some((detail) => detail.label === "Checksum" && detail.value === "matched"));
   assert.ok(view.details.some((detail) => detail.label === "Evidence comparison" && detail.value.includes("Passed")));
+  assert.ok(view.details.some((detail) => detail.label === "Runtime validation" && detail.value === "Real Napoleon runtime"));
   assert.ok(view.caveat.includes("does not grant memory writes"));
+});
+
+test("describes local harness bridge readiness as validation warning only", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "local_harness",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canSendLive, true);
+  assert.ok(view.summary.includes("real Napoleon runtime validation has not been proven"));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Runtime validation" &&
+        detail.value === "Local harness only; not real Napoleon runtime validation",
+    ),
+  );
 });
 
 test("describes last fail-closed live send in bridge readiness", () => {

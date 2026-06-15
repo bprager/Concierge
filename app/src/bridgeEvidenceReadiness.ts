@@ -17,6 +17,7 @@ export interface BridgeEvidenceReadinessState {
 export interface BridgeReadinessProofInput {
   descriptorConnection: DescriptorConnectionState;
   readiness: BridgeEvidenceReadinessState;
+  runtimeValidationSource?: "real_runtime" | "local_harness" | "local_simulation";
   generatedAt?: string;
 }
 
@@ -132,6 +133,15 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         failureReason: input.readiness.failureReason,
         blockedEffects,
       },
+      runtimeValidation: {
+        source: input.runtimeValidationSource ?? "real_runtime",
+        caveat:
+          input.runtimeValidationSource === "local_harness"
+            ? "Local harness validation is not real Napoleon runtime validation."
+            : input.runtimeValidationSource === "local_simulation"
+              ? "Local simulation is not real Napoleon runtime validation."
+              : "Real Napoleon runtime validation source.",
+      },
       boundary: {
         approvalCaptured: false,
         memoryWritePerformed: false,
@@ -218,6 +228,7 @@ export function compareBridgeReadinessProofs(
     { label: "Last operation path", path: ["evidence", "lastTargetPath"] },
     { label: "Last failure reason", path: ["evidence", "lastFailureReason"] },
     { label: "Evidence blocked effects", path: ["evidence", "blockedEffects"] },
+    { label: "Runtime validation source", path: ["runtimeValidation", "source"] },
   ];
 
   const changes = comparedFields.flatMap(({ label, path }) => {

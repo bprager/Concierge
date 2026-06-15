@@ -53,7 +53,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added runtime authority-boundary validation that fails if Concierge source directly executes processes, accesses memory or graph systems, or dispatches agents/tools outside the governed bridge.
 - Added first-class Napoleon descriptor connection state for discovered, missing, and checksum/signature mismatch cases, with bridge preflight blocking before network calls.
 - Added live Chief of Staff descriptor discovery from `/v1/concierge/chief-of-staff/descriptor`, including checksum/signature parsing and fail-closed invalid descriptor states.
-- Added a Text Concierge live bridge readiness panel that combines endpoint, descriptor, checksum/signature, evidence capture/comparison, last live-send outcome, and blocked-effect state while stating that readiness is not Napoleon approval.
+- Added a Text Concierge live bridge readiness panel that combines endpoint, descriptor, checksum/signature, evidence capture/comparison, runtime-validation source, last live-send outcome, and blocked-effect state while stating that readiness is not Napoleon approval.
+- Added runtime-validation source labeling to live bridge readiness and readiness proof export so local harness and simulation checks remain distinct from real Napoleon runtime validation.
 - Added a composer-side live-send preflight checklist for text readiness, endpoint configuration, descriptor discovery, descriptor integrity, local governance send gate, and Rehearsal Mode state.
 - Added in-session readiness tracking from captured `bridge_contract_evidence`, with local registry and raw/secret field comparison before evidence is marked passed.
 - Added a sanitized local bridge readiness proof export with descriptor state, blocked effects, evidence status, last failure reason, and no raw prompts, endpoints, or secrets.

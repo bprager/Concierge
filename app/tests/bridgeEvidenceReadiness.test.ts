@@ -89,6 +89,7 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
   const exported = exportBridgeReadinessProofJson({
     descriptorConnection,
     readiness: state,
+    runtimeValidationSource: "local_harness",
     generatedAt: "2026-06-13T00:00:00.000Z",
   });
   const proof = JSON.parse(exported) as {
@@ -96,6 +97,7 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
     generatedAt: string;
     descriptor: { state: string; checksumState: string; signatureState: string; serviceId?: string };
     evidence: { captureState: string; comparisonState: string; lastFailureReason?: string; blockedEffects: string[] };
+    runtimeValidation: { source: string; caveat: string };
     boundary: { approvalCaptured: boolean; memoryWritePerformed: boolean; externalSendPerformed: boolean };
   };
   const forbiddenKeys = ["endpoint", "host", "token", "message", "prompt", "requestBody", "responseBody", "responseText"];
@@ -110,6 +112,8 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
   assert.equal(proof.evidence.comparisonState, "passed");
   assert.equal(proof.evidence.lastFailureReason, "contract_mismatch");
   assert.deepEqual(proof.evidence.blockedEffects, ["memory_write", "approval_capture", "external_send"]);
+  assert.equal(proof.runtimeValidation.source, "local_harness");
+  assert.ok(proof.runtimeValidation.caveat.includes("not real Napoleon runtime validation"));
   assert.equal(proof.boundary.approvalCaptured, false);
   assert.equal(proof.boundary.memoryWritePerformed, false);
   assert.equal(proof.boundary.externalSendPerformed, false);
