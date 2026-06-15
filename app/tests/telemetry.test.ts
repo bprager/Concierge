@@ -2,8 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { JSDOM } from "jsdom";
 import {
+  clearTelemetryBuffer,
   emitCapabilitySignal,
   emitEvent,
+  exportTelemetryBufferJson,
   loadTelemetryBufferFromStorage,
   TELEMETRY_BUFFER_MAX_EVENTS,
   TELEMETRY_BUFFER_STORAGE_KEY,
@@ -296,6 +298,100 @@ test("telemetry off suppresses ordinary buffering but preserves privacy audit bu
     assert.equal(buffer.events.length, 1);
     assert.equal(buffer.events[0].event, "privacy_setting_changed");
     assert.equal(buffer.events[0].attributes.traceId, "trace_privacy_buffer");
+  } finally {
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
+});
+
+test("telemetry buffer export is local redacted metadata only", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  console.info = () => undefined;
+
+  try {
+    emitEvent("response_failed", {
+      traceId: "trace_exported_buffer",
+      conversationId: "conv_exported_buffer",
+      turnId: "turn_exported_buffer",
+      rawPrompt: "raw prompt must not export",
+      responseBody: { responseText: "raw response must not export" },
+      endpointUrl: "https://napoleon.example.test",
+      authorization: "Bearer secret",
+    });
+
+    const exported = JSON.parse(exportTelemetryBufferJson(localStorage)) as {
+      schemaVersion: string;
+      caveat: string;
+      eventCount: number;
+      events: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+
+    assert.equal(exported.schemaVersion, "concierge.telemetry-buffer.export.v1");
+    assert.equal(exported.eventCount, 1);
+    assert.equal(exported.events[0].event, "response_failed");
+    assert.equal(exported.events[0].attributes.rawPrompt, "[redacted]");
+    assert.equal(exported.events[0].attributes.responseBody, "[redacted]");
+    assert.equal(exported.events[0].attributes.endpointUrl, "[redacted]");
+    assert.equal(exported.events[0].attributes.authorization, "[redacted]");
+    assert.equal(JSON.stringify(exported).includes("raw prompt must not export"), false);
+    assert.equal(JSON.stringify(exported).includes("raw response must not export"), false);
+    assert.match(exported.caveat, /not Napoleon approval/);
+  } finally {
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
+});
+
+test("telemetry buffer clear removes persisted local events", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  console.info = () => undefined;
+
+  try {
+    emitEvent("settings_changed", {
+      traceId: "trace_clear_buffer",
+      conversationId: "conv_clear_buffer",
+      turnId: "turn_clear_buffer",
+    });
+
+    assert.equal(loadTelemetryBufferFromStorage(localStorage).events.length, 1);
+    clearTelemetryBuffer(localStorage);
+
+    assert.equal(localStorage.getItem(TELEMETRY_BUFFER_STORAGE_KEY), null);
+    assert.equal(loadTelemetryBufferFromStorage(localStorage).events.length, 0);
   } finally {
     console.info = previousInfo;
     if (previousWindow === undefined) {

@@ -18,8 +18,19 @@ export interface LocalTelemetryBuffer {
   events: TelemetryPayload[];
 }
 
+export interface LocalTelemetryBufferExport {
+  schemaVersion: "concierge.telemetry-buffer.export.v1";
+  generatedAt: string;
+  eventCount: number;
+  maxEvents: number;
+  caveat: string;
+  events: TelemetryPayload[];
+}
+
 export const TELEMETRY_BUFFER_STORAGE_KEY = "concierge_telemetry_buffer_v1";
 export const TELEMETRY_BUFFER_MAX_EVENTS = 200;
+export const TELEMETRY_BUFFER_EXPORT_CAVEAT =
+  "Local redacted metadata only; not Napoleon approval, not a memory write, not agent dispatch, and not permission to send externally.";
 
 const SENSITIVE_ATTRIBUTE_KEYS = new Set([
   "authtoken",
@@ -101,6 +112,29 @@ export function appendTelemetryPayloadToBuffer(
     return current;
   }
   return next;
+}
+
+export function exportTelemetryBufferJson(storage: Storage | null | undefined): string {
+  const buffer = loadTelemetryBufferFromStorage(storage);
+  const exportPayload: LocalTelemetryBufferExport = {
+    schemaVersion: "concierge.telemetry-buffer.export.v1",
+    generatedAt: new Date().toISOString(),
+    eventCount: buffer.events.length,
+    maxEvents: buffer.maxEvents,
+    caveat: TELEMETRY_BUFFER_EXPORT_CAVEAT,
+    events: buffer.events.map((event) => sanitizeTelemetryPayload(event)),
+  };
+  return JSON.stringify(exportPayload, null, 2);
+}
+
+export function clearTelemetryBuffer(storage: Storage | null | undefined): boolean {
+  if (!storage) return false;
+  try {
+    storage.removeItem(TELEMETRY_BUFFER_STORAGE_KEY);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function localTelemetryEnabled(): boolean {

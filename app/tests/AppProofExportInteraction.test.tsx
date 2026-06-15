@@ -1713,6 +1713,66 @@ test("renders local privacy controls for telemetry camera and microphone", async
   }
 });
 
+test("renders local telemetry buffer controls with redacted export and local clear", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalInfo = console.info;
+  console.info = () => undefined;
+
+  try {
+    localStorage.setItem(
+      "concierge_telemetry_buffer_v1",
+      JSON.stringify({
+        schemaVersion: "concierge.telemetry-buffer.v1",
+        maxEvents: 200,
+        events: [
+          {
+            ts: "2026-06-15T00:00:00.000Z",
+            event: "response_failed",
+            attributes: {
+              traceId: "trace_buffer_ui",
+              prompt: "[redacted]",
+              endpoint: "[redacted]",
+              blockedEffects: ["memory_write"],
+            },
+          },
+        ],
+      }),
+    );
+
+    const view = render(<App />);
+    const buffer = within(view.getByLabelText("Local telemetry buffer"));
+
+    assert.ok(buffer.getByText("Buffered events: 1 of 200"));
+    assert.ok(buffer.getByText("Last event: response_failed"));
+
+    await user.click(buffer.getByRole("button", { name: "Export telemetry buffer" }));
+    const exported = buffer.getByLabelText("Telemetry buffer export") as HTMLTextAreaElement;
+
+    assert.match(exported.value, /"schemaVersion": "concierge\.telemetry-buffer\.export\.v1"/);
+    assert.match(exported.value, /trace_buffer_ui/);
+    assert.match(exported.value, /"prompt": "\[redacted\]"/);
+    assert.match(exported.value, /not Napoleon approval/);
+    assert.doesNotMatch(exported.value, /private prompt/);
+    assert.doesNotMatch(exported.value, /napoleon\.example/);
+
+    await user.click(buffer.getByRole("button", { name: "Clear telemetry buffer" }));
+
+    assert.equal(localStorage.getItem("concierge_telemetry_buffer_v1"), null);
+    assert.ok(buffer.getByText("Buffered events: 0 of 200"));
+    assert.ok(buffer.getByText("Last event: none"));
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders avatar privacy dashboard without starting capture storage or affect models", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

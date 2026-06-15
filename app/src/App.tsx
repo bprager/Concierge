@@ -113,7 +113,14 @@ import {
   describeNapoleonTranscriptMetadata,
   summarizeRehearsalPreview,
 } from "./presentation.js";
-import { emitEvent, newTraceId } from "./telemetry.js";
+import {
+  clearTelemetryBuffer,
+  emitEvent,
+  exportTelemetryBufferJson,
+  loadTelemetryBufferFromStorage,
+  newTraceId,
+  TELEMETRY_BUFFER_MAX_EVENTS,
+} from "./telemetry.js";
 import { capabilityLedger } from "./telemetry.js";
 import {
   CAPABILITY_LEDGER_MAX_AGE_DAYS,
@@ -235,6 +242,15 @@ export function App() {
     typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_auth_token") ?? "",
   );
   const [telemetryEnabled, setTelemetryEnabled] = useState(() => storedBoolean("concierge_telemetry_enabled", true));
+  const [telemetryBufferCount, setTelemetryBufferCount] = useState(() => {
+    const buffer = loadTelemetryBufferFromStorage(browserStorage());
+    return buffer.events.length;
+  });
+  const [telemetryBufferLastEvent, setTelemetryBufferLastEvent] = useState(() => {
+    const buffer = loadTelemetryBufferFromStorage(browserStorage());
+    return buffer.events.at(-1)?.event ?? "none";
+  });
+  const [telemetryBufferExportJson, setTelemetryBufferExportJson] = useState<string | null>(null);
   const [cameraEnabled, setCameraEnabled] = useState(() => storedBoolean("concierge_camera_enabled", false));
   const [microphoneEnabled, setMicrophoneEnabled] = useState(() =>
     storedBoolean("concierge_microphone_enabled", false),
@@ -370,6 +386,24 @@ export function App() {
     setCapabilitySignalCount(capabilityLedger.listRecent().length);
   }
 
+  function refreshTelemetryBufferStatus() {
+    const buffer = loadTelemetryBufferFromStorage(browserStorage());
+    setTelemetryBufferCount(buffer.events.length);
+    setTelemetryBufferLastEvent(buffer.events.at(-1)?.event ?? "none");
+  }
+
+  function exportLocalTelemetryBuffer() {
+    setTelemetryBufferExportJson(exportTelemetryBufferJson(browserStorage()));
+    refreshTelemetryBufferStatus();
+  }
+
+  function clearLocalTelemetryBuffer() {
+    clearTelemetryBuffer(browserStorage());
+    setTelemetryBufferExportJson(null);
+    setTelemetryBufferCount(0);
+    setTelemetryBufferLastEvent("none");
+  }
+
   function taxonomySelection(value = selectedTaxonomyLabel): { dimension: TaxonomyDimension; label: string } | null {
     const [dimension, ...labelParts] = value.split(":");
     const label = labelParts.join(":");
@@ -462,6 +496,7 @@ export function App() {
       memoryWritePerformed: false,
       externalSendPerformed: false,
     });
+    refreshTelemetryBufferStatus();
   }
 
   async function requestCameraPermission() {
@@ -2010,6 +2045,39 @@ export function App() {
           Local telemetry {telemetryEnabled ? "on" : "off"}, camera {cameraEnabled ? "on" : "off"},
           microphone {microphoneEnabled ? "on" : "off"}
         </span>
+      </section>
+
+      <section className="contract-status" aria-label="Local telemetry buffer">
+        <div>
+          <strong>Local telemetry buffer</strong>
+          <span>browser-local redacted metadata only</span>
+        </div>
+        <div>
+          <strong>Buffered events</strong>
+          <span>Buffered events: {telemetryBufferCount} of {TELEMETRY_BUFFER_MAX_EVENTS}</span>
+        </div>
+        <div>
+          <strong>Last event</strong>
+          <span>Last event: {telemetryBufferLastEvent}</span>
+        </div>
+        <div>
+          <strong>Export boundary</strong>
+          <span>Export boundary: local metadata only; not Napoleon approval.</span>
+        </div>
+        <button className="secondary" onClick={exportLocalTelemetryBuffer}>
+          Export telemetry buffer
+        </button>
+        <button className="secondary" onClick={clearLocalTelemetryBuffer}>
+          Clear telemetry buffer
+        </button>
+        {telemetryBufferExportJson ? (
+          <textarea
+            className="proof-export"
+            aria-label="Telemetry buffer export"
+            readOnly
+            value={telemetryBufferExportJson}
+          />
+        ) : null}
       </section>
 
       <section className="contract-status" aria-label="Voice readiness">
