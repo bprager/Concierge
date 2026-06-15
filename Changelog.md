@@ -58,6 +58,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added repository validation that rejects governed response artifacts claiming memory writes, approval capture, external sends, agent dispatch, or local application.
 - Added an OpenAPI-validated governance review response artifact on the canonical Chief of Staff steering route, with repository validation for review-only, child-protected guardian-review, and no-side-effect boundaries.
 - Added an OpenAPI-validated Chief of Staff taxonomy review response artifact on the canonical steering route, with repository validation for review-only, capability-evidence, and no-local-application boundaries.
+- Added an OpenAPI-validated child-protected Chief of Staff taxonomy review response artifact, with repository validation for guardian review wording, child profile evidence, and no local taxonomy application.
 - Added OpenAPI-validated governed request artifacts for memory proposal and Chief of Staff steering handoffs, with proposal-only boundary checks that reject nested approval, memory write, agent dispatch, external send, or local-apply claims.
 - Added child-protected memory proposal request artifact validation that requires guardian review and preserves child protected profile mapping.
 - Added child-protected Chief of Staff steering request artifact validation that requires explicit child-safety caution while preserving proposal-only boundaries.

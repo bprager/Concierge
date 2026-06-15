@@ -366,6 +366,29 @@ def validate_taxonomy_review_response_boundary(data: object) -> None:
         raise SystemExit("taxonomy review responses must preserve capability taxonomy review evidence")
 
 
+def validate_child_taxonomy_review_response_boundary(data: object) -> None:
+    validate_taxonomy_review_response_boundary(data)
+
+    if not isinstance(data, dict):
+        raise SystemExit("Child taxonomy review response example must be a JSON object")
+    decision = data.get("governanceDecision")
+    audit = data.get("auditEnvelope")
+    if not isinstance(decision, dict) or not isinstance(audit, dict):
+        raise SystemExit("Child taxonomy review response example must include governanceDecision and auditEnvelope objects")
+
+    approval_requirement = audit.get("approval_requirement")
+    if not isinstance(approval_requirement, str) or "guardian" not in approval_requirement:
+        raise SystemExit("child protected taxonomy review responses must preserve guardian review wording")
+
+    evidence_links = audit.get("evidence_links")
+    if not isinstance(evidence_links, list) or "profile_mode:child_protected_user" not in evidence_links:
+        raise SystemExit("child protected taxonomy review responses must preserve child profile evidence")
+
+    rationale = decision.get("rationale")
+    if not isinstance(rationale, str) or "Child-protected" not in rationale:
+        raise SystemExit("child protected taxonomy review responses must state the child-protected boundary")
+
+
 def validate_proposal_only_request_boundary(data: object) -> None:
     if not isinstance(data, dict):
         raise SystemExit("Governed handoff request example must be a JSON object")
@@ -501,6 +524,11 @@ def validate_openapi_response_examples() -> None:
             "200",
             "examples/sample_chief_of_staff_taxonomy_review_response.json",
         ),
+        (
+            "/v1/concierge/chief-of-staff/steering",
+            "200",
+            "examples/sample_child_chief_of_staff_taxonomy_review_response.json",
+        ),
     ]
     for path, status_code, example_path in examples:
         data = load_json(example_path)
@@ -511,6 +539,8 @@ def validate_openapi_response_examples() -> None:
             validate_governance_review_response_boundary(data)
         if example_path.endswith("sample_chief_of_staff_taxonomy_review_response.json"):
             validate_taxonomy_review_response_boundary(data)
+        if example_path.endswith("sample_child_chief_of_staff_taxonomy_review_response.json"):
+            validate_child_taxonomy_review_response_boundary(data)
         print(f"valid OpenAPI response example: {example_path} against {path} {status_code}")
 
 

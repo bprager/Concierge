@@ -1,0 +1,47 @@
+{
+  "text": "Napoleon accepted the child-protected taxonomy review packet for review only. Concierge did not apply taxonomy edits.",
+  "governanceDecision": {
+    "decision_id": "decision_sample_child_taxonomy_review",
+    "request_id": "cos_child_taxonomy_review_request_sample",
+    "outcome": "requires_review",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "guardian_and_owner_review_required_before_child_protected_taxonomy_change",
+    "rationale": "Child-protected taxonomy cleanup recommendations require Napoleon, guardian, and owner review before any taxonomy, policy, routing, or durable effect.",
+    "blocked_effects": [
+      "memory_write",
+      "agent_dispatch",
+      "external_send",
+      "approval_capture",
+      "runtime_authority"
+    ],
+    "trace_id": "trace_child_taxonomy_review_response_sample",
+    "audit_id": "audit_child_taxonomy_review_response_sample"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_child_taxonomy_review_response_sample",
+    "parent_trace_id": "trace_child_taxonomy_review_request_sample",
+    "actor_id": "napoleon.chief_of_staff",
+    "request_id": "cos_child_taxonomy_review_request_sample",
+    "decision_id": "decision_sample_child_taxonomy_review",
+    "timestamp": "2026-06-15T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_child_taxonomy_review_response_sample",
+    "trace_id": "trace_child_taxonomy_review_response_sample",
+    "decision_id": "decision_sample_child_taxonomy_review",
+    "actor_id": "napoleon.chief_of_staff",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "guardian_and_owner_review_required_before_child_protected_taxonomy_change",
+    "evidence_links": [
+      "trace:trace_child_taxonomy_review_response_sample",
+      "fixture:sample_child_chief_of_staff_taxonomy_review_response",
+      "capability:capability_taxonomy_review",
+      "profile_mode:child_protected_user"
+    ]
+  },
+  "appliedLocally": false,
+  "memoryWritePerformed": false,
+  "approvalCaptured": false,
+  "agentDispatchPerformed": false,
+  "externalSendPerformed": false
+}
