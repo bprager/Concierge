@@ -34,6 +34,7 @@ import {
   localAvatarAffectFusionSample,
   type LocalAvatarAffectFusionResult,
 } from "./avatarAffectFusion.js";
+import { buildAvatarPrivacyDashboard } from "./avatarPrivacyDashboard.js";
 import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
 import { answerCapabilityQuestion } from "./capabilityLedger.js";
 import { describeBridgeOperationSummary, describeTaxonomyReviewBridgeSummary } from "./bridgeOperations.js";
@@ -238,6 +239,12 @@ export function App() {
   const [microphoneEnabled, setMicrophoneEnabled] = useState(() =>
     storedBoolean("concierge_microphone_enabled", false),
   );
+  const [avatarAffectEnabled, setAvatarAffectEnabled] = useState(() =>
+    storedBoolean("concierge_avatar_affect_enabled", false),
+  );
+  const [rawMediaStorageEnabled, setRawMediaStorageEnabled] = useState(() =>
+    storedBoolean("concierge_raw_media_storage_enabled", false),
+  );
   const [microphonePermissionStatus, setMicrophonePermissionStatus] =
     useState<LocalMediaPermissionStatus>("not_requested");
   const [cameraPermissionStatus, setCameraPermissionStatus] = useState<LocalMediaPermissionStatus>("not_requested");
@@ -421,16 +428,25 @@ export function App() {
     }
   }
 
-  function updatePrivacySetting(kind: "telemetry" | "camera" | "microphone", enabled: boolean) {
+  function updatePrivacySetting(
+    kind: "telemetry" | "camera" | "microphone" | "avatar_affect" | "raw_media_storage",
+    enabled: boolean,
+  ) {
     const storageKey =
       kind === "telemetry"
         ? "concierge_telemetry_enabled"
         : kind === "camera"
           ? "concierge_camera_enabled"
-          : "concierge_microphone_enabled";
+          : kind === "microphone"
+            ? "concierge_microphone_enabled"
+            : kind === "avatar_affect"
+              ? "concierge_avatar_affect_enabled"
+              : "concierge_raw_media_storage_enabled";
     if (kind === "telemetry") setTelemetryEnabled(enabled);
     if (kind === "camera") setCameraEnabled(enabled);
     if (kind === "microphone") setMicrophoneEnabled(enabled);
+    if (kind === "avatar_affect") setAvatarAffectEnabled(enabled);
+    if (kind === "raw_media_storage") setRawMediaStorageEnabled(enabled);
     if (typeof localStorage !== "undefined") {
       localStorage.setItem(storageKey, String(enabled));
     }
@@ -1872,6 +1888,14 @@ export function App() {
     : cameraPermissionStatus !== "granted"
       ? "Camera capture blocked: OS camera permission is not granted."
       : "Camera capture ready but stopped; avatar/camera mode is not active.";
+  const avatarPrivacyDashboard = buildAvatarPrivacyDashboard({
+    profileMode: profile,
+    telemetryEnabled,
+    cameraEnabled,
+    microphoneEnabled,
+    avatarAffectEnabled,
+    rawMediaStorageEnabled,
+  });
   const napoleonDelegationView = lastNapoleonPresentation.delegation ?? describeDelegation(undefined);
 
   return (
@@ -2768,6 +2792,89 @@ export function App() {
         <button className="secondary" onClick={() => void requestCameraPermission()}>
           Request camera permission
         </button>
+      </section>
+
+      <section className="contract-status" aria-label="Avatar privacy dashboard">
+        <div>
+          <strong>Avatar privacy dashboard</strong>
+          <span>local controls only</span>
+        </div>
+        <label>
+          Avatar affect
+          <input
+            type="checkbox"
+            checked={avatarAffectEnabled}
+            onChange={(e) => updatePrivacySetting("avatar_affect", e.target.checked)}
+          />
+        </label>
+        <label>
+          Raw media storage
+          <input
+            type="checkbox"
+            checked={rawMediaStorageEnabled}
+            onChange={(e) => updatePrivacySetting("raw_media_storage", e.target.checked)}
+          />
+        </label>
+        <div>
+          <strong>Camera control</strong>
+          <span>Camera control: {avatarPrivacyDashboard.cameraControl}</span>
+        </div>
+        <div>
+          <strong>Microphone control</strong>
+          <span>Microphone control: {avatarPrivacyDashboard.microphoneControl}</span>
+        </div>
+        <div>
+          <strong>Affect control</strong>
+          <span>Affect control: {avatarPrivacyDashboard.affectControl}</span>
+        </div>
+        <div>
+          <strong>Raw media storage</strong>
+          <span>Raw media storage: {avatarPrivacyDashboard.rawMediaStorageControl}</span>
+        </div>
+        <div>
+          <strong>Telemetry control</strong>
+          <span>Telemetry control: {avatarPrivacyDashboard.telemetryControl}</span>
+        </div>
+        <div>
+          <strong>Camera capture</strong>
+          <span>Camera capture started: no</span>
+        </div>
+        <div>
+          <strong>Microphone capture</strong>
+          <span>Microphone capture started: no</span>
+        </div>
+        <div>
+          <strong>Raw video</strong>
+          <span>Raw video stored: no</span>
+        </div>
+        <div>
+          <strong>Raw audio</strong>
+          <span>Raw audio stored: no</span>
+        </div>
+        <div>
+          <strong>Affect model</strong>
+          <span>Live affect model started: no</span>
+        </div>
+        <div>
+          <strong>Emotion fact</strong>
+          <span>Emotion claimed as fact: no</span>
+        </div>
+        <div>
+          <strong>Napoleon contact</strong>
+          <span>Live Napoleon contacted: no</span>
+        </div>
+        <div>
+          <strong>Authority boundary</strong>
+          <span>Authority boundary: {avatarPrivacyDashboard.authorityBoundary}</span>
+        </div>
+        <div>
+          <strong>Guardian reminder</strong>
+          <span>Guardian reminder: {avatarPrivacyDashboard.guardianReviewReminder}</span>
+        </div>
+        <div>
+          <strong>Blocked effects</strong>
+          <span>Blocked effects: {avatarPrivacyDashboard.blockedEffects.join(", ")}</span>
+        </div>
       </section>
 
       <section className="contract-status">

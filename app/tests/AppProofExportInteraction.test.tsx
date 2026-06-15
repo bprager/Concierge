@@ -1713,6 +1713,90 @@ test("renders local privacy controls for telemetry camera and microphone", async
   }
 });
 
+test("renders avatar privacy dashboard without starting capture storage or affect models", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("avatar privacy dashboard must stay local");
+    },
+  });
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    const view = render(<App />);
+
+    await view.findByText("Avatar privacy dashboard");
+    const dashboard = within(view.getByLabelText("Avatar privacy dashboard"));
+    assert.ok(dashboard.getByText("Camera control: disabled"));
+    assert.ok(dashboard.getByText("Affect control: disabled"));
+    assert.ok(dashboard.getByText("Raw media storage: disabled"));
+    assert.ok(dashboard.getByText("Telemetry control: enabled"));
+    assert.ok(dashboard.getByText("Camera capture started: no"));
+    assert.ok(dashboard.getByText("Microphone capture started: no"));
+    assert.ok(dashboard.getByText("Raw video stored: no"));
+    assert.ok(dashboard.getByText("Raw audio stored: no"));
+    assert.ok(dashboard.getByText("Live affect model started: no"));
+    assert.ok(dashboard.getByText("Emotion claimed as fact: no"));
+
+    await user.click(view.getByLabelText("Avatar affect"));
+    await user.click(view.getByLabelText("Raw media storage"));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    assert.equal(localStorage.getItem("concierge_avatar_affect_enabled"), "true");
+    assert.equal(localStorage.getItem("concierge_raw_media_storage_enabled"), "true");
+    const settingsEvents = telemetryPayloads.filter((payload) => payload.event === "privacy_setting_changed");
+    assert.ok(settingsEvents.some((payload) => payload.attributes.setting === "avatar_affect"));
+    assert.ok(settingsEvents.some((payload) => payload.attributes.setting === "raw_media_storage"));
+    assert.ok(settingsEvents.every((payload) => payload.attributes.rawAudioStored === false));
+    assert.ok(settingsEvents.every((payload) => payload.attributes.rawVideoStored === false));
+    assert.ok(settingsEvents.every((payload) => payload.attributes.approvalCaptured === false));
+    assert.ok(settingsEvents.every((payload) => payload.attributes.externalSendPerformed === false));
+    assert.ok(dashboard.getByText("Affect control: enabled"));
+    assert.ok(dashboard.getByText("Raw media storage: enabled"));
+    assert.ok(dashboard.getByText("Live affect model started: no"));
+    assert.ok(dashboard.getByText("Blocked effects: camera_capture, microphone_capture, raw_video_storage, raw_audio_storage, live_affect_model, emotion_fact_claim, attention_inference, avatar_animation, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("keeps voice capture blocked until explicit microphone permission is granted", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([

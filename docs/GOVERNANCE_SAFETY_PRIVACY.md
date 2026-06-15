@@ -179,3 +179,4 @@ Avatar mode must:
 - Explain camera and mic state visibly
 - Preserve user agency
 - Treat affect fusion as uncertainty metadata only; do not present local signals as emotional facts or attention facts
+- Keep raw avatar audio/video storage disabled by default and visibly separate local preferences from permission, approval, or live capture

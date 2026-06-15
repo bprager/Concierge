@@ -622,6 +622,28 @@ Evaluator coverage:
 
 - Covered by pure avatar affect-fusion tests and rendered app interaction tests for local uncertainty metadata without media capture, emotion-as-fact claims, live affect models, attention inference, Napoleon contact, approval, guardian approval, or side effects.
 
+### AV-009 details
+
+User value: The user can see and change avatar privacy preferences in one place before live avatar camera, affect, or storage paths exist.
+
+Acceptance criteria:
+
+- Text Concierge exposes an avatar privacy dashboard for camera, microphone, avatar affect, raw media storage, and telemetry state.
+- Camera, microphone, avatar affect, and raw media storage default off.
+- Avatar affect and raw media storage preferences persist locally and emit `privacy_setting_changed`.
+- Changing dashboard preferences does not request camera or microphone permission, start capture, store raw audio/video, run live affect models, infer emotion or attention, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- The dashboard shows false capture, storage, affect-model, emotion-fact, Napoleon-contact, approval, memory, and external-send fields plus blocked effects.
+- Child protected mode keeps camera, microphone, affect, raw media storage, and animation features under guardian-review-required state even if local preferences are on, and it must not capture guardian approval.
+
+Privacy and safety impact:
+
+- This is a local control and visibility surface only, not camera, microphone, affect, or storage authorization.
+- Raw audio/video storage remains blocked by default and no live perception pipeline is introduced.
+
+Evaluator coverage:
+
+- Covered by pure avatar privacy dashboard tests and rendered app interaction tests for local preferences without capture, storage, live affect models, Napoleon contact, approval, guardian approval, or side effects.
+
 ### AV-010 details
 
 User value: Child protected avatar behavior is visibly stricter before live avatar camera or perception features exist.
