@@ -1999,6 +1999,8 @@ test("shapes a local voice response preview without contacting Napoleon or start
   const user = userEventModule.default.setup();
   let permissionRequests = 0;
   let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
   Object.defineProperty(globalThis.navigator, "mediaDevices", {
     configurable: true,
     value: {
@@ -2019,6 +2021,18 @@ test("shapes a local voice response preview without contacting Napoleon or start
   });
 
   try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
     const view = render(<App />);
 
     await view.findByText("Voice response shaping");
@@ -2031,11 +2045,18 @@ test("shapes a local voice response preview without contacting Napoleon or start
     assert.equal(permissionRequests, 0);
     assert.equal(fetchCalls, 0);
     assert.ok(shaping.getByText("Shortened for speech: yes"));
-    assert.ok(shaping.getByText("Spoken summary: Napoleon says: Prepare the bridge rollout plan for owner review. Passive Brain found that descriptor discovery is ready."));
-    assert.ok(shaping.getByText("Authority boundary: Bridge-provided Napoleon provenance preserved for speech."));
+    const shapingEvent = telemetryPayloads.find((payload) => payload.event === "voice_response_shaped");
+    assert.ok(shapingEvent);
+    assert.equal(shapingEvent.attributes.localPreparationOnly, true);
+    assert.equal(shapingEvent.attributes.bridgeProvidedProvenance, false);
+    assert.ok(shaping.getByText("Spoken summary: Prepare the bridge rollout plan for owner review. A local summary notes that descriptor discovery is ready."));
+    assert.equal(shaping.queryByText(/Napoleon says/), null);
+    assert.equal(shaping.queryByText(/Passive Brain found/), null);
+    assert.ok(shaping.getByText("Authority boundary: No bridge provenance; speech summary must not claim Napoleon or delegated-agent authority."));
     assert.ok(shaping.getByText("Audio playback started: no"));
     assert.ok(shaping.getByText("Blocked effects: audio_playback, microphone_capture, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
   } finally {
+    console.info = originalInfo;
     cleanup();
     dom.window.close();
   }
@@ -2084,7 +2105,8 @@ test("uses stricter child protected voice shaping without contacting Napoleon or
     assert.ok(shaping.getByText("Profile: child protected"));
     assert.ok(shaping.getByText("Pacing: slow"));
     assert.ok(shaping.getByText("Guardian review reminder: yes"));
-    assert.ok(shaping.getByText("Spoken summary: Napoleon says: Prepare the bridge rollout plan for owner review. Please check this with your guardian review."));
+    assert.ok(shaping.getByText("Spoken summary: Prepare the bridge rollout plan for owner review. Please check this with your guardian review."));
+    assert.equal(shaping.queryByText(/Napoleon says/), null);
     assert.ok(shaping.getByText("Authority boundary: Child protected speech preview is shortened, slower, and still requires guardian/owner review; it is not Napoleon approval."));
     assert.ok(shaping.getByText("Audio playback started: no"));
   } finally {

@@ -31,8 +31,8 @@ export interface VoiceResponseShapeResult {
 export const localVoiceResponseShapeSample: VoiceResponseShapeInput = {
   responseText:
     "Prepare the bridge rollout plan for owner review. Passive Brain found that descriptor discovery is ready. Keep the proof export visible before the next governed send. This final sentence should not be spoken in the short voice summary.",
-  speakerLabel: "Napoleon",
-  bridgeProvidedProvenance: true,
+  speakerLabel: "Local preview",
+  bridgeProvidedProvenance: false,
   maxSpokenChars: 150,
 };
 

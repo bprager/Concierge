@@ -395,6 +395,7 @@ Acceptance criteria:
 - Long bridge-provenance text is shortened into a concise spoken summary.
 - "Napoleon says" or delegated-agent wording is preserved only when matching bridge provenance exists.
 - When bridge provenance is absent, the spoken summary must not claim Napoleon or delegated-agent authority and must remove unproven Napoleon recommendation or delegated-agent finding claims from the spoken text.
+- The built-in local voice shaping sample must emit `bridge_provided_provenance=false` and must not prefix the spoken summary with "Napoleon says"; bridge provenance may be true only when a real bridge-derived input supplies it.
 - Running the preparation does not start audio playback, request microphone permission, start microphone capture, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `voice_response_shaped` includes local-preparation marker, shortened state, original and spoken character counts, bridge-provenance marker, capture/playback/storage false, live-Napoleon-contact false, and explicit false side-effect flags.
 - All blocked effects are visible in the UI.
