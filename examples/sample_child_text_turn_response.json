@@ -1,0 +1,58 @@
+{
+  "text": "Napoleon can help draft a safe message for a guardian to review. Concierge did not send it, write memory, or keep secrets.",
+  "profileMode": "child_protected_user",
+  "governanceDecision": {
+    "decision_id": "decision_sample_child_text_turn",
+    "request_id": "cos_turn_example_text_001",
+    "outcome": "requires_review",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "guardian_approval_required",
+    "rationale": "Child-protected text turns that may involve sending a message require guardian review and cannot create secret-keeping, memory writes, external sends, or approval capture from Concierge.",
+    "blocked_effects": [
+      "runtime_authority",
+      "agent_dispatch",
+      "memory_write",
+      "approval_capture",
+      "external_send",
+      "secret_keeping"
+    ],
+    "trace_id": "trace_child_text_turn_response_sample",
+    "audit_id": "audit_child_text_turn_response_sample"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_child_text_turn_response_sample",
+    "parent_trace_id": "conv_example_text_001",
+    "actor_id": "napoleon.chief_of_staff",
+    "request_id": "cos_turn_example_text_001",
+    "decision_id": "decision_sample_child_text_turn",
+    "timestamp": "2026-06-15T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_child_text_turn_response_sample",
+    "trace_id": "trace_child_text_turn_response_sample",
+    "decision_id": "decision_sample_child_text_turn",
+    "actor_id": "napoleon.chief_of_staff",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "guardian_approval_required",
+    "evidence_links": [
+      "trace:trace_child_text_turn_response_sample",
+      "fixture:sample_child_text_turn_response",
+      "profile_mode:child_protected_user",
+      "conversation:conv_example_text_001"
+    ]
+  },
+  "requiresReview": true,
+  "blockedEffects": [
+    "runtime_authority",
+    "agent_dispatch",
+    "memory_write",
+    "approval_capture",
+    "external_send",
+    "secret_keeping"
+  ],
+  "memoryWritePerformed": false,
+  "approvalCaptured": false,
+  "agentDispatchPerformed": false,
+  "externalSendPerformed": false,
+  "appliedLocally": false
+}
