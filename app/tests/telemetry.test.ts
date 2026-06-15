@@ -1,7 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { JSDOM } from "jsdom";
-import { emitCapabilitySignal, emitEvent } from "../src/telemetry.js";
+import {
+  emitCapabilitySignal,
+  emitEvent,
+  loadTelemetryBufferFromStorage,
+  TELEMETRY_BUFFER_MAX_EVENTS,
+  TELEMETRY_BUFFER_STORAGE_KEY,
+} from "../src/telemetry.js";
 
 test("telemetry emits capability signals for tracked text concierge events", () => {
   const signal = emitCapabilitySignal("response_generated", {
@@ -152,6 +158,144 @@ test("telemetry off setting still allows camera permission audit events", () => 
 
     assert.equal(payloads.length, 1);
     assert.equal((payloads[0][1] as { event: string }).event, "camera_permission_result");
+  } finally {
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
+});
+
+test("emitted telemetry is buffered locally with sensitive attributes redacted", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  console.info = () => undefined;
+
+  try {
+    emitEvent("response_failed", {
+      traceId: "trace_buffered",
+      conversationId: "conv_buffered",
+      turnId: "turn_buffered",
+      prompt: "private prompt",
+      responseText: "private response",
+      endpoint: "https://napoleon.example.test/v1/concierge/turn",
+      bearerToken: "secret-token",
+      blockedEffects: ["memory_write"],
+    });
+
+    const buffer = loadTelemetryBufferFromStorage(localStorage);
+    assert.equal(buffer.events.length, 1);
+    assert.equal(buffer.events[0].event, "response_failed");
+    assert.equal(buffer.events[0].attributes.traceId, "trace_buffered");
+    assert.equal(buffer.events[0].attributes.prompt, "[redacted]");
+    assert.equal(buffer.events[0].attributes.responseText, "[redacted]");
+    assert.equal(buffer.events[0].attributes.endpoint, "[redacted]");
+    assert.equal(buffer.events[0].attributes.bearerToken, "[redacted]");
+    assert.deepEqual(buffer.events[0].attributes.blockedEffects, ["memory_write"]);
+  } finally {
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
+});
+
+test("local telemetry buffer is count bounded", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  console.info = () => undefined;
+
+  try {
+    for (let index = 0; index < TELEMETRY_BUFFER_MAX_EVENTS + 5; index += 1) {
+      emitEvent("settings_changed", {
+        traceId: `trace_buffer_${index}`,
+        conversationId: "conv_buffer",
+        turnId: `turn_buffer_${index}`,
+      });
+    }
+
+    const buffer = loadTelemetryBufferFromStorage(localStorage);
+    assert.equal(buffer.events.length, TELEMETRY_BUFFER_MAX_EVENTS);
+    assert.equal(buffer.events[0].attributes.traceId, "trace_buffer_5");
+    assert.equal(buffer.events.at(-1)?.attributes.traceId, `trace_buffer_${TELEMETRY_BUFFER_MAX_EVENTS + 4}`);
+  } finally {
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
+});
+
+test("telemetry off suppresses ordinary buffering but preserves privacy audit buffer", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  localStorage.setItem("concierge_telemetry_enabled", "false");
+  console.info = () => undefined;
+
+  try {
+    emitEvent("settings_changed", {
+      traceId: "trace_suppressed_buffer",
+      conversationId: "conv_suppressed_buffer",
+      turnId: "turn_suppressed_buffer",
+    });
+    emitEvent("privacy_setting_changed", {
+      traceId: "trace_privacy_buffer",
+      conversationId: "conv_privacy_buffer",
+      setting: "microphone",
+      enabled: false,
+      localOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      externalSendPerformed: false,
+    });
+
+    const buffer = loadTelemetryBufferFromStorage(localStorage);
+    assert.equal(localStorage.getItem(TELEMETRY_BUFFER_STORAGE_KEY)?.includes("trace_suppressed_buffer"), false);
+    assert.equal(buffer.events.length, 1);
+    assert.equal(buffer.events[0].event, "privacy_setting_changed");
+    assert.equal(buffer.events[0].attributes.traceId, "trace_privacy_buffer");
   } finally {
     console.info = previousInfo;
     if (previousWindow === undefined) {

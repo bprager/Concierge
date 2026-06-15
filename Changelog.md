@@ -20,6 +20,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added combined live-runtime validation for descriptor discovery, sanitized bridge evidence capture, evidence comparison, evaluator HTTP mode, and non-authorizing runtime summaries.
 - Sanitized live-runtime evaluator reports by removing response excerpts before retaining them as validation artifacts.
 - Added live-runtime artifact privacy auditing so retained bridge/evaluator artifacts fail validation if raw fields or sensitive runtime values are present.
+- Added a bounded browser-local telemetry buffer that redacts sensitive fields and keeps privacy audit events locally available even when ordinary telemetry is disabled.
 - Added generated bridge response-required metadata from OpenAPI and fail-closed text response validation when Napoleon omits required response fields.
 - Added generated bridge response-required validation for governed memory proposal, governance review, Chief of Staff steering, and taxonomy review handoffs so malformed review responses fail closed instead of using local fallback text.
 - Tightened app bridge endpoint resolution so runtime callers can use only named generated bridge operations, with repository validation rejecting free-form bridge path resolver reintroduction.

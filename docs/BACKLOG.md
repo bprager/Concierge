@@ -762,6 +762,29 @@ Evaluator coverage:
 | OBS-007 | Add dashboard specification | P2 | Metrics, traces, evaluator history, and privacy events defined | dashboard_spec_created |
 | OBS-008 | Add conversation capability ledger | P1 | Local ledger stores derived capability signals, persists count/age-bounded metadata and taxonomy edits in browser-local storage, and provides clear/export/taxonomy/trend controls without storing raw conversation content by default | conversation_capability_signal |
 
+### OBS-002 details
+
+User value: Concierge keeps recent local audit and troubleshooting metadata available even when no telemetry backend is configured.
+
+Acceptance criteria:
+
+- Text Concierge writes emitted local telemetry events to a browser-local telemetry buffer.
+- The buffer is count bounded and keeps only the most recent events.
+- Buffered attributes redact raw prompts, raw text, response text, endpoints, bearer tokens, request bodies, response bodies, raw audio, and raw video.
+- Turning local telemetry off suppresses ordinary event buffering.
+- Privacy audit events, including camera, microphone, and privacy setting changes, remain buffered even when ordinary telemetry is off.
+- Buffering does not send externally, write Napoleon memory, capture approval, append remote audit records, dispatch agents, or contact Napoleon.
+
+Privacy and safety impact:
+
+- The buffer is local browser storage only and stores sanitized metadata, not raw transcripts or media.
+- The buffer is not a Napoleon audit record and cannot be treated as approval or execution proof.
+- Export, clear, and retention controls remain future work and must preserve the same redaction and non-authority boundary.
+
+Evaluator coverage:
+
+- Covered by telemetry tests for local buffering, count bounds, sensitive field redaction, telemetry-off suppression, and privacy audit retention.
+
 ### OBS-008 details
 
 User value: Concierge can inspect its own usefulness without requiring the user to manually remember repeated misses.

@@ -12,6 +12,35 @@ export interface TelemetryPayload {
   attributes: Record<string, unknown>;
 }
 
+export interface LocalTelemetryBuffer {
+  schemaVersion: "concierge.telemetry-buffer.v1";
+  maxEvents: number;
+  events: TelemetryPayload[];
+}
+
+export const TELEMETRY_BUFFER_STORAGE_KEY = "concierge_telemetry_buffer_v1";
+export const TELEMETRY_BUFFER_MAX_EVENTS = 200;
+
+const SENSITIVE_ATTRIBUTE_KEYS = new Set([
+  "authtoken",
+  "authorization",
+  "bearer_token",
+  "bearertoken",
+  "endpoint",
+  "endpointurl",
+  "message",
+  "prompt",
+  "rawaudio",
+  "rawmessage",
+  "rawprompt",
+  "rawtext",
+  "rawvideo",
+  "requestbody",
+  "responsebody",
+  "responsetext",
+  "token",
+]);
+
 function browserStorage(): Storage | null {
   try {
     return typeof window === "undefined" ? null : window.localStorage;
@@ -38,6 +67,42 @@ export function emitPayload(payload: TelemetryPayload) {
   console.info("[concierge.telemetry]", payload);
 }
 
+export function loadTelemetryBufferFromStorage(storage: Storage | null | undefined): LocalTelemetryBuffer {
+  if (!storage) return emptyTelemetryBuffer();
+  try {
+    const raw = storage.getItem(TELEMETRY_BUFFER_STORAGE_KEY);
+    if (!raw) return emptyTelemetryBuffer();
+    const parsed = JSON.parse(raw) as unknown;
+    if (!isTelemetryBuffer(parsed)) return emptyTelemetryBuffer();
+    return {
+      schemaVersion: "concierge.telemetry-buffer.v1",
+      maxEvents: TELEMETRY_BUFFER_MAX_EVENTS,
+      events: parsed.events.slice(-TELEMETRY_BUFFER_MAX_EVENTS),
+    };
+  } catch {
+    return emptyTelemetryBuffer();
+  }
+}
+
+export function appendTelemetryPayloadToBuffer(
+  storage: Storage | null | undefined,
+  payload: TelemetryPayload,
+): LocalTelemetryBuffer {
+  const current = loadTelemetryBufferFromStorage(storage);
+  const next: LocalTelemetryBuffer = {
+    schemaVersion: "concierge.telemetry-buffer.v1",
+    maxEvents: TELEMETRY_BUFFER_MAX_EVENTS,
+    events: [...current.events, sanitizeTelemetryPayload(payload)].slice(-TELEMETRY_BUFFER_MAX_EVENTS),
+  };
+  if (!storage) return next;
+  try {
+    storage.setItem(TELEMETRY_BUFFER_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    return current;
+  }
+  return next;
+}
+
 function localTelemetryEnabled(): boolean {
   const storage = browserStorage();
   if (!storage) return true;
@@ -61,8 +126,7 @@ export function emitEvent(event: string, attributes: Record<string, unknown>) {
 
   const payload = makeTelemetryPayload(event, attributes);
 
-  // P1 target: write to local buffer and optionally export via OTLP.
-  // For now, keep it visible during development.
+  appendTelemetryPayloadToBuffer(browserStorage(), payload);
   emitPayload(payload);
   emitCapabilitySignal(event, attributes);
 }
@@ -104,4 +168,53 @@ export function emitCapabilitySignal(
   }
   emitPayload(makeTelemetryPayload(signal.eventName, signal as unknown as Record<string, unknown>));
   return signal;
+}
+
+function emptyTelemetryBuffer(): LocalTelemetryBuffer {
+  return {
+    schemaVersion: "concierge.telemetry-buffer.v1",
+    maxEvents: TELEMETRY_BUFFER_MAX_EVENTS,
+    events: [],
+  };
+}
+
+function isTelemetryBuffer(candidate: unknown): candidate is LocalTelemetryBuffer {
+  return (
+    typeof candidate === "object" &&
+    candidate !== null &&
+    (candidate as { schemaVersion?: unknown }).schemaVersion === "concierge.telemetry-buffer.v1" &&
+    Array.isArray((candidate as { events?: unknown }).events)
+  );
+}
+
+function sanitizeTelemetryPayload(payload: TelemetryPayload): TelemetryPayload {
+  return {
+    ts: payload.ts,
+    event: payload.event,
+    attributes: sanitizeTelemetryAttributes(payload.attributes),
+  };
+}
+
+function sanitizeTelemetryAttributes(attributes: Record<string, unknown>): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(attributes)) {
+    sanitized[key] = shouldRedactTelemetryAttribute(key) ? "[redacted]" : sanitizeTelemetryValue(value);
+  }
+  return sanitized;
+}
+
+function sanitizeTelemetryValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map((item) => sanitizeTelemetryValue(item));
+  if (value && typeof value === "object") {
+    const sanitized: Record<string, unknown> = {};
+    for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+      sanitized[key] = shouldRedactTelemetryAttribute(key) ? "[redacted]" : sanitizeTelemetryValue(nestedValue);
+    }
+    return sanitized;
+  }
+  return value;
+}
+
+function shouldRedactTelemetryAttribute(key: string): boolean {
+  return SENSITIVE_ATTRIBUTE_KEYS.has(key.toLowerCase());
 }
