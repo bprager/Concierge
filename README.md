@@ -55,6 +55,8 @@ When a real Napoleon runtime is available, set `NAPOLEON_BRIDGE_ENDPOINT` to the
 make live-runtime-validation
 ```
 
+The live runtime validation artifacts are local evidence only. They omit raw prompts, response bodies, response text, endpoint hosts, bearer tokens, and evaluator response excerpts.
+
 The lower-level evaluator-only command is still available:
 
 ```bash

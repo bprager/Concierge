@@ -27,7 +27,11 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(summary["bridgeEvidence"]["status"], "passed")
         self.assertEqual(summary["bridgeEvidence"]["record_count"], 1)
         self.assertEqual(summary["httpEvaluator"]["status"], "passed")
+        self.assertTrue(summary["httpEvaluator"]["sanitized"])
         self.assertEqual(report["score_total"], 100.0)
+        self.assertNotIn("response_excerpt", json.dumps(report))
+        self.assertNotIn("PRD: Concierge", json.dumps(report))
+        self.assertGreater(report["live_runtime_sanitization"]["responseExcerptsRemoved"], 0)
         self.assertEqual(evidence[0]["targetPath"], "/v1/concierge/turn")
         self.assertIn("not Napoleon approval", summary["boundary"])
         self.assertFalse(summary["promotionBoundary"]["approvalCaptured"])
@@ -64,6 +68,27 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             self.assertEqual(exit_code, 2)
             self.assertIn("NAPOLEON_BRIDGE_ENDPOINT", stderr.getvalue())
             self.assertFalse((Path(tmpdir) / "summary.json").exists())
+
+    def test_sanitize_eval_report_removes_nested_response_excerpts(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report_path = Path(tmpdir) / "eval_http.json"
+            report_path.write_text(
+                json.dumps({
+                    "run_id": "run_raw",
+                    "cases": [
+                        {"case_id": "CASE-001", "response_excerpt": "raw live response"},
+                        {"case_id": "CASE-002", "nested": {"response_excerpt": "another raw response"}},
+                    ],
+                }),
+                encoding="utf-8",
+            )
+
+            removed = live_runtime_validation.sanitize_eval_report(report_path)
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(removed, 2)
+        self.assertNotIn("response_excerpt", json.dumps(report))
+        self.assertEqual(report["live_runtime_sanitization"]["responseExcerptsRemoved"], 2)
 
 
 if __name__ == "__main__":

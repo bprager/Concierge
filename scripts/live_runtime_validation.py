@@ -32,6 +32,7 @@ BOUNDARY = (
     "not release approval, not a memory write, not agent dispatch, not an "
     "external send, and not authority to apply self-evolution changes."
 )
+REDACTED_REPORT_FIELDS = {"response_excerpt"}
 
 
 def strip_known_path(endpoint: str) -> str:
@@ -90,6 +91,43 @@ def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def sanitize_eval_report_payload(payload: Any) -> tuple[Any, int]:
+    if isinstance(payload, dict):
+        removed = 0
+        sanitized: dict[str, Any] = {}
+        for key, value in payload.items():
+            if key in REDACTED_REPORT_FIELDS:
+                removed += 1
+                continue
+            sanitized_value, nested_removed = sanitize_eval_report_payload(value)
+            removed += nested_removed
+            sanitized[key] = sanitized_value
+        return sanitized, removed
+    if isinstance(payload, list):
+        sanitized_items = []
+        removed = 0
+        for item in payload:
+            sanitized_item, nested_removed = sanitize_eval_report_payload(item)
+            sanitized_items.append(sanitized_item)
+            removed += nested_removed
+        return sanitized_items, removed
+    return payload, 0
+
+
+def sanitize_eval_report(path: Path) -> int:
+    if not path.exists():
+        return 0
+    payload = load_json(path)
+    sanitized, removed = sanitize_eval_report_payload(payload)
+    if isinstance(sanitized, dict):
+        sanitized["live_runtime_sanitization"] = {
+            "responseExcerptsRemoved": removed,
+            "boundary": "Live runtime validation report omits raw response excerpts.",
+        }
+    path.write_text(json.dumps(sanitized, indent=2) + "\n", encoding="utf-8")
+    return removed
+
+
 def count_bridge_records(path: Path) -> int:
     if not path.exists():
         return 0
@@ -137,6 +175,7 @@ def write_summary(
         "httpEvaluator": {
             "status": "passed" if eval_exit_code == 0 else "failed" if eval_exit_code is not None else "not_run",
             "path": str(eval_report_path),
+            "sanitized": eval_report_path.exists(),
             **eval_counts(eval_report_path),
         },
         "promotionBoundary": {
@@ -187,6 +226,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     eval_exit_code: int | None = None
     if bridge_exit_code == 0 and eval_endpoint is not None:
         eval_exit_code = run_http_eval(eval_endpoint, eval_report_path, auth_token)
+        sanitize_eval_report(eval_report_path)
 
     summary = write_summary(summary_path, bridge_exit_code, eval_exit_code, evidence_path, eval_report_path)
     print(json.dumps({
