@@ -8,7 +8,7 @@ export const GENERATED_BRIDGE_OPERATIONS = [
     id: "chief_of_staff_descriptor",
     path: "/v1/concierge/chief-of-staff/descriptor",
     requestKind: "chief_of_staff_descriptor",
-    transport: "http_post",
+    transport: "http_get",
     governedBridgeOnly: true,
     tokenPlacement: "authorization_header_only",
   },

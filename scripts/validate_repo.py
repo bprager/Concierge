@@ -165,6 +165,20 @@ def load_openapi_concierge_paths() -> list[str]:
     return sorted(path for path in openapi.get("paths", {}) if path.startswith("/v1/concierge/"))
 
 
+def load_openapi_concierge_transports() -> dict[str, str]:
+    openapi = load_openapi()
+    transports: dict[str, str] = {}
+    method_to_transport = {"get": "http_get", "post": "http_post"}
+    for path, path_spec in openapi.get("paths", {}).items():
+        if not path.startswith("/v1/concierge/"):
+            continue
+        methods = [method for method in method_to_transport if method in path_spec]
+        if len(methods) != 1:
+            raise SystemExit(f"OpenAPI path must define exactly one supported bridge method: {path}")
+        transports[path] = method_to_transport[methods[0]]
+    return transports
+
+
 def load_openapi_request_kinds() -> dict[str, str]:
     openapi = load_openapi()
     request_kinds: dict[str, str] = {}
@@ -752,9 +766,11 @@ def validate_bridge_contract_alignment() -> None:
         )
 
     request_kinds = load_openapi_request_kinds()
+    transports = load_openapi_concierge_transports()
     security = load_openapi_bearer_security()
     missing_security: list[str] = []
     request_kind_mismatch: list[str] = []
+    transport_mismatch: list[str] = []
     for operation in operations:
         path = operation["path"]
         if operation.get("governedBridgeOnly") is not True:
@@ -763,6 +779,10 @@ def validate_bridge_contract_alignment() -> None:
             raise SystemExit(f"Bridge operation token placement is not header-only: {operation['id']}")
         if not security.get(path):
             missing_security.append(path)
+        if operation.get("transport") != transports.get(path):
+            transport_mismatch.append(
+                f"{operation['id']} registry={operation.get('transport')} openapi={transports.get(path)}"
+            )
         if operation["id"] != "chief_of_staff_descriptor" and request_kinds.get(path) != operation.get("requestKind"):
             request_kind_mismatch.append(
                 f"{operation['id']} registry={operation.get('requestKind')} openapi={request_kinds.get(path)}"
@@ -770,6 +790,8 @@ def validate_bridge_contract_alignment() -> None:
 
     if missing_security:
         raise SystemExit(f"OpenAPI paths missing NapoleonBearer security: {', '.join(missing_security)}")
+    if transport_mismatch:
+        raise SystemExit("Bridge transport mismatch:\n" + "\n".join(transport_mismatch))
     if request_kind_mismatch:
         raise SystemExit("Bridge requestKind mismatch:\n" + "\n".join(request_kind_mismatch))
 

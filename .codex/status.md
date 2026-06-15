@@ -85,6 +85,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added transcript-visible live text bridge failure messages that include the fail-closed reason and blocked effects where available.
 - Added returned decision, audit, and governance references to live text bridge fail-closed errors, telemetry, and visible failure messages when Napoleon supplies those references before blocking.
 - Added generated bridge operation registry output from the canonical OpenAPI bridge contract and repository validation that fails when the generated file is stale.
+- Aligned the generated bridge operation registry with canonical HTTP methods, including descriptor discovery as `GET` and governed handoffs as `POST`, with repository validation for method drift.
 - Added governed Chief of Staff steering submission for evolution proposal review packets, gated by endpoint and descriptor preflight and blocked from local application, memory writes, approval capture, agent dispatch, or external sends.
 - Added child-protected safeguards to governed Chief of Staff steering submissions, including child-safety caution, child profile scope, and guardian/owner review wording.
 - Hardened governed Chief of Staff steering review responses so side-effect claims fail closed as contract mismatches.

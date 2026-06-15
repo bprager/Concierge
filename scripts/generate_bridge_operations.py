@@ -24,6 +24,19 @@ OPERATION_IDS_BY_PATH = {
 
 DESCRIPTOR_REQUEST_KIND = "chief_of_staff_descriptor"
 
+HTTP_METHOD_TO_TRANSPORT = {
+    "get": "http_get",
+    "post": "http_post",
+}
+
+
+def operation_method_for(path_spec: dict[str, Any], path: str) -> tuple[str, dict[str, Any]]:
+    methods = [method for method in HTTP_METHOD_TO_TRANSPORT if method in path_spec]
+    if len(methods) != 1:
+        raise SystemExit(f"OpenAPI path must define exactly one supported bridge method: {path}")
+    method = methods[0]
+    return method, path_spec[method]
+
 
 def request_kind_for(path: str, operation: dict[str, Any]) -> str:
     schema = (
@@ -44,13 +57,13 @@ def generated_text() -> str:
     openapi = yaml.safe_load(SOURCE_PATH.read_text(encoding="utf-8"))
     paths = openapi.get("paths", {})
     operations = []
-    for path in sorted(paths):
+    for path, path_spec in sorted(paths.items()):
         if not path.startswith("/v1/concierge/"):
             continue
         operation_id = OPERATION_IDS_BY_PATH.get(path)
         if not operation_id:
             raise SystemExit(f"OpenAPI path lacks local bridge operation id mapping: {path}")
-        operation = paths[path].get("post") or paths[path].get("get") or {}
+        method, operation = operation_method_for(path_spec, path)
         security = operation.get("security", [])
         if not any("NapoleonBearer" in entry for entry in security if isinstance(entry, dict)):
             raise SystemExit(f"OpenAPI path lacks NapoleonBearer security: {path}")
@@ -59,6 +72,7 @@ def generated_text() -> str:
                 "id": operation_id,
                 "path": path,
                 "requestKind": request_kind_for(path, operation),
+                "transport": HTTP_METHOD_TO_TRANSPORT[method],
             }
         )
 
@@ -77,7 +91,7 @@ def generated_text() -> str:
                 f'    id: "{operation["id"]}",',
                 f'    path: "{operation["path"]}",',
                 f'    requestKind: "{operation["requestKind"]}",',
-                '    transport: "http_post",',
+                f'    transport: "{operation["transport"]}",',
                 "    governedBridgeOnly: true,",
                 '    tokenPlacement: "authorization_header_only",',
                 "  },",

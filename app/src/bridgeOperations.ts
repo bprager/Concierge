@@ -19,7 +19,7 @@ export interface BridgeOperation {
     | "chief_of_staff_steering_handoff"
     | "memory_proposal_review_handoff"
     | "evaluator_prompt";
-  transport: "http_post";
+  transport: "http_get" | "http_post";
   governedBridgeOnly: true;
   tokenPlacement: "authorization_header_only";
 }
@@ -30,7 +30,7 @@ export interface BridgeOperationSummary {
   label: string;
   path: string;
   requestKind: BridgeOperation["requestKind"];
-  transport: "HTTP POST";
+  transport: "HTTP GET" | "HTTP POST";
   boundary: string;
   tokenHandling: string;
   sideEffects: string;
@@ -63,6 +63,11 @@ const BRIDGE_OPERATION_LABELS: Record<BridgeOperationId, string> = {
   text_turn: "Text turn",
 };
 
+const BRIDGE_OPERATION_TRANSPORT_LABELS: Record<BridgeOperation["transport"], BridgeOperationSummary["transport"]> = {
+  http_get: "HTTP GET",
+  http_post: "HTTP POST",
+};
+
 export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOperationSummary {
   const operation = getBridgeOperation(id);
   return {
@@ -71,7 +76,7 @@ export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOpe
     label: BRIDGE_OPERATION_LABELS[operation.id],
     path: operation.path,
     requestKind: operation.requestKind,
-    transport: "HTTP POST",
+    transport: BRIDGE_OPERATION_TRANSPORT_LABELS[operation.transport],
     boundary: "Governed Napoleon bridge only",
     tokenHandling: "Bearer token is sent only in the Authorization header",
     sideEffects: "No memory write, approval capture, agent dispatch, or external send is performed by Concierge",

@@ -24,6 +24,19 @@ function openApiPaths(): string[] {
   return matches.map((match) => match[1]).sort();
 }
 
+function openApiTransports(): Record<string, string> {
+  const yaml = readFileSync("../api/napoleon_bridge.openapi.yaml", "utf8");
+  const transports: Record<string, string> = {};
+  const blocks = [...yaml.matchAll(/^  (\/v1\/concierge\/[^:]+):\n((?:    .*\n)+)/gm)];
+  for (const block of blocks) {
+    const path = block[1];
+    const body = block[2] ?? "";
+    if (/^    get:/m.test(body)) transports[path] = "http_get";
+    if (/^    post:/m.test(body)) transports[path] = "http_post";
+  }
+  return transports;
+}
+
 test("bridge operation registry matches canonical OpenAPI concierge paths", () => {
   const registryPaths = (BRIDGE_OPERATIONS as OperationShape[]).map((operation) => operation.path).sort();
 
@@ -32,12 +45,14 @@ test("bridge operation registry matches canonical OpenAPI concierge paths", () =
 });
 
 test("bridge operations declare governed transport and bearer-token policy", () => {
+  const transports = openApiTransports();
   for (const operation of BRIDGE_OPERATIONS as OperationShape[]) {
-    assert.equal(operation.transport, "http_post");
+    assert.equal(operation.transport, transports[operation.path]);
     assert.equal(operation.governedBridgeOnly, true);
     assert.equal(operation.tokenPlacement, "authorization_header_only");
   }
 
+  assert.equal(getBridgeOperation("chief_of_staff_descriptor").transport, "http_get");
   assert.equal(getBridgeOperation("text_turn").requestKind, "text_turn");
   assert.equal(getBridgeOperation("chief_of_staff_steering").requestKind, "chief_of_staff_steering_handoff");
   assert.equal(getBridgeOperation("memory_proposal_review").requestKind, "memory_proposal_review_handoff");
@@ -69,6 +84,9 @@ test("describes governed bridge operation routes without endpoint hosts or secre
   assert.equal(summary.sideEffects, "No memory write, approval capture, agent dispatch, or external send is performed by Concierge");
   assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
   assert.equal(JSON.stringify(summary).includes("secret-token"), false);
+
+  const descriptorSummary = describeBridgeOperationSummary("chief_of_staff_descriptor");
+  assert.equal(descriptorSummary.transport, "HTTP GET");
 });
 
 test("describes all core governed operation routes for the UI", () => {

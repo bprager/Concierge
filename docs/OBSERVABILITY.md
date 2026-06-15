@@ -106,6 +106,8 @@ Initial local implementation: Text Concierge emits `conversation_capability_sign
 
 The standalone `make eval-http-local-harness` report is also labeled with `runtimeValidation.source=local_harness` and a caveat that it validates local evaluator transport only, not real Napoleon runtime behavior.
 
+The generated bridge operation registry now carries canonical HTTP methods as well as paths, so descriptor discovery remains a `GET` operation while governed handoffs remain `POST` operations.
+
 Governed memory proposal review responses that claim memory writes, approval capture, external sends, agent dispatch, or local application are reported as `contract_mismatch` failures through `memory_proposal_send_failed`.
 
 Live text responses that claim memory writes, approval capture, external sends, agent dispatch, or local application are reported as `contract_mismatch` failures through `bridge_request_failed` and remain visible through the bridge-blocked transcript message. The local harness can emit matching forbidden-claim response shapes for text, Chief of Staff steering, and memory proposal review paths so local checks can keep those failure signals exercised.

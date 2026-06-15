@@ -70,8 +70,8 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added repository validation that fails when governed OpenAPI request or response sample artifacts are not registered in the canonical validation inventory.
 - Added optional local bridge bearer token support for live text turns and governed steering handoff, sent only as an authorization header.
 - Added canonical bridge endpoint resolution from a configured Napoleon base URL for text turns and Chief of Staff steering handoff.
-- Added a generated bridge operation registry derived from the canonical OpenAPI Concierge paths.
-- Added contract-aware repository validation for bridge operation paths, request kinds, bearer security, and named bridge operation usage.
+- Added a generated bridge operation registry derived from the canonical OpenAPI Concierge paths and HTTP methods.
+- Added contract-aware repository validation for bridge operation paths, HTTP methods, request kinds, bearer security, and named bridge operation usage.
 - Added a Text Concierge governed route panel that shows canonical Napoleon bridge paths without endpoint hosts or tokens.
 - Added Chief of Staff taxonomy review to the governed route panel as a visible handoff alias of the canonical Chief of Staff steering operation.
 - Added runtime-validation source labeling to live bridge readiness and readiness proof export so local harness and simulation checks are not mistaken for real Napoleon runtime validation.
