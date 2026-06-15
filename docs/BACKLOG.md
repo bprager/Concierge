@@ -600,6 +600,28 @@ Evaluator coverage:
 
 - Covered by pure avatar face/head-pose tests and rendered app interaction tests for local metadata preparation without camera capture, raw video storage, live face detection, affect inference, attention inference, animation, Napoleon contact, approval, guardian approval, or side effects.
 
+### AV-008 details
+
+User value: The user can inspect how future avatar perception might combine weak local signals without Concierge pretending to know the user's emotions.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local avatar affect-fusion panel.
+- The panel combines deterministic local sample metadata from head-pose shift, voice pause, and text clarification signals.
+- Output uses uncertainty labels such as possible confusion, possible frustration, or low confidence / no signal rather than emotional facts.
+- Preparing affect-fusion metadata does not request camera or microphone permission, start capture, store raw audio/video, run live face detection, start a live affect model, infer attention, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `affect_signal_fused` includes local-metadata marker, profile mode, child-protected marker, uncertainty label, display label, confidence, input signals, false emotion-fact/capture/storage/live-model/attention/animation/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- Child protected affect fusion shows guardian-review wording and must not treat metadata preparation as guardian approval, camera permission, microphone permission, emotion inference, attention inference, animation permission, or Napoleon approval.
+
+Privacy and safety impact:
+
+- This is local uncertainty metadata only, not live affect detection.
+- No raw audio, raw video, emotion fact, attention signal, bridge call, memory write, approval capture, guardian approval capture, or external send is introduced.
+
+Evaluator coverage:
+
+- Covered by pure avatar affect-fusion tests and rendered app interaction tests for local uncertainty metadata without media capture, emotion-as-fact claims, live affect models, attention inference, Napoleon contact, approval, guardian approval, or side effects.
+
 ### AV-010 details
 
 User value: Child protected avatar behavior is visibly stricter before live avatar camera or perception features exist.

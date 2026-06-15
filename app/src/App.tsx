@@ -29,6 +29,11 @@ import {
   localAvatarFacePoseSample,
   type LocalAvatarFacePoseResult,
 } from "./avatarFacePose.js";
+import {
+  buildLocalAvatarAffectFusion,
+  localAvatarAffectFusionSample,
+  type LocalAvatarAffectFusionResult,
+} from "./avatarAffectFusion.js";
 import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
 import { answerCapabilityQuestion } from "./capabilityLedger.js";
 import { describeBridgeOperationSummary, describeTaxonomyReviewBridgeSummary } from "./bridgeOperations.js";
@@ -247,6 +252,8 @@ export function App() {
   const [avatarLipSyncResult, setAvatarLipSyncResult] = useState<LocalAvatarLipSyncResult | null>(null);
   const [avatarGazeResult, setAvatarGazeResult] = useState<LocalAvatarGazeResult | null>(null);
   const [avatarFacePoseResult, setAvatarFacePoseResult] = useState<LocalAvatarFacePoseResult | null>(null);
+  const [avatarAffectFusionResult, setAvatarAffectFusionResult] =
+    useState<LocalAvatarAffectFusionResult | null>(null);
   const [avatarModelResult, setAvatarModelResult] = useState<LocalAvatarModelReferenceResult | null>(null);
   const [avatarRendererReadinessResult, setAvatarRendererReadinessResult] =
     useState<LocalAvatarRendererReadinessResult | null>(null);
@@ -885,6 +892,38 @@ export function App() {
       faceDetectionStarted: result.faceDetectionStarted,
       rawVideoStored: result.rawVideoStored,
       affectInferred: result.affectInferred,
+      attentionInferred: result.attentionInferred,
+      avatarAnimationStarted: result.avatarAnimationStarted,
+      liveNapoleonContacted: result.liveNapoleonContacted,
+      memoryWritePerformed: result.memoryWritePerformed,
+      approvalCaptured: result.approvalCaptured,
+      guardianApprovalCaptured: result.guardianApprovalCaptured,
+      externalSendPerformed: result.externalSendPerformed,
+      blockedEffects: result.blockedEffects,
+    });
+  }
+
+  function runLocalAvatarAffectFusion() {
+    const traceId = newTraceId();
+    const result = buildLocalAvatarAffectFusion({ ...localAvatarAffectFusionSample, profileMode: profile });
+    setAvatarAffectFusionResult(result);
+    emitEvent("affect_signal_fused", {
+      traceId,
+      conversationId,
+      localMetadataOnly: result.localMetadataOnly,
+      profileMode: result.profileMode,
+      childProtected: result.childProtected,
+      uncertaintyLabel: result.uncertaintyLabel,
+      displayLabel: result.displayLabel,
+      confidence: result.confidence,
+      inputSignals: result.inputSignals,
+      emotionClaimedAsFact: result.emotionClaimedAsFact,
+      cameraCaptureStarted: result.cameraCaptureStarted,
+      microphoneCaptureStarted: result.microphoneCaptureStarted,
+      rawVideoStored: result.rawVideoStored,
+      rawAudioStored: result.rawAudioStored,
+      liveFaceDetectionStarted: result.liveFaceDetectionStarted,
+      liveAffectModelStarted: result.liveAffectModelStarted,
       attentionInferred: result.attentionInferred,
       avatarAnimationStarted: result.avatarAnimationStarted,
       liveNapoleonContacted: result.liveNapoleonContacted,
@@ -1816,6 +1855,10 @@ export function App() {
     avatarFacePoseResult === null
       ? "Face pose not estimated"
       : `Face present: ${avatarFacePoseResult.facePresent ? "yes" : "no"}`;
+  const avatarAffectFusionSummary =
+    avatarAffectFusionResult === null
+      ? "Affect signal not fused"
+      : `Uncertainty label: ${avatarAffectFusionResult.displayLabel}`;
   const avatarModelSummary =
     avatarModelResult === null
       ? "Avatar model not loaded"
@@ -2500,6 +2543,92 @@ export function App() {
         ) : null}
         <button className="secondary" onClick={runLocalAvatarFacePoseEstimate}>
           Estimate local face pose
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Avatar affect fusion">
+        <div>
+          <strong>Avatar affect fusion</strong>
+          <span>local uncertainty metadata only</span>
+        </div>
+        <div>
+          <strong>Affect state</strong>
+          <span>{avatarAffectFusionSummary}</span>
+        </div>
+        <div>
+          <strong>Emotion fact</strong>
+          <span>Emotion claimed as fact: no</span>
+        </div>
+        {avatarAffectFusionResult ? (
+          <>
+            <div>
+              <strong>Confidence</strong>
+              <span>Confidence: {avatarAffectFusionResult.confidence}</span>
+            </div>
+            <div>
+              <strong>Input signals</strong>
+              <span>Input signals: {avatarAffectFusionResult.inputSignals.join(", ")}</span>
+            </div>
+            <div>
+              <strong>Rationale</strong>
+              <span>Rationale: {avatarAffectFusionResult.rationale.join(" ")}</span>
+            </div>
+            <div>
+              <strong>Profile</strong>
+              <span>Profile: {avatarAffectFusionResult.profileMode}</span>
+            </div>
+            <div>
+              <strong>Child protected</strong>
+              <span>Child protected: {avatarAffectFusionResult.childProtected ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Camera capture</strong>
+              <span>Camera capture started: no</span>
+            </div>
+            <div>
+              <strong>Microphone capture</strong>
+              <span>Microphone capture started: no</span>
+            </div>
+            <div>
+              <strong>Raw video</strong>
+              <span>Raw video stored: no</span>
+            </div>
+            <div>
+              <strong>Raw audio</strong>
+              <span>Raw audio stored: no</span>
+            </div>
+            <div>
+              <strong>Face detection</strong>
+              <span>Live face detection started: no</span>
+            </div>
+            <div>
+              <strong>Affect model</strong>
+              <span>Live affect model started: no</span>
+            </div>
+            <div>
+              <strong>Attention</strong>
+              <span>Attention inferred: no</span>
+            </div>
+            <div>
+              <strong>Napoleon contact</strong>
+              <span>Live Napoleon contacted: no</span>
+            </div>
+            <div>
+              <strong>Authority boundary</strong>
+              <span>Authority boundary: {avatarAffectFusionResult.authorityBoundary}</span>
+            </div>
+            <div>
+              <strong>Guardian reminder</strong>
+              <span>Guardian reminder: {avatarAffectFusionResult.guardianReviewReminder}</span>
+            </div>
+            <div>
+              <strong>Blocked effects</strong>
+              <span>Blocked effects: {avatarAffectFusionResult.blockedEffects.join(", ")}</span>
+            </div>
+          </>
+        ) : null}
+        <button className="secondary" onClick={runLocalAvatarAffectFusion}>
+          Fuse local affect signal
         </button>
       </section>
 

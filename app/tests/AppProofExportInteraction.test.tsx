@@ -2672,3 +2672,82 @@ test("estimates avatar face and head pose metadata without camera capture or aff
     dom.window.close();
   }
 });
+
+test("fuses local affect metadata as uncertainty without emotion facts or media capture", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("avatar affect fusion metadata must stay local");
+    },
+  });
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    const view = render(<App />);
+
+    await view.findByText("Avatar affect fusion");
+    const avatarAffectFusion = within(view.getByLabelText("Avatar affect fusion"));
+    assert.ok(avatarAffectFusion.getByText("Affect signal not fused"));
+    assert.ok(avatarAffectFusion.getByText("Emotion claimed as fact: no"));
+
+    await user.click(view.getByRole("button", { name: "Fuse local affect signal" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    const affectEvent = telemetryPayloads.find((payload) => payload.event === "affect_signal_fused");
+    assert.ok(affectEvent);
+    assert.equal(affectEvent.attributes.localMetadataOnly, true);
+    assert.equal(affectEvent.attributes.emotionClaimedAsFact, false);
+    assert.equal(affectEvent.attributes.cameraCaptureStarted, false);
+    assert.equal(affectEvent.attributes.microphoneCaptureStarted, false);
+    assert.ok(avatarAffectFusion.getByText("Uncertainty label: Possible confusion"));
+    assert.ok(avatarAffectFusion.getByText("Confidence: 0.56"));
+    assert.ok(avatarAffectFusion.getByText("Input signals: head_pose_shift, voice_pause, text_clarification"));
+    assert.ok(avatarAffectFusion.getByText("Camera capture started: no"));
+    assert.ok(avatarAffectFusion.getByText("Microphone capture started: no"));
+    assert.ok(avatarAffectFusion.getByText("Raw video stored: no"));
+    assert.ok(avatarAffectFusion.getByText("Raw audio stored: no"));
+    assert.ok(avatarAffectFusion.getByText("Live affect model started: no"));
+    assert.ok(avatarAffectFusion.getByText("Attention inferred: no"));
+    assert.ok(avatarAffectFusion.getByText("Authority boundary: Affect fusion is local uncertainty metadata only; it is not an emotion fact, attention inference, approval, or agent action."));
+    assert.ok(avatarAffectFusion.getByText("Blocked effects: camera_capture, microphone_capture, raw_video_storage, raw_audio_storage, live_face_detection, live_affect_model, emotion_fact_claim, attention_inference, avatar_animation, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});

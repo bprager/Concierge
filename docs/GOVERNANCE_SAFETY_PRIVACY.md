@@ -178,3 +178,4 @@ Avatar mode must:
 - Avoid surveillance-like behavior
 - Explain camera and mic state visibly
 - Preserve user agency
+- Treat affect fusion as uncertainty metadata only; do not present local signals as emotional facts or attention facts

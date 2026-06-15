@@ -27,6 +27,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Tightened the rendered post-preview advisory-send control so Rehearsal Mode stays local and cannot unlock a live Napoleon bridge send while still active.
 - Added a rendered post-preview send path that preserves an unchanged rehearsal preview after Rehearsal Mode is turned off, then sends it only through the governed Napoleon bridge.
 - Tightened the local Avatar State preview so the built-in sample is labeled as local preview without Napoleon provenance unless bridge proof exists.
+- Added a local Avatar Affect Fusion panel that combines deterministic sample signals into uncertainty labels without claiming emotion facts, starting media capture, contacting Napoleon, or performing side effects.
 - Added transcript-level source, fail-closed attribution boundary, and blocked-effect metadata for blocked Napoleon bridge attempts.
 - Added Napoleon delegation panel rendering for returned target capability IDs when selected-agent delegation is not returned.
 - Added last-success proof rendering and sanitized proof export for returned Napoleon target capability IDs when selected-agent delegation is not returned.
