@@ -106,6 +106,24 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertEqual(harness.post_count, 0)
         self.assertIn("descriptor preflight failed", stderr.getvalue())
 
+    def test_capture_runner_fails_closed_when_local_harness_is_mislabeled_as_real_runtime(self):
+        with local_bridge_harness.running_harness() as base_url:
+            with tempfile.NamedTemporaryFile("w", suffix=".json") as handle:
+                stderr = io.StringIO()
+                with contextlib.redirect_stderr(stderr):
+                    exit_code = bridge_evidence_capture.main(["--endpoint", base_url, "--out", handle.name])
+
+        self.assertEqual(exit_code, 1)
+        self.assertIn("descriptor identifies local_harness", stderr.getvalue())
+        self.assertIn("--runtime-validation-source local_harness", stderr.getvalue())
+
+    def test_detects_local_harness_descriptor_from_checksum(self):
+        detected = bridge_evidence_capture.detect_descriptor_runtime_source(
+            {"checksum": {"expected": "sha256:local-harness", "actual": "sha256:local-harness"}}
+        )
+
+        self.assertEqual(detected, "local_harness")
+
 
 class RecordingBridgeHarness:
     def __init__(self, descriptor_ready: bool):

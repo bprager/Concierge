@@ -21,6 +21,7 @@ from scripts import bridge_evidence_compare
 DEFAULT_MESSAGE = "Ask Napoleon for a governed Concierge bridge evidence check."
 REQUIRED_DESCRIPTOR_BLOCKED_EFFECTS = {"runtime_authority", "memory_write"}
 RUNTIME_VALIDATION_SOURCES = ("real_runtime", "local_harness", "local_simulation")
+LOCAL_HARNESS_CHECKSUM = "sha256:local-harness"
 
 
 def bridge_url(endpoint: str, path: str = "/v1/concierge/turn") -> str:
@@ -103,6 +104,23 @@ def descriptor_connection_from_response(status_code: int, payload: dict[str, Any
             "message": "Descriptor discovery passed." if ready else "Descriptor discovery failed closed.",
         },
     }
+
+
+def detect_descriptor_runtime_source(payload: dict[str, Any]) -> str | None:
+    checksum = payload.get("checksum") if isinstance(payload.get("checksum"), dict) else {}
+    if checksum.get("expected") == LOCAL_HARNESS_CHECKSUM or checksum.get("actual") == LOCAL_HARNESS_CHECKSUM:
+        return "local_harness"
+    return None
+
+
+def validate_runtime_validation_source(payload: dict[str, Any], requested_source: str) -> str | None:
+    detected_source = detect_descriptor_runtime_source(payload)
+    if detected_source and requested_source != detected_source:
+        return (
+            f"descriptor identifies {detected_source}; rerun with "
+            f"--runtime-validation-source {detected_source} so local evidence is not mislabeled"
+        )
+    return None
 
 
 def request_payload(message: str, descriptor_preflight: dict[str, Any]) -> dict[str, Any]:
@@ -252,6 +270,11 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     descriptor_preflight = descriptor_connection_from_response(descriptor_status, descriptor_payload)
     if not descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"]:
         print("descriptor preflight failed; bridge evidence capture did not send text turn", file=sys.stderr)
+        return 1
+    source_error = validate_runtime_validation_source(descriptor_payload, args.runtime_validation_source)
+    if source_error:
+        print(source_error, file=sys.stderr)
+        print("bridge evidence capture did not send text turn", file=sys.stderr)
         return 1
 
     status_code, response_payload = post_json(

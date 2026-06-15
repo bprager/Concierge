@@ -70,7 +70,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
                 stdout = io.StringIO()
                 with contextlib.redirect_stdout(stdout):
                     exit_code = live_runtime_validation.main(
-                        ["--out-dir", tmpdir],
+                        ["--out-dir", tmpdir, "--runtime-validation-source", "local_harness"],
                         env={"NAPOLEON_BRIDGE_ENDPOINT": base_url},
                     )
 
@@ -79,10 +79,27 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(summary["bridgeEvidence"]["status"], "passed")
         self.assertEqual(summary["httpEvaluator"]["status"], "passed")
-        self.assertEqual(summary["runtimeValidation"]["source"], "real_runtime")
-        self.assertIn("Real Napoleon runtime", summary["runtimeValidation"]["caveat"])
+        self.assertEqual(summary["runtimeValidation"]["source"], "local_harness")
+        self.assertIn("not real Napoleon runtime validation", summary["runtimeValidation"]["caveat"])
         self.assertNotIn(base_url, json.dumps(summary))
         self.assertIn("http_evaluator_status", stdout.getvalue())
+
+    def test_fails_closed_when_local_harness_is_mislabeled_as_real_runtime(self):
+        with local_bridge_harness.running_harness() as base_url:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                    exit_code = live_runtime_validation.main(["--bridge-endpoint", base_url, "--out-dir", tmpdir])
+
+                summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(summary["bridgeEvidence"]["status"], "failed")
+        self.assertEqual(summary["httpEvaluator"]["status"], "not_run")
+        self.assertEqual(summary["runtimeValidation"]["source"], "real_runtime")
+        self.assertIn("descriptor identifies local_harness", stderr.getvalue())
+        self.assertFalse((Path(tmpdir) / "bridge_evidence.json").exists())
 
     def test_fails_without_any_endpoint_and_writes_no_artifacts(self):
         with tempfile.TemporaryDirectory() as tmpdir:
