@@ -31,6 +31,9 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertTrue(summary["httpEvaluator"]["sanitized"])
         self.assertEqual(summary["runtimeValidation"]["source"], "local_harness")
         self.assertIn("not real Napoleon runtime validation", summary["runtimeValidation"]["caveat"])
+        self.assertEqual(summary["artifactPrivacy"]["status"], "passed")
+        self.assertEqual(summary["artifactPrivacy"]["violation_count"], 0)
+        self.assertEqual(summary["artifactPrivacy"]["checked_count"], 2)
         self.assertEqual(report["score_total"], 100.0)
         self.assertNotIn("response_excerpt", json.dumps(report))
         self.assertNotIn("PRD: Concierge", json.dumps(report))
@@ -43,6 +46,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertFalse(base_url in json.dumps(summary))
         self.assertIn("runtime_validation_source", stdout.getvalue())
         self.assertIn("bridge_status", stdout.getvalue())
+        self.assertIn("artifact_privacy_status", stdout.getvalue())
 
     def test_derives_bridge_base_from_eval_endpoint(self):
         bridge, evaluator = live_runtime_validation.resolve_endpoints(
@@ -80,6 +84,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(summary["bridgeEvidence"]["status"], "passed")
         self.assertEqual(summary["httpEvaluator"]["status"], "passed")
         self.assertEqual(summary["runtimeValidation"]["source"], "local_harness")
+        self.assertEqual(summary["artifactPrivacy"]["status"], "passed")
         self.assertIn("not real Napoleon runtime validation", summary["runtimeValidation"]["caveat"])
         self.assertNotIn(base_url, json.dumps(summary))
         self.assertIn("http_evaluator_status", stdout.getvalue())
@@ -97,6 +102,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(exit_code, 1)
         self.assertEqual(summary["bridgeEvidence"]["status"], "failed")
         self.assertEqual(summary["httpEvaluator"]["status"], "not_run")
+        self.assertEqual(summary["artifactPrivacy"]["status"], "passed")
         self.assertEqual(summary["runtimeValidation"]["source"], "real_runtime")
         self.assertIn("descriptor identifies local_harness", stderr.getvalue())
         self.assertFalse((Path(tmpdir) / "bridge_evidence.json").exists())
@@ -131,6 +137,34 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(removed, 2)
         self.assertNotIn("response_excerpt", json.dumps(report))
         self.assertEqual(report["live_runtime_sanitization"]["responseExcerptsRemoved"], 2)
+
+    def test_artifact_privacy_audit_rejects_forbidden_fields_and_sensitive_values(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            artifact = Path(tmpdir) / "artifact.json"
+            artifact.write_text(
+                json.dumps({
+                    "safe": "metadata",
+                    "nested": {
+                        "responseText": "raw response",
+                        "trace": "trace_123",
+                        "note": "called http://127.0.0.1:8787 during validation",
+                    },
+                }),
+                encoding="utf-8",
+            )
+
+            audit = live_runtime_validation.audit_artifact_privacy(
+                [artifact],
+                {"http://127.0.0.1:8787", "secret_token"},
+            )
+
+        self.assertEqual(audit["status"], "failed")
+        self.assertEqual(audit["checked_count"], 1)
+        self.assertEqual(audit["violation_count"], 2)
+        self.assertTrue(any("forbidden artifact field responseText" in violation for violation in audit["artifacts"][0]["violations"]))
+        self.assertTrue(any("sensitive runtime value present" in violation for violation in audit["artifacts"][0]["violations"]))
+        self.assertNotIn("raw response", json.dumps(audit))
+        self.assertNotIn("127.0.0.1:8787", json.dumps(audit))
 
 
 if __name__ == "__main__":

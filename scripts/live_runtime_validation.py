@@ -34,6 +34,25 @@ BOUNDARY = (
 )
 REDACTED_REPORT_FIELDS = {"response_excerpt"}
 RUNTIME_VALIDATION_SOURCES = ("real_runtime", "local_harness", "local_simulation")
+FORBIDDEN_ARTIFACT_FIELDS = {
+    "authorization",
+    "auth",
+    "authToken",
+    "bearerToken",
+    "body",
+    "endpoint",
+    "headers",
+    "host",
+    "message",
+    "prompt",
+    "requestBody",
+    "responseBody",
+    "responseText",
+    "response_excerpt",
+    "text",
+    "token",
+    "url",
+}
 
 
 def runtime_validation_caveat(source: str) -> str:
@@ -149,6 +168,49 @@ def sanitize_eval_report(path: Path) -> int:
     return removed
 
 
+def artifact_privacy_violations(value: Any, sensitive_values: set[str], path: str = "$") -> list[str]:
+    violations: list[str] = []
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            key_path = f"{path}.{key}"
+            if key in FORBIDDEN_ARTIFACT_FIELDS:
+                violations.append(f"{key_path}: forbidden artifact field {key}")
+            violations.extend(artifact_privacy_violations(nested, sensitive_values, key_path))
+    elif isinstance(value, list):
+        for index, nested in enumerate(value):
+            violations.extend(artifact_privacy_violations(nested, sensitive_values, f"{path}[{index}]"))
+    elif isinstance(value, str):
+        for sensitive in sensitive_values:
+            if sensitive and sensitive in value:
+                violations.append(f"{path}: sensitive runtime value present")
+                break
+    return violations
+
+
+def audit_artifact_privacy(paths: list[Path], sensitive_values: set[str]) -> dict[str, Any]:
+    artifacts: list[dict[str, Any]] = []
+    violation_count = 0
+    for path in paths:
+        if not path.exists():
+            artifacts.append({"path": str(path), "status": "not_found", "violation_count": 0})
+            continue
+        violations = artifact_privacy_violations(load_json(path), sensitive_values)
+        violation_count += len(violations)
+        artifacts.append({
+            "path": str(path),
+            "status": "passed" if not violations else "failed",
+            "violation_count": len(violations),
+            "violations": violations,
+        })
+    return {
+        "status": "passed" if violation_count == 0 else "failed",
+        "checked_count": len(artifacts),
+        "violation_count": violation_count,
+        "artifacts": artifacts,
+        "boundary": "Artifact privacy audit reports field paths only and does not copy sensitive values.",
+    }
+
+
 def count_bridge_records(path: Path) -> int:
     if not path.exists():
         return 0
@@ -186,6 +248,7 @@ def write_summary(
     evidence_path: Path,
     eval_report_path: Path,
     runtime_validation_source: str,
+    artifact_privacy: dict[str, Any],
 ) -> dict[str, Any]:
     summary = {
         "boundary": BOUNDARY,
@@ -204,6 +267,7 @@ def write_summary(
             "sanitized": eval_report_path.exists(),
             **eval_counts(eval_report_path),
         },
+        "artifactPrivacy": artifact_privacy,
         "promotionBoundary": {
             "requiresHumanReview": True,
             "requiresNapoleonOrReleaseApprovalWhenApplicable": True,
@@ -265,6 +329,19 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         eval_exit_code = run_http_eval(eval_endpoint, eval_report_path, auth_token)
         sanitize_eval_report(eval_report_path)
 
+    sensitive_values = {
+        value
+        for value in [
+            bridge_endpoint,
+            eval_endpoint,
+            strip_known_path(bridge_endpoint) if bridge_endpoint else None,
+            strip_known_path(eval_endpoint) if eval_endpoint else None,
+            auth_token,
+        ]
+        if value
+    }
+    artifact_privacy = audit_artifact_privacy([evidence_path, eval_report_path], sensitive_values)
+
     summary = write_summary(
         summary_path,
         bridge_exit_code,
@@ -272,12 +349,14 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         evidence_path,
         eval_report_path,
         args.runtime_validation_source,
+        artifact_privacy,
     )
     print(json.dumps({
         "summary": str(summary_path),
         "runtime_validation_source": summary["runtimeValidation"]["source"],
         "bridge_status": summary["bridgeEvidence"]["status"],
         "http_evaluator_status": summary["httpEvaluator"]["status"],
+        "artifact_privacy_status": summary["artifactPrivacy"]["status"],
         "boundary": BOUNDARY,
     }, indent=2))
 
@@ -285,6 +364,8 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         return bridge_exit_code
     if eval_exit_code not in (None, 0):
         return eval_exit_code
+    if summary["artifactPrivacy"]["status"] != "passed":
+        return 1
     return 0
 
 
