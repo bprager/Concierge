@@ -663,6 +663,14 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
         evolutionProposal,
       }
     : draft;
+  const recommendation = {
+    capability: "capability_taxonomy_review",
+    summary: evolutionProposal.summary,
+    evidenceCount: evolutionProposal.evidence.length,
+    confidence: draft.recommendations.length > 0 ? 0.8 : 0.4,
+    proposalOnly: true,
+    ...(isChildProtected ? { childSafetyCaution: true as const } : {}),
+  };
   const requestId = `cos_${dependencies.traceId}`;
   const localDecisionId = `local_taxonomy_review_${dependencies.traceId}`;
   const localAuditId = `local_audit_${dependencies.traceId}`;
@@ -738,7 +746,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
       method: "POST",
       headers: buildTaxonomyReviewHeaders(authToken),
       body: JSON.stringify({
-        requestKind: "chief_of_staff_taxonomy_review_handoff",
+        requestKind: "chief_of_staff_steering_handoff",
         profileMode,
         descriptorStatus: descriptorConnection.descriptorStatus,
         descriptorConnection,
@@ -746,6 +754,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
         governanceRequest,
         traceEnvelope,
         auditEnvelope,
+        recommendation,
         taxonomyReview,
         evaluatorCaseCandidate: draft.evaluatorCaseCandidate,
         evolutionProposal,

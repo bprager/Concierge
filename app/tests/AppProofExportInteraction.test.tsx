@@ -1341,6 +1341,10 @@ test("submits a taxonomy review draft through rendered governed controls", async
         );
       }
       if (String(input).endsWith("/v1/concierge/chief-of-staff/steering")) {
+        assert.equal(body.requestKind, "chief_of_staff_steering_handoff");
+        assert.equal(body.taxonomyReview.reviewType, "chief_of_staff_taxonomy_review");
+        assert.equal(body.recommendation.capability, "capability_taxonomy_review");
+        assert.equal(body.recommendation.proposalOnly, true);
         return new Response(
           JSON.stringify({
             text: "Napoleon accepted the taxonomy review packet for review.",

@@ -277,7 +277,10 @@ test("submits taxonomy review draft through governed bridge without applying loc
   assert.equal(targetUrl, "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering");
   assert.equal(headers?.Authorization, "Bearer taxonomy_token");
   assert.equal(JSON.stringify(posted).includes("taxonomy_token"), false);
+  assert.equal(posted?.requestKind, "chief_of_staff_steering_handoff");
   assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "evolution_proposal_review");
+  assert.equal((posted?.recommendation as { capability: string }).capability, "capability_taxonomy_review");
+  assert.equal((posted?.recommendation as { proposalOnly: boolean }).proposalOnly, true);
   assert.equal((posted?.taxonomyReview as { reviewType: string }).reviewType, "chief_of_staff_taxonomy_review");
   assert.equal((posted?.evolutionProposal as { proposal_id: string }).proposal_id, draft.evolutionProposal.proposal_id);
   assert.deepEqual(posted?.boundary, {

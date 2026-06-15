@@ -1,0 +1,153 @@
+{
+  "requestKind": "chief_of_staff_steering_handoff",
+  "profileMode": "adult_owner",
+  "chiefOfStaffRequest": {
+    "request_id": "cos_taxonomy_review_request_sample",
+    "requester": "concierge.capability_intelligence",
+    "request_type": "evolution_proposal_review",
+    "profile_mode": "adult_owner",
+    "source_evidence": [
+      "trace:trace_taxonomy_review_request_sample",
+      "capability:capability_taxonomy_review"
+    ],
+    "requested_authority_tier": "advisory_review",
+    "trace_id": "trace_taxonomy_review_request_sample",
+    "payload_schema": "schemas/evolution_proposal.schema.json"
+  },
+  "governanceRequest": {
+    "request_id": "cos_taxonomy_review_request_sample",
+    "actor_id": "concierge.capability_intelligence",
+    "action": "submit_taxonomy_review_for_review",
+    "target": "napoleon.chief_of_staff",
+    "requested_authority_tier": "advisory_review",
+    "evidence_links": [
+      "trace:trace_taxonomy_review_request_sample",
+      "capability:capability_taxonomy_review"
+    ],
+    "trace_id": "trace_taxonomy_review_request_sample"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_taxonomy_review_request_sample",
+    "parent_trace_id": "conv_taxonomy_review_request_sample",
+    "actor_id": "concierge.capability_intelligence",
+    "request_id": "cos_taxonomy_review_request_sample",
+    "decision_id": "decision_taxonomy_review_request_sample",
+    "timestamp": "2026-06-15T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_taxonomy_review_request_sample",
+    "trace_id": "trace_taxonomy_review_request_sample",
+    "decision_id": "decision_taxonomy_review_request_sample",
+    "actor_id": "concierge.capability_intelligence",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "Napoleon Chief of Staff and owner review before taxonomy cleanup is applied or rolled into policy.",
+    "evidence_links": [
+      "trace:trace_taxonomy_review_request_sample",
+      "capability:capability_taxonomy_review"
+    ]
+  },
+  "recommendation": {
+    "capability": "capability_taxonomy_review",
+    "summary": "Review local metadata-only taxonomy cleanup recommendations.",
+    "evidenceCount": 2,
+    "confidence": 0.8,
+    "proposalOnly": true
+  },
+  "taxonomyReview": {
+    "reviewType": "chief_of_staff_taxonomy_review",
+    "conversationId": "conv_taxonomy_review_request_sample",
+    "traceId": "trace_taxonomy_review_request_sample",
+    "recommendations": [
+      {
+        "action": "merge",
+        "dimension": "topic",
+        "sourceLabel": "deploy",
+        "targetLabel": "deployment",
+        "evidenceCount": 2,
+        "evidenceRefs": [
+          "trace:trace_taxonomy_review_request_sample"
+        ],
+        "reason": "Labels look like variants and require review before any local merge."
+      }
+    ],
+    "evaluatorCaseCandidate": {
+      "caseId": "capability_taxonomy_review_001",
+      "expectedBehavior": "Concierge drafts taxonomy cleanup as proposal-only local metadata."
+    },
+    "evolutionProposal": {
+      "proposal_id": "evo_capability_taxonomy_review_trace_taxonomy_review_request_sample",
+      "summary": "Review local capability taxonomy cleanup recommendations without applying edits.",
+      "risk_level": "low",
+      "evidence": [
+        "trace:trace_taxonomy_review_request_sample"
+      ],
+      "change": {
+        "capability": "capability_taxonomy_review",
+        "architecture_area": "observability",
+        "requested_action": "review_taxonomy_cleanup",
+        "recommendation_count": 1
+      },
+      "affected_profiles": [
+        "adult_owner"
+      ],
+      "affected_channels": [
+        "text"
+      ],
+      "evaluator_cases": [
+        "capability_taxonomy_review_001"
+      ],
+      "approval_required": "Napoleon Chief of Staff and owner review before taxonomy cleanup is applied or rolled into policy.",
+      "rollback_plan": "Keep current local taxonomy labels and discard the proposed cleanup recommendations."
+    },
+    "boundary": {
+      "proposalOnly": true,
+      "approvalCaptured": false,
+      "memoryWriteAllowed": false,
+      "agentDispatchAllowed": false,
+      "externalSendAllowed": false
+    }
+  },
+  "evaluatorCaseCandidate": {
+    "caseId": "capability_taxonomy_review_001",
+    "expectedBehavior": "Concierge drafts taxonomy cleanup as proposal-only local metadata."
+  },
+  "evolutionProposal": {
+    "proposal_id": "evo_capability_taxonomy_review_trace_taxonomy_review_request_sample",
+    "summary": "Review local capability taxonomy cleanup recommendations without applying edits.",
+    "risk_level": "low",
+    "evidence": [
+      "trace:trace_taxonomy_review_request_sample"
+    ],
+    "change": {
+      "capability": "capability_taxonomy_review",
+      "architecture_area": "observability",
+      "requested_action": "review_taxonomy_cleanup",
+      "recommendation_count": 1
+    },
+    "affected_profiles": [
+      "adult_owner"
+    ],
+    "affected_channels": [
+      "text"
+    ],
+    "evaluator_cases": [
+      "capability_taxonomy_review_001"
+    ],
+    "approval_required": "Napoleon Chief of Staff and owner review before taxonomy cleanup is applied or rolled into policy.",
+    "rollback_plan": "Keep current local taxonomy labels and discard the proposed cleanup recommendations."
+  },
+  "boundary": {
+    "proposalOnly": true,
+    "approvalCaptured": false,
+    "memoryWriteAllowed": false,
+    "agentDispatchAllowed": false,
+    "externalSendAllowed": false
+  },
+  "blockedEffects": [
+    "memory_write",
+    "agent_dispatch",
+    "external_send",
+    "approval_capture",
+    "runtime_authority"
+  ]
+}
