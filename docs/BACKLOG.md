@@ -579,6 +579,27 @@ Evaluator coverage:
 
 - Covered by pure avatar gaze tests and rendered app interaction tests for local metadata preparation without camera tracking, animation, perception, Napoleon contact, approval, guardian approval, or side effects.
 
+### AV-006 details
+
+User value: The user can inspect future face and head-pose perception output before any live camera capture, face detection service, affect model, renderer animation, or Napoleon contact exists.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local avatar face/head-pose panel.
+- The panel estimates face-present, head yaw, head pitch, head roll, and confidence from deterministic local sample metadata.
+- Preparing face/head-pose metadata does not request camera permission, start camera capture, store raw video, run live face detection, infer affect, infer attention, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `camera_state_estimated` includes local-metadata marker, profile mode, child-protected marker, face-present state, head yaw, head pitch, head roll, confidence, false capture/storage/live-face-detection/affect/attention/animation/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- Child protected face/head-pose preparation shows guardian-review wording and must not treat metadata preparation as guardian approval, camera permission, attention inference, affect inference, animation permission, or Napoleon approval.
+
+Privacy and safety impact:
+
+- This is local sample metadata only, not live camera perception.
+- No raw video, affect signal, attention signal, bridge call, memory write, approval capture, guardian approval capture, or external send is introduced.
+
+Evaluator coverage:
+
+- Covered by pure avatar face/head-pose tests and rendered app interaction tests for local metadata preparation without camera capture, raw video storage, live face detection, affect inference, attention inference, animation, Napoleon contact, approval, guardian approval, or side effects.
+
 ### AV-010 details
 
 User value: Child protected avatar behavior is visibly stricter before live avatar camera or perception features exist.

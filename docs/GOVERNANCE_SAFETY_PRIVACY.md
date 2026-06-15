@@ -111,6 +111,8 @@ Local avatar lip-sync preparation is generated-amplitude metadata only. It may d
 
 Local avatar gaze simulation is UI metadata only. It may derive an eye target from explicit local window-focus and user-position metadata for future avatar behavior, but it must not start camera-based gaze tracking, infer attention, start avatar animation, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected gaze simulation must show guardian-review wording and must record that no guardian approval was captured.
 
+Local avatar face and head-pose estimation is sample metadata only. It may show deterministic face-present, head yaw, head pitch, head roll, and confidence values for a future camera perception surface, but it must not request camera permission, start camera capture, store raw video, run live face detection, infer affect, infer attention, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected face/head-pose preparation must show guardian-review wording and must record that no guardian approval was captured.
+
 ## 4. Memory proposal review
 
 Text Concierge may identify possible preferences or profile notes from a turn and show them as memory proposals.

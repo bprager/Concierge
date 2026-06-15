@@ -2597,3 +2597,78 @@ test("simulates avatar gaze without camera tracking animation or Napoleon contac
     dom.window.close();
   }
 });
+
+test("estimates avatar face and head pose metadata without camera capture or affect inference", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("avatar face and head pose metadata must stay local");
+    },
+  });
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    const view = render(<App />);
+
+    await view.findByText("Avatar face pose");
+    const avatarFacePose = within(view.getByLabelText("Avatar face pose"));
+    assert.ok(avatarFacePose.getByText("Face pose not estimated"));
+    assert.ok(avatarFacePose.getByText("Camera capture started: no"));
+
+    await user.click(view.getByRole("button", { name: "Estimate local face pose" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    const facePoseEvent = telemetryPayloads.find((payload) => payload.event === "camera_state_estimated");
+    assert.ok(facePoseEvent);
+    assert.equal(facePoseEvent.attributes.localMetadataOnly, true);
+    assert.equal(facePoseEvent.attributes.cameraCaptureStarted, false);
+    assert.equal(facePoseEvent.attributes.affectInferred, false);
+    assert.ok(avatarFacePose.getByText("Face present: yes"));
+    assert.ok(avatarFacePose.getByText("Head yaw: 8deg"));
+    assert.ok(avatarFacePose.getByText("Head pitch: -4deg"));
+    assert.ok(avatarFacePose.getByText("Head roll: 2deg"));
+    assert.ok(avatarFacePose.getByText("Raw video stored: no"));
+    assert.ok(avatarFacePose.getByText("Affect inferred: no"));
+    assert.ok(avatarFacePose.getByText("Authority boundary: Face and head-pose estimation is local sample metadata only; it is not camera capture, attention inference, emotion inference, approval, or agent action."));
+    assert.ok(avatarFacePose.getByText("Blocked effects: camera_capture, raw_video_storage, live_face_detection, affect_inference, attention_inference, avatar_animation, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
