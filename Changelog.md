@@ -24,6 +24,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added generated bridge response-required validation for governed memory proposal, governance review, Chief of Staff steering, and taxonomy review handoffs so malformed review responses fail closed instead of using local fallback text.
 - Tightened live-send preflight so Rehearsal Mode is shown as not directly live-send attemptable even when endpoint, descriptor, text, and governance checks otherwise pass.
 - Tightened the rendered post-preview advisory-send control so Rehearsal Mode stays local and cannot unlock a live Napoleon bridge send while still active.
+- Added a rendered post-preview send path that preserves an unchanged rehearsal preview after Rehearsal Mode is turned off, then sends it only through the governed Napoleon bridge.
 - Added transcript-level source, fail-closed attribution boundary, and blocked-effect metadata for blocked Napoleon bridge attempts.
 - Added Napoleon delegation panel rendering for returned target capability IDs when selected-agent delegation is not returned.
 - Added last-success proof rendering and sanitized proof export for returned Napoleon target capability IDs when selected-agent delegation is not returned.

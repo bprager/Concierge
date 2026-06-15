@@ -48,7 +48,7 @@ Avatar renderer readiness is local preflight only, not live rendering. It may co
 
 Avatar expression mapping is local stance metadata only, not animation or emotion inference. It may map direct, warm, concerned, playful, or somber stance labels to expression labels, but it must not start animation, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected mapping stays conservative and does not capture guardian approval.
 
-Sending an advisory request is a separate user action after the preview exists, but it is disabled while Rehearsal Mode remains active. The user must leave Rehearsal Mode before any live governed bridge send can be attempted. That send still goes through the governed bridge path and remains subject to Chief of Staff and governance decisions.
+Sending an advisory request is a separate user action after the preview exists, but it is disabled while Rehearsal Mode remains active. The user must leave Rehearsal Mode before any live governed bridge send can be attempted. The unchanged preview remains available for that separate send after Rehearsal Mode is off; if the prompt changes, the post-preview send stays blocked until a new preview is created. That send still goes through the governed bridge path and remains subject to Chief of Staff and governance decisions.
 
 If the rehearsed turn is `no_go` or denied, Concierge blocks the send action. If the turn is `requires_review`, Concierge shows a review panel. A local acknowledgement can record that the review was seen, but it is not Napoleon approval and does not grant authority.
 

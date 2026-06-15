@@ -1763,8 +1763,11 @@ export function App() {
             type="checkbox"
             checked={rehearsalMode}
             onChange={(e) => {
-              setRehearsalMode(e.target.checked);
-              setPendingRehearsal(null);
+              const enabled = e.target.checked;
+              setRehearsalMode(enabled);
+              if (enabled) {
+                setPendingRehearsal(null);
+              }
             }}
           />
         </label>
@@ -3073,7 +3076,7 @@ export function App() {
           <button onClick={rehearsalMode ? rehearse : () => submit()}>
             {rehearsalMode ? "Rehearse" : "Send"}
           </button>
-          {rehearsalMode ? (
+          {pendingRehearsal ? (
             <button className="secondary" disabled={!canSendRehearsal} onClick={() => submit(pendingRehearsal)}>
               Send advisory request
             </button>
