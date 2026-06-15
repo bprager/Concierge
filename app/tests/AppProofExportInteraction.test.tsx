@@ -621,6 +621,76 @@ test("shows fail-closed transcript metadata when Napoleon auth fails", async () 
   }
 });
 
+test("blocks rendered live send before fetch when descriptor discovery auth fails", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  const authHeaders: Array<string | undefined> = [];
+  const postedBodies: string[] = [];
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      requestedUrls.push(url);
+      const headers = init?.headers as Record<string, string> | undefined;
+      authHeaders.push(headers?.Authorization);
+      if (init?.body) {
+        postedBodies.push(String(init.body));
+      }
+      if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+        return harnessJsonResponse(401, { text: "Unauthorized secret_token" });
+      }
+
+      assert.fail(`unexpected fetch after descriptor auth failure: ${url}`);
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+    fireEvent.change(view.getByLabelText("Bridge token"), { target: { value: "secret_token" } });
+    await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    const authFailureMessages = await view.findAllByText(
+      "Napoleon descriptor discovery failed authentication, so Concierge is blocked from live bridge sends.",
+    );
+    assert.ok(authFailureMessages.length > 0);
+
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Draft a bridge readiness summary" } });
+    await waitFor(() => assert.equal(composer.value, "Draft a bridge readiness summary"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    const blockedMessages = await view.findAllByText(/Napoleon bridge blocked: auth_failure/);
+    const blockedReply = blockedMessages.find((message) => message.closest("article"))?.closest("article") as HTMLElement | null;
+    assert.ok(blockedReply);
+    assert.ok(within(blockedReply).getByText("Blocked Napoleon governed bridge attempt"));
+    assert.ok(within(blockedReply).getByText("No Napoleon response was accepted; fail-closed local state only."));
+    assert.equal(
+      requestedUrls.some((url) => url === "http://127.0.0.1:8787/v1/concierge/turn"),
+      false,
+    );
+    assert.ok(authHeaders.includes("Bearer secret_token"));
+    assert.equal(postedBodies.length, 0);
+    assert.equal(view.container.textContent?.includes("Unauthorized secret_token"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows fail-closed transcript metadata when Napoleon bridge times out", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

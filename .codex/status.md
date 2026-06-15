@@ -54,6 +54,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added first-class Napoleon descriptor connection state for discovered, missing, and checksum/signature mismatch cases, with bridge preflight blocking before network calls.
 - Added live Chief of Staff descriptor discovery from `/v1/concierge/chief-of-staff/descriptor`, including checksum/signature parsing and fail-closed invalid descriptor states.
 - Added descriptor discovery fail-closed states for auth failure, timeout, and HTTP failure, and carried those reasons into text, memory proposal, Chief of Staff steering, and taxonomy review preflight failures before fetch.
+- Updated descriptor discovery telemetry so auth failure, timeout, and HTTP failure emit failed discovery events instead of completed discovery events.
 - Added a Text Concierge live bridge readiness panel that combines endpoint, descriptor, checksum/signature, evidence capture/comparison, runtime-validation source, last live-send outcome, and blocked-effect state while stating that readiness is not Napoleon approval.
 - Added runtime-validation source labeling to live bridge readiness and readiness proof export so local harness and simulation checks remain distinct from real Napoleon runtime validation.
 - Added a composer-side live-send preflight checklist for text readiness, endpoint configuration, descriptor discovery, descriptor integrity, local governance send gate, and Rehearsal Mode state.

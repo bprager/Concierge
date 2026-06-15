@@ -823,13 +823,18 @@ export function App() {
       setLiveDescriptorInput(result.input);
       setDescriptorMode("live");
       setDescriptorDiscoveryMessage(result.connection.message);
-      emitEvent("descriptor_discovery_completed", {
+      const discoveryFailed =
+        result.connection.failClosedReason === "auth_failure" ||
+        result.connection.failClosedReason === "bridge_timeout" ||
+        result.connection.failClosedReason === "http_failure";
+      emitEvent(discoveryFailed ? "descriptor_discovery_failed" : "descriptor_discovery_completed", {
         traceId: newTraceId(),
         conversationId,
         state: result.connection.state,
         checksumState: result.connection.checksumState,
         signatureState: result.connection.signatureState,
         canAttemptLiveBridge: result.connection.canAttemptLiveBridge,
+        failClosedReason: result.connection.failClosedReason ?? "none",
       });
     } catch (error) {
       const failedInput = { endpointConfigured: Boolean(selectedEndpoint), descriptor: null };

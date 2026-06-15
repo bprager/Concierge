@@ -109,7 +109,7 @@ Live text responses that claim memory writes, approval capture, external sends, 
 
 When descriptor discovery has not completed, live text turns, memory proposal handoff, Chief of Staff steering handoff, and Chief of Staff taxonomy review handoff fail closed before request fetch and report descriptor mismatch failures with the relevant blocked-effect list. When Rehearsal Mode is active, memory proposal review, Chief of Staff steering, and taxonomy review submit helpers fail closed before request fetch and emit their governed handoff failure events with blocked effects.
 
-Descriptor discovery failures preserve `auth_failure`, `bridge_timeout`, and `http_failure` as local connection states. If a user attempts a governed text turn, memory proposal handoff, Chief of Staff steering handoff, or taxonomy review handoff after one of those failures, the preflight failure event carries the same reason before any request fetch is attempted.
+Descriptor discovery failures preserve `auth_failure`, `bridge_timeout`, and `http_failure` as local connection states and emit `descriptor_discovery_failed` rather than `descriptor_discovery_completed`. If a user attempts a governed text turn, memory proposal handoff, Chief of Staff steering handoff, or taxonomy review handoff after one of those failures, the preflight failure event carries the same reason before any request fetch is attempted.
 
 ## 5. Metrics
 
