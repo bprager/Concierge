@@ -64,10 +64,28 @@ class BridgeContractValidationTest(unittest.TestCase):
         validate_repo.validate_openapi_instance(schema, response)
         validate_repo.validate_bridge_response_provenance(response)
 
+    def test_sample_governance_review_response_matches_openapi_response_contract(self):
+        response = validate_repo.load_json("examples/sample_governance_review_response.json")
+        schema = validate_repo.load_openapi_response_schema("/v1/concierge/chief-of-staff/steering", "200")
+
+        validate_repo.validate_openapi_instance(schema, response)
+        validate_repo.validate_bridge_response_provenance(response)
+        validate_repo.validate_governance_review_response_boundary(response)
+
+    def test_sample_taxonomy_review_response_matches_openapi_response_contract(self):
+        response = validate_repo.load_json("examples/sample_chief_of_staff_taxonomy_review_response.json")
+        schema = validate_repo.load_openapi_response_schema("/v1/concierge/chief-of-staff/steering", "200")
+
+        validate_repo.validate_openapi_instance(schema, response)
+        validate_repo.validate_bridge_response_provenance(response)
+        validate_repo.validate_taxonomy_review_response_boundary(response)
+
     def test_governed_review_responses_carry_explicit_false_side_effect_boundaries(self):
         examples = [
             "examples/sample_memory_proposal_response.json",
             "examples/sample_chief_of_staff_steering_response.json",
+            "examples/sample_governance_review_response.json",
+            "examples/sample_chief_of_staff_taxonomy_review_response.json",
         ]
         required_false_fields = [
             "memoryWritePerformed",

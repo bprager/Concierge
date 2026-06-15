@@ -344,6 +344,28 @@ def validate_governance_review_response_boundary(data: object) -> None:
         raise SystemExit("child protected governance review responses must preserve guardian review wording")
 
 
+def validate_taxonomy_review_response_boundary(data: object) -> None:
+    if not isinstance(data, dict):
+        raise SystemExit("Taxonomy review response example must be a JSON object")
+
+    decision = data.get("governanceDecision")
+    audit = data.get("auditEnvelope")
+    if not isinstance(decision, dict) or not isinstance(audit, dict):
+        raise SystemExit("Taxonomy review response example must include governanceDecision and auditEnvelope objects")
+
+    require_equal(decision.get("outcome"), "requires_review", "taxonomy review response must remain review-only")
+    require_equal(decision.get("authority_tier"), "advisory_review", "taxonomy review response must stay advisory review")
+    require_equal(data.get("appliedLocally"), False, "taxonomy review response must not apply taxonomy edits locally")
+    require_equal(data.get("approvalCaptured"), False, "taxonomy review response must not capture approval")
+    require_equal(data.get("memoryWritePerformed"), False, "taxonomy review response must not write memory")
+    require_equal(data.get("agentDispatchPerformed"), False, "taxonomy review response must not dispatch agents")
+    require_equal(data.get("externalSendPerformed"), False, "taxonomy review response must not send externally")
+
+    evidence_links = audit.get("evidence_links")
+    if not isinstance(evidence_links, list) or "capability:capability_taxonomy_review" not in evidence_links:
+        raise SystemExit("taxonomy review responses must preserve capability taxonomy review evidence")
+
+
 def validate_proposal_only_request_boundary(data: object) -> None:
     if not isinstance(data, dict):
         raise SystemExit("Governed handoff request example must be a JSON object")
@@ -474,6 +496,11 @@ def validate_openapi_response_examples() -> None:
             "200",
             "examples/sample_governance_review_response.json",
         ),
+        (
+            "/v1/concierge/chief-of-staff/steering",
+            "200",
+            "examples/sample_chief_of_staff_taxonomy_review_response.json",
+        ),
     ]
     for path, status_code, example_path in examples:
         data = load_json(example_path)
@@ -482,6 +509,8 @@ def validate_openapi_response_examples() -> None:
         validate_bridge_response_provenance(data)
         if example_path.endswith("sample_governance_review_response.json"):
             validate_governance_review_response_boundary(data)
+        if example_path.endswith("sample_chief_of_staff_taxonomy_review_response.json"):
+            validate_taxonomy_review_response_boundary(data)
         print(f"valid OpenAPI response example: {example_path} against {path} {status_code}")
 
 
