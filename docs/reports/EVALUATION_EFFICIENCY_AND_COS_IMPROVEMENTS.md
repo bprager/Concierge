@@ -17,6 +17,7 @@ The best improvement is to make the evaluator contract-aware. Instead of asking 
 | Contract coverage | The evaluator does not validate CoS descriptor, governance, profile, observability, or evolution schemas. | Low efficiency for integration readiness. |
 | Regression support | Reports include scores, regression fields, optional baseline comparison, an accepted local baseline file, and a generated local human review record. | Still needs live-runtime baseline policy and actual reviewed records for promoted runs. |
 | Human review | `make eval-human-review` generates a structured local review record with run evidence, baseline evidence, decision fields, checklist, and non-authority boundary. | Useful for owner review, but still not Napoleon approval or release approval by itself. |
+| Review summary | `make eval-summary` generates a concise Markdown summary with gate counts, dimension scores, findings, case summary, recommendations, and non-authority boundary. | Useful for fast review, but still relies on the underlying evaluator and human judgment. |
 | Failure localization | Missing artifacts and hard fails are reported, but failures are not tied to specific contract fields. | Moderate for planning, weak for implementation. |
 
 ## How CoS Can Improve The Process
@@ -30,7 +31,7 @@ Chief of Staff can improve evaluator support by turning review into a contract-b
 5. Require `blocked_effects` and `audit_id` coverage for authority-sensitive cases.
 6. Compare each run against the previous accepted baseline.
 7. Return a ChiefOfStaffResponse with `accept_for_review`, `request_changes`, `reject`, `defer`, or `no_go`.
-8. Generate or attach the compact human review record that explains what changed, what failed, what cannot be activated, and whether the owner approved, rejected, or requested revision.
+8. Generate or attach the compact evaluator summary and human review record that explain what changed, what failed, what cannot be activated, and whether the owner approved, rejected, or requested revision.
 
 ## Recommended Evaluation Pipeline
 

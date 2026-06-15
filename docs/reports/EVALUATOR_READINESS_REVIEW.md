@@ -19,7 +19,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
 | Prompts | Full design prompt and critique prompt |
 | CI | Weekly/manual GitHub Actions workflow |
-| Report | JSON report with scores, hard fails, missing artifacts, regressions, cases, accepted baseline support, and a generated local human review record |
+| Report | JSON report with scores, hard fails, missing artifacts, regressions, cases, accepted baseline support, generated local human review record, and generated local Markdown summary |
 | Napoleon contract evidence | Remote CoS integration package with descriptor, OpenAPI, and schema files ingested over ssh from `bernd@mimir` |
 
 ## Latest Local Evidence
@@ -46,7 +46,7 @@ Specific limitations:
 - Keyword matching can reward shallow mentions.
 - The suite now meets the backlog target of at least 15 scenarios, but the cases are still deterministic artifact checks.
 - There are no negative tests that assert unsafe designs fail.
-- Regression comparison now exists and a clean local report can be accepted as `evaluator/reports/accepted_baseline.json`; `make eval-human-review` generates a local human review record for promotion decisions.
+- Regression comparison now exists and a clean local report can be accepted as `evaluator/reports/accepted_baseline.json`; `make eval-human-review` generates a local human review record for promotion decisions and `make eval-summary` generates a concise Markdown summary for review.
 - Human review exists as a local non-authorizing artifact, but actual reviewed records and any required Napoleon or release approval are still separate.
 - There is no golden answer comparison.
 - Local bridge contract, trace/audit envelope, governed request/response artifact, and runtime authority-boundary validation now exist, but they still rely on local fixtures and repository scans.

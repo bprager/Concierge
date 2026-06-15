@@ -107,8 +107,8 @@ Work:
 - Add negative cases for unsafe autonomy, child safety, memory writes, raw capture, and direct tool execution.
 - Add contract-conformance cases for descriptor discovery, agent manifests, governance decisions, profile mapping, observability envelopes, evolution proposals, and contract-only boundaries.
 - Use `make eval-human-review` for evaluator baseline promotion and keep completed review records with the promoted evidence.
-- Add Markdown summary output.
-- Add human review checklist.
+- Use `make eval-summary` to produce the Markdown summary output for review.
+- Keep the human review checklist updated as promotion gates change.
 
 Why fourth:
 
