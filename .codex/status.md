@@ -127,6 +127,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Tightened runtime governed review handling so memory proposal, Chief of Staff steering, and Chief of Staff taxonomy review responses fail closed when required explicit false side-effect fields are omitted.
 - Tightened runtime governed review handling so memory proposal, governance review, Chief of Staff steering, and Chief of Staff taxonomy review responses also fail closed when generated required top-level response fields such as review text are omitted.
 - Tightened live-send preflight so Rehearsal Mode remains a warning state that does not claim direct live-send readiness when other checks pass.
+- Tightened the rendered post-preview advisory-send control so Rehearsal Mode remains local and does not enable a live Napoleon bridge send while still active.
 - Tightened live text bridge handling so returned profile-mode drift fails closed instead of widening child protected, guest, or collaborator turns into another scope.
 - Added active profile-mode metadata to blocked live bridge transcript messages so profile-scope drift failures show the preserved local scope.
 - Added active profile and profile-mode telemetry for successful and fail-closed live text responses so Conversation Capability Intelligence keeps child-protected, guest, collaborator, or owner scope in derived local signals.

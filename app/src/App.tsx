@@ -1597,6 +1597,7 @@ export function App() {
 
   const canSendRehearsal = Boolean(
     pendingRehearsal &&
+      !rehearsalMode &&
       input.trim() === pendingRehearsal.content &&
       pendingRehearsal.preview.governanceReview.canSendAdvisory,
   );

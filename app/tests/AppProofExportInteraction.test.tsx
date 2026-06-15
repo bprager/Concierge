@@ -201,6 +201,59 @@ test("shows Napoleon delegation panel before bridge provenance is returned", asy
   }
 });
 
+test("keeps post-preview advisory send disabled while Rehearsal Mode is active", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    assert.equal(url, "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor");
+    return harnessJsonResponse(200, {
+      descriptor: {
+        schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+        serviceId: "napoleon.chief_of_staff",
+        runtimeAuthority: false,
+        commandExecution: false,
+        cachePolicy: "fail_closed_to_review_required",
+        blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+      },
+      checksum: { expected: "sha256:ui", actual: "sha256:ui" },
+      signature: { valid: true },
+    });
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (!rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Summarize bridge status" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await view.findByText("Rehearsal only");
+    const advisoryButton = view.getByRole("button", { name: "Send advisory request" }) as HTMLButtonElement;
+    assert.equal(advisoryButton.disabled, true);
+    assert.equal(requestedUrls.some((url) => url.endsWith("/v1/concierge/turn")), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows taxonomy review in governed routes as the canonical steering handoff", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([
