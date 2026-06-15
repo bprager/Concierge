@@ -126,7 +126,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Known Bugs Or Risks
 
 - The evaluator stub can pass while real Napoleon integration is incomplete.
-- The app skeleton can imply product readiness before live auth, full profile handling, live runtime validation, and trace completeness are implemented.
+- The app skeleton can imply product readiness before live credential validation, live runtime validation, and durable trace completeness are implemented.
 - Camera, microphone, child-mode, and avatar work can weaken privacy or agency if implemented before consent and audit controls.
 - The bridge boundary can erode if UI code starts calling tools or services directly instead of governed Napoleon APIs; repository validation now catches representative direct runtime bypasses.
 - Self-evolution language can be misread as permission for automatic production changes; it is proposal-only until gates and approval exist.
@@ -146,6 +146,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Sanitized Napoleon response proof export and comparison now keep returned target capability separate from selected-agent provenance.
 - The Napoleon delegation panel now also displays a returned target capability ID when selected-agent delegation is not returned, while keeping selected agents marked as not returned.
 - Resolved the license documentation drift by replacing the obsolete license-choice TODO with third-party asset license review guidance.
+- Refreshed stale startup report authentication gaps to reflect the current OpenAPI bearer scheme, generated header-only token registry, and remaining live credential-validation dependency.
 - Local avatar work now includes a metadata-only VRM model reference loader and Avatar Model panel that validates the local model reference without starting rendering, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - Local avatar work now includes an Avatar Renderer readiness panel that prepares renderer preflight metadata from the loaded model without allocating a canvas, starting a render loop, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.

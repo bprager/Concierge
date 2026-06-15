@@ -63,7 +63,7 @@ Current state:
 
 Work:
 
-- Add auth scheme once Napoleon provides the live transport.
+- Validate the existing header-only bearer-token bridge scheme once Napoleon provides the live transport and credentials.
 - Add request, response, decision, trace, and audit IDs.
 - Add error responses.
 - Add governance decision handling for `allow_prepare_only`, `deny`, `requires_review`, and `no_go`.
@@ -235,7 +235,7 @@ Defer until P1 governance and trace behavior are stable:
 
 1. Add `make check` with evaluator, schema, YAML, frontend, and Tauri checks.
 2. Add local contract references or mirrors for the Napoleon CoS descriptor and schemas.
-3. Update OpenAPI bridge with authentication, governance, confirmation, errors, trace IDs, decision IDs, audit IDs, evidence links, and blocked effects.
+3. Continue updating the OpenAPI bridge with remaining error-response and confirmation payload details; authentication, governance, trace IDs, decision IDs, audit IDs, evidence links, and blocked effects are now represented locally.
 4. Add bridge and CoS contract fixtures and tests.
 5. Tighten interaction trace schema and add examples for key flows.
 6. Expand evaluator scenarios to at least 15, including Napoleon contract-conformance cases.

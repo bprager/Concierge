@@ -10,7 +10,7 @@ The strongest architectural decision is the boundary: Concierge owns local inter
 
 The June 8 integration pass discovered Napoleon-side Chief of Staff integration contracts on `bernd@mimir` under `~/Projects/Napoleon/docs/concierge-integration/`. Those documents materially improve alignment: Napoleon now defines contract-only surfaces for Chief of Staff requests, agent manifests, governance decisions, user profiles, observability envelopes, and evolution proposals. They do not grant runtime authority.
 
-The main weakness has shifted from "no Napoleon contract evidence" to "local Concierge contracts do not yet mirror Napoleon's contract package." The app skeleton still does not implement complete identity resolution, governance confirmation, durable trace assembly, privacy audit records, endpoint authentication, or child-mode policy enforcement. The evaluator is useful as a smoke test but not yet a strong judge of Napoleon or Chief of Staff quality.
+The main weakness has shifted from "no Napoleon contract evidence" to "live Napoleon runtime validation is still unavailable." The app now has local profile mapping, governance review display, bearer-token bridge handling, and child-profile contract coverage, but real endpoint credentials, descriptor signature/checksum validation against a live runtime, durable trace storage, and full privacy audit retention still need runtime validation. The evaluator is useful as a smoke test but not yet a strong judge of Napoleon or Chief of Staff quality.
 
 ## Evidence Reviewed
 
@@ -71,7 +71,7 @@ Reviewed documentation and handoff files:
 ## Missing Decisions
 
 1. Exact live Napoleon HTTP, MCP, or stdio endpoint for the `napoleon.chief_of_staff` descriptor; the remote descriptor currently leaves runtime base URLs blank.
-2. Authentication and descriptor signature/checksum model; the remote descriptor marks signature and checksum as pending future implementation.
+2. Live credential provisioning and descriptor signature/checksum model; the local bridge contract now has header-only bearer-token support, while the remote descriptor still marks signature and checksum as pending future implementation.
 3. How local `/v1/concierge/turn` should map to Napoleon's contract surfaces: ChiefOfStaffRequest, GovernanceEvaluationRequest, agent manifest discovery, profile lookup, observability trace reference, and EvolutionProposal.
 4. Confirmation UX lifecycle for the remote governance outcomes: `allow_prepare_only`, `deny`, `requires_review`, and `no_go`.
 5. Memory write proposal details; the remote contracts currently block memory writes but do not define a user-facing memory proposal payload.
@@ -85,7 +85,7 @@ Reviewed documentation and handoff files:
 
 - `docs/BACKLOG.md` says EV-002 requires at least 15 scenarios; `evaluator/scenarios.yaml` now meets that breadth target, but the evaluator remains deterministic and does not prove live Napoleon readiness.
 - `docs/EVALUATOR.md` includes `regressions` in the report shape; `schemas/evaluator_run.schema.json` and the runner currently do not require or emit regressions.
-- `docs/PRD.md` says the local bridge must be authenticated; `api/napoleon_bridge.openapi.yaml` and `app/src/napoleonBridge.ts` do not define authentication.
+- Resolved locally: `api/napoleon_bridge.openapi.yaml`, the generated operation registry, and bridge callers now define header-only bearer-token handling; live credential provisioning still depends on the real Napoleon runtime.
 - `docs/OBSERVABILITY.md` requires many trace fields and events; `examples/sample_interaction_trace.json` and `app/src/telemetry.ts` include only a subset.
 - Local Concierge uses `child_protected`; Napoleon's profile contract uses `child_protected_user`. This needs an explicit mapping before contract tests.
 - Local Concierge's OpenAPI describes `/v1/concierge/turn`; Napoleon's integration OpenAPI describes review/discovery/governance/profile/observability/evolution endpoints and is marked `contract_only`.

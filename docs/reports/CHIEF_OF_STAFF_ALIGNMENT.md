@@ -39,7 +39,7 @@ The next alignment step is no longer to invent contracts from scratch. It is to 
 
 - Stable `napoleon.chief_of_staff` discovery descriptor. Remote source: `discovery/chief-of-staff-service.yaml`.
 - Runtime endpoint selection for supported transports: `file_manifest`, `http`, `mcp`, and `local_stdio`.
-- Authentication model for local app requests; descriptor signature and checksum are marked pending.
+- Live credential provisioning for local app requests; the local bridge now supports header-only bearer tokens, while descriptor signature and checksum remain marked pending by the remote package.
 - Request, response, decision, trace, and audit correlation IDs.
 - Supported channels: text now, voice/avatar later.
 - Allowed timeout, retry, and failure behavior.
@@ -194,7 +194,7 @@ For policy, authority, child mode, memory, bridge, or self-evolution changes:
 ## Remaining Open Questions For Chief Of Staff
 
 1. What live endpoint or transport should Concierge use after validating the `napoleon.chief_of_staff` descriptor?
-2. What authentication mechanism should be used for the first local MVP?
+2. What live credential provisioning and rotation process should back the local MVP's header-only bearer-token bridge?
 3. How should local `child_protected` map to Napoleon's `child_protected_user` profile mode?
 4. Which side-effect categories must P1 support as prepare-only versus review-required?
 5. Can Concierge display agent routing details to the user, or should it abstract them?

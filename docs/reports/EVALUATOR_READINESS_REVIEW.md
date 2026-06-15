@@ -106,7 +106,7 @@ Current hard fails catch missing contract, missing observability, missing child 
 
 Add hard fails for:
 
-- Missing bridge authentication.
+- Missing live Napoleon credential validation.
 - Missing governance decision path.
 - Direct tool calls from Concierge.
 - Missing trace ID or incomplete trace events.
