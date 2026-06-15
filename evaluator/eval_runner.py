@@ -166,12 +166,61 @@ def check_artifacts(text: str, expected: Dict[str, Any], artifact_ids: List[str]
     return result
 
 
+def detect_regressions(report: Dict[str, Any], baseline: Dict[str, Any] | None) -> List[Dict[str, Any]]:
+    if not baseline:
+        return []
+
+    regressions: List[Dict[str, Any]] = []
+    previous_total = float(baseline.get("score_total", 0))
+    current_total = float(report.get("score_total", 0))
+    if current_total < previous_total:
+        regressions.append({
+            "id": "score_total_decreased",
+            "message": "Evaluator score decreased from baseline.",
+            "previous": previous_total,
+            "current": current_total,
+        })
+
+    previous_hard_fails = len(baseline.get("hard_fails", []))
+    current_hard_fails = len(report.get("hard_fails", []))
+    if current_hard_fails > previous_hard_fails:
+        regressions.append({
+            "id": "hard_fail_count_increased",
+            "message": "Hard fail count increased from baseline.",
+            "previous": previous_hard_fails,
+            "current": current_hard_fails,
+        })
+
+    previous_missing = len(baseline.get("missing_artifacts", []))
+    current_missing = len(report.get("missing_artifacts", []))
+    if current_missing > previous_missing:
+        regressions.append({
+            "id": "missing_artifact_count_increased",
+            "message": "Missing artifact count increased from baseline.",
+            "previous": previous_missing,
+            "current": current_missing,
+        })
+
+    previous_scenarios = int(baseline.get("scenario_count", 0))
+    current_scenarios = int(report.get("scenario_count", 0))
+    if current_scenarios < previous_scenarios:
+        regressions.append({
+            "id": "scenario_count_decreased",
+            "message": "Scenario count decreased from baseline.",
+            "previous": previous_scenarios,
+            "current": current_scenarios,
+        })
+
+    return regressions
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=["stub", "http"], default="stub")
     parser.add_argument("--endpoint", default=os.environ.get("NAPOLEON_EVAL_ENDPOINT"))
     parser.add_argument("--token", default=os.environ.get("NAPOLEON_EVAL_TOKEN"))
     parser.add_argument("--out", default=str(ROOT / "reports" / "latest.json"))
+    parser.add_argument("--baseline", default=os.environ.get("CONCIERGE_EVAL_BASELINE"))
     args = parser.parse_args(argv)
 
     scenarios = load_yaml(ROOT / "scenarios.yaml")["scenarios"]
@@ -238,7 +287,7 @@ def main(argv: list[str] | None = None) -> int:
     if total < 90:
         recommendations.append("Review low-scoring rubric dimensions before implementation.")
 
-    report = {
+    report: Dict[str, Any] = {
         "run_id": run_id,
         "mode": args.mode,
         "napoleon_version": os.environ.get("NAPOLEON_VERSION", "unknown"),
@@ -248,9 +297,20 @@ def main(argv: list[str] | None = None) -> int:
         "hard_fails": all_hard_fails,
         "dimension_scores": averaged_dimensions,
         "missing_artifacts": missing_artifacts,
+        "regressions": [],
         "recommendations": recommendations,
         "cases": case_reports,
     }
+
+    baseline_report = None
+    if args.baseline:
+        baseline_path = Path(args.baseline)
+        if not baseline_path.exists():
+            raise SystemExit(f"Baseline report not found: {baseline_path}")
+        baseline_report = json.loads(baseline_path.read_text(encoding="utf-8"))
+    report["regressions"] = detect_regressions(report, baseline_report)
+    if report["regressions"]:
+        recommendations.append("Review evaluator regressions before promotion.")
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -261,10 +321,11 @@ def main(argv: list[str] | None = None) -> int:
         "score_total": total,
         "hard_fail_count": len(all_hard_fails),
         "missing_artifact_count": len(missing_artifacts),
+        "regression_count": len(report["regressions"]),
         "out": str(out),
     }, indent=2))
 
-    return 1 if all_hard_fails else 0
+    return 1 if all_hard_fails or report["regressions"] else 0
 
 
 if __name__ == "__main__":

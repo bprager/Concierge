@@ -161,8 +161,8 @@ Keep self-evolution proposal-only. Do not build runtime adaptation until evaluat
 
 | Area | Inconsistency | Recommendation |
 |---|---|---|
-| Evaluator mechanics | The suite now meets the 15-scenario breadth target, but remains deterministic keyword/artifact checking. | Add regression comparison, human review, negative failure fixtures, and live Napoleon baseline checks before using evaluator for phase gates. |
-| Evaluator reports | Docs mention regressions; schema/runner do not emit them. | Add regression fields or revise docs. |
+| Evaluator mechanics | The suite now meets the 15-scenario breadth target and supports optional baseline regression comparison, but remains deterministic keyword/artifact checking. | Add human review, negative failure fixtures, baseline storage, and live Napoleon baseline checks before using evaluator for phase gates. |
+| Evaluator reports | Resolved locally: reports now include `regressions`, and the runner can compare against a supplied baseline. | Add accepted baseline storage and review workflow before using regressions as a promotion gate. |
 | Authentication | Resolved locally: OpenAPI specifies `NapoleonBearer`, generated bridge operations require header-only token placement, and tests validate that governed paths carry bearer security. | Validate credential provisioning against the real Napoleon runtime once a live endpoint exists. |
 | Observability | Required events are broad; sample trace and telemetry helper are minimal. | Add trace completeness tests. |
 | Contract surface | Local `/v1/concierge/turn` does not match Napoleon's contract-only review/discovery/governance/profile/evolution API. | Define a local adapter or revise local OpenAPI to reference Napoleon contracts. |

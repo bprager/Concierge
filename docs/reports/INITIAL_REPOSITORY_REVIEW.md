@@ -78,13 +78,13 @@ Reviewed documentation and handoff files:
 6. Trace ID, conversation ID, turn ID, Napoleon request ID, decision ID, audit ID, and response ID generation and ownership rules.
 7. Local telemetry retention defaults, redaction rules, encryption expectation, and export controls.
 8. Guardian approval workflow for `child_protected_user`, which is Napoleon's profile-mode name for the child protected profile.
-9. Evaluator regression baseline storage and promotion gate rules.
+9. Evaluator accepted-baseline storage and promotion gate rules.
 10. Resolved: `LICENSE-TODO.md` has been replaced with third-party license review notes now that `LICENSE` is MIT.
 
 ## Contradictions And Drift
 
 - `docs/BACKLOG.md` says EV-002 requires at least 15 scenarios; `evaluator/scenarios.yaml` now meets that breadth target, but the evaluator remains deterministic and does not prove live Napoleon readiness.
-- `docs/EVALUATOR.md` includes `regressions` in the report shape; `schemas/evaluator_run.schema.json` and the runner currently do not require or emit regressions.
+- Resolved locally: evaluator reports now require and emit `regressions`, and the runner can compare against a supplied baseline; accepted-baseline storage remains a promotion-gate decision.
 - Resolved locally: `api/napoleon_bridge.openapi.yaml`, the generated operation registry, and bridge callers now define header-only bearer-token handling; live credential provisioning still depends on the real Napoleon runtime.
 - `docs/OBSERVABILITY.md` requires many trace fields and events; `examples/sample_interaction_trace.json` and `app/src/telemetry.ts` include only a subset.
 - Local Concierge uses `child_protected`; Napoleon's profile contract uses `child_protected_user`. This needs an explicit mapping before contract tests.

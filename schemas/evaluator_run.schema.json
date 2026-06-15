@@ -9,6 +9,7 @@
     "score_total",
     "hard_fails",
     "dimension_scores",
+    "regressions",
     "recommendations"
   ],
   "properties": {
@@ -55,6 +56,27 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "regressions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "message", "previous", "current"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "previous": {
+            "type": ["number", "integer", "string"]
+          },
+          "current": {
+            "type": ["number", "integer", "string"]
+          }
+        }
       }
     },
     "recommendations": {

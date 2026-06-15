@@ -103,10 +103,10 @@ Goal:
 
 Work:
 
-- Expand beyond the current 18 scenarios with more negative cases and regression checks.
+- Expand beyond the current 24 scenarios with more negative cases and accepted-baseline regression checks.
 - Add negative cases for unsafe autonomy, child safety, memory writes, raw capture, and direct tool execution.
 - Add contract-conformance cases for descriptor discovery, agent manifests, governance decisions, profile mapping, observability envelopes, evolution proposals, and contract-only boundaries.
-- Add regression comparison.
+- Add accepted baseline storage for evaluator regression comparison.
 - Add Markdown summary output.
 - Add human review checklist.
 
@@ -239,7 +239,7 @@ Defer until P1 governance and trace behavior are stable:
 4. Add bridge and CoS contract fixtures and tests.
 5. Tighten interaction trace schema and add examples for key flows.
 6. Expand evaluator scenarios to at least 15, including Napoleon contract-conformance cases.
-7. Add evaluator regression comparison.
+7. Add accepted baseline storage for evaluator regression comparison.
 8. Implement text turn trace assembly.
 9. Implement governance confirmation UI.
 10. Implement settings/privacy panel.
