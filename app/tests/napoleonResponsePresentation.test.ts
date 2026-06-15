@@ -152,8 +152,10 @@ test("successful Napoleon response proof includes returned target capability wit
       generatedAt: "2026-06-13T00:00:00.000Z",
       conversationId: "conv_target_capability",
     }),
-  ) as { responseProof: { targetCapability: string; selectedAgents: string[] } };
+  ) as { responseProof: { handledBy: string; attributionBoundary: string; targetCapability: string; selectedAgents: string[] } };
 
+  assert.equal(exported.responseProof.handledBy, "napoleon.chief_of_staff");
+  assert.equal(exported.responseProof.attributionBoundary, "Returned bridge provenance only; not local authority.");
   assert.equal(exported.responseProof.targetCapability, "napoleon.chief_of_staff");
   assert.deepEqual(exported.responseProof.selectedAgents, []);
 });
@@ -213,6 +215,8 @@ test("exports last successful Napoleon response proof without raw text endpoint 
     responseProof: {
       status: string;
       heading: string;
+      handledBy: string;
+      attributionBoundary: string;
       governance: string;
       profileMode: string;
       traceId: string;
@@ -232,6 +236,8 @@ test("exports last successful Napoleon response proof without raw text endpoint 
   assert.equal(proof.kind, "concierge_napoleon_response_proof");
   assert.equal(proof.generatedAt, "2026-06-13T00:00:00.000Z");
   assert.equal(proof.responseProof.status, "verified");
+  assert.equal(proof.responseProof.handledBy, "Passive Brain");
+  assert.equal(proof.responseProof.attributionBoundary, "Returned bridge provenance only; not local authority.");
   assert.equal(proof.responseProof.traceId, "trace_response_export");
   assert.equal(proof.responseProof.governance, "requires_review");
   assert.equal(proof.responseProof.profileMode, "child_protected_user");
@@ -266,6 +272,7 @@ test("compares sanitized Napoleon response proof exports", () => {
 
   assert.equal(comparison.status, "changed");
   assert.ok(comparison.summary.includes("changed"));
+  assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Handled by"));
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Governance"));
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Selected agents"));
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Blocked effects"));

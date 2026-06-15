@@ -23,6 +23,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added Napoleon delegation panel rendering for returned target capability IDs when selected-agent delegation is not returned.
 - Added last-success proof rendering and sanitized proof export for returned Napoleon target capability IDs when selected-agent delegation is not returned.
 - Added a persistent Napoleon delegation panel empty state so selected agents, effects, governance, trace, and audit fields stay visible as "not returned" until bridge provenance exists.
+- Added explicit handled-by and attribution-boundary fields to sanitized Napoleon response proof exports.
 - Added initial project scaffold with product docs, governance and safety docs, architecture notes, backlog, risk register, roadmap, and ADRs.
 - Added evaluator scenarios, rubrics, expected artifacts, CI workflow, and report output handling.
 - Added starter Tauri and React desktop shell with local stub bridge behavior and development telemetry.

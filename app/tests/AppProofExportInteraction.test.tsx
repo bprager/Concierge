@@ -158,6 +158,8 @@ test("exports and compares Napoleon proof through rendered app controls", async 
 
     const exportBlock = screen.getByLabelText("Exported Napoleon response proof");
     assert.ok(exportBlock.textContent?.includes("concierge_napoleon_response_proof"));
+    assert.ok(exportBlock.textContent?.includes('"handledBy": "Passive Brain"'));
+    assert.ok(exportBlock.textContent?.includes('"attributionBoundary": "Returned bridge provenance only; not local authority."'));
     assert.ok(!exportBlock.textContent?.includes("Draft a bridge readiness summary"));
     assert.ok(!exportBlock.textContent?.includes("127.0.0.1"));
     assert.ok(!exportBlock.textContent?.includes("Napoleon recommends keeping this as a governed review draft"));

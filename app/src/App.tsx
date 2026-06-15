@@ -1438,14 +1438,17 @@ export function App() {
     setNapoleonProofExportJson(json);
     setNapoleonProofComparison(comparison);
     const proof = lastNapoleonPresentation.proof;
+    const proofDetail = (label: string) => proof?.details.find((detail) => detail.label === label)?.value ?? "unavailable";
     emitEvent("napoleon_response_proof_exported", {
       traceId,
       conversationId,
       status: proof?.status ?? "not_available",
-      governance: proof?.details.find((detail) => detail.label === "Governance")?.value ?? "unavailable",
-      profileMode: proof?.details.find((detail) => detail.label === "Profile mode")?.value ?? "unavailable",
-      responseTraceId: proof?.details.find((detail) => detail.label === "Trace")?.value ?? "unavailable",
-      responseAuditId: proof?.details.find((detail) => detail.label === "Audit")?.value ?? "unavailable",
+      handledBy: proofDetail("Capability or agents"),
+      attributionBoundary: proof ? "Returned bridge provenance only; not local authority." : "unavailable",
+      governance: proofDetail("Governance"),
+      profileMode: proofDetail("Profile mode"),
+      responseTraceId: proofDetail("Trace"),
+      responseAuditId: proofDetail("Audit"),
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
       approvalCaptured: false,

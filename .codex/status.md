@@ -164,6 +164,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Fail-closed Napoleon bridge attempts now show transcript-level blocked bridge source, no-accepted-response attribution boundary, and blocked effects on the assistant failure message when available.
 - Last successful Napoleon proof rendering and sanitized proof export now preserve returned target capability IDs when selected-agent delegation is not returned.
 - Sanitized Napoleon response proof export and comparison now keep returned target capability separate from selected-agent provenance.
+- Sanitized Napoleon response proof export and telemetry now include explicit handled-by provenance and attribution-boundary fields derived only from returned target capability or selected-agent metadata.
 - The Napoleon delegation panel now also displays a returned target capability ID when selected-agent delegation is not returned, while keeping selected agents marked as not returned.
 - Resolved the license documentation drift by replacing the obsolete license-choice TODO with third-party asset license review guidance.
 - Refreshed stale startup report authentication gaps to reflect the current OpenAPI bearer scheme, generated header-only token registry, and remaining live credential-validation dependency.

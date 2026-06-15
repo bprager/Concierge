@@ -90,6 +90,8 @@ export function exportNapoleonResponseProofJson(
         responseProof: {
           status: "not_available",
           heading: "No successful Napoleon proof",
+          handledBy: "unavailable",
+          attributionBoundary: "No accepted Napoleon response provenance is available.",
           governance: "unavailable",
           profileMode: "unavailable",
           decisionId: "unavailable",
@@ -124,6 +126,8 @@ export function exportNapoleonResponseProofJson(
       responseProof: {
         status: proof.status,
         heading: proof.heading,
+        handledBy: optionalProofDetailValue(proof, "Capability or agents"),
+        attributionBoundary: "Returned bridge provenance only; not local authority.",
         governance: proofDetailValue(proof, "Governance"),
         profileMode: proofDetailValue(proof, "Profile mode"),
         decisionId: proofDetailValue(proof, "Decision"),
@@ -219,6 +223,7 @@ export function compareNapoleonResponseProofs(
 
   const comparedFields: Array<{ label: string; path: string[] }> = [
     { label: "Proof status", path: ["responseProof", "status"] },
+    { label: "Handled by", path: ["responseProof", "handledBy"] },
     { label: "Governance", path: ["responseProof", "governance"] },
     { label: "Profile mode", path: ["responseProof", "profileMode"] },
     { label: "Decision", path: ["responseProof", "decisionId"] },
