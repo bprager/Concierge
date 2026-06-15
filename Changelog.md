@@ -78,6 +78,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added first-class descriptor discovery fail-closed states for auth failure, timeout, and HTTP failure, with governed handoff preflights preserving those reasons.
 - Changed descriptor discovery telemetry so auth failure, timeout, and HTTP failure emit failed discovery events.
 - Added strict live bridge provenance checks requiring Napoleon trace and audit envelopes to match governance and delegation attribution.
+- Added governed governance review handoff from the live review panel through the canonical Chief of Staff bridge, with endpoint/descriptor/Rehearsal Mode gating, child-protected review wording, fail-closed remote denial handling, and strict rejection of approval capture or side-effect claims.
 - Added Napoleon delegation provenance support and a Text Concierge delegation panel that only attributes agent contributions when the bridge response includes them.
 - Added reusable Napoleon bridge contract fixtures for delegated success, auth failure, contract mismatch, and timeout cases.
 - Added evaluator coverage for bridge delegation provenance and reusable bridge fixture fail-closed cases.

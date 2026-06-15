@@ -51,7 +51,7 @@ Evaluator coverage:
 | TX-002 | Add Napoleon bridge client | P0 | Text requests can be sent to configured Napoleon endpoint | bridge_request_started, bridge_request_completed |
 | TX-003 | Add user profile resolver | P0 | Adult owner, child protected, guest, and collaborator supported in the text UI and contract mapping | identity_resolved |
 | TX-004 | Add interaction stance policy | P0 | Concierge selects stance and logs reason | stance_selected |
-| TX-005 | Add governance confirmation UI | P0 | Side effects require visible confirmation; requires_review, deny, and no_go are visible and non-authority local acknowledgement cannot be mistaken for approval | governance_decision |
+| TX-005 | Add governance confirmation UI | P0 | Side effects require visible confirmation; requires_review, deny, and no_go are visible; non-authority local acknowledgement and governed review handoff cannot be mistaken for approval | governance_decision, governance_review_send_started |
 | TX-006 | Add text conversation trace | P0 | Every turn has trace_id and turn_id | user_message_received, response_generated |
 | TX-007 | Add child profile response rules | P0 | Child mode uses simple language and restricted authority | child_policy_applied |
 | TX-008 | Add memory update suggestion flow | P1 | Preferences are proposed, shown for review, and can be submitted for governed Napoleon review without silently storing or writing directly | memory_update_proposed, memory_proposal_send_started |
@@ -83,12 +83,15 @@ Acceptance criteria:
 - `allow_prepare_only`, `requires_review`, `deny`, and `no_go` have distinct visible states.
 - Review panels show decision ID, audit ID, authority tier, approval requirement, rationale, blocked effects, and trace ID.
 - Local acknowledgement may record that review was seen, but it is not Napoleon approval.
+- A live governance review packet can be submitted only through the governed Chief of Staff bridge after endpoint and descriptor preflight pass and Rehearsal Mode is off.
+- Napoleon review responses require matching governance, trace, and audit proof before Concierge displays them as reviewed.
 - `no_go` prevents sending the advisory request forward.
 - Child protected mode uses stricter wording and never implies secret-keeping or external action.
 
 Privacy and safety impact:
 
 - Local acknowledgement does not execute side effects, write memory, send externally, or dispatch agents.
+- Governed review handoff does not capture approval, write memory, dispatch agents, send externally, apply locally, or grant runtime authority.
 - Concierge remains a presentation and consent surface; Napoleon and Chief of Staff remain the authority layer.
 
 Evaluator coverage:

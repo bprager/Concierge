@@ -1142,6 +1142,21 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName.startsWith("governance_review_send_")) {
+    const failed = eventName.endsWith("_failed");
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "governance",
+      intentLabel: "governed_review_handoff",
+      capabilityLabel: "governance_review_handoff",
+      capabilityStatus: failed ? "blocked" : "working",
+      outcomeSignal: failed ? "bridge_failed" : "review_required",
+      confidence: failed ? 0.88 : 0.82,
+      architectureArea: failed ? "bridge" : "governance_ux",
+      suggestedNextStep: failed ? "add_backlog_item" : "needs_human_review",
+    });
+  }
+
   if (eventName.startsWith("memory_proposal_")) {
     return buildCapabilitySignal({
       ...base,

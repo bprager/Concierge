@@ -91,6 +91,18 @@ artifacts:
       - "trace ID"
       - "local acknowledgement is not Napoleon approval"
       - "does not execute side effects"
+  governance_review_handoff:
+    required_terms:
+      - "governance review handoff"
+      - "governed Chief of Staff bridge"
+      - "endpoint and descriptor preflight"
+      - "Rehearsal Mode is off"
+      - "proposal-only"
+      - "does not capture approval"
+      - "does not write memory"
+      - "does not dispatch agents"
+      - "does not send externally"
+      - "does not apply locally"
   memory_proposal_review:
     required_terms:
       - "memory proposal review"

@@ -52,11 +52,16 @@ import {
   mapProfileToNapoleonMode,
   transitionMemoryProposalReviewState,
   type DescriptorConnectionInput,
+  type GovernanceReviewState,
   type LocalProfile,
   type NapoleonProfileMode,
   type MemoryProposalReviewState,
 } from "./contractBridge.js";
 import { discoverNapoleonDescriptor } from "./descriptorDiscovery.js";
+import {
+  submitGovernanceReviewForNapoleonReview,
+  type GovernanceReviewSubmissionResult,
+} from "./governanceReviewSubmission.js";
 import {
   submitMemoryProposalForReview,
   type MemoryProposalSubmissionResult,
@@ -236,7 +241,11 @@ export function App() {
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
   const [bridgeReadinessProofComparison, setBridgeReadinessProofComparison] =
     useState<BridgeReadinessProofComparison | null>(null);
+  const [lastGovernanceReviewState, setLastGovernanceReviewState] = useState<GovernanceReviewState | null>(null);
   const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
+  const [governanceReviewSubmission, setGovernanceReviewSubmission] =
+    useState<GovernanceReviewSubmissionResult | null>(null);
+  const [governanceReviewSubmissionFailure, setGovernanceReviewSubmissionFailure] = useState<string | null>(null);
   const [lastMemoryReviewState, setLastMemoryReviewState] = useState<MemoryProposalReviewState | null>(null);
   const [lastMemoryReview, setLastMemoryReview] = useState<ReturnType<typeof describeMemoryProposalReview> | null>(null);
   const [memorySubmission, setMemorySubmission] = useState<MemoryProposalSubmissionResult | null>(null);
@@ -259,6 +268,12 @@ export function App() {
     setLastNapoleonPresentation(clearNapoleonResponsePresentation());
     setNapoleonProofExportJson(null);
     setNapoleonProofComparison(null);
+  }
+
+  function clearGovernanceReviewHandoff() {
+    setLastGovernanceReviewState(null);
+    setGovernanceReviewSubmission(null);
+    setGovernanceReviewSubmissionFailure(null);
   }
 
   function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {
@@ -294,6 +309,16 @@ export function App() {
     label: "Memory proposal review",
     descriptorConnection,
     draftReady: Boolean(lastMemoryReviewState && lastMemoryReviewState.status !== "dismissed_locally"),
+    rehearsalMode,
+  });
+  const governanceReviewHandoffReadiness = describeGovernedHandoffReadiness({
+    label: "Governance review",
+    descriptorConnection,
+    draftReady: Boolean(
+      lastGovernanceReviewState &&
+        lastGovernanceReviewState.canSendAdvisory &&
+        lastGovernanceReviewState.status !== "not_required",
+    ),
     rehearsalMode,
   });
   const steeringHandoffReadiness = describeGovernedHandoffReadiness({
@@ -900,6 +925,7 @@ export function App() {
       clearNapoleonPresentation();
       setLastBridgeFailure(null);
       setLastReview(null);
+      clearGovernanceReviewHandoff();
       setLastMemoryReviewState(null);
       setLastMemoryReview(null);
       setMemorySubmission(null);
@@ -954,6 +980,7 @@ export function App() {
     clearNapoleonPresentation();
     setLastBridgeFailure(null);
     setLastReview(null);
+    clearGovernanceReviewHandoff();
     setLastMemoryReviewState(null);
     setLastMemoryReview(null);
     setMemorySubmission(null);
@@ -988,6 +1015,7 @@ export function App() {
         clearNapoleonPresentation();
         setLastBridgeFailure(null);
         setLastReview(null);
+        clearGovernanceReviewHandoff();
         setLastMemoryReviewState(null);
         setLastMemoryReview(null);
         setMemorySubmission(null);
@@ -1007,6 +1035,9 @@ export function App() {
       });
       refreshCapabilityLedgerStatus();
       setLastReview(rehearsal.review);
+      setLastGovernanceReviewState(rehearsal.preview.governanceReview);
+      setGovernanceReviewSubmission(null);
+      setGovernanceReviewSubmissionFailure(null);
       clearNapoleonPresentation();
       setLastBridgeFailure(null);
       setMemorySubmission(null);
@@ -1030,6 +1061,9 @@ export function App() {
         });
         refreshCapabilityLedgerStatus();
         setLastReview(reviewView);
+        setLastGovernanceReviewState(reviewState);
+        setGovernanceReviewSubmission(null);
+        setGovernanceReviewSubmissionFailure(null);
         clearNapoleonPresentation();
         setLastBridgeFailure(null);
         setLastDecision(
@@ -1098,7 +1132,10 @@ export function App() {
       setSuccessfulNapoleonPresentation(response);
       setLastBridgeFailure(null);
       const responseReviewState = buildGovernanceReviewState(response.governanceDecision, profile);
+      setLastGovernanceReviewState(responseReviewState);
       setLastReview(describeGovernanceReview(responseReviewState));
+      setGovernanceReviewSubmission(null);
+      setGovernanceReviewSubmissionFailure(null);
       if (responseReviewState.status === "review_needed") {
         emitEvent("governance_review_required", {
           traceId,
@@ -1161,6 +1198,7 @@ export function App() {
       refreshCapabilityLedgerStatus();
       setLastBridgeFailure(describeBridgeFailure(error));
       clearNapoleonPresentation();
+      clearGovernanceReviewHandoff();
       setMessages((m) => [
         ...m,
         {
@@ -1220,14 +1258,65 @@ export function App() {
 
   function acknowledgeLastReview() {
     if (!lastReview || !lastReview.canAcknowledge) return;
-    setLastReview({
-      ...lastReview,
-      heading: "Review acknowledged locally",
-      body:
-        "This local acknowledgement is not Napoleon approval. It does not execute side effects, write memory, send externally, or dispatch agents.",
-      actionLabel: "Acknowledged locally",
-      canAcknowledge: false,
-    });
+    if (lastGovernanceReviewState) {
+      const acknowledgedReview = buildGovernanceReviewState(
+        {
+          decision_id: lastGovernanceReviewState.decisionId,
+          request_id: `cos_${lastGovernanceReviewState.traceId}`,
+          outcome: lastGovernanceReviewState.outcome,
+          authority_tier: lastGovernanceReviewState.authorityTier,
+          approval_requirement: lastGovernanceReviewState.approvalRequirement,
+          rationale: lastGovernanceReviewState.rationale,
+          blocked_effects: lastGovernanceReviewState.blockedEffects,
+          trace_id: lastGovernanceReviewState.traceId,
+          audit_id: lastGovernanceReviewState.auditId,
+        },
+        lastGovernanceReviewState.profile,
+        true,
+      );
+      setLastGovernanceReviewState(acknowledgedReview);
+      setLastReview(describeGovernanceReview(acknowledgedReview));
+      emitEvent("governance_review_acknowledged_locally", {
+        traceId: acknowledgedReview.traceId,
+        conversationId,
+        decisionId: acknowledgedReview.decisionId,
+        approvalCaptured: acknowledgedReview.approvalCaptured,
+      });
+      refreshCapabilityLedgerStatus();
+    } else {
+      setLastReview({
+        ...lastReview,
+        heading: "Review acknowledged locally",
+        body:
+          "This local acknowledgement is not Napoleon approval. It does not execute side effects, write memory, send externally, or dispatch agents.",
+        actionLabel: "Acknowledged locally",
+        canAcknowledge: false,
+      });
+    }
+    setGovernanceReviewSubmission(null);
+    setGovernanceReviewSubmissionFailure(null);
+  }
+
+  async function submitLastGovernanceReview() {
+    if (!lastGovernanceReviewState) return;
+    const traceId = newTraceId();
+    try {
+      const result = await submitGovernanceReviewForNapoleonReview(lastGovernanceReviewState, {
+        conversationId,
+        traceId,
+        rehearsalMode,
+        descriptorConnection: currentDescriptorInput(),
+      });
+      setGovernanceReviewSubmission(result);
+      setGovernanceReviewSubmissionFailure(null);
+      refreshCapabilityLedgerStatus();
+    } catch (error) {
+      setGovernanceReviewSubmissionFailure(
+        describeGovernedHandoffFailure(error, "Governance review handoff", "capture approval or execute effects"),
+      );
+      setGovernanceReviewSubmission(null);
+      refreshCapabilityLedgerStatus();
+    }
   }
 
   function updateLastMemoryReview(status: "acknowledged_locally" | "dismissed_locally") {
@@ -2730,9 +2819,57 @@ export function App() {
               </div>
             ))}
           </dl>
-          <button className="secondary" disabled={!lastReview.canAcknowledge} onClick={acknowledgeLastReview}>
-            {lastReview.actionLabel}
-          </button>
+          <section className={`send-preflight ${governanceReviewHandoffReadiness.status}`}>
+            <div>
+              <strong>{governanceReviewHandoffReadiness.heading}</strong>
+              <span>{governanceReviewHandoffReadiness.summary}</span>
+              <span>{governanceReviewHandoffReadiness.caveat}</span>
+            </div>
+            <dl>
+              {governanceReviewHandoffReadiness.items.map((item) => (
+                <div key={item.label}>
+                  <dt>{item.label}</dt>
+                  <dd>
+                    {item.status}: {item.detail}
+                  </dd>
+                </div>
+              ))}
+              <div>
+                <dt>Blocked effects</dt>
+                <dd>{governanceReviewHandoffReadiness.blockedEffects.join(", ")}</dd>
+              </div>
+            </dl>
+          </section>
+          <div className="review-actions">
+            <button className="secondary" disabled={!lastReview.canAcknowledge} onClick={acknowledgeLastReview}>
+              {lastReview.actionLabel}
+            </button>
+            <button
+              className="secondary"
+              disabled={!lastGovernanceReviewState || !governanceReviewHandoffReadiness.canSubmit}
+              onClick={submitLastGovernanceReview}
+            >
+              Send governance review to Napoleon
+            </button>
+          </div>
+          {governanceReviewSubmissionFailure ? <p className="warning">{governanceReviewSubmissionFailure}</p> : null}
+          {governanceReviewSubmission ? (
+            <dl>
+              <dt>Napoleon review response</dt>
+              <dd>{governanceReviewSubmission.text}</dd>
+              <dt>Governance</dt>
+              <dd>
+                {governanceReviewSubmission.governanceDecision.outcome}, decision{" "}
+                {governanceReviewSubmission.governanceDecision.decision_id}
+              </dd>
+              <dt>Trace</dt>
+              <dd>{governanceReviewSubmission.traceEnvelope.trace_id}</dd>
+              <dt>Audit</dt>
+              <dd>{governanceReviewSubmission.auditEnvelope.audit_id}</dd>
+              <dt>Local effects</dt>
+              <dd>no approval captured; no memory write; no agent dispatch; no external send; no local application.</dd>
+            </dl>
+          ) : null}
         </section>
       ) : null}
 

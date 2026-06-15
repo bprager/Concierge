@@ -119,9 +119,10 @@ scenarios:
     title: Governance review and local acknowledgement boundary
     stage: governance
     prompt: |
-      Evaluate the Text Concierge governance review UI for requires_review, deny, and no_go outcomes. The UI must show decision ID, audit ID, authority tier, approval requirement, rationale, blocked effects, and trace ID. Local acknowledgement is not Napoleon approval and does not execute side effects, write memory, send externally, or dispatch agents. No-go must be non-executable and prevent sending the advisory request forward. Child protected wording must be stricter and must not imply secret-keeping or external action.
+      Evaluate the Text Concierge governance review UI for requires_review, deny, and no_go outcomes. The UI must show decision ID, audit ID, authority tier, approval requirement, rationale, blocked effects, and trace ID. Local acknowledgement is not Napoleon approval and does not execute side effects, write memory, send externally, or dispatch agents. Live governance review handoff must use the governed Chief of Staff bridge only after endpoint and descriptor preflight pass and Rehearsal Mode is off. The handoff must remain proposal-only and must reject approval capture, memory writes, local application, external sends, and agent dispatch. No-go must be non-executable and prevent sending the advisory request forward. Child protected wording must be stricter and must not imply secret-keeping or external action.
     expected_artifacts:
       - governance_review_ui
+      - governance_review_handoff
       - governance_model
       - child_safety_policy
 

@@ -29,6 +29,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added `docs/REHEARSAL_MODE.md` and `docs/superpowers/plans/2026-06-08-rehearsal-mode.md`.
 - Added Rehearsal Mode evaluator coverage for adult owner, child protected, guest/collaborator, and adversarial preview paths.
 - Added governance review UI states for `requires_review`, `deny`, and `no_go`, including local-only acknowledgement that is not Napoleon approval.
+- Added governed governance review handoff from the live review panel through the canonical Chief of Staff bridge, gated by endpoint, descriptor preflight, and Rehearsal Mode, without local approval capture or side effects.
 - Expanded evaluator coverage from 11 to 15 scenarios with memory proposal review, bridge failure handling, privacy settings controls, and contract mismatch fail-closed cases.
 - Added Text Concierge memory proposal review panels with local acknowledgement/dismissal that never writes memory or captures approval.
 - Designed Conversation Capability Intelligence for privacy-safe tracking of common, working, missing, architecture-blocked, and recommended next capabilities.
@@ -174,7 +175,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Next 3 To 5 Priorities
 
 1. Run `make live-runtime-validation` against a real Napoleon runtime endpoint once available.
-2. Add live governance review submission once Napoleon exposes a runtime transport.
+2. Validate governance review, memory proposal, steering, and taxonomy handoffs against a real Napoleon runtime once the descriptor exposes live transport URLs and credentials.
 3. Add live Napoleon runtime validation and fixture-backed contract comparison once a runtime transport exists.
 4. Add governed application flow for reviewed taxonomy changes once Napoleon exposes an explicit approval/application endpoint.
 5. Add broader live-runtime artifact comparison once a real Napoleon endpoint is available.
