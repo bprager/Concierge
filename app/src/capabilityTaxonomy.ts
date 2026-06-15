@@ -640,6 +640,23 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
   dependencies: TaxonomyReviewSubmissionDependencies,
 ): Promise<ChiefOfStaffTaxonomyReviewSubmissionResult> {
   const profileMode = mapProfileToNapoleonMode(dependencies.profile ?? "adult_owner");
+  const isChildProtected = profileMode === "child_protected_user";
+  const approvalRequirement = isChildProtected
+    ? "guardian_and_owner_review_required_before_child_protected_taxonomy_change"
+    : draft.evolutionProposal.approval_required;
+  const evolutionProposal = isChildProtected
+    ? {
+        ...draft.evolutionProposal,
+        affected_profiles: ["child_protected_user"],
+        approval_required: approvalRequirement,
+      }
+    : draft.evolutionProposal;
+  const taxonomyReview = isChildProtected
+    ? {
+        ...draft,
+        evolutionProposal,
+      }
+    : draft;
   const requestId = `cos_${dependencies.traceId}`;
   const localDecisionId = `local_taxonomy_review_${dependencies.traceId}`;
   const localAuditId = `local_audit_${dependencies.traceId}`;
@@ -664,7 +681,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     requester: "concierge.capability_intelligence",
     request_type: "evolution_proposal_review",
     profile_mode: profileMode,
-    source_evidence: draft.evolutionProposal.evidence,
+    source_evidence: evolutionProposal.evidence,
     requested_authority_tier: "advisory_review",
     trace_id: dependencies.traceId,
     payload_schema: "schemas/evolution_proposal.schema.json",
@@ -672,10 +689,10 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
   const governanceRequest: GovernanceEvaluationRequest = {
     request_id: `gov_${dependencies.traceId}`,
     actor_id: "concierge.capability_intelligence",
-    action: "submit_taxonomy_review_for_review",
+    action: isChildProtected ? "submit_child_taxonomy_review_for_review" : "submit_taxonomy_review_for_review",
     target: "napoleon.chief_of_staff",
     requested_authority_tier: "advisory_review",
-    evidence_links: draft.evolutionProposal.evidence,
+    evidence_links: evolutionProposal.evidence,
     trace_id: dependencies.traceId,
   };
   const traceEnvelope: TraceEnvelope = {
@@ -692,15 +709,15 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     decision_id: localDecisionId,
     actor_id: "concierge.capability_intelligence",
     authority_tier: "advisory_review",
-    approval_requirement: draft.evolutionProposal.approval_required,
-    evidence_links: draft.evolutionProposal.evidence,
+    approval_requirement: approvalRequirement,
+    evidence_links: evolutionProposal.evidence,
   };
 
   emitTaxonomyReviewEvent(dependencies, "capability_taxonomy_review_send_started", {
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,
     requestId,
-    proposalId: draft.evolutionProposal.proposal_id,
+    proposalId: evolutionProposal.proposal_id,
     recommendationCount: draft.recommendations.length,
     profileMode,
   });
@@ -720,9 +737,9 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
         governanceRequest,
         traceEnvelope,
         auditEnvelope,
-        taxonomyReview: draft,
+        taxonomyReview,
         evaluatorCaseCandidate: draft.evaluatorCaseCandidate,
-        evolutionProposal: draft.evolutionProposal,
+        evolutionProposal,
         boundary: draft.boundary,
         blockedEffects: TAXONOMY_REVIEW_BLOCKED_EFFECTS,
       }),
@@ -762,7 +779,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,
     requestId,
-    proposalId: draft.evolutionProposal.proposal_id,
+    proposalId: evolutionProposal.proposal_id,
     decisionId: payload.governanceDecision.decision_id,
     auditId: payload.auditEnvelope.audit_id,
     outcome: payload.governanceDecision.outcome,

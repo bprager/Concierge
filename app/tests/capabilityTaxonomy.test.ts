@@ -294,6 +294,91 @@ test("submits taxonomy review draft through governed bridge without applying loc
   assert.equal(result.externalSendPerformed, false);
 });
 
+test("child protected taxonomy review handoff keeps child scope and guardian review", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_child_taxonomy_1", topic: "support", capability: "child_safe_response" });
+  addWorkingSignal(ledger, { traceId: "trace_child_taxonomy_2", topic: "support", capability: "homework_help" });
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_child_taxonomy_review",
+    traceId: "trace_child_taxonomy_review",
+  });
+  let posted: Record<string, unknown> | undefined;
+
+  await submitChiefOfStaffTaxonomyReviewDraft(draft, {
+    conversationId: "conv_child_taxonomy_review",
+    traceId: "trace_child_taxonomy_submit",
+    profile: "child_protected",
+    getEndpoint: () => "https://napoleon.example/concierge",
+    descriptorConnection: {
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:local-static",
+      actualChecksum: "sha256:local-static",
+      signatureValid: true,
+    },
+    fetch: async (_url: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => {
+      posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return {
+        ok: true,
+        json: async () => ({
+          text: "Napoleon accepted the child taxonomy review packet for review.",
+          governanceDecision: {
+            decision_id: "decision_child_taxonomy_review",
+            request_id: "cos_trace_child_taxonomy_submit",
+            outcome: "requires_review",
+            authority_tier: "advisory_review",
+            approval_requirement: "guardian_and_owner_review",
+            rationale: "Child-protected taxonomy review requires guardian and owner review.",
+            blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+            trace_id: "trace_child_taxonomy_submit",
+            audit_id: "audit_child_taxonomy_review",
+          },
+          traceEnvelope: {
+            trace_id: "trace_child_taxonomy_submit",
+            parent_trace_id: "conv_child_taxonomy_review",
+            actor_id: "napoleon.chief_of_staff",
+            request_id: "cos_trace_child_taxonomy_submit",
+            decision_id: "decision_child_taxonomy_review",
+            timestamp: "2026-06-15T00:00:00.000Z",
+          },
+          auditEnvelope: {
+            audit_id: "audit_child_taxonomy_review",
+            trace_id: "trace_child_taxonomy_submit",
+            decision_id: "decision_child_taxonomy_review",
+            actor_id: "napoleon.chief_of_staff",
+            authority_tier: "advisory_review",
+            approval_requirement: "guardian_and_owner_review",
+            evidence_links: ["trace:trace_child_taxonomy_submit"],
+          },
+          appliedLocally: false,
+          memoryWritePerformed: false,
+          approvalCaptured: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+        }),
+      };
+    },
+  });
+
+  assert.equal(posted?.profileMode, "child_protected_user");
+  assert.equal((posted?.chiefOfStaffRequest as { profile_mode: string }).profile_mode, "child_protected_user");
+  assert.equal(
+    (posted?.governanceRequest as { action: string }).action,
+    "submit_child_taxonomy_review_for_review",
+  );
+  assert.deepEqual((posted?.evolutionProposal as { affected_profiles: string[] }).affected_profiles, [
+    "child_protected_user",
+  ]);
+  assert.equal(
+    (posted?.evolutionProposal as { approval_required: string }).approval_required,
+    "guardian_and_owner_review_required_before_child_protected_taxonomy_change",
+  );
+  assert.equal(
+    (posted?.auditEnvelope as { approval_requirement: string }).approval_requirement,
+    "guardian_and_owner_review_required_before_child_protected_taxonomy_change",
+  );
+});
+
 test("taxonomy review handoff rejects response claims that apply taxonomy or side effects", async () => {
   const ledger = createCapabilityLedger();
   addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });

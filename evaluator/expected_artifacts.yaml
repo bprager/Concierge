@@ -301,6 +301,8 @@ artifacts:
       - "correctly blocked unsafe requests"
       - "failed safe requests"
       - "child protected minimization"
+      - "child-protected taxonomy review"
+      - "guardian/owner review"
       - "proposal-only recommendations"
       - "does not implement features"
       - "does not grant approval"

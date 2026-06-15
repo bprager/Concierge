@@ -150,7 +150,7 @@ Acceptance criteria:
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
 - Correctly blocked unsafe requests are classified separately from failed safe requests.
 - Recommendations are proposal-only and do not implement features, grant approval, write memory, dispatch agents, or send externally.
-- Local Chief of Staff taxonomy review drafts can recommend metadata-only merge, split, and deprecation review, package evaluator-case and evolution-proposal drafts, and submit them through the governed Chief of Staff bridge only after endpoint and descriptor preflight pass, without applying taxonomy edits or changing Napoleon policy/routing.
+- Local Chief of Staff taxonomy review drafts can recommend metadata-only merge, split, and deprecation review, package evaluator-case and evolution-proposal drafts, and submit them through the governed Chief of Staff bridge only after endpoint and descriptor preflight pass, without applying taxonomy edits or changing Napoleon policy/routing; child-protected taxonomy review handoffs preserve child profile scope and guardian/owner review wording.
 - Child protected aggregates are minimized and separated from adult-owner aggregates.
 
 Privacy and safety impact:
@@ -614,6 +614,7 @@ Acceptance criteria:
 - The draft remains local when no governed Napoleon endpoint is configured or descriptor preflight fails.
 - Governed submission posts an `evolution_proposal_review` packet with recommendation, evaluator case candidate, evolution proposal draft, proposal-only boundary, blocked effects, and trace/audit envelopes.
 - Child-protected governed submission includes explicit child-safety caution, child-protected profile scope, and guardian/owner review wording.
+- Child-protected taxonomy review submission preserves child-protected profile scope and guardian/owner review wording before any Chief of Staff review handoff.
 - Napoleon submission responses require matching governance, trace, and audit proof before Concierge shows them as reviewed.
 - Submission responses fail closed as contract mismatches if they claim local application, memory writes, approval capture, agent dispatch, or external sends.
 - The draft cannot apply changes, write memory, dispatch agents, send externally, or capture approval.
