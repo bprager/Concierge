@@ -44,6 +44,23 @@ test("does not invent Napoleon attribution when bridge provenance is absent", ()
   });
 
   assert.equal(result.spokenText.startsWith("Napoleon says:"), false);
+  assert.equal(result.spokenText.includes("Napoleon recommends"), false);
+  assert.equal(result.authorityBoundary, "No bridge provenance; speech summary must not claim Napoleon or delegated-agent authority.");
+  assert.equal(result.liveNapoleonContacted, false);
+  assert.equal(result.audioPlaybackStarted, false);
+});
+
+test("removes delegated-agent finding claims from speech when bridge provenance is absent", () => {
+  const result = shapeVoiceResponseForSpeech({
+    responseText:
+      "Passive Brain found that descriptor discovery is ready. This text is local and lacks bridge provenance.",
+    speakerLabel: "Napoleon",
+    bridgeProvidedProvenance: false,
+    maxSpokenChars: 140,
+  });
+
+  assert.equal(result.spokenText.includes("Passive Brain found"), false);
+  assert.equal(result.spokenText.includes("descriptor discovery is ready"), true);
   assert.equal(result.authorityBoundary, "No bridge provenance; speech summary must not claim Napoleon or delegated-agent authority.");
   assert.equal(result.liveNapoleonContacted, false);
   assert.equal(result.audioPlaybackStarted, false);

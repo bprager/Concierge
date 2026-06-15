@@ -150,6 +150,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a local Camera readiness panel and explicit camera permission request path so camera settings cannot be mistaken for active avatar/camera capture.
 - Added a local Barge-in Rehearsal panel and deterministic interruption state model that marks sample speech as interrupted without playback, capture, live Napoleon contact, or side effects.
 - Added local Voice Response Shaping that shortens long bridge-provenance responses for future speech while preserving authority boundaries and keeping playback, capture, Napoleon contact, and side effects blocked.
+- Tightened local Voice Response Shaping so unproven spoken summaries remove Napoleon recommendation and delegated-agent finding claims when bridge provenance is absent.
 - Added child-protected voice shaping constraints with shorter speech previews, slower pacing metadata, and guardian-review reminders before any live voice playback exists.
 - Added a local neutral Avatar State panel that reflects bridge-provenance text and stance without camera capture, face detection, affect inference, animation, live Napoleon contact, or side effects.
 - Added child-protected Avatar State constraints that disable avatar camera and affect paths until guardian review without treating avatar state as approval.

@@ -59,8 +59,20 @@ function firstSpokenSentences(text: string, maxChars: number): string {
   return spoken;
 }
 
+function removeUnprovenAttributionClaims(text: string): string {
+  return text
+    .replace(/\bNapoleon recommends\s+/gi, "A local summary suggests ")
+    .replace(/\bNapoleon says:?\s+/gi, "A local summary says ")
+    .replace(/\bPassive Brain found\s+/gi, "A local summary notes ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function shapeVoiceResponseForSpeech(input: VoiceResponseShapeInput): VoiceResponseShapeResult {
-  const trimmedText = input.responseText.trim();
+  const trimmedText = (input.bridgeProvidedProvenance
+    ? input.responseText.trim()
+    : removeUnprovenAttributionClaims(input.responseText)
+  );
   if (trimmedText.length === 0) {
     throw new Error("response text is empty");
   }
