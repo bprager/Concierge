@@ -60,9 +60,9 @@ export interface LocalAvatarExpressionResult {
 }
 
 export const localNeutralAvatarStateSample: LocalNeutralAvatarStateInput = {
-  responseText: "Napoleon recommends preparing the bridge rollout plan for owner review.",
+  responseText: "Local avatar preview for preparing the bridge rollout plan for owner review.",
   stance: "direct_strategic",
-  bridgeProvidedProvenance: true,
+  bridgeProvidedProvenance: false,
 };
 
 export const localAvatarExpressionSample: LocalAvatarExpressionInput = {

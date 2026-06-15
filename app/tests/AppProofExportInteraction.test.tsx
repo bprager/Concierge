@@ -2184,8 +2184,8 @@ test("builds local neutral avatar state without camera capture or Napoleon conta
     assert.ok(avatarState.getByText("Avatar state: neutral_listening"));
     assert.ok(avatarState.getByText("Expression: neutral"));
     assert.ok(avatarState.getByText("Stance: direct_strategic"));
-    assert.ok(avatarState.getByText("Provenance: Bridge-provided Napoleon response"));
-    assert.ok(avatarState.getByText("Authority boundary: Avatar reflects returned text provenance only; it is not Napoleon approval or an agent action."));
+    assert.ok(avatarState.getByText("Provenance: Local preview without Napoleon provenance"));
+    assert.ok(avatarState.getByText("Authority boundary: Avatar preview must not claim Napoleon or delegated-agent authority without bridge provenance."));
     assert.ok(avatarState.getByText("Face detection started: no"));
     assert.ok(avatarState.getByText("Affect inferred: no"));
     assert.ok(avatarState.getByText("Blocked effects: camera_capture, face_detection, affect_inference, avatar_animation, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
