@@ -17,6 +17,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
                     exit_code = live_runtime_validation.main([
                         "--bridge-endpoint", base_url,
                         "--out-dir", tmpdir,
+                        "--runtime-validation-source", "local_harness",
                     ])
 
                 summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
@@ -28,6 +29,8 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(summary["bridgeEvidence"]["record_count"], 1)
         self.assertEqual(summary["httpEvaluator"]["status"], "passed")
         self.assertTrue(summary["httpEvaluator"]["sanitized"])
+        self.assertEqual(summary["runtimeValidation"]["source"], "local_harness")
+        self.assertIn("not real Napoleon runtime validation", summary["runtimeValidation"]["caveat"])
         self.assertEqual(report["score_total"], 100.0)
         self.assertNotIn("response_excerpt", json.dumps(report))
         self.assertNotIn("PRD: Concierge", json.dumps(report))
@@ -37,6 +40,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertFalse(summary["promotionBoundary"]["approvalCaptured"])
         self.assertFalse(summary["promotionBoundary"]["memoryWritePerformed"])
         self.assertFalse(base_url in json.dumps(summary))
+        self.assertIn("runtime_validation_source", stdout.getvalue())
         self.assertIn("bridge_status", stdout.getvalue())
 
     def test_derives_bridge_base_from_eval_endpoint(self):
@@ -74,6 +78,8 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(summary["bridgeEvidence"]["status"], "passed")
         self.assertEqual(summary["httpEvaluator"]["status"], "passed")
+        self.assertEqual(summary["runtimeValidation"]["source"], "real_runtime")
+        self.assertIn("Real Napoleon runtime", summary["runtimeValidation"]["caveat"])
         self.assertNotIn(base_url, json.dumps(summary))
         self.assertIn("http_evaluator_status", stdout.getvalue())
 

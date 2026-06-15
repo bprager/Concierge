@@ -56,6 +56,7 @@ make live-runtime-validation
 ```
 
 The live runtime validation artifacts are local evidence only. They omit raw prompts, response bodies, response text, endpoint hosts, bearer tokens, and evaluator response excerpts.
+The validation summary records the runtime validation source. Keep the default `real_runtime` for an actual Napoleon runtime; use `--runtime-validation-source local_harness` only for local harness evidence.
 
 The lower-level evaluator-only command is still available:
 

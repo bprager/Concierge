@@ -33,6 +33,15 @@ BOUNDARY = (
     "external send, and not authority to apply self-evolution changes."
 )
 REDACTED_REPORT_FIELDS = {"response_excerpt"}
+RUNTIME_VALIDATION_SOURCES = ("real_runtime", "local_harness", "local_simulation")
+
+
+def runtime_validation_caveat(source: str) -> str:
+    if source == "local_harness":
+        return "Local harness validation is not real Napoleon runtime validation."
+    if source == "local_simulation":
+        return "Local simulation validation is not real Napoleon runtime validation."
+    return "Real Napoleon runtime validation source."
 
 
 def strip_known_path(endpoint: str) -> str:
@@ -164,9 +173,14 @@ def write_summary(
     eval_exit_code: int | None,
     evidence_path: Path,
     eval_report_path: Path,
+    runtime_validation_source: str,
 ) -> dict[str, Any]:
     summary = {
         "boundary": BOUNDARY,
+        "runtimeValidation": {
+            "source": runtime_validation_source,
+            "caveat": runtime_validation_caveat(runtime_validation_source),
+        },
         "bridgeEvidence": {
             "status": "passed" if bridge_exit_code == 0 else "failed",
             "record_count": count_bridge_records(evidence_path),
@@ -198,6 +212,12 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     parser.add_argument("--eval-endpoint", help="Napoleon evaluator endpoint; defaults to bridge base + /v1/concierge/evaluate")
     parser.add_argument("--auth-token", default=None, help="Optional bearer token; never written to validation artifacts")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help="Directory for sanitized validation artifacts")
+    parser.add_argument(
+        "--runtime-validation-source",
+        choices=RUNTIME_VALIDATION_SOURCES,
+        default="real_runtime",
+        help="Evidence source label written to the sanitized summary",
+    )
     args = parser.parse_args(argv)
 
     active_env = os.environ if env is None else env
@@ -228,9 +248,17 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         eval_exit_code = run_http_eval(eval_endpoint, eval_report_path, auth_token)
         sanitize_eval_report(eval_report_path)
 
-    summary = write_summary(summary_path, bridge_exit_code, eval_exit_code, evidence_path, eval_report_path)
+    summary = write_summary(
+        summary_path,
+        bridge_exit_code,
+        eval_exit_code,
+        evidence_path,
+        eval_report_path,
+        args.runtime_validation_source,
+    )
     print(json.dumps({
         "summary": str(summary_path),
+        "runtime_validation_source": summary["runtimeValidation"]["source"],
         "bridge_status": summary["bridgeEvidence"]["status"],
         "http_evaluator_status": summary["httpEvaluator"]["status"],
         "boundary": BOUNDARY,
