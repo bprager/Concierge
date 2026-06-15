@@ -535,6 +535,27 @@ Evaluator coverage:
 
 - Covered by pure avatar expression tests and rendered app interaction tests for local expression mapping without animation, camera, perception, Napoleon contact, approval, guardian approval, or side effects.
 
+### AV-004 details
+
+User value: The user can inspect how future avatar mouth movement would follow generated speech amplitude before any audio playback, renderer animation, camera, or perception pipeline exists.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local avatar lip-sync panel.
+- The panel derives mouth-open cues from generated local amplitude frames and shows cue count, duration, peak mouth-open value, active profile, and child-protected status.
+- Preparing lip-sync metadata does not start audio playback, request microphone permission, start microphone capture, store raw audio, start avatar animation, request camera permission, start camera capture, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `lip_sync_started` and `lip_sync_completed` include local-metadata marker, profile mode, child-protected marker where applicable, cue count, duration, peak mouth-open value, false playback/capture/storage/animation/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- Child protected lip-sync preparation shows guardian-review wording and must not treat metadata preparation as guardian approval, speech permission, animation permission, or recording permission.
+
+Privacy and safety impact:
+
+- This is local amplitude metadata only, not live speech playback or avatar animation.
+- No raw audio, raw video, affect signal, bridge call, memory write, approval capture, guardian approval capture, or external send is introduced.
+
+Evaluator coverage:
+
+- Covered by pure avatar lip-sync tests and rendered app interaction tests for local metadata preparation without media playback, camera, perception, Napoleon contact, approval, guardian approval, or side effects.
+
 ### AV-010 details
 
 User value: Child protected avatar behavior is visibly stricter before live avatar camera or perception features exist.

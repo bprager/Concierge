@@ -160,6 +160,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a local Avatar Renderer readiness panel that verifies renderer preflight state without allocating canvas, starting a render loop, contacting Napoleon, or starting side effects.
 - Added local Avatar Expression mapping from stance metadata without starting animation, inferring emotion, contacting Napoleon, or granting authority.
 - Tightened Avatar Expression telemetry so the built-in local sample does not claim bridge provenance.
+- Added a local Avatar Lip Sync panel that derives mouth-open metadata from generated amplitude frames without starting audio playback, avatar animation, camera capture, Napoleon contact, or side effects.
 - Added a local Voice Activity Detection sample panel and deterministic VAD detector that emits segment metadata without starting microphone capture or storing raw audio.
 - Added a local Speech Transcription sample panel and deterministic STT adapter that emits transcript metadata without starting microphone capture or storing raw audio.
 - Added a local Text to Speech sample panel and deterministic TTS adapter that emits speech-preparation metadata without starting audio playback or storing raw audio.

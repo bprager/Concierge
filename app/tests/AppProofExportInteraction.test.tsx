@@ -2447,3 +2447,79 @@ test("maps avatar stance to expression metadata without animation or emotion inf
     dom.window.close();
   }
 });
+
+test("prepares avatar lip sync metadata without media playback camera or Napoleon contact", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("avatar lip sync baseline must stay local");
+    },
+  });
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    const view = render(<App />);
+
+    await view.findByText("Avatar lip sync");
+    const avatarLipSync = within(view.getByLabelText("Avatar lip sync"));
+    assert.ok(avatarLipSync.getByText("Lip sync not prepared"));
+    assert.ok(avatarLipSync.getByText("Avatar animation started: no"));
+
+    await user.click(view.getByRole("button", { name: "Prepare local lip sync" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    const startedEvent = telemetryPayloads.find((payload) => payload.event === "lip_sync_started");
+    const completedEvent = telemetryPayloads.find((payload) => payload.event === "lip_sync_completed");
+    assert.ok(startedEvent);
+    assert.ok(completedEvent);
+    assert.equal(completedEvent.attributes.localMetadataOnly, true);
+    assert.equal(completedEvent.attributes.audioPlaybackStarted, false);
+    assert.equal(completedEvent.attributes.avatarAnimationStarted, false);
+    assert.ok(avatarLipSync.getByText("Mouth cues: 5"));
+    assert.ok(avatarLipSync.getByText("Peak mouth open: 1"));
+    assert.ok(avatarLipSync.getByText("Audio playback started: no"));
+    assert.ok(avatarLipSync.getByText("Camera capture started: no"));
+    assert.ok(avatarLipSync.getByText("Live Napoleon contacted: no"));
+    assert.ok(avatarLipSync.getByText("Authority boundary: Lip sync is local amplitude metadata only; it is not speech playback, avatar animation, approval, or agent action."));
+    assert.ok(avatarLipSync.getByText("Blocked effects: avatar_animation, audio_playback, microphone_capture, raw_audio_storage, camera_capture, face_detection, affect_inference, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});

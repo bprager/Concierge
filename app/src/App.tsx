@@ -14,6 +14,11 @@ import {
   type LocalAvatarRendererReadinessResult,
   type LocalAvatarModelReferenceResult,
 } from "./avatarModel.js";
+import {
+  buildLocalAvatarLipSyncBaseline,
+  localAvatarLipSyncSample,
+  type LocalAvatarLipSyncResult,
+} from "./avatarLipSync.js";
 import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
 import { answerCapabilityQuestion } from "./capabilityLedger.js";
 import { describeBridgeOperationSummary, describeTaxonomyReviewBridgeSummary } from "./bridgeOperations.js";
@@ -229,6 +234,7 @@ export function App() {
   const [voiceResponseShapeResult, setVoiceResponseShapeResult] = useState<VoiceResponseShapeResult | null>(null);
   const [neutralAvatarStateResult, setNeutralAvatarStateResult] = useState<LocalNeutralAvatarStateResult | null>(null);
   const [avatarExpressionResult, setAvatarExpressionResult] = useState<LocalAvatarExpressionResult | null>(null);
+  const [avatarLipSyncResult, setAvatarLipSyncResult] = useState<LocalAvatarLipSyncResult | null>(null);
   const [avatarModelResult, setAvatarModelResult] = useState<LocalAvatarModelReferenceResult | null>(null);
   const [avatarRendererReadinessResult, setAvatarRendererReadinessResult] =
     useState<LocalAvatarRendererReadinessResult | null>(null);
@@ -770,6 +776,47 @@ export function App() {
       affectInferred: result.affectInferred,
       cameraCaptureStarted: result.cameraCaptureStarted,
       faceDetectionStarted: result.faceDetectionStarted,
+      liveNapoleonContacted: result.liveNapoleonContacted,
+      memoryWritePerformed: result.memoryWritePerformed,
+      approvalCaptured: result.approvalCaptured,
+      guardianApprovalCaptured: result.guardianApprovalCaptured,
+      externalSendPerformed: result.externalSendPerformed,
+      blockedEffects: result.blockedEffects,
+    });
+  }
+
+  function runLocalAvatarLipSyncBaseline() {
+    const traceId = newTraceId();
+    emitEvent("lip_sync_started", {
+      traceId,
+      conversationId,
+      localMetadataOnly: true,
+      profileMode: profile,
+      audioPlaybackStarted: false,
+      avatarAnimationStarted: false,
+      liveNapoleonContacted: false,
+      memoryWritePerformed: false,
+      approvalCaptured: false,
+      externalSendPerformed: false,
+    });
+    const result = buildLocalAvatarLipSyncBaseline({ ...localAvatarLipSyncSample, profileMode: profile });
+    setAvatarLipSyncResult(result);
+    emitEvent("lip_sync_completed", {
+      traceId,
+      conversationId,
+      localMetadataOnly: result.localMetadataOnly,
+      profileMode: result.profileMode,
+      childProtected: result.childProtected,
+      cueCount: result.mouthCues.length,
+      durationMs: result.durationMs,
+      peakMouthOpen: result.peakMouthOpen,
+      audioPlaybackStarted: result.audioPlaybackStarted,
+      microphoneCaptureStarted: result.microphoneCaptureStarted,
+      rawAudioStored: result.rawAudioStored,
+      avatarAnimationStarted: result.avatarAnimationStarted,
+      cameraCaptureStarted: result.cameraCaptureStarted,
+      faceDetectionStarted: result.faceDetectionStarted,
+      affectInferred: result.affectInferred,
       liveNapoleonContacted: result.liveNapoleonContacted,
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
@@ -1687,6 +1734,10 @@ export function App() {
     avatarExpressionResult === null
       ? "Expression not mapped"
       : `Expression: ${avatarExpressionResult.expression}`;
+  const avatarLipSyncSummary =
+    avatarLipSyncResult === null
+      ? "Lip sync not prepared"
+      : `Mouth cues: ${avatarLipSyncResult.mouthCues.length}`;
   const avatarModelSummary =
     avatarModelResult === null
       ? "Avatar model not loaded"
@@ -2165,6 +2216,68 @@ export function App() {
         ) : null}
         <button className="secondary" onClick={runLocalAvatarExpressionMapping}>
           Map sample stance to expression
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Avatar lip sync">
+        <div>
+          <strong>Avatar lip sync</strong>
+          <span>local amplitude metadata only</span>
+        </div>
+        <div>
+          <strong>Lip sync state</strong>
+          <span>{avatarLipSyncSummary}</span>
+        </div>
+        <div>
+          <strong>Animation</strong>
+          <span>Avatar animation started: no</span>
+        </div>
+        {avatarLipSyncResult ? (
+          <>
+            <div>
+              <strong>Peak mouth open</strong>
+              <span>Peak mouth open: {avatarLipSyncResult.peakMouthOpen}</span>
+            </div>
+            <div>
+              <strong>Duration</strong>
+              <span>Duration: {avatarLipSyncResult.durationMs}ms</span>
+            </div>
+            <div>
+              <strong>Profile</strong>
+              <span>Profile: {avatarLipSyncResult.profileMode}</span>
+            </div>
+            <div>
+              <strong>Child protected</strong>
+              <span>Child protected: {avatarLipSyncResult.childProtected ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Audio playback</strong>
+              <span>Audio playback started: no</span>
+            </div>
+            <div>
+              <strong>Camera capture</strong>
+              <span>Camera capture started: no</span>
+            </div>
+            <div>
+              <strong>Napoleon contact</strong>
+              <span>Live Napoleon contacted: no</span>
+            </div>
+            <div>
+              <strong>Authority boundary</strong>
+              <span>Authority boundary: {avatarLipSyncResult.authorityBoundary}</span>
+            </div>
+            <div>
+              <strong>Guardian reminder</strong>
+              <span>Guardian reminder: {avatarLipSyncResult.guardianReviewReminder}</span>
+            </div>
+            <div>
+              <strong>Blocked effects</strong>
+              <span>Blocked effects: {avatarLipSyncResult.blockedEffects.join(", ")}</span>
+            </div>
+          </>
+        ) : null}
+        <button className="secondary" onClick={runLocalAvatarLipSyncBaseline}>
+          Prepare local lip sync
         </button>
       </section>
 

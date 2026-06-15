@@ -107,6 +107,8 @@ Local avatar renderer readiness is preflight display state only. It may show tha
 
 Local avatar expression mapping is stance metadata only. It may map an explicit Concierge stance such as direct, warm, concerned, playful, or somber to an expression label, but it must not infer the user's emotion, infer the assistant's emotion, start animation, request camera permission, capture video, run face detection, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. The built-in local expression sample must not claim bridge provenance; bridge provenance may be true only when a real bridge-derived input supplies it. Child protected expression mapping must remain conservative and must record that no guardian approval was captured.
 
+Local avatar lip-sync preparation is generated-amplitude metadata only. It may derive mouth-open cues from local amplitude frames for future avatar animation, but it must not start audio playback, request microphone permission, start microphone capture, store raw audio, start avatar animation, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected lip-sync preparation must show guardian-review wording and must record that no guardian approval was captured.
+
 ## 4. Memory proposal review
 
 Text Concierge may identify possible preferences or profile notes from a turn and show them as memory proposals.
