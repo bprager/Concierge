@@ -68,6 +68,22 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(bridge, "http://127.0.0.1:8787/v1/concierge/turn")
         self.assertEqual(evaluator, "http://127.0.0.1:8787/v1/concierge/evaluate")
 
+    def test_derives_eval_endpoint_from_known_bridge_operation_urls(self):
+        for path in [
+            "/v1/concierge/chief-of-staff/descriptor",
+            "/v1/concierge/chief-of-staff/steering",
+            "/v1/concierge/memory-proposals",
+        ]:
+            with self.subTest(path=path):
+                bridge, evaluator = live_runtime_validation.resolve_endpoints(
+                    f"http://127.0.0.1:8787{path}",
+                    None,
+                    {},
+                )
+
+                self.assertEqual(bridge, f"http://127.0.0.1:8787{path}")
+                self.assertEqual(evaluator, "http://127.0.0.1:8787/v1/concierge/evaluate")
+
     def test_runs_from_bridge_endpoint_environment_without_eval_endpoint(self):
         with local_bridge_harness.running_harness() as base_url:
             with tempfile.TemporaryDirectory() as tmpdir:

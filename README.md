@@ -51,7 +51,7 @@ To prove the combined live-runtime validation runner against the local harness, 
 make live-runtime-local-harness
 ```
 
-When a real Napoleon runtime is available, set `NAPOLEON_BRIDGE_ENDPOINT` to the Napoleon base URL or full `/v1/concierge/turn` URL and `NAPOLEON_EVAL_ENDPOINT` to the evaluator endpoint if it differs from `/v1/concierge/evaluate`, then run:
+When a real Napoleon runtime is available, set `NAPOLEON_BRIDGE_ENDPOINT` to the Napoleon base URL or a known Concierge bridge operation URL and `NAPOLEON_EVAL_ENDPOINT` to the evaluator endpoint if it differs from `/v1/concierge/evaluate`, then run:
 
 ```bash
 make live-runtime-validation

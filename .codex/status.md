@@ -183,6 +183,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added `make live-runtime-validation` and `make live-runtime-local-harness` so descriptor discovery, sanitized bridge evidence capture/comparison, evaluator HTTP mode, and non-authorizing runtime summaries can be run together once a real Napoleon runtime endpoint exists.
 - Fixed `make live-runtime-validation` so `NAPOLEON_BRIDGE_ENDPOINT` alone is enough to run the full live-runtime validation path, with `/v1/concierge/evaluate` derived from the bridge base URL when `NAPOLEON_EVAL_ENDPOINT` is not set.
 - Fixed standalone bridge evidence capture so `NAPOLEON_BRIDGE_ENDPOINT` may be a base URL or known Concierge bridge operation URL without duplicating descriptor or text-turn paths.
+- Fixed combined live-runtime validation so known Concierge bridge operation URLs derive `/v1/concierge/evaluate` from the bridge base instead of duplicating descriptor, steering, memory proposal, or turn paths.
 - Added `runtimeValidation.source` and caveat fields to live-runtime validation summaries so local harness and simulation artifacts remain distinct from real Napoleon runtime validation evidence.
 - Added `runtimeValidationSource` labels to sanitized bridge evidence capture and comparator validation so captured local harness or simulation evidence remains distinct from real Napoleon runtime evidence.
 - Added a fail-closed guard that rejects descriptor-identified local harness evidence when it is mislabeled as real runtime validation.

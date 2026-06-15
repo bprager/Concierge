@@ -25,7 +25,7 @@ from scripts import bridge_evidence_capture
 
 DEFAULT_OUT_DIR = Path("/tmp/concierge-live-runtime-validation")
 EVALUATOR_PATH = "/v1/concierge/evaluate"
-TURN_PATH = "/v1/concierge/turn"
+KNOWN_BRIDGE_PATHS = bridge_evidence_capture.KNOWN_BRIDGE_PATHS
 
 BOUNDARY = (
     "Live runtime validation is evidence only. It is not Napoleon approval, "
@@ -65,7 +65,7 @@ def runtime_validation_caveat(source: str) -> str:
 
 def strip_known_path(endpoint: str) -> str:
     value = endpoint.strip().rstrip("/")
-    for path in [EVALUATOR_PATH, TURN_PATH]:
+    for path in KNOWN_BRIDGE_PATHS:
         if value.endswith(path):
             return value[: -len(path)].rstrip("/")
     return value
@@ -284,7 +284,7 @@ def write_summary(
 
 def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--bridge-endpoint", help="Napoleon base URL or full /v1/concierge/turn URL")
+    parser.add_argument("--bridge-endpoint", help="Napoleon base URL or known Concierge bridge operation URL")
     parser.add_argument("--eval-endpoint", help="Napoleon evaluator endpoint; defaults to bridge base + /v1/concierge/evaluate")
     parser.add_argument("--auth-token", default=None, help="Optional bearer token; never written to validation artifacts")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help="Directory for sanitized validation artifacts")
