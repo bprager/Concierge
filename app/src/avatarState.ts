@@ -68,7 +68,7 @@ export const localNeutralAvatarStateSample: LocalNeutralAvatarStateInput = {
 export const localAvatarExpressionSample: LocalAvatarExpressionInput = {
   stance: "direct",
   profileMode: "adult_owner",
-  bridgeProvidedProvenance: true,
+  bridgeProvidedProvenance: false,
 };
 
 export function buildLocalNeutralAvatarState(input: LocalNeutralAvatarStateInput): LocalNeutralAvatarStateResult {

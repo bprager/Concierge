@@ -522,6 +522,7 @@ Acceptance criteria:
 - Direct, warm, concerned, playful, and somber stance labels map to distinct expression metadata.
 - Mapping expression does not start animation, allocate a canvas, request camera permission, start camera capture, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `avatar_expression_set` includes local-metadata marker, stance, expression, profile mode, child-protected marker, bridge-provenance marker, false animation/affect/capture/face/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- The built-in local expression sample must emit `bridge_provided_provenance=false`; bridge provenance may be true only when a real bridge-derived input supplies it.
 - Child protected expression mapping stays conservative, shows guardian-review wording, and must not treat mapping as guardian approval.
 
 Privacy and safety impact:

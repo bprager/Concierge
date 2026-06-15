@@ -2365,6 +2365,8 @@ test("maps avatar stance to expression metadata without animation or emotion inf
   const user = userEventModule.default.setup();
   let permissionRequests = 0;
   let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
   Object.defineProperty(globalThis.navigator, "mediaDevices", {
     configurable: true,
     value: {
@@ -2385,6 +2387,18 @@ test("maps avatar stance to expression metadata without animation or emotion inf
   });
 
   try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
     const view = render(<App />);
 
     await view.findByText("Avatar expression");
@@ -2396,12 +2410,17 @@ test("maps avatar stance to expression metadata without animation or emotion inf
 
     assert.equal(permissionRequests, 0);
     assert.equal(fetchCalls, 0);
+    const expressionEvent = telemetryPayloads.find((payload) => payload.event === "avatar_expression_set");
+    assert.ok(expressionEvent);
+    assert.equal(expressionEvent.attributes.localMetadataOnly, true);
+    assert.equal(expressionEvent.attributes.bridgeProvidedProvenance, false);
     assert.ok(avatarExpression.getByText("Expression: focused_neutral"));
     assert.ok(avatarExpression.getByText("Stance: direct"));
     assert.ok(avatarExpression.getByText("Affect inferred: no"));
     assert.ok(avatarExpression.getByText("Authority boundary: Expression reflects local stance metadata only; it is not emotion inference, approval, or agent action."));
     assert.ok(avatarExpression.getByText("Blocked effects: avatar_animation, affect_inference, camera_capture, face_detection, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
   } finally {
+    console.info = originalInfo;
     cleanup();
     dom.window.close();
   }
