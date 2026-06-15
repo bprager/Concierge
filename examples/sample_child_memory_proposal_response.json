@@ -1,0 +1,47 @@
+{
+  "text": "Napoleon accepted the child-protected memory proposal for review only. Concierge did not write memory or keep secrets.",
+  "governanceDecision": {
+    "decision_id": "decision_sample_child_memory",
+    "request_id": "cos_child_memory_request_sample",
+    "outcome": "requires_review",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "guardian_approval_required",
+    "rationale": "Child-protected memory proposals require guardian review before any durable memory write, and Concierge must not keep safety-relevant secrets.",
+    "blocked_effects": [
+      "memory_write",
+      "approval_capture",
+      "external_send",
+      "agent_dispatch",
+      "secret_keeping"
+    ],
+    "trace_id": "trace_child_memory_response_sample",
+    "audit_id": "audit_child_memory_response_sample"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_child_memory_response_sample",
+    "parent_trace_id": "trace_child_memory_request_sample",
+    "actor_id": "napoleon.chief_of_staff",
+    "request_id": "cos_child_memory_request_sample",
+    "decision_id": "decision_sample_child_memory",
+    "timestamp": "2026-06-15T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "audit_child_memory_response_sample",
+    "trace_id": "trace_child_memory_response_sample",
+    "decision_id": "decision_sample_child_memory",
+    "actor_id": "napoleon.chief_of_staff",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "guardian_approval_required",
+    "evidence_links": [
+      "trace:trace_child_memory_response_sample",
+      "fixture:sample_child_memory_proposal_response",
+      "proposal:child_memory_request_sample",
+      "profile_mode:child_protected_user"
+    ]
+  },
+  "memoryWritePerformed": false,
+  "approvalCaptured": false,
+  "agentDispatchPerformed": false,
+  "externalSendPerformed": false,
+  "appliedLocally": false
+}

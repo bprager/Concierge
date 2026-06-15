@@ -56,6 +56,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a local harness HTTP evaluator runner and `make eval-http-local-harness` target for validating evaluator HTTP plumbing without treating the harness as real Napoleon.
 - Added OpenAPI-validated governed response artifacts for text turns, memory proposal review, and Chief of Staff steering review, with governance, trace, audit, delegation, and recommendation provenance consistency checks where applicable.
 - Added repository validation that rejects governed response artifacts claiming memory writes, approval capture, external sends, agent dispatch, or local application.
+- Added an OpenAPI-validated child-protected memory proposal response artifact, with repository validation for guardian review wording, child profile evidence, proposal evidence, blocked secret-keeping, and no memory write.
 - Added an OpenAPI-validated governance review response artifact on the canonical Chief of Staff steering route, with repository validation for review-only, child-protected guardian-review, and no-side-effect boundaries.
 - Added an OpenAPI-validated Chief of Staff taxonomy review response artifact on the canonical steering route, with repository validation for review-only, capability-evidence, and no-local-application boundaries.
 - Added an OpenAPI-validated child-protected Chief of Staff taxonomy review response artifact, with repository validation for guardian review wording, child profile evidence, and no local taxonomy application.

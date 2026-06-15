@@ -344,6 +344,37 @@ def validate_governance_review_response_boundary(data: object) -> None:
         raise SystemExit("child protected governance review responses must preserve guardian review wording")
 
 
+def validate_child_memory_response_boundary(data: object) -> None:
+    if not isinstance(data, dict):
+        raise SystemExit("Child memory response example must be a JSON object")
+
+    decision = data.get("governanceDecision")
+    audit = data.get("auditEnvelope")
+    if not isinstance(decision, dict) or not isinstance(audit, dict):
+        raise SystemExit("Child memory response example must include governanceDecision and auditEnvelope objects")
+
+    require_equal(decision.get("outcome"), "requires_review", "child memory response must remain review-only")
+    require_equal(decision.get("authority_tier"), "advisory_review", "child memory response must stay advisory review")
+    require_equal(data.get("memoryWritePerformed"), False, "child memory response must not write memory")
+    require_equal(data.get("approvalCaptured"), False, "child memory response must not capture approval")
+    require_equal(data.get("agentDispatchPerformed"), False, "child memory response must not dispatch agents")
+    require_equal(data.get("externalSendPerformed"), False, "child memory response must not send externally")
+
+    approval_requirement = audit.get("approval_requirement")
+    if not isinstance(approval_requirement, str) or "guardian" not in approval_requirement:
+        raise SystemExit("child protected memory responses must preserve guardian review wording")
+
+    evidence_links = audit.get("evidence_links")
+    if not isinstance(evidence_links, list) or "profile_mode:child_protected_user" not in evidence_links:
+        raise SystemExit("child protected memory responses must preserve child profile evidence")
+    if "proposal:child_memory_request_sample" not in evidence_links:
+        raise SystemExit("child protected memory responses must preserve proposal evidence")
+
+    blocked_effects = decision.get("blocked_effects")
+    if not isinstance(blocked_effects, list) or "secret_keeping" not in blocked_effects:
+        raise SystemExit("child protected memory responses must keep secret-keeping blocked")
+
+
 def validate_taxonomy_review_response_boundary(data: object) -> None:
     if not isinstance(data, dict):
         raise SystemExit("Taxonomy review response example must be a JSON object")
@@ -509,6 +540,7 @@ def validate_openapi_response_examples() -> None:
     examples = [
         ("/v1/concierge/turn", "200", "examples/sample_text_turn_response.json"),
         ("/v1/concierge/memory-proposals", "200", "examples/sample_memory_proposal_response.json"),
+        ("/v1/concierge/memory-proposals", "200", "examples/sample_child_memory_proposal_response.json"),
         (
             "/v1/concierge/chief-of-staff/steering",
             "200",
@@ -535,6 +567,8 @@ def validate_openapi_response_examples() -> None:
         schema = load_openapi_response_schema(path, status_code)
         validate_openapi_instance(schema, data)
         validate_bridge_response_provenance(data)
+        if example_path.endswith("sample_child_memory_proposal_response.json"):
+            validate_child_memory_response_boundary(data)
         if example_path.endswith("sample_governance_review_response.json"):
             validate_governance_review_response_boundary(data)
         if example_path.endswith("sample_chief_of_staff_taxonomy_review_response.json"):
