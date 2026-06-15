@@ -5,6 +5,7 @@ import {
   GENERATED_BRIDGE_CONTRACT_SOURCE,
   buildNapoleonBridgeUrl,
   describeBridgeOperationSummary,
+  describeTaxonomyReviewBridgeSummary,
   getBridgeOperation,
 } from "../src/bridgeOperations.js";
 
@@ -76,11 +77,18 @@ test("describes all core governed operation routes for the UI", () => {
     describeBridgeOperationSummary("text_turn"),
     describeBridgeOperationSummary("memory_proposal_review"),
     describeBridgeOperationSummary("chief_of_staff_steering"),
+    describeTaxonomyReviewBridgeSummary(),
   ];
 
   assert.deepEqual(
     summaries.map((summary) => summary.label),
-    ["Descriptor discovery", "Text turn", "Memory proposal review", "Chief of Staff steering"],
+    [
+      "Descriptor discovery",
+      "Text turn",
+      "Memory proposal review",
+      "Chief of Staff steering",
+      "Chief of Staff taxonomy review",
+    ],
   );
   assert.deepEqual(
     summaries.map((summary) => summary.path),
@@ -89,6 +97,9 @@ test("describes all core governed operation routes for the UI", () => {
       "/v1/concierge/turn",
       "/v1/concierge/memory-proposals",
       "/v1/concierge/chief-of-staff/steering",
+      "/v1/concierge/chief-of-staff/steering",
     ],
   );
+  assert.equal(summaries.at(-1)?.operationId, "chief_of_staff_steering");
+  assert.equal(summaries.at(-1)?.requestKind, "chief_of_staff_steering_handoff");
 });

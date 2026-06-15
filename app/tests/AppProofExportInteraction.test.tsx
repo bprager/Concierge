@@ -192,6 +192,28 @@ test("shows Napoleon delegation panel before bridge provenance is returned", asy
   }
 });
 
+test("shows taxonomy review in governed routes as the canonical steering handoff", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App />);
+    const routesPanel = view.getByText("Governed Napoleon routes").closest("section") as HTMLElement;
+    assert.ok(routesPanel);
+    const routes = within(routesPanel);
+
+    assert.ok(routes.getByText("Chief of Staff taxonomy review"));
+    assert.ok(routes.getByText("Canonical operation: chief_of_staff_steering"));
+    assert.equal(routes.getAllByText("/v1/concierge/chief-of-staff/steering").length, 2);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows fail-closed transcript metadata when Napoleon returns no-go", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

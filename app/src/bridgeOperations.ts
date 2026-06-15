@@ -25,7 +25,8 @@ export interface BridgeOperation {
 }
 
 export interface BridgeOperationSummary {
-  id: BridgeOperationId;
+  id: BridgeOperationId | "chief_of_staff_taxonomy_review";
+  operationId: BridgeOperationId;
   label: string;
   path: string;
   requestKind: BridgeOperation["requestKind"];
@@ -66,6 +67,7 @@ export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOpe
   const operation = getBridgeOperation(id);
   return {
     id: operation.id,
+    operationId: operation.id,
     label: BRIDGE_OPERATION_LABELS[operation.id],
     path: operation.path,
     requestKind: operation.requestKind,
@@ -73,5 +75,14 @@ export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOpe
     boundary: "Governed Napoleon bridge only",
     tokenHandling: "Bearer token is sent only in the Authorization header",
     sideEffects: "No memory write, approval capture, agent dispatch, or external send is performed by Concierge",
+  };
+}
+
+export function describeTaxonomyReviewBridgeSummary(): BridgeOperationSummary {
+  const summary = describeBridgeOperationSummary("chief_of_staff_steering");
+  return {
+    ...summary,
+    id: "chief_of_staff_taxonomy_review",
+    label: "Chief of Staff taxonomy review",
   };
 }

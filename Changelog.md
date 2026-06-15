@@ -65,6 +65,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a generated bridge operation registry derived from the canonical OpenAPI Concierge paths.
 - Added contract-aware repository validation for bridge operation paths, request kinds, bearer security, and named bridge operation usage.
 - Added a Text Concierge governed route panel that shows canonical Napoleon bridge paths without endpoint hosts or tokens.
+- Added Chief of Staff taxonomy review to the governed route panel as a visible handoff alias of the canonical Chief of Staff steering operation.
 - Added runtime source validation that fails when Concierge directly executes processes, accesses memory or graph systems, or dispatches agents/tools outside the governed bridge.
 - Added first-class Napoleon descriptor connection state for discovered, missing, and checksum/signature mismatch cases.
 - Added live Napoleon Chief of Staff descriptor discovery from the canonical descriptor endpoint, with invalid or mismatched descriptors kept fail-closed.

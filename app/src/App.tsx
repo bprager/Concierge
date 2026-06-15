@@ -16,7 +16,7 @@ import {
 } from "./avatarModel.js";
 import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
 import { answerCapabilityQuestion } from "./capabilityLedger.js";
-import { describeBridgeOperationSummary } from "./bridgeOperations.js";
+import { describeBridgeOperationSummary, describeTaxonomyReviewBridgeSummary } from "./bridgeOperations.js";
 import {
   buildBridgeEvidenceReadinessState,
   compareBridgeReadinessProofs,
@@ -1522,6 +1522,7 @@ export function App() {
     describeBridgeOperationSummary("text_turn"),
     describeBridgeOperationSummary("memory_proposal_review"),
     describeBridgeOperationSummary("chief_of_staff_steering"),
+    describeTaxonomyReviewBridgeSummary(),
   ];
   const microphonePermissionLabel =
     microphonePermissionStatus === "not_requested"
@@ -2245,6 +2246,7 @@ export function App() {
                 <span>{operation.path}</span>
                 <span>{operation.requestKind}</span>
                 <span>{operation.boundary}</span>
+                {operation.id !== operation.operationId ? <span>Canonical operation: {operation.operationId}</span> : null}
               </dd>
             </div>
           ))}
