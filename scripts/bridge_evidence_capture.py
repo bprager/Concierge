@@ -241,8 +241,11 @@ def evidence_from_response(
 def endpoint_from_args(endpoint: str | None, env: dict[str, str]) -> str | None:
     if endpoint and endpoint.strip():
         return endpoint.strip()
-    value = env.get("NAPOLEON_EVAL_ENDPOINT")
-    return value.strip() if value and value.strip() else None
+    for key in ["NAPOLEON_BRIDGE_ENDPOINT", "NAPOLEON_EVAL_ENDPOINT"]:
+        value = env.get(key)
+        if value and value.strip():
+            return value.strip()
+    return None
 
 
 def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> int:
@@ -262,7 +265,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     active_env = os.environ if env is None else env
     endpoint = endpoint_from_args(args.endpoint, active_env)
     if endpoint is None:
-        print("bridge evidence capture requires --endpoint or NAPOLEON_EVAL_ENDPOINT", file=sys.stderr)
+        print("bridge evidence capture requires --endpoint, NAPOLEON_BRIDGE_ENDPOINT, or NAPOLEON_EVAL_ENDPOINT", file=sys.stderr)
         return 2
 
     descriptor_status, descriptor_payload = get_json(

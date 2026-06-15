@@ -48,6 +48,7 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
                 exit_code = bridge_evidence_capture.main(["--out", handle.name], env={})
 
         self.assertEqual(exit_code, 2)
+        self.assertIn("NAPOLEON_BRIDGE_ENDPOINT", stderr.getvalue())
         self.assertIn("NAPOLEON_EVAL_ENDPOINT", stderr.getvalue())
 
     def test_capture_runner_command_writes_json_list(self):
@@ -72,6 +73,22 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertIsInstance(payload, list)
         self.assertEqual(payload[0]["runtimeValidationSource"], "local_harness")
         self.assertIn("captured 1 bridge evidence record", stdout.getvalue())
+
+    def test_capture_runner_uses_bridge_endpoint_environment(self):
+        with local_bridge_harness.running_harness() as base_url:
+            with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    exit_code = bridge_evidence_capture.main(
+                        ["--out", handle.name, "--runtime-validation-source", "local_harness"],
+                        env={"NAPOLEON_BRIDGE_ENDPOINT": base_url},
+                    )
+                handle.seek(0)
+                records = json.load(handle)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(records[0]["runtimeValidationSource"], "local_harness")
+        self.assertEqual(records[0]["targetPath"], "/v1/concierge/turn")
+        self.assertFalse(base_url in json.dumps(records))
 
     def test_capture_runner_discovers_descriptor_before_text_turn(self):
         with RecordingBridgeHarness(descriptor_ready=True) as harness:

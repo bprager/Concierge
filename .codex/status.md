@@ -44,6 +44,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added fail-closed live Napoleon bridge errors for missing endpoint, descriptor mismatch, auth failure, contract mismatch, governance no-go, timeout, and HTTP failure.
 - Added sanitized live text bridge contract evidence capture for success and fail-closed outcomes; records omit raw prompt text, response text, endpoint hosts, bearer tokens, request bodies, and response bodies.
 - Added a bridge evidence capture runner for one governed text turn against a configured endpoint, with descriptor discovery preflight and local Napoleon-compatible harness coverage.
+- Updated bridge evidence capture so `NAPOLEON_BRIDGE_ENDPOINT` can provide the governed bridge base URL, while `NAPOLEON_EVAL_ENDPOINT` remains supported as a fallback for evaluator-oriented setups.
 - Added a local bridge evidence comparator plus sample evidence fixture to check captured bridge metadata against the OpenAPI-aligned bridge registry and reject raw payload or secret fields.
 - Added optional local bridge bearer token support for text turns and governed steering handoff; tokens are sent only in authorization headers and excluded from payloads and telemetry.
 - Hardened live governed handoffs so Napoleon `deny` and `no_go` responses become blocked outcomes for text turns, memory proposal review, Chief of Staff steering, and taxonomy review instead of normal successful responses or completed reviews.
@@ -144,8 +145,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Current Blockers
 
 - No runtime blocker is known from the handoff setup itself.
-- Real Napoleon HTTP evaluator mode requires a configured `NAPOLEON_EVAL_ENDPOINT`; `make eval-http-local-harness` only verifies local HTTP evaluator plumbing.
-- Live Chief of Staff/Napoleon runtime alignment could not be verified because the remote descriptor has no populated live HTTP/MCP/stdio base URL and no local `NAPOLEON_EVAL_ENDPOINT` is configured.
+- Real Napoleon HTTP evaluator-only mode requires a configured `NAPOLEON_EVAL_ENDPOINT`; `make eval-http-local-harness` only verifies local HTTP evaluator plumbing.
+- Live Chief of Staff/Napoleon runtime alignment could not be verified because the remote descriptor has no populated live HTTP/MCP/stdio base URL and no local `NAPOLEON_BRIDGE_ENDPOINT` or `NAPOLEON_EVAL_ENDPOINT` is configured.
 - License docs are now consistent: `LICENSE` is MIT, and `LICENSE-TODO.md` tracks only third-party asset license review.
 
 ## Known Bugs Or Risks
