@@ -581,8 +581,8 @@ def validate_proposal_only_request_boundary(data: object) -> None:
     scan_forbidden_authority_claims(data, "request")
 
 
-def validate_openapi_request_examples() -> None:
-    examples = [
+def openapi_request_examples() -> list[tuple[str, str]]:
+    return [
         ("/v1/concierge/memory-proposals", "examples/sample_memory_proposal_request.json"),
         ("/v1/concierge/memory-proposals", "examples/sample_child_memory_proposal_request.json"),
         ("/v1/concierge/chief-of-staff/steering", "examples/sample_chief_of_staff_steering_request.json"),
@@ -591,16 +591,10 @@ def validate_openapi_request_examples() -> None:
         ("/v1/concierge/chief-of-staff/steering", "examples/sample_chief_of_staff_taxonomy_review_request.json"),
         ("/v1/concierge/chief-of-staff/steering", "examples/sample_child_chief_of_staff_taxonomy_review_request.json"),
     ]
-    for path, example_path in examples:
-        data = load_json(example_path)
-        schema = load_openapi_request_schema(path)
-        validate_openapi_instance(schema, data)
-        validate_proposal_only_request_boundary(data)
-        print(f"valid OpenAPI request example: {example_path} against {path}")
 
 
-def validate_openapi_response_examples() -> None:
-    examples = [
+def openapi_response_examples() -> list[tuple[str, str, str]]:
+    return [
         ("/v1/concierge/turn", "200", "examples/sample_text_turn_response.json"),
         ("/v1/concierge/turn", "200", "examples/sample_child_text_turn_response.json"),
         ("/v1/concierge/memory-proposals", "200", "examples/sample_memory_proposal_response.json"),
@@ -631,6 +625,45 @@ def validate_openapi_response_examples() -> None:
             "examples/sample_child_chief_of_staff_taxonomy_review_response.json",
         ),
     ]
+
+
+def validate_openapi_example_inventory() -> None:
+    registered_requests = {example_path for _, example_path in openapi_request_examples()}
+    registered_responses = {example_path for _, _, example_path in openapi_response_examples()}
+    discovered_requests = {
+        str(path.relative_to(ROOT))
+        for path in (ROOT / "examples").glob("sample*_request.json")
+    }
+    discovered_responses = {
+        str(path.relative_to(ROOT))
+        for path in (ROOT / "examples").glob("sample*_response.json")
+    }
+
+    if registered_requests != discovered_requests:
+        missing = sorted(discovered_requests - registered_requests)
+        stale = sorted(registered_requests - discovered_requests)
+        raise SystemExit(f"OpenAPI request example inventory mismatch; missing={missing}, stale={stale}")
+    if registered_responses != discovered_responses:
+        missing = sorted(discovered_responses - registered_responses)
+        stale = sorted(registered_responses - discovered_responses)
+        raise SystemExit(f"OpenAPI response example inventory mismatch; missing={missing}, stale={stale}")
+
+    print("OpenAPI request/response example inventory is complete")
+
+
+def validate_openapi_request_examples() -> None:
+    validate_openapi_example_inventory()
+    examples = openapi_request_examples()
+    for path, example_path in examples:
+        data = load_json(example_path)
+        schema = load_openapi_request_schema(path)
+        validate_openapi_instance(schema, data)
+        validate_proposal_only_request_boundary(data)
+        print(f"valid OpenAPI request example: {example_path} against {path}")
+
+
+def validate_openapi_response_examples() -> None:
+    examples = openapi_response_examples()
     for path, status_code, example_path in examples:
         data = load_json(example_path)
         schema = load_openapi_response_schema(path, status_code)

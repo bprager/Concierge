@@ -39,6 +39,14 @@ class BridgeContractValidationTest(unittest.TestCase):
 
         self.assertEqual(offenders, [])
 
+    def test_openapi_example_inventory_covers_all_sample_request_and_response_files(self):
+        validate_repo.validate_openapi_example_inventory()
+
+    def test_registered_openapi_response_examples_are_unique(self):
+        examples = [example_path for _, _, example_path in validate_repo.openapi_response_examples()]
+
+        self.assertEqual(len(examples), len(set(examples)))
+
     def test_sample_text_turn_response_matches_openapi_response_contract(self):
         response = validate_repo.load_json("examples/sample_text_turn_response.json")
         schema = validate_repo.load_openapi_response_schema("/v1/concierge/turn", "200")
