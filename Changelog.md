@@ -22,6 +22,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added live-runtime artifact privacy auditing so retained bridge/evaluator artifacts fail validation if raw fields or sensitive runtime values are present.
 - Added generated bridge response-required metadata from OpenAPI and fail-closed text response validation when Napoleon omits required response fields.
 - Added generated bridge response-required validation for governed memory proposal, governance review, Chief of Staff steering, and taxonomy review handoffs so malformed review responses fail closed instead of using local fallback text.
+- Tightened app bridge endpoint resolution so runtime callers can use only named generated bridge operations, with repository validation rejecting free-form bridge path resolver reintroduction.
 - Tightened live-send preflight so Rehearsal Mode is shown as not directly live-send attemptable even when endpoint, descriptor, text, and governance checks otherwise pass.
 - Tightened the rendered post-preview advisory-send control so Rehearsal Mode stays local and cannot unlock a live Napoleon bridge send while still active.
 - Added a rendered post-preview send path that preserves an unchanged rehearsal preview after Rehearsal Mode is turned off, then sends it only through the governed Napoleon bridge.

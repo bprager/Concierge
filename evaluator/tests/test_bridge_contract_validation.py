@@ -39,6 +39,11 @@ class BridgeContractValidationTest(unittest.TestCase):
 
         self.assertEqual(offenders, [])
 
+    def test_bridge_endpoint_module_exposes_only_named_operation_resolution(self):
+        bridge_endpoint = (validate_repo.ROOT / "app/src/bridgeEndpoint.ts").read_text(encoding="utf-8")
+
+        self.assertNotIn("resolveNapoleonBridgeEndpoint(", bridge_endpoint)
+
     def test_openapi_example_inventory_covers_all_sample_request_and_response_files(self):
         validate_repo.validate_openapi_example_inventory()
 

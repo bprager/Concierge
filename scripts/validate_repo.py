@@ -760,8 +760,6 @@ def validate_openapi_response_examples() -> None:
 def find_freeform_bridge_path_callers() -> list[str]:
     offenders: list[str] = []
     for path in (ROOT / "app/src").glob("*.ts"):
-        if path.name == "bridgeEndpoint.ts":
-            continue
         text = path.read_text(encoding="utf-8")
         if "resolveNapoleonBridgeEndpoint(" in text:
             offenders.append(str(path.relative_to(ROOT)))
