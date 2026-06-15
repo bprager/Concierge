@@ -20,6 +20,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added combined live-runtime validation for descriptor discovery, sanitized bridge evidence capture, evidence comparison, evaluator HTTP mode, and non-authorizing runtime summaries.
 - Sanitized live-runtime evaluator reports by removing response excerpts before retaining them as validation artifacts.
 - Added live-runtime artifact privacy auditing so retained bridge/evaluator artifacts fail validation if raw fields or sensitive runtime values are present.
+- Added generated bridge response-required metadata from OpenAPI and fail-closed text response validation when Napoleon omits required response fields.
 - Added transcript-level source, fail-closed attribution boundary, and blocked-effect metadata for blocked Napoleon bridge attempts.
 - Added Napoleon delegation panel rendering for returned target capability IDs when selected-agent delegation is not returned.
 - Added last-success proof rendering and sanitized proof export for returned Napoleon target capability IDs when selected-agent delegation is not returned.

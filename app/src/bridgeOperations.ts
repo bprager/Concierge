@@ -20,6 +20,7 @@ export interface BridgeOperation {
     | "memory_proposal_review_handoff"
     | "evaluator_prompt";
   transport: "http_get" | "http_post";
+  responseRequired: readonly string[];
   governedBridgeOnly: true;
   tokenPlacement: "authorization_header_only";
 }

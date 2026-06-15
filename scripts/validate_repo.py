@@ -133,6 +133,9 @@ def load_bridge_operations() -> list[dict[str, Any]]:
             value = re.search(rf"{key}:\s*\"([^\"]+)\"", body)
             if value:
                 operation[key] = value.group(1)
+        response_required = re.search(r"responseRequired:\s*\[(?P<items>[^\]]*)\]", body, re.DOTALL)
+        if response_required:
+            operation["responseRequired"] = re.findall(r"\"([^\"]+)\"", response_required.group("items"))
         governed = re.search(r"governedBridgeOnly:\s*(true|false)", body)
         if governed:
             operation["governedBridgeOnly"] = governed.group(1) == "true"
@@ -827,6 +830,7 @@ def validate_bridge_contract_alignment() -> None:
     missing_security: list[str] = []
     request_kind_mismatch: list[str] = []
     transport_mismatch: list[str] = []
+    response_required_mismatch: list[str] = []
     for operation in operations:
         path = operation["path"]
         if operation.get("governedBridgeOnly") is not True:
@@ -843,6 +847,11 @@ def validate_bridge_contract_alignment() -> None:
             request_kind_mismatch.append(
                 f"{operation['id']} registry={operation.get('requestKind')} openapi={request_kinds.get(path)}"
             )
+        response_required = load_openapi_response_schema(path, "200").get("required", [])
+        if operation.get("responseRequired") != response_required:
+            response_required_mismatch.append(
+                f"{operation['id']} registry={operation.get('responseRequired')} openapi={response_required}"
+            )
 
     if missing_security:
         raise SystemExit(f"OpenAPI paths missing NapoleonBearer security: {', '.join(missing_security)}")
@@ -850,6 +859,8 @@ def validate_bridge_contract_alignment() -> None:
         raise SystemExit("Bridge transport mismatch:\n" + "\n".join(transport_mismatch))
     if request_kind_mismatch:
         raise SystemExit("Bridge requestKind mismatch:\n" + "\n".join(request_kind_mismatch))
+    if response_required_mismatch:
+        raise SystemExit("Bridge response required-field mismatch:\n" + "\n".join(response_required_mismatch))
 
     offenders = find_freeform_bridge_path_callers()
     if offenders:

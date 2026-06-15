@@ -363,6 +363,12 @@ function hasForbiddenTextTurnSideEffectClaim(payload: Partial<NapoleonResponse> 
   ].some((pattern) => pattern.test(text));
 }
 
+function hasRequiredResponseFields(payload: unknown, operation: BridgeOperation): boolean {
+  if (!payload || typeof payload !== "object") return false;
+  const record = payload as Record<string, unknown>;
+  return operation.responseRequired.every((field) => record[field] !== undefined);
+}
+
 function failClosed(
   dependencies: BridgeDependencies,
   reason: NapoleonBridgeFailureReason,
@@ -487,6 +493,10 @@ export async function sendToNapoleon(
   }
 
   const payload = (await response.json()) as Partial<NapoleonResponse>;
+  const textTurnOperation = getBridgeOperation("text_turn");
+  if (!hasRequiredResponseFields(payload, textTurnOperation)) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
   if (!isGovernanceDecision(payload.governanceDecision)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }

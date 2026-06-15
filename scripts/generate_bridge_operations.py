@@ -53,6 +53,20 @@ def request_kind_for(path: str, operation: dict[str, Any]) -> str:
     raise SystemExit(f"OpenAPI path lacks requestKind const: {path}")
 
 
+def response_required_for(path: str, operation: dict[str, Any]) -> list[str]:
+    schema = (
+        operation.get("responses", {})
+        .get("200", {})
+        .get("content", {})
+        .get("application/json", {})
+        .get("schema", {})
+    )
+    required = schema.get("required")
+    if not isinstance(required, list) or not all(isinstance(item, str) for item in required):
+        raise SystemExit(f"OpenAPI path lacks 200 response required fields: {path}")
+    return required
+
+
 def generated_text() -> str:
     openapi = yaml.safe_load(SOURCE_PATH.read_text(encoding="utf-8"))
     paths = openapi.get("paths", {})
@@ -73,6 +87,7 @@ def generated_text() -> str:
                 "path": path,
                 "requestKind": request_kind_for(path, operation),
                 "transport": HTTP_METHOD_TO_TRANSPORT[method],
+                "responseRequired": response_required_for(path, operation),
             }
         )
 
@@ -92,6 +107,9 @@ def generated_text() -> str:
                 f'    path: "{operation["path"]}",',
                 f'    requestKind: "{operation["requestKind"]}",',
                 f'    transport: "{operation["transport"]}",',
+                "    responseRequired: ["
+                + ", ".join(f'"{field}"' for field in operation["responseRequired"])
+                + "],",
                 "    governedBridgeOnly: true,",
                 '    tokenPlacement: "authorization_header_only",',
                 "  },",

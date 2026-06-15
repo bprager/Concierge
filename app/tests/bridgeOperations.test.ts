@@ -16,6 +16,7 @@ type OperationShape = {
   transport: string;
   governedBridgeOnly: boolean;
   tokenPlacement: string;
+  responseRequired: readonly string[];
 };
 
 function openApiPaths(): string[] {
@@ -56,6 +57,43 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   assert.equal(getBridgeOperation("text_turn").requestKind, "text_turn");
   assert.equal(getBridgeOperation("chief_of_staff_steering").requestKind, "chief_of_staff_steering_handoff");
   assert.equal(getBridgeOperation("memory_proposal_review").requestKind, "memory_proposal_review_handoff");
+});
+
+test("bridge operation registry exposes canonical required response fields", () => {
+  assert.deepEqual(getBridgeOperation("text_turn").responseRequired, [
+    "text",
+    "governanceDecision",
+    "traceEnvelope",
+    "auditEnvelope",
+  ]);
+  assert.deepEqual(getBridgeOperation("chief_of_staff_descriptor").responseRequired, [
+    "serviceId",
+    "ready",
+    "runtimeAuthority",
+    "cachePolicy",
+    "blockedEffects",
+  ]);
+  assert.deepEqual(getBridgeOperation("chief_of_staff_steering").responseRequired, [
+    "text",
+    "governanceDecision",
+    "traceEnvelope",
+    "auditEnvelope",
+    "appliedLocally",
+    "memoryWritePerformed",
+    "approvalCaptured",
+    "agentDispatchPerformed",
+    "externalSendPerformed",
+  ]);
+  assert.deepEqual(getBridgeOperation("memory_proposal_review").responseRequired, [
+    "text",
+    "governanceDecision",
+    "traceEnvelope",
+    "auditEnvelope",
+    "memoryWritePerformed",
+    "approvalCaptured",
+    "agentDispatchPerformed",
+    "externalSendPerformed",
+  ]);
 });
 
 test("bridge URL builder resolves base URLs and already-specific operation URLs", () => {
