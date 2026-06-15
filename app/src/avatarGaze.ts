@@ -11,6 +11,10 @@ export interface LocalAvatarGazeResult {
   localMetadataOnly: true;
   profileMode: LocalProfile;
   childProtected: boolean;
+  guardianReviewRequired: boolean;
+  cameraPolicy: "explicit_permission_required" | "disabled_until_guardian_review";
+  animationPolicy: "disabled" | "disabled_until_guardian_review";
+  attentionPolicy: "disabled";
   eyeTarget: "user_position" | "user_interface";
   horizontalOffset: number;
   verticalOffset: number;
@@ -62,6 +66,10 @@ export function buildLocalAvatarGazeSimulation(input: LocalAvatarGazeInput): Loc
     localMetadataOnly: true,
     profileMode,
     childProtected,
+    guardianReviewRequired: childProtected,
+    cameraPolicy: childProtected ? "disabled_until_guardian_review" : "explicit_permission_required",
+    animationPolicy: childProtected ? "disabled_until_guardian_review" : "disabled",
+    attentionPolicy: "disabled",
     eyeTarget,
     horizontalOffset,
     verticalOffset,

@@ -871,6 +871,10 @@ export function App() {
       localMetadataOnly: result.localMetadataOnly,
       profileMode: result.profileMode,
       childProtected: result.childProtected,
+      guardianReviewRequired: result.guardianReviewRequired,
+      cameraPolicy: result.cameraPolicy,
+      animationPolicy: result.animationPolicy,
+      attentionPolicy: result.attentionPolicy,
       eyeTarget: result.eyeTarget,
       horizontalOffset: result.horizontalOffset,
       verticalOffset: result.verticalOffset,
@@ -899,6 +903,11 @@ export function App() {
       localMetadataOnly: result.localMetadataOnly,
       profileMode: result.profileMode,
       childProtected: result.childProtected,
+      guardianReviewRequired: result.guardianReviewRequired,
+      cameraPolicy: result.cameraPolicy,
+      facePosePolicy: result.facePosePolicy,
+      affectPolicy: result.affectPolicy,
+      attentionPolicy: result.attentionPolicy,
       facePresent: result.facePresent,
       headYawDegrees: result.headYawDegrees,
       headPitchDegrees: result.headPitchDegrees,
@@ -929,6 +938,12 @@ export function App() {
       localMetadataOnly: result.localMetadataOnly,
       profileMode: result.profileMode,
       childProtected: result.childProtected,
+      guardianReviewRequired: result.guardianReviewRequired,
+      cameraPolicy: result.cameraPolicy,
+      microphonePolicy: result.microphonePolicy,
+      storagePolicy: result.storagePolicy,
+      affectPolicy: result.affectPolicy,
+      emotionFactPolicy: result.emotionFactPolicy,
       uncertaintyLabel: result.uncertaintyLabel,
       displayLabel: result.displayLabel,
       confidence: result.confidence,
@@ -2462,6 +2477,22 @@ export function App() {
               <span>Child protected: {avatarGazeResult.childProtected ? "yes" : "no"}</span>
             </div>
             <div>
+              <strong>Guardian review</strong>
+              <span>Guardian review required: {avatarGazeResult.guardianReviewRequired ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Camera policy</strong>
+              <span>Camera policy: {avatarGazeResult.cameraPolicy}</span>
+            </div>
+            <div>
+              <strong>Animation policy</strong>
+              <span>Animation policy: {avatarGazeResult.animationPolicy}</span>
+            </div>
+            <div>
+              <strong>Attention policy</strong>
+              <span>Attention policy: {avatarGazeResult.attentionPolicy}</span>
+            </div>
+            <div>
               <strong>Gaze tracking</strong>
               <span>Gaze tracking started: no</span>
             </div>
@@ -2530,6 +2561,26 @@ export function App() {
             <div>
               <strong>Child protected</strong>
               <span>Child protected: {avatarFacePoseResult.childProtected ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Guardian review</strong>
+              <span>Guardian review required: {avatarFacePoseResult.guardianReviewRequired ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Camera policy</strong>
+              <span>Camera policy: {avatarFacePoseResult.cameraPolicy}</span>
+            </div>
+            <div>
+              <strong>Face pose policy</strong>
+              <span>Face pose policy: {avatarFacePoseResult.facePosePolicy}</span>
+            </div>
+            <div>
+              <strong>Affect policy</strong>
+              <span>Affect policy: {avatarFacePoseResult.affectPolicy}</span>
+            </div>
+            <div>
+              <strong>Attention policy</strong>
+              <span>Attention policy: {avatarFacePoseResult.attentionPolicy}</span>
             </div>
             <div>
               <strong>Raw video</strong>
@@ -2604,6 +2655,30 @@ export function App() {
             <div>
               <strong>Child protected</strong>
               <span>Child protected: {avatarAffectFusionResult.childProtected ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Guardian review</strong>
+              <span>Guardian review required: {avatarAffectFusionResult.guardianReviewRequired ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Camera policy</strong>
+              <span>Camera policy: {avatarAffectFusionResult.cameraPolicy}</span>
+            </div>
+            <div>
+              <strong>Microphone policy</strong>
+              <span>Microphone policy: {avatarAffectFusionResult.microphonePolicy}</span>
+            </div>
+            <div>
+              <strong>Storage policy</strong>
+              <span>Storage policy: {avatarAffectFusionResult.storagePolicy}</span>
+            </div>
+            <div>
+              <strong>Affect policy</strong>
+              <span>Affect policy: {avatarAffectFusionResult.affectPolicy}</span>
+            </div>
+            <div>
+              <strong>Emotion fact policy</strong>
+              <span>Emotion fact policy: {avatarAffectFusionResult.emotionFactPolicy}</span>
             </div>
             <div>
               <strong>Camera capture</strong>

@@ -566,8 +566,9 @@ Acceptance criteria:
 - Text Concierge exposes a local avatar gaze panel.
 - The panel derives an eye target, horizontal offset, vertical offset, and confidence from local user-position and window-focus metadata.
 - If the app window is not focused, gaze falls back to the user-interface target instead of pretending to track the user.
+- The panel shows whether guardian review is required plus camera, animation, and attention policy metadata.
 - Preparing gaze metadata does not start gaze tracking, avatar animation, request camera permission, start camera capture, run face detection, infer affect or attention, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
-- `gaze_target_updated` includes local-metadata marker, profile mode, child-protected marker, eye target, offsets, confidence, false gaze-tracking/animation/capture/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- `gaze_target_updated` includes local-metadata marker, profile mode, child-protected marker, guardian-review-required marker, camera policy, animation policy, attention policy, eye target, offsets, confidence, false gaze-tracking/animation/capture/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
 - Child protected gaze simulation shows guardian-review wording and must not treat metadata preparation as guardian approval, camera permission, attention inference, or animation permission.
 
 Privacy and safety impact:
@@ -587,8 +588,9 @@ Acceptance criteria:
 
 - Text Concierge exposes a local avatar face/head-pose panel.
 - The panel estimates face-present, head yaw, head pitch, head roll, and confidence from deterministic local sample metadata.
+- The panel shows whether guardian review is required plus camera, face-pose, affect, and attention policy metadata.
 - Preparing face/head-pose metadata does not request camera permission, start camera capture, store raw video, run live face detection, infer affect, infer attention, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
-- `camera_state_estimated` includes local-metadata marker, profile mode, child-protected marker, face-present state, head yaw, head pitch, head roll, confidence, false capture/storage/live-face-detection/affect/attention/animation/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- `camera_state_estimated` includes local-metadata marker, profile mode, child-protected marker, guardian-review-required marker, camera policy, face-pose policy, affect policy, attention policy, face-present state, head yaw, head pitch, head roll, confidence, false capture/storage/live-face-detection/affect/attention/animation/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
 - Child protected face/head-pose preparation shows guardian-review wording and must not treat metadata preparation as guardian approval, camera permission, attention inference, affect inference, animation permission, or Napoleon approval.
 
 Privacy and safety impact:
@@ -609,8 +611,9 @@ Acceptance criteria:
 - Text Concierge exposes a local avatar affect-fusion panel.
 - The panel combines deterministic local sample metadata from head-pose shift, voice pause, and text clarification signals.
 - Output uses uncertainty labels such as possible confusion, possible frustration, or low confidence / no signal rather than emotional facts.
+- The panel shows whether guardian review is required plus camera, microphone, storage, affect, and emotion-fact policy metadata.
 - Preparing affect-fusion metadata does not request camera or microphone permission, start capture, store raw audio/video, run live face detection, start a live affect model, infer attention, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
-- `affect_signal_fused` includes local-metadata marker, profile mode, child-protected marker, uncertainty label, display label, confidence, input signals, false emotion-fact/capture/storage/live-model/attention/animation/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- `affect_signal_fused` includes local-metadata marker, profile mode, child-protected marker, guardian-review-required marker, camera policy, microphone policy, storage policy, affect policy, emotion-fact policy, uncertainty label, display label, confidence, input signals, false emotion-fact/capture/storage/live-model/attention/animation/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
 - Child protected affect fusion shows guardian-review wording and must not treat metadata preparation as guardian approval, camera permission, microphone permission, emotion inference, attention inference, animation permission, or Napoleon approval.
 
 Privacy and safety impact:
@@ -653,6 +656,7 @@ Acceptance criteria:
 - Local avatar state reads the active profile.
 - Child protected avatar state marks `child_protected` as true.
 - Child protected avatar state keeps camera policy disabled until guardian review and affect policy disabled.
+- Child protected gaze, face/head-pose, and affect-fusion panels expose guardian-review-required state and explicit camera, microphone, storage, animation, face-pose, affect, attention, and emotion-fact policy fields where applicable.
 - Child protected avatar state displays a guardian-review reminder.
 - Running child protected avatar state does not request camera permission, start camera capture, run face detection, infer affect, start animation, contact Napoleon, write memory, capture approval, capture guardian approval, dispatch agents, or send externally.
 - `avatar_state_changed` includes profile mode, child-protected marker, camera policy, affect policy, guardian-approval-captured false, and blocked effects including guardian approval capture.

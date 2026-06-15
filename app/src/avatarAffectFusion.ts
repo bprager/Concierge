@@ -17,6 +17,12 @@ export interface LocalAvatarAffectFusionResult {
   localMetadataOnly: true;
   profileMode: LocalProfile;
   childProtected: boolean;
+  guardianReviewRequired: boolean;
+  cameraPolicy: "local_sample_only" | "disabled_until_guardian_review";
+  microphonePolicy: "local_sample_only" | "disabled_until_guardian_review";
+  storagePolicy: "disabled" | "disabled_until_guardian_review";
+  affectPolicy: "local_uncertainty_only" | "disabled_until_guardian_review";
+  emotionFactPolicy: "disabled";
   uncertaintyLabel: LocalAffectUncertaintyLabel;
   displayLabel: string;
   confidence: number;
@@ -78,6 +84,12 @@ export function buildLocalAvatarAffectFusion(
     localMetadataOnly: true,
     profileMode,
     childProtected,
+    guardianReviewRequired: childProtected,
+    cameraPolicy: childProtected ? "disabled_until_guardian_review" : "local_sample_only",
+    microphonePolicy: childProtected ? "disabled_until_guardian_review" : "local_sample_only",
+    storagePolicy: childProtected ? "disabled_until_guardian_review" : "disabled",
+    affectPolicy: childProtected ? "disabled_until_guardian_review" : "local_uncertainty_only",
+    emotionFactPolicy: "disabled",
     uncertaintyLabel,
     displayLabel: displayLabelFor(uncertaintyLabel),
     confidence: confidenceFor(uncertaintyLabel),

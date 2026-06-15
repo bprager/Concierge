@@ -12,6 +12,11 @@ export interface LocalAvatarFacePoseResult {
   localMetadataOnly: true;
   profileMode: LocalProfile;
   childProtected: boolean;
+  guardianReviewRequired: boolean;
+  cameraPolicy: "explicit_permission_required" | "disabled_until_guardian_review";
+  facePosePolicy: "local_sample_only" | "disabled_until_guardian_review";
+  affectPolicy: "disabled";
+  attentionPolicy: "disabled";
   facePresent: boolean;
   headYawDegrees: number;
   headPitchDegrees: number;
@@ -64,6 +69,11 @@ export function buildLocalAvatarFacePoseEstimate(input: LocalAvatarFacePoseInput
     localMetadataOnly: true,
     profileMode,
     childProtected,
+    guardianReviewRequired: childProtected,
+    cameraPolicy: childProtected ? "disabled_until_guardian_review" : "explicit_permission_required",
+    facePosePolicy: childProtected ? "disabled_until_guardian_review" : "local_sample_only",
+    affectPolicy: "disabled",
+    attentionPolicy: "disabled",
     facePresent: input.facePresent,
     headYawDegrees: clampDegrees(input.headYawDegrees),
     headPitchDegrees: clampDegrees(input.headPitchDegrees),
