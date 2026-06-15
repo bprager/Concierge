@@ -1,6 +1,6 @@
 import type { NapoleonDelegation, NapoleonRecommendationProvenance, NapoleonRequest, NapoleonResponse } from "./types";
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
-import { getBridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
+import { getBridgeOperation, type BridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
 import {
   buildDescriptorConnectionState,
   buildTextTurnContract,
@@ -22,6 +22,7 @@ export interface BridgeContractEvidence {
   kind: "bridge_contract_evidence";
   operationId: BridgeOperationId;
   requestKind: string;
+  transport: BridgeOperation["transport"];
   status: "success" | "fail_closed";
   reason?: NapoleonBridgeFailureReason;
   httpStatus?: number;
@@ -139,6 +140,7 @@ function buildFailClosedEvidence(
     kind: "bridge_contract_evidence",
     operationId: evidenceContext.operationId,
     requestKind: evidenceContext.requestKind,
+    transport: getBridgeOperation(evidenceContext.operationId).transport,
     status: "fail_closed",
     reason,
     httpStatus: status,
@@ -579,6 +581,7 @@ export async function sendToNapoleon(
     kind: "bridge_contract_evidence",
     operationId: "text_turn",
     requestKind: "text_turn",
+    transport: getBridgeOperation("text_turn").transport,
     status: "success",
     httpStatus: response.status ?? 200,
     targetPath: getBridgeOperation("text_turn").path,

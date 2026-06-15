@@ -35,6 +35,7 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertEqual(records[0]["status"], "success")
         self.assertEqual(records[0]["targetPath"], "/v1/concierge/turn")
         self.assertEqual(records[0]["requestKind"], "text_turn")
+        self.assertEqual(records[0]["transport"], "http_post")
         self.assertEqual(records[0]["governanceOutcome"], "requires_review")
         self.assertEqual(records[0]["runtimeValidationSource"], "local_harness")
         self.assertEqual(records[0]["selectedAgentIds"], ["passive_brain"])

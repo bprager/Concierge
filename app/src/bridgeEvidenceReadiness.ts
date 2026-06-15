@@ -8,6 +8,7 @@ export interface BridgeEvidenceReadinessState {
   comparisonState: LiveBridgeEvidenceState;
   lastEvidenceStatus?: BridgeContractEvidence["status"];
   lastOperationId?: BridgeOperationId;
+  lastTransport?: BridgeContractEvidence["transport"];
   lastTargetPath?: string;
   lastFailureReason?: string;
   lastBlockedEffects?: string[];
@@ -77,6 +78,9 @@ function compareBridgeEvidence(record: BridgeContractEvidence): string | null {
   if (record.requestKind !== operation.requestKind) {
     return `Evidence request kind ${record.requestKind} does not match ${operation.requestKind}.`;
   }
+  if (record.transport !== operation.transport) {
+    return `Evidence transport ${record.transport} does not match ${operation.transport}.`;
+  }
   if (record.status === "success" && !record.provenanceVerified) {
     return "Successful bridge evidence must have verified provenance.";
   }
@@ -94,6 +98,7 @@ export function updateBridgeEvidenceReadinessState(
     comparisonState: failureReason ? "failed" : "passed",
     lastEvidenceStatus: record.status,
     lastOperationId: record.operationId,
+    lastTransport: record.transport,
     lastTargetPath: record.targetPath,
     lastFailureReason: record.reason,
     lastBlockedEffects: record.blockedEffects,
@@ -128,6 +133,7 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         comparisonState: input.readiness.comparisonState,
         lastEvidenceStatus: input.readiness.lastEvidenceStatus,
         lastOperationId: input.readiness.lastOperationId,
+        lastTransport: input.readiness.lastTransport,
         lastTargetPath: input.readiness.lastTargetPath,
         lastFailureReason: input.readiness.lastFailureReason,
         failureReason: input.readiness.failureReason,
@@ -225,6 +231,7 @@ export function compareBridgeReadinessProofs(
     { label: "Evidence capture", path: ["evidence", "captureState"] },
     { label: "Evidence comparison", path: ["evidence", "comparisonState"] },
     { label: "Last evidence status", path: ["evidence", "lastEvidenceStatus"] },
+    { label: "Last transport", path: ["evidence", "lastTransport"] },
     { label: "Last operation path", path: ["evidence", "lastTargetPath"] },
     { label: "Last failure reason", path: ["evidence", "lastFailureReason"] },
     { label: "Evidence blocked effects", path: ["evidence", "blockedEffects"] },

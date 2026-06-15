@@ -109,6 +109,7 @@ def compare_bridge_evidence_records(records: list[dict[str, Any]]) -> list[str]:
 
         operation_id = require_string(record, "operationId", index, violations)
         request_kind = require_string(record, "requestKind", index, violations)
+        transport = require_string(record, "transport", index, violations)
         status = require_string(record, "status", index, violations)
         target_path = require_string(record, "targetPath", index, violations)
         require_string(record, "traceId", index, violations)
@@ -129,9 +130,14 @@ def compare_bridge_evidence_records(records: list[dict[str, Any]]) -> list[str]:
             continue
 
         expected_path = operation["path"]
+        expected_transport = operation["transport"]
         if target_path != expected_path:
             violations.append(
                 f"{prefix}: targetPath does not match operation {operation_id}: {target_path} != {expected_path}"
+            )
+        if transport != expected_transport:
+            violations.append(
+                f"{prefix}: transport does not match operation {operation_id}: {transport} != {expected_transport}"
             )
 
         expected_request_kind = request_kinds.get(expected_path)

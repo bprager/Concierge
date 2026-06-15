@@ -53,6 +53,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added sanitized live bridge contract evidence capture for success and fail-closed text bridge outcomes without storing raw prompt text, response text, endpoint hosts, or bearer tokens.
 - Added a bridge evidence capture runner that discovers the Chief of Staff descriptor, sends one governed text turn to a configured endpoint, and validates the sanitized evidence path against the local harness.
 - Added a bridge evidence comparator and sample evidence fixture that check captured bridge metadata against the OpenAPI-aligned bridge registry while rejecting raw payload or secret fields.
+- Added canonical transport to sanitized bridge evidence capture, comparison, and readiness proof exports so runtime evidence catches HTTP method drift.
 - Added a local harness HTTP evaluator runner and `make eval-http-local-harness` target for validating evaluator HTTP plumbing without treating the harness as real Napoleon.
 - Added an OpenAPI-validated Chief of Staff descriptor response artifact, with repository validation for contract-only, fail-closed, no-runtime-authority descriptor boundaries.
 - Added OpenAPI-validated governed response artifacts for text turns, memory proposal review, and Chief of Staff steering review, with governance, trace, audit, delegation, and recommendation provenance consistency checks where applicable.

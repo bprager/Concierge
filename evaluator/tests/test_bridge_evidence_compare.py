@@ -32,6 +32,14 @@ class BridgeEvidenceCompareTest(unittest.TestCase):
 
         self.assertIn("requestKind does not match OpenAPI", violations[0])
 
+    def test_rejects_transport_that_does_not_match_operation_registry(self):
+        record = self.valid_record()
+        record["transport"] = "http_get"
+
+        violations = bridge_evidence_compare.compare_bridge_evidence_records([record])
+
+        self.assertTrue(any("transport does not match operation text_turn" in violation for violation in violations))
+
     def test_rejects_raw_payload_or_secret_fields(self):
         record = self.valid_record()
         record["requestBody"] = {"message": "Draft the private bridge plan", "Authorization": "Bearer secret"}
@@ -68,6 +76,7 @@ class BridgeEvidenceCompareTest(unittest.TestCase):
             "kind": "bridge_contract_evidence",
             "operationId": "text_turn",
             "requestKind": "text_turn",
+            "transport": "http_post",
             "status": "success",
             "httpStatus": 200,
             "targetPath": "/v1/concierge/turn",

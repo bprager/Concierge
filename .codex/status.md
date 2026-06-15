@@ -59,8 +59,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added a Text Concierge live bridge readiness panel that combines endpoint, descriptor, checksum/signature, evidence capture/comparison, runtime-validation source, last live-send outcome, and blocked-effect state while stating that readiness is not Napoleon approval.
 - Added runtime-validation source labeling to live bridge readiness and readiness proof export so local harness and simulation checks remain distinct from real Napoleon runtime validation.
 - Added a composer-side live-send preflight checklist for text readiness, endpoint configuration, descriptor discovery, descriptor integrity, local governance send gate, and Rehearsal Mode state.
-- Added in-session readiness tracking from captured `bridge_contract_evidence`, with local registry and raw/secret field comparison before evidence is marked passed.
-- Added a sanitized local bridge readiness proof export with descriptor state, blocked effects, evidence status, last failure reason, and no raw prompts, endpoints, or secrets.
+- Added in-session readiness tracking from captured `bridge_contract_evidence`, with local registry transport/path/request-kind and raw/secret field comparison before evidence is marked passed.
+- Added a sanitized local bridge readiness proof export with descriptor state, blocked effects, evidence status, last operation transport, last failure reason, and no raw prompts, endpoints, or secrets.
 - Added same-session local bridge readiness proof comparison that reports sanitized proof changes without exposing raw prompts, endpoints, tokens, request bodies, or response bodies.
 - Added a local harness endpoint preset that configures `http://127.0.0.1:8787` and descriptor preflight without starting services or granting authority.
 - Added `make app-smoke` for app-level local harness text flow coverage across descriptor discovery, governed send, delegation presentation, last successful proof presentation, blocked effects, readiness evidence, and denied fail-closed text turn details.

@@ -13,6 +13,7 @@ const validEvidence: BridgeContractEvidence = {
   kind: "bridge_contract_evidence",
   operationId: "text_turn",
   requestKind: "text_turn",
+  transport: "http_post",
   status: "success",
   httpStatus: 200,
   targetPath: "/v1/concierge/turn",
@@ -44,6 +45,7 @@ test("marks sanitized bridge evidence as captured and compared", () => {
   assert.equal(state.comparisonState, "passed");
   assert.equal(state.lastEvidenceStatus, "success");
   assert.equal(state.lastOperationId, "text_turn");
+  assert.equal(state.lastTransport, "http_post");
   assert.equal(state.lastTargetPath, "/v1/concierge/turn");
 });
 
@@ -56,6 +58,17 @@ test("fails comparison for evidence that does not match the bridge registry", ()
   assert.equal(state.captureState, "passed");
   assert.equal(state.comparisonState, "failed");
   assert.ok(state.failureReason?.includes("target path"));
+});
+
+test("fails comparison for evidence transport that does not match the bridge registry", () => {
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+    ...validEvidence,
+    transport: "http_get",
+  });
+
+  assert.equal(state.captureState, "passed");
+  assert.equal(state.comparisonState, "failed");
+  assert.ok(state.failureReason?.includes("transport"));
 });
 
 test("fails comparison when evidence contains raw payload fields", () => {
@@ -185,6 +198,7 @@ test("compares sanitized bridge readiness proofs and reports meaningful changed 
       "Evidence capture",
       "Evidence comparison",
       "Last evidence status",
+      "Last transport",
       "Last operation path",
       "Last failure reason",
       "Evidence blocked effects",
