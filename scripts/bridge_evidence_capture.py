@@ -22,13 +22,28 @@ DEFAULT_MESSAGE = "Ask Napoleon for a governed Concierge bridge evidence check."
 REQUIRED_DESCRIPTOR_BLOCKED_EFFECTS = {"runtime_authority", "memory_write"}
 RUNTIME_VALIDATION_SOURCES = ("real_runtime", "local_harness", "local_simulation")
 LOCAL_HARNESS_CHECKSUM = "sha256:local-harness"
+KNOWN_BRIDGE_PATHS = (
+    "/v1/concierge/turn",
+    "/v1/concierge/evaluate",
+    "/v1/concierge/chief-of-staff/descriptor",
+    "/v1/concierge/chief-of-staff/steering",
+    "/v1/concierge/memory-proposals",
+)
+
+
+def strip_known_bridge_path(endpoint: str) -> str:
+    value = endpoint.strip().rstrip("/")
+    for known_path in KNOWN_BRIDGE_PATHS:
+        if value.endswith(known_path):
+            return value[: -len(known_path)].rstrip("/")
+    return value
 
 
 def bridge_url(endpoint: str, path: str = "/v1/concierge/turn") -> str:
-    base = endpoint.rstrip("/")
+    base = endpoint.strip().rstrip("/")
     if base.endswith(path):
         return base
-    return f"{base}{path}"
+    return f"{strip_known_bridge_path(base)}{path}"
 
 
 def get_json(url: str, auth_token: str | None = None) -> tuple[int, dict[str, Any]]:

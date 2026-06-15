@@ -112,6 +112,30 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertEqual(harness.last_turn_payload["descriptorConnection"]["checksumState"], "matched")
         self.assertEqual(harness.last_turn_payload["descriptorConnection"]["signatureState"], "valid")
 
+    def test_capture_runner_normalizes_full_turn_endpoint_before_descriptor_preflight(self):
+        with RecordingBridgeHarness(descriptor_ready=True) as harness:
+            with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    exit_code = bridge_evidence_capture.main(
+                        [
+                            "--endpoint",
+                            f"{harness.base_url}/v1/concierge/turn",
+                            "--out",
+                            handle.name,
+                            "--runtime-validation-source",
+                            "local_simulation",
+                        ]
+                    )
+                self.assertEqual(exit_code, 0)
+                handle.seek(0)
+                records = json.load(handle)
+
+        self.assertEqual(harness.get_count, 1)
+        self.assertEqual(harness.post_count, 1)
+        self.assertEqual(records[0]["targetPath"], "/v1/concierge/turn")
+        self.assertEqual(harness.last_post_path, "/v1/concierge/turn")
+        self.assertEqual(harness.last_turn_payload["descriptorConnection"]["state"], "ready")
+
     def test_capture_runner_fails_closed_when_descriptor_discovery_is_invalid(self):
         with RecordingBridgeHarness(descriptor_ready=False) as harness:
             with tempfile.NamedTemporaryFile("w", suffix=".json") as handle:
@@ -148,6 +172,7 @@ class RecordingBridgeHarness:
         self.descriptor_ready = descriptor_ready
         self.get_count = 0
         self.post_count = 0
+        self.last_post_path = ""
         self.last_turn_payload = {}
 
     def __enter__(self):
@@ -176,8 +201,12 @@ class RecordingBridgeHarness:
 
             def do_POST(self):
                 parent.post_count += 1
+                parent.last_post_path = self.path
                 length = int(self.headers.get("Content-Length", "0"))
                 parent.last_turn_payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                if self.path != "/v1/concierge/turn":
+                    self.write_json(404, {"error": "not_found"})
+                    return
                 trace_id = parent.last_turn_payload["traceId"]
                 request_id = parent.last_turn_payload["chiefOfStaffRequest"]["request_id"]
                 self.write_json(

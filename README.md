@@ -51,7 +51,7 @@ To prove the combined live-runtime validation runner against the local harness, 
 make live-runtime-local-harness
 ```
 
-When a real Napoleon runtime is available, set `NAPOLEON_BRIDGE_ENDPOINT` to the Napoleon base URL and `NAPOLEON_EVAL_ENDPOINT` to the evaluator endpoint if it differs from `/v1/concierge/evaluate`, then run:
+When a real Napoleon runtime is available, set `NAPOLEON_BRIDGE_ENDPOINT` to the Napoleon base URL or full `/v1/concierge/turn` URL and `NAPOLEON_EVAL_ENDPOINT` to the evaluator endpoint if it differs from `/v1/concierge/evaluate`, then run:
 
 ```bash
 make live-runtime-validation
@@ -60,7 +60,7 @@ make live-runtime-validation
 The live runtime validation artifacts are local evidence only. They omit raw prompts, response bodies, response text, endpoint hosts, bearer tokens, and evaluator response excerpts.
 The validation summary and captured bridge evidence record the runtime validation source. The summary also includes an artifact privacy audit and fails validation if retained bridge or evaluator artifacts contain forbidden raw fields or sensitive runtime values. Keep the default `real_runtime` for an actual Napoleon runtime; use `--runtime-validation-source local_harness` only for local harness evidence.
 If the descriptor identifies the local harness but the run is labeled as `real_runtime`, validation fails closed before sending the text turn.
-Standalone bridge evidence capture also accepts `NAPOLEON_BRIDGE_ENDPOINT`; evaluator-only HTTP mode still uses `NAPOLEON_EVAL_ENDPOINT`.
+Standalone bridge evidence capture also accepts `NAPOLEON_BRIDGE_ENDPOINT` as either a base URL or known Concierge bridge operation URL; evaluator-only HTTP mode still uses `NAPOLEON_EVAL_ENDPOINT`.
 
 The lower-level evaluator-only command is still available:
 
