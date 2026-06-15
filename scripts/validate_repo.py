@@ -358,6 +358,53 @@ def validate_governance_review_response_boundary(data: object) -> None:
         raise SystemExit("child protected governance review responses must preserve guardian review wording")
 
 
+def validate_descriptor_response_boundary(data: object) -> None:
+    if not isinstance(data, dict):
+        raise SystemExit("Descriptor response example must be a JSON object")
+
+    descriptor = data.get("descriptor")
+    connection = data.get("connection")
+    checksum = data.get("checksum")
+    signature = data.get("signature")
+    if not isinstance(descriptor, dict):
+        raise SystemExit("Descriptor response example must include descriptor object")
+    if not isinstance(connection, dict):
+        raise SystemExit("Descriptor response example must include connection object")
+    if not isinstance(checksum, dict) or not isinstance(signature, dict):
+        raise SystemExit("Descriptor response example must include checksum and signature objects")
+
+    require_equal(data.get("serviceId"), "napoleon.chief_of_staff", "descriptor response serviceId must match Chief of Staff")
+    require_equal(descriptor.get("serviceId"), "napoleon.chief_of_staff", "descriptor.serviceId must match Chief of Staff")
+    require_equal(data.get("ready"), True, "descriptor response sample must be ready")
+    require_equal(data.get("runtimeAuthority"), False, "descriptor response must not grant runtime authority")
+    require_equal(descriptor.get("runtimeAuthority"), False, "descriptor must not grant runtime authority")
+    require_equal(descriptor.get("commandExecution"), False, "descriptor must not allow command execution")
+    require_equal(
+        data.get("cachePolicy"),
+        "fail_closed_to_review_required",
+        "descriptor response must preserve fail-closed cache policy",
+    )
+    require_equal(
+        descriptor.get("cachePolicy"),
+        "fail_closed_to_review_required",
+        "descriptor must preserve fail-closed cache policy",
+    )
+    require_equal(connection.get("state"), "ready", "descriptor connection state must be ready in ready sample")
+    require_equal(connection.get("checksumState"), "matched", "descriptor checksum must match in ready sample")
+    require_equal(connection.get("signatureState"), "valid", "descriptor signature must be valid in ready sample")
+    require_equal(connection.get("canAttemptLiveBridge"), True, "descriptor sample may only attempt bridge after ready state")
+    require_equal(checksum.get("expected"), checksum.get("actual"), "descriptor checksum sample must match")
+    require_equal(signature.get("valid"), True, "descriptor signature sample must be valid")
+
+    blocked_effects = descriptor.get("blockedEffects")
+    top_level_blocked_effects = data.get("blockedEffects")
+    if not isinstance(blocked_effects, list) or not isinstance(top_level_blocked_effects, list):
+        raise SystemExit("Descriptor response must include blocked effect lists")
+    for effect in ["runtime_authority", "command_execution", "memory_write", "agent_dispatch", "approval_capture", "external_send"]:
+        if effect not in blocked_effects or effect not in top_level_blocked_effects:
+            raise SystemExit(f"Descriptor response must keep {effect} blocked")
+
+
 def validate_child_text_response_boundary(data: object) -> None:
     if not isinstance(data, dict):
         raise SystemExit("Child text response example must be a JSON object")
@@ -609,6 +656,11 @@ def openapi_request_examples() -> list[tuple[str, str]]:
 
 def openapi_response_examples() -> list[tuple[str, str, str]]:
     return [
+        (
+            "/v1/concierge/chief-of-staff/descriptor",
+            "200",
+            "examples/sample_chief_of_staff_descriptor_response.json",
+        ),
         ("/v1/concierge/turn", "200", "examples/sample_text_turn_response.json"),
         ("/v1/concierge/turn", "200", "examples/sample_child_text_turn_response.json"),
         ("/v1/concierge/memory-proposals", "200", "examples/sample_memory_proposal_response.json"),
@@ -682,6 +734,10 @@ def validate_openapi_response_examples() -> None:
         data = load_json(example_path)
         schema = load_openapi_response_schema(path, status_code)
         validate_openapi_instance(schema, data)
+        if example_path.endswith("sample_chief_of_staff_descriptor_response.json"):
+            validate_descriptor_response_boundary(data)
+            print(f"valid OpenAPI response example: {example_path} against {path} {status_code}")
+            continue
         validate_bridge_response_provenance(data)
         if example_path.endswith("sample_child_text_turn_response.json"):
             validate_child_text_response_boundary(data)

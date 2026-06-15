@@ -47,6 +47,13 @@ class BridgeContractValidationTest(unittest.TestCase):
 
         self.assertEqual(len(examples), len(set(examples)))
 
+    def test_sample_chief_of_staff_descriptor_response_matches_openapi_response_contract(self):
+        response = validate_repo.load_json("examples/sample_chief_of_staff_descriptor_response.json")
+        schema = validate_repo.load_openapi_response_schema("/v1/concierge/chief-of-staff/descriptor", "200")
+
+        validate_repo.validate_openapi_instance(schema, response)
+        validate_repo.validate_descriptor_response_boundary(response)
+
     def test_sample_text_turn_response_matches_openapi_response_contract(self):
         response = validate_repo.load_json("examples/sample_text_turn_response.json")
         schema = validate_repo.load_openapi_response_schema("/v1/concierge/turn", "200")
