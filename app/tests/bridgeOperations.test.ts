@@ -38,11 +38,67 @@ function openApiTransports(): Record<string, string> {
   return transports;
 }
 
+function openApiEnumAfter(anchor: string, enumKey: string, occurrence = 0): string[] {
+  const yaml = readFileSync("../api/napoleon_bridge.openapi.yaml", "utf8");
+  const starts = [...yaml.matchAll(new RegExp(anchor, "g"))].map((match) => match.index ?? -1);
+  const start = starts[occurrence] ?? -1;
+  assert.notEqual(start, -1, `missing OpenAPI anchor: ${anchor} occurrence ${occurrence}`);
+  const afterAnchor = yaml.slice(start);
+  const enumStart = afterAnchor.indexOf(enumKey);
+  assert.notEqual(enumStart, -1, `missing enum key after ${anchor}: ${enumKey}`);
+  const afterEnum = afterAnchor.slice(enumStart);
+  const nextProperty = afterEnum.match(/\n\s{20}[a-zA-Z][A-Za-z0-9]+:\n/);
+  const propertyBlock = nextProperty ? afterEnum.slice(0, nextProperty.index) : afterEnum;
+  const inlineEnum = propertyBlock.match(/enum:\s*\[([^\]]+)\]/);
+  if (inlineEnum) {
+    return inlineEnum[1].split(",").map((value) => value.trim());
+  }
+  const lines = propertyBlock.split("\n");
+  const enumLine = lines.findIndex((line) => line.trim() === "enum:");
+  assert.notEqual(enumLine, -1, `missing enum block after ${anchor}: ${enumKey}`);
+  const values: string[] = [];
+  for (const line of lines.slice(enumLine + 1)) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("- ")) break;
+    values.push(trimmed.slice(2));
+  }
+  return values;
+}
+
 test("bridge operation registry matches canonical OpenAPI concierge paths", () => {
   const registryPaths = (BRIDGE_OPERATIONS as OperationShape[]).map((operation) => operation.path).sort();
 
   assert.equal(GENERATED_BRIDGE_CONTRACT_SOURCE, "api/napoleon_bridge.openapi.yaml");
   assert.deepEqual(registryPaths, openApiPaths());
+});
+
+test("OpenAPI descriptor connection enums match runtime fail-closed states", () => {
+  const expectedStates = [
+    "no_endpoint",
+    "missing_descriptor",
+    "descriptor_mismatch",
+    "auth_failure",
+    "bridge_timeout",
+    "http_failure",
+    "ready",
+  ];
+  const expectedFailClosedReasons = [
+    "no_endpoint",
+    "no_descriptor",
+    "descriptor_invalid",
+    "descriptor_signature_or_checksum_mismatch",
+    "auth_failure",
+    "bridge_timeout",
+    "http_failure",
+  ];
+
+  for (const occurrence of [0, 1, 2]) {
+    assert.deepEqual(openApiEnumAfter("descriptorConnection:", "state:", occurrence), expectedStates);
+    assert.deepEqual(
+      openApiEnumAfter("descriptorConnection:", "failClosedReason:", occurrence),
+      expectedFailClosedReasons,
+    );
+  }
 });
 
 test("bridge operations declare governed transport and bearer-token policy", () => {

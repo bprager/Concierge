@@ -173,6 +173,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Fixed
 
 - Reject live Napoleon text responses that claim memory writes, approval capture, agent dispatch, local application, or external sends even when those claims appear only in response text.
+- Aligned the OpenAPI descriptor connection contract with runtime fail-closed descriptor states for authentication failure, timeout, and HTTP failure.
 - Show blocked effects from fail-closed memory proposal review and Chief of Staff steering handoff errors in telemetry and visible failure messages.
 - Show live text bridge failure reasons and blocked effects in the conversation transcript as well as the bridge failure panel.
 - Show returned decision, audit, and governance references in live text bridge failure telemetry and visible fail-closed messages when Napoleon supplies them.
