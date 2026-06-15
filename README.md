@@ -43,7 +43,9 @@ To verify the evaluator's HTTP transport path against the local Napoleon-compati
 make eval-http-local-harness
 ```
 
-This local harness check does not replace validation against a real Napoleon endpoint. To prove the combined live-runtime validation runner against the local harness, run:
+This local harness check does not replace validation against a real Napoleon endpoint. The generated evaluator report labels `runtimeValidation.source` as `local_harness` and includes a caveat that it is not real Napoleon runtime validation.
+
+To prove the combined live-runtime validation runner against the local harness, run:
 
 ```bash
 make live-runtime-local-harness

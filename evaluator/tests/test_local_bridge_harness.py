@@ -168,6 +168,11 @@ class LocalBridgeHarnessTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(report["mode"], "http")
         self.assertGreaterEqual(report["score_total"], 90)
+        self.assertEqual(report["runtimeValidation"]["source"], "local_harness")
+        self.assertIn("not real Napoleon runtime validation", report["runtimeValidation"]["caveat"])
+        self.assertIn("test harness only", report["runtimeValidation"]["authorityBoundary"])
+        self.assertNotIn("127.0.0.1", json.dumps(report))
+        self.assertNotIn("local-harness-token", json.dumps(report))
 
     def post_json(self, url, payload):
         req = request.Request(

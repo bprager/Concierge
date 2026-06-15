@@ -163,6 +163,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added `runtimeValidation.source` and caveat fields to live-runtime validation summaries so local harness and simulation artifacts remain distinct from real Napoleon runtime validation evidence.
 - Added `runtimeValidationSource` labels to sanitized bridge evidence capture and comparator validation so captured local harness or simulation evidence remains distinct from real Napoleon runtime evidence.
 - Added a fail-closed guard that rejects descriptor-identified local harness evidence when it is mislabeled as real runtime validation.
+- Added `runtimeValidation.source=local_harness` labeling to standalone evaluator HTTP local harness reports so transport-only evidence remains distinct from real Napoleon runtime validation.
 - Sanitized live-runtime evaluator reports so retained validation artifacts remove evaluator response excerpts before review.
 - Local avatar work now includes a metadata-only VRM model reference loader and Avatar Model panel that validates the local model reference without starting rendering, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - Local avatar work now includes an Avatar Renderer readiness panel that prepares renderer preflight metadata from the loaded model without allocating a canvas, starting a render loop, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.

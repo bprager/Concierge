@@ -8,7 +8,7 @@ This summary is local evaluator evidence only. It is not Napoleon approval, not 
 
 - Report: `evaluator/reports/latest.json`
 - Human review record: `evaluator/reports/human_review.md`
-- Run ID: `2026-06-15T14:39:21Z`
+- Run ID: `2026-06-15T14:44:24Z`
 - Mode: `stub`
 - Scenario count: `24`
 - Score total: `100.0`
