@@ -102,6 +102,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added OpenAPI-governed response artifact validation for child-protected Chief of Staff taxonomy review handoff, including guardian review wording, child profile evidence, and explicit false local-application and side-effect boundary checks.
 - Added child-protected memory proposal request artifact validation with guardian review and child profile enforcement.
 - Added child-protected Chief of Staff steering request artifact validation with required child-safety caution and proposal-only boundary enforcement.
+- Added OpenAPI-governed response artifact validation for child-protected Chief of Staff steering handoff, including guardian review wording, child profile and capability evidence, blocked secret-keeping, and explicit false local-application and side-effect boundary checks.
 - Added a last successful Napoleon proof panel that displays returned governance, trace, audit, delegation, recommendation, allowed-effect, and blocked-effect metadata without treating it as approval or execution authority.
 - Added successful Napoleon transcript metadata that displays a returned target capability when Napoleon supplies one without selected-agent delegation.
 - Centralized Text Concierge Napoleon response presentation state so local-only, blocked, and failed paths clear stale delegation and proof together.
