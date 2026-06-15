@@ -173,7 +173,7 @@ Acceptance criteria:
 
 - Live sends fail closed when no endpoint is configured, descriptor validation fails, auth fails, the response contract is invalid, local governance is `no_go`, Napoleon returns `deny` or `no_go`, or the bridge times out.
 - Optional bridge tokens are sent only as `Authorization` headers and are not included in request bodies, telemetry, memory proposals, or capability exports.
-- Configured Napoleon base URLs resolve to canonical bridge paths for text turns, descriptor discovery, Chief of Staff steering handoff, memory proposal review, and evaluator requests.
+- Configured Napoleon base URLs or known Concierge bridge operation URLs resolve to canonical bridge paths for text turns, descriptor discovery, Chief of Staff steering handoff, memory proposal review, and evaluator requests.
 - Bridge operation IDs, paths, HTTP methods, and required 200-response fields are generated from `api/napoleon_bridge.openapi.yaml`, and app plus repository checks fail if the generated registry drifts from the canonical contract.
 - Text Concierge shows the governed descriptor discovery, text turn, memory proposal review, Chief of Staff steering, and Chief of Staff taxonomy review paths from the generated registry without endpoint hosts, bearer tokens, or authority claims; taxonomy review is shown as a governed handoff alias of the canonical Chief of Staff steering operation, not as a separate free-form route.
 - Repository validation checks that governed bridge operations have matching HTTP methods, request-kind constants, required 200-response fields, `NapoleonBearer` security, and named operation usage.

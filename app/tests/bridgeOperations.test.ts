@@ -166,6 +166,27 @@ test("bridge URL builder resolves base URLs and already-specific operation URLs"
   );
 });
 
+test("bridge URL builder normalizes known operation URLs before resolving another operation", () => {
+  assert.equal(
+    buildNapoleonBridgeUrl(
+      "https://napoleon.example/concierge/v1/concierge/chief-of-staff/descriptor",
+      "text_turn",
+    ),
+    "https://napoleon.example/concierge/v1/concierge/turn",
+  );
+  assert.equal(
+    buildNapoleonBridgeUrl(
+      "https://napoleon.example/concierge/v1/concierge/memory-proposals",
+      "chief_of_staff_steering",
+    ),
+    "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering",
+  );
+  assert.equal(
+    buildNapoleonBridgeUrl("https://napoleon.example/concierge/v1/concierge/evaluate", "memory_proposal_review"),
+    "https://napoleon.example/concierge/v1/concierge/memory-proposals",
+  );
+});
+
 test("describes governed bridge operation routes without endpoint hosts or secrets", () => {
   const summary = describeBridgeOperationSummary("text_turn");
 
