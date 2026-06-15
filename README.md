@@ -43,7 +43,19 @@ To verify the evaluator's HTTP transport path against the local Napoleon-compati
 make eval-http-local-harness
 ```
 
-This local harness check does not replace validation against a real Napoleon endpoint. When one is available, set `NAPOLEON_EVAL_ENDPOINT` and run:
+This local harness check does not replace validation against a real Napoleon endpoint. To prove the combined live-runtime validation runner against the local harness, run:
+
+```bash
+make live-runtime-local-harness
+```
+
+When a real Napoleon runtime is available, set `NAPOLEON_BRIDGE_ENDPOINT` to the Napoleon base URL and `NAPOLEON_EVAL_ENDPOINT` to the evaluator endpoint if it differs from `/v1/concierge/evaluate`, then run:
+
+```bash
+make live-runtime-validation
+```
+
+The lower-level evaluator-only command is still available:
 
 ```bash
 make eval-http

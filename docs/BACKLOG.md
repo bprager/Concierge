@@ -195,6 +195,8 @@ Acceptance criteria:
 - `make bridge-evidence-capture` exercises one governed text evidence capture against the local harness, including descriptor discovery before text turn submission.
 - `make bridge-evidence-compare` validates sample or captured bridge evidence against the OpenAPI-aligned bridge registry and rejects raw payload or secret fields.
 - `make eval-http-local-harness` exercises evaluator HTTP mode against the local Napoleon-compatible harness without treating it as live Napoleon validation.
+- `make live-runtime-local-harness` proves the combined live-runtime validation runner against the local harness, including descriptor discovery, sanitized bridge evidence capture, evidence comparison, and evaluator HTTP mode.
+- `make live-runtime-validation` runs the same combined validation against a configured real Napoleon runtime using `NAPOLEON_BRIDGE_ENDPOINT` and optional `NAPOLEON_EVAL_ENDPOINT`, writing sanitized evidence, evaluator report, and validation summary artifacts without endpoint hosts, bearer tokens, raw prompts, request bodies, response bodies, or response text.
 - Failures are visible as local blocked states with blocked effects. Early local failures preserve the relevant text-turn, memory proposal, or Chief of Staff steering blocked-effect list, and remote failures preserve Napoleon-supplied blocked effects plus returned decision, audit, and governance references where available. Failures do not send externally, write memory, dispatch agents, append remote audit records, or capture approval.
 - Text Concierge always shows the Napoleon delegation panel; before bridge provenance is returned, selected agents, allowed effects, blocked effects, governance state, trace ID, and audit ID are explicitly shown as not returned.
 - Successful live responses may fill the Napoleon delegation panel with selected agents, selection reasons, allowed effects, blocked effects, governance state, trace ID, and audit ID.
@@ -228,7 +230,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by bridge failure, contract mismatch, live text response side-effect-claim, bridge response authority provenance, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, timeout, rendered proof export interaction, local harness text proof/delegation/export comparison, steering, and memory response-side side-effect claims, sanitized bridge evidence capture, bridge evidence comparison, and repository validation for direct authority-boundary bypass attempts.
+- Covered by bridge failure, contract mismatch, live text response side-effect-claim, bridge response authority provenance, and dedicated bridge fixture delegation scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, timeout, rendered proof export interaction, local harness text proof/delegation/export comparison, steering, and memory response-side side-effect claims, sanitized bridge evidence capture, bridge evidence comparison, combined live-runtime validation runner coverage against the local harness, and repository validation for direct authority-boundary bypass attempts.
 
 ## Milestone P2: Voice Concierge
 

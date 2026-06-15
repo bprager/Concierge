@@ -131,7 +131,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - The bridge boundary can erode if UI code starts calling tools or services directly instead of governed Napoleon APIs; repository validation now catches representative direct runtime bypasses.
 - Self-evolution language can be misread as permission for automatic production changes; it is proposal-only until gates and approval exist.
 - The Napoleon bridge contract has a first-pass CoS-aware Text Concierge adapter, OpenAPI-aligned bridge operation registry, local governed route panel, local HTTP bridge harness, a UI local harness endpoint preset, canonical endpoint path resolution, optional local bearer-token header support, sanitized bridge contract evidence capture and comparison with a live-capable runner and UI-session readiness tracking, local/live descriptor connection state, a local live bridge readiness panel, composer-side live-send preflight checklist, same-session readiness proof comparison, local rehearsal preview, governance review display, governed memory proposal review handoff, fail-closed live errors, strict response provenance checks, reusable fixtures, and delegation provenance display, but live runtime validation still needs a configured endpoint.
-- The evaluator has 24 scenarios and meets the current backlog breadth target. Repository validation now includes contract-aware bridge and runtime authority-boundary gates, accepted baseline regression checks, a local human review record generator, and a local Markdown summary generator for promotion decisions, but live Napoleon HTTP mode is still not configured or validated and actual reviewed promotion records still need to be kept when changes are promoted.
+- The evaluator has 24 scenarios and meets the current backlog breadth target. Repository validation now includes contract-aware bridge and runtime authority-boundary gates, accepted baseline regression checks, a local human review record generator, a local Markdown summary generator, and a combined live-runtime validation runner for promotion decisions, but live Napoleon HTTP mode is still not configured or validated against a real endpoint and actual reviewed promotion records still need to be kept when changes are promoted.
 - The capability ledger is browser-local, count and age bounded, with clear/export/taxonomy controls, local Chief of Staff taxonomy review drafts with evaluator-case and evolution-proposal packet details, governed taxonomy review submission, 7 day and 28 day trend answers, deterministic risk/value scoring, and governed evolution proposal review handoff; applying reviewed taxonomy changes remains future work.
 - Local Concierge contracts now include first-pass mirrors of Napoleon's CoS package for text turns, OpenAPI-tested canonical operation paths, request-kind and bearer-security validation, governed memory proposal review handoff, required live response trace/audit provenance, live text side-effect claim rejection, response authority provenance evaluator coverage, child protected bridge response semantics coverage, governed review response semantics coverage, profile-scope drift evaluator coverage, live-runtime artifact semantics evaluator coverage, governed request/response artifact validation, and live/local descriptor checksum/signature state. Remaining mismatches include live runtime validation against a real endpoint.
 - Local voice work now includes deterministic barge-in rehearsal state and a rendered Text Concierge panel that shows planned sample speech interruption and blocked effects without playback, capture, raw audio storage, Napoleon contact, approval capture, memory writes, agent dispatch, or external sends.
@@ -151,13 +151,14 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added accepted evaluator baseline storage at `evaluator/reports/accepted_baseline.json`, with `make eval-accept-baseline` requiring a clean report and `make eval-with-baseline` failing on local regression.
 - Added `make eval-human-review` for local evaluator promotion records with reviewer decision fields, baseline evidence, hard-fail/missing-artifact/regression counts, and explicit non-authority boundaries.
 - Added `make eval-summary` for local evaluator Markdown summaries with run status, gate counts, dimension scores, case summary, recommendations, and explicit non-authority boundaries.
+- Added `make live-runtime-validation` and `make live-runtime-local-harness` so descriptor discovery, sanitized bridge evidence capture/comparison, evaluator HTTP mode, and non-authorizing runtime summaries can be run together once a real Napoleon runtime endpoint exists.
 - Local avatar work now includes a metadata-only VRM model reference loader and Avatar Model panel that validates the local model reference without starting rendering, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - Local avatar work now includes an Avatar Renderer readiness panel that prepares renderer preflight metadata from the loaded model without allocating a canvas, starting a render loop, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
 
 ## Next 3 To 5 Priorities
 
-1. Validate live Napoleon descriptor discovery against a real runtime endpoint once available.
+1. Run `make live-runtime-validation` against a real Napoleon runtime endpoint once available.
 2. Add live governance review submission once Napoleon exposes a runtime transport.
 3. Add live Napoleon runtime validation and fixture-backed contract comparison once a runtime transport exists.
 4. Add governed application flow for reviewed taxonomy changes once Napoleon exposes an explicit approval/application endpoint.
@@ -169,7 +170,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Evaluator default report path: `make eval`
 - Local bridge harness smoke: `make bridge-harness`
 - App local harness text smoke: `make app-smoke`
-- Napoleon HTTP evaluator: `NAPOLEON_EVAL_ENDPOINT=<url> make eval-http`
+- Napoleon live runtime validation: `NAPOLEON_BRIDGE_ENDPOINT=<base-url> make live-runtime-validation`
+- Napoleon HTTP evaluator only: `NAPOLEON_EVAL_ENDPOINT=<url> make eval-http`
 - Frontend build, if dependencies are installed: `cd app && npm run build`
 - Tauri shell check, if Rust dependencies are available: `cd app/src-tauri && cargo check`
 

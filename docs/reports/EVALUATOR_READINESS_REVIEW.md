@@ -50,7 +50,7 @@ Specific limitations:
 - Human review exists as a local non-authorizing artifact, but actual reviewed records and any required Napoleon or release approval are still separate.
 - There is no golden answer comparison.
 - Local bridge contract, trace/audit envelope, governed request/response artifact, and runtime authority-boundary validation now exist, but they still rely on local fixtures and repository scans.
-- App-level local harness coverage exists for the P1 text bridge path, but live Napoleon runtime behavior is still unverified.
+- App-level local harness coverage exists for the P1 text bridge path, and `make live-runtime-local-harness` proves the combined runtime validation runner against the local harness, but live Napoleon runtime behavior is still unverified.
 - There is no live validation against a real Napoleon endpoint for the `napoleon.chief_of_staff` descriptor, governance decisions, agent manifests, profile contract, observability envelopes, or evolution proposals.
 
 ## Scenario Gaps

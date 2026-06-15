@@ -109,6 +109,7 @@ Work:
 - Use `make eval-human-review` for evaluator baseline promotion and keep completed review records with the promoted evidence.
 - Use `make eval-summary` to produce the Markdown summary output for review.
 - Keep the human review checklist updated as promotion gates change.
+- Use `make live-runtime-validation` once a real Napoleon runtime endpoint exists, so descriptor discovery, sanitized bridge evidence, and evaluator HTTP mode are checked together before phase promotion.
 
 Why fourth:
 

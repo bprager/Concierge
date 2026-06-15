@@ -10,7 +10,7 @@ The strongest architectural decision is the boundary: Concierge owns local inter
 
 The June 8 integration pass discovered Napoleon-side Chief of Staff integration contracts on `bernd@mimir` under `~/Projects/Napoleon/docs/concierge-integration/`. Those documents materially improve alignment: Napoleon now defines contract-only surfaces for Chief of Staff requests, agent manifests, governance decisions, user profiles, observability envelopes, and evolution proposals. They do not grant runtime authority.
 
-The main weakness has shifted from "no Napoleon contract evidence" to "live Napoleon runtime validation is still unavailable." The app now has local profile mapping, governance review display, bearer-token bridge handling, and child-profile contract coverage, but real endpoint credentials, descriptor signature/checksum validation against a live runtime, durable trace storage, and full privacy audit retention still need runtime validation. The evaluator is useful as a smoke test but not yet a strong judge of Napoleon or Chief of Staff quality.
+The main weakness has shifted from "no Napoleon contract evidence" to "live Napoleon runtime validation is still unavailable." The app now has local profile mapping, governance review display, bearer-token bridge handling, child-profile contract coverage, and a combined live-runtime validation runner for descriptor discovery, sanitized bridge evidence, and evaluator HTTP mode. Real endpoint credentials, descriptor signature/checksum validation against a live runtime, durable trace storage, and full privacy audit retention still need runtime validation. The evaluator is useful as a smoke test but not yet a strong judge of Napoleon or Chief of Staff quality.
 
 ## Evidence Reviewed
 

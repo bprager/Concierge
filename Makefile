@@ -1,4 +1,4 @@
-.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare generate-bridge-operations eval-http eval-http-local-harness schema-check app-test app-smoke app-build tauri-check zip
+.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare generate-bridge-operations eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
 
 check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare schema-check app-test app-smoke app-build tauri-check
 
@@ -37,6 +37,12 @@ eval-http:
 
 eval-http-local-harness:
 	PYTHONPATH=evaluator uv run --with PyYAML --with requests --with jsonschema python scripts/eval_http_local_harness.py
+
+live-runtime-validation:
+	PYTHONPATH=evaluator uv run --with PyYAML --with requests --with jsonschema python scripts/live_runtime_validation.py --bridge-endpoint $$NAPOLEON_BRIDGE_ENDPOINT --eval-endpoint $$NAPOLEON_EVAL_ENDPOINT
+
+live-runtime-local-harness:
+	PYTHONPATH=evaluator uv run --with PyYAML --with requests --with jsonschema python -m unittest evaluator.tests.test_live_runtime_validation
 
 schema-check:
 	uv run --with PyYAML --with jsonschema python scripts/validate_repo.py
