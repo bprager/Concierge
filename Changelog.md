@@ -60,6 +60,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added child-protected memory proposal request artifact validation that requires guardian review and preserves child protected profile mapping.
 - Added child-protected Chief of Staff steering request artifact validation that requires explicit child-safety caution while preserving proposal-only boundaries.
 - Added OpenAPI-validated adult and child Chief of Staff taxonomy review request artifacts and aligned taxonomy review submission with the canonical Chief of Staff steering request kind.
+- Added an OpenAPI-validated governance review request artifact on the canonical Chief of Staff steering route, with repository validation for proposal-only and child-protected guardian-review boundaries.
 - Added optional local bridge bearer token support for live text turns and governed steering handoff, sent only as an authorization header.
 - Added canonical bridge endpoint resolution from a configured Napoleon base URL for text turns and Chief of Staff steering handoff.
 - Added a generated bridge operation registry derived from the canonical OpenAPI Concierge paths.

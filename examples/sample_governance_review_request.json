@@ -1,0 +1,91 @@
+{
+  "requestKind": "chief_of_staff_steering_handoff",
+  "handoffKind": "governance_review_handoff",
+  "profileMode": "child_protected_user",
+  "chiefOfStaffRequest": {
+    "request_id": "cos_governance_review_request_sample",
+    "requester": "concierge.governance_review",
+    "request_type": "governance_review",
+    "profile_mode": "child_protected_user",
+    "source_evidence": [
+      "trace:trace_governance_review_original",
+      "audit:audit_governance_review_original",
+      "decision:decision_governance_review_original"
+    ],
+    "requested_authority_tier": "advisory_review",
+    "trace_id": "trace_governance_review_request_sample",
+    "payload_schema": "napoleon/concierge/governance-review-handoff/v1"
+  },
+  "governanceRequest": {
+    "request_id": "gov_governance_review_request_sample",
+    "actor_id": "concierge.governance_review",
+    "action": "submit_governance_review_for_napoleon_review",
+    "target": "napoleon.governance",
+    "requested_authority_tier": "advisory_review",
+    "evidence_links": [
+      "trace:trace_governance_review_original",
+      "audit:audit_governance_review_original",
+      "decision:decision_governance_review_original"
+    ],
+    "trace_id": "trace_governance_review_request_sample"
+  },
+  "traceEnvelope": {
+    "trace_id": "trace_governance_review_request_sample",
+    "parent_trace_id": "conv_governance_review_request_sample",
+    "actor_id": "concierge.governance_review",
+    "request_id": "cos_governance_review_request_sample",
+    "decision_id": "local_governance_trace_governance_review_request_sample",
+    "timestamp": "2026-06-15T00:00:00.000Z"
+  },
+  "auditEnvelope": {
+    "audit_id": "local_audit_trace_governance_review_request_sample",
+    "trace_id": "trace_governance_review_request_sample",
+    "decision_id": "local_governance_trace_governance_review_request_sample",
+    "actor_id": "concierge.governance_review",
+    "authority_tier": "advisory_review",
+    "approval_requirement": "guardian_and_owner_review_before_external_or_durable_effects",
+    "evidence_links": [
+      "trace:trace_governance_review_original",
+      "audit:audit_governance_review_original",
+      "decision:decision_governance_review_original"
+    ]
+  },
+  "governanceReview": {
+    "outcome": "requires_review",
+    "status": "review_needed",
+    "decisionId": "decision_governance_review_original",
+    "auditId": "audit_governance_review_original",
+    "authorityTier": "approval_required",
+    "approvalRequirement": "guardian_and_owner_review",
+    "rationale": "External or durable effects need Napoleon and guardian/owner review before action.",
+    "blockedEffects": [
+      "approval_capture",
+      "memory_write",
+      "agent_dispatch",
+      "external_send",
+      "runtime_authority",
+      "audit_append"
+    ],
+    "traceId": "trace_governance_review_original",
+    "profile": "child_protected",
+    "canAcknowledge": true,
+    "canSendAdvisory": true,
+    "approvalCaptured": false
+  },
+  "boundary": {
+    "proposalOnly": true,
+    "approvalCaptured": false,
+    "memoryWriteAllowed": false,
+    "agentDispatchAllowed": false,
+    "externalSendAllowed": false,
+    "localApplicationAllowed": false
+  },
+  "blockedEffects": [
+    "approval_capture",
+    "memory_write",
+    "agent_dispatch",
+    "external_send",
+    "runtime_authority",
+    "audit_append"
+  ]
+}

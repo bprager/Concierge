@@ -350,7 +350,6 @@ def validate_proposal_only_request_boundary(data: object) -> None:
     require_equal(trace.get("trace_id"), chief.get("trace_id"), "traceEnvelope.trace_id must match Chief of Staff trace")
     require_equal(trace.get("trace_id"), governance.get("trace_id"), "traceEnvelope.trace_id must match governance trace")
     require_equal(trace.get("request_id"), chief.get("request_id"), "traceEnvelope.request_id must match Chief of Staff request")
-    require_equal(trace.get("request_id"), governance.get("request_id"), "traceEnvelope.request_id must match governance request")
     require_equal(audit.get("trace_id"), trace.get("trace_id"), "auditEnvelope.trace_id must match request trace")
     require_equal(audit.get("decision_id"), trace.get("decision_id"), "auditEnvelope.decision_id must match request trace")
     require_equal(audit.get("authority_tier"), "advisory_review", "auditEnvelope.authority_tier must remain advisory review")
@@ -378,6 +377,23 @@ def validate_proposal_only_request_boundary(data: object) -> None:
             True,
             "child protected steering recommendations must include child safety caution",
         )
+
+    governance_review = data.get("governanceReview")
+    if governance_review is not None:
+        if not isinstance(governance_review, dict):
+            raise SystemExit("governanceReview must be an object")
+        require_equal(data.get("handoffKind"), "governance_review_handoff", "governanceReview handoff kind must be explicit")
+        require_equal(chief.get("request_type"), "governance_review", "governance review handoffs must use governance_review request type")
+        require_equal(governance_review.get("approvalCaptured"), False, "governanceReview.approvalCaptured must be false")
+        if data.get("profileMode") == "child_protected_user":
+            require_equal(
+                governance_review.get("profile"),
+                "child_protected",
+                "child protected governance review profile must stay child protected",
+            )
+            approval_requirement = audit.get("approval_requirement")
+            if not isinstance(approval_requirement, str) or "guardian" not in approval_requirement:
+                raise SystemExit("child protected governance review handoffs must preserve guardian review wording")
 
     forbidden_true_fields = {
         "approvalCaptured",
@@ -410,6 +426,7 @@ def validate_openapi_request_examples() -> None:
         ("/v1/concierge/memory-proposals", "examples/sample_child_memory_proposal_request.json"),
         ("/v1/concierge/chief-of-staff/steering", "examples/sample_chief_of_staff_steering_request.json"),
         ("/v1/concierge/chief-of-staff/steering", "examples/sample_child_chief_of_staff_steering_request.json"),
+        ("/v1/concierge/chief-of-staff/steering", "examples/sample_governance_review_request.json"),
         ("/v1/concierge/chief-of-staff/steering", "examples/sample_chief_of_staff_taxonomy_review_request.json"),
         ("/v1/concierge/chief-of-staff/steering", "examples/sample_child_chief_of_staff_taxonomy_review_request.json"),
     ]

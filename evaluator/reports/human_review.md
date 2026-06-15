@@ -7,7 +7,7 @@ This is a local human review record only. It is not Napoleon approval, not relea
 ## Evaluator Run
 
 - Report: `evaluator/reports/latest.json`
-- Run ID: `2026-06-15T15:08:49Z`
+- Run ID: `2026-06-15T15:13:16Z`
 - Mode: `stub`
 - Scenario count: `24`
 - Score total: `100.0`
@@ -24,7 +24,7 @@ This is a local human review record only. It is not Napoleon approval, not relea
 ## Human Decision
 
 - Reviewer: `TBD`
-- Review generated at: `2026-06-15T15:08:52Z`
+- Review generated at: `2026-06-15T15:13:19Z`
 - Reviewed at: `TBD`
 - Decision: `request_revision`
 - Allowed values: `approve`, `reject`, `request_revision`
