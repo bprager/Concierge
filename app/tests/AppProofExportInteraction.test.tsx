@@ -1226,7 +1226,7 @@ test("blocks taxonomy review handoff visibly when no Napoleon endpoint is config
     const heading = await view.findByText("Chief of Staff taxonomy review readiness");
     const readiness = heading.closest("section") as HTMLElement;
     assert.ok(readiness);
-    assert.ok(within(readiness).getByText(/blocked until the review draft, endpoint, and descriptor preflight are ready/));
+    assert.ok(within(readiness).getByText(/blocked until the review draft, endpoint, descriptor preflight, and Rehearsal Mode state are ready/));
     assert.ok(within(readiness).getByText("Endpoint configured"));
     assert.ok(within(readiness).getByText(/blocked: No Napoleon endpoint is configured/));
     assert.ok(within(readiness).getByText("Descriptor preflight"));
@@ -1234,6 +1234,70 @@ test("blocks taxonomy review handoff visibly when no Napoleon endpoint is config
     assert.ok(within(readiness).getByText(/not Napoleon approval/));
     assert.equal(view.getByRole("button", { name: "Send taxonomy review to Napoleon review" }).hasAttribute("disabled"), true);
   } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
+test("blocks taxonomy review handoff while Rehearsal Mode is active", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: RequestInfo | URL) => {
+      requestedUrls.push(String(input));
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "external_send"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("unexpected governed handoff", { status: 500 });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+    await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, true);
+
+    await user.click(view.getByRole("button", { name: "Draft taxonomy review" }));
+
+    const heading = await view.findByText("Chief of Staff taxonomy review readiness");
+    const readiness = heading.closest("section") as HTMLElement;
+    assert.ok(readiness);
+    assert.ok(within(readiness).getByText("Rehearsal Mode"));
+    assert.ok(within(readiness).getByText(/blocked: Rehearsal Mode is active/));
+    assert.equal(view.getByRole("button", { name: "Send taxonomy review to Napoleon review" }).hasAttribute("disabled"), true);
+    assert.equal(
+      requestedUrls.some((url) => url.endsWith("/v1/concierge/chief-of-staff/steering")),
+      false,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
     cleanup();
     dom.window.close();
   }

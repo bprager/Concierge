@@ -294,16 +294,19 @@ export function App() {
     label: "Memory proposal review",
     descriptorConnection,
     draftReady: Boolean(lastMemoryReviewState && lastMemoryReviewState.status !== "dismissed_locally"),
+    rehearsalMode,
   });
   const steeringHandoffReadiness = describeGovernedHandoffReadiness({
     label: "Chief of Staff steering",
     descriptorConnection,
     draftReady: Boolean(steeringDraft?.sendState.canSendToNapoleon),
+    rehearsalMode,
   });
   const taxonomyHandoffReadiness = describeGovernedHandoffReadiness({
     label: "Chief of Staff taxonomy review",
     descriptorConnection,
     draftReady: Boolean(taxonomyReviewDraft),
+    rehearsalMode,
   });
 
   function refreshCapabilityLedgerStatus() {
