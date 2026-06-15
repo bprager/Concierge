@@ -83,6 +83,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added child-protected safeguards to governed Chief of Staff steering submissions, including child-safety caution, child profile scope, and guardian/owner review wording.
 - Added child-protected safeguards to governed Chief of Staff taxonomy review submissions, preserving child scope and guardian/owner review wording before Chief of Staff handoff.
 - Added rendered coverage and profile-aware draft wording so child-protected Chief of Staff taxonomy review drafts show guardian/owner review before any handoff.
+- Added rendered coverage and fail-closed handling so endpoint or token changes require fresh Napoleon descriptor discovery before any live text send.
 - Added governed memory proposal submission that sends review packets to Napoleon only after endpoint and descriptor preflight, without writing memory or capturing approval locally.
 - Added a Text Concierge live bridge readiness panel that combines endpoint, descriptor integrity, local evidence capture/comparison state, blocked effects, and the reminder that readiness is not Napoleon approval.
 - Added last live-send outcome and fail-closed reason rendering to the Text Concierge live bridge readiness panel.

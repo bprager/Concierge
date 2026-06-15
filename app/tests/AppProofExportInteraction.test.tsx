@@ -407,6 +407,57 @@ test("blocks rendered live send before fetch when no Napoleon endpoint is config
   }
 });
 
+test("blocks rendered live send before fetch when endpoint changes without live descriptor discovery", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: string | URL | Request) => {
+      requestedUrls.push(String(input));
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+
+    await waitFor(() => assert.ok(view.getAllByText("No Napoleon Chief of Staff descriptor has been discovered.").length > 0));
+    const preflight = view.getByText("Live send preflight").closest("div")?.parentElement as HTMLElement | null;
+    assert.ok(preflight);
+    assert.ok(preflight.classList.contains("blocked"));
+    assert.ok(within(preflight).getByText("Descriptor discovered"));
+    assert.ok(within(preflight).getByText("No Napoleon Chief of Staff descriptor has been discovered."));
+
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Draft a bridge readiness summary" } });
+    await waitFor(() => assert.equal(composer.value, "Draft a bridge readiness summary"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    const blockedMessages = await view.findAllByText(/Napoleon bridge blocked: descriptor_mismatch/);
+    const blockedReply = blockedMessages.find((message) => message.closest("article"))?.closest("article") as HTMLElement | null;
+    assert.ok(blockedReply);
+    assert.ok(within(blockedReply).getByText("Blocked Napoleon governed bridge attempt"));
+    assert.ok(within(blockedReply).getByText("No Napoleon response was accepted; fail-closed local state only."));
+    assert.ok(within(blockedReply).getByText("Blocked effects"));
+    assert.equal(requestedUrls.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("blocks rendered live send before fetch when no Napoleon descriptor is discovered", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

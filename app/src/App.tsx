@@ -274,6 +274,12 @@ export function App() {
         endpointConfigured: Boolean(endpoint.trim()),
       };
     }
+    if (endpoint.trim() && descriptorMode !== "checksum_mismatch") {
+      return {
+        endpointConfigured: true,
+        descriptor: null,
+      };
+    }
     return {
       endpointConfigured: Boolean(endpoint.trim()),
       descriptor: descriptorMode === "missing" ? null : defaultChiefOfStaffDescriptor,
@@ -338,6 +344,8 @@ export function App() {
 
   function updateEndpoint(value: string) {
     setEndpoint(value);
+    setLiveDescriptorInput(null);
+    setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
@@ -349,6 +357,8 @@ export function App() {
 
   function updateAuthToken(value: string) {
     setAuthToken(value);
+    setLiveDescriptorInput(null);
+    setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
