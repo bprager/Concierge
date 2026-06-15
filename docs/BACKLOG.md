@@ -556,6 +556,28 @@ Evaluator coverage:
 
 - Covered by pure avatar lip-sync tests and rendered app interaction tests for local metadata preparation without media playback, camera, perception, Napoleon contact, approval, guardian approval, or side effects.
 
+### AV-007 details
+
+User value: The user can inspect how future avatar eye direction would respond to local window focus and estimated user position before camera tracking, rendering, or animation exists.
+
+Acceptance criteria:
+
+- Text Concierge exposes a local avatar gaze panel.
+- The panel derives an eye target, horizontal offset, vertical offset, and confidence from local user-position and window-focus metadata.
+- If the app window is not focused, gaze falls back to the user-interface target instead of pretending to track the user.
+- Preparing gaze metadata does not start gaze tracking, avatar animation, request camera permission, start camera capture, run face detection, infer affect or attention, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `gaze_target_updated` includes local-metadata marker, profile mode, child-protected marker, eye target, offsets, confidence, false gaze-tracking/animation/capture/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- Child protected gaze simulation shows guardian-review wording and must not treat metadata preparation as guardian approval, camera permission, attention inference, or animation permission.
+
+Privacy and safety impact:
+
+- This is local UI metadata only, not camera-based gaze tracking or attention inference.
+- No raw video, affect signal, bridge call, memory write, approval capture, guardian approval capture, or external send is introduced.
+
+Evaluator coverage:
+
+- Covered by pure avatar gaze tests and rendered app interaction tests for local metadata preparation without camera tracking, animation, perception, Napoleon contact, approval, guardian approval, or side effects.
+
 ### AV-010 details
 
 User value: Child protected avatar behavior is visibly stricter before live avatar camera or perception features exist.

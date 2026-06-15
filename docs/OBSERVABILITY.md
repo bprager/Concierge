@@ -79,6 +79,7 @@ Every user turn has:
 | avatar_expression_set | avatar | local_metadata_only, stance, expression, profile_mode, child_protected, bridge_provided_provenance, avatar_animation_started, affect_inferred, camera_capture_started, face_detection_started, live_napoleon_contacted, guardian_approval_captured, blocked_effects |
 | lip_sync_started | avatar | local_metadata_only, profile_mode, audio_playback_started, avatar_animation_started, live_napoleon_contacted, approval_captured, memory_write_performed, external_send_performed |
 | lip_sync_completed | avatar | local_metadata_only, profile_mode, child_protected, cue_count, duration_ms, peak_mouth_open, audio_playback_started, microphone_capture_started, raw_audio_stored, avatar_animation_started, camera_capture_started, face_detection_started, affect_inferred, live_napoleon_contacted, guardian_approval_captured, blocked_effects |
+| gaze_target_updated | avatar | local_metadata_only, profile_mode, child_protected, eye_target, horizontal_offset, vertical_offset, confidence, gaze_tracking_started, avatar_animation_started, camera_capture_started, face_detection_started, affect_inferred, live_napoleon_contacted, guardian_approval_captured, blocked_effects |
 | camera_state_estimated | perception | present, looking_at_screen, confidence |
 | eval_case_started | evaluator | case_id |
 | eval_case_completed | evaluator | case_id, score |

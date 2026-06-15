@@ -262,6 +262,7 @@ Required trace events include:
 - avatar_expression_set
 - lip_sync_started
 - lip_sync_completed
+- gaze_target_updated
 - camera_state_estimated
 - eval_case_started
 - eval_case_completed

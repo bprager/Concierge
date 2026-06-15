@@ -2523,3 +2523,77 @@ test("prepares avatar lip sync metadata without media playback camera or Napoleo
     dom.window.close();
   }
 });
+
+test("simulates avatar gaze without camera tracking animation or Napoleon contact", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("avatar gaze simulation must stay local");
+    },
+  });
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    const view = render(<App />);
+
+    await view.findByText("Avatar gaze");
+    const avatarGaze = within(view.getByLabelText("Avatar gaze"));
+    assert.ok(avatarGaze.getByText("Gaze target not simulated"));
+    assert.ok(avatarGaze.getByText("Camera capture started: no"));
+
+    await user.click(view.getByRole("button", { name: "Simulate local gaze" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    const gazeEvent = telemetryPayloads.find((payload) => payload.event === "gaze_target_updated");
+    assert.ok(gazeEvent);
+    assert.equal(gazeEvent.attributes.localMetadataOnly, true);
+    assert.equal(gazeEvent.attributes.cameraCaptureStarted, false);
+    assert.equal(gazeEvent.attributes.avatarAnimationStarted, false);
+    assert.ok(avatarGaze.getByText("Eye target: user_position"));
+    assert.ok(avatarGaze.getByText("Horizontal offset: 0.25"));
+    assert.ok(avatarGaze.getByText("Vertical offset: -0.2"));
+    assert.ok(avatarGaze.getByText("Gaze tracking started: no"));
+    assert.ok(avatarGaze.getByText("Live Napoleon contacted: no"));
+    assert.ok(avatarGaze.getByText("Authority boundary: Gaze simulation is local UI metadata only; it is not camera tracking, attention inference, approval, or agent action."));
+    assert.ok(avatarGaze.getByText("Blocked effects: gaze_tracking, avatar_animation, camera_capture, face_detection, affect_inference, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});

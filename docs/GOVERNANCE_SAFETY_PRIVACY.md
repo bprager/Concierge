@@ -109,6 +109,8 @@ Local avatar expression mapping is stance metadata only. It may map an explicit 
 
 Local avatar lip-sync preparation is generated-amplitude metadata only. It may derive mouth-open cues from local amplitude frames for future avatar animation, but it must not start audio playback, request microphone permission, start microphone capture, store raw audio, start avatar animation, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected lip-sync preparation must show guardian-review wording and must record that no guardian approval was captured.
 
+Local avatar gaze simulation is UI metadata only. It may derive an eye target from explicit local window-focus and user-position metadata for future avatar behavior, but it must not start camera-based gaze tracking, infer attention, start avatar animation, request camera permission, capture video, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally. Child protected gaze simulation must show guardian-review wording and must record that no guardian approval was captured.
+
 ## 4. Memory proposal review
 
 Text Concierge may identify possible preferences or profile notes from a turn and show them as memory proposals.

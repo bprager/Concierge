@@ -19,6 +19,11 @@ import {
   localAvatarLipSyncSample,
   type LocalAvatarLipSyncResult,
 } from "./avatarLipSync.js";
+import {
+  buildLocalAvatarGazeSimulation,
+  localAvatarGazeSample,
+  type LocalAvatarGazeResult,
+} from "./avatarGaze.js";
 import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
 import { answerCapabilityQuestion } from "./capabilityLedger.js";
 import { describeBridgeOperationSummary, describeTaxonomyReviewBridgeSummary } from "./bridgeOperations.js";
@@ -235,6 +240,7 @@ export function App() {
   const [neutralAvatarStateResult, setNeutralAvatarStateResult] = useState<LocalNeutralAvatarStateResult | null>(null);
   const [avatarExpressionResult, setAvatarExpressionResult] = useState<LocalAvatarExpressionResult | null>(null);
   const [avatarLipSyncResult, setAvatarLipSyncResult] = useState<LocalAvatarLipSyncResult | null>(null);
+  const [avatarGazeResult, setAvatarGazeResult] = useState<LocalAvatarGazeResult | null>(null);
   const [avatarModelResult, setAvatarModelResult] = useState<LocalAvatarModelReferenceResult | null>(null);
   const [avatarRendererReadinessResult, setAvatarRendererReadinessResult] =
     useState<LocalAvatarRendererReadinessResult | null>(null);
@@ -816,6 +822,34 @@ export function App() {
       avatarAnimationStarted: result.avatarAnimationStarted,
       cameraCaptureStarted: result.cameraCaptureStarted,
       faceDetectionStarted: result.faceDetectionStarted,
+      affectInferred: result.affectInferred,
+      liveNapoleonContacted: result.liveNapoleonContacted,
+      memoryWritePerformed: result.memoryWritePerformed,
+      approvalCaptured: result.approvalCaptured,
+      guardianApprovalCaptured: result.guardianApprovalCaptured,
+      externalSendPerformed: result.externalSendPerformed,
+      blockedEffects: result.blockedEffects,
+    });
+  }
+
+  function runLocalAvatarGazeSimulation() {
+    const traceId = newTraceId();
+    const result = buildLocalAvatarGazeSimulation({ ...localAvatarGazeSample, profileMode: profile });
+    setAvatarGazeResult(result);
+    emitEvent("gaze_target_updated", {
+      traceId,
+      conversationId,
+      localMetadataOnly: result.localMetadataOnly,
+      profileMode: result.profileMode,
+      childProtected: result.childProtected,
+      eyeTarget: result.eyeTarget,
+      horizontalOffset: result.horizontalOffset,
+      verticalOffset: result.verticalOffset,
+      confidence: result.confidence,
+      cameraCaptureStarted: result.cameraCaptureStarted,
+      faceDetectionStarted: result.faceDetectionStarted,
+      gazeTrackingStarted: result.gazeTrackingStarted,
+      avatarAnimationStarted: result.avatarAnimationStarted,
       affectInferred: result.affectInferred,
       liveNapoleonContacted: result.liveNapoleonContacted,
       memoryWritePerformed: result.memoryWritePerformed,
@@ -1738,6 +1772,10 @@ export function App() {
     avatarLipSyncResult === null
       ? "Lip sync not prepared"
       : `Mouth cues: ${avatarLipSyncResult.mouthCues.length}`;
+  const avatarGazeSummary =
+    avatarGazeResult === null
+      ? "Gaze target not simulated"
+      : `Eye target: ${avatarGazeResult.eyeTarget}`;
   const avatarModelSummary =
     avatarModelResult === null
       ? "Avatar model not loaded"
@@ -2278,6 +2316,72 @@ export function App() {
         ) : null}
         <button className="secondary" onClick={runLocalAvatarLipSyncBaseline}>
           Prepare local lip sync
+        </button>
+      </section>
+
+      <section className="contract-status" aria-label="Avatar gaze">
+        <div>
+          <strong>Avatar gaze</strong>
+          <span>local UI metadata only</span>
+        </div>
+        <div>
+          <strong>Gaze state</strong>
+          <span>{avatarGazeSummary}</span>
+        </div>
+        <div>
+          <strong>Camera capture</strong>
+          <span>Camera capture started: no</span>
+        </div>
+        {avatarGazeResult ? (
+          <>
+            <div>
+              <strong>Horizontal offset</strong>
+              <span>Horizontal offset: {avatarGazeResult.horizontalOffset}</span>
+            </div>
+            <div>
+              <strong>Vertical offset</strong>
+              <span>Vertical offset: {avatarGazeResult.verticalOffset}</span>
+            </div>
+            <div>
+              <strong>Confidence</strong>
+              <span>Confidence: {avatarGazeResult.confidence}</span>
+            </div>
+            <div>
+              <strong>Profile</strong>
+              <span>Profile: {avatarGazeResult.profileMode}</span>
+            </div>
+            <div>
+              <strong>Child protected</strong>
+              <span>Child protected: {avatarGazeResult.childProtected ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Gaze tracking</strong>
+              <span>Gaze tracking started: no</span>
+            </div>
+            <div>
+              <strong>Animation</strong>
+              <span>Avatar animation started: no</span>
+            </div>
+            <div>
+              <strong>Napoleon contact</strong>
+              <span>Live Napoleon contacted: no</span>
+            </div>
+            <div>
+              <strong>Authority boundary</strong>
+              <span>Authority boundary: {avatarGazeResult.authorityBoundary}</span>
+            </div>
+            <div>
+              <strong>Guardian reminder</strong>
+              <span>Guardian reminder: {avatarGazeResult.guardianReviewReminder}</span>
+            </div>
+            <div>
+              <strong>Blocked effects</strong>
+              <span>Blocked effects: {avatarGazeResult.blockedEffects.join(", ")}</span>
+            </div>
+          </>
+        ) : null}
+        <button className="secondary" onClick={runLocalAvatarGazeSimulation}>
+          Simulate local gaze
         </button>
       </section>
 
