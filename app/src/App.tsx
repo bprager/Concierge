@@ -1431,6 +1431,7 @@ export function App() {
     const draft = draftChiefOfStaffTaxonomyReview(capabilityLedger.listRecent(), capabilityTaxonomy, {
       conversationId,
       traceId,
+      profile,
     });
     setTaxonomyReviewDraft(draft);
     setTaxonomyReviewSubmission(null);

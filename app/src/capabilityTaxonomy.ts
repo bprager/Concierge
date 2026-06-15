@@ -426,8 +426,13 @@ function uniqueEvidenceRefs(recommendations: ChiefOfStaffTaxonomyRecommendation[
 export function draftChiefOfStaffTaxonomyReview(
   signals: ConversationCapabilitySignal[],
   taxonomy: CapabilityTaxonomy = createCapabilityTaxonomy(),
-  options: { conversationId: string; traceId: string },
+  options: { conversationId: string; traceId: string; profile?: LocalProfile },
 ): ChiefOfStaffTaxonomyReviewDraft {
+  const profileMode = mapProfileToNapoleonMode(options.profile ?? "adult_owner");
+  const isChildProtected = profileMode === "child_protected_user";
+  const approvalRequired = isChildProtected
+    ? "guardian_and_owner_review_required_before_child_protected_taxonomy_change"
+    : "Napoleon Chief of Staff and owner review before taxonomy cleanup is applied or rolled into policy.";
   const dimensions: TaxonomyDimension[] = ["topic", "intent", "capability", "architecture"];
   const recommendations = [
     ...dimensions.flatMap((dimension) => mergeRecommendations(signals, dimension)),
@@ -457,10 +462,10 @@ export function draftChiefOfStaffTaxonomyReview(
         requested_action: "review_taxonomy_cleanup",
         recommendation_count: recommendations.length,
       },
-      affected_profiles: ["adult_owner"],
+      affected_profiles: isChildProtected ? ["child_protected_user"] : ["adult_owner"],
       affected_channels: ["text"],
       evaluator_cases: [evaluatorCaseCandidate.caseId],
-      approval_required: "Napoleon Chief of Staff and owner review before taxonomy cleanup is applied or rolled into policy.",
+      approval_required: approvalRequired,
       rollback_plan: "Keep current local taxonomy labels and discard the proposed cleanup recommendations.",
     },
     boundary: TAXONOMY_REVIEW_BOUNDARY,

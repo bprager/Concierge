@@ -70,7 +70,7 @@ Local taxonomy storage:
 - Query answers apply edited labels to aggregates while preserving original derived signal records.
 - Taxonomy edits are local hints only. They do not change Napoleon policy, routing, memory, approval, dispatch, or external sends.
 - Reset restores derived labels by clearing local taxonomy edits.
-- Chief of Staff taxonomy review drafts can recommend merge, split, or deprecation review from local metadata and evidence references, then package those recommendations with an evaluator case candidate and evolution proposal draft without applying edits. When a governed endpoint and descriptor preflight are available, Concierge can send the review packet to Napoleon through the governed Chief of Staff steering path; child-protected submissions preserve child profile scope and guardian/owner review wording, and the response still cannot apply taxonomy edits, write memory, capture approval, dispatch agents, or send externally.
+- Chief of Staff taxonomy review drafts can recommend merge, split, or deprecation review from local metadata and evidence references, then package those recommendations with an evaluator case candidate and evolution proposal draft without applying edits. Child-protected drafts show guardian/owner review wording before submission. When a governed endpoint and descriptor preflight are available, Concierge can send the review packet to Napoleon through the governed Chief of Staff steering path; child-protected submissions preserve child profile scope and guardian/owner review wording, and the response still cannot apply taxonomy edits, write memory, capture approval, dispatch agents, or send externally.
 
 ## 4. Answer model
 

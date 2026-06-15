@@ -881,6 +881,30 @@ test("drafts a proposal-only taxonomy review from rendered app controls", async 
   }
 });
 
+test("shows guardian review on child protected taxonomy review drafts before handoff", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+    await user.click(view.getByRole("button", { name: "Draft taxonomy review" }));
+
+    await view.findByText("Chief of Staff taxonomy review draft");
+    assert.ok(view.getByText(/guardian_and_owner_review_required_before_child_protected_taxonomy_change/));
+    assert.equal(view.queryByText(/Napoleon Chief of Staff and owner review before taxonomy cleanup/), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("submits a steering draft through rendered governed controls without local side effects", async () => {
   const dom = installDom();
   const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
