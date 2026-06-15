@@ -1,4 +1,5 @@
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
+import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import type { CapabilityArchitectureArea, ConversationCapabilitySignal, RecommendationBoundary } from "./capabilityLedger.js";
 import {
   buildDescriptorConnectionState,
@@ -778,6 +779,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
 
   const payload = (await response.json()) as Partial<ChiefOfStaffTaxonomyReviewSubmissionResult>;
   if (
+    !hasRequiredBridgeResponseFields(payload, "chief_of_staff_steering") ||
     !isGovernanceDecision(payload.governanceDecision) ||
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||

@@ -5,6 +5,7 @@ import {
   type RecommendationBoundary,
 } from "./capabilityLedger.js";
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
+import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import {
   buildDescriptorConnectionState,
   defaultChiefOfStaffDescriptor,
@@ -425,6 +426,7 @@ export async function submitChiefOfStaffSteeringDraft(
 
   const payload = (await response.json()) as Partial<ChiefOfStaffSteeringSubmissionResult>;
   if (
+    !hasRequiredBridgeResponseFields(payload, "chief_of_staff_steering") ||
     !isGovernanceDecision(payload.governanceDecision) ||
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||

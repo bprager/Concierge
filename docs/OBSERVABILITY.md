@@ -106,7 +106,7 @@ Initial local implementation: Text Concierge emits `conversation_capability_sign
 
 The standalone `make eval-http-local-harness` report is also labeled with `runtimeValidation.source=local_harness` and a caveat that it validates local evaluator transport only, not real Napoleon runtime behavior.
 
-The generated bridge operation registry now carries canonical HTTP methods and required 200-response fields as well as paths, so descriptor discovery remains a `GET` operation while governed handoffs remain `POST` operations and runtime text responses fail closed if Napoleon omits OpenAPI-required top-level fields.
+The generated bridge operation registry now carries canonical HTTP methods and required 200-response fields as well as paths, so descriptor discovery remains a `GET` operation while governed handoffs remain `POST` operations and runtime text, memory proposal review, governance review, Chief of Staff steering, and Chief of Staff taxonomy review responses fail closed if Napoleon omits OpenAPI-required top-level fields.
 
 The canonical descriptor response sample is validated as contract-only metadata: it must keep runtime authority and command execution false, preserve fail-closed cache policy, carry checksum/signature proof, and keep authority effects blocked.
 

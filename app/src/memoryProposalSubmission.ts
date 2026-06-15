@@ -1,4 +1,5 @@
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
+import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import {
   buildDescriptorConnectionState,
   defaultChiefOfStaffDescriptor,
@@ -335,6 +336,7 @@ export async function submitMemoryProposalForReview(
 
   const payload = (await response.json()) as Partial<MemoryProposalSubmissionResult>;
   if (
+    !hasRequiredBridgeResponseFields(payload, "memory_proposal_review") ||
     !isGovernanceDecision(payload.governanceDecision) ||
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
