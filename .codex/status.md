@@ -74,6 +74,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added `make app-smoke` for app-level local harness text flow coverage across descriptor discovery, governed send, delegation presentation, last successful proof presentation, blocked effects, readiness evidence, and denied fail-closed text turn details.
 - Added Napoleon delegation provenance parsing plus a Text Concierge panel for selected agents, selection reasons, allowed and blocked effects, governance state, trace ID, and audit ID.
 - Added metadata-only identity, intent, stance, governance, context, and delegation trace events before governed live Napoleon text sends, using the same turn and trace without raw prompts, endpoints, tokens, request bodies, or response bodies.
+- Added action, decision, and reason fields to governed live text-turn governance decision telemetry so local traces include the required decision context before the bridge send.
 - Added child-protected text-turn policy telemetry with guardian-review, no-secret-keeping, and blocked memory-write, approval-capture, external-send, and agent-dispatch flags before governed bridge sends.
 - Added reusable Napoleon bridge contract fixtures for delegated success, auth failure, contract mismatch, and timeout cases.
 - Added evaluator coverage for bridge delegation provenance and bridge contract fixture fail-closed behavior.

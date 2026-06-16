@@ -190,6 +190,13 @@ test("exports and compares Napoleon proof through rendered app controls", async 
         "delegation_requested",
       ],
     );
+    const governanceDecision = textTurnEvents?.find((event) => event.event === "governance_decision");
+    assert.equal(governanceDecision?.attributes.actionType, "prepare_text_response");
+    assert.equal(governanceDecision?.attributes.decision, "allow_prepare_only");
+    assert.equal(
+      governanceDecision?.attributes.reason,
+      "Text Concierge may prepare an advisory response but blocked effects remain unavailable.",
+    );
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));
     await screen.findByText("No previous Napoleon response proof is available in this app session.");
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));

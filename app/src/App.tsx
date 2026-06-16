@@ -1418,6 +1418,9 @@ export function App() {
     }
     emitEvent("governance_decision", {
       ...base,
+      actionType: "prepare_text_response",
+      decision: input.reviewState.outcome,
+      reason: input.reviewState.rationale,
       outcome: input.reviewState.outcome,
       governanceOutcome: input.reviewState.outcome,
       decisionId: input.reviewState.decisionId,
