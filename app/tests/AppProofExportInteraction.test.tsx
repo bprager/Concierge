@@ -127,6 +127,8 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     const readinessPanel = screen.getByText("Live bridge readiness").closest("section") as HTMLElement;
     assert.ok(readinessPanel);
     assert.ok(within(readinessPanel).getByText("Local harness only; not real Napoleon runtime validation"));
+    assert.ok(within(readinessPanel).getByText("Promotion gate"));
+    assert.ok(within(readinessPanel).getByText("blocked until real Napoleon runtime evidence passes"));
     await user.click(screen.getByRole("button", { name: "Export readiness proof" }));
     const readinessExport = screen.getByLabelText("Exported bridge readiness proof");
     assert.ok(readinessExport.textContent?.includes('"source": "local_harness"'));

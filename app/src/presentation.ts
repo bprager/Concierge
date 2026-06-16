@@ -189,6 +189,14 @@ function describeRuntimeValidationSource(source: LiveBridgeReadinessInput["runti
   return "Real Napoleon runtime";
 }
 
+function describePromotionGate(source: LiveBridgeReadinessInput["runtimeValidationSource"], evidencePending: boolean): string {
+  if (source === "local_harness" || source === "local_simulation") {
+    return "blocked until real Napoleon runtime evidence passes";
+  }
+  if (evidencePending) return "blocked until evidence capture and comparison pass";
+  return "real runtime evidence available";
+}
+
 export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): LiveBridgeReadinessView {
   const descriptor = input.descriptorConnection;
   const blockedEffects = descriptor.descriptorStatus?.blockedEffects ?? [
@@ -261,6 +269,7 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
       { label: "Evidence capture", value: describeEvidenceState(evidenceCapture) },
       { label: "Evidence comparison", value: describeEvidenceState(evidenceComparison) },
       { label: "Runtime validation", value: describeRuntimeValidationSource(runtimeValidationSource) },
+      { label: "Promotion gate", value: describePromotionGate(runtimeValidationSource, evidencePending) },
       {
         label: "Last live send",
         value:

@@ -61,6 +61,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Updated descriptor discovery telemetry so auth failure, timeout, and HTTP failure emit failed discovery events instead of completed discovery events.
 - Added a Text Concierge live bridge readiness panel that combines endpoint, descriptor, checksum/signature, evidence capture/comparison, runtime-validation source, last live-send outcome, and blocked-effect state while stating that readiness is not Napoleon approval.
 - Added runtime-validation source labeling to live bridge readiness and readiness proof export so local harness and simulation checks remain distinct from real Napoleon runtime validation.
+- Added a visible live bridge promotion gate so local harness and simulation evidence remain blocked for live promotion until real Napoleon runtime evidence passes.
 - Added a composer-side live-send preflight checklist for text readiness, endpoint configuration, descriptor discovery, descriptor integrity, local governance send gate, and Rehearsal Mode state.
 - Added in-session readiness tracking from captured `bridge_contract_evidence`, with local registry transport/path/request-kind and raw/secret field comparison before evidence is marked passed.
 - Added a sanitized local bridge readiness proof export with descriptor state, blocked effects, evidence status, last operation transport, last failure reason, and no raw prompts, endpoints, or secrets.

@@ -81,6 +81,8 @@ Voice response shaping may shorten bridge-provenance text for future speech befo
 
 Bridge readiness proof exports are local metadata only. They may include descriptor state, checksum/signature state, evidence status, last operation path, blocked effects, and last fail-closed reason, but they must not include raw prompts, response bodies, endpoint hosts, bearer tokens, request bodies, or response bodies. Exporting a readiness proof is not Napoleon approval and does not grant memory writes, approval capture, agent dispatch, local application, or external sends.
 
+The live bridge readiness promotion gate is local display state only. Local harness or simulation evidence remains blocked for live promotion until real Napoleon runtime evidence capture and comparison pass; the gate is not approval and does not authorize a send, memory write, agent dispatch, external send, or local application.
+
 Bridge readiness proof comparison is also local metadata only. It compares the current proof with the previous proof exported in the same app session using sanitized descriptor and evidence fields, and it must not expose raw prompts, endpoint hosts, tokens, request bodies, response bodies, or authority claims.
 
 The governed route panel is local contract metadata only. It may show canonical Napoleon bridge paths and request kinds from the generated registry, but it must not display configured endpoint hosts, bearer tokens, raw prompts, request bodies, response bodies, or any claim that Concierge can bypass Napoleon governance.
