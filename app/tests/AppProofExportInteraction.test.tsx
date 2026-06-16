@@ -37,6 +37,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
   ]);
   const user = userEventModule.default.setup();
   const requestedUrls: string[] = [];
+  let lastTextTurnBody: { turnId?: string } | null = null;
   globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
     requestedUrls.push(url);
@@ -58,9 +59,11 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(url, "http://127.0.0.1:8787/v1/concierge/turn");
     const body = JSON.parse(String(init?.body ?? "{}")) as {
       traceId: string;
+      turnId?: string;
       profileMode: string;
       chiefOfStaffRequest: { request_id: string };
     };
+    lastTextTurnBody = body;
     return harnessJsonResponse(200, {
       text: "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
       profileMode: body.profileMode,
@@ -161,6 +164,32 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(napoleonReply).getByText("napoleon.chief_of_staff"));
     assert.ok(within(napoleonReply).getByText("Blocked effects"));
     assert.ok(within(napoleonReply).getByText("memory_write, approval_capture, external_send, agent_dispatch"));
+    const textTurnTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const textTurnEvents = textTurnTelemetryBuffer.events?.filter((event) =>
+      event.attributes.turnId === lastTextTurnBody?.turnId,
+    );
+    assert.deepEqual(
+      textTurnEvents?.map((event) => event.event).filter((event) =>
+        [
+          "identity_resolved",
+          "intent_detected",
+          "stance_selected",
+          "governance_decision",
+          "context_requested",
+          "delegation_requested",
+        ].includes(event),
+      ),
+      [
+        "identity_resolved",
+        "intent_detected",
+        "stance_selected",
+        "governance_decision",
+        "context_requested",
+        "delegation_requested",
+      ],
+    );
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));
     await screen.findByText("No previous Napoleon response proof is available in this app session.");
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));

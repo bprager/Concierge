@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added metadata-only identity, intent, stance, governance, context, and delegation trace events before governed live Napoleon text sends.
 - Added a visible `Why selected` row to the Napoleon delegation panel for empty, target-capability-only, and returned-delegation states.
 - Added returned selected-agent selection reasons to sanitized Napoleon response proof exports and comparisons.
 - Added count-only selected-agent and selection-reason telemetry to sanitized Napoleon response proof exports without emitting returned reason text.

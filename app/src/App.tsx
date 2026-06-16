@@ -229,6 +229,35 @@ function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapa
   return `${answer.summary}\n\n${rows}\n\nEvidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
 }
 
+function stanceForProfile(profile: LocalProfile): { stance: string; reason: string; confidence: number } {
+  if (profile === "child_protected") {
+    return {
+      stance: "protected_prepare_only",
+      reason: "child_protected_profile_requires_conservative_governance",
+      confidence: 0.9,
+    };
+  }
+  if (profile === "guest") {
+    return {
+      stance: "scoped_prepare_only",
+      reason: "guest_profile_limits_authority_and_memory_scope",
+      confidence: 0.86,
+    };
+  }
+  if (profile === "collaborator") {
+    return {
+      stance: "collaborative_prepare_only",
+      reason: "collaborator_profile_keeps_actions_advisory",
+      confidence: 0.84,
+    };
+  }
+  return {
+    stance: "owner_prepare_only",
+    reason: "adult_owner_profile_allows_advisory_text_preparation_only",
+    confidence: 0.88,
+  };
+}
+
 function browserStorage(): Storage | null {
   try {
     return typeof window === "undefined" ? null : window.localStorage;
@@ -1340,6 +1369,68 @@ export function App() {
     setMemorySubmissionFailure(null);
   }
 
+  function emitGovernedTextTurnTraceEvents(input: {
+    traceId: string;
+    turnId: string;
+    profileMode: NapoleonProfileMode;
+    reviewState: GovernanceReviewState;
+  }) {
+    const base = {
+      traceId: input.traceId,
+      conversationId,
+      turnId: input.turnId,
+      profile,
+      channel: "text",
+    };
+    const stance = stanceForProfile(profile);
+    emitEvent("identity_resolved", {
+      ...base,
+      profileMode: input.profileMode,
+      userProfile: profile,
+      source: "local_profile_selector",
+      confidence: 1,
+    });
+    emitEvent("intent_detected", {
+      ...base,
+      intent: "governed_text_turn",
+      target: "napoleon.chief_of_staff",
+      source: "local_text_ui",
+      confidence: 0.72,
+    });
+    emitEvent("stance_selected", {
+      ...base,
+      stance: stance.stance,
+      reason: stance.reason,
+      confidence: stance.confidence,
+    });
+    emitEvent("governance_decision", {
+      ...base,
+      outcome: input.reviewState.outcome,
+      governanceOutcome: input.reviewState.outcome,
+      decisionId: input.reviewState.decisionId,
+      auditId: input.reviewState.auditId,
+      authorityTier: input.reviewState.authorityTier,
+      approvalRequirement: input.reviewState.approvalRequirement,
+      blockedEffects: input.reviewState.blockedEffects,
+      approvalCaptured: input.reviewState.approvalCaptured,
+      source: "local_preflight_before_governed_bridge",
+    });
+    emitEvent("context_requested", {
+      ...base,
+      contextType: "napoleon_bridge_contract",
+      purpose: "prepare_governed_text_turn",
+      source: "governed_descriptor_preflight",
+    });
+    emitEvent("delegation_requested", {
+      ...base,
+      targetAgent: "napoleon.chief_of_staff",
+      reason: "governed_bridge_text_turn",
+      requestKind: "concierge_text_turn",
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+    });
+  }
+
   async function submit(rehearsal: PendingRehearsal | null = null) {
     const content = rehearsal?.content ?? input.trim();
     if (!content) return;
@@ -1400,43 +1491,42 @@ export function App() {
 
     const traceId = rehearsal?.traceId ?? newTraceId();
     const turnId = rehearsal?.turnId ?? `turn_${Date.now().toString(16)}`;
-    if (!rehearsal) {
-      const preflight = buildTextTurnContract({ message: content, profile, conversationId, turnId, traceId });
-      const reviewState = buildGovernanceReviewState(preflight.governanceDecision, profile);
-      if (!reviewState.canSendAdvisory) {
-        const reviewView = describeGovernanceReview(reviewState);
-        emitEvent("governance_review_blocked", {
-          traceId,
-          conversationId,
-          turnId,
+    const preflight = buildTextTurnContract({ message: content, profile, conversationId, turnId, traceId });
+    const reviewState = rehearsal?.preview.governanceReview ?? buildGovernanceReviewState(preflight.governanceDecision, profile);
+    const activeProfileMode = mapProfileToNapoleonMode(profile);
+    if (!reviewState.canSendAdvisory) {
+      const reviewView = describeGovernanceReview(reviewState);
+      emitEvent("governance_review_blocked", {
+        traceId,
+        conversationId,
+        turnId,
+        outcome: reviewState.outcome,
+        decisionId: reviewState.decisionId,
+      });
+      refreshCapabilityLedgerStatus();
+      setLastReview(reviewView);
+      setLastGovernanceReviewState(reviewState);
+      setGovernanceReviewSubmission(null);
+      setGovernanceReviewSubmissionFailure(null);
+      clearNapoleonPresentation();
+      setLastBridgeFailure(null);
+      setLastDecision(
+        describeGovernanceDecision({
           outcome: reviewState.outcome,
           decisionId: reviewState.decisionId,
-        });
-        refreshCapabilityLedgerStatus();
-        setLastReview(reviewView);
-        setLastGovernanceReviewState(reviewState);
-        setGovernanceReviewSubmission(null);
-        setGovernanceReviewSubmissionFailure(null);
-        clearNapoleonPresentation();
-        setLastBridgeFailure(null);
-        setLastDecision(
-          describeGovernanceDecision({
-            outcome: reviewState.outcome,
-            decisionId: reviewState.decisionId,
-            auditId: reviewState.auditId,
-            blockedEffects: reviewState.blockedEffects,
-          }),
-        );
-        return;
-      }
+          auditId: reviewState.auditId,
+          blockedEffects: reviewState.blockedEffects,
+        }),
+      );
+      return;
     }
 
     emitEvent("user_message_received", { traceId, conversationId, turnId, channel: "text", profile });
+    emitGovernedTextTurnTraceEvents({ traceId, turnId, profileMode: activeProfileMode, reviewState });
 
     setMessages((m) => [...m, { role: "user", content }]);
     setInput("");
     setPendingRehearsal(null);
-    const activeProfileMode = mapProfileToNapoleonMode(profile);
 
     try {
       const response = await sendToNapoleon({

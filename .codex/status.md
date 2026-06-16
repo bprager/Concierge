@@ -73,6 +73,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added a local harness endpoint preset that configures `http://127.0.0.1:8787` and descriptor preflight without starting services or granting authority.
 - Added `make app-smoke` for app-level local harness text flow coverage across descriptor discovery, governed send, delegation presentation, last successful proof presentation, blocked effects, readiness evidence, and denied fail-closed text turn details.
 - Added Napoleon delegation provenance parsing plus a Text Concierge panel for selected agents, selection reasons, allowed and blocked effects, governance state, trace ID, and audit ID.
+- Added metadata-only identity, intent, stance, governance, context, and delegation trace events before governed live Napoleon text sends, using the same turn and trace without raw prompts, endpoints, tokens, request bodies, or response bodies.
 - Added reusable Napoleon bridge contract fixtures for delegated success, auth failure, contract mismatch, and timeout cases.
 - Added evaluator coverage for bridge delegation provenance and bridge contract fixture fail-closed behavior.
 - Added evaluator coverage for bridge response authority provenance so invented Napoleon recommendations, invented selected-agent findings, and side-effect claims require matching provenance or fail closed.
