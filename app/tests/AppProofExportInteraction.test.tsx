@@ -512,6 +512,122 @@ test("clears Napoleon proof and delegation when bridge connection settings chang
   }
 });
 
+test("clears Napoleon proof and delegation when descriptor connection state changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+      return harnessJsonResponse(200, {
+        descriptor: {
+          schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+          serviceId: "napoleon.chief_of_staff",
+          runtimeAuthority: false,
+          commandExecution: false,
+          cachePolicy: "fail_closed_to_review_required",
+          blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+        },
+        checksum: { expected: "sha256:ui", actual: "sha256:ui" },
+        signature: { valid: true },
+      });
+    }
+
+    assert.equal(url, "http://127.0.0.1:8787/v1/concierge/turn");
+    const body = JSON.parse(String(init?.body ?? "{}")) as {
+      traceId: string;
+      profileMode: string;
+      chiefOfStaffRequest: { request_id: string };
+    };
+    return harnessJsonResponse(200, {
+      text: "Napoleon recommends keeping descriptor-scoped provenance visible only while the descriptor state is current.",
+      profileMode: body.profileMode,
+      targetAgent: "napoleon.chief_of_staff",
+      governanceDecision: {
+        decision_id: `decision_${body.traceId}`,
+        request_id: body.chiefOfStaffRequest.request_id,
+        outcome: "requires_review",
+        authority_tier: "advisory_review",
+        approval_requirement: "chief_of_staff_and_owner_review",
+        rationale: "Local harness requires governed review.",
+        blocked_effects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+        trace_id: body.traceId,
+        audit_id: `audit_${body.traceId}`,
+      },
+      traceEnvelope: {
+        trace_id: body.traceId,
+        parent_trace_id: "local_harness",
+        actor_id: "napoleon.local_harness",
+        request_id: body.chiefOfStaffRequest.request_id,
+        decision_id: `decision_${body.traceId}`,
+        timestamp: "2026-06-12T00:00:00.000Z",
+      },
+      auditEnvelope: {
+        audit_id: `audit_${body.traceId}`,
+        trace_id: body.traceId,
+        decision_id: `decision_${body.traceId}`,
+        actor_id: "napoleon.local_harness",
+        authority_tier: "advisory_review",
+        approval_requirement: "chief_of_staff_and_owner_review",
+        evidence_links: [`trace:${body.traceId}`, "harness:local"],
+      },
+      delegation: {
+        selectedAgents: [
+          {
+            agentId: "passive_brain",
+            displayName: "Passive Brain",
+            selectionReason: "Descriptor-scoped prior context is relevant.",
+            contributionSummary: "descriptor-scoped context",
+          },
+        ],
+        allowedEffects: ["prepare_advisory_response"],
+        blockedEffects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+        governanceState: "requires_review",
+        traceId: body.traceId,
+        auditId: `audit_${body.traceId}`,
+      },
+      recommendationProvenance: {
+        summary: "keeping descriptor-scoped provenance visible only while the descriptor state is current",
+        traceId: body.traceId,
+        auditId: `audit_${body.traceId}`,
+      },
+    });
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Prepare a descriptor-scoped proof" } });
+    await waitFor(() => assert.equal(composer.value, "Prepare a descriptor-scoped proof"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    await view.findByText("Last successful Napoleon proof");
+    const delegationPanel = view.getByLabelText("Napoleon delegation");
+    assert.ok(within(delegationPanel).getAllByText(/Passive Brain/).length > 0);
+
+    fireEvent.change(view.getByLabelText("Descriptor"), { target: { value: "checksum_mismatch" } });
+
+    assert.equal(view.queryByText("Last successful Napoleon proof"), null);
+    assert.equal(within(delegationPanel).queryAllByText(/Passive Brain/).length, 0);
+    assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("keeps post-preview advisory send disabled while Rehearsal Mode is active", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([

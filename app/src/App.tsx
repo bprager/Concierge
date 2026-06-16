@@ -509,6 +509,12 @@ export function App() {
     }
   }
 
+  function updateDescriptorMode(value: "discovered" | "live" | "missing" | "checksum_mismatch") {
+    setDescriptorMode(value);
+    clearBridgeReadinessProof();
+    clearNapoleonPresentation();
+  }
+
   function updatePrivacySetting(
     kind: "telemetry" | "camera" | "microphone" | "wake_word" | "avatar_affect" | "raw_media_storage",
     enabled: boolean,
@@ -1155,6 +1161,7 @@ export function App() {
       setDescriptorMode("live");
       setDescriptorDiscoveryMessage(result.connection.message);
       clearBridgeReadinessProof();
+      clearNapoleonPresentation();
       const discoveryFailed =
         result.connection.failClosedReason === "auth_failure" ||
         result.connection.failClosedReason === "bridge_timeout" ||
@@ -1175,6 +1182,7 @@ export function App() {
       setDescriptorMode("live");
       setDescriptorDiscoveryMessage("Descriptor discovery failed closed. Concierge will not attempt live bridge calls.");
       clearBridgeReadinessProof();
+      clearNapoleonPresentation();
       emitEvent("descriptor_discovery_failed", {
         traceId: newTraceId(),
         conversationId,
@@ -2125,10 +2133,7 @@ export function App() {
           Descriptor
           <select
             value={descriptorMode}
-            onChange={(e) => {
-              setDescriptorMode(e.target.value as typeof descriptorMode);
-              clearBridgeReadinessProof();
-            }}
+            onChange={(e) => updateDescriptorMode(e.target.value as typeof descriptorMode)}
           >
             <option value="discovered">Discovered local descriptor</option>
             <option value="live">Live discovered descriptor</option>
