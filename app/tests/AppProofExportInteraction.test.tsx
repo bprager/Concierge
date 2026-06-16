@@ -1928,6 +1928,30 @@ test("drafts a proposal-only taxonomy review from rendered app controls", async 
   }
 });
 
+test("clears stale taxonomy review drafts when local capability metadata is cleared", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Draft taxonomy review" }));
+    await view.findByText("Chief of Staff taxonomy review draft");
+
+    fireEvent.click(view.getByRole("button", { name: "Clear local capability ledger" }));
+
+    assert.equal(Boolean(view.queryByText("Chief of Staff taxonomy review draft")), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows guardian review on child protected taxonomy review drafts before handoff", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([

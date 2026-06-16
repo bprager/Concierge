@@ -505,6 +505,9 @@ export function App() {
     mutate(next);
     setCapabilityTaxonomy(next);
     persistCapabilityTaxonomyToStorage(browserStorage(), next);
+    setTaxonomyReviewDraft(null);
+    setTaxonomyReviewSubmission(null);
+    setTaxonomyReviewFailure(null);
     emitEvent(event, {
       traceId: newTraceId(),
       conversationId,
@@ -1842,6 +1845,12 @@ export function App() {
     setSelectedTaxonomyLabel("");
     setTaxonomyRenameValue("");
     setTaxonomyMergeTarget("");
+    setSteeringDraft(null);
+    setSteeringSubmission(null);
+    setSteeringFailure(null);
+    setTaxonomyReviewDraft(null);
+    setTaxonomyReviewSubmission(null);
+    setTaxonomyReviewFailure(null);
     refreshCapabilityLedgerStatus();
     emitEvent("capability_ledger_cleared", {
       traceId,

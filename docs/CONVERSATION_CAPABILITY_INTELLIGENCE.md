@@ -59,7 +59,7 @@ Persistent local storage:
 - Schema version: `concierge.capability-ledger.v1`.
 - Export schema version: `concierge.capability-ledger.export.v1`.
 - Retention: bounded to the latest 250 derived metadata signals and a 90 day local age window.
-- Clear control: removes the persisted snapshot and clears the in-memory ledger.
+- Clear control: removes the persisted snapshot, clears the in-memory ledger, and clears derived Chief of Staff steering and taxonomy review drafts, review responses, and failure states so obsolete local evidence cannot be handed off.
 - Export control: renders local JSON for derived metadata only, includes retention settings and trend caveats, and states that export does not grant permission to share externally; export and clear telemetry explicitly records no approval capture, memory write, agent dispatch, or external send.
 - Child protected records remain distinguishable through `profile_mode` and `privacy_class: child_sensitive`, without retaining raw child content.
 
@@ -70,7 +70,7 @@ Local taxonomy storage:
 - Query answers apply edited labels to aggregates while preserving original derived signal records.
 - Taxonomy edits are local hints only. They do not change Napoleon policy, routing, memory, approval, dispatch, or external sends, and edit telemetry records no approval capture, memory write, agent dispatch, or external send.
 - Reset restores derived labels by clearing local taxonomy edits.
-- Chief of Staff taxonomy review drafts can recommend merge, split, or deprecation review from local metadata and evidence references, then package those recommendations with an evaluator case candidate and evolution proposal draft without applying edits. Child-protected drafts show guardian/owner review wording before submission. When a governed endpoint and descriptor preflight are available, Concierge can send the review packet to Napoleon through the governed Chief of Staff steering path using the canonical `chief_of_staff_steering_handoff` request kind with taxonomy review payload metadata; child-protected submissions preserve child profile scope and guardian/owner review wording, and the response still cannot apply taxonomy edits, write memory, capture approval, dispatch agents, or send externally.
+- Chief of Staff taxonomy review drafts can recommend merge, split, or deprecation review from local metadata and evidence references, then package those recommendations with an evaluator case candidate and evolution proposal draft without applying edits. Child-protected drafts show guardian/owner review wording before submission. Local taxonomy edits clear existing taxonomy review drafts and review results so the user must regenerate a packet from the current metadata before handoff. When a governed endpoint and descriptor preflight are available, Concierge can send the review packet to Napoleon through the governed Chief of Staff steering path using the canonical `chief_of_staff_steering_handoff` request kind with taxonomy review payload metadata; child-protected submissions preserve child profile scope and guardian/owner review wording, and the response still cannot apply taxonomy edits, write memory, capture approval, dispatch agents, or send externally.
 
 ## 4. Answer model
 
