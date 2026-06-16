@@ -79,6 +79,35 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertEqual(violations, [])
 
+    def test_network_scanner_rejects_direct_urls_inside_bridge_modules(self):
+        for source in [
+            'await fetcher("https://api.example.test/v1/concierge/turn", { method: "POST" });',
+            'await fetcher(endpoint + "/v1/custom-service", { method: "POST" });',
+            'await fetcher(`${endpoint}/v1/concierge/freeform`, { method: "POST" });',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/napoleonBridge.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("bridge module network call must use named generated operation resolution", violations[0])
+
+    def test_network_scanner_allows_bridge_modules_to_fetch_named_operation_targets(self):
+        for source in [
+            """
+            const targetEndpoint = resolveNapoleonBridgeOperation(endpoint, "text_turn");
+            response = await fetcher(targetEndpoint, { method: "POST" });
+            """,
+            """
+            response = await fetcher(resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_descriptor"), {
+              method: "GET",
+            });
+            """,
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/descriptorDiscovery.ts", source)
+
+                self.assertEqual(violations, [])
+
     def test_scanner_allows_governed_bridge_and_proposal_language(self):
         violations = validate_repo.scan_authority_boundary_text(
             "app/src/memoryProposalSubmission.ts",

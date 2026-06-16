@@ -81,6 +81,15 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bsendBeacon\s*\("),
 ]
 
+BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
+    r"\b(?:fetcher|fetch)\s*\(\s*("
+    r"['\"]https?://"
+    r"|['\"][^'\"]*/v1/"
+    r"|`[^`]*\$\{[^`]*\}[^`]*/v1/"
+    r"|\w+\s*\+\s*['\"][^'\"]*/v1/"
+    r")"
+)
+
 
 def load_json(path: str) -> object:
     return json.loads((ROOT / path).read_text(encoding="utf-8"))
@@ -822,7 +831,13 @@ def find_direct_authority_boundary_violations() -> list[str]:
 
 def scan_ungoverned_network_text(path: str, text: str) -> list[str]:
     if path in GOVERNED_NETWORK_SOURCE_ALLOWLIST:
-        return []
+        violations: list[str] = []
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            if BRIDGE_MODULE_DIRECT_TARGET_PATTERN.search(line):
+                violations.append(
+                    f"{path}:{line_number}: bridge module network call must use named generated operation resolution"
+                )
+        return violations
     violations: list[str] = []
     for line_number, line in enumerate(text.splitlines(), start=1):
         for pattern in UNGOVERNED_NETWORK_PATTERNS:
