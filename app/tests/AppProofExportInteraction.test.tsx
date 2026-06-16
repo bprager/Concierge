@@ -2867,6 +2867,58 @@ test("runs local voice activity sample without starting microphone capture", asy
   }
 });
 
+test("local voice and avatar sample telemetry records no agent dispatch", async () => {
+  const dom = installDom();
+  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Run local VAD sample" }));
+    await user.click(view.getByRole("button", { name: "Run local STT sample" }));
+    await user.click(view.getByRole("button", { name: "Run local TTS sample" }));
+    await user.click(view.getByRole("button", { name: "Run local voice rehearsal" }));
+    await user.click(view.getByRole("button", { name: "Prepare neutral avatar state" }));
+    await user.click(view.getByRole("button", { name: "Map sample stance to expression" }));
+    await user.click(view.getByRole("button", { name: "Prepare local lip sync" }));
+    await user.click(view.getByRole("button", { name: "Simulate local gaze" }));
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const sampleEvents = telemetryBuffer.events?.filter((event) =>
+      [
+        "voice_segment_detected",
+        "stt_completed",
+        "tts_started",
+        "tts_completed",
+        "voice_turn_rehearsed",
+        "avatar_state_changed",
+        "avatar_expression_set",
+        "lip_sync_started",
+        "lip_sync_completed",
+        "gaze_target_updated",
+      ].includes(event.event),
+    );
+
+    assert.ok((sampleEvents?.length ?? 0) >= 10);
+    for (const event of sampleEvents ?? []) {
+      assert.equal(event.attributes.approvalCaptured, false);
+      assert.equal(event.attributes.memoryWritePerformed, false);
+      assert.equal(event.attributes.agentDispatchPerformed, false);
+      assert.equal(event.attributes.externalSendPerformed, false);
+    }
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("runs local speech transcription sample without starting microphone capture", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

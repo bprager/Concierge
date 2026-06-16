@@ -746,6 +746,7 @@ export function App() {
         rawAudioStored: false,
         approvalCaptured: false,
         memoryWritePerformed: false,
+        agentDispatchPerformed: false,
         externalSendPerformed: false,
       });
     }
@@ -794,6 +795,7 @@ export function App() {
       rawAudioStored: result.rawAudioStored,
       approvalCaptured: false,
       memoryWritePerformed: false,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: false,
     });
   }
@@ -812,6 +814,7 @@ export function App() {
       rawAudioStored: result.rawAudioStored,
       approvalCaptured: false,
       memoryWritePerformed: false,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: false,
     });
     emitEvent("tts_completed", {
@@ -824,6 +827,7 @@ export function App() {
       rawAudioStored: result.rawAudioStored,
       approvalCaptured: false,
       memoryWritePerformed: false,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: false,
     });
   }
@@ -850,6 +854,7 @@ export function App() {
       rawAudioStored: result.rawAudioStored,
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });
@@ -936,6 +941,7 @@ export function App() {
       liveNapoleonContacted: result.liveNapoleonContacted,
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });
@@ -962,6 +968,7 @@ export function App() {
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
       guardianApprovalCaptured: result.guardianApprovalCaptured,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });
@@ -979,6 +986,7 @@ export function App() {
       liveNapoleonContacted: false,
       memoryWritePerformed: false,
       approvalCaptured: false,
+      agentDispatchPerformed: false,
       externalSendPerformed: false,
     });
     const result = buildLocalAvatarLipSyncBaseline({ ...localAvatarLipSyncSample, profileMode: profile });
@@ -1003,6 +1011,7 @@ export function App() {
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
       guardianApprovalCaptured: result.guardianApprovalCaptured,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });
@@ -1035,6 +1044,7 @@ export function App() {
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
       guardianApprovalCaptured: result.guardianApprovalCaptured,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });

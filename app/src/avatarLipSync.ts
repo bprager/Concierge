@@ -31,6 +31,7 @@ export interface LocalAvatarLipSyncResult {
   memoryWritePerformed: false;
   approvalCaptured: false;
   guardianApprovalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -96,6 +97,7 @@ export function buildLocalAvatarLipSyncBaseline(input: LocalAvatarLipSyncInput):
     memoryWritePerformed: false,
     approvalCaptured: false,
     guardianApprovalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     blockedEffects,
   };

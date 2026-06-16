@@ -162,6 +162,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added a local Speech Transcription sample panel and deterministic adapter; running the sample emits transcript metadata only and does not request microphone permission, start capture, store raw audio, or claim side effects.
 - Added a local Text to Speech sample panel and deterministic adapter; running the sample emits speech-preparation metadata only and does not start audio playback, store raw audio, or claim side effects.
 - Added a local Voice Turn Rehearsal panel and deterministic adapter; running the dry run chains VAD, STT, text boundary, and TTS metadata while keeping Napoleon contact, media capture, playback, storage, approval, memory, dispatch, and external sends blocked.
+- Tightened local voice and avatar sample telemetry so VAD, STT, TTS, voice rehearsal, avatar state, expression, lip sync, and gaze events explicitly record no agent dispatch.
 - Tightened local barge-in rehearsal metadata and UI so agent dispatch is explicitly reported as not performed, matching the blocked side-effect boundary.
 - Tightened local voice response shaping metadata and UI so agent dispatch is explicitly reported as not performed while preparing speech summaries.
 

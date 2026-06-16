@@ -10,6 +10,7 @@ export interface LocalSpeechTranscriptionResult {
   latencyMs: number;
   localSampleOnly: true;
   rawAudioStored: false;
+  agentDispatchPerformed: false;
 }
 
 export const localSttSample: LocalSpeechSample = {
@@ -29,5 +30,6 @@ export function transcribeLocalSpeechSample(sample: LocalSpeechSample): LocalSpe
     latencyMs: 0,
     localSampleOnly: true,
     rawAudioStored: false,
+    agentDispatchPerformed: false,
   };
 }

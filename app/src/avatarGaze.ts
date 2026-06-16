@@ -30,6 +30,7 @@ export interface LocalAvatarGazeResult {
   memoryWritePerformed: false;
   approvalCaptured: false;
   guardianApprovalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -88,6 +89,7 @@ export function buildLocalAvatarGazeSimulation(input: LocalAvatarGazeInput): Loc
     memoryWritePerformed: false,
     approvalCaptured: false,
     guardianApprovalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     blockedEffects,
   };

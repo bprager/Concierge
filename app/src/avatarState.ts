@@ -28,6 +28,7 @@ export interface LocalNeutralAvatarStateResult {
   memoryWritePerformed: false;
   approvalCaptured: false;
   guardianApprovalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -55,6 +56,7 @@ export interface LocalAvatarExpressionResult {
   memoryWritePerformed: false;
   approvalCaptured: false;
   guardianApprovalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -120,6 +122,7 @@ export function buildLocalNeutralAvatarState(input: LocalNeutralAvatarStateInput
     memoryWritePerformed: false,
     approvalCaptured: false,
     guardianApprovalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     blockedEffects,
   };
@@ -165,6 +168,7 @@ export function mapLocalAvatarExpression(input: LocalAvatarExpressionInput): Loc
     memoryWritePerformed: false,
     approvalCaptured: false,
     guardianApprovalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     blockedEffects,
   };

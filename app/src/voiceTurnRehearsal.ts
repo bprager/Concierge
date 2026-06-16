@@ -25,6 +25,7 @@ export interface LocalVoiceTurnRehearsalResult {
   rawAudioStored: false;
   memoryWritePerformed: false;
   approvalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   vad: {
     segments: VoiceActivitySegment[];
@@ -54,6 +55,7 @@ export function rehearseLocalVoiceTurnSample(): LocalVoiceTurnRehearsalResult {
     rawAudioStored: false,
     memoryWritePerformed: false,
     approvalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     vad: {
       segments,

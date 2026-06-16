@@ -13,6 +13,7 @@ export interface LocalTextToSpeechResult {
   localSampleOnly: true;
   audioPlaybackStarted: false;
   rawAudioStored: false;
+  agentDispatchPerformed: false;
 }
 
 export const localTtsSample: LocalTextToSpeechSample = {
@@ -36,5 +37,6 @@ export function synthesizeLocalSpeechSample(sample: LocalTextToSpeechSample): Lo
     localSampleOnly: true,
     audioPlaybackStarted: false,
     rawAudioStored: false,
+    agentDispatchPerformed: false,
   };
 }
