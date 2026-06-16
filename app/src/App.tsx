@@ -576,6 +576,7 @@ export function App() {
       rawVideoStored: false,
       approvalCaptured: false,
       memoryWritePerformed: false,
+      agentDispatchPerformed: false,
       externalSendPerformed: false,
     });
 
@@ -589,6 +590,7 @@ export function App() {
         rawVideoStored: false,
         approvalCaptured: false,
         memoryWritePerformed: false,
+        agentDispatchPerformed: false,
         externalSendPerformed: false,
       });
       return;
@@ -604,6 +606,7 @@ export function App() {
         rawVideoStored: false,
         approvalCaptured: false,
         memoryWritePerformed: false,
+        agentDispatchPerformed: false,
         externalSendPerformed: false,
       });
       return;
@@ -623,6 +626,7 @@ export function App() {
         rawVideoStored: false,
         approvalCaptured: false,
         memoryWritePerformed: false,
+        agentDispatchPerformed: false,
         externalSendPerformed: false,
       });
     } catch {
@@ -635,6 +639,7 @@ export function App() {
         rawVideoStored: false,
         approvalCaptured: false,
         memoryWritePerformed: false,
+        agentDispatchPerformed: false,
         externalSendPerformed: false,
       });
     }
@@ -651,6 +656,7 @@ export function App() {
       rawAudioStored: false,
       approvalCaptured: false,
       memoryWritePerformed: false,
+      agentDispatchPerformed: false,
       externalSendPerformed: false,
     });
 
@@ -664,6 +670,7 @@ export function App() {
         rawAudioStored: false,
         approvalCaptured: false,
         memoryWritePerformed: false,
+        agentDispatchPerformed: false,
         externalSendPerformed: false,
       });
       return;
@@ -679,6 +686,7 @@ export function App() {
         rawAudioStored: false,
         approvalCaptured: false,
         memoryWritePerformed: false,
+        agentDispatchPerformed: false,
         externalSendPerformed: false,
       });
       return;
@@ -698,6 +706,7 @@ export function App() {
         rawAudioStored: false,
         approvalCaptured: false,
         memoryWritePerformed: false,
+        agentDispatchPerformed: false,
         externalSendPerformed: false,
       });
     } catch {
@@ -710,6 +719,7 @@ export function App() {
         rawAudioStored: false,
         approvalCaptured: false,
         memoryWritePerformed: false,
+        agentDispatchPerformed: false,
         externalSendPerformed: false,
       });
     }

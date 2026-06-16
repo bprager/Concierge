@@ -2778,6 +2778,53 @@ test("keeps voice capture blocked until explicit microphone permission is grante
   }
 });
 
+test("camera and microphone permission telemetry records no agent dispatch", async () => {
+  const dom = installDom();
+  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => ({
+        getTracks: () => [{ stop: () => undefined }],
+      }),
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByLabelText("Camera"));
+    await user.click(view.getByRole("button", { name: "Request camera permission" }));
+    await user.click(view.getByLabelText("Microphone"));
+    await user.click(view.getByRole("button", { name: "Request microphone permission" }));
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const permissionEvents = telemetryBuffer.events?.filter((event) =>
+      ["camera_permission_requested", "camera_permission_result", "mic_permission_requested", "mic_permission_result"].includes(
+        event.event,
+      ),
+    );
+
+    assert.equal(permissionEvents?.length, 4);
+    for (const event of permissionEvents ?? []) {
+      assert.equal(event.attributes.approvalCaptured, false);
+      assert.equal(event.attributes.memoryWritePerformed, false);
+      assert.equal(event.attributes.agentDispatchPerformed, false);
+      assert.equal(event.attributes.externalSendPerformed, false);
+    }
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("runs local voice activity sample without starting microphone capture", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

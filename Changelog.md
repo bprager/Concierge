@@ -193,6 +193,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added local Text Concierge privacy controls for telemetry, camera, and microphone state, with camera and microphone off by default, local persistence, and privacy-setting events that do not store raw audio or video.
 - Added a local Voice readiness panel and explicit microphone permission request path so microphone settings cannot be mistaken for active voice capture.
 - Added a local Camera readiness panel and explicit camera permission request path so camera settings cannot be mistaken for active avatar/camera capture.
+- Tightened local camera and microphone permission telemetry so permission request and result events explicitly record no agent dispatch.
 - Added a local Barge-in Rehearsal panel and deterministic interruption state model that marks sample speech as interrupted without playback, capture, live Napoleon contact, or side effects.
 - Added local Voice Response Shaping that shortens long bridge-provenance responses for future speech while preserving authority boundaries and keeping playback, capture, Napoleon contact, and side effects blocked.
 - Tightened local Voice Response Shaping so unproven spoken summaries remove Napoleon recommendation and delegated-agent finding claims when bridge provenance is absent.

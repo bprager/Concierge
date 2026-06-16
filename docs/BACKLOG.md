@@ -71,7 +71,7 @@ Acceptance criteria:
 - Camera and microphone default to off.
 - Telemetry defaults to on for local development signals and can be turned off in local settings.
 - Camera and microphone toggles persist local state but do not start capture, request operating-system permissions, store raw audio/video, or send data externally.
-- Privacy setting changes emit local metadata with explicit false side-effect flags for approval capture, memory writes, and external sends.
+- Privacy setting changes and camera/microphone permission request/result events emit local metadata with explicit false side-effect flags for approval capture, memory writes, agent dispatch, and external sends.
 - Child protected mode remains stricter than adult owner mode and must not treat a local toggle as guardian approval.
 
 ### TX-005 details
