@@ -24,6 +24,7 @@ export interface VoiceResponseShapeResult {
   liveNapoleonContacted: false;
   memoryWritePerformed: false;
   approvalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -111,6 +112,7 @@ export function shapeVoiceResponseForSpeech(input: VoiceResponseShapeInput): Voi
     liveNapoleonContacted: false,
     memoryWritePerformed: false,
     approvalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     blockedEffects: [
       "audio_playback",

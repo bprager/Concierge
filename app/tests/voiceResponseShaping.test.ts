@@ -21,6 +21,7 @@ test("shapes long bridge-provenance response for speech without side effects", (
   assert.equal(result.liveNapoleonContacted, false);
   assert.equal(result.memoryWritePerformed, false);
   assert.equal(result.approvalCaptured, false);
+  assert.equal(result.agentDispatchPerformed, false);
   assert.equal(result.externalSendPerformed, false);
   assert.deepEqual(result.blockedEffects, [
     "audio_playback",

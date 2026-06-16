@@ -2993,11 +2993,13 @@ test("shapes a local voice response preview without contacting Napoleon or start
     assert.ok(shapingEvent);
     assert.equal(shapingEvent.attributes.localPreparationOnly, true);
     assert.equal(shapingEvent.attributes.bridgeProvidedProvenance, false);
+    assert.equal(shapingEvent.attributes.agentDispatchPerformed, false);
     assert.ok(shaping.getByText("Spoken summary: Prepare the bridge rollout plan for owner review. A local summary notes that descriptor discovery is ready."));
     assert.equal(shaping.queryByText(/Napoleon says/), null);
     assert.equal(shaping.queryByText(/Passive Brain found/), null);
     assert.ok(shaping.getByText("Authority boundary: No bridge provenance; speech summary must not claim Napoleon or delegated-agent authority."));
     assert.ok(shaping.getByText("Audio playback started: no"));
+    assert.ok(shaping.getByText("Agent dispatch: no"));
     assert.ok(shaping.getByText("Blocked effects: audio_playback, microphone_capture, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
   } finally {
     console.info = originalInfo;

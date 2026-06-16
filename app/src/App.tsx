@@ -893,6 +893,7 @@ export function App() {
       liveNapoleonContacted: result.liveNapoleonContacted,
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });
@@ -2619,6 +2620,10 @@ export function App() {
             <div>
               <strong>Playback</strong>
               <span>Audio playback started: no</span>
+            </div>
+            <div>
+              <strong>Agent dispatch</strong>
+              <span>Agent dispatch: {voiceResponseShapeResult.agentDispatchPerformed ? "yes" : "no"}</span>
             </div>
             <div>
               <strong>Blocked effects</strong>
