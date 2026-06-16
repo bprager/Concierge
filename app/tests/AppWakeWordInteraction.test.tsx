@@ -43,6 +43,13 @@ test("renders wake word as a local option that does not start listening", async 
     panel.getByText("Listening started: no");
     panel.getByText("Microphone capture started: no");
     panel.getByText("Authority boundary: Wake word is a local option only; no always-on listening has started.");
+
+    await user.click(view.getByRole("button", { name: "Run local wake word sample" }));
+    panel.getByText("Sample detection: detected at 320 ms, confidence 0.91");
+    panel.getByText("Local sample only: yes");
+    panel.getByText("Listening started: no");
+    panel.getByText("Microphone capture started: no");
+    panel.getByText("Authority boundary: Local sample detection only; no always-on listening or live wake-word service is active.");
   } finally {
     cleanup();
     dom.window.close();

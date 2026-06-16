@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildLocalWakeWordReadiness } from "../src/wakeWordReadiness.js";
+import {
+  buildLocalWakeWordReadiness,
+  runLocalWakeWordDetectionSample,
+} from "../src/wakeWordReadiness.js";
 
 test("prepares wake word readiness without listening capture or Napoleon contact", () => {
   const disabled = buildLocalWakeWordReadiness({ enabled: false, profileMode: "adult_owner" });
@@ -35,4 +38,27 @@ test("prepares wake word readiness without listening capture or Napoleon contact
     "external_send",
     "agent_dispatch",
   ]);
+});
+
+test("runs a local wake word detection sample without capture storage or Napoleon contact", () => {
+  const result = runLocalWakeWordDetectionSample({ enabled: true, profileMode: "child_protected" });
+
+  assert.equal(result.localSampleOnly, true);
+  assert.equal(result.detected, true);
+  assert.equal(result.phrase, "Hey Concierge");
+  assert.equal(result.detectedAtMs, 320);
+  assert.equal(result.confidence, 0.91);
+  assert.equal(result.profileMode, "child_protected");
+  assert.equal(result.childProtected, true);
+  assert.equal(result.guardianReviewReminder, true);
+  assert.equal(result.listeningStarted, false);
+  assert.equal(result.microphoneCaptureStarted, false);
+  assert.equal(result.rawAudioStored, false);
+  assert.equal(result.liveNapoleonContacted, false);
+  assert.equal(result.memoryWritePerformed, false);
+  assert.equal(result.approvalCaptured, false);
+  assert.equal(result.externalSendPerformed, false);
+  assert.equal(result.agentDispatchPerformed, false);
+  assert.equal(result.authorityBoundary, "Local sample detection only; no always-on listening or live wake-word service is active.");
+  assert.equal(JSON.stringify(result).includes("audioData"), false);
 });

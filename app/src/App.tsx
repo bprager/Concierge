@@ -150,7 +150,11 @@ import {
   type VoiceResponseShapeResult,
 } from "./voiceResponseShaping.js";
 import { detectVoiceSegments, localVadSampleFrames, type VoiceActivitySegment } from "./voiceActivity.js";
-import { buildLocalWakeWordReadiness } from "./wakeWordReadiness.js";
+import {
+  buildLocalWakeWordReadiness,
+  runLocalWakeWordDetectionSample,
+  type LocalWakeWordDetectionSampleResult,
+} from "./wakeWordReadiness.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
 
@@ -277,6 +281,8 @@ export function App() {
   const [voiceTurnRehearsalResult, setVoiceTurnRehearsalResult] = useState<LocalVoiceTurnRehearsalResult | null>(null);
   const [bargeInRehearsalResult, setBargeInRehearsalResult] = useState<LocalBargeInRehearsalResult | null>(null);
   const [voiceResponseShapeResult, setVoiceResponseShapeResult] = useState<VoiceResponseShapeResult | null>(null);
+  const [wakeWordDetectionSampleResult, setWakeWordDetectionSampleResult] =
+    useState<LocalWakeWordDetectionSampleResult | null>(null);
   const [neutralAvatarStateResult, setNeutralAvatarStateResult] = useState<LocalNeutralAvatarStateResult | null>(null);
   const [avatarExpressionResult, setAvatarExpressionResult] = useState<LocalAvatarExpressionResult | null>(null);
   const [avatarLipSyncResult, setAvatarLipSyncResult] = useState<LocalAvatarLipSyncResult | null>(null);
@@ -692,6 +698,35 @@ export function App() {
         externalSendPerformed: false,
       });
     }
+  }
+
+  function runLocalWakeWordSample() {
+    const traceId = newTraceId();
+    const result = runLocalWakeWordDetectionSample({
+      enabled: wakeWordEnabled,
+      profileMode: profile,
+    });
+    setWakeWordDetectionSampleResult(result);
+    emitEvent("wake_word_sample_detected", {
+      traceId,
+      conversationId,
+      localSampleOnly: result.localSampleOnly,
+      enabled: result.enabled,
+      detected: result.detected,
+      detectedAtMs: result.detectedAtMs,
+      confidence: result.confidence,
+      profileMode: result.profileMode,
+      childProtected: result.childProtected,
+      guardianReviewReminder: result.guardianReviewReminder,
+      listeningStarted: result.listeningStarted,
+      microphoneCaptureStarted: result.microphoneCaptureStarted,
+      rawAudioStored: result.rawAudioStored,
+      liveNapoleonContacted: result.liveNapoleonContacted,
+      approvalCaptured: result.approvalCaptured,
+      memoryWritePerformed: result.memoryWritePerformed,
+      externalSendPerformed: result.externalSendPerformed,
+      agentDispatchPerformed: result.agentDispatchPerformed,
+    });
   }
 
   function runLocalSttSample() {
@@ -1905,6 +1940,12 @@ export function App() {
   const wakeWordSummary = wakeWordReadiness.enabled
     ? "Wake word option enabled; capture stopped."
     : "Wake word disabled";
+  const wakeWordSampleSummary =
+    wakeWordDetectionSampleResult === null
+      ? "Wake word sample not run"
+      : wakeWordDetectionSampleResult.detected
+        ? `Sample detection: detected at ${wakeWordDetectionSampleResult.detectedAtMs} ms, confidence ${wakeWordDetectionSampleResult.confidence}`
+        : "Sample detection: not detected";
   const vadSampleSummary =
     vadSampleSegments === null
       ? "VAD sample not run"
@@ -2175,6 +2216,22 @@ export function App() {
           <span>Raw audio stored: no</span>
         </div>
         <div>
+          <strong>Sample state</strong>
+          <span>{wakeWordSampleSummary}</span>
+        </div>
+        {wakeWordDetectionSampleResult ? (
+          <>
+            <div>
+              <strong>Local sample</strong>
+              <span>Local sample only: {wakeWordDetectionSampleResult.localSampleOnly ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Sample boundary</strong>
+              <span>Authority boundary: {wakeWordDetectionSampleResult.authorityBoundary}</span>
+            </div>
+          </>
+        ) : null}
+        <div>
           <strong>Authority boundary</strong>
           <span>Authority boundary: {wakeWordReadiness.authorityBoundary}</span>
         </div>
@@ -2188,6 +2245,9 @@ export function App() {
           <strong>Blocked effects</strong>
           <span>Blocked effects: {wakeWordReadiness.blockedEffects.join(", ")}</span>
         </div>
+        <button className="secondary" onClick={runLocalWakeWordSample}>
+          Run local wake word sample
+        </button>
       </section>
 
       <section className="contract-status" aria-label="Voice activity detection">
