@@ -2205,7 +2205,7 @@ test("submits a steering draft through rendered governed controls without local 
 
 test("submits a memory proposal through rendered governed controls without local side effects", async () => {
   const dom = installDom();
-  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
     import("@testing-library/react"),
     import("@testing-library/user-event"),
     import("../src/App.js"),
@@ -2341,6 +2341,18 @@ test("submits a memory proposal through rendered governed controls without local
     await user.click(view.getByRole("button", { name: "Send memory proposal to Napoleon review" }));
 
     await view.findByText("Napoleon accepted the memory proposal for review.");
+    const submissionDetails = view.getByText("Napoleon accepted the memory proposal for review.").closest("dl") as HTMLElement | null;
+    assert.equal(Boolean(submissionDetails), true);
+    assert.ok(within(submissionDetails as HTMLElement).getByText("Authority tier"));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("advisory_review"));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("Approval requirement"));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("chief_of_staff_and_owner_review"));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("Rationale"));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("Memory write remains blocked pending review."));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("Blocked effects"));
+    assert.ok(
+      within(submissionDetails as HTMLElement).getByText("memory_write, agent_dispatch, external_send, approval_capture"),
+    );
     assert.ok(view.getByText(/decision_memory_review_rendered/));
     assert.ok(view.getByText(/audit_memory_review_rendered/));
     assert.ok(view.getByText("no memory write; no approval captured; no agent dispatch; no external send."));

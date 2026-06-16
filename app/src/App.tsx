@@ -188,6 +188,24 @@ interface PendingRehearsal {
   memoryReview: ReturnType<typeof describeMemoryProposalReview> | null;
 }
 
+type GovernedReviewResponseView = {
+  text: string;
+  governanceDecision: {
+    outcome: string;
+    decision_id: string;
+    authority_tier: string;
+    approval_requirement: string;
+    rationale: string;
+    blocked_effects: string[];
+  };
+  traceEnvelope: {
+    trace_id: string;
+  };
+  auditEnvelope: {
+    audit_id: string;
+  };
+};
+
 export function buildBridgeFailureMessageMetadata(
   error: unknown,
   activeProfileMode?: NapoleonProfileMode,
@@ -2287,6 +2305,33 @@ export function App() {
   });
   const napoleonDelegationView = lastNapoleonPresentation.delegation ?? describeDelegation(undefined);
 
+  function renderGovernedReviewResponse(result: GovernedReviewResponseView, localEffects: string) {
+    return (
+      <dl>
+        <dt>Napoleon review response</dt>
+        <dd>{result.text}</dd>
+        <dt>Governance</dt>
+        <dd>
+          {result.governanceDecision.outcome}, decision {result.governanceDecision.decision_id}
+        </dd>
+        <dt>Authority tier</dt>
+        <dd>{result.governanceDecision.authority_tier}</dd>
+        <dt>Approval requirement</dt>
+        <dd>{result.governanceDecision.approval_requirement}</dd>
+        <dt>Rationale</dt>
+        <dd>{result.governanceDecision.rationale}</dd>
+        <dt>Trace</dt>
+        <dd>{result.traceEnvelope.trace_id}</dd>
+        <dt>Audit</dt>
+        <dd>{result.auditEnvelope.audit_id}</dd>
+        <dt>Blocked effects</dt>
+        <dd>{result.governanceDecision.blocked_effects.join(", ")}</dd>
+        <dt>Local effects</dt>
+        <dd>{localEffects}</dd>
+      </dl>
+    );
+  }
+
   return (
     <main className="shell">
       <header>
@@ -3766,25 +3811,12 @@ export function App() {
             Send steering draft to Napoleon review
           </button>
           {steeringFailure ? <p className="warning">{steeringFailure}</p> : null}
-          {steeringSubmission ? (
-            <dl>
-              <dt>Napoleon review response</dt>
-              <dd>{steeringSubmission.text}</dd>
-              <dt>Governance</dt>
-              <dd>
-                {steeringSubmission.governanceDecision.outcome}, decision{" "}
-                {steeringSubmission.governanceDecision.decision_id}
-              </dd>
-              <dt>Trace</dt>
-              <dd>{steeringSubmission.traceEnvelope.trace_id}</dd>
-              <dt>Audit</dt>
-              <dd>{steeringSubmission.auditEnvelope.audit_id}</dd>
-              <dt>Blocked effects</dt>
-              <dd>{steeringSubmission.governanceDecision.blocked_effects.join(", ")}</dd>
-              <dt>Local effects</dt>
-              <dd>not applied; no memory write; no approval captured; no agent dispatch; no external send.</dd>
-            </dl>
-          ) : null}
+          {steeringSubmission
+            ? renderGovernedReviewResponse(
+                steeringSubmission,
+                "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
+              )
+            : null}
         </section>
       ) : null}
 
@@ -3924,25 +3956,12 @@ export function App() {
             Send taxonomy review to Napoleon review
           </button>
           {taxonomyReviewFailure ? <p className="warning">{taxonomyReviewFailure}</p> : null}
-          {taxonomyReviewSubmission ? (
-            <dl>
-              <dt>Napoleon review response</dt>
-              <dd>{taxonomyReviewSubmission.text}</dd>
-              <dt>Governance</dt>
-              <dd>
-                {taxonomyReviewSubmission.governanceDecision.outcome}, decision{" "}
-                {taxonomyReviewSubmission.governanceDecision.decision_id}
-              </dd>
-              <dt>Trace</dt>
-              <dd>{taxonomyReviewSubmission.traceEnvelope.trace_id}</dd>
-              <dt>Audit</dt>
-              <dd>{taxonomyReviewSubmission.auditEnvelope.audit_id}</dd>
-              <dt>Blocked effects</dt>
-              <dd>{taxonomyReviewSubmission.governanceDecision.blocked_effects.join(", ")}</dd>
-              <dt>Local effects</dt>
-              <dd>not applied; no memory write; no approval captured; no agent dispatch; no external send.</dd>
-            </dl>
-          ) : null}
+          {taxonomyReviewSubmission
+            ? renderGovernedReviewResponse(
+                taxonomyReviewSubmission,
+                "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
+              )
+            : null}
         </section>
       ) : null}
 
@@ -4128,23 +4147,12 @@ export function App() {
             </button>
           </div>
           {governanceReviewSubmissionFailure ? <p className="warning">{governanceReviewSubmissionFailure}</p> : null}
-          {governanceReviewSubmission ? (
-            <dl>
-              <dt>Napoleon review response</dt>
-              <dd>{governanceReviewSubmission.text}</dd>
-              <dt>Governance</dt>
-              <dd>
-                {governanceReviewSubmission.governanceDecision.outcome}, decision{" "}
-                {governanceReviewSubmission.governanceDecision.decision_id}
-              </dd>
-              <dt>Trace</dt>
-              <dd>{governanceReviewSubmission.traceEnvelope.trace_id}</dd>
-              <dt>Audit</dt>
-              <dd>{governanceReviewSubmission.auditEnvelope.audit_id}</dd>
-              <dt>Local effects</dt>
-              <dd>no approval captured; no memory write; no agent dispatch; no external send; no local application.</dd>
-            </dl>
-          ) : null}
+          {governanceReviewSubmission
+            ? renderGovernedReviewResponse(
+                governanceReviewSubmission,
+                "no approval captured; no memory write; no agent dispatch; no external send; no local application.",
+              )
+            : null}
         </section>
       ) : null}
 
@@ -4211,23 +4219,12 @@ export function App() {
             </button>
           </div>
           {memorySubmissionFailure ? <p className="warning">{memorySubmissionFailure}</p> : null}
-          {memorySubmission ? (
-            <dl>
-              <dt>Napoleon review response</dt>
-              <dd>{memorySubmission.text}</dd>
-              <dt>Governance</dt>
-              <dd>
-                {memorySubmission.governanceDecision.outcome}, decision{" "}
-                {memorySubmission.governanceDecision.decision_id}
-              </dd>
-              <dt>Trace</dt>
-              <dd>{memorySubmission.traceEnvelope.trace_id}</dd>
-              <dt>Audit</dt>
-              <dd>{memorySubmission.auditEnvelope.audit_id}</dd>
-              <dt>Local effects</dt>
-              <dd>no memory write; no approval captured; no agent dispatch; no external send.</dd>
-            </dl>
-          ) : null}
+          {memorySubmission
+            ? renderGovernedReviewResponse(
+                memorySubmission,
+                "no memory write; no approval captured; no agent dispatch; no external send.",
+              )
+            : null}
         </section>
       ) : null}
 

@@ -11,6 +11,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added rendered coverage and UI behavior so an existing Chief of Staff steering draft becomes submittable after governed endpoint and descriptor readiness become valid, without re-drafting or weakening Rehearsal Mode/preflight blocks.
 - Added stale-draft clearing when local capability metadata or taxonomy edits change so Chief of Staff steering and taxonomy review handoffs cannot reuse obsolete local evidence.
 - Added profile-change clearing for local governance and memory review drafts so proposal-only handoffs cannot reuse adult, guest, collaborator, or child-protected context after the active user profile changes.
+- Added full returned governance context to governed review response panels, including authority tier, approval requirement, rationale, blocked effects, trace, and audit details.
 - Added returned blocked-effect rendering to governed Chief of Staff steering and taxonomy review response panels.
 - Added stale-result clearing for governed review handoffs when profile, endpoint, token, descriptor, or Rehearsal Mode state changes.
 - Added action, decision, and reason fields to governed live text-turn governance decision telemetry.
