@@ -1152,6 +1152,7 @@ export function App() {
       setLiveDescriptorInput(result.input);
       setDescriptorMode("live");
       setDescriptorDiscoveryMessage(result.connection.message);
+      clearBridgeReadinessProof();
       const discoveryFailed =
         result.connection.failClosedReason === "auth_failure" ||
         result.connection.failClosedReason === "bridge_timeout" ||
@@ -1171,6 +1172,7 @@ export function App() {
       setLiveDescriptorInput(failedInput);
       setDescriptorMode("live");
       setDescriptorDiscoveryMessage("Descriptor discovery failed closed. Concierge will not attempt live bridge calls.");
+      clearBridgeReadinessProof();
       emitEvent("descriptor_discovery_failed", {
         traceId: newTraceId(),
         conversationId,

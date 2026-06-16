@@ -210,6 +210,75 @@ test("shows Napoleon delegation panel before bridge provenance is returned", asy
   }
 });
 
+test("clears bridge readiness proof when descriptor mode changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App />);
+
+    fireEvent.click(view.getByRole("button", { name: "Export readiness proof" }));
+    assert.ok(view.getByLabelText("Exported bridge readiness proof"));
+
+    fireEvent.change(view.getByLabelText("Descriptor"), { target: { value: "missing" } });
+
+    assert.equal(view.queryByLabelText("Exported bridge readiness proof"), null);
+    assert.equal(view.queryByText("Readiness proof comparison"), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
+test("clears bridge readiness proof when live descriptor discovery updates connection state", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+  const requestedUrls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    assert.equal(url, "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor");
+    return harnessJsonResponse(200, {
+      descriptor: {
+        schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+        serviceId: "napoleon.chief_of_staff",
+        runtimeAuthority: false,
+        commandExecution: false,
+        cachePolicy: "fail_closed_to_review_required",
+        blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+      },
+      checksum: { expected: "sha256:ui", actual: "sha256:ui" },
+      signature: { valid: true },
+    });
+  }) as typeof fetch;
+
+  try {
+    localStorage.setItem("napoleon_endpoint", "http://127.0.0.1:8787");
+    const view = render(<App />);
+
+    fireEvent.click(view.getByRole("button", { name: "Export readiness proof" }));
+    assert.ok(view.getByLabelText("Exported bridge readiness proof"));
+
+    fireEvent.click(view.getByRole("button", { name: "Discover descriptor" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+
+    assert.equal(view.queryByLabelText("Exported bridge readiness proof"), null);
+    assert.equal(view.queryByText("Readiness proof comparison"), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("keeps post-preview advisory send disabled while Rehearsal Mode is active", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([

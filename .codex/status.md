@@ -69,6 +69,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added in-session readiness tracking from captured `bridge_contract_evidence`, with local registry transport/path/request-kind and raw/secret field comparison before evidence is marked passed.
 - Added a sanitized local bridge readiness proof export with descriptor state, blocked effects, evidence status, last operation transport, last failure reason, and no raw prompts, endpoints, or secrets.
 - Added same-session local bridge readiness proof comparison that reports sanitized proof changes without exposing raw prompts, endpoints, tokens, request bodies, or response bodies.
+- Cleared rendered bridge readiness proof exports and comparisons when descriptor discovery updates connection state, matching endpoint and bearer-token invalidation.
 - Added a local harness endpoint preset that configures `http://127.0.0.1:8787` and descriptor preflight without starting services or granting authority.
 - Added `make app-smoke` for app-level local harness text flow coverage across descriptor discovery, governed send, delegation presentation, last successful proof presentation, blocked effects, readiness evidence, and denied fail-closed text turn details.
 - Added Napoleon delegation provenance parsing plus a Text Concierge panel for selected agents, selection reasons, allowed and blocked effects, governance state, trace ID, and audit ID.
