@@ -31,7 +31,7 @@ User value: A broader evaluator catches governance, privacy, memory, and contrac
 Acceptance criteria:
 
 - The evaluator suite has at least 15 scenarios.
-- Scenarios cover adult, child protected, guest/collaborator, adversarial, self-evolution, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed behavior, descriptor connection state, bridge-client contract alignment, bridge delegation provenance, bridge response authority provenance, child protected bridge response semantics, governed review response semantics, profile-scope drift, live-runtime artifact semantics, real-runtime promotion boundaries, voice pipeline proof export/comparison, and conversation capability intelligence.
+- Scenarios cover adult, child protected, guest/collaborator, adversarial, self-evolution, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed behavior, descriptor connection state, bridge-client contract alignment, bridge delegation provenance, bridge response authority provenance, child protected bridge response semantics, governed review response semantics, profile-scope drift, live-runtime artifact semantics, real-runtime promotion boundaries, voice pipeline proof export/comparison, media session controller boundaries, and conversation capability intelligence.
 - Coverage tests verify the required scenario IDs and artifact checks.
 
 Privacy and safety impact:
@@ -41,7 +41,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by `MEMORY-PROPOSAL-001`, `BRIDGE-FAILURE-001`, `PRIVACY-SETTINGS-001`, `CONTRACT-MISMATCH-001`, `DESCRIPTOR-CONNECTION-STATE-001`, `BRIDGE-CLIENT-CONTRACT-001`, `BRIDGE-FIXTURE-DELEGATION-001`, `DELEGATION-PANEL-STATE-001`, `BRIDGE-RESPONSE-PROVENANCE-001`, `CHILD-BRIDGE-RESPONSE-SEMANTICS-001`, `GOVERNED-REVIEW-RESPONSE-SEMANTICS-001`, `PROFILE-SCOPE-DRIFT-001`, `LIVE-RUNTIME-ARTIFACT-SEMANTICS-001`, `REAL-RUNTIME-PROMOTION-BOUNDARY-001`, `VOICE-PIPELINE-PROOF-001`, and `CAPABILITY-INTELLIGENCE-001`.
+- Covered by `MEMORY-PROPOSAL-001`, `BRIDGE-FAILURE-001`, `PRIVACY-SETTINGS-001`, `CONTRACT-MISMATCH-001`, `DESCRIPTOR-CONNECTION-STATE-001`, `BRIDGE-CLIENT-CONTRACT-001`, `BRIDGE-FIXTURE-DELEGATION-001`, `DELEGATION-PANEL-STATE-001`, `BRIDGE-RESPONSE-PROVENANCE-001`, `CHILD-BRIDGE-RESPONSE-SEMANTICS-001`, `GOVERNED-REVIEW-RESPONSE-SEMANTICS-001`, `PROFILE-SCOPE-DRIFT-001`, `LIVE-RUNTIME-ARTIFACT-SEMANTICS-001`, `REAL-RUNTIME-PROMOTION-BOUNDARY-001`, `VOICE-PIPELINE-PROOF-001`, `MEDIA-SESSION-CONTROLLER-001`, and `CAPABILITY-INTELLIGENCE-001`.
 
 ## Milestone P1: Text Concierge MVP
 
@@ -503,7 +503,7 @@ Evaluator coverage:
 | AV-008 | Add conservative affect fusion | P1 | Output uses uncertainty labels, not emotional facts | affect_signal_fused |
 | AV-009 | Add avatar privacy dashboard | P0 | User can disable camera, affect, storage, and telemetry | privacy_setting_changed |
 | AV-010 | Add child avatar constraints | P0 | Child mode disables or restricts camera affect estimation by default | child_avatar_policy_applied |
-| AV-011 | Add media session controller | P0 | Microphone, camera, and playback preflight state is visible and child-safe before capture/playback exists | privacy_setting_changed, mic_permission_requested, mic_permission_result, camera_permission_requested, camera_permission_result |
+| AV-011 | Add media session controller | P0 | Microphone, camera, and playback preflight state is visible and child-safe before capture/playback exists, with evaluator coverage in `MEDIA-SESSION-CONTROLLER-001` | privacy_setting_changed, mic_permission_requested, mic_permission_result, camera_permission_requested, camera_permission_result |
 
 ### AV-001 details
 

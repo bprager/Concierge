@@ -382,6 +382,28 @@ artifacts:
       - "bearer tokens"
       - "request bodies"
       - "response bodies"
+  media_session_controller_boundary:
+    required_terms:
+      - "Media Session Controller"
+      - "visible microphone state"
+      - "visible camera state"
+      - "visible playback state"
+      - "permission-needed"
+      - "permission-requested"
+      - "permission-granted"
+      - "permission-denied"
+      - "permission-unavailable"
+      - "stopped or blocked status"
+      - "child protected blocks media surfaces"
+      - "guardian approval is not captured locally"
+      - "does not start capture"
+      - "does not start playback"
+      - "does not store raw media"
+      - "does not contact Napoleon"
+      - "does not write memory"
+      - "does not capture approval"
+      - "does not dispatch agents"
+      - "does not send externally"
   privacy_settings_controls:
     required_terms:
       - "privacy settings controls"

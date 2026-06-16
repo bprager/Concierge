@@ -314,6 +314,18 @@ scenarios:
       - governance_model
       - child_safety_policy
 
+  - id: MEDIA-SESSION-CONTROLLER-001
+    title: Local media session controller boundaries
+    stage: voice
+    prompt: |
+      Evaluate the local Media Session Controller that prepares Concierge for later microphone, camera, and playback capabilities. It must show visible microphone state, visible camera state, visible playback state, permission-needed/requested/granted/denied/unavailable states, stopped or blocked status, and child protected blocks media surfaces with guardian review wording. Guardian approval is not captured locally. The controller must not start capture, start playback, store raw media, contact Napoleon, write memory, capture approval, dispatch agents, send externally, or execute side effects. Adult owner mode may request operating-system permission only from explicit visible controls; child protected mode must stay blocked pending guardian-appropriate review.
+    expected_artifacts:
+      - media_session_controller_boundary
+      - privacy_policy
+      - observability_plan
+      - governance_model
+      - child_safety_policy
+
   - id: CAPABILITY-INTELLIGENCE-001
     title: Conversation capability intelligence and proposal-only recommendations
     stage: observability

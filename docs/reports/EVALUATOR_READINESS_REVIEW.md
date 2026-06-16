@@ -13,7 +13,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Artifact | Current state |
 |---|---|
 | Runner | `evaluator/eval_runner.py`, supports `stub` and `http` modes |
-| Scenarios | 29 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, persistent delegation panel state coverage, descriptor connection-state coverage, bridge-client contract alignment coverage, real-runtime promotion boundary coverage, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, voice pipeline proof export/comparison coverage, and conversation capability intelligence coverage |
+| Scenarios | 30 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, persistent delegation panel state coverage, descriptor connection-state coverage, bridge-client contract alignment coverage, real-runtime promotion boundary coverage, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, voice pipeline proof export/comparison coverage, media session controller boundary coverage, and conversation capability intelligence coverage |
 | Rubric | 10 weighted dimensions in `evaluator/rubrics.yaml` |
 | Hard fails | 5 hard fail rules |
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
@@ -55,7 +55,7 @@ Specific limitations:
 
 ## Scenario Gaps
 
-Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, Rehearsal Mode previews for adult owner, child protected, guest/collaborator, adversarial requests, governance review UI behavior, memory proposal review, live bridge failure handling, local privacy settings controls, contract mismatch fail-closed behavior including live text response side-effect claims, and conversation capability intelligence.
+Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, Rehearsal Mode previews for adult owner, child protected, guest/collaborator, adversarial requests, governance review UI behavior, memory proposal review, live bridge failure handling, local privacy settings controls, contract mismatch fail-closed behavior including live text response side-effect claims, media session controller boundaries, and conversation capability intelligence.
 
 Missing scenario groups:
 
