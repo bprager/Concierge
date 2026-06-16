@@ -95,6 +95,9 @@ FORBIDDEN_TAURI_NATIVE_PLUGINS = {
     "upload",
     "websocket",
 }
+VISIBLE_PERMISSION_HANDLER_SOURCE_ALLOWLIST = {
+    "app/src/App.tsx",
+}
 
 UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bfetch\s*\("),
@@ -113,6 +116,14 @@ BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
     r"|\w+\s*\+\s*['\"][^'\"]*/v1/"
     r")"
 )
+
+HIDDEN_MEDIA_OR_SPEECH_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"\bgetUserMedia\s*\("),
+    re.compile(r"\b(?:AudioContext|webkitAudioContext)\s*\("),
+    re.compile(r"\bSpeechRecognition\s*\("),
+    re.compile(r"\bspeechSynthesis\b"),
+    re.compile(r"\.play\s*\("),
+]
 
 
 def load_json(path: str) -> object:
@@ -895,6 +906,26 @@ def find_ungoverned_network_violations() -> list[str]:
     return sorted(violations)
 
 
+def scan_hidden_media_or_speech_text(path: str, text: str) -> list[str]:
+    if path in VISIBLE_PERMISSION_HANDLER_SOURCE_ALLOWLIST:
+        return []
+    violations: list[str] = []
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        for pattern in HIDDEN_MEDIA_OR_SPEECH_PATTERNS:
+            if pattern.search(line):
+                violations.append(f"{path}:{line_number}: hidden media capture or speech/playback API")
+                break
+    return violations
+
+
+def find_hidden_media_or_speech_violations() -> list[str]:
+    violations: list[str] = []
+    for path in authority_source_paths():
+        relative_path = str(path.relative_to(ROOT))
+        violations.extend(scan_hidden_media_or_speech_text(relative_path, path.read_text(encoding="utf-8")))
+    return sorted(violations)
+
+
 def scan_tauri_config_text(path: str, text: str) -> list[str]:
     try:
         config = json.loads(text)
@@ -957,6 +988,12 @@ def validate_authority_boundary() -> None:
         raise SystemExit(
             "Concierge runtime code makes network calls outside governed Napoleon bridge modules:\n"
             + "\n".join(network_violations)
+        )
+    media_violations = find_hidden_media_or_speech_violations()
+    if media_violations:
+        raise SystemExit(
+            "Concierge runtime code starts hidden media capture or speech/playback APIs:\n"
+            + "\n".join(media_violations)
         )
     tauri_violations = find_tauri_desktop_authority_violations()
     if tauri_violations:

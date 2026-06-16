@@ -14,6 +14,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertEqual(violations, [])
 
+    def test_current_runtime_sources_do_not_start_hidden_media_or_speech(self):
+        violations = validate_repo.find_hidden_media_or_speech_violations()
+
+        self.assertEqual(violations, [])
+
     def test_current_tauri_desktop_surface_does_not_enable_native_bypass_plugins(self):
         violations = validate_repo.find_tauri_desktop_authority_violations()
 
@@ -110,6 +115,37 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
+    def test_media_scanner_detects_hidden_capture_speech_and_playback(self):
+        for source in [
+            "await navigator.mediaDevices.getUserMedia({ audio: true });",
+            "const audio = new AudioContext();",
+            "const speech = new SpeechRecognition();",
+            "window.speechSynthesis.speak(utterance);",
+            "await clip.play();",
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_hidden_media_or_speech_text("app/src/hiddenCapture.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("hidden media capture or speech/playback API", violations[0])
+
+    def test_media_scanner_allows_visible_permission_handlers(self):
+        violations = validate_repo.scan_hidden_media_or_speech_text(
+            "app/src/App.tsx",
+            """
+            async function requestCameraPermission() {
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+              for (const track of stream.getTracks()) track.stop();
+            }
+            async function requestMicrophonePermission() {
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+              for (const track of stream.getTracks()) track.stop();
+            }
+            """,
+        )
+
+        self.assertEqual(violations, [])
 
     def test_network_scanner_allows_named_bridge_modules(self):
         violations = validate_repo.scan_ungoverned_network_text(
