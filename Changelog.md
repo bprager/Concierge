@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a local Media Session Controller that centralizes microphone, camera, and playback preflight state while keeping capture, playback, raw media storage, Napoleon contact, approval, memory writes, agent dispatch, and external sends blocked.
 - Hardened repository authority-boundary validation so runtime source, Tauri configuration, and Tauri plugin dependencies cannot add direct native bridge, shell, file, service, or HTTP bypasses around the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so hidden media capture, browser speech recognition/synthesis, audio contexts, or playback APIs cannot be introduced outside explicit visible permission handlers.
 - Hardened repository authority-boundary validation so governed bridge modules cannot fetch hard-coded or concatenated URLs and must resolve live requests through named generated bridge operations.

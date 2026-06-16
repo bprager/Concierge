@@ -503,6 +503,7 @@ Evaluator coverage:
 | AV-008 | Add conservative affect fusion | P1 | Output uses uncertainty labels, not emotional facts | affect_signal_fused |
 | AV-009 | Add avatar privacy dashboard | P0 | User can disable camera, affect, storage, and telemetry | privacy_setting_changed |
 | AV-010 | Add child avatar constraints | P0 | Child mode disables or restricts camera affect estimation by default | child_avatar_policy_applied |
+| AV-011 | Add media session controller | P0 | Microphone, camera, and playback preflight state is visible and child-safe before capture/playback exists | privacy_setting_changed, mic_permission_requested, mic_permission_result, camera_permission_requested, camera_permission_result |
 
 ### AV-001 details
 
@@ -751,6 +752,26 @@ Privacy and safety impact:
 Evaluator coverage:
 
 - Covered by rendered app interaction tests for camera setting, explicit permission request, and stopped capture state.
+
+### AV-011 details
+
+User value: The user can inspect one central media state before voice/avatar work adds real capture or playback, so permission, local preference, stopped state, and child-protected blocking are not confused.
+
+Acceptance criteria:
+
+- Text Concierge exposes a Media Session Controller for microphone, camera, and playback.
+- The controller shows local preference, permission, stopped/capture/playback state, guardian-review state, authority boundary, and blocked effects.
+- Microphone, camera, and playback states remain local preflight only and do not start capture, playback, raw media storage, Napoleon contact, memory writes, approval capture, guardian approval capture, agent dispatch, or external sends.
+- Child protected mode keeps microphone, camera, and playback blocked behind visible guardian-review wording even when local preferences are enabled.
+- Permission request/result telemetry remains metadata-only and explicit about false side effects.
+
+Privacy and safety impact:
+
+- This is a shared consent and state surface only, not live voice mode, avatar mode, recording permission, playback permission, guardian approval, or Napoleon approval.
+
+Evaluator coverage:
+
+- Covered by pure media-session tests and rendered app interaction tests for adult and child-protected local media state without capture, playback, storage, Napoleon contact, approval, guardian approval, dispatch, or external sends.
 
 ## Milestone P4: Controlled self-evolution
 

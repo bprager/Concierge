@@ -87,6 +87,7 @@ import {
   submitMemoryProposalForReview,
   type MemoryProposalSubmissionResult,
 } from "./memoryProposalSubmission.js";
+import { buildMediaSessionSummary, type LocalMediaPermissionStatus } from "./mediaSession.js";
 import { NapoleonBridgeError, sendToNapoleon } from "./napoleonBridge.js";
 import {
   buildSuccessfulNapoleonResponsePresentation,
@@ -166,8 +167,6 @@ import {
 } from "./wakeWordReadiness.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
-
-type LocalMediaPermissionStatus = "not_requested" | "granted" | "denied" | "unavailable";
 
 function storedBoolean(key: string, fallback: boolean): boolean {
   if (typeof localStorage === "undefined") return fallback;
@@ -284,7 +283,11 @@ function browserStorage(): Storage | null {
   }
 }
 
-export function App() {
+interface AppProps {
+  initialProfile?: LocalProfile;
+}
+
+export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [messages, setMessages] = useState<ConciergeMessage[]>([
     {
       role: "assistant",
@@ -292,7 +295,7 @@ export function App() {
     },
   ]);
   const [input, setInput] = useState("");
-  const [profile, setProfile] = useState<LocalProfile>("adult_owner");
+  const [profile, setProfile] = useState<LocalProfile>(initialProfile);
   const [rehearsalMode, setRehearsalMode] = useState(true);
   const [descriptorMode, setDescriptorMode] = useState<"discovered" | "live" | "missing" | "checksum_mismatch">("discovered");
   const [liveDescriptorInput, setLiveDescriptorInput] = useState<DescriptorConnectionInput | null>(null);
@@ -645,6 +648,7 @@ export function App() {
 
   async function requestCameraPermission() {
     const traceId = newTraceId();
+    setCameraPermissionStatus("requested");
     emitEvent("camera_permission_requested", {
       traceId,
       conversationId,
@@ -725,6 +729,7 @@ export function App() {
 
   async function requestMicrophonePermission() {
     const traceId = newTraceId();
+    setMicrophonePermissionStatus("requested");
     emitEvent("mic_permission_requested", {
       traceId,
       conversationId,
@@ -2212,6 +2217,8 @@ export function App() {
   const microphonePermissionLabel =
     microphonePermissionStatus === "not_requested"
       ? "Permission not requested"
+      : microphonePermissionStatus === "requested"
+        ? "Permission requested"
       : microphonePermissionStatus === "granted"
         ? "Permission granted"
         : microphonePermissionStatus === "unavailable"
@@ -2220,6 +2227,8 @@ export function App() {
   const cameraPermissionLabel =
     cameraPermissionStatus === "not_requested"
       ? "Permission not requested"
+      : cameraPermissionStatus === "requested"
+        ? "Permission requested"
       : cameraPermissionStatus === "granted"
         ? "Permission granted"
         : cameraPermissionStatus === "unavailable"
@@ -2230,6 +2239,14 @@ export function App() {
     : microphonePermissionStatus !== "granted"
       ? "Voice capture blocked: OS microphone permission is not granted."
       : "Voice capture ready but stopped; voice mode is not active.";
+  const mediaSessionSummary = buildMediaSessionSummary({
+    profileMode: profile,
+    microphoneEnabled,
+    microphonePermissionStatus,
+    cameraEnabled,
+    cameraPermissionStatus,
+    mediaApiAvailable: true,
+  });
   const wakeWordReadiness = buildLocalWakeWordReadiness({
     enabled: wakeWordEnabled,
     profileMode: profile,
@@ -2496,6 +2513,47 @@ export function App() {
             value={interactionTraceExportJson}
           />
         ) : null}
+      </section>
+
+      <section className="contract-status" aria-label="Media session controller">
+        <div>
+          <strong>Media session controller</strong>
+          <span>local preflight only</span>
+        </div>
+        <div>
+          <strong>Microphone session</strong>
+          <span>Microphone session: {mediaSessionSummary.microphone.status}</span>
+          <span>Microphone permission: {mediaSessionSummary.microphone.permissionStatus}</span>
+          <span>Microphone capture started: {mediaSessionSummary.microphone.microphoneCaptureStarted ? "yes" : "no"}</span>
+        </div>
+        <div>
+          <strong>Camera session</strong>
+          <span>Camera session: {mediaSessionSummary.camera.status}</span>
+          <span>Camera permission: {mediaSessionSummary.camera.permissionStatus}</span>
+          <span>Camera capture started: {mediaSessionSummary.camera.cameraCaptureStarted ? "yes" : "no"}</span>
+        </div>
+        <div>
+          <strong>Playback session</strong>
+          <span>Playback session: {mediaSessionSummary.playback.status}</span>
+          <span>Audio playback started: {mediaSessionSummary.playback.audioPlaybackStarted ? "yes" : "no"}</span>
+          <span>Raw audio stored: {mediaSessionSummary.playback.rawAudioStored ? "yes" : "no"}</span>
+        </div>
+        <div>
+          <strong>Child boundary</strong>
+          <span>Child protected: {mediaSessionSummary.childProtected ? "yes" : "no"}</span>
+          <span>Guardian approval captured: {mediaSessionSummary.microphone.guardianApprovalCaptured ? "yes" : "no"}</span>
+          <span>{mediaSessionSummary.microphone.guardianReviewReminder}</span>
+        </div>
+        <div>
+          <strong>Authority boundary</strong>
+          <span>Authority boundary: {mediaSessionSummary.authorityBoundary}</span>
+        </div>
+        <div>
+          <strong>Blocked effects</strong>
+          <span>Microphone blocked effects: {mediaSessionSummary.microphone.blockedEffects.join(", ")}</span>
+          <span>Camera blocked effects: {mediaSessionSummary.camera.blockedEffects.join(", ")}</span>
+          <span>Playback blocked effects: {mediaSessionSummary.playback.blockedEffects.join(", ")}</span>
+        </div>
       </section>
 
       <section className="contract-status" aria-label="Voice readiness">

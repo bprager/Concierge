@@ -121,7 +121,7 @@ export interface LiveSendPreflightView {
   items: LiveSendPreflightItem[];
 }
 
-export type MicrophonePermissionStatus = "not_requested" | "granted" | "denied" | "unavailable";
+export type MicrophonePermissionStatus = "not_requested" | "requested" | "granted" | "denied" | "unavailable";
 
 export interface LiveVoiceReadinessInput {
   descriptorConnection: DescriptorConnectionState;
