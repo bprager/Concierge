@@ -34,6 +34,7 @@ export interface LocalAvatarFacePoseResult {
   memoryWritePerformed: false;
   approvalCaptured: false;
   guardianApprovalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -94,6 +95,7 @@ export function buildLocalAvatarFacePoseEstimate(input: LocalAvatarFacePoseInput
     memoryWritePerformed: false,
     approvalCaptured: false,
     guardianApprovalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     blockedEffects,
   };

@@ -1058,6 +1058,7 @@ export function App() {
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
       guardianApprovalCaptured: result.guardianApprovalCaptured,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });
@@ -2982,6 +2983,10 @@ export function App() {
             <div>
               <strong>Napoleon contact</strong>
               <span>Live Napoleon contacted: no</span>
+            </div>
+            <div>
+              <strong>Agent dispatch</strong>
+              <span>Agent dispatch: {avatarFacePoseResult.agentDispatchPerformed ? "yes" : "no"}</span>
             </div>
             <div>
               <strong>Authority boundary</strong>

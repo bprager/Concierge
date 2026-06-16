@@ -20,6 +20,7 @@ test("builds local face and head pose metadata without camera capture or affect 
   assert.equal(result.liveNapoleonContacted, false);
   assert.equal(result.memoryWritePerformed, false);
   assert.equal(result.approvalCaptured, false);
+  assert.equal(result.agentDispatchPerformed, false);
   assert.equal(result.externalSendPerformed, false);
   assert.deepEqual(result.blockedEffects, [
     "camera_capture",

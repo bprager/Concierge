@@ -3617,6 +3617,7 @@ test("estimates avatar face and head pose metadata without camera capture or aff
     assert.equal(facePoseEvent.attributes.attentionPolicy, "disabled");
     assert.equal(facePoseEvent.attributes.cameraCaptureStarted, false);
     assert.equal(facePoseEvent.attributes.affectInferred, false);
+    assert.equal(facePoseEvent.attributes.agentDispatchPerformed, false);
     assert.ok(avatarFacePose.getByText("Face present: yes"));
     assert.ok(avatarFacePose.getByText("Head yaw: 8deg"));
     assert.ok(avatarFacePose.getByText("Head pitch: -4deg"));
@@ -3628,6 +3629,7 @@ test("estimates avatar face and head pose metadata without camera capture or aff
     assert.ok(avatarFacePose.getByText("Attention policy: disabled"));
     assert.ok(avatarFacePose.getByText("Raw video stored: no"));
     assert.ok(avatarFacePose.getByText("Affect inferred: no"));
+    assert.ok(avatarFacePose.getByText("Agent dispatch: no"));
     assert.ok(avatarFacePose.getByText("Authority boundary: Face and head-pose estimation is local sample metadata only; it is not camera capture, attention inference, emotion inference, approval, or agent action."));
     assert.ok(avatarFacePose.getByText("Blocked effects: camera_capture, raw_video_storage, live_face_detection, affect_inference, attention_inference, avatar_animation, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
   } finally {
