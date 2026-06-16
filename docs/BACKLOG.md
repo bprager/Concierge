@@ -803,7 +803,7 @@ Evaluator coverage:
 | OBS-005 | Add privacy audit log | P0 | Camera, mic, memory, and child policy changes are auditable | privacy_audit_logged |
 | OBS-006 | Add evaluator report retention | P1 | Reports retained with timestamps and version metadata | eval_report_retained |
 | OBS-007 | Add dashboard specification | P2 | Metrics, traces, evaluator history, and privacy events defined | dashboard_spec_created |
-| OBS-008 | Add conversation capability ledger | P1 | Local ledger stores derived capability signals, persists count/age-bounded metadata and taxonomy edits in browser-local storage, and provides clear/export/taxonomy/trend controls without storing raw conversation content by default | conversation_capability_signal |
+| OBS-008 | Add conversation capability ledger | P1 | Local ledger stores derived capability signals, persists count/age-bounded metadata and taxonomy edits in browser-local storage, and provides clear/export/taxonomy/trend controls without storing raw conversation content by default; clear/export telemetry records no approval capture, memory write, agent dispatch, or external send | conversation_capability_signal |
 
 ### OBS-002 details
 

@@ -185,6 +185,42 @@ test("exports and compares Napoleon proof through rendered app controls", async 
   }
 });
 
+test("capability ledger export and clear telemetry stays proposal-only without agent dispatch", async () => {
+  const dom = installDom();
+  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Export local capability metadata" }));
+    await view.findByLabelText("Exported local capability metadata");
+    await user.click(view.getByRole("button", { name: "Clear local capability ledger" }));
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const exportEvent = telemetryBuffer.events?.find((event) => event.event === "capability_ledger_exported");
+    const clearEvent = telemetryBuffer.events?.find((event) => event.event === "capability_ledger_cleared");
+
+    assert.equal(exportEvent?.attributes.approvalCaptured, false);
+    assert.equal(exportEvent?.attributes.memoryWritePerformed, false);
+    assert.equal(exportEvent?.attributes.agentDispatchPerformed, false);
+    assert.equal(exportEvent?.attributes.externalSendPerformed, false);
+    assert.equal(clearEvent?.attributes.approvalCaptured, false);
+    assert.equal(clearEvent?.attributes.memoryWritePerformed, false);
+    assert.equal(clearEvent?.attributes.agentDispatchPerformed, false);
+    assert.equal(clearEvent?.attributes.externalSendPerformed, false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows Napoleon delegation panel before bridge provenance is returned", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([

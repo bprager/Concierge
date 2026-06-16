@@ -60,7 +60,7 @@ Persistent local storage:
 - Export schema version: `concierge.capability-ledger.export.v1`.
 - Retention: bounded to the latest 250 derived metadata signals and a 90 day local age window.
 - Clear control: removes the persisted snapshot and clears the in-memory ledger.
-- Export control: renders local JSON for derived metadata only, includes retention settings and trend caveats, and states that export does not grant permission to share externally.
+- Export control: renders local JSON for derived metadata only, includes retention settings and trend caveats, and states that export does not grant permission to share externally; export and clear telemetry explicitly records no approval capture, memory write, agent dispatch, or external send.
 - Child protected records remain distinguishable through `profile_mode` and `privacy_class: child_sensitive`, without retaining raw child content.
 
 Local taxonomy storage:
