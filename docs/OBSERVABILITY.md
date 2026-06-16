@@ -118,6 +118,8 @@ Standalone bridge evidence capture accepts `NAPOLEON_BRIDGE_ENDPOINT` as the gov
 
 The generated bridge operation registry now carries canonical HTTP methods and required 200-response fields as well as paths, so descriptor discovery remains a `GET` operation while governed handoffs remain `POST` operations and runtime text, memory proposal review, governance review, Chief of Staff steering, and Chief of Staff taxonomy review responses fail closed if Napoleon omits OpenAPI-required top-level fields.
 
+Wake-word readiness is represented as a local privacy setting and local display state only. Setting `wake_word` in `privacy_setting_changed` records whether the future wake-word option is enabled, while keeping always-on listening, microphone capture, raw audio storage, live Napoleon contact, approval capture, memory writes, agent dispatch, and external sends false. No `wake_word_detected` event is emitted until an explicit local detection path exists.
+
 The canonical descriptor response sample is validated as contract-only metadata: it must keep runtime authority and command execution false, preserve fail-closed cache policy, carry checksum/signature proof, and keep authority effects blocked.
 
 Governed memory proposal review responses that claim memory writes, approval capture, external sends, agent dispatch, or local application are reported as `contract_mismatch` failures through `memory_proposal_send_failed`.

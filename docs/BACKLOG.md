@@ -250,7 +250,7 @@ Evaluator coverage:
 | VO-005 | Add barge-in | P0 | User can interrupt TTS and start new turn | barge_in_detected |
 | VO-006 | Add voice turn latency metrics | P0 | VAD, STT, Napoleon, TTS spans emitted | voice_turn_completed |
 | VO-007 | Add voice-specific response shaping | P1 | Long text responses are summarized for speech | voice_response_shaped |
-| VO-008 | Add wake word option | P2 | Wake word can be enabled or disabled | wake_word_detected |
+| VO-008 | Add wake word option | P2 | Wake word can be enabled or disabled without starting listening or capture | privacy_setting_changed |
 | VO-009 | Add child voice constraints | P1 | Child mode has slower pacing and stricter side effect controls | child_voice_policy_applied |
 
 ### VO-001 details
@@ -410,6 +410,27 @@ Privacy and safety impact:
 Evaluator coverage:
 
 - Covered by pure voice response shaping tests and rendered app interaction tests for local preparation without media or Napoleon contact.
+
+### VO-008 details
+
+User value: The user can see and change the future wake-word preference before any always-on listening, microphone capture, or live voice mode exists.
+
+Acceptance criteria:
+
+- Text Concierge exposes a wake-word setting that defaults off and persists locally.
+- Text Concierge exposes a local wake-word readiness panel with option state, phrase, listening state, microphone capture state, raw audio storage state, authority boundary, and blocked effects.
+- Enabling the wake-word option does not request microphone permission, start always-on listening, start microphone capture, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- `privacy_setting_changed` records wake-word setting changes as local metadata with explicit false side-effect flags.
+- Child protected mode shows guardian-review reminder state and must not treat the wake-word option as guardian approval, recording permission, external speech permission, or Napoleon approval.
+
+Privacy and safety impact:
+
+- This is local wake-word readiness only, not wake-word detection or live voice mode.
+- Raw audio remains unstored, and no always-on listening path is introduced.
+
+Evaluator coverage:
+
+- Covered by pure wake-word readiness tests and rendered app interaction tests for local option toggling without listening, capture, raw audio storage, Napoleon contact, or side effects.
 
 ### VO-009 details
 

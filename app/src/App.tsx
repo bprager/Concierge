@@ -150,6 +150,7 @@ import {
   type VoiceResponseShapeResult,
 } from "./voiceResponseShaping.js";
 import { detectVoiceSegments, localVadSampleFrames, type VoiceActivitySegment } from "./voiceActivity.js";
+import { buildLocalWakeWordReadiness } from "./wakeWordReadiness.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
 
@@ -260,6 +261,7 @@ export function App() {
   const [microphoneEnabled, setMicrophoneEnabled] = useState(() =>
     storedBoolean("concierge_microphone_enabled", false),
   );
+  const [wakeWordEnabled, setWakeWordEnabled] = useState(() => storedBoolean("concierge_wake_word_enabled", false));
   const [avatarAffectEnabled, setAvatarAffectEnabled] = useState(() =>
     storedBoolean("concierge_avatar_affect_enabled", false),
   );
@@ -477,7 +479,7 @@ export function App() {
   }
 
   function updatePrivacySetting(
-    kind: "telemetry" | "camera" | "microphone" | "avatar_affect" | "raw_media_storage",
+    kind: "telemetry" | "camera" | "microphone" | "wake_word" | "avatar_affect" | "raw_media_storage",
     enabled: boolean,
   ) {
     const storageKey =
@@ -487,12 +489,15 @@ export function App() {
           ? "concierge_camera_enabled"
           : kind === "microphone"
             ? "concierge_microphone_enabled"
-            : kind === "avatar_affect"
-              ? "concierge_avatar_affect_enabled"
-              : "concierge_raw_media_storage_enabled";
+            : kind === "wake_word"
+              ? "concierge_wake_word_enabled"
+              : kind === "avatar_affect"
+                ? "concierge_avatar_affect_enabled"
+                : "concierge_raw_media_storage_enabled";
     if (kind === "telemetry") setTelemetryEnabled(enabled);
     if (kind === "camera") setCameraEnabled(enabled);
     if (kind === "microphone") setMicrophoneEnabled(enabled);
+    if (kind === "wake_word") setWakeWordEnabled(enabled);
     if (kind === "avatar_affect") setAvatarAffectEnabled(enabled);
     if (kind === "raw_media_storage") setRawMediaStorageEnabled(enabled);
     if (typeof localStorage !== "undefined") {
@@ -1893,6 +1898,13 @@ export function App() {
     : microphonePermissionStatus !== "granted"
       ? "Voice capture blocked: OS microphone permission is not granted."
       : "Voice capture ready but stopped; voice mode is not active.";
+  const wakeWordReadiness = buildLocalWakeWordReadiness({
+    enabled: wakeWordEnabled,
+    profileMode: profile,
+  });
+  const wakeWordSummary = wakeWordReadiness.enabled
+    ? "Wake word option enabled; capture stopped."
+    : "Wake word disabled";
   const vadSampleSummary =
     vadSampleSegments === null
       ? "VAD sample not run"
@@ -2054,10 +2066,19 @@ export function App() {
             onChange={(e) => updatePrivacySetting("microphone", e.target.checked)}
           />
         </label>
+        <label>
+          Wake word
+          <input
+            type="checkbox"
+            checked={wakeWordEnabled}
+            onChange={(e) => updatePrivacySetting("wake_word", e.target.checked)}
+          />
+        </label>
         <span className="capture">
           Local telemetry {telemetryEnabled ? "on" : "off"}, camera {cameraEnabled ? "on" : "off"},
           microphone {microphoneEnabled ? "on" : "off"}
         </span>
+        <span className="capture">Wake word {wakeWordEnabled ? "on" : "off"}</span>
       </section>
 
       <section className="contract-status" aria-label="Local telemetry buffer">
@@ -2126,6 +2147,47 @@ export function App() {
         <button className="secondary" onClick={() => void requestMicrophonePermission()}>
           Request microphone permission
         </button>
+      </section>
+
+      <section className="contract-status" aria-label="Wake word readiness">
+        <div>
+          <strong>Wake word readiness</strong>
+          <span>local option only</span>
+        </div>
+        <div>
+          <strong>Option state</strong>
+          <span>{wakeWordSummary}</span>
+        </div>
+        <div>
+          <strong>Phrase</strong>
+          <span>Phrase: {wakeWordReadiness.phrase}</span>
+        </div>
+        <div>
+          <strong>Listening</strong>
+          <span>Listening started: no</span>
+        </div>
+        <div>
+          <strong>Capture</strong>
+          <span>Microphone capture started: no</span>
+        </div>
+        <div>
+          <strong>Storage</strong>
+          <span>Raw audio stored: no</span>
+        </div>
+        <div>
+          <strong>Authority boundary</strong>
+          <span>Authority boundary: {wakeWordReadiness.authorityBoundary}</span>
+        </div>
+        {wakeWordReadiness.childProtected ? (
+          <div>
+            <strong>Guardian review</strong>
+            <span>Guardian review reminder: yes</span>
+          </div>
+        ) : null}
+        <div>
+          <strong>Blocked effects</strong>
+          <span>Blocked effects: {wakeWordReadiness.blockedEffects.join(", ")}</span>
+        </div>
       </section>
 
       <section className="contract-status" aria-label="Voice activity detection">
