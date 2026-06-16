@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so runtime UI source cannot add direct `fetch`, `WebSocket`, `EventSource`, `XMLHttpRequest`, or `sendBeacon` network calls outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so direct `invokeAgent`, `runTool`, and `executeTool` calls are rejected alongside existing direct agent/tool dispatch patterns.
 - Added rendered child-protected avatar perception coverage and visible guardian-approval-captured boundaries for local gaze, face/head-pose, and affect-fusion panels.
 - Preserved unreadable governed review handoff response bodies for memory proposal, governance review, Chief of Staff steering, and taxonomy review submissions as fail-closed contract mismatches with blocked-effect evidence.

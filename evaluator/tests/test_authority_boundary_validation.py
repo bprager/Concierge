@@ -9,6 +9,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertEqual(violations, [])
 
+    def test_current_runtime_sources_do_not_make_ungoverned_network_calls(self):
+        violations = validate_repo.find_ungoverned_network_violations()
+
+        self.assertEqual(violations, [])
+
     def test_scanner_detects_direct_process_execution(self):
         violations = validate_repo.scan_authority_boundary_text(
             "app/src-tauri/src/main.rs",
@@ -44,6 +49,35 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
                 self.assertTrue(violations)
                 self.assertIn("direct agent or tool dispatch", violations[0])
+
+    def test_network_scanner_detects_unallowlisted_fetch_and_socket_calls(self):
+        for source in [
+            'await fetch("https://api.example.test/send", { method: "POST" });',
+            'await window.fetch("https://api.example.test/send");',
+            "const request = new XMLHttpRequest();",
+            'const socket = new WebSocket("wss://api.example.test/live");',
+            'const events = new EventSource("https://api.example.test/events");',
+            'navigator.sendBeacon("https://api.example.test/audit", payload);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
+    def test_network_scanner_allows_named_bridge_modules(self):
+        violations = validate_repo.scan_ungoverned_network_text(
+            "app/src/napoleonBridge.ts",
+            """
+            const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
+            await fetcher(resolveNapoleonBridgeOperation(endpoint, "text_turn"), {
+              method: "POST",
+              body: JSON.stringify(payload),
+            });
+            """,
+        )
+
+        self.assertEqual(violations, [])
 
     def test_scanner_allows_governed_bridge_and_proposal_language(self):
         violations = validate_repo.scan_authority_boundary_text(

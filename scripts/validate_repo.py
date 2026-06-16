@@ -38,6 +38,15 @@ AUTHORITY_SOURCE_EXCLUDED_PARTS = {
     "__tests__",
 }
 
+GOVERNED_NETWORK_SOURCE_ALLOWLIST = {
+    "app/src/capabilityTaxonomy.ts",
+    "app/src/chiefOfStaffSteering.ts",
+    "app/src/descriptorDiscovery.ts",
+    "app/src/governanceReviewSubmission.ts",
+    "app/src/memoryProposalSubmission.ts",
+    "app/src/napoleonBridge.ts",
+}
+
 AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (
         re.compile(
@@ -61,6 +70,15 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         ),
         "direct agent or tool dispatch",
     ),
+]
+
+UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"\bfetch\s*\("),
+    re.compile(r"\b(?:globalThis|window)\.fetch\b"),
+    re.compile(r"\bXMLHttpRequest\b"),
+    re.compile(r"\bWebSocket\s*\("),
+    re.compile(r"\bEventSource\s*\("),
+    re.compile(r"\bsendBeacon\s*\("),
 ]
 
 
@@ -802,11 +820,37 @@ def find_direct_authority_boundary_violations() -> list[str]:
     return sorted(violations)
 
 
+def scan_ungoverned_network_text(path: str, text: str) -> list[str]:
+    if path in GOVERNED_NETWORK_SOURCE_ALLOWLIST:
+        return []
+    violations: list[str] = []
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        for pattern in UNGOVERNED_NETWORK_PATTERNS:
+            if pattern.search(line):
+                violations.append(f"{path}:{line_number}: ungoverned network call outside Napoleon bridge modules")
+                break
+    return violations
+
+
+def find_ungoverned_network_violations() -> list[str]:
+    violations: list[str] = []
+    for path in authority_source_paths():
+        relative_path = str(path.relative_to(ROOT))
+        violations.extend(scan_ungoverned_network_text(relative_path, path.read_text(encoding="utf-8")))
+    return sorted(violations)
+
+
 def validate_authority_boundary() -> None:
     violations = find_direct_authority_boundary_violations()
     if violations:
         raise SystemExit(
             "Concierge runtime code bypasses the governed Napoleon bridge:\n" + "\n".join(violations)
+        )
+    network_violations = find_ungoverned_network_violations()
+    if network_violations:
+        raise SystemExit(
+            "Concierge runtime code makes network calls outside governed Napoleon bridge modules:\n"
+            + "\n".join(network_violations)
         )
     print("authority boundary scan passed")
 
