@@ -46,6 +46,18 @@ export interface GovernedVoicePipelineProofInput {
   conversationId: string;
 }
 
+export interface GovernedVoicePipelineProofChange {
+  label: string;
+  previous: string;
+  current: string;
+}
+
+export interface GovernedVoicePipelineProofComparison {
+  status: "not_available" | "unchanged" | "changed" | "invalid_previous";
+  summary: string;
+  changes: GovernedVoicePipelineProofChange[];
+}
+
 const blockedEffects = [
   "microphone_capture",
   "audio_playback",
@@ -181,4 +193,122 @@ export function exportGovernedVoicePipelineProofJson(
     null,
     2,
   );
+}
+
+const forbiddenProofFragments = [
+  "endpoint",
+  "host",
+  "token",
+  "prompt",
+  "message",
+  "requestBody",
+  "responseBody",
+  "rawAudioData",
+];
+
+function hasForbiddenProofFragment(value: string): boolean {
+  return forbiddenProofFragments.some((fragment) => value.includes(fragment));
+}
+
+function listValue(value: unknown): string {
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "string") return value;
+  if (value === undefined || value === null) return "unavailable";
+  return String(value);
+}
+
+function parseVoicePipelineProof(json: string): null | {
+  kind?: string;
+  voicePipeline?: {
+    proposalOnly?: boolean;
+    profileMode?: string;
+    childProtected?: boolean;
+    guardianReviewRequired?: boolean;
+    canStartLiveVoice?: boolean;
+    authorityBoundary?: string;
+    stages?: Array<{ id?: string; status?: string }>;
+    blockedEffects?: string[];
+  };
+  boundary?: Record<string, boolean>;
+} {
+  if (hasForbiddenProofFragment(json)) return null;
+  try {
+    const parsed = JSON.parse(json) as {
+      kind?: string;
+      voicePipeline?: {
+        proposalOnly?: boolean;
+        profileMode?: string;
+        childProtected?: boolean;
+        guardianReviewRequired?: boolean;
+        canStartLiveVoice?: boolean;
+        authorityBoundary?: string;
+        stages?: Array<{ id?: string; status?: string }>;
+        blockedEffects?: string[];
+      };
+      boundary?: Record<string, boolean>;
+    };
+    if (parsed.kind !== "concierge_governed_voice_pipeline_proof") return null;
+    if (!parsed.voicePipeline) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+export function compareGovernedVoicePipelineProofs(
+  previousJson: string | null,
+  currentJson: string,
+): GovernedVoicePipelineProofComparison {
+  if (!previousJson) {
+    return {
+      status: "not_available",
+      summary: "No previous voice pipeline proof exported in this session.",
+      changes: [],
+    };
+  }
+
+  const previous = parseVoicePipelineProof(previousJson);
+  const current = parseVoicePipelineProof(currentJson);
+  if (!previous || !current) {
+    return {
+      status: "invalid_previous",
+      summary: "Previous voice pipeline proof is missing or unsafe, so it was not compared.",
+      changes: [],
+    };
+  }
+
+  const fields: Array<[string, unknown, unknown]> = [
+    ["Profile mode", previous.voicePipeline?.profileMode, current.voicePipeline?.profileMode],
+    ["Child protected", previous.voicePipeline?.childProtected, current.voicePipeline?.childProtected],
+    ["Guardian review required", previous.voicePipeline?.guardianReviewRequired, current.voicePipeline?.guardianReviewRequired],
+    ["Can start live voice", previous.voicePipeline?.canStartLiveVoice, current.voicePipeline?.canStartLiveVoice],
+    ["Authority boundary", previous.voicePipeline?.authorityBoundary, current.voicePipeline?.authorityBoundary],
+    [
+      "Pipeline stages",
+      previous.voicePipeline?.stages?.map((stage) => `${stage.id}:${stage.status}`),
+      current.voicePipeline?.stages?.map((stage) => `${stage.id}:${stage.status}`),
+    ],
+    ["Blocked effects", previous.voicePipeline?.blockedEffects, current.voicePipeline?.blockedEffects],
+  ];
+
+  const changes = fields.flatMap(([label, previousValue, currentValue]) => {
+    const previousText = listValue(previousValue);
+    const currentText = listValue(currentValue);
+    return previousText === currentText ? [] : [{ label, previous: previousText, current: currentText }];
+  });
+
+  if (changes.length === 0) {
+    return {
+      status: "unchanged",
+      summary: "Voice pipeline proof metadata is unchanged.",
+      changes,
+    };
+  }
+
+  return {
+    status: "changed",
+    summary: `Voice pipeline proof metadata changed in ${changes.length} field(s).`,
+    changes,
+  };
 }

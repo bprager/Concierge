@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildGovernedVoicePipelinePlan, exportGovernedVoicePipelineProofJson } from "../src/voicePipelinePlan.js";
+import {
+  buildGovernedVoicePipelinePlan,
+  compareGovernedVoicePipelineProofs,
+  exportGovernedVoicePipelineProofJson,
+} from "../src/voicePipelinePlan.js";
 
 interface VoicePipelinePlanStageView {
   id: string;
@@ -107,4 +111,54 @@ test("exports a sanitized governed voice pipeline proof without raw prompt endpo
   for (const forbidden of ["endpoint", "host", "token", "prompt", "message", "requestBody", "responseBody", "rawAudioData"]) {
     assert.equal(json.includes(forbidden), false);
   }
+});
+
+test("compares sanitized governed voice pipeline proofs without raw prompt endpoint or secret fields", () => {
+  const previous = exportGovernedVoicePipelineProofJson(buildGovernedVoicePipelinePlan({ profileMode: "adult_owner" }), {
+    generatedAt: "2026-06-16T00:00:00.000Z",
+    conversationId: "conv_voice_pipeline",
+  });
+  const current = exportGovernedVoicePipelineProofJson(
+    buildGovernedVoicePipelinePlan({ profileMode: "child_protected_user" }),
+    {
+      generatedAt: "2026-06-16T00:05:00.000Z",
+      conversationId: "conv_voice_pipeline",
+    },
+  );
+
+  const comparison = compareGovernedVoicePipelineProofs(previous, current);
+
+  assert.equal(comparison.status, "changed");
+  assert.ok(comparison.summary.includes("changed"));
+  assert.deepEqual(
+    comparison.changes.map((change: { label: string }) => change.label),
+    ["Profile mode", "Child protected", "Guardian review required", "Authority boundary"],
+  );
+  assert.ok(
+    comparison.changes.every(
+      (change: { previous: string; current: string }) =>
+        !`${change.previous} ${change.current}`.includes("prompt") &&
+        !`${change.previous} ${change.current}`.includes("endpoint") &&
+        !`${change.previous} ${change.current}`.includes("token"),
+    ),
+  );
+});
+
+test("rejects missing or unsafe previous governed voice pipeline proof comparison input", () => {
+  const current = exportGovernedVoicePipelineProofJson(buildGovernedVoicePipelinePlan({ profileMode: "adult_owner" }), {
+    generatedAt: "2026-06-16T00:00:00.000Z",
+    conversationId: "conv_voice_pipeline",
+  });
+
+  const missing = compareGovernedVoicePipelineProofs(null, current);
+  assert.equal(missing.status, "not_available");
+
+  const unsafe = compareGovernedVoicePipelineProofs(
+    JSON.stringify({
+      kind: "concierge_governed_voice_pipeline_proof",
+      voicePipeline: { rawPrompt: "secret prompt" },
+    }),
+    current,
+  );
+  assert.equal(unsafe.status, "invalid_previous");
 });

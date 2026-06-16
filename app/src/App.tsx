@@ -145,7 +145,12 @@ import {
   type LocalTextToSpeechResult,
 } from "./textToSpeech.js";
 import { rehearseLocalVoiceTurnSample, type LocalVoiceTurnRehearsalResult } from "./voiceTurnRehearsal.js";
-import { buildGovernedVoicePipelinePlan, exportGovernedVoicePipelineProofJson } from "./voicePipelinePlan.js";
+import {
+  buildGovernedVoicePipelinePlan,
+  compareGovernedVoicePipelineProofs,
+  exportGovernedVoicePipelineProofJson,
+  type GovernedVoicePipelineProofComparison,
+} from "./voicePipelinePlan.js";
 import {
   localVoiceResponseShapeSample,
   shapeVoiceResponseForSpeech,
@@ -305,6 +310,8 @@ export function App() {
   const [bridgeReadinessProofComparison, setBridgeReadinessProofComparison] =
     useState<BridgeReadinessProofComparison | null>(null);
   const [voicePipelineProofJson, setVoicePipelineProofJson] = useState<string | null>(null);
+  const [voicePipelineProofComparison, setVoicePipelineProofComparison] =
+    useState<GovernedVoicePipelineProofComparison | null>(null);
   const [lastGovernanceReviewState, setLastGovernanceReviewState] = useState<GovernanceReviewState | null>(null);
   const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
   const [governanceReviewSubmission, setGovernanceReviewSubmission] =
@@ -1746,7 +1753,9 @@ export function App() {
     const json = exportGovernedVoicePipelineProofJson(governedVoicePipelinePlan, {
       conversationId,
     });
+    const comparison = compareGovernedVoicePipelineProofs(voicePipelineProofJson, json);
     setVoicePipelineProofJson(json);
+    setVoicePipelineProofComparison(comparison);
     emitEvent("voice_pipeline_proof_exported", {
       traceId,
       conversationId,
@@ -1755,6 +1764,8 @@ export function App() {
       canStartLiveVoice: governedVoicePipelinePlan.canStartLiveVoice,
       stageCount: governedVoicePipelinePlan.stages.length,
       blockedEffects: governedVoicePipelinePlan.blockedEffects,
+      proofComparisonStatus: comparison.status,
+      proofComparisonChangeCount: comparison.changes.length,
       microphoneCaptureStarted: governedVoicePipelinePlan.microphoneCaptureStarted,
       audioPlaybackStarted: governedVoicePipelinePlan.audioPlaybackStarted,
       rawAudioStored: governedVoicePipelinePlan.rawAudioStored,
@@ -2262,6 +2273,25 @@ export function App() {
         <button className="secondary" onClick={exportVoicePipelineProof}>
           Export voice pipeline proof
         </button>
+        {voicePipelineProofComparison ? (
+          <div className={`proof-comparison ${voicePipelineProofComparison.status}`}>
+            <strong>Voice pipeline proof comparison</strong>
+            <span>{voicePipelineProofComparison.summary}</span>
+            <span>Comparison uses local sanitized voice pipeline proof metadata only and is not Napoleon approval.</span>
+            {voicePipelineProofComparison.changes.length > 0 ? (
+              <dl>
+                {voicePipelineProofComparison.changes.map((change) => (
+                  <div key={change.label}>
+                    <dt>{change.label}</dt>
+                    <dd>
+                      {change.previous} {"->"} {change.current}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+          </div>
+        ) : null}
         {voicePipelineProofJson ? (
           <pre aria-label="Exported voice pipeline proof">{voicePipelineProofJson}</pre>
         ) : null}

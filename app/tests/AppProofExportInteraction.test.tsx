@@ -1959,6 +1959,12 @@ test("keeps voice capture blocked until explicit microphone permission is grante
     assert.ok(!exportedVoiceProof.textContent?.includes("endpoint"));
     assert.ok(!exportedVoiceProof.textContent?.includes("token"));
     assert.ok(!exportedVoiceProof.textContent?.includes("prompt"));
+    assert.ok(voiceReadiness.getByText("No previous voice pipeline proof exported in this session."));
+
+    await user.click(voiceReadiness.getByText("Export voice pipeline proof"));
+    assert.ok(voiceReadiness.getByText("Voice pipeline proof comparison"));
+    assert.ok(voiceReadiness.getByText("Voice pipeline proof metadata is unchanged."));
+    assert.ok(voiceReadiness.getByText("Comparison uses local sanitized voice pipeline proof metadata only and is not Napoleon approval."));
 
     await user.click(view.getByLabelText("Microphone"));
 
