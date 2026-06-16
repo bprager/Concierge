@@ -252,7 +252,7 @@ Evaluator coverage:
 | VO-007 | Add voice-specific response shaping | P1 | Long text responses are summarized for speech | voice_response_shaped |
 | VO-008 | Add wake word option | P2 | Wake word can be enabled or disabled without starting listening or capture | privacy_setting_changed |
 | VO-009 | Add child voice constraints | P1 | Child mode has slower pacing and stricter side effect controls | child_voice_policy_applied |
-| VO-010 | Add live voice readiness gate | P0 | Live voice remains visibly blocked until consent, descriptor, runtime proof, and voice pipeline exist | mic_permission_requested, mic_permission_result |
+| VO-010 | Add live voice readiness gate | P0 | Live voice remains visibly blocked and shows proposal-only pipeline stages until consent, descriptor, runtime proof, and voice pipeline exist | mic_permission_requested, mic_permission_result |
 
 ### VO-001 details
 
@@ -266,6 +266,8 @@ Acceptance criteria:
 - If permission is granted, Concierge immediately stops the permission stream and still reports voice capture as stopped until voice mode is implemented.
 - Text Concierge shows a live voice readiness gate that lists microphone, descriptor, runtime-proof, Rehearsal Mode, and voice-pipeline blockers.
 - The live voice readiness gate remains blocked even when microphone permission is granted until the governed voice pipeline exists.
+- Text Concierge shows a proposal-only governed voice pipeline plan for consent, capture, VAD, STT, governed Napoleon bridge turn, response shaping, TTS, and playback, with every stage blocked until explicit implementation and proof exist.
+- The plan must not start capture or playback, contact Napoleon, write memory, capture approval, dispatch agents, send externally, or imply Napoleon approval.
 - Permission checks do not write memory, capture approval, dispatch agents, send externally, or store raw audio.
 - Child protected mode must keep the same visible capture boundary and cannot treat microphone permission as guardian approval.
 
@@ -274,6 +276,7 @@ Privacy and safety impact:
 - This is a preflight and consent surface only, not voice mode.
 - Raw audio remains unstored, and no always-on listening path is introduced.
 - The live voice gate is derived from local settings, permission state, descriptor readiness, and bridge proof state; it is not a command to start capture or contact Napoleon.
+- The pipeline plan is local derived display state only and is not executable.
 
 Evaluator coverage:
 

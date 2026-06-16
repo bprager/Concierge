@@ -1945,6 +1945,11 @@ test("keeps voice capture blocked until explicit microphone permission is grante
     assert.ok(voiceReadiness.getByText("Live voice is blocked because the governed voice pipeline is not implemented."));
     assert.ok(voiceReadiness.getByText("Voice pipeline: blocked"));
     assert.ok(voiceReadiness.getByText("Blocked effects: microphone_capture, audio_playback, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, agent_dispatch, external_send"));
+    assert.ok(voiceReadiness.getByText("Governed voice pipeline plan"));
+    assert.ok(voiceReadiness.getByText("Proposal only: yes"));
+    assert.ok(voiceReadiness.getByText("Consent and visible recording state: blocked"));
+    assert.ok(voiceReadiness.getByText("Governed Napoleon bridge turn: blocked"));
+    assert.ok(voiceReadiness.getByText("Live voice can start: no"));
 
     await user.click(view.getByLabelText("Microphone"));
 

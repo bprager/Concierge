@@ -145,6 +145,7 @@ import {
   type LocalTextToSpeechResult,
 } from "./textToSpeech.js";
 import { rehearseLocalVoiceTurnSample, type LocalVoiceTurnRehearsalResult } from "./voiceTurnRehearsal.js";
+import { buildGovernedVoicePipelinePlan } from "./voicePipelinePlan.js";
 import {
   localVoiceResponseShapeSample,
   shapeVoiceResponseForSpeech,
@@ -1909,6 +1910,7 @@ export function App() {
     runtimeValidationSource,
     rehearsalMode,
   });
+  const governedVoicePipelinePlan = buildGovernedVoicePipelinePlan({ profileMode: mapProfileToNapoleonMode(profile) });
   const currentInput = input.trim();
   const currentContract = currentInput
     ? buildTextTurnContract({ message: currentInput, profile, conversationId, turnId: "turn_preflight", traceId: "trace_preflight" })
@@ -2217,6 +2219,20 @@ export function App() {
           <strong>Live voice blocked effects</strong>
           <span>Blocked effects: {liveVoiceReadiness.blockedEffects.join(", ")}</span>
         </div>
+        <div>
+          <strong>Governed voice pipeline plan</strong>
+          <span>Proposal only: {governedVoicePipelinePlan.proposalOnly ? "yes" : "no"}</span>
+          <span>Live voice can start: {governedVoicePipelinePlan.canStartLiveVoice ? "yes" : "no"}</span>
+          <span>{governedVoicePipelinePlan.authorityBoundary}</span>
+        </div>
+        {governedVoicePipelinePlan.stages.map((stage) => (
+          <div key={stage.id}>
+            <strong>{stage.label}</strong>
+            <span>{stage.label}: {stage.status}</span>
+            <span>Required proof: {stage.requiredProof}</span>
+            <span>{stage.authorityBoundary}</span>
+          </div>
+        ))}
         <button className="secondary" onClick={() => void requestMicrophonePermission()}>
           Request microphone permission
         </button>
