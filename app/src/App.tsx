@@ -486,6 +486,7 @@ export function App() {
     setLiveDescriptorInput(null);
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
+    clearNapoleonPresentation();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_endpoint", value.trim());
@@ -499,6 +500,7 @@ export function App() {
     setLiveDescriptorInput(null);
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
+    clearNapoleonPresentation();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_auth_token", value.trim());

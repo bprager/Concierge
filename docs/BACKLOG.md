@@ -213,6 +213,7 @@ Acceptance criteria:
 - Fail-closed Napoleon transcript responses show the blocked bridge source, no-accepted-response attribution boundary, and blocked effects when available.
 - Successful live text responses show a last successful Napoleon proof panel summarizing returned governance, profile mode, decision, trace, audit, target capability, selected-agent provenance, allowed effects, and blocked effects; it is display-only and must be cleared with delegation presentation by local-only answers, blocked preflight paths, and failed bridge calls.
 - Changing the active user profile clears rendered Napoleon proof and delegation provenance so returned evidence is not reused across child, guest, collaborator, and owner contexts.
+- Changing the bridge endpoint or bearer token clears rendered Napoleon proof and delegation provenance so returned evidence is not reused after connection preflight is invalidated.
 - Text Concierge can export a sanitized local Napoleon response proof containing only returned proof metadata, including profile mode, explicit handled-by provenance, attribution boundary, target capability IDs, selected-agent names, and false boundary flags, without raw prompts, response text, endpoint hosts, bearer tokens, request bodies, or response bodies.
 - Text Concierge can compare the current sanitized local Napoleon response proof with the previous proof exported in the same app session, reporting unchanged, changed, invalid previous proof, or no previous proof from returned governance, profile mode, trace/audit, target-capability, selected-agent, allowed-effect, and blocked-effect metadata only.
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.
@@ -232,6 +233,7 @@ Privacy and safety impact:
 - Live bridge readiness is a local preflight summary only and cannot be treated as Napoleon approval, memory permission, agent dispatch permission, or external-send permission.
 - Last successful Napoleon proof is local returned-provenance display only and cannot be treated as Napoleon approval, memory permission, agent dispatch permission, external-send permission, or evidence that Concierge executed a side effect.
 - Active profile changes must clear returned proof and delegation provenance so profile-scoped evidence is not reused after the user switches context.
+- Endpoint and bearer-token changes must clear returned proof and delegation provenance so connection-scoped evidence is not reused after descriptor discovery is invalidated.
 - Last successful Napoleon proof export is local metadata only and cannot be treated as a Napoleon audit record, approval, memory permission, agent dispatch permission, or external-send permission.
 - Last successful Napoleon proof comparison is local metadata only and cannot be treated as a Napoleon audit record, approval, memory permission, agent dispatch permission, external-send permission, or evidence that Concierge executed a side effect.
 - The local harness preset is a test endpoint convenience only; it must not be treated as live Napoleon authority or service control.
