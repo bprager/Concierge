@@ -2725,6 +2725,10 @@ export function App() {
               <span>Affect inferred: no</span>
             </div>
             <div>
+              <strong>Napoleon contact</strong>
+              <span>Live Napoleon contacted: {neutralAvatarStateResult.liveNapoleonContacted ? "yes" : "no"}</span>
+            </div>
+            <div>
               <strong>Guardian approval</strong>
               <span>Guardian approval captured: no</span>
             </div>
@@ -2773,6 +2777,10 @@ export function App() {
             <div>
               <strong>Affect</strong>
               <span>Affect inferred: no</span>
+            </div>
+            <div>
+              <strong>Napoleon contact</strong>
+              <span>Live Napoleon contacted: {avatarExpressionResult.liveNapoleonContacted ? "yes" : "no"}</span>
             </div>
             <div>
               <strong>Authority boundary</strong>

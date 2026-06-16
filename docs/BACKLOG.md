@@ -503,6 +503,7 @@ Acceptance criteria:
 - Running the state preparation does not request camera permission, start camera capture, run face detection, infer affect, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `avatar_state_changed` includes local-display marker, avatar state, expression, gaze target, stance, bridge-provenance marker, false capture/face/affect/animation/live-Napoleon-contact flags, and blocked effects.
 - The avatar state panel visibly reports `Agent dispatch: no`.
+- The avatar state panel visibly reports `Live Napoleon contacted: no`.
 - Provenance wording must not claim Napoleon or delegated-agent authority without bridge proof; the built-in local avatar sample must be labeled as local preview without Napoleon provenance.
 - Child protected mode must not treat avatar state as guardian approval or emotion inference.
 
@@ -568,6 +569,7 @@ Acceptance criteria:
 - Direct, warm, concerned, playful, and somber stance labels map to distinct expression metadata.
 - Mapping expression does not start animation, allocate a canvas, request camera permission, start camera capture, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `avatar_expression_set` includes local-metadata marker, stance, expression, profile mode, child-protected marker, bridge-provenance marker, false animation/affect/capture/face/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- The avatar expression panel visibly reports `Live Napoleon contacted: no`.
 - The built-in local expression sample must emit `bridge_provided_provenance=false`; bridge provenance may be true only when a real bridge-derived input supplies it.
 - Child protected expression mapping stays conservative, shows guardian-review wording, and must not treat mapping as guardian approval.
 

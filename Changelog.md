@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added visible no-live-Napoleon-contact rows to the local avatar state and expression panels.
 - Added evaluator coverage for the real Napoleon runtime promotion boundary so local harness or simulation evidence cannot satisfy real-runtime readiness.
 - Added evaluator coverage for persistent Napoleon delegation panel empty and target-capability states.
 - Added evaluator coverage for generated Napoleon bridge-client contract alignment and named-operation boundaries.

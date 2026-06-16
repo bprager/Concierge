@@ -2946,6 +2946,29 @@ test("local avatar sample panels show no agent dispatch", async () => {
   }
 });
 
+test("local avatar state and expression panels show no live Napoleon contact", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Prepare neutral avatar state" }));
+    await user.click(view.getByRole("button", { name: "Map sample stance to expression" }));
+
+    assert.ok(within(view.getByLabelText("Avatar state")).getByText("Live Napoleon contacted: no"));
+    assert.ok(within(view.getByLabelText("Avatar expression")).getByText("Live Napoleon contacted: no"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("runs local speech transcription sample without starting microphone capture", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
