@@ -12,6 +12,7 @@ function responseProofJson(input: {
   traceId: string;
   governanceOutcome?: "allow_prepare_only" | "requires_review";
   agentName?: string;
+  selectionReason?: string;
   blockedEffects?: string[];
 }): string {
   const contract = buildTextTurnContract({
@@ -23,6 +24,7 @@ function responseProofJson(input: {
     governanceOutcome: input.governanceOutcome ?? "requires_review",
   });
   const agentName = input.agentName ?? "Passive Brain";
+  const selectionReason = input.selectionReason ?? "Relevant context was returned.";
   const state = buildSuccessfulNapoleonResponsePresentation({
     text: `${agentName} found bridge rollout context.`,
     profileMode: "adult_owner",
@@ -35,7 +37,7 @@ function responseProofJson(input: {
         {
           agentId: agentName.toLocaleLowerCase().replaceAll(" ", "_"),
           displayName: agentName,
-          selectionReason: "Relevant context was returned.",
+          selectionReason,
           contributionSummary: "bridge rollout context",
         },
       ],
@@ -222,6 +224,7 @@ test("exports last successful Napoleon response proof without raw text endpoint 
       traceId: string;
       auditId: string;
       selectedAgents: string[];
+      selectedAgentReasons: string[];
       allowedEffects: string[];
       blockedEffects: string[];
     };
@@ -242,6 +245,9 @@ test("exports last successful Napoleon response proof without raw text endpoint 
   assert.equal(proof.responseProof.governance, "requires_review");
   assert.equal(proof.responseProof.profileMode, "child_protected_user");
   assert.deepEqual(proof.responseProof.selectedAgents, ["Passive Brain"]);
+  assert.deepEqual(proof.responseProof.selectedAgentReasons, [
+    "Passive Brain: Prior bridge rollout context is relevant.",
+  ]);
   assert.ok(proof.responseProof.blockedEffects.includes("memory_write"));
   assert.equal(proof.boundary.approvalCaptured, false);
   assert.equal(proof.boundary.memoryWritePerformed, false);
@@ -259,12 +265,14 @@ test("compares sanitized Napoleon response proof exports", () => {
     traceId: "trace_previous",
     governanceOutcome: "requires_review",
     agentName: "Passive Brain",
+    selectionReason: "Prior deployment context was relevant.",
     blockedEffects: ["memory_write", "external_send"],
   });
   const current = responseProofJson({
     traceId: "trace_current",
     governanceOutcome: "allow_prepare_only",
     agentName: "Planner",
+    selectionReason: "Planning context was relevant.",
     blockedEffects: ["memory_write", "agent_dispatch"],
   });
 
@@ -275,6 +283,7 @@ test("compares sanitized Napoleon response proof exports", () => {
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Handled by"));
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Governance"));
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Selected agents"));
+  assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Why selected"));
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Blocked effects"));
   assert.ok(
     comparison.changes.every(

@@ -99,6 +99,7 @@ export function exportNapoleonResponseProofJson(
           auditId: "unavailable",
           targetCapability: "unavailable",
           selectedAgents: [],
+          selectedAgentReasons: [],
           allowedEffects: [],
           blockedEffects: [],
         },
@@ -135,6 +136,7 @@ export function exportNapoleonResponseProofJson(
         auditId: proofDetailValue(proof, "Audit"),
         targetCapability: optionalProofDetailValue(proof, "Target capability"),
         selectedAgents: splitList(proofDetailValue(proof, "Selected agents")),
+        selectedAgentReasons: splitList(proofDetailValue(proof, "Why selected")),
         allowedEffects: splitList(proofDetailValue(proof, "Allowed effects")),
         blockedEffects: splitList(proofDetailValue(proof, "Blocked effects")),
       },
@@ -231,6 +233,7 @@ export function compareNapoleonResponseProofs(
     { label: "Audit", path: ["responseProof", "auditId"] },
     { label: "Target capability", path: ["responseProof", "targetCapability"] },
     { label: "Selected agents", path: ["responseProof", "selectedAgents"] },
+    { label: "Why selected", path: ["responseProof", "selectedAgentReasons"] },
     { label: "Allowed effects", path: ["responseProof", "allowedEffects"] },
     { label: "Blocked effects", path: ["responseProof", "blockedEffects"] },
   ];

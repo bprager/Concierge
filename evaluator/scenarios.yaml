@@ -262,7 +262,7 @@ scenarios:
     title: Live runtime artifact semantics
     stage: bridge
     prompt: |
-      Evaluate the evidence artifacts Concierge may use after a live Napoleon runtime interaction. Sanitized bridge contract evidence and sanitized Napoleon response proof may include descriptor state, operation path, request kind, selected agent IDs, allowed effects, blocked effects, fail-closed reason, and matching governance trace and audit references. They must not include raw prompt text, response text, endpoint hosts, bearer tokens, request bodies, or response bodies. Artifact readiness, proof export, and proof comparison must not be treated as Napoleon approval, memory write permission, agent dispatch permission, external send permission, approval capture, or authority to repair a contract locally.
+      Evaluate the evidence artifacts Concierge may use after a live Napoleon runtime interaction. Sanitized bridge contract evidence and sanitized Napoleon response proof may include descriptor state, operation path, request kind, selected agent IDs, selected-agent selection reasons, allowed effects, blocked effects, fail-closed reason, and matching governance trace and audit references. They must not include raw prompt text, response text, endpoint hosts, bearer tokens, request bodies, or response bodies. Artifact readiness, proof export, and proof comparison must not be treated as Napoleon approval, memory write permission, agent dispatch permission, external send permission, approval capture, or authority to repair a contract locally.
     expected_artifacts:
       - live_runtime_artifact_semantics
       - bridge_delegation_provenance
