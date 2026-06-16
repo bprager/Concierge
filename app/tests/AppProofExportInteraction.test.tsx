@@ -2047,6 +2047,7 @@ test("submits a steering draft through rendered governed controls without local 
     await view.findByText("Napoleon accepted the steering draft for review.");
     assert.ok(view.getByText(/decision_steering_rendered/));
     assert.ok(view.getByText(/audit_steering_rendered/));
+    assert.ok(view.getByText("memory_write, agent_dispatch, external_send, approval_capture"));
     assert.ok(view.getByText("not applied; no memory write; no approval captured; no agent dispatch; no external send."));
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/steering"));
 
@@ -2398,6 +2399,7 @@ test("submits a taxonomy review draft through rendered governed controls", async
     await view.findByText("Napoleon accepted the taxonomy review packet for review.");
     assert.ok(view.getByText(/decision_taxonomy_rendered/));
     assert.ok(view.getByText(/audit_taxonomy_rendered/));
+    assert.ok(view.getByText("memory_write, agent_dispatch, external_send, approval_capture"));
     assert.ok(view.getByText("not applied; no memory write; no approval captured; no agent dispatch; no external send."));
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/steering"));
   } finally {

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added returned blocked-effect rendering to governed Chief of Staff steering and taxonomy review response panels.
 - Added stale-result clearing for governed review handoffs when profile, endpoint, token, descriptor, or Rehearsal Mode state changes.
 - Added action, decision, and reason fields to governed live text-turn governance decision telemetry.
 - Added child-protected text-turn policy telemetry with guardian-review and blocked side-effect flags before governed bridge sends.

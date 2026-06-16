@@ -3760,6 +3760,8 @@ export function App() {
               <dd>{steeringSubmission.traceEnvelope.trace_id}</dd>
               <dt>Audit</dt>
               <dd>{steeringSubmission.auditEnvelope.audit_id}</dd>
+              <dt>Blocked effects</dt>
+              <dd>{steeringSubmission.governanceDecision.blocked_effects.join(", ")}</dd>
               <dt>Local effects</dt>
               <dd>not applied; no memory write; no approval captured; no agent dispatch; no external send.</dd>
             </dl>
@@ -3916,6 +3918,8 @@ export function App() {
               <dd>{taxonomyReviewSubmission.traceEnvelope.trace_id}</dd>
               <dt>Audit</dt>
               <dd>{taxonomyReviewSubmission.auditEnvelope.audit_id}</dd>
+              <dt>Blocked effects</dt>
+              <dd>{taxonomyReviewSubmission.governanceDecision.blocked_effects.join(", ")}</dd>
               <dt>Local effects</dt>
               <dd>not applied; no memory write; no approval captured; no agent dispatch; no external send.</dd>
             </dl>
