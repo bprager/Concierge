@@ -49,6 +49,17 @@ const FORBIDDEN_EVIDENCE_KEYS = new Set([
   "token",
 ]);
 
+function promotionGateForProof(input: BridgeReadinessProofInput): string {
+  const source = input.runtimeValidationSource ?? "real_runtime";
+  if (source === "local_harness" || source === "local_simulation") {
+    return "blocked_until_real_runtime_evidence_passes";
+  }
+  if (input.readiness.captureState !== "passed" || input.readiness.comparisonState !== "passed") {
+    return "blocked_until_evidence_capture_and_comparison_pass";
+  }
+  return "real_runtime_evidence_available";
+}
+
 export function buildBridgeEvidenceReadinessState(): BridgeEvidenceReadinessState {
   return {
     captureState: "not_run",
@@ -141,6 +152,7 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
       },
       runtimeValidation: {
         source: input.runtimeValidationSource ?? "real_runtime",
+        promotionGate: promotionGateForProof(input),
         caveat:
           input.runtimeValidationSource === "local_harness"
             ? "Local harness validation is not real Napoleon runtime validation."
@@ -236,6 +248,7 @@ export function compareBridgeReadinessProofs(
     { label: "Last failure reason", path: ["evidence", "lastFailureReason"] },
     { label: "Evidence blocked effects", path: ["evidence", "blockedEffects"] },
     { label: "Runtime validation source", path: ["runtimeValidation", "source"] },
+    { label: "Promotion gate", path: ["runtimeValidation", "promotionGate"] },
   ];
 
   const changes = comparedFields.flatMap(({ label, path }) => {

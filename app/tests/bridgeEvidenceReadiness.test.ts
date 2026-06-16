@@ -110,7 +110,7 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
     generatedAt: string;
     descriptor: { state: string; checksumState: string; signatureState: string; serviceId?: string };
     evidence: { captureState: string; comparisonState: string; lastFailureReason?: string; blockedEffects: string[] };
-    runtimeValidation: { source: string; caveat: string };
+    runtimeValidation: { source: string; caveat: string; promotionGate: string };
     boundary: { approvalCaptured: boolean; memoryWritePerformed: boolean; externalSendPerformed: boolean };
   };
   const forbiddenKeys = ["endpoint", "host", "token", "message", "prompt", "requestBody", "responseBody", "responseText"];
@@ -127,6 +127,7 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
   assert.deepEqual(proof.evidence.blockedEffects, ["memory_write", "approval_capture", "external_send"]);
   assert.equal(proof.runtimeValidation.source, "local_harness");
   assert.ok(proof.runtimeValidation.caveat.includes("not real Napoleon runtime validation"));
+  assert.equal(proof.runtimeValidation.promotionGate, "blocked_until_real_runtime_evidence_passes");
   assert.equal(proof.boundary.approvalCaptured, false);
   assert.equal(proof.boundary.memoryWritePerformed, false);
   assert.equal(proof.boundary.externalSendPerformed, false);
@@ -174,6 +175,7 @@ test("compares sanitized bridge readiness proofs and reports meaningful changed 
   const previousProof = exportBridgeReadinessProofJson({
     descriptorConnection: previousDescriptorConnection,
     readiness: buildBridgeEvidenceReadinessState(),
+    runtimeValidationSource: "local_harness",
     generatedAt: "2026-06-13T00:00:00.000Z",
   });
   const currentProof = exportBridgeReadinessProofJson({
@@ -202,6 +204,8 @@ test("compares sanitized bridge readiness proofs and reports meaningful changed 
       "Last operation path",
       "Last failure reason",
       "Evidence blocked effects",
+      "Runtime validation source",
+      "Promotion gate",
     ],
   );
   assert.equal(JSON.stringify(comparison).includes("127.0.0.1"), false);
