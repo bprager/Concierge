@@ -243,6 +243,7 @@ export function compareNapoleonResponseProofs(
   const comparedFields: Array<{ label: string; path: string[] }> = [
     { label: "Proof status", path: ["responseProof", "status"] },
     { label: "Handled by", path: ["responseProof", "handledBy"] },
+    { label: "Attribution boundary", path: ["responseProof", "attributionBoundary"] },
     { label: "Governance", path: ["responseProof", "governance"] },
     { label: "Profile mode", path: ["responseProof", "profileMode"] },
     { label: "Decision", path: ["responseProof", "decisionId"] },

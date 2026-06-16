@@ -299,6 +299,42 @@ test("compares sanitized Napoleon response proof exports", () => {
   );
 });
 
+test("compares Napoleon response proof attribution boundary changes", () => {
+  const current = responseProofJson({ traceId: "trace_current_boundary" });
+  const previousWithoutBoundary = JSON.stringify({
+    kind: "concierge_napoleon_response_proof",
+    version: 1,
+    generatedAt: "2026-06-13T00:00:00.000Z",
+    responseProof: {
+      status: "verified",
+      heading: "Last successful Napoleon proof",
+      handledBy: "Passive Brain",
+      governance: "requires_review",
+      profileMode: "adult_owner",
+      decisionId: "decision_previous_boundary",
+      traceId: "trace_previous_boundary",
+      auditId: "audit_previous_boundary",
+      targetCapability: "unavailable",
+      selectedAgents: ["Passive Brain"],
+      selectedAgentReasons: ["Passive Brain: Relevant context was returned."],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["memory_write", "external_send"],
+    },
+    boundary: {
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      localApplicationPerformed: false,
+    },
+  });
+
+  const comparison = compareNapoleonResponseProofs(previousWithoutBoundary, current);
+
+  assert.equal(comparison.status, "changed");
+  assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Attribution boundary"));
+});
+
 test("rejects missing or unsafe previous Napoleon response proof comparison input", () => {
   const current = responseProofJson({ traceId: "trace_current" });
 
