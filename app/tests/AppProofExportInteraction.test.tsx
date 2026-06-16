@@ -1941,6 +1941,10 @@ test("keeps voice capture blocked until explicit microphone permission is grante
     assert.ok(voiceReadiness.getByText("Microphone setting off"));
     assert.ok(voiceReadiness.getByText("Permission not requested"));
     assert.ok(voiceReadiness.getByText("Voice capture blocked: microphone setting is off and OS permission is not granted."));
+    assert.ok(voiceReadiness.getByText("Live voice readiness"));
+    assert.ok(voiceReadiness.getByText("Live voice is blocked because the governed voice pipeline is not implemented."));
+    assert.ok(voiceReadiness.getByText("Voice pipeline: blocked"));
+    assert.ok(voiceReadiness.getByText("Blocked effects: microphone_capture, audio_playback, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, agent_dispatch, external_send"));
 
     await user.click(view.getByLabelText("Microphone"));
 
@@ -1953,6 +1957,8 @@ test("keeps voice capture blocked until explicit microphone permission is grante
     assert.equal(permissionRequests, 1);
     assert.ok(voiceReadiness.getByText("Permission granted"));
     assert.ok(voiceReadiness.getByText("Voice capture ready but stopped; voice mode is not active."));
+    assert.ok(voiceReadiness.getByText("Microphone permission: ready"));
+    assert.ok(voiceReadiness.getByText("Voice pipeline: blocked"));
   } finally {
     cleanup();
     dom.window.close();

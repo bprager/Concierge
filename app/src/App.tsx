@@ -108,6 +108,7 @@ import {
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
+  describeLiveVoiceReadiness,
   describeLiveSendPreflight,
   describeMemoryProposalReview,
   describeNapoleonTranscriptMetadata,
@@ -1886,17 +1887,27 @@ export function App() {
     taxonomyCounts[dimension].map((row) => ({ ...row, value: `${dimension}:${row.label}` })),
   );
   const selectedTaxonomyRow = taxonomyRows.find((row) => row.value === selectedTaxonomyLabel);
+  const runtimeValidationSource = isLocalHarnessEndpoint(endpoint)
+    ? "local_harness"
+    : descriptorMode === "live"
+      ? "real_runtime"
+      : "local_simulation";
   const liveBridgeReadiness = describeLiveBridgeReadiness({
     descriptorConnection,
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,
     evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
     lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus,
     lastFailureReason: bridgeEvidenceReadiness.lastFailureReason,
-    runtimeValidationSource: isLocalHarnessEndpoint(endpoint)
-      ? "local_harness"
-      : descriptorMode === "live"
-        ? "real_runtime"
-        : "local_simulation",
+    runtimeValidationSource,
+  });
+  const liveVoiceReadiness = describeLiveVoiceReadiness({
+    descriptorConnection,
+    microphoneEnabled,
+    microphonePermissionStatus,
+    evidenceCaptureState: bridgeEvidenceReadiness.captureState,
+    evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
+    runtimeValidationSource,
+    rehearsalMode,
   });
   const currentInput = input.trim();
   const currentContract = currentInput
@@ -2189,6 +2200,22 @@ export function App() {
         <div>
           <strong>Capture state</strong>
           <span>{voiceCaptureSummary}</span>
+        </div>
+        <div>
+          <strong>{liveVoiceReadiness.heading}</strong>
+          <span>{liveVoiceReadiness.summary}</span>
+          <span>{liveVoiceReadiness.caveat}</span>
+        </div>
+        {liveVoiceReadiness.items.map((item) => (
+          <div key={item.label}>
+            <strong>{item.label}</strong>
+            <span>{item.label}: {item.status}</span>
+            <span>{item.detail}</span>
+          </div>
+        ))}
+        <div>
+          <strong>Live voice blocked effects</strong>
+          <span>Blocked effects: {liveVoiceReadiness.blockedEffects.join(", ")}</span>
         </div>
         <button className="secondary" onClick={() => void requestMicrophonePermission()}>
           Request microphone permission

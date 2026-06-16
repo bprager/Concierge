@@ -252,6 +252,7 @@ Evaluator coverage:
 | VO-007 | Add voice-specific response shaping | P1 | Long text responses are summarized for speech | voice_response_shaped |
 | VO-008 | Add wake word option | P2 | Wake word can be enabled or disabled without starting listening or capture | privacy_setting_changed |
 | VO-009 | Add child voice constraints | P1 | Child mode has slower pacing and stricter side effect controls | child_voice_policy_applied |
+| VO-010 | Add live voice readiness gate | P0 | Live voice remains visibly blocked until consent, descriptor, runtime proof, and voice pipeline exist | mic_permission_requested, mic_permission_result |
 
 ### VO-001 details
 
@@ -263,6 +264,8 @@ Acceptance criteria:
 - Microphone setting defaults off and does not request OS permission by itself.
 - An explicit microphone permission action emits `mic_permission_requested` and `mic_permission_result`.
 - If permission is granted, Concierge immediately stops the permission stream and still reports voice capture as stopped until voice mode is implemented.
+- Text Concierge shows a live voice readiness gate that lists microphone, descriptor, runtime-proof, Rehearsal Mode, and voice-pipeline blockers.
+- The live voice readiness gate remains blocked even when microphone permission is granted until the governed voice pipeline exists.
 - Permission checks do not write memory, capture approval, dispatch agents, send externally, or store raw audio.
 - Child protected mode must keep the same visible capture boundary and cannot treat microphone permission as guardian approval.
 
@@ -270,6 +273,7 @@ Privacy and safety impact:
 
 - This is a preflight and consent surface only, not voice mode.
 - Raw audio remains unstored, and no always-on listening path is introduced.
+- The live voice gate is derived from local settings, permission state, descriptor readiness, and bridge proof state; it is not a command to start capture or contact Napoleon.
 
 Evaluator coverage:
 

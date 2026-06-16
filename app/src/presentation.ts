@@ -121,6 +121,28 @@ export interface LiveSendPreflightView {
   items: LiveSendPreflightItem[];
 }
 
+export type MicrophonePermissionStatus = "not_requested" | "granted" | "denied" | "unavailable";
+
+export interface LiveVoiceReadinessInput {
+  descriptorConnection: DescriptorConnectionState;
+  microphoneEnabled: boolean;
+  microphonePermissionStatus: MicrophonePermissionStatus;
+  evidenceCaptureState?: LiveBridgeEvidenceState;
+  evidenceComparisonState?: LiveBridgeEvidenceState;
+  runtimeValidationSource?: LiveBridgeReadinessInput["runtimeValidationSource"];
+  rehearsalMode: boolean;
+}
+
+export interface LiveVoiceReadinessView {
+  heading: string;
+  status: "blocked" | "warning";
+  canStartLiveVoice: false;
+  summary: string;
+  caveat: string;
+  blockedEffects: string[];
+  items: LiveSendPreflightItem[];
+}
+
 export interface GovernedHandoffReadinessInput {
   label: string;
   descriptorConnection: DescriptorConnectionState;
@@ -280,6 +302,78 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
               : "not run",
       },
       { label: "Live send", value: canSendLive ? "governed bridge allowed" : "blocked" },
+    ],
+  };
+}
+
+export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): LiveVoiceReadinessView {
+  const evidenceCapture = input.evidenceCaptureState ?? "not_run";
+  const evidenceComparison = input.evidenceComparisonState ?? "not_run";
+  const runtimeValidationSource = input.runtimeValidationSource ?? "real_runtime";
+  const realRuntimeReady =
+    runtimeValidationSource === "real_runtime" && evidenceCapture === "passed" && evidenceComparison === "passed";
+  const descriptorReady = input.descriptorConnection.canAttemptLiveBridge;
+  const blockedEffects = [
+    "microphone_capture",
+    "audio_playback",
+    "raw_audio_storage",
+    "live_napoleon_contact",
+    "memory_write",
+    "approval_capture",
+    "agent_dispatch",
+    "external_send",
+  ];
+
+  return {
+    heading: "Live voice readiness",
+    status: "blocked",
+    canStartLiveVoice: false,
+    summary: "Live voice is blocked because the governed voice pipeline is not implemented.",
+    caveat:
+      "This voice readiness gate is not Napoleon approval, not microphone consent, not permission to speak externally, and not a live voice start command.",
+    blockedEffects,
+    items: [
+      {
+        label: "Microphone setting",
+        status: input.microphoneEnabled ? "ready" : "blocked",
+        detail: input.microphoneEnabled
+          ? "Microphone preference is on."
+          : "Microphone preference is off; live capture cannot start.",
+      },
+      {
+        label: "Microphone permission",
+        status: input.microphonePermissionStatus === "granted" ? "ready" : "blocked",
+        detail:
+          input.microphonePermissionStatus === "granted"
+            ? "OS microphone permission is granted, but capture remains stopped."
+            : "OS microphone permission is not granted.",
+      },
+      {
+        label: "Descriptor preflight",
+        status: descriptorReady ? "ready" : "blocked",
+        detail: descriptorReady
+          ? "Napoleon descriptor is ready for governed bridge calls."
+          : `Napoleon descriptor blocks live voice: ${input.descriptorConnection.state}.`,
+      },
+      {
+        label: "Runtime proof",
+        status: realRuntimeReady ? "ready" : "warning",
+        detail: realRuntimeReady
+          ? "Real Napoleon runtime evidence has passed for the bridge."
+          : "Real Napoleon runtime proof is not available for live voice.",
+      },
+      {
+        label: "Rehearsal Mode",
+        status: input.rehearsalMode ? "blocked" : "ready",
+        detail: input.rehearsalMode
+          ? "Rehearsal Mode is local only and must not contact Napoleon."
+          : "Rehearsal Mode is off.",
+      },
+      {
+        label: "Voice pipeline",
+        status: "blocked",
+        detail: "Live microphone capture, live STT, governed Napoleon turn, and live TTS playback are not implemented.",
+      },
     ],
   };
 }

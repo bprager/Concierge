@@ -17,6 +17,7 @@ import {
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
+  describeLiveVoiceReadiness,
   describeLiveSendPreflight,
   describeMemoryProposalReview,
   describeNapoleonTranscriptMetadata,
@@ -364,6 +365,34 @@ test("describes local harness bridge readiness as validation warning only", () =
         detail.value === "blocked until real Napoleon runtime evidence passes",
     ),
   );
+});
+
+test("describes live voice readiness as blocked until the governed voice pipeline exists", () => {
+  const view = describeLiveVoiceReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    microphoneEnabled: true,
+    microphonePermissionStatus: "granted",
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+    rehearsalMode: false,
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canStartLiveVoice, false);
+  assert.ok(view.summary.includes("voice pipeline is not implemented"));
+  assert.ok(view.caveat.includes("not Napoleon approval"));
+  assert.ok(view.blockedEffects.includes("microphone_capture"));
+  assert.ok(view.blockedEffects.includes("audio_playback"));
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Microphone permission" && item.status === "ready"));
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Descriptor preflight" && item.status === "ready"));
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Voice pipeline" && item.status === "blocked"));
 });
 
 test("describes last fail-closed live send in bridge readiness", () => {
