@@ -117,6 +117,7 @@ import {
 import {
   clearTelemetryBuffer,
   emitEvent,
+  exportInteractionTraceJson,
   exportTelemetryBufferJson,
   loadTelemetryBufferRetentionLimit,
   loadTelemetryBufferFromStorage,
@@ -268,6 +269,7 @@ export function App() {
     loadTelemetryBufferRetentionLimit(browserStorage()),
   );
   const [telemetryBufferExportJson, setTelemetryBufferExportJson] = useState<string | null>(null);
+  const [interactionTraceExportJson, setInteractionTraceExportJson] = useState<string | null>(null);
   const [cameraEnabled, setCameraEnabled] = useState(() => storedBoolean("concierge_camera_enabled", false));
   const [microphoneEnabled, setMicrophoneEnabled] = useState(() =>
     storedBoolean("concierge_microphone_enabled", false),
@@ -421,9 +423,20 @@ export function App() {
     refreshTelemetryBufferStatus();
   }
 
+  function exportLatestInteractionTrace() {
+    const latestTraceId = [...loadTelemetryBufferFromStorage(browserStorage()).events]
+      .reverse()
+      .map((event) => event.attributes.traceId)
+      .find((traceId): traceId is string => typeof traceId === "string" && traceId.length > 0);
+    if (!latestTraceId) return;
+    setInteractionTraceExportJson(exportInteractionTraceJson(browserStorage(), latestTraceId));
+    refreshTelemetryBufferStatus();
+  }
+
   function clearLocalTelemetryBuffer() {
     clearTelemetryBuffer(browserStorage());
     setTelemetryBufferExportJson(null);
+    setInteractionTraceExportJson(null);
     setTelemetryBufferCount(0);
     setTelemetryBufferLastEvent("none");
   }
@@ -2210,6 +2223,9 @@ export function App() {
         <button className="secondary" onClick={exportLocalTelemetryBuffer}>
           Export telemetry buffer
         </button>
+        <button className="secondary" onClick={exportLatestInteractionTrace}>
+          Export latest trace
+        </button>
         <button className="secondary" onClick={clearLocalTelemetryBuffer}>
           Clear telemetry buffer
         </button>
@@ -2219,6 +2235,14 @@ export function App() {
             aria-label="Telemetry buffer export"
             readOnly
             value={telemetryBufferExportJson}
+          />
+        ) : null}
+        {interactionTraceExportJson ? (
+          <textarea
+            className="proof-export"
+            aria-label="Latest interaction trace export"
+            readOnly
+            value={interactionTraceExportJson}
           />
         ) : null}
       </section>

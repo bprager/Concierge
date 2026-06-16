@@ -30,6 +30,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added live-runtime artifact privacy auditing so retained bridge/evaluator artifacts fail validation if raw fields or sensitive runtime values are present.
 - Added a bounded browser-local telemetry buffer that redacts sensitive fields and keeps privacy audit events locally available even when ordinary telemetry is disabled.
 - Added Text Concierge controls to show local telemetry buffer status, export redacted local buffer metadata, and clear the browser-local buffer without sending externally or implying Napoleon approval.
+- Added Text Concierge local interaction trace export from the telemetry buffer, preserving sanitized trace, conversation, turn, profile, channel, governance, and event metadata without raw prompts, responses, endpoints, tokens, request bodies, or response bodies.
 - Added a Text Concierge local telemetry buffer retention selector for latest 25, 50, 100, or 200 events, pruning existing browser-local metadata when reduced.
 - Added generated bridge response-required metadata from OpenAPI and fail-closed text response validation when Napoleon omits required response fields.
 - Added generated bridge response-required validation for governed memory proposal, governance review, Chief of Staff steering, and taxonomy review handoffs so malformed review responses fail closed instead of using local fallback text.

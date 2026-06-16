@@ -1742,11 +1742,28 @@ test("renders local telemetry buffer controls with redacted export and local cle
         events: [
           {
             ts: "2026-06-15T00:00:00.000Z",
+            event: "user_message_received",
+            attributes: {
+              traceId: "trace_buffer_ui",
+              conversationId: "conv_buffer_ui",
+              turnId: "turn_buffer_ui",
+              channel: "text",
+              profile: "adult_owner",
+              prompt: "[redacted]",
+              endpoint: "[redacted]",
+            },
+          },
+          {
+            ts: "2026-06-15T00:00:01.000Z",
             event: "response_failed",
             attributes: {
               traceId: "trace_buffer_ui",
-              prompt: "[redacted]",
-              endpoint: "[redacted]",
+              conversationId: "conv_buffer_ui",
+              turnId: "turn_buffer_ui",
+              profile: "adult_owner",
+              profileMode: "adult_owner",
+              bridgeFailureReason: "governance_no_go",
+              governanceOutcome: "no_go",
               blockedEffects: ["memory_write"],
             },
           },
@@ -1757,7 +1774,7 @@ test("renders local telemetry buffer controls with redacted export and local cle
     const view = render(<App />);
     const buffer = within(view.getByLabelText("Local telemetry buffer"));
 
-    assert.ok(buffer.getByText("Buffered events: 1 of 200"));
+    assert.ok(buffer.getByText("Buffered events: 2 of 200"));
     assert.ok(buffer.getByText("Last event: response_failed"));
 
     await user.click(buffer.getByRole("button", { name: "Export telemetry buffer" }));
@@ -1769,6 +1786,17 @@ test("renders local telemetry buffer controls with redacted export and local cle
     assert.match(exported.value, /not Napoleon approval/);
     assert.doesNotMatch(exported.value, /private prompt/);
     assert.doesNotMatch(exported.value, /napoleon\.example/);
+
+    await user.click(buffer.getByRole("button", { name: "Export latest trace" }));
+    const traceExport = buffer.getByLabelText("Latest interaction trace export") as HTMLTextAreaElement;
+
+    assert.match(traceExport.value, /"schemaVersion": "concierge\.interaction-trace\.export\.v1"/);
+    assert.match(traceExport.value, /"trace_id": "trace_buffer_ui"/);
+    assert.match(traceExport.value, /"conversation_id": "conv_buffer_ui"/);
+    assert.match(traceExport.value, /"turn_id": "turn_buffer_ui"/);
+    assert.match(traceExport.value, /"governance_decision": "no_go"/);
+    assert.match(traceExport.value, /not Napoleon approval/);
+    assert.doesNotMatch(traceExport.value, /napoleon\.example/);
 
     await user.click(buffer.getByRole("button", { name: "Clear telemetry buffer" }));
 

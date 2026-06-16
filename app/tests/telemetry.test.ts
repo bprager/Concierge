@@ -5,6 +5,7 @@ import {
   clearTelemetryBuffer,
   emitCapabilitySignal,
   emitEvent,
+  exportInteractionTraceJson,
   exportTelemetryBufferJson,
   loadTelemetryBufferRetentionLimit,
   loadTelemetryBufferFromStorage,
@@ -357,6 +358,105 @@ test("telemetry buffer export is local redacted metadata only", () => {
     assert.equal(JSON.stringify(exported).includes("raw prompt must not export"), false);
     assert.equal(JSON.stringify(exported).includes("raw response must not export"), false);
     assert.match(exported.caveat, /not Napoleon approval/);
+  } finally {
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
+});
+
+test("interaction trace export reconstructs one sanitized trace from buffered events", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  console.info = () => undefined;
+
+  try {
+    emitEvent("user_message_received", {
+      traceId: "trace_export_trace",
+      conversationId: "conv_export_trace",
+      turnId: "turn_export_trace",
+      channel: "text",
+      profile: "adult_owner",
+      rawPrompt: "do not export this prompt",
+      endpoint: "https://napoleon.example.test/v1/concierge/turn",
+    });
+    emitEvent("bridge_request_completed", {
+      traceId: "trace_export_trace",
+      conversationId: "conv_export_trace",
+      turnId: "turn_export_trace",
+      requestId: "cos_turn_export_trace",
+      outcome: "requires_review",
+      decisionId: "decision_export_trace",
+      auditId: "audit_export_trace",
+      bearerToken: "secret-token",
+    });
+    emitEvent("response_generated", {
+      traceId: "trace_export_trace",
+      conversationId: "conv_export_trace",
+      turnId: "turn_export_trace",
+      profile: "adult_owner",
+      profileMode: "adult_owner",
+      responseType: "text",
+      governanceOutcome: "requires_review",
+      decisionId: "decision_export_trace",
+      auditId: "audit_export_trace",
+      responseText: "do not export this response",
+    });
+    emitEvent("response_generated", {
+      traceId: "trace_other",
+      conversationId: "conv_other",
+      turnId: "turn_other",
+      profile: "guest",
+    });
+
+    const trace = JSON.parse(exportInteractionTraceJson(localStorage, "trace_export_trace")) as {
+      schemaVersion: string;
+      trace_id: string;
+      conversation_id: string;
+      turn_id: string;
+      user_profile: string;
+      channel: string;
+      governance_decision: string;
+      caveat: string;
+      events: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+
+    assert.equal(trace.schemaVersion, "concierge.interaction-trace.export.v1");
+    assert.equal(trace.trace_id, "trace_export_trace");
+    assert.equal(trace.conversation_id, "conv_export_trace");
+    assert.equal(trace.turn_id, "turn_export_trace");
+    assert.equal(trace.user_profile, "adult_owner");
+    assert.equal(trace.channel, "text");
+    assert.equal(trace.governance_decision, "requires_review");
+    assert.deepEqual(trace.events.map((event) => event.event), [
+      "user_message_received",
+      "bridge_request_completed",
+      "response_generated",
+    ]);
+    assert.equal(trace.events[0].attributes.rawPrompt, "[redacted]");
+    assert.equal(trace.events[0].attributes.endpoint, "[redacted]");
+    assert.equal(trace.events[1].attributes.bearerToken, "[redacted]");
+    assert.equal(trace.events[2].attributes.responseText, "[redacted]");
+    assert.equal(JSON.stringify(trace).includes("do not export this prompt"), false);
+    assert.equal(JSON.stringify(trace).includes("do not export this response"), false);
+    assert.equal(JSON.stringify(trace).includes("napoleon.example.test"), false);
+    assert.equal(JSON.stringify(trace).includes("secret-token"), false);
+    assert.match(trace.caveat, /not Napoleon approval/);
   } finally {
     console.info = previousInfo;
     if (previousWindow === undefined) {

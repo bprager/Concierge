@@ -810,6 +810,7 @@ Acceptance criteria:
 - Text Concierge shows local buffer count and last event status.
 - Text Concierge lets the user choose a latest-event retention limit of 25, 50, 100, or 200 events and prunes existing buffered metadata when reduced.
 - Text Concierge can export redacted local JSON metadata from the buffer.
+- Text Concierge can export the latest interaction trace as local sanitized metadata with trace, conversation, turn, profile, channel, governance, and event fields while excluding raw prompts, response text, endpoints, bearer tokens, request bodies, and response bodies.
 - Text Concierge can clear the browser-local telemetry buffer.
 - Buffering does not send externally, write Napoleon memory, capture approval, append remote audit records, dispatch agents, or contact Napoleon.
 

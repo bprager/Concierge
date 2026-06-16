@@ -27,12 +27,27 @@ export interface LocalTelemetryBufferExport {
   events: TelemetryPayload[];
 }
 
+export interface InteractionTraceExport {
+  schemaVersion: "concierge.interaction-trace.export.v1";
+  generatedAt: string;
+  trace_id: string;
+  conversation_id: string;
+  turn_id: string;
+  user_profile: "adult_owner" | "child_protected" | "guest" | "collaborator";
+  channel: "text" | "voice" | "avatar";
+  governance_decision?: string;
+  caveat: string;
+  events: TelemetryPayload[];
+}
+
 export const TELEMETRY_BUFFER_STORAGE_KEY = "concierge_telemetry_buffer_v1";
 export const TELEMETRY_BUFFER_MAX_EVENTS = 200;
 export const TELEMETRY_BUFFER_RETENTION_STORAGE_KEY = "concierge_telemetry_buffer_max_events";
 export const TELEMETRY_BUFFER_RETENTION_OPTIONS = [25, 50, 100, 200] as const;
 export const TELEMETRY_BUFFER_EXPORT_CAVEAT =
   "Local redacted metadata only; not Napoleon approval, not a memory write, not agent dispatch, and not permission to send externally.";
+export const INTERACTION_TRACE_EXPORT_CAVEAT =
+  "Local sanitized trace metadata only; not Napoleon approval, not a memory write, not agent dispatch, and not permission to send externally.";
 
 const SENSITIVE_ATTRIBUTE_KEYS = new Set([
   "authtoken",
@@ -159,6 +174,29 @@ export function exportTelemetryBufferJson(storage: Storage | null | undefined): 
     maxEvents: buffer.maxEvents,
     caveat: TELEMETRY_BUFFER_EXPORT_CAVEAT,
     events: buffer.events.map((event) => sanitizeTelemetryPayload(event)),
+  };
+  return JSON.stringify(exportPayload, null, 2);
+}
+
+export function exportInteractionTraceJson(storage: Storage | null | undefined, traceId: string): string {
+  const events = loadTelemetryBufferFromStorage(storage)
+    .events.filter((event) => event.attributes.traceId === traceId)
+    .map((event) => sanitizeTelemetryPayload(event));
+  const first = events[0];
+  const lastWithGovernance = [...events].reverse().find((event) => typeof event.attributes.governanceOutcome === "string");
+  const exportPayload: InteractionTraceExport = {
+    schemaVersion: "concierge.interaction-trace.export.v1",
+    generatedAt: new Date().toISOString(),
+    trace_id: traceId,
+    conversation_id: stringAttribute(first, "conversationId", "not_returned"),
+    turn_id: stringAttribute(first, "turnId", "not_returned"),
+    user_profile: userProfileAttribute(first),
+    channel: channelAttribute(first),
+    ...(lastWithGovernance
+      ? { governance_decision: stringAttribute(lastWithGovernance, "governanceOutcome", "not_returned") }
+      : {}),
+    caveat: INTERACTION_TRACE_EXPORT_CAVEAT,
+    events,
   };
   return JSON.stringify(exportPayload, null, 2);
 }
@@ -291,4 +329,25 @@ function sanitizeTelemetryValue(value: unknown): unknown {
 
 function shouldRedactTelemetryAttribute(key: string): boolean {
   return SENSITIVE_ATTRIBUTE_KEYS.has(key.toLowerCase());
+}
+
+function stringAttribute(payload: TelemetryPayload | undefined, key: string, fallback: string): string {
+  const value = payload?.attributes[key];
+  return typeof value === "string" && value.length > 0 ? value : fallback;
+}
+
+function userProfileAttribute(payload: TelemetryPayload | undefined): InteractionTraceExport["user_profile"] {
+  const profile = stringAttribute(payload, "profile", "guest");
+  if (profile === "adult_owner" || profile === "child_protected" || profile === "guest" || profile === "collaborator") {
+    return profile;
+  }
+  return "guest";
+}
+
+function channelAttribute(payload: TelemetryPayload | undefined): InteractionTraceExport["channel"] {
+  const channel = stringAttribute(payload, "channel", "text");
+  if (channel === "text" || channel === "voice" || channel === "avatar") {
+    return channel;
+  }
+  return "text";
 }
