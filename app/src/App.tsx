@@ -515,6 +515,14 @@ export function App() {
     clearNapoleonPresentation();
   }
 
+  function updateRehearsalMode(enabled: boolean) {
+    setRehearsalMode(enabled);
+    if (enabled) {
+      setPendingRehearsal(null);
+      clearNapoleonPresentation();
+    }
+  }
+
   function updatePrivacySetting(
     kind: "telemetry" | "camera" | "microphone" | "wake_word" | "avatar_affect" | "raw_media_storage",
     enabled: boolean,
@@ -2152,13 +2160,7 @@ export function App() {
           <input
             type="checkbox"
             checked={rehearsalMode}
-            onChange={(e) => {
-              const enabled = e.target.checked;
-              setRehearsalMode(enabled);
-              if (enabled) {
-                setPendingRehearsal(null);
-              }
-            }}
+            onChange={(e) => updateRehearsalMode(e.target.checked)}
           />
         </label>
         <label>

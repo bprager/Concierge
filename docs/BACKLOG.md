@@ -215,6 +215,7 @@ Acceptance criteria:
 - Changing the active user profile clears rendered Napoleon proof and delegation provenance so returned evidence is not reused across child, guest, collaborator, and owner contexts.
 - Changing the bridge endpoint or bearer token clears rendered Napoleon proof and delegation provenance so returned evidence is not reused after connection preflight is invalidated.
 - Changing descriptor mode or refreshing descriptor discovery clears rendered Napoleon proof and delegation provenance so returned evidence is not reused after descriptor preflight changes.
+- Enabling Rehearsal Mode clears rendered Napoleon proof and delegation provenance so live bridge evidence is not shown while Concierge is in local-only preview mode.
 - Text Concierge can export a sanitized local Napoleon response proof containing only returned proof metadata, including profile mode, explicit handled-by provenance, attribution boundary, target capability IDs, selected-agent names, and false boundary flags, without raw prompts, response text, endpoint hosts, bearer tokens, request bodies, or response bodies.
 - Text Concierge can compare the current sanitized local Napoleon response proof with the previous proof exported in the same app session, reporting unchanged, changed, invalid previous proof, or no previous proof from returned governance, profile mode, trace/audit, target-capability, selected-agent, allowed-effect, and blocked-effect metadata only.
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.
@@ -236,6 +237,7 @@ Privacy and safety impact:
 - Active profile changes must clear returned proof and delegation provenance so profile-scoped evidence is not reused after the user switches context.
 - Endpoint and bearer-token changes must clear returned proof and delegation provenance so connection-scoped evidence is not reused after descriptor discovery is invalidated.
 - Descriptor mode and descriptor discovery changes must clear returned proof and delegation provenance so descriptor-scoped evidence is not reused after connection preflight changes.
+- Rehearsal Mode activation must clear returned proof and delegation provenance so local-only preview mode does not display stale live bridge evidence.
 - Last successful Napoleon proof export is local metadata only and cannot be treated as a Napoleon audit record, approval, memory permission, agent dispatch permission, or external-send permission.
 - Last successful Napoleon proof comparison is local metadata only and cannot be treated as a Napoleon audit record, approval, memory permission, agent dispatch permission, external-send permission, or evidence that Concierge executed a side effect.
 - The local harness preset is a test endpoint convenience only; it must not be treated as live Napoleon authority or service control.
