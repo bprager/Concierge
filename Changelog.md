@@ -10,6 +10,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 - Added a visible `Why selected` row to the Napoleon delegation panel for empty, target-capability-only, and returned-delegation states.
 - Added returned selected-agent selection reasons to sanitized Napoleon response proof exports and comparisons.
+- Added count-only selected-agent and selection-reason telemetry to sanitized Napoleon response proof exports without emitting returned reason text.
 - Added an explicit target-capability `not returned` row to the empty Napoleon delegation panel.
 - Added visible no-live-Napoleon-contact and no-agent-dispatch rows to the wake-word readiness panel.
 - Added always-visible no-Napoleon-contact rows to local voice shaping, avatar face-pose, and avatar affect-fusion panels before samples run.

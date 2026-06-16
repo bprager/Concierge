@@ -170,9 +170,24 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(exportBlock.textContent?.includes("concierge_napoleon_response_proof"));
     assert.ok(exportBlock.textContent?.includes('"handledBy": "Passive Brain"'));
     assert.ok(exportBlock.textContent?.includes('"attributionBoundary": "Returned bridge provenance only; not local authority."'));
+    assert.ok(exportBlock.textContent?.includes('"selectedAgentReasons": ['));
     assert.ok(!exportBlock.textContent?.includes("Draft a bridge readiness summary"));
     assert.ok(!exportBlock.textContent?.includes("127.0.0.1"));
     assert.ok(!exportBlock.textContent?.includes("Napoleon recommends keeping this as a governed review draft"));
+    const proofTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const napoleonProofEvent = proofTelemetryBuffer.events
+      ?.filter((event) => event.event === "napoleon_response_proof_exported")
+      .at(-1);
+    assert.equal(napoleonProofEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(napoleonProofEvent?.attributes.selectedAgentSelectionReasonCount, 1);
+    assert.equal(
+      Object.values(napoleonProofEvent?.attributes ?? {}).some((value) =>
+        String(value).includes("Prior bridge context is relevant to the request."),
+      ),
+      false,
+    );
     assert.equal(
       within(screen.getByText("Napoleon proof comparison").parentElement as HTMLElement).queryAllByText("Decision")
         .length,

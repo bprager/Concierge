@@ -1794,6 +1794,13 @@ export function App() {
     setNapoleonProofComparison(comparison);
     const proof = lastNapoleonPresentation.proof;
     const proofDetail = (label: string) => proof?.details.find((detail) => detail.label === label)?.value ?? "unavailable";
+    const countReturnedList = (value: string, separator: string) =>
+      value === "unavailable" || value === "not returned"
+        ? 0
+        : value
+            .split(separator)
+            .map((item) => item.trim())
+            .filter(Boolean).length;
     emitEvent("napoleon_response_proof_exported", {
       traceId,
       conversationId,
@@ -1804,6 +1811,8 @@ export function App() {
       profileMode: proofDetail("Profile mode"),
       responseTraceId: proofDetail("Trace"),
       responseAuditId: proofDetail("Audit"),
+      selectedAgentCount: countReturnedList(proofDetail("Selected agents"), ","),
+      selectedAgentSelectionReasonCount: countReturnedList(proofDetail("Why selected"), ";"),
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
       approvalCaptured: false,
