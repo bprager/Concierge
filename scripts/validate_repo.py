@@ -83,6 +83,18 @@ ALLOWED_TAURI_COMMANDS = {"app_status"}
 TAURI_COMMAND_ATTRIBUTE_PATTERN = re.compile(r"#\s*\[\s*tauri::command\s*\]")
 RUST_FUNCTION_NAME_PATTERN = re.compile(r"\bfn\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(")
 TAURI_GENERATE_HANDLER_PATTERN = re.compile(r"generate_handler!\s*\[(?P<handlers>[^\]]*)\]")
+CARGO_SECTION_PATTERN = re.compile(r"^\s*\[(?P<section>[^\]]+)\]\s*$")
+CARGO_DEPENDENCY_PATTERN = re.compile(r"^\s*(?P<name>[A-Za-z0-9_.-]+)\s*=")
+FORBIDDEN_TAURI_NATIVE_PLUGINS = {
+    "fs",
+    "http",
+    "process",
+    "shell",
+    "sql",
+    "store",
+    "upload",
+    "websocket",
+}
 
 UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bfetch\s*\("),
@@ -883,6 +895,57 @@ def find_ungoverned_network_violations() -> list[str]:
     return sorted(violations)
 
 
+def scan_tauri_config_text(path: str, text: str) -> list[str]:
+    try:
+        config = json.loads(text)
+    except json.JSONDecodeError as error:
+        return [f"{path}:1: invalid Tauri config JSON: {error.msg}"]
+    plugins = config.get("plugins", {})
+    if not isinstance(plugins, dict):
+        return []
+    violations = []
+    for plugin_name in sorted(plugins):
+        if plugin_name in FORBIDDEN_TAURI_NATIVE_PLUGINS:
+            violations.append(f"{path}: configured Tauri native bypass plugin: {plugin_name}")
+    return violations
+
+
+def scan_tauri_cargo_manifest_text(path: str, text: str) -> list[str]:
+    violations = []
+    dependency_names = []
+    in_dependencies = False
+    for line in text.splitlines():
+        section_match = CARGO_SECTION_PATTERN.match(line)
+        if section_match:
+            in_dependencies = section_match.group("section") == "dependencies"
+            continue
+        if not in_dependencies:
+            continue
+        dependency_match = CARGO_DEPENDENCY_PATTERN.match(line)
+        if dependency_match:
+            dependency_names.append(dependency_match.group("name"))
+    for dependency_name in sorted(dependency_names):
+        if not dependency_name.startswith("tauri-plugin-"):
+            continue
+        plugin_name = dependency_name.removeprefix("tauri-plugin-")
+        if plugin_name in FORBIDDEN_TAURI_NATIVE_PLUGINS:
+            violations.append(f"{path}: Tauri native bypass plugin dependency: {dependency_name}")
+    return violations
+
+
+def find_tauri_desktop_authority_violations() -> list[str]:
+    violations: list[str] = []
+    config_path = ROOT / "app/src-tauri/tauri.conf.json"
+    if config_path.exists():
+        violations.extend(scan_tauri_config_text(str(config_path.relative_to(ROOT)), config_path.read_text(encoding="utf-8")))
+    manifest_path = ROOT / "app/src-tauri/Cargo.toml"
+    if manifest_path.exists():
+        violations.extend(
+            scan_tauri_cargo_manifest_text(str(manifest_path.relative_to(ROOT)), manifest_path.read_text(encoding="utf-8")),
+        )
+    return sorted(violations)
+
+
 def validate_authority_boundary() -> None:
     violations = find_direct_authority_boundary_violations()
     if violations:
@@ -894,6 +957,12 @@ def validate_authority_boundary() -> None:
         raise SystemExit(
             "Concierge runtime code makes network calls outside governed Napoleon bridge modules:\n"
             + "\n".join(network_violations)
+        )
+    tauri_violations = find_tauri_desktop_authority_violations()
+    if tauri_violations:
+        raise SystemExit(
+            "Concierge desktop configuration enables native authority bypasses:\n"
+            + "\n".join(tauri_violations)
         )
     print("authority boundary scan passed")
 

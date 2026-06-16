@@ -14,6 +14,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertEqual(violations, [])
 
+    def test_current_tauri_desktop_surface_does_not_enable_native_bypass_plugins(self):
+        violations = validate_repo.find_tauri_desktop_authority_violations()
+
+        self.assertEqual(violations, [])
+
     def test_scanner_detects_direct_process_execution(self):
         violations = validate_repo.scan_authority_boundary_text(
             "app/src-tauri/src/main.rs",
@@ -61,6 +66,35 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
                 self.assertTrue(violations)
                 self.assertIn("direct Tauri native bridge access", violations[0])
+
+    def test_scanner_detects_tauri_configured_native_bypass_plugins(self):
+        source = """
+        {
+          "plugins": {
+            "shell": { "open": true },
+            "http": { "scope": ["https://api.example.test"] },
+            "fs": { "scope": ["$APPDATA/*"] }
+          }
+        }
+        """
+
+        violations = validate_repo.scan_tauri_config_text("app/src-tauri/tauri.conf.json", source)
+
+        self.assertEqual(len(violations), 3)
+        self.assertTrue(all("configured Tauri native bypass plugin" in violation for violation in violations))
+
+    def test_scanner_detects_tauri_native_bypass_plugin_dependencies(self):
+        source = """
+        [dependencies]
+        tauri-plugin-shell = "2"
+        tauri-plugin-http = "2"
+        tauri-plugin-fs = "2"
+        """
+
+        violations = validate_repo.scan_tauri_cargo_manifest_text("app/src-tauri/Cargo.toml", source)
+
+        self.assertEqual(len(violations), 3)
+        self.assertTrue(all("Tauri native bypass plugin dependency" in violation for violation in violations))
 
     def test_network_scanner_detects_unallowlisted_fetch_and_socket_calls(self):
         for source in [
