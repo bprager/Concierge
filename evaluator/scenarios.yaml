@@ -159,6 +159,17 @@ scenarios:
       - bridge_failure_handling
       - governance_model
 
+  - id: DELEGATION-PANEL-STATE-001
+    title: Persistent Napoleon delegation panel states
+    stage: bridge
+    prompt: |
+      Evaluate how Text Concierge renders the Napoleon delegation panel before and after bridge provenance is available. The panel must be persistent even when no delegation provenance is returned. In the empty state, selected agents not returned, why selected not returned, allowed effects not returned, blocked effects not returned, governance state not returned, trace ID not returned, and audit ID not returned must remain visible instead of being omitted or inferred. If Napoleon returns a target capability without selected-agent delegation, the UI may show the returned target capability, but it must label it as not selected-agent provenance and keep selected-agent details not returned. All attribution must be returned bridge provenance only. Concierge must not invent selected agents, invent recommendations, write memory, capture approval, dispatch agents, or send externally.
+    expected_artifacts:
+      - delegation_panel_state
+      - bridge_delegation_provenance
+      - bridge_response_authority_provenance
+      - governance_model
+
   - id: PRIVACY-SETTINGS-001
     title: Local settings and privacy controls
     stage: privacy

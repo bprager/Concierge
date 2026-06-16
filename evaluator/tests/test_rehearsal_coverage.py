@@ -235,6 +235,36 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("fails closed as contract mismatch", checks["bridge_response_authority_provenance"]["missing_terms"])
         self.assertIn("does not execute claimed side effects", checks["bridge_response_authority_provenance"]["missing_terms"])
 
+    def test_delegation_panel_state_scenario_requires_empty_and_target_capability_boundaries(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("DELEGATION-PANEL-STATE-001", scenarios)
+        self.assertIn(
+            "delegation_panel_state",
+            scenarios["DELEGATION-PANEL-STATE-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = "Concierge shows delegation information."
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["delegation_panel_state"],
+        )
+
+        self.assertFalse(checks["delegation_panel_state"]["found"])
+        self.assertIn("persistent Napoleon delegation panel", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("selected agents not returned", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("why selected not returned", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("allowed effects not returned", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("blocked effects not returned", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("governance state not returned", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("trace ID not returned", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("audit ID not returned", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("returned target capability", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("not selected-agent provenance", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("does not invent selected agents", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("does not invent recommendations", checks["delegation_panel_state"]["missing_terms"])
+
     def test_child_bridge_response_semantics_require_stricter_boundary(self):
         scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
 

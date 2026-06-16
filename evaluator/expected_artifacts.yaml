@@ -143,6 +143,26 @@ artifacts:
       - "recommendation provenance"
       - "Passive Brain found"
       - "only when the bridge response contains that contribution"
+  delegation_panel_state:
+    required_terms:
+      - "persistent Napoleon delegation panel"
+      - "selected agents not returned"
+      - "why selected not returned"
+      - "allowed effects not returned"
+      - "blocked effects not returned"
+      - "governance state not returned"
+      - "trace ID not returned"
+      - "audit ID not returned"
+      - "returned target capability"
+      - "not selected-agent provenance"
+      - "not returned"
+      - "returned bridge provenance only"
+      - "does not invent selected agents"
+      - "does not invent recommendations"
+      - "does not write memory"
+      - "does not capture approval"
+      - "does not dispatch agents"
+      - "does not send externally"
   bridge_contract_fixtures:
     required_terms:
       - "bridge contract fixtures"
