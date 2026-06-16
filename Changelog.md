@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so runtime source cannot add direct Tauri native bridge invocation or non-allowlisted Tauri commands that bypass the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so governed bridge modules cannot fetch hard-coded or concatenated URLs and must resolve live requests through named generated bridge operations.
 - Hardened bridge readiness and Napoleon response proof comparisons so pasted proof JSON is rejected when endpoint URLs, loopback hosts, bearer credentials, authorization strings, raw-field names, or secret-like values appear anywhere in the comparison input.
 - Hardened repository authority-boundary validation so runtime UI source cannot add direct `fetch`, `WebSocket`, `EventSource`, `XMLHttpRequest`, or `sendBeacon` network calls outside the governed Napoleon bridge modules.

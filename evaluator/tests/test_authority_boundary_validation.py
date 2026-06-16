@@ -50,6 +50,18 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("direct agent or tool dispatch", violations[0])
 
+    def test_scanner_detects_direct_tauri_native_bridge_access(self):
+        for source in [
+            'import { invoke } from "@tauri-apps/api/core";',
+            'await invoke("write_memory", payload);',
+            "#[tauri::command]\nfn write_memory() {}",
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_authority_boundary_text("app/src/nativeBridge.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("direct Tauri native bridge access", violations[0])
+
     def test_network_scanner_detects_unallowlisted_fetch_and_socket_calls(self):
         for source in [
             'await fetch("https://api.example.test/send", { method: "POST" });',

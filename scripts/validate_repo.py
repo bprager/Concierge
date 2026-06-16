@@ -70,7 +70,19 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         ),
         "direct agent or tool dispatch",
     ),
+    (
+        re.compile(
+            r"@tauri-apps/api/"
+            r"|\binvoke\s*\("
+        ),
+        "direct Tauri native bridge access",
+    ),
 ]
+
+ALLOWED_TAURI_COMMANDS = {"app_status"}
+TAURI_COMMAND_ATTRIBUTE_PATTERN = re.compile(r"#\s*\[\s*tauri::command\s*\]")
+RUST_FUNCTION_NAME_PATTERN = re.compile(r"\bfn\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(")
+TAURI_GENERATE_HANDLER_PATTERN = re.compile(r"generate_handler!\s*\[(?P<handlers>[^\]]*)\]")
 
 UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bfetch\s*\("),
@@ -814,10 +826,26 @@ def authority_source_paths() -> list[Path]:
 
 def scan_authority_boundary_text(path: str, text: str) -> list[str]:
     violations: list[str] = []
-    for line_number, line in enumerate(text.splitlines(), start=1):
+    lines = text.splitlines()
+    for line_number, line in enumerate(lines, start=1):
         for pattern, reason in AUTHORITY_BOUNDARY_PATTERNS:
             if pattern.search(line):
                 violations.append(f"{path}:{line_number}: {reason}")
+        if TAURI_COMMAND_ATTRIBUTE_PATTERN.search(line):
+            function_name = None
+            for next_line in lines[line_number:]:
+                function_match = RUST_FUNCTION_NAME_PATTERN.search(next_line)
+                if function_match:
+                    function_name = function_match.group(1)
+                    break
+            if function_name not in ALLOWED_TAURI_COMMANDS:
+                violations.append(f"{path}:{line_number}: direct Tauri native bridge access")
+        handler_match = TAURI_GENERATE_HANDLER_PATTERN.search(line)
+        if handler_match:
+            handlers = [handler.strip() for handler in handler_match.group("handlers").split(",")]
+            blocked_handlers = [handler for handler in handlers if handler and handler not in ALLOWED_TAURI_COMMANDS]
+            if blocked_handlers:
+                violations.append(f"{path}:{line_number}: direct Tauri native bridge access")
     return violations
 
 
