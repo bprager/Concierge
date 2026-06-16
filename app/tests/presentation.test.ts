@@ -184,6 +184,7 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.equal(empty.heading, "Napoleon delegation unavailable");
   assert.ok(!empty.body.includes("Napoleon recommends"));
   assert.ok(!empty.body.includes("Passive Brain found"));
+  assert.ok(empty.details.some((detail) => detail.label === "Target capability" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Selected agents" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Allowed effects" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Blocked effects" && detail.value === "not returned"));

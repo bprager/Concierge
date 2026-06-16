@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added an explicit target-capability `not returned` row to the empty Napoleon delegation panel.
 - Added visible no-live-Napoleon-contact and no-agent-dispatch rows to the wake-word readiness panel.
 - Added always-visible no-Napoleon-contact rows to local voice shaping, avatar face-pose, and avatar affect-fusion panels before samples run.
 - Added a visible no-Napoleon-contact row to the local voice response shaping panel.

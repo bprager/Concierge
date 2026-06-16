@@ -275,7 +275,8 @@ test("shows Napoleon delegation panel before bridge provenance is returned", asy
         "No Napoleon delegation provenance was included with this response, so Concierge will not attribute the answer to a capability or agent.",
       ),
     );
-    assert.equal(delegationPanel.getAllByText("not returned").length, 6);
+    assert.ok(delegationPanel.getByText("Target capability"));
+    assert.equal(delegationPanel.getAllByText("not returned").length, 7);
     assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
     assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
   } finally {
