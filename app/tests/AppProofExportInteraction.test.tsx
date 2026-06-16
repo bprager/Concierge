@@ -3706,6 +3706,7 @@ test("fuses local affect metadata as uncertainty without emotion facts or media 
     assert.equal(affectEvent.attributes.emotionClaimedAsFact, false);
     assert.equal(affectEvent.attributes.cameraCaptureStarted, false);
     assert.equal(affectEvent.attributes.microphoneCaptureStarted, false);
+    assert.equal(affectEvent.attributes.agentDispatchPerformed, false);
     assert.ok(avatarAffectFusion.getByText("Uncertainty label: Possible confusion"));
     assert.ok(avatarAffectFusion.getByText("Confidence: 0.56"));
     assert.ok(avatarAffectFusion.getByText("Input signals: head_pose_shift, voice_pause, text_clarification"));
@@ -3721,6 +3722,7 @@ test("fuses local affect metadata as uncertainty without emotion facts or media 
     assert.ok(avatarAffectFusion.getByText("Raw audio stored: no"));
     assert.ok(avatarAffectFusion.getByText("Live affect model started: no"));
     assert.ok(avatarAffectFusion.getByText("Attention inferred: no"));
+    assert.ok(avatarAffectFusion.getByText("Agent dispatch: no"));
     assert.ok(avatarAffectFusion.getByText("Authority boundary: Affect fusion is local uncertainty metadata only; it is not an emotion fact, attention inference, approval, or agent action."));
     assert.ok(avatarAffectFusion.getByText("Blocked effects: camera_capture, microphone_capture, raw_video_storage, raw_audio_storage, live_face_detection, live_affect_model, emotion_fact_claim, attention_inference, avatar_animation, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
   } finally {

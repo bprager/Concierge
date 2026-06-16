@@ -61,6 +61,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a local Avatar Affect Fusion panel that combines deterministic sample signals into uncertainty labels without claiming emotion facts, starting media capture, contacting Napoleon, or performing side effects.
 - Tightened child-protected avatar constraints so gaze, face/head-pose, and affect-fusion panels expose guardian-review-required policy metadata for camera, microphone, storage, animation, affect, attention, and emotion-fact paths without capturing guardian approval.
 - Tightened local avatar face/head-pose metadata and UI so agent dispatch is explicitly reported as not performed while estimating local sample pose.
+- Tightened local avatar affect-fusion metadata and UI so agent dispatch is explicitly reported as not performed while deriving uncertainty labels.
 - Added transcript-level source, fail-closed attribution boundary, and blocked-effect metadata for blocked Napoleon bridge attempts.
 - Added Napoleon delegation panel rendering for returned target capability IDs when selected-agent delegation is not returned.
 - Added last-success proof rendering and sanitized proof export for returned Napoleon target capability IDs when selected-agent delegation is not returned.

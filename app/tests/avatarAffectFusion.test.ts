@@ -29,6 +29,7 @@ test("builds uncertain local affect-fusion metadata without emotion facts or med
   assert.equal(result.liveNapoleonContacted, false);
   assert.equal(result.memoryWritePerformed, false);
   assert.equal(result.approvalCaptured, false);
+  assert.equal(result.agentDispatchPerformed, false);
   assert.equal(result.externalSendPerformed, false);
   assert.deepEqual(result.blockedEffects, [
     "camera_capture",
