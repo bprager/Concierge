@@ -3223,6 +3223,8 @@ test("loads local avatar model metadata without renderer camera or Napoleon cont
   const user = userEventModule.default.setup();
   let permissionRequests = 0;
   let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
   Object.defineProperty(globalThis.navigator, "mediaDevices", {
     configurable: true,
     value: {
@@ -3243,6 +3245,18 @@ test("loads local avatar model metadata without renderer camera or Napoleon cont
   });
 
   try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
     const view = render(<App />);
 
     await view.findByText("Avatar model");
@@ -3254,6 +3268,9 @@ test("loads local avatar model metadata without renderer camera or Napoleon cont
 
     assert.equal(permissionRequests, 0);
     assert.equal(fetchCalls, 0);
+    const modelEvent = telemetryPayloads.find((payload) => payload.event === "avatar_model_loaded");
+    assert.ok(modelEvent);
+    assert.equal(modelEvent.attributes.agentDispatchPerformed, false);
     assert.ok(avatarModel.getByText("Model loaded: Concierge Neutral"));
     assert.ok(avatarModel.getByText("Model format: vrm"));
     assert.ok(avatarModel.getByText("Model path: avatars/concierge-neutral.vrm"));
@@ -3261,8 +3278,10 @@ test("loads local avatar model metadata without renderer camera or Napoleon cont
     assert.ok(avatarModel.getByText("Camera capture started: no"));
     assert.ok(avatarModel.getByText("Affect inferred: no"));
     assert.ok(avatarModel.getByText("Live Napoleon contacted: no"));
+    assert.ok(avatarModel.getByText("Agent dispatch: no"));
     assert.ok(avatarModel.getByText("Blocked effects: renderer_start, camera_capture, face_detection, affect_inference, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
   } finally {
+    console.info = originalInfo;
     cleanup();
     dom.window.close();
   }
@@ -3278,6 +3297,8 @@ test("prepares avatar renderer readiness without starting rendering camera or Na
   const user = userEventModule.default.setup();
   let permissionRequests = 0;
   let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
   Object.defineProperty(globalThis.navigator, "mediaDevices", {
     configurable: true,
     value: {
@@ -3298,6 +3319,18 @@ test("prepares avatar renderer readiness without starting rendering camera or Na
   });
 
   try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
     const view = render(<App />);
 
     await view.findByText("Avatar renderer");
@@ -3310,14 +3343,19 @@ test("prepares avatar renderer readiness without starting rendering camera or Na
 
     assert.equal(permissionRequests, 0);
     assert.equal(fetchCalls, 0);
+    const rendererEvent = telemetryPayloads.find((payload) => payload.event === "avatar_renderer_readiness_prepared");
+    assert.ok(rendererEvent);
+    assert.equal(rendererEvent.attributes.agentDispatchPerformed, false);
     assert.ok(avatarRenderer.getByText("Renderer ready: yes"));
     assert.ok(avatarRenderer.getByText("Model: Concierge Neutral"));
     assert.ok(avatarRenderer.getByText("Render loop started: no"));
     assert.ok(avatarRenderer.getByText("Canvas allocated: no"));
     assert.ok(avatarRenderer.getByText("Camera capture started: no"));
     assert.ok(avatarRenderer.getByText("Live Napoleon contacted: no"));
+    assert.ok(avatarRenderer.getByText("Agent dispatch: no"));
     assert.ok(avatarRenderer.getByText("Blocked effects: renderer_start, render_loop, canvas_allocation, camera_capture, face_detection, affect_inference, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
   } finally {
+    console.info = originalInfo;
     cleanup();
     dom.window.close();
   }

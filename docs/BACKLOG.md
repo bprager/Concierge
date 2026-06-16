@@ -524,7 +524,7 @@ Acceptance criteria:
 - The panel can load a local `.vrm` model reference and display model name, path, format, active profile, and child-protected status.
 - Loading the model reference does not start a renderer, request camera permission, start camera capture, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - Non-`.vrm` model references are rejected before metadata is loaded.
-- `avatar_model_loaded` includes local-reference marker, model-loaded marker, model format, model path, display name, profile mode, child-protected marker, false renderer/capture/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- `avatar_model_loaded` includes local-reference marker, model-loaded marker, model format, model path, display name, profile mode, child-protected marker, false renderer/capture/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, agent-dispatch-performed false, and blocked effects.
 - Child protected model loading shows guardian-review wording and must not treat model loading as guardian approval.
 
 Privacy and safety impact:
@@ -545,7 +545,7 @@ Acceptance criteria:
 - Text Concierge exposes a local avatar renderer readiness panel.
 - Renderer readiness can be prepared from loaded avatar model metadata.
 - Preparing readiness does not allocate a canvas, start a render loop, start animation, request camera permission, start camera capture, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
-- `avatar_renderer_readiness_prepared` includes local-readiness marker, renderer-ready marker, false renderer-started/render-loop/canvas flags, model display name, model format, profile mode, child-protected marker, false capture/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
+- `avatar_renderer_readiness_prepared` includes local-readiness marker, renderer-ready marker, false renderer-started/render-loop/canvas flags, model display name, model format, profile mode, child-protected marker, false capture/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, agent-dispatch-performed false, and blocked effects.
 - Child protected renderer readiness shows guardian-review wording and must not treat readiness as guardian approval.
 
 Privacy and safety impact:

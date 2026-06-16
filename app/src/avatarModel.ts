@@ -23,6 +23,7 @@ export interface LocalAvatarModelReferenceResult {
   memoryWritePerformed: false;
   approvalCaptured: false;
   guardianApprovalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -49,6 +50,7 @@ export interface LocalAvatarRendererReadinessResult {
   memoryWritePerformed: false;
   approvalCaptured: false;
   guardianApprovalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -107,6 +109,7 @@ export function loadLocalAvatarModelReference(
     memoryWritePerformed: false,
     approvalCaptured: false,
     guardianApprovalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     blockedEffects,
   };
@@ -153,6 +156,7 @@ export function buildLocalAvatarRendererReadiness(
     memoryWritePerformed: false,
     approvalCaptured: false,
     guardianApprovalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     blockedEffects,
   };

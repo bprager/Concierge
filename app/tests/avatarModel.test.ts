@@ -22,6 +22,7 @@ test("loads local avatar model reference without renderer camera or Napoleon con
   assert.equal(result.liveNapoleonContacted, false);
   assert.equal(result.memoryWritePerformed, false);
   assert.equal(result.approvalCaptured, false);
+  assert.equal(result.agentDispatchPerformed, false);
   assert.equal(result.externalSendPerformed, false);
   assert.deepEqual(result.blockedEffects, [
     "renderer_start",
@@ -84,6 +85,7 @@ test("prepares renderer readiness without starting rendering or side effects", (
   assert.equal(readiness.liveNapoleonContacted, false);
   assert.equal(readiness.memoryWritePerformed, false);
   assert.equal(readiness.approvalCaptured, false);
+  assert.equal(readiness.agentDispatchPerformed, false);
   assert.equal(readiness.externalSendPerformed, false);
   assert.deepEqual(readiness.blockedEffects, [
     "renderer_start",
