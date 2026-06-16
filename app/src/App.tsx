@@ -119,6 +119,7 @@ import {
   emitEvent,
   exportInteractionTraceJson,
   exportTelemetryBufferJson,
+  findLatestInteractionTraceId,
   loadTelemetryBufferRetentionLimit,
   loadTelemetryBufferFromStorage,
   newTraceId,
@@ -424,10 +425,7 @@ export function App() {
   }
 
   function exportLatestInteractionTrace() {
-    const latestTraceId = [...loadTelemetryBufferFromStorage(browserStorage()).events]
-      .reverse()
-      .map((event) => event.attributes.traceId)
-      .find((traceId): traceId is string => typeof traceId === "string" && traceId.length > 0);
+    const latestTraceId = findLatestInteractionTraceId(browserStorage());
     if (!latestTraceId) return;
     setInteractionTraceExportJson(exportInteractionTraceJson(browserStorage(), latestTraceId));
     refreshTelemetryBufferStatus();

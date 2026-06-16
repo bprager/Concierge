@@ -201,6 +201,27 @@ export function exportInteractionTraceJson(storage: Storage | null | undefined, 
   return JSON.stringify(exportPayload, null, 2);
 }
 
+export function findLatestInteractionTraceId(storage: Storage | null | undefined): string | null {
+  const events = loadTelemetryBufferFromStorage(storage).events;
+  for (const event of [...events].reverse()) {
+    const traceId = event.attributes.traceId;
+    const turnId = event.attributes.turnId;
+    if (typeof traceId === "string" && traceId.length > 0 && typeof turnId === "string" && turnId.length > 0) {
+      return traceId;
+    }
+
+    const responseTraceId = event.attributes.responseTraceId;
+    if (
+      typeof responseTraceId === "string" &&
+      responseTraceId.length > 0 &&
+      events.some((candidate) => candidate.attributes.traceId === responseTraceId && typeof candidate.attributes.turnId === "string")
+    ) {
+      return responseTraceId;
+    }
+  }
+  return null;
+}
+
 export function clearTelemetryBuffer(storage: Storage | null | undefined): boolean {
   if (!storage) return false;
   try {

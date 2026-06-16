@@ -7,6 +7,7 @@ import {
   emitEvent,
   exportInteractionTraceJson,
   exportTelemetryBufferJson,
+  findLatestInteractionTraceId,
   loadTelemetryBufferRetentionLimit,
   loadTelemetryBufferFromStorage,
   setTelemetryBufferRetentionLimit,
@@ -457,6 +458,56 @@ test("interaction trace export reconstructs one sanitized trace from buffered ev
     assert.equal(JSON.stringify(trace).includes("napoleon.example.test"), false);
     assert.equal(JSON.stringify(trace).includes("secret-token"), false);
     assert.match(trace.caveat, /not Napoleon approval/);
+  } finally {
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
+});
+
+test("latest interaction trace ignores local proof export event traces", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  console.info = () => undefined;
+
+  try {
+    emitEvent("user_message_received", {
+      traceId: "trace_real_turn",
+      conversationId: "conv_real_turn",
+      turnId: "turn_real_turn",
+      channel: "text",
+      profile: "adult_owner",
+    });
+    emitEvent("response_generated", {
+      traceId: "trace_real_turn",
+      conversationId: "conv_real_turn",
+      turnId: "turn_real_turn",
+      profile: "adult_owner",
+      governanceOutcome: "requires_review",
+    });
+    emitEvent("napoleon_response_proof_exported", {
+      traceId: "trace_local_proof_export",
+      conversationId: "conv_real_turn",
+      responseTraceId: "trace_real_turn",
+      responseAuditId: "audit_real_turn",
+    });
+
+    assert.equal(findLatestInteractionTraceId(localStorage), "trace_real_turn");
   } finally {
     console.info = previousInfo;
     if (previousWindow === undefined) {
