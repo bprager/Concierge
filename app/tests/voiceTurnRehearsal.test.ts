@@ -14,6 +14,15 @@ test("rehearses a local voice turn without capture playback or Napoleon contact"
   assert.equal(result.approvalCaptured, false);
   assert.equal(result.externalSendPerformed, false);
   assert.equal(result.vad.segments.length, 2);
+  assert.deepEqual(result.latency, {
+    localSampleOnly: true,
+    vadMs: 400,
+    sttMs: 0,
+    napoleonMs: 0,
+    ttsMs: 0,
+    totalMs: 400,
+    liveNapoleonContacted: false,
+  });
   assert.equal(result.stt.transcript, "Concierge voice sample detected.");
   assert.equal(result.textBoundary.responseBoundary, "local_rehearsal_placeholder");
   assert.equal(result.textBoundary.authorityBoundary, "Napoleon not contacted; no delegated agent response.");

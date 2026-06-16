@@ -35,6 +35,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Tightened the local Avatar State preview so the built-in sample is labeled as local preview without Napoleon provenance unless bridge proof exists.
 - Added a local wake-word sample dry run that reports deterministic sample detection without starting listening, microphone capture, raw audio storage, Napoleon contact, or side effects.
 - Added a local wake-word readiness option and panel that stays off by default and does not start listening, microphone capture, raw audio storage, Napoleon contact, or side effects.
+- Added local voice-turn sample timing metadata for VAD, STT, Napoleon, TTS, and total rehearsal timing without starting capture, playback, storage, Napoleon contact, or side effects.
 - Added a local Avatar Privacy Dashboard for camera, microphone, avatar affect, raw media storage, and telemetry preferences without starting capture, storage, affect models, Napoleon contact, or side effects.
 - Added a local Avatar Affect Fusion panel that combines deterministic sample signals into uncertainty labels without claiming emotion facts, starting media capture, contacting Napoleon, or performing side effects.
 - Tightened child-protected avatar constraints so gaze, face/head-pose, and affect-fusion panels expose guardian-review-required policy metadata for camera, microphone, storage, animation, affect, attention, and emotion-fact paths without capturing guardian approval.

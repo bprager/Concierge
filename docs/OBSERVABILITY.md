@@ -71,7 +71,7 @@ Every user turn has:
 | stt_completed | voice | latency_ms, model, local_sample_only, capture_started, raw_audio_stored |
 | tts_started | voice | voice_id, chars, local_sample_only, audio_playback_started, raw_audio_stored |
 | tts_completed | voice | latency_ms, duration_ms, local_sample_only, audio_playback_started, raw_audio_stored |
-| voice_turn_rehearsed | voice | local_rehearsal_only, vad_segment_count, stt_model, tts_voice_id, live_napoleon_contacted, microphone_capture_started, audio_playback_started, raw_audio_stored, blocked_effects |
+| voice_turn_rehearsed | voice | local_rehearsal_only, vad_segment_count, stt_model, tts_voice_id, vad_latency_ms, stt_latency_ms, napoleon_latency_ms, tts_latency_ms, total_latency_ms, live_napoleon_contacted, microphone_capture_started, audio_playback_started, raw_audio_stored, blocked_effects |
 | barge_in_rehearsed | voice | local_rehearsal_only, barge_in_detected, interrupted_output, interrupt_at_ms, next_turn_prepared, microphone_capture_started, audio_playback_started, raw_audio_stored, live_napoleon_contacted, blocked_effects |
 | voice_response_shaped | voice | local_preparation_only, profile_mode, child_protected, was_shortened, original_chars, spoken_chars, max_spoken_chars_applied, pacing, requires_guardian_review_reminder, bridge_provided_provenance, microphone_capture_started, audio_playback_started, raw_audio_stored, live_napoleon_contacted, blocked_effects |
 | wake_word_sample_detected | voice | local_sample_only, enabled, detected, detected_at_ms, confidence, profile_mode, child_protected, guardian_review_reminder, listening_started, microphone_capture_started, raw_audio_stored, live_napoleon_contacted |
@@ -155,6 +155,7 @@ Descriptor discovery failures preserve `auth_failure`, `bridge_timeout`, and `ht
 - voice_vad_latency_ms
 - stt_latency_ms
 - tts_start_latency_ms
+- voice_turn_total_latency_ms
 - avatar_frame_rate
 - camera_processing_ms
 

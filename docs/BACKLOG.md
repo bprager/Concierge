@@ -248,7 +248,7 @@ Evaluator coverage:
 | VO-003 | Add STT adapter | P0 | Local Whisper path can transcribe sample audio | stt_started, stt_completed |
 | VO-004 | Add TTS adapter | P0 | Concierge response can be spoken | tts_started, tts_completed |
 | VO-005 | Add barge-in | P0 | User can interrupt TTS and start new turn | barge_in_detected |
-| VO-006 | Add voice turn latency metrics | P0 | VAD, STT, Napoleon, TTS spans emitted | voice_turn_completed |
+| VO-006 | Add voice turn latency metrics | P0 | VAD, STT, Napoleon, TTS, and total local sample timing emitted | voice_turn_rehearsed |
 | VO-007 | Add voice-specific response shaping | P1 | Long text responses are summarized for speech | voice_response_shaped |
 | VO-008 | Add wake word option | P2 | Wake word can be enabled or disabled without starting listening or capture | privacy_setting_changed |
 | VO-009 | Add child voice constraints | P1 | Child mode has slower pacing and stricter side effect controls | child_voice_policy_applied |
@@ -351,7 +351,7 @@ Acceptance criteria:
 - The dry run chains local VAD, local STT, an explicit text authority boundary, and local TTS metadata.
 - The text boundary states that Napoleon was not contacted and no delegated agent response exists.
 - Running the dry run does not request microphone permission, start microphone capture, start audio playback, write memory, capture approval, dispatch agents, contact Napoleon, or send externally.
-- `voice_turn_rehearsed` includes local-rehearsal marker, VAD segment count, STT model, TTS voice, live-Napoleon-contact false, capture/playback/storage false, and explicit false side-effect flags.
+- `voice_turn_rehearsed` includes local-rehearsal marker, VAD segment count, STT model, TTS voice, VAD/STT/Napoleon/TTS/total local sample timing metadata, live-Napoleon-contact false, capture/playback/storage false, and explicit false side-effect flags.
 - All blocked effects are visible in the UI.
 - Child protected mode must not treat local voice rehearsal as guardian approval, recording permission, external speech permission, or Napoleon approval.
 

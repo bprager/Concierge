@@ -788,6 +788,11 @@ export function App() {
       vadSegmentCount: result.vad.segments.length,
       sttModel: result.stt.model,
       ttsVoiceId: result.tts.voiceId,
+      vadLatencyMs: result.latency.vadMs,
+      sttLatencyMs: result.latency.sttMs,
+      napoleonLatencyMs: result.latency.napoleonMs,
+      ttsLatencyMs: result.latency.ttsMs,
+      totalLatencyMs: result.latency.totalMs,
       liveNapoleonContacted: result.liveNapoleonContacted,
       microphoneCaptureStarted: result.microphoneCaptureStarted,
       audioPlaybackStarted: result.audioPlaybackStarted,
@@ -2368,6 +2373,10 @@ export function App() {
             <div>
               <strong>Speech output</strong>
               <span>TTS: {voiceTurnRehearsalResult.tts.voiceId} prepared without playback.</span>
+            </div>
+            <div>
+              <strong>Latency</strong>
+              <span>Latency: {voiceTurnRehearsalResult.latency.totalMs}ms local sample total</span>
             </div>
             <div>
               <strong>Blocked effects</strong>

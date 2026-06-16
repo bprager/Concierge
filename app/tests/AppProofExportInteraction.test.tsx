@@ -2126,6 +2126,7 @@ test("runs local voice turn rehearsal without contacting Napoleon or starting me
     assert.equal(permissionRequests, 0);
     assert.equal(fetchCalls, 0);
     assert.ok(rehearsal.getByText("VAD: 2 segments"));
+    assert.ok(rehearsal.getByText("Latency: 400ms local sample total"));
     assert.ok(rehearsal.getByText("STT: Concierge voice sample detected."));
     assert.ok(rehearsal.getByText("Text boundary: Napoleon not contacted; no delegated agent response."));
     assert.ok(rehearsal.getByText("TTS: local-sample-voice prepared without playback."));

@@ -7,6 +7,16 @@ export interface LocalVoiceTurnTextBoundary {
   authorityBoundary: string;
 }
 
+export interface LocalVoiceTurnLatencySummary {
+  localSampleOnly: true;
+  vadMs: number;
+  sttMs: number;
+  napoleonMs: 0;
+  ttsMs: number;
+  totalMs: number;
+  liveNapoleonContacted: false;
+}
+
 export interface LocalVoiceTurnRehearsalResult {
   localRehearsalOnly: true;
   liveNapoleonContacted: false;
@@ -22,6 +32,7 @@ export interface LocalVoiceTurnRehearsalResult {
   stt: LocalSpeechTranscriptionResult;
   textBoundary: LocalVoiceTurnTextBoundary;
   tts: LocalTextToSpeechResult;
+  latency: LocalVoiceTurnLatencySummary;
   blockedEffects: string[];
 }
 
@@ -33,6 +44,7 @@ export function rehearseLocalVoiceTurnSample(): LocalVoiceTurnRehearsalResult {
   });
   const stt = transcribeLocalSpeechSample(localSttSample);
   const tts = synthesizeLocalSpeechSample(localTtsSample);
+  const vadMs = localVadSampleFrames.reduce((latest, frame) => Math.max(latest, frame.offsetMs + frame.durationMs), 0);
 
   return {
     localRehearsalOnly: true,
@@ -52,6 +64,15 @@ export function rehearseLocalVoiceTurnSample(): LocalVoiceTurnRehearsalResult {
       authorityBoundary: "Napoleon not contacted; no delegated agent response.",
     },
     tts,
+    latency: {
+      localSampleOnly: true,
+      vadMs,
+      sttMs: stt.latencyMs,
+      napoleonMs: 0,
+      ttsMs: tts.latencyMs,
+      totalMs: vadMs + stt.latencyMs + tts.latencyMs,
+      liveNapoleonContacted: false,
+    },
     blockedEffects: [
       "microphone_capture",
       "audio_playback",
