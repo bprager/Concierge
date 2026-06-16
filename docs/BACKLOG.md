@@ -502,6 +502,7 @@ Acceptance criteria:
 - The state is `neutral_listening` with neutral expression and user-interface gaze, derived from local preview text unless bridge proof supplies returned text provenance, plus stance.
 - Running the state preparation does not request camera permission, start camera capture, run face detection, infer affect, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `avatar_state_changed` includes local-display marker, avatar state, expression, gaze target, stance, bridge-provenance marker, false capture/face/affect/animation/live-Napoleon-contact flags, and blocked effects.
+- The avatar state panel visibly reports `Agent dispatch: no`.
 - Provenance wording must not claim Napoleon or delegated-agent authority without bridge proof; the built-in local avatar sample must be labeled as local preview without Napoleon provenance.
 - Child protected mode must not treat avatar state as guardian approval or emotion inference.
 

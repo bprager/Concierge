@@ -2729,6 +2729,10 @@ export function App() {
               <span>Guardian approval captured: no</span>
             </div>
             <div>
+              <strong>Agent dispatch</strong>
+              <span>Agent dispatch: {neutralAvatarStateResult.agentDispatchPerformed ? "yes" : "no"}</span>
+            </div>
+            <div>
               <strong>Blocked effects</strong>
               <span>Blocked effects: {neutralAvatarStateResult.blockedEffects.join(", ")}</span>
             </div>
@@ -2777,6 +2781,10 @@ export function App() {
             <div>
               <strong>Guardian reminder</strong>
               <span>Guardian reminder: {avatarExpressionResult.guardianReviewReminder}</span>
+            </div>
+            <div>
+              <strong>Agent dispatch</strong>
+              <span>Agent dispatch: {avatarExpressionResult.agentDispatchPerformed ? "yes" : "no"}</span>
             </div>
             <div>
               <strong>Blocked effects</strong>
@@ -2839,6 +2847,10 @@ export function App() {
             <div>
               <strong>Guardian reminder</strong>
               <span>Guardian reminder: {avatarLipSyncResult.guardianReviewReminder}</span>
+            </div>
+            <div>
+              <strong>Agent dispatch</strong>
+              <span>Agent dispatch: {avatarLipSyncResult.agentDispatchPerformed ? "yes" : "no"}</span>
             </div>
             <div>
               <strong>Blocked effects</strong>
@@ -2921,6 +2933,10 @@ export function App() {
             <div>
               <strong>Guardian reminder</strong>
               <span>Guardian reminder: {avatarGazeResult.guardianReviewReminder}</span>
+            </div>
+            <div>
+              <strong>Agent dispatch</strong>
+              <span>Agent dispatch: {avatarGazeResult.agentDispatchPerformed ? "yes" : "no"}</span>
             </div>
             <div>
               <strong>Blocked effects</strong>

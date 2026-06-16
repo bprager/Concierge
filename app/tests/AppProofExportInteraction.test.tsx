@@ -2919,6 +2919,33 @@ test("local voice and avatar sample telemetry records no agent dispatch", async 
   }
 });
 
+test("local avatar sample panels show no agent dispatch", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Prepare neutral avatar state" }));
+    await user.click(view.getByRole("button", { name: "Map sample stance to expression" }));
+    await user.click(view.getByRole("button", { name: "Prepare local lip sync" }));
+    await user.click(view.getByRole("button", { name: "Simulate local gaze" }));
+
+    assert.ok(within(view.getByLabelText("Avatar state")).getByText("Agent dispatch: no"));
+    assert.ok(within(view.getByLabelText("Avatar expression")).getByText("Agent dispatch: no"));
+    assert.ok(within(view.getByLabelText("Avatar lip sync")).getByText("Agent dispatch: no"));
+    assert.ok(within(view.getByLabelText("Avatar gaze")).getByText("Agent dispatch: no"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("runs local speech transcription sample without starting microphone capture", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
