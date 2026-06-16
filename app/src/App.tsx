@@ -1197,6 +1197,7 @@ export function App() {
     setProfile(value);
     setPendingRehearsal(null);
     clearBridgeReadinessProof();
+    clearNapoleonPresentation();
   }
 
   function updateInput(value: string) {

@@ -76,6 +76,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added reusable Napoleon bridge contract fixtures for delegated success, auth failure, contract mismatch, and timeout cases.
 - Added evaluator coverage for bridge delegation provenance and bridge contract fixture fail-closed behavior.
 - Added evaluator coverage for bridge response authority provenance so invented Napoleon recommendations, invented selected-agent findings, and side-effect claims require matching provenance or fail closed.
+- Cleared rendered Napoleon proof and delegation provenance when the active user profile changes so profile-scoped bridge evidence is not reused across child, guest, collaborator, and owner contexts.
 - Added evaluator coverage for child protected bridge response semantics so valid bridge responses still preserve guardian review, no secret-keeping, memory minimization, blocked effects, and stricter child fail-closed behavior.
 - Added evaluator coverage for governed memory proposal and Chief of Staff steering review response semantics so `requires_review` remains non-approval and reviewed packets stay proposal-only, not locally applied.
 - Added evaluator coverage for profile-scope drift so guest, collaborator, and child protected responses cannot widen themselves into adult owner or owner-only authority.
