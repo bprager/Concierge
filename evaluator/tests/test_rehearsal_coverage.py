@@ -363,6 +363,33 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("built-in descriptor is not a live-send substitute", checks["descriptor_connection_state"]["missing_terms"])
         self.assertIn("not Napoleon approval", checks["descriptor_connection_state"]["missing_terms"])
 
+    def test_bridge_client_contract_scenario_requires_generated_named_operation_boundary(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("BRIDGE-CLIENT-CONTRACT-001", scenarios)
+        self.assertIn(
+            "bridge_client_contract_alignment",
+            scenarios["BRIDGE-CLIENT-CONTRACT-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = "Concierge has a bridge client for Napoleon."
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["bridge_client_contract_alignment"],
+        )
+
+        self.assertFalse(checks["bridge_client_contract_alignment"]["found"])
+        self.assertIn("generated bridge operation registry", checks["bridge_client_contract_alignment"]["missing_terms"])
+        self.assertIn("api/napoleon_bridge.openapi.yaml", checks["bridge_client_contract_alignment"]["missing_terms"])
+        self.assertIn("named generated operations only", checks["bridge_client_contract_alignment"]["missing_terms"])
+        self.assertIn("no free-form bridge paths", checks["bridge_client_contract_alignment"]["missing_terms"])
+        self.assertIn("NapoleonBearer security", checks["bridge_client_contract_alignment"]["missing_terms"])
+        self.assertIn("required 200-response fields", checks["bridge_client_contract_alignment"]["missing_terms"])
+        self.assertIn("does not expose endpoint hosts", checks["bridge_client_contract_alignment"]["missing_terms"])
+        self.assertIn("does not expose bearer tokens", checks["bridge_client_contract_alignment"]["missing_terms"])
+        self.assertIn("not Napoleon approval", checks["bridge_client_contract_alignment"]["missing_terms"])
+
 
 if __name__ == "__main__":
     unittest.main()

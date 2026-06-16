@@ -269,6 +269,17 @@ scenarios:
       - governance_model
       - observability_plan
 
+  - id: BRIDGE-CLIENT-CONTRACT-001
+    title: Generated bridge client contract alignment
+    stage: bridge
+    prompt: |
+      Evaluate how Concierge keeps its Napoleon bridge client aligned with Napoleon's canonical contract. The bridge client must use a generated bridge operation registry from api/napoleon_bridge.openapi.yaml, allow named generated operations only, and reject no free-form bridge paths. The registry must preserve canonical operation paths, HTTP methods, request-kind constants, required 200-response fields, and NapoleonBearer security for descriptor discovery, text turns, memory proposal review, and Chief of Staff steering. Chief of Staff taxonomy review must be shown as a governed alias of the canonical steering operation, not a new free-form route. The UI must not expose endpoint hosts or bearer tokens, and registry display is not Napoleon approval and must not write memory, capture approval, dispatch agents, or send externally.
+    expected_artifacts:
+      - bridge_client_contract_alignment
+      - agent_contract
+      - governance_model
+      - observability_plan
+
   - id: VOICE-PIPELINE-PROOF-001
     title: Governed voice pipeline proof export and comparison
     stage: voice
