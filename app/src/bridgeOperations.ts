@@ -50,7 +50,7 @@ export function getBridgeOperation(id: BridgeOperationId): BridgeOperation {
 }
 
 function stripKnownBridgeOperationPath(configuredEndpoint: string): string {
-  const trimmed = configuredEndpoint.trim().replace(/\/+$/, "");
+  const trimmed = configuredEndpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
   for (const operation of BRIDGE_OPERATIONS) {
     if (trimmed.endsWith(operation.path)) {
       return trimmed.slice(0, -operation.path.length).replace(/\/+$/, "");
@@ -61,7 +61,7 @@ function stripKnownBridgeOperationPath(configuredEndpoint: string): string {
 
 export function buildNapoleonBridgeUrl(configuredEndpoint: string, operationId: BridgeOperationId): string {
   const operation = getBridgeOperation(operationId);
-  const trimmed = configuredEndpoint.trim().replace(/\/+$/, "");
+  const trimmed = configuredEndpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
   if (trimmed.endsWith(operation.path)) return trimmed;
   return `${stripKnownBridgeOperationPath(trimmed)}${operation.path}`;
 }

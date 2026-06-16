@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Tightened governed bridge URL resolution so pasted known operation URLs with query strings or fragments are normalized back to canonical Concierge bridge paths before any live request.
 - Added rendered coverage and UI behavior so an existing Chief of Staff steering draft becomes submittable after governed endpoint and descriptor readiness become valid, without re-drafting or weakening Rehearsal Mode/preflight blocks.
 - Added stale-draft clearing when local capability metadata or taxonomy edits change so Chief of Staff steering and taxonomy review handoffs cannot reuse obsolete local evidence.
 - Added profile-change clearing for local governance and memory review drafts so proposal-only handoffs cannot reuse adult, guest, collaborator, or child-protected context after the active user profile changes.

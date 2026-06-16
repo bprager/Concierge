@@ -187,6 +187,16 @@ test("bridge URL builder normalizes known operation URLs before resolving anothe
   );
 });
 
+test("bridge URL builder drops pasted operation query strings before resolving another operation", () => {
+  assert.equal(
+    buildNapoleonBridgeUrl(
+      "https://napoleon.example/concierge/v1/concierge/chief-of-staff/descriptor?cache=skip#debug",
+      "text_turn",
+    ),
+    "https://napoleon.example/concierge/v1/concierge/turn",
+  );
+});
+
 test("describes governed bridge operation routes without endpoint hosts or secrets", () => {
   const summary = describeBridgeOperationSummary("text_turn");
 
