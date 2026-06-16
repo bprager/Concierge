@@ -258,6 +258,17 @@ scenarios:
       - observability_plan
       - governance_model
 
+  - id: DESCRIPTOR-CONNECTION-STATE-001
+    title: Napoleon descriptor discovery as connection state
+    stage: bridge
+    prompt: |
+      Evaluate how Text Concierge treats Napoleon Chief of Staff descriptor discovery before any live text turn or governed handoff. Descriptor discovery is first-class connection state, not authority. The UI must show endpoint presence, descriptor state, checksum state, signature state, and contract-only readiness. Missing descriptor, checksum mismatch, signature mismatch, auth failure, timeout, and HTTP failure must all fail closed and remain visible as connection states. These states must block live text turns before fetch, block memory proposal handoff before fetch, and block Chief of Staff steering handoff before fetch. The built-in descriptor is not a live-send substitute. Descriptor readiness is not Napoleon approval and does not write memory, capture approval, dispatch agents, or send externally.
+    expected_artifacts:
+      - descriptor_connection_state
+      - bridge_failure_handling
+      - governance_model
+      - observability_plan
+
   - id: VOICE-PIPELINE-PROOF-001
     title: Governed voice pipeline proof export and comparison
     stage: voice

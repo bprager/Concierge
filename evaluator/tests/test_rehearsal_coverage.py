@@ -336,6 +336,33 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("matching governance trace and audit references", checks["live_runtime_artifact_semantics"]["missing_terms"])
         self.assertIn("not treated as Napoleon approval", checks["live_runtime_artifact_semantics"]["missing_terms"])
 
+    def test_descriptor_connection_state_scenario_requires_first_class_fail_closed_states(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("DESCRIPTOR-CONNECTION-STATE-001", scenarios)
+        self.assertIn(
+            "descriptor_connection_state",
+            scenarios["DESCRIPTOR-CONNECTION-STATE-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = "Concierge discovers the Napoleon descriptor before sending."
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["descriptor_connection_state"],
+        )
+
+        self.assertFalse(checks["descriptor_connection_state"]["found"])
+        self.assertIn("descriptor discovery is first-class connection state", checks["descriptor_connection_state"]["missing_terms"])
+        self.assertIn("missing descriptor", checks["descriptor_connection_state"]["missing_terms"])
+        self.assertIn("checksum mismatch", checks["descriptor_connection_state"]["missing_terms"])
+        self.assertIn("signature mismatch", checks["descriptor_connection_state"]["missing_terms"])
+        self.assertIn("auth failure", checks["descriptor_connection_state"]["missing_terms"])
+        self.assertIn("timeout", checks["descriptor_connection_state"]["missing_terms"])
+        self.assertIn("blocks live text turns before fetch", checks["descriptor_connection_state"]["missing_terms"])
+        self.assertIn("built-in descriptor is not a live-send substitute", checks["descriptor_connection_state"]["missing_terms"])
+        self.assertIn("not Napoleon approval", checks["descriptor_connection_state"]["missing_terms"])
+
 
 if __name__ == "__main__":
     unittest.main()
