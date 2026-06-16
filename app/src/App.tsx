@@ -2398,6 +2398,14 @@ export function App() {
           <span>Raw audio stored: no</span>
         </div>
         <div>
+          <strong>Napoleon contact</strong>
+          <span>Live Napoleon contacted: {wakeWordReadiness.liveNapoleonContacted ? "yes" : "no"}</span>
+        </div>
+        <div>
+          <strong>Agent dispatch</strong>
+          <span>Agent dispatch: {wakeWordReadiness.agentDispatchPerformed ? "yes" : "no"}</span>
+        </div>
+        <div>
           <strong>Sample state</strong>
           <span>{wakeWordSampleSummary}</span>
         </div>

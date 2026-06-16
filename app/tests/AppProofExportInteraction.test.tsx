@@ -2919,6 +2919,59 @@ test("local voice and avatar sample telemetry records no agent dispatch", async 
   }
 });
 
+test("wake word readiness visibly reports no Napoleon contact or agent dispatch before listening exists", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("wake word readiness must stay local");
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Wake word readiness");
+    const wakeWordReadiness = within(view.getByLabelText("Wake word readiness"));
+    assert.ok(wakeWordReadiness.getByText("Wake word disabled"));
+    assert.ok(wakeWordReadiness.getByText("Listening started: no"));
+    assert.ok(wakeWordReadiness.getByText("Microphone capture started: no"));
+    assert.ok(wakeWordReadiness.getByText("Live Napoleon contacted: no"));
+    assert.ok(wakeWordReadiness.getByText("Agent dispatch: no"));
+
+    await user.click(view.getByRole("button", { name: "Run local wake word sample" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+    assert.ok(wakeWordReadiness.getByText("Sample detection: not detected"));
+    assert.ok(wakeWordReadiness.getByText("Live Napoleon contacted: no"));
+    assert.ok(wakeWordReadiness.getByText("Agent dispatch: no"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("local avatar sample panels show no agent dispatch", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

@@ -439,11 +439,12 @@ User value: The user can see and change the future wake-word preference before a
 Acceptance criteria:
 
 - Text Concierge exposes a wake-word setting that defaults off and persists locally.
-- Text Concierge exposes a local wake-word readiness panel with option state, phrase, listening state, microphone capture state, raw audio storage state, authority boundary, and blocked effects.
+- Text Concierge exposes a local wake-word readiness panel with option state, phrase, listening state, microphone capture state, raw audio storage state, live-Napoleon-contact state, agent-dispatch state, authority boundary, and blocked effects.
 - Text Concierge exposes a local wake-word sample dry run that reports deterministic detection metadata from fixed sample metadata only.
 - Enabling the wake-word option does not request microphone permission, start always-on listening, start microphone capture, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `privacy_setting_changed` records wake-word setting changes as local metadata with explicit false side-effect flags.
 - `wake_word_sample_detected` records local sample detection metadata with listening, microphone capture, raw audio storage, live Napoleon contact, approval capture, memory writes, agent dispatch, and external sends false.
+- The wake-word readiness panel visibly reports `Live Napoleon contacted: no` and `Agent dispatch: no` before and after the local sample dry run.
 - Child protected mode shows guardian-review reminder state and must not treat the wake-word option as guardian approval, recording permission, external speech permission, or Napoleon approval.
 
 Privacy and safety impact:
