@@ -458,6 +458,7 @@ export function describeDelegation(
         details: [
           { label: "Target capability", value: targetCapability },
           { label: "Selected agents", value: "not returned" },
+          { label: "Why selected", value: "not returned" },
           { label: "Allowed effects", value: "not returned" },
           { label: "Blocked effects", value: "not returned" },
           { label: "Governance state", value: "not returned" },
@@ -473,6 +474,7 @@ export function describeDelegation(
       details: [
         { label: "Target capability", value: "not returned" },
         { label: "Selected agents", value: "not returned" },
+        { label: "Why selected", value: "not returned" },
         { label: "Allowed effects", value: "not returned" },
         { label: "Blocked effects", value: "not returned" },
         { label: "Governance state", value: "not returned" },
@@ -485,6 +487,9 @@ export function describeDelegation(
   const agentLabels = delegation.selectedAgents
     .map((agent) => `${agent.displayName} (${agent.agentId}): ${agent.selectionReason}`)
     .join("; ");
+  const selectionReasons = delegation.selectedAgents
+    .map((agent) => `${agent.displayName}: ${agent.selectionReason}`)
+    .join("; ");
   const contribution = delegation.selectedAgents
     .filter((agent) => agent.contributionSummary)
     .map((agent) => `${agent.displayName} found ${agent.contributionSummary}.`)
@@ -495,6 +500,7 @@ export function describeDelegation(
     body: contribution || "Napoleon provided delegation provenance for this response.",
     details: [
       { label: "Selected agents", value: agentLabels },
+      { label: "Why selected", value: selectionReasons },
       { label: "Allowed effects", value: delegation.allowedEffects.join(", ") },
       { label: "Blocked effects", value: delegation.blockedEffects.join(", ") },
       { label: "Governance state", value: delegation.governanceState },

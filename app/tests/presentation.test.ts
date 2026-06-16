@@ -177,6 +177,7 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.equal(view.heading, "Napoleon delegation");
   assert.ok(view.body.includes("Passive Brain found Found the previous deployment risk note."));
   assert.ok(view.details.some((detail) => detail.label === "Selected agents" && detail.value.includes("Passive Brain")));
+  assert.ok(view.details.some((detail) => detail.label === "Why selected" && detail.value.includes("Relevant deployment history")));
   assert.ok(view.details.some((detail) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
 
   const empty = describeDelegation(undefined);
@@ -186,6 +187,7 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.ok(!empty.body.includes("Passive Brain found"));
   assert.ok(empty.details.some((detail) => detail.label === "Target capability" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Selected agents" && detail.value === "not returned"));
+  assert.ok(empty.details.some((detail) => detail.label === "Why selected" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Allowed effects" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Blocked effects" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Governance state" && detail.value === "not returned"));
