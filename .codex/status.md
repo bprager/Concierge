@@ -37,7 +37,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added the first Text Concierge query surface over the local capability ledger for common conversations and missing/blocked capabilities.
 - Expanded the Text Concierge capability query surface with working-well, easy-to-evolve, architecture-area, and recommended-next local planning answers.
 - Added browser-local capability ledger persistence, retention, clear, and metadata-only JSON export controls with explicit no-agent-dispatch telemetry.
-- Added local capability taxonomy rename, merge, deprecated marker, split-candidate marker, reset, persistence, and export controls.
+- Added local capability taxonomy rename, merge, deprecated marker, split-candidate marker, reset, persistence, and export controls with explicit no-agent-dispatch edit telemetry.
 - Added age-based capability ledger retention and local trend answers for increasing conversations, worsening missing capabilities, recently working capabilities, and weekly changes.
 - Added seasonal capability trend answers that compare recent 28 day local metadata with the previous 28 days while preserving proposal-only boundaries and child minimization.
 - Added local risk/value scoring for capability recommendations, including score components, risk penalties, child-safety caution, and scoring caveats.

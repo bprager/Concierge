@@ -221,6 +221,43 @@ test("capability ledger export and clear telemetry stays proposal-only without a
   }
 });
 
+test("capability taxonomy edit telemetry stays proposal-only without agent dispatch", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, { App }, { emitEvent }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+  ]);
+  emitEvent("rehearsal_preview_created", {
+    traceId: "trace_taxonomy_ui",
+    conversationId: "conv_taxonomy_ui",
+    turnId: "turn_taxonomy_ui",
+    profile: "adult_owner",
+    requestId: "cos_taxonomy_ui",
+  });
+
+  try {
+    const view = render(<App />);
+
+    fireEvent.change(view.getByLabelText("Label"), { target: { value: "topic:governed_text_turn" } });
+    fireEvent.change(view.getByPlaceholderText("New local label"), { target: { value: "release_operations" } });
+    fireEvent.click(view.getByRole("button", { name: "Rename label" }));
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const renameEvent = telemetryBuffer.events?.find((event) => event.event === "capability_taxonomy_label_renamed");
+
+    assert.equal(renameEvent?.attributes.approvalCaptured, false);
+    assert.equal(renameEvent?.attributes.memoryWritePerformed, false);
+    assert.equal(renameEvent?.attributes.agentDispatchPerformed, false);
+    assert.equal(renameEvent?.attributes.externalSendPerformed, false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows Napoleon delegation panel before bridge provenance is returned", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([

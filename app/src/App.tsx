@@ -471,6 +471,7 @@ export function App() {
       storage: "local_browser",
       approvalCaptured: false,
       memoryWritePerformed: false,
+      agentDispatchPerformed: false,
       externalSendPerformed: false,
       ...attributes,
     });
