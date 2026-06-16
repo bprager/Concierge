@@ -487,7 +487,12 @@ export async function sendToNapoleon(
     failClosed(dependencies, reason, request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
 
-  const payload = (await response.json()) as Partial<NapoleonResponse>;
+  let payload: Partial<NapoleonResponse>;
+  try {
+    payload = (await response.json()) as Partial<NapoleonResponse>;
+  } catch {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
   const textTurnOperation = getBridgeOperation("text_turn");
   if (!hasRequiredBridgeResponseFields(payload, textTurnOperation.id)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);

@@ -512,6 +512,50 @@ test("live bridge fails closed when Napoleon response omits trace or audit prove
   );
 });
 
+test("live bridge fails closed when Napoleon response body cannot be read", async () => {
+  const events: TelemetryPayload[] = [];
+  const evidence: unknown[] = [];
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_unreadable_body",
+          conversationId: "conv_unreadable_body",
+          turnId: "turn_unreadable_body",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => {
+              throw new Error("private malformed response body detail");
+            },
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(textTurnBlockedEffects),
+  );
+
+  assert.equal(events.at(-1)?.event, "bridge_request_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, textTurnBlockedEffects);
+  assert.equal(JSON.stringify(events).includes("private malformed response body detail"), false);
+  assert.deepEqual((evidence.at(-1) as { blockedEffects?: string[] }).blockedEffects, textTurnBlockedEffects);
+});
+
 test("live bridge fails closed when Napoleon response omits canonical required text field", async () => {
   await assert.rejects(
     () =>
