@@ -3158,6 +3158,10 @@ export function App() {
               <span>Guardian reminder: {avatarGazeResult.guardianReviewReminder}</span>
             </div>
             <div>
+              <strong>Guardian approval</strong>
+              <span>Guardian approval captured: {avatarGazeResult.guardianApprovalCaptured ? "yes" : "no"}</span>
+            </div>
+            <div>
               <strong>Agent dispatch</strong>
               <span>Agent dispatch: {avatarGazeResult.agentDispatchPerformed ? "yes" : "no"}</span>
             </div>
@@ -3262,6 +3266,10 @@ export function App() {
             <div>
               <strong>Guardian reminder</strong>
               <span>Guardian reminder: {avatarFacePoseResult.guardianReviewReminder}</span>
+            </div>
+            <div>
+              <strong>Guardian approval</strong>
+              <span>Guardian approval captured: {avatarFacePoseResult.guardianApprovalCaptured ? "yes" : "no"}</span>
             </div>
             <div>
               <strong>Blocked effects</strong>
@@ -3376,6 +3384,10 @@ export function App() {
             <div>
               <strong>Guardian reminder</strong>
               <span>Guardian reminder: {avatarAffectFusionResult.guardianReviewReminder}</span>
+            </div>
+            <div>
+              <strong>Guardian approval</strong>
+              <span>Guardian approval captured: {avatarAffectFusionResult.guardianApprovalCaptured ? "yes" : "no"}</span>
             </div>
             <div>
               <strong>Blocked effects</strong>

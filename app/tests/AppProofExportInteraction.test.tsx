@@ -3922,6 +3922,98 @@ test("applies child protected avatar state constraints from rendered profile con
   }
 });
 
+test("shows child protected avatar perception panels as guardian-review gated without capturing guardian approval", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("child avatar perception panels must stay local");
+    },
+  });
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    const view = render(<App />);
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+    await user.click(view.getByRole("button", { name: "Simulate local gaze" }));
+    await user.click(view.getByRole("button", { name: "Estimate local face pose" }));
+    await user.click(view.getByRole("button", { name: "Fuse local affect signal" }));
+
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+
+    const avatarGaze = within(view.getByLabelText("Avatar gaze"));
+    assert.ok(avatarGaze.getByText("Guardian review required: yes"));
+    assert.ok(avatarGaze.getByText("Camera policy: disabled_until_guardian_review"));
+    assert.ok(avatarGaze.getByText("Animation policy: disabled_until_guardian_review"));
+    assert.ok(avatarGaze.getByText("Guardian approval captured: no"));
+
+    const avatarFacePose = within(view.getByLabelText("Avatar face pose"));
+    assert.ok(avatarFacePose.getByText("Child protected: yes"));
+    assert.ok(avatarFacePose.getByText("Guardian review required: yes"));
+    assert.ok(avatarFacePose.getByText("Camera policy: disabled_until_guardian_review"));
+    assert.ok(avatarFacePose.getByText("Face pose policy: disabled_until_guardian_review"));
+    assert.ok(avatarFacePose.getByText("Guardian approval captured: no"));
+
+    const avatarAffectFusion = within(view.getByLabelText("Avatar affect fusion"));
+    assert.ok(avatarAffectFusion.getByText("Child protected: yes"));
+    assert.ok(avatarAffectFusion.getByText("Guardian review required: yes"));
+    assert.ok(avatarAffectFusion.getByText("Camera policy: disabled_until_guardian_review"));
+    assert.ok(avatarAffectFusion.getByText("Microphone policy: disabled_until_guardian_review"));
+    assert.ok(avatarAffectFusion.getByText("Affect policy: disabled_until_guardian_review"));
+    assert.ok(avatarAffectFusion.getByText("Guardian approval captured: no"));
+
+    for (const eventName of ["gaze_target_updated", "camera_state_estimated", "affect_signal_fused"]) {
+      const event = telemetryPayloads.find((payload) => payload.event === eventName);
+      assert.ok(event);
+      assert.equal(event.attributes.profileMode, "child_protected");
+      assert.equal(event.attributes.childProtected, true);
+      assert.equal(event.attributes.guardianReviewRequired, true);
+      assert.equal(event.attributes.guardianApprovalCaptured, false);
+      assert.equal(event.attributes.agentDispatchPerformed, false);
+      assert.equal(event.attributes.externalSendPerformed, false);
+    }
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("loads local avatar model metadata without renderer camera or Napoleon contact", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

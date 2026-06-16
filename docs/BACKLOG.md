@@ -711,7 +711,7 @@ Acceptance criteria:
 - Local avatar state reads the active profile.
 - Child protected avatar state marks `child_protected` as true.
 - Child protected avatar state keeps camera policy disabled until guardian review and affect policy disabled.
-- Child protected gaze, face/head-pose, and affect-fusion panels expose guardian-review-required state and explicit camera, microphone, storage, animation, face-pose, affect, attention, and emotion-fact policy fields where applicable.
+- Child protected gaze, face/head-pose, and affect-fusion panels expose guardian-review-required state, explicit guardian-approval-captured false state, and explicit camera, microphone, storage, animation, face-pose, affect, attention, and emotion-fact policy fields where applicable.
 - Child protected avatar state displays a guardian-review reminder.
 - Running child protected avatar state does not request camera permission, start camera capture, run face detection, infer affect, start animation, contact Napoleon, write memory, capture approval, capture guardian approval, dispatch agents, or send externally.
 - `avatar_state_changed` includes profile mode, child-protected marker, camera policy, affect policy, guardian-approval-captured false, and blocked effects including guardian approval capture.
@@ -723,7 +723,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by pure avatar state tests and rendered app interaction tests for child protected local preparation without camera, perception, animation, Napoleon contact, approval, guardian approval, or side effects.
+- Covered by pure avatar state/perception tests and rendered app interaction tests for child protected local preparation without camera, perception, animation, Napoleon contact, approval, guardian approval, or side effects.
 
 ### AV-005 details
 
