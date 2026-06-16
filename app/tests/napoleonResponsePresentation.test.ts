@@ -307,3 +307,32 @@ test("rejects missing or unsafe previous Napoleon response proof comparison inpu
   );
   assert.equal(unsafe.status, "invalid_previous");
 });
+
+test("rejects Napoleon response proof comparison input containing endpoint or secret values", () => {
+  const current = responseProofJson({ traceId: "trace_current" });
+  const previousWithEndpointValue = JSON.stringify({
+    kind: "concierge_napoleon_response_proof",
+    responseProof: {
+      status: "verified",
+      handledBy: "http://127.0.0.1:8787/v1/concierge/turn",
+      governance: "requires_review",
+    },
+  });
+  const currentWithSecretValue = JSON.stringify({
+    kind: "concierge_napoleon_response_proof",
+    responseProof: {
+      status: "verified",
+      handledBy: "Passive Brain",
+      governance: "requires_review",
+      blockedEffects: ["Bearer local-secret-token"],
+    },
+  });
+
+  const previousComparison = compareNapoleonResponseProofs(previousWithEndpointValue, current);
+  const currentComparison = compareNapoleonResponseProofs(current, currentWithSecretValue);
+
+  assert.equal(previousComparison.status, "invalid_previous");
+  assert.equal(currentComparison.status, "invalid_current");
+  assert.equal(JSON.stringify(previousComparison).includes("127.0.0.1"), false);
+  assert.equal(JSON.stringify(currentComparison).includes("local-secret-token"), false);
+});

@@ -49,6 +49,18 @@ const FORBIDDEN_EVIDENCE_KEYS = new Set([
   "token",
 ]);
 
+const FORBIDDEN_EVIDENCE_KEY_NAMES = new Set([...FORBIDDEN_EVIDENCE_KEYS].map((key) => key.toLocaleLowerCase()));
+
+const FORBIDDEN_EVIDENCE_VALUE_PATTERNS = [
+  /\bhttps?:\/\//i,
+  /\bwss?:\/\//i,
+  /\blocalhost\b/i,
+  /\b127\.0\.0\.1\b/,
+  /\b0\.0\.0\.0\b/,
+  /\bbearer\b/i,
+  /\bauthorization\b/i,
+];
+
 function promotionGateForProof(input: BridgeReadinessProofInput): string {
   const source = input.runtimeValidationSource ?? "real_runtime";
   if (source === "local_harness" || source === "local_simulation") {
@@ -67,18 +79,21 @@ export function buildBridgeEvidenceReadinessState(): BridgeEvidenceReadinessStat
   };
 }
 
-function containsForbiddenEvidenceKey(value: unknown): boolean {
+function containsForbiddenEvidenceContent(value: unknown): boolean {
+  if (typeof value === "string") {
+    return FORBIDDEN_EVIDENCE_VALUE_PATTERNS.some((pattern) => pattern.test(value));
+  }
+  if (Array.isArray(value)) return value.some((item) => containsForbiddenEvidenceContent(item));
   if (!value || typeof value !== "object") return false;
 
   return Object.entries(value).some(([key, nested]) => {
-    if (FORBIDDEN_EVIDENCE_KEYS.has(key)) return true;
-    if (Array.isArray(nested)) return nested.some((item) => containsForbiddenEvidenceKey(item));
-    return containsForbiddenEvidenceKey(nested);
+    if (FORBIDDEN_EVIDENCE_KEY_NAMES.has(key.toLocaleLowerCase())) return true;
+    return containsForbiddenEvidenceContent(nested);
   });
 }
 
 function compareBridgeEvidence(record: BridgeContractEvidence): string | null {
-  if (containsForbiddenEvidenceKey(record)) {
+  if (containsForbiddenEvidenceContent(record)) {
     return "Evidence contains a raw or secret field and cannot be used for readiness.";
   }
 
@@ -180,7 +195,7 @@ function parseBridgeReadinessProof(json: string): Record<string, unknown> | null
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
     const proof = parsed as Record<string, unknown>;
     if (proof.kind !== "concierge_bridge_readiness_proof") return null;
-    if (containsForbiddenEvidenceKey(proof)) return null;
+    if (containsForbiddenEvidenceContent(proof)) return null;
     return proof;
   } catch {
     return null;

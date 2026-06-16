@@ -257,3 +257,36 @@ test("rejects previous bridge readiness proof containing forbidden raw fields", 
   assert.equal(comparison.status, "invalid_previous");
   assert.equal(JSON.stringify(comparison).includes("raw user text"), false);
 });
+
+test("rejects bridge readiness proof comparison input containing endpoint or secret values", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+  const currentProof = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const previousProofWithEndpointValue = JSON.stringify({
+    kind: "concierge_bridge_readiness_proof",
+    descriptor: { state: "ready" },
+    evidence: { lastTargetPath: "http://127.0.0.1:8787/v1/concierge/turn" },
+  });
+  const currentProofWithSecretValue = JSON.stringify({
+    kind: "concierge_bridge_readiness_proof",
+    descriptor: { state: "ready" },
+    evidence: { blockedEffects: ["Bearer local-secret-token"] },
+  });
+
+  const previousComparison = compareBridgeReadinessProofs(previousProofWithEndpointValue, currentProof);
+  const currentComparison = compareBridgeReadinessProofs(currentProof, currentProofWithSecretValue);
+
+  assert.equal(previousComparison.status, "invalid_previous");
+  assert.equal(currentComparison.status, "invalid_current");
+  assert.equal(JSON.stringify(previousComparison).includes("127.0.0.1"), false);
+  assert.equal(JSON.stringify(currentComparison).includes("local-secret-token"), false);
+});
