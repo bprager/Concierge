@@ -290,6 +290,27 @@ artifacts:
       - "does not dispatch agents"
       - "does not send externally"
       - "does not capture approval"
+  real_runtime_promotion_boundary:
+    required_terms:
+      - "real runtime promotion boundary"
+      - "NAPOLEON_BRIDGE_ENDPOINT"
+      - "NAPOLEON_EVAL_ENDPOINT"
+      - "local_harness is not real Napoleon runtime validation"
+      - "local_simulation is not real Napoleon runtime validation"
+      - "blocked_until_real_runtime_evidence_passes"
+      - "descriptor discovery must pass"
+      - "sanitized bridge evidence capture must pass"
+      - "bridge evidence comparison must pass"
+      - "evaluator HTTP mode must pass"
+      - "artifact privacy audit must pass"
+      - "human review remains required"
+      - "not Napoleon approval"
+      - "not release approval"
+      - "does not write memory"
+      - "does not dispatch agents"
+      - "does not send externally"
+      - "does not capture approval"
+      - "does not apply self-evolution changes"
   descriptor_connection_state:
     required_terms:
       - "descriptor discovery is first-class connection state"

@@ -161,8 +161,8 @@ Keep self-evolution proposal-only. Do not build runtime adaptation until evaluat
 
 | Area | Inconsistency | Recommendation |
 |---|---|---|
-| Evaluator mechanics | The suite now meets the 15-scenario breadth target and supports accepted-baseline regression comparison, but remains deterministic keyword/artifact checking. | Add human review, negative failure fixtures, and live Napoleon baseline checks before using evaluator for phase gates. |
-| Evaluator reports | Resolved locally: reports now include `regressions`, the runner can compare against a supplied baseline, and `evaluator/reports/accepted_baseline.json` stores the current clean accepted local baseline. | Add human review workflow before using regressions as a promotion gate. |
+| Evaluator mechanics | The suite now exceeds the 15-scenario breadth target and supports accepted-baseline regression comparison, but remains deterministic keyword/artifact checking. | Add more negative failure fixtures and real live Napoleon baseline checks before using evaluator for phase gates. |
+| Evaluator reports | Resolved locally: reports now include `regressions`, the runner can compare against a supplied baseline, `evaluator/reports/accepted_baseline.json` stores the current clean accepted local baseline, and `make eval-human-review` creates a non-authorizing local review record. | Keep completed human review records with promoted evidence before using regressions as a promotion gate. |
 | Authentication | Resolved locally: OpenAPI specifies `NapoleonBearer`, generated bridge operations require header-only token placement, and tests validate that governed paths carry bearer security. | Validate credential provisioning against the real Napoleon runtime once a live endpoint exists. |
 | Observability | Required events are broad; sample trace and telemetry helper are minimal. | Add trace completeness tests. |
 | Contract surface | Local `/v1/concierge/turn` does not match Napoleon's contract-only review/discovery/governance/profile/evolution API. | Define a local adapter or revise local OpenAPI to reference Napoleon contracts. |

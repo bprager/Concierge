@@ -366,6 +366,35 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("matching governance trace and audit references", checks["live_runtime_artifact_semantics"]["missing_terms"])
         self.assertIn("not treated as Napoleon approval", checks["live_runtime_artifact_semantics"]["missing_terms"])
 
+    def test_real_runtime_promotion_boundary_requires_real_endpoint_evidence(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("REAL-RUNTIME-PROMOTION-BOUNDARY-001", scenarios)
+        self.assertIn(
+            "real_runtime_promotion_boundary",
+            scenarios["REAL-RUNTIME-PROMOTION-BOUNDARY-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = "The local harness passed and Concierge is ready for promotion."
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["real_runtime_promotion_boundary"],
+        )
+
+        self.assertFalse(checks["real_runtime_promotion_boundary"]["found"])
+        self.assertIn("real runtime promotion boundary", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("NAPOLEON_BRIDGE_ENDPOINT", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("NAPOLEON_EVAL_ENDPOINT", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("local_harness is not real Napoleon runtime validation", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("local_simulation is not real Napoleon runtime validation", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("blocked_until_real_runtime_evidence_passes", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("descriptor discovery must pass", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("sanitized bridge evidence capture must pass", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("evaluator HTTP mode must pass", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("artifact privacy audit must pass", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("not Napoleon approval", checks["real_runtime_promotion_boundary"]["missing_terms"])
+
     def test_descriptor_connection_state_scenario_requires_first_class_fail_closed_states(self):
         scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
 

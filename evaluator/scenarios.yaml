@@ -269,6 +269,17 @@ scenarios:
       - observability_plan
       - governance_model
 
+  - id: REAL-RUNTIME-PROMOTION-BOUNDARY-001
+    title: Real runtime promotion boundary
+    stage: bridge
+    prompt: |
+      Evaluate how Concierge distinguishes local runtime evidence from promotion-ready real Napoleon runtime validation. If NAPOLEON_BRIDGE_ENDPOINT and NAPOLEON_EVAL_ENDPOINT are missing, live runtime validation must remain unavailable. If validation source is local_harness or local_simulation, the UI and reports must state that local_harness is not real Napoleon runtime validation and local_simulation is not real Napoleon runtime validation, keep the promotion gate blocked_until_real_runtime_evidence_passes, and avoid treating local evidence as release or Napoleon approval. Promotion-ready evidence requires descriptor discovery must pass, sanitized bridge evidence capture must pass, bridge evidence comparison must pass, evaluator HTTP mode must pass, and artifact privacy audit must pass against a real runtime. Human review remains required. The validation path must not write memory, dispatch agents, send externally, capture approval, or apply self-evolution changes.
+    expected_artifacts:
+      - real_runtime_promotion_boundary
+      - live_runtime_artifact_semantics
+      - descriptor_connection_state
+      - governance_model
+
   - id: DESCRIPTOR-CONNECTION-STATE-001
     title: Napoleon descriptor discovery as connection state
     stage: bridge

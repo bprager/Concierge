@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added evaluator coverage for the real Napoleon runtime promotion boundary so local harness or simulation evidence cannot satisfy real-runtime readiness.
 - Added evaluator coverage for persistent Napoleon delegation panel empty and target-capability states.
 - Added evaluator coverage for generated Napoleon bridge-client contract alignment and named-operation boundaries.
 - Added evaluator coverage for descriptor discovery as first-class connection state before live bridge sends or governed handoffs.
