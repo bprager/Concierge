@@ -446,6 +446,7 @@ export function App() {
     setTelemetryBufferLastEvent(buffer.events.at(-1)?.event ?? "none");
     setTelemetryBufferRetentionLimitState(buffer.maxEvents);
     setTelemetryBufferExportJson(null);
+    setInteractionTraceExportJson(null);
   }
 
   function taxonomySelection(value = selectedTaxonomyLabel): { dimension: TaxonomyDimension; label: string } | null {

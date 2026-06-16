@@ -34,6 +34,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Tightened latest interaction trace selection so local proof/export telemetry points back to the real turn trace instead of being exported as the conversation trace.
 - Added visible latest-trace availability in the local telemetry buffer and disabled latest-trace export when only non-interaction metadata is buffered.
 - Added a Text Concierge local telemetry buffer retention selector for latest 25, 50, 100, or 200 events, pruning existing browser-local metadata when reduced.
+- Cleared rendered telemetry and interaction trace exports when local telemetry retention changes so stale snapshots do not outlive the current browser-local buffer view.
 - Added generated bridge response-required metadata from OpenAPI and fail-closed text response validation when Napoleon omits required response fields.
 - Added generated bridge response-required validation for governed memory proposal, governance review, Chief of Staff steering, and taxonomy review handoffs so malformed review responses fail closed instead of using local fallback text.
 - Tightened app bridge endpoint resolution so runtime callers can use only named generated bridge operations, with repository validation rejecting free-form bridge path resolver reintroduction.

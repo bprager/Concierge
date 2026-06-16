@@ -1892,6 +1892,65 @@ test("renders local telemetry buffer retention control and prunes stored metadat
   }
 });
 
+test("clears latest trace export when telemetry retention changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    localStorage.setItem(
+      "concierge_telemetry_buffer_v1",
+      JSON.stringify({
+        schemaVersion: "concierge.telemetry-buffer.v1",
+        maxEvents: 200,
+        events: [
+          {
+            ts: "2026-06-15T00:00:00.000Z",
+            event: "settings_changed",
+            attributes: {
+              traceId: "trace_pruned_settings",
+            },
+          },
+          ...Array.from({ length: 30 }, (_, index) => ({
+            ts: "2026-06-15T00:00:01.000Z",
+            event: index === 29 ? "user_message_received" : "settings_changed",
+            attributes: {
+              traceId: index === 29 ? "trace_retained_export" : `trace_after_export_${index}`,
+              ...(index === 29
+                ? {
+                    conversationId: "conv_retained_export",
+                    turnId: "turn_retained_export",
+                    channel: "text",
+                    profile: "adult_owner",
+                  }
+                : {}),
+            },
+          })),
+        ],
+      }),
+    );
+
+    const view = render(<App />);
+    const buffer = within(view.getByLabelText("Local telemetry buffer"));
+
+    await user.click(buffer.getByRole("button", { name: "Export latest trace" }));
+    assert.match((buffer.getByLabelText("Latest interaction trace export") as HTMLTextAreaElement).value, /trace_retained_export/);
+
+    fireEvent.change(buffer.getByLabelText("Telemetry buffer retention"), { target: { value: "25" } });
+
+    assert.equal(buffer.queryByLabelText("Latest interaction trace export"), null);
+    assert.ok(buffer.getByText("Latest trace: trace_retained_export"));
+    assert.equal(buffer.getByRole("button", { name: "Export latest trace" }).hasAttribute("disabled"), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders avatar privacy dashboard without starting capture storage or affect models", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

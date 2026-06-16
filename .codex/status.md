@@ -217,6 +217,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Tightened latest interaction trace selection so local proof/export telemetry references the real turn trace instead of becoming the exported interaction trace.
 - Added latest real interaction trace availability to the local telemetry buffer UI and disabled latest-trace export when only non-interaction metadata is buffered.
 - Added a local telemetry buffer retention selector for latest 25, 50, 100, or 200 events, with immediate browser-local pruning when the limit is reduced.
+- Cleared rendered local telemetry and interaction trace exports when retention changes so stale snapshots do not outlive the current browser-local buffer view.
 - Added generated OpenAPI response-required metadata to the bridge operation registry and made live text responses fail closed when Napoleon omits required top-level response fields.
 - Local avatar work now includes a metadata-only VRM model reference loader and Avatar Model panel that validates the local model reference without starting rendering, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - Local avatar work now includes an Avatar Renderer readiness panel that prepares renderer preflight metadata from the loaded model without allocating a canvas, starting a render loop, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
