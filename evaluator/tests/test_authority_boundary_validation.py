@@ -33,6 +33,18 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertIn("direct agent or tool dispatch", violations[0])
 
+    def test_scanner_detects_direct_agent_or_tool_dispatch_aliases(self):
+        for source in [
+            "await invokeAgent(request);",
+            "await runTool('calendar.lookup', payload);",
+            "await executeTool(toolName, payload);",
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_authority_boundary_text("app/src/router.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("direct agent or tool dispatch", violations[0])
+
     def test_scanner_allows_governed_bridge_and_proposal_language(self):
         violations = validate_repo.scan_authority_boundary_text(
             "app/src/memoryProposalSubmission.ts",

@@ -56,7 +56,7 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     ),
     (
         re.compile(
-            r"\b(dispatchAgent|agentRegistry|taskRouter|callTool)\b"
+            r"\b(dispatchAgent|invokeAgent|agentRegistry|taskRouter|callTool|runTool|executeTool)\b"
             r"|\btool\.execute\s*\("
         ),
         "direct agent or tool dispatch",
