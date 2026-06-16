@@ -2651,6 +2651,10 @@ export function App() {
               <span>Audio playback started: no</span>
             </div>
             <div>
+              <strong>Napoleon contact</strong>
+              <span>Napoleon contact: {voiceResponseShapeResult.liveNapoleonContacted ? "yes" : "no"}</span>
+            </div>
+            <div>
               <strong>Agent dispatch</strong>
               <span>Agent dispatch: {voiceResponseShapeResult.agentDispatchPerformed ? "yes" : "no"}</span>
             </div>

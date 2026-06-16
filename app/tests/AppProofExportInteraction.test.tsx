@@ -3224,6 +3224,7 @@ test("shapes a local voice response preview without contacting Napoleon or start
     assert.equal(shaping.queryByText(/Passive Brain found/), null);
     assert.ok(shaping.getByText("Authority boundary: No bridge provenance; speech summary must not claim Napoleon or delegated-agent authority."));
     assert.ok(shaping.getByText("Audio playback started: no"));
+    assert.ok(shaping.getByText("Napoleon contact: no"));
     assert.ok(shaping.getByText("Agent dispatch: no"));
     assert.ok(shaping.getByText("Blocked effects: audio_playback, microphone_capture, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
   } finally {

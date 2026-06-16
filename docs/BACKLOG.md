@@ -419,6 +419,7 @@ Acceptance criteria:
 - The built-in local voice shaping sample must emit `bridge_provided_provenance=false` and must not prefix the spoken summary with "Napoleon says"; bridge provenance may be true only when a real bridge-derived input supplies it.
 - Running the preparation does not start audio playback, request microphone permission, start microphone capture, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `voice_response_shaped` includes local-preparation marker, shortened state, original and spoken character counts, bridge-provenance marker, capture/playback/storage false, live-Napoleon-contact false, and explicit false side-effect flags.
+- The voice response shaping panel visibly reports `Napoleon contact: no`.
 - All blocked effects are visible in the UI.
 - Child protected mode must not treat shaped speech text as guardian approval, recording permission, external speech permission, or Napoleon approval.
 
