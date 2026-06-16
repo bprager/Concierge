@@ -129,6 +129,13 @@ export async function discoverNapoleonDescriptor(
     return { input, connection: buildDescriptorConnectionState(input), source: "live" };
   }
 
-  const input = buildInputFromPayload(true, await response.json());
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    const input = failureInput(true, "http_failure");
+    return { input, connection: buildDescriptorConnectionState(input), source: "live" };
+  }
+  const input = buildInputFromPayload(true, payload);
   return { input, connection: buildDescriptorConnectionState(input), source: "live" };
 }

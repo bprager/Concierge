@@ -98,6 +98,23 @@ test("descriptor discovery reports malformed descriptor as missing descriptor", 
   assert.equal(result.connection.canAttemptLiveBridge, false);
 });
 
+test("descriptor discovery treats unreadable descriptor JSON as fail-closed HTTP state", async () => {
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "https://napoleon.example/concierge",
+    fetch: async () => ({
+      ok: true,
+      json: async () => {
+        throw new Error("malformed descriptor body with private response detail");
+      },
+    }),
+  });
+
+  assert.equal(result.connection.state, "http_failure");
+  assert.equal(result.connection.failClosedReason, "http_failure");
+  assert.equal(result.connection.canAttemptLiveBridge, false);
+  assert.match(result.connection.message, /failed over HTTP/);
+});
+
 test("descriptor discovery preserves auth failure as fail-closed connection state", async () => {
   const result = await discoverNapoleonDescriptor({
     getEndpoint: () => "https://napoleon.example/concierge",
