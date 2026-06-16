@@ -210,13 +210,13 @@ Before telemetry leaves the local device:
 
 The local buffer stores telemetry when the collector is unavailable.
 
-Initial local implementation: Text Concierge stores emitted telemetry payloads in a browser-local buffer at `concierge_telemetry_buffer_v1`. The buffer keeps the latest 200 events, redacts sensitive attribute keys such as raw prompts, raw text, response text, endpoints, bearer tokens, request bodies, response bodies, raw audio, and raw video, and does not send externally. Ordinary events are not buffered when local telemetry is disabled, but privacy audit events for camera, microphone, and privacy settings remain buffered so consent-relevant changes stay locally auditable. The Text Concierge settings surface shows the buffered event count and last event, can export the redacted local JSON metadata, and can clear the persisted buffer. The buffer and its export are local metadata only; they are not Napoleon approval, not Napoleon audit records, not memory writes, not agent dispatch, and not permission to send externally.
+Initial local implementation: Text Concierge stores emitted telemetry payloads in a browser-local buffer at `concierge_telemetry_buffer_v1`. The buffer defaults to the latest 200 events, can be reduced to latest 100, 50, or 25 events from settings, redacts sensitive attribute keys such as raw prompts, raw text, response text, endpoints, bearer tokens, request bodies, response bodies, raw audio, and raw video, and does not send externally. Ordinary events are not buffered when local telemetry is disabled, but privacy audit events for camera, microphone, and privacy settings remain buffered so consent-relevant changes stay locally auditable. The Text Concierge settings surface shows the buffered event count and last event, can export the redacted local JSON metadata, can clear the persisted buffer, and prunes existing buffered metadata when the retention limit is reduced. The buffer and its export are local metadata only; they are not Napoleon approval, not Napoleon audit records, not memory writes, not agent dispatch, and not permission to send externally.
 
 Requirements:
 
-- Bounded size: initial implementation keeps the latest 200 events.
+- Bounded size: initial implementation defaults to the latest 200 events and lets the user reduce retention to latest 100, 50, or 25 events.
 - Redaction: initial implementation redacts common raw content, endpoint, body, and token fields before storage.
-- User-visible retention settings: future work.
+- User-visible retention settings: initial implementation stores the selected latest-event limit locally and immediately prunes existing buffered metadata when reduced.
 - Manual delete option: initial implementation clears the browser-local buffer from the settings surface.
 - Export option for debugging: initial implementation exports redacted browser-local JSON metadata from the settings surface.
 - Encryption at rest when feasible: future work.

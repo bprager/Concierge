@@ -117,9 +117,11 @@ import {
   clearTelemetryBuffer,
   emitEvent,
   exportTelemetryBufferJson,
+  loadTelemetryBufferRetentionLimit,
   loadTelemetryBufferFromStorage,
   newTraceId,
-  TELEMETRY_BUFFER_MAX_EVENTS,
+  setTelemetryBufferRetentionLimit,
+  TELEMETRY_BUFFER_RETENTION_OPTIONS,
 } from "./telemetry.js";
 import { capabilityLedger } from "./telemetry.js";
 import {
@@ -250,6 +252,9 @@ export function App() {
     const buffer = loadTelemetryBufferFromStorage(browserStorage());
     return buffer.events.at(-1)?.event ?? "none";
   });
+  const [telemetryBufferRetentionLimit, setTelemetryBufferRetentionLimitState] = useState(() =>
+    loadTelemetryBufferRetentionLimit(browserStorage()),
+  );
   const [telemetryBufferExportJson, setTelemetryBufferExportJson] = useState<string | null>(null);
   const [cameraEnabled, setCameraEnabled] = useState(() => storedBoolean("concierge_camera_enabled", false));
   const [microphoneEnabled, setMicrophoneEnabled] = useState(() =>
@@ -390,6 +395,7 @@ export function App() {
     const buffer = loadTelemetryBufferFromStorage(browserStorage());
     setTelemetryBufferCount(buffer.events.length);
     setTelemetryBufferLastEvent(buffer.events.at(-1)?.event ?? "none");
+    setTelemetryBufferRetentionLimitState(buffer.maxEvents);
   }
 
   function exportLocalTelemetryBuffer() {
@@ -402,6 +408,14 @@ export function App() {
     setTelemetryBufferExportJson(null);
     setTelemetryBufferCount(0);
     setTelemetryBufferLastEvent("none");
+  }
+
+  function updateTelemetryBufferRetentionLimit(value: number) {
+    const buffer = setTelemetryBufferRetentionLimit(browserStorage(), value);
+    setTelemetryBufferCount(buffer.events.length);
+    setTelemetryBufferLastEvent(buffer.events.at(-1)?.event ?? "none");
+    setTelemetryBufferRetentionLimitState(buffer.maxEvents);
+    setTelemetryBufferExportJson(null);
   }
 
   function taxonomySelection(value = selectedTaxonomyLabel): { dimension: TaxonomyDimension; label: string } | null {
@@ -2054,12 +2068,25 @@ export function App() {
         </div>
         <div>
           <strong>Buffered events</strong>
-          <span>Buffered events: {telemetryBufferCount} of {TELEMETRY_BUFFER_MAX_EVENTS}</span>
+          <span>Buffered events: {telemetryBufferCount} of {telemetryBufferRetentionLimit}</span>
         </div>
         <div>
           <strong>Last event</strong>
           <span>Last event: {telemetryBufferLastEvent}</span>
         </div>
+        <label>
+          Telemetry buffer retention
+          <select
+            value={telemetryBufferRetentionLimit}
+            onChange={(event) => updateTelemetryBufferRetentionLimit(Number(event.target.value))}
+          >
+            {TELEMETRY_BUFFER_RETENTION_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                Latest {option}
+              </option>
+            ))}
+          </select>
+        </label>
         <div>
           <strong>Export boundary</strong>
           <span>Export boundary: local metadata only; not Napoleon approval.</span>

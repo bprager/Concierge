@@ -774,6 +774,7 @@ Acceptance criteria:
 - Turning local telemetry off suppresses ordinary event buffering.
 - Privacy audit events, including camera, microphone, and privacy setting changes, remain buffered even when ordinary telemetry is off.
 - Text Concierge shows local buffer count and last event status.
+- Text Concierge lets the user choose a latest-event retention limit of 25, 50, 100, or 200 events and prunes existing buffered metadata when reduced.
 - Text Concierge can export redacted local JSON metadata from the buffer.
 - Text Concierge can clear the browser-local telemetry buffer.
 - Buffering does not send externally, write Napoleon memory, capture approval, append remote audit records, dispatch agents, or contact Napoleon.
@@ -783,12 +784,12 @@ Privacy and safety impact:
 - The buffer is local browser storage only and stores sanitized metadata, not raw transcripts or media.
 - The buffer is not a Napoleon audit record and cannot be treated as approval or execution proof.
 - Export and clear controls preserve the same redaction and non-authority boundary.
-- User-visible retention settings remain future work and must preserve the same redaction and non-authority boundary.
+- User-visible retention controls preserve the same redaction and non-authority boundary.
 
 Evaluator coverage:
 
-- Covered by telemetry tests for local buffering, count bounds, sensitive field redaction, telemetry-off suppression, privacy audit retention, redacted export, and clear behavior.
-- Covered by rendered app tests for buffer status, redacted export, and local clear controls.
+- Covered by telemetry tests for local buffering, count bounds, sensitive field redaction, telemetry-off suppression, privacy audit retention, redacted export, clear behavior, and retention pruning.
+- Covered by rendered app tests for buffer status, retention selection, redacted export, and local clear controls.
 
 ### OBS-008 details
 

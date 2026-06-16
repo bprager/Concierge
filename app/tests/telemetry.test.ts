@@ -6,8 +6,12 @@ import {
   emitCapabilitySignal,
   emitEvent,
   exportTelemetryBufferJson,
+  loadTelemetryBufferRetentionLimit,
   loadTelemetryBufferFromStorage,
+  setTelemetryBufferRetentionLimit,
+  TELEMETRY_BUFFER_RETENTION_OPTIONS,
   TELEMETRY_BUFFER_MAX_EVENTS,
+  TELEMETRY_BUFFER_RETENTION_STORAGE_KEY,
   TELEMETRY_BUFFER_STORAGE_KEY,
 } from "../src/telemetry.js";
 
@@ -392,6 +396,59 @@ test("telemetry buffer clear removes persisted local events", () => {
 
     assert.equal(localStorage.getItem(TELEMETRY_BUFFER_STORAGE_KEY), null);
     assert.equal(loadTelemetryBufferFromStorage(localStorage).events.length, 0);
+  } finally {
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
+});
+
+test("telemetry buffer retention setting prunes persisted local events", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  console.info = () => undefined;
+
+  try {
+    assert.deepEqual(TELEMETRY_BUFFER_RETENTION_OPTIONS, [25, 50, 100, 200]);
+    assert.equal(loadTelemetryBufferRetentionLimit(localStorage), TELEMETRY_BUFFER_MAX_EVENTS);
+
+    for (let index = 0; index < 30; index += 1) {
+      emitEvent("settings_changed", {
+        traceId: `trace_retention_${index}`,
+        conversationId: "conv_retention",
+        turnId: `turn_retention_${index}`,
+      });
+    }
+
+    const pruned = setTelemetryBufferRetentionLimit(localStorage, 25);
+
+    assert.equal(localStorage.getItem(TELEMETRY_BUFFER_RETENTION_STORAGE_KEY), "25");
+    assert.equal(loadTelemetryBufferRetentionLimit(localStorage), 25);
+    assert.equal(pruned.maxEvents, 25);
+    assert.equal(pruned.events.length, 25);
+    assert.equal(pruned.events[0].attributes.traceId, "trace_retention_5");
+    assert.equal(loadTelemetryBufferFromStorage(localStorage).events.length, 25);
+    assert.equal(JSON.parse(exportTelemetryBufferJson(localStorage)).maxEvents, 25);
+
+    clearTelemetryBuffer(localStorage);
+
+    assert.equal(loadTelemetryBufferFromStorage(localStorage).maxEvents, 25);
+    assert.equal(JSON.parse(exportTelemetryBufferJson(localStorage)).maxEvents, 25);
   } finally {
     console.info = previousInfo;
     if (previousWindow === undefined) {

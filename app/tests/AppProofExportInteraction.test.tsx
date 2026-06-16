@@ -1773,6 +1773,52 @@ test("renders local telemetry buffer controls with redacted export and local cle
   }
 });
 
+test("renders local telemetry buffer retention control and prunes stored metadata", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    localStorage.setItem(
+      "concierge_telemetry_buffer_v1",
+      JSON.stringify({
+        schemaVersion: "concierge.telemetry-buffer.v1",
+        maxEvents: 200,
+        events: Array.from({ length: 30 }, (_, index) => ({
+          ts: "2026-06-15T00:00:00.000Z",
+          event: "settings_changed",
+          attributes: {
+            traceId: `trace_retention_ui_${index}`,
+          },
+        })),
+      }),
+    );
+
+    const view = render(<App />);
+    const buffer = within(view.getByLabelText("Local telemetry buffer"));
+    const retention = buffer.getByLabelText("Telemetry buffer retention") as HTMLSelectElement;
+
+    assert.equal(retention.value, "200");
+    assert.ok(buffer.getByText("Buffered events: 30 of 200"));
+
+    fireEvent.change(retention, { target: { value: "25" } });
+
+    assert.equal(localStorage.getItem("concierge_telemetry_buffer_max_events"), "25");
+    assert.ok(buffer.getByText("Buffered events: 25 of 25"));
+    assert.ok(buffer.getByText("Last event: settings_changed"));
+    const stored = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ attributes: Record<string, unknown> }>;
+    };
+    assert.equal(stored.events?.length, 25);
+    assert.equal(stored.events?.[0].attributes.traceId, "trace_retention_ui_5");
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders avatar privacy dashboard without starting capture storage or affect models", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([

@@ -29,6 +29,8 @@ export interface LocalTelemetryBufferExport {
 
 export const TELEMETRY_BUFFER_STORAGE_KEY = "concierge_telemetry_buffer_v1";
 export const TELEMETRY_BUFFER_MAX_EVENTS = 200;
+export const TELEMETRY_BUFFER_RETENTION_STORAGE_KEY = "concierge_telemetry_buffer_max_events";
+export const TELEMETRY_BUFFER_RETENTION_OPTIONS = [25, 50, 100, 200] as const;
 export const TELEMETRY_BUFFER_EXPORT_CAVEAT =
   "Local redacted metadata only; not Napoleon approval, not a memory write, not agent dispatch, and not permission to send externally.";
 
@@ -79,19 +81,20 @@ export function emitPayload(payload: TelemetryPayload) {
 }
 
 export function loadTelemetryBufferFromStorage(storage: Storage | null | undefined): LocalTelemetryBuffer {
-  if (!storage) return emptyTelemetryBuffer();
+  const maxEvents = loadTelemetryBufferRetentionLimit(storage);
+  if (!storage) return emptyTelemetryBuffer(maxEvents);
   try {
     const raw = storage.getItem(TELEMETRY_BUFFER_STORAGE_KEY);
-    if (!raw) return emptyTelemetryBuffer();
+    if (!raw) return emptyTelemetryBuffer(maxEvents);
     const parsed = JSON.parse(raw) as unknown;
-    if (!isTelemetryBuffer(parsed)) return emptyTelemetryBuffer();
+    if (!isTelemetryBuffer(parsed)) return emptyTelemetryBuffer(maxEvents);
     return {
       schemaVersion: "concierge.telemetry-buffer.v1",
-      maxEvents: TELEMETRY_BUFFER_MAX_EVENTS,
-      events: parsed.events.slice(-TELEMETRY_BUFFER_MAX_EVENTS),
+      maxEvents,
+      events: parsed.events.slice(-maxEvents),
     };
   } catch {
-    return emptyTelemetryBuffer();
+    return emptyTelemetryBuffer(maxEvents);
   }
 }
 
@@ -100,13 +103,46 @@ export function appendTelemetryPayloadToBuffer(
   payload: TelemetryPayload,
 ): LocalTelemetryBuffer {
   const current = loadTelemetryBufferFromStorage(storage);
+  const maxEvents = loadTelemetryBufferRetentionLimit(storage);
   const next: LocalTelemetryBuffer = {
     schemaVersion: "concierge.telemetry-buffer.v1",
-    maxEvents: TELEMETRY_BUFFER_MAX_EVENTS,
-    events: [...current.events, sanitizeTelemetryPayload(payload)].slice(-TELEMETRY_BUFFER_MAX_EVENTS),
+    maxEvents,
+    events: [...current.events, sanitizeTelemetryPayload(payload)].slice(-maxEvents),
   };
   if (!storage) return next;
   try {
+    storage.setItem(TELEMETRY_BUFFER_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    return current;
+  }
+  return next;
+}
+
+export function loadTelemetryBufferRetentionLimit(storage: Storage | null | undefined): number {
+  if (!storage) return TELEMETRY_BUFFER_MAX_EVENTS;
+  try {
+    const raw = storage.getItem(TELEMETRY_BUFFER_RETENTION_STORAGE_KEY);
+    const parsed = Number(raw);
+    return isTelemetryBufferRetentionOption(parsed) ? parsed : TELEMETRY_BUFFER_MAX_EVENTS;
+  } catch {
+    return TELEMETRY_BUFFER_MAX_EVENTS;
+  }
+}
+
+export function setTelemetryBufferRetentionLimit(
+  storage: Storage | null | undefined,
+  maxEvents: number,
+): LocalTelemetryBuffer {
+  const nextMaxEvents = isTelemetryBufferRetentionOption(maxEvents) ? maxEvents : TELEMETRY_BUFFER_MAX_EVENTS;
+  const current = loadTelemetryBufferFromStorage(storage);
+  const next: LocalTelemetryBuffer = {
+    schemaVersion: "concierge.telemetry-buffer.v1",
+    maxEvents: nextMaxEvents,
+    events: current.events.slice(-nextMaxEvents),
+  };
+  if (!storage) return next;
+  try {
+    storage.setItem(TELEMETRY_BUFFER_RETENTION_STORAGE_KEY, String(nextMaxEvents));
     storage.setItem(TELEMETRY_BUFFER_STORAGE_KEY, JSON.stringify(next));
   } catch {
     return current;
@@ -204,12 +240,16 @@ export function emitCapabilitySignal(
   return signal;
 }
 
-function emptyTelemetryBuffer(): LocalTelemetryBuffer {
+function emptyTelemetryBuffer(maxEvents = TELEMETRY_BUFFER_MAX_EVENTS): LocalTelemetryBuffer {
   return {
     schemaVersion: "concierge.telemetry-buffer.v1",
-    maxEvents: TELEMETRY_BUFFER_MAX_EVENTS,
+    maxEvents,
     events: [],
   };
+}
+
+function isTelemetryBufferRetentionOption(value: number): value is (typeof TELEMETRY_BUFFER_RETENTION_OPTIONS)[number] {
+  return TELEMETRY_BUFFER_RETENTION_OPTIONS.includes(value as (typeof TELEMETRY_BUFFER_RETENTION_OPTIONS)[number]);
 }
 
 function isTelemetryBuffer(candidate: unknown): candidate is LocalTelemetryBuffer {
