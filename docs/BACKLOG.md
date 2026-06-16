@@ -214,7 +214,7 @@ Acceptance criteria:
 - Successful Napoleon transcript responses show the source as the governed bridge, the attribution boundary as returned bridge provenance only, and the response blocked effects.
 - Fail-closed Napoleon transcript responses show the blocked bridge source, no-accepted-response attribution boundary, and blocked effects when available.
 - Successful live text responses show a last successful Napoleon proof panel summarizing returned governance, profile mode, decision, trace, audit, target capability, selected-agent provenance, selected-agent selection reasons, allowed effects, and blocked effects; it is display-only and must be cleared with delegation presentation by local-only answers, blocked preflight paths, and failed bridge calls.
-- Changing the active user profile clears rendered Napoleon proof, delegation provenance, and governed review handoff result panels so returned evidence is not reused across child, guest, collaborator, and owner contexts.
+- Changing the active user profile clears rendered Napoleon proof, delegation provenance, local governance and memory review drafts, and governed review handoff result panels so returned or locally drafted evidence is not reused across child, guest, collaborator, and owner contexts.
 - Changing the bridge endpoint or bearer token clears rendered Napoleon proof, delegation provenance, and governed review handoff result panels so returned evidence is not reused after connection preflight is invalidated.
 - Changing descriptor mode or refreshing descriptor discovery clears rendered Napoleon proof, delegation provenance, and governed review handoff result panels so returned evidence is not reused after descriptor preflight changes.
 - Enabling Rehearsal Mode clears rendered Napoleon proof, delegation provenance, and governed review handoff result panels so live bridge evidence is not shown while Concierge is in local-only preview mode.
@@ -237,7 +237,7 @@ Privacy and safety impact:
 - Missing or invalid bridge state cannot be converted into local authority.
 - Live bridge readiness is a local preflight summary only and cannot be treated as Napoleon approval, memory permission, agent dispatch permission, or external-send permission.
 - Last successful Napoleon proof is local returned-provenance display only and cannot be treated as Napoleon approval, memory permission, agent dispatch permission, external-send permission, or evidence that Concierge executed a side effect.
-- Active profile changes must clear returned proof and delegation provenance so profile-scoped evidence is not reused after the user switches context.
+- Active profile changes must clear returned proof, delegation provenance, local governance review drafts, local memory review drafts, and governed handoff result panels so profile-scoped evidence is not reused after the user switches context.
 - Endpoint and bearer-token changes must clear returned proof and delegation provenance so connection-scoped evidence is not reused after descriptor discovery is invalidated.
 - Descriptor mode and descriptor discovery changes must clear returned proof and delegation provenance so descriptor-scoped evidence is not reused after connection preflight changes.
 - Rehearsal Mode activation must clear returned proof and delegation provenance so local-only preview mode does not display stale live bridge evidence.

@@ -379,6 +379,15 @@ export function App() {
     setGovernanceReviewSubmissionFailure(null);
   }
 
+  function clearLocalReviewDrafts() {
+    setLastGovernanceReviewState(null);
+    setLastReview(null);
+    setLastMemoryReviewState(null);
+    setLastMemoryReview(null);
+    setMemorySubmission(null);
+    setMemorySubmissionFailure(null);
+  }
+
   function clearGovernedHandoffResults() {
     setGovernanceReviewSubmission(null);
     setGovernanceReviewSubmissionFailure(null);
@@ -1293,6 +1302,7 @@ export function App() {
     setPendingRehearsal(null);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearLocalReviewDrafts();
     clearGovernedHandoffResults();
   }
 
