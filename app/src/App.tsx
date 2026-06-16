@@ -1403,6 +1403,19 @@ export function App() {
       reason: stance.reason,
       confidence: stance.confidence,
     });
+    if (profile === "child_protected") {
+      emitEvent("child_policy_applied", {
+        ...base,
+        profileMode: input.profileMode,
+        guardianReviewRequired: true,
+        secretKeepingAllowed: false,
+        memoryWriteAllowed: false,
+        approvalCaptureAllowed: false,
+        externalSendAllowed: false,
+        agentDispatchAllowed: false,
+        childSafetyBoundary: "child_protected_text_turn_requires_guardian_owner_review_for_external_or_memory_effects",
+      });
+    }
     emitEvent("governance_decision", {
       ...base,
       outcome: input.reviewState.outcome,

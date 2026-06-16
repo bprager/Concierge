@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added child-protected text-turn policy telemetry with guardian-review and blocked side-effect flags before governed bridge sends.
 - Added metadata-only identity, intent, stance, governance, context, and delegation trace events before governed live Napoleon text sends.
 - Added a visible `Why selected` row to the Napoleon delegation panel for empty, target-capability-only, and returned-delegation states.
 - Added returned selected-agent selection reasons to sanitized Napoleon response proof exports and comparisons.

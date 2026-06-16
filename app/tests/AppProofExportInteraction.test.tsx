@@ -1860,6 +1860,20 @@ test("shows active profile boundary when Napoleon response tries to drift profil
     assert.equal(responseFailed.attributes.profile, "child_protected");
     assert.equal(responseFailed.attributes.profileMode, "child_protected_user");
     assert.equal(responseFailed.attributes.bridgeFailureReason, "contract_mismatch");
+    const childPolicy = telemetryPayloads.find(
+      (payload) =>
+        payload.event === "child_policy_applied" &&
+        payload.attributes.traceId === responseFailed.attributes.traceId,
+    );
+    assert.ok(childPolicy);
+    assert.equal(childPolicy.attributes.profile, "child_protected");
+    assert.equal(childPolicy.attributes.profileMode, "child_protected_user");
+    assert.equal(childPolicy.attributes.guardianReviewRequired, true);
+    assert.equal(childPolicy.attributes.secretKeepingAllowed, false);
+    assert.equal(childPolicy.attributes.memoryWriteAllowed, false);
+    assert.equal(childPolicy.attributes.approvalCaptureAllowed, false);
+    assert.equal(childPolicy.attributes.externalSendAllowed, false);
+    assert.equal(childPolicy.attributes.agentDispatchAllowed, false);
     const blockedEffects = responseFailed.attributes.blockedEffects as string[];
     assert.ok(blockedEffects.includes("memory_write"));
     assert.ok(blockedEffects.includes("approval_capture"));
