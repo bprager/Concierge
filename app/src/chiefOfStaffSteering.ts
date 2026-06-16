@@ -435,7 +435,12 @@ export async function submitChiefOfStaffSteeringDraft(
     failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, response.status, blockedEffects);
   }
 
-  const payload = (await response.json()) as Partial<ChiefOfStaffSteeringSubmissionResult>;
+  let payload: Partial<ChiefOfStaffSteeringSubmissionResult>;
+  try {
+    payload = (await response.json()) as Partial<ChiefOfStaffSteeringSubmissionResult>;
+  } catch {
+    failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, undefined, blockedEffects);
+  }
   if (
     !hasRequiredBridgeResponseFields(payload, "chief_of_staff_steering") ||
     !isGovernanceDecision(payload.governanceDecision) ||

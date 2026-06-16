@@ -775,3 +775,42 @@ test("steering handoff rejects review responses that omit canonical required tex
   assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
   assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
 });
+
+test("steering handoff rejects unreadable review response bodies", async () => {
+  const ledger = createCapabilityLedger();
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_steering",
+    endpointConfigured: true,
+  });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffSteeringDraft(draft, {
+        conversationId: "conv_steering",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge/evolution",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => {
+            throw new Error("private steering response detail");
+          },
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
+  );
+
+  assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, steeringBlockedEffects);
+  assert.equal(JSON.stringify(events).includes("private steering response detail"), false);
+});

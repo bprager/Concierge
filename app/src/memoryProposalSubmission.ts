@@ -334,7 +334,20 @@ export async function submitMemoryProposalForReview(
     );
   }
 
-  const payload = (await response.json()) as Partial<MemoryProposalSubmissionResult>;
+  let payload: Partial<MemoryProposalSubmissionResult>;
+  try {
+    payload = (await response.json()) as Partial<MemoryProposalSubmissionResult>;
+  } catch {
+    failMemoryProposalClosed(
+      dependencies,
+      "contract_mismatch",
+      dependencies.traceId,
+      requestId,
+      memoryProposal.proposalId,
+      undefined,
+      blockedEffects,
+    );
+  }
   if (
     !hasRequiredBridgeResponseFields(payload, "memory_proposal_review") ||
     !isGovernanceDecision(payload.governanceDecision) ||

@@ -385,3 +385,38 @@ test("governance review submission rejects review responses that omit canonical 
   assert.equal(events.at(-1)?.event, "governance_review_send_failed");
   assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
 });
+
+test("governance review submission rejects unreadable review response bodies", async () => {
+  const review = buildReview();
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitGovernanceReviewForNapoleonReview(review, {
+        conversationId: "conv_governance",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => {
+            throw new Error("private governance response detail");
+          },
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(governanceReviewBlockedEffects),
+  );
+
+  assert.equal(events.at(-1)?.event, "governance_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, governanceReviewBlockedEffects);
+  assert.equal(JSON.stringify(events).includes("private governance response detail"), false);
+});

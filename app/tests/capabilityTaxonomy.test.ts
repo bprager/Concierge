@@ -743,3 +743,56 @@ test("taxonomy review handoff rejects review responses that omit canonical requi
   assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
   assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
 });
+
+test("taxonomy review handoff rejects unreadable review response bodies", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_deployment_1", topic: "deployment", capability: "release_summary" });
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_taxonomy_review",
+    traceId: "trace_taxonomy_review",
+  });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const blockedEffects = [
+    "memory_write",
+    "agent_dispatch",
+    "external_send",
+    "approval_capture",
+    "runtime_authority",
+  ];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffTaxonomyReviewDraft(draft, {
+        conversationId: "conv_taxonomy_review",
+        traceId: "trace_taxonomy_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: {
+          endpointConfigured: true,
+          descriptor: defaultChiefOfStaffDescriptor,
+          expectedChecksum: "sha256:local-static",
+          actualChecksum: "sha256:local-static",
+          signatureValid: true,
+        },
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => {
+            throw new Error("private taxonomy response detail");
+          },
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(blockedEffects),
+  );
+
+  assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, blockedEffects);
+  assert.equal(JSON.stringify(events).includes("private taxonomy response detail"), false);
+});

@@ -777,7 +777,12 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     failTaxonomyReviewClosed(dependencies, reason, requestId, response.status);
   }
 
-  const payload = (await response.json()) as Partial<ChiefOfStaffTaxonomyReviewSubmissionResult>;
+  let payload: Partial<ChiefOfStaffTaxonomyReviewSubmissionResult>;
+  try {
+    payload = (await response.json()) as Partial<ChiefOfStaffTaxonomyReviewSubmissionResult>;
+  } catch {
+    failTaxonomyReviewClosed(dependencies, "contract_mismatch", requestId);
+  }
   if (
     !hasRequiredBridgeResponseFields(payload, "chief_of_staff_steering") ||
     !isGovernanceDecision(payload.governanceDecision) ||

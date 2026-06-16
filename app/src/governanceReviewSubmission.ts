@@ -357,7 +357,20 @@ export async function submitGovernanceReviewForNapoleonReview(
     );
   }
 
-  const payload = (await response.json()) as Partial<GovernanceReviewSubmissionResult>;
+  let payload: Partial<GovernanceReviewSubmissionResult>;
+  try {
+    payload = (await response.json()) as Partial<GovernanceReviewSubmissionResult>;
+  } catch {
+    failGovernanceReviewClosed(
+      dependencies,
+      "contract_mismatch",
+      dependencies.traceId,
+      requestId,
+      review.decisionId,
+      review.auditId,
+      review.profile,
+    );
+  }
   if (
     !hasRequiredBridgeResponseFields(payload, "chief_of_staff_steering") ||
     !isGovernanceDecision(payload.governanceDecision) ||
