@@ -70,6 +70,60 @@ test("drafts proposal-only Chief of Staff steering from capability signals", () 
   assert.ok(draft.evolutionProposal.evidence.includes("trace:trace_missing_bridge"));
 });
 
+test("steering draft evidence excludes correctly blocked unsafe signals with the same capability label", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_missing_memory_review",
+      conversationId: "conv_missing_memory_review",
+      turnId: "turn_missing_memory_review",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "memory",
+      intentLabel: "review_memory",
+      capabilityLabel: "memory_review",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.9,
+      evidenceRefs: ["trace:trace_missing_memory_review"],
+      architectureArea: "memory_review",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "create_evolution_proposal",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_blocked_memory_write",
+      conversationId: "conv_blocked_memory_write",
+      turnId: "turn_blocked_memory_write",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "memory",
+      intentLabel: "unsafe_memory_write",
+      capabilityLabel: "memory_review",
+      capabilityStatus: "blocked",
+      outcomeSignal: "blocked",
+      confidence: 0.95,
+      evidenceRefs: ["trace:trace_blocked_memory_write"],
+      architectureArea: "governance_ux",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "no_action",
+    }),
+  );
+
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_steering",
+    endpointConfigured: false,
+  });
+
+  assert.equal(draft.recommendation.capabilityLabel, "memory_review");
+  assert.deepEqual(draft.evolutionProposal.evidence, ["trace:trace_missing_memory_review"]);
+  assert.equal(draft.evolutionProposal.evidence.includes("trace:trace_blocked_memory_write"), false);
+});
+
 test("steering handoff fails closed without endpoint and does not fetch", async () => {
   const ledger = createCapabilityLedger();
   const draft = draftChiefOfStaffSteering(ledger, {

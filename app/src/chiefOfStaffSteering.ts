@@ -1,7 +1,9 @@
 import {
   answerCapabilityQuestion,
   type CapabilityArchitectureArea,
+  type CapabilityAnswerRow,
   type CapabilityLedger,
+  type ConversationCapabilitySignal,
   type RecommendationBoundary,
 } from "./capabilityLedger.js";
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
@@ -117,6 +119,15 @@ function riskForArchitecture(area: CapabilityArchitectureArea): EvolutionProposa
   return "low";
 }
 
+function supportsSteeringRecommendation(signal: ConversationCapabilitySignal, row: CapabilityAnswerRow | undefined): boolean {
+  if (!row) return false;
+  if (signal.capabilityLabel !== row.label) return false;
+  if (row.architectureArea && signal.architectureArea !== row.architectureArea) return false;
+  if (row.status && signal.capabilityStatus !== row.status) return false;
+  if (signal.capabilityStatus === "missing") return true;
+  return signal.capabilityStatus === "degraded" && signal.suggestedNextStep !== "needs_human_review";
+}
+
 export function draftChiefOfStaffSteering(
   ledger: CapabilityLedger,
   options: SteeringDraftOptions,
@@ -128,7 +139,7 @@ export function draftChiefOfStaffSteering(
   const confidence = top?.confidence ?? 0;
   const evidenceRefs = ledger
     .listRecent()
-    .filter((signal) => signal.capabilityLabel === capabilityLabel)
+    .filter((signal) => supportsSteeringRecommendation(signal, top))
     .flatMap((signal) => signal.evidenceRefs)
     .slice(0, 8);
   const caseId = `capability_gap_${capabilityLabel.replace(/[^a-z0-9_]+/gi, "_").toLowerCase()}`;

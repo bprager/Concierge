@@ -152,6 +152,7 @@ Acceptance criteria:
 - Easy-to-evolve and recommended-next answers use deterministic local ranking from count, confidence, capability status, architecture area, and suggested next step.
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
 - Correctly blocked unsafe requests are classified separately from failed safe requests.
+- Chief of Staff steering drafts only attach evidence from the missing or degraded recommendation bucket that produced the recommendation; correctly blocked unsafe traces are not reused as evolution proposal evidence because of a shared capability label.
 - Recommendations are proposal-only and do not implement features, grant approval, write memory, dispatch agents, or send externally.
 - Local Chief of Staff taxonomy review drafts can recommend metadata-only merge, split, and deprecation review, package evaluator-case and evolution-proposal drafts, and submit them through the governed Chief of Staff bridge only after endpoint and descriptor preflight pass, without applying taxonomy edits or changing Napoleon policy/routing; child-protected taxonomy review drafts and handoffs preserve child profile scope and guardian/owner review wording.
 - Clearing the local capability ledger clears any derived Chief of Staff steering or taxonomy review draft, response, or failure state so obsolete local evidence cannot be submitted or displayed; taxonomy edits clear derived taxonomy review drafts and review results.
@@ -161,6 +162,7 @@ Privacy and safety impact:
 
 - The query surface uses derived metadata and redacted summaries by default.
 - Raw conversation content is not stored or exported without explicit user-visible controls.
+- Evolution proposal evidence remains metadata-only and excludes correctly blocked unsafe request traces when they are not part of the selected recommendation bucket.
 
 Evaluator coverage:
 
