@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added evaluator coverage for governed voice pipeline proof export and same-session comparison boundaries.
 - Added transcript-level source, attribution-boundary, and blocked-effect rendering for successful Napoleon bridge responses.
 - Added transcript-level target capability rendering for successful Napoleon responses when Napoleon returns a capability ID without selected-agent delegation.
 - Changed sanitized Napoleon response proof export and comparison to keep returned target capability separate from selected-agent provenance.

@@ -13,7 +13,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Artifact | Current state |
 |---|---|
 | Runner | `evaluator/eval_runner.py`, supports `stub` and `http` modes |
-| Scenarios | 24 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, and conversation capability intelligence coverage |
+| Scenarios | 25 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, voice pipeline proof export/comparison coverage, and conversation capability intelligence coverage |
 | Rubric | 10 weighted dimensions in `evaluator/rubrics.yaml` |
 | Hard fails | 5 hard fail rules |
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
