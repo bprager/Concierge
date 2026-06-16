@@ -558,6 +558,7 @@ export function App() {
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
@@ -573,6 +574,7 @@ export function App() {
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
@@ -586,6 +588,7 @@ export function App() {
     setDescriptorMode(value);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearLocalReviewDrafts();
     clearGovernedHandoffResults();
   }
 
@@ -594,6 +597,7 @@ export function App() {
     if (enabled) {
       setPendingRehearsal(null);
       clearNapoleonPresentation();
+      clearLocalReviewDrafts();
       clearGovernedHandoffResults();
     }
   }
@@ -1272,6 +1276,7 @@ export function App() {
       setDescriptorDiscoveryMessage(result.connection.message);
       clearBridgeReadinessProof();
       clearNapoleonPresentation();
+      clearLocalReviewDrafts();
       clearGovernedHandoffResults();
       const discoveryFailed =
         result.connection.failClosedReason === "auth_failure" ||
@@ -1294,6 +1299,7 @@ export function App() {
       setDescriptorDiscoveryMessage("Descriptor discovery failed closed. Concierge will not attempt live bridge calls.");
       clearBridgeReadinessProof();
       clearNapoleonPresentation();
+      clearLocalReviewDrafts();
       clearGovernedHandoffResults();
       emitEvent("descriptor_discovery_failed", {
         traceId: newTraceId(),

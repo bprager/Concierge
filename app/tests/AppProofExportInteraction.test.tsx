@@ -2465,6 +2465,107 @@ test("clears profile-scoped memory review drafts when user profile changes", asy
   }
 });
 
+test("clears connection-scoped memory review drafts when Napoleon endpoint changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const body = init?.body ? JSON.parse(String(init.body)) : {};
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/turn")) {
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon prepared the preference note for review.",
+            profileMode: body.profileMode,
+            targetAgent: "napoleon.memory",
+            governanceDecision: {
+              decision_id: "decision_memory_turn_endpoint_change",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Memory-like requests require governed review.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: body.traceId,
+              audit_id: "audit_memory_turn_endpoint_change",
+            },
+            traceEnvelope: {
+              trace_id: body.traceId,
+              parent_trace_id: "rendered-memory-endpoint-change",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_memory_turn_endpoint_change",
+              timestamp: "2026-06-14T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_memory_turn_endpoint_change",
+              trace_id: body.traceId,
+              decision_id: "decision_memory_turn_endpoint_change",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:memory-turn-endpoint-change"],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Remember that I prefer concise updates" },
+    });
+    await user.click(view.getByRole("button", { name: "Send" }));
+    await view.findByText("Napoleon prepared the preference note for review.");
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send memory proposal to Napoleon review" })), true);
+
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:9999" } });
+
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send memory proposal to Napoleon review" })), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("blocks taxonomy review handoff visibly when no Napoleon endpoint is configured", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([
