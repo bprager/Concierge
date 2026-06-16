@@ -1952,7 +1952,8 @@ export function App() {
     pendingRehearsal &&
       !rehearsalMode &&
       input.trim() === pendingRehearsal.content &&
-      pendingRehearsal.preview.governanceReview.canSendAdvisory,
+      pendingRehearsal.preview.governanceReview.canSendAdvisory &&
+      descriptorConnection.canAttemptLiveBridge,
   );
   const taxonomyCounts = getTaxonomyLabelCounts(capabilityLedger.listRecent(), capabilityTaxonomy);
   const taxonomyRows = (Object.keys(taxonomyCounts) as TaxonomyDimension[]).flatMap((dimension) =>
