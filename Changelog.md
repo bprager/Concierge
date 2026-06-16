@@ -26,6 +26,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a visible live bridge promotion gate so local harness or simulation evidence stays blocked for real Napoleon runtime promotion until real runtime evidence passes.
 - Added the same promotion-gate result to sanitized bridge readiness proof exports and comparisons.
 - Added promotion-gate metadata to local bridge readiness proof export telemetry so audit metadata matches sanitized proof exports.
+- Added explicit no-agent-dispatch metadata to local bridge readiness proof export telemetry.
 - Sanitized live-runtime evaluator reports by removing response excerpts before retaining them as validation artifacts.
 - Added live-runtime artifact privacy auditing so retained bridge/evaluator artifacts fail validation if raw fields or sensitive runtime values are present.
 - Added a bounded browser-local telemetry buffer that redacts sensitive fields and keeps privacy audit events locally available even when ordinary telemetry is disabled.

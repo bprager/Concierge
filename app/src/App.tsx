@@ -1756,6 +1756,7 @@ export function App() {
       lastFailureReason: bridgeEvidenceReadiness.lastFailureReason ?? "none",
       approvalCaptured: false,
       memoryWritePerformed: false,
+      agentDispatchPerformed: false,
       externalSendPerformed: false,
     });
   }
