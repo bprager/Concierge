@@ -53,6 +53,7 @@ test("live bridge fails closed when no Napoleon endpoint is configured", async (
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("no_endpoint") &&
+      (error as { profileMode?: string }).profileMode === "child_protected_user" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(textTurnBlockedEffects),
   );
@@ -60,6 +61,7 @@ test("live bridge fails closed when no Napoleon endpoint is configured", async (
   assert.equal(events[0].event, "bridge_request_started");
   assert.equal(events.at(-1)?.event, "bridge_request_failed");
   assert.equal(events.at(-1)?.attributes.reason, "no_endpoint");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, textTurnBlockedEffects);
   assert.deepEqual((evidence[0] as { blockedEffects?: string[] }).blockedEffects, textTurnBlockedEffects);
 });

@@ -591,11 +591,14 @@ test("describes bridge failure transcript message with reason and blocked effect
   const error = new NapoleonBridgeError("bridge_timeout", "trace_timeout", "request_timeout", undefined, [
     "external_send",
     "memory_write",
-  ]);
+  ], {
+    profileMode: "child_protected_user",
+  });
 
   const message = describeBridgeFailureTranscriptMessage(error);
 
   assert.ok(message.includes("bridge_timeout"));
+  assert.ok(message.includes("Profile child_protected_user"));
   assert.ok(message.includes("Blocked effects: external_send, memory_write"));
   assert.ok(message.includes("did not execute anything"));
   assert.ok(message.includes("prepare-only mode"));

@@ -87,6 +87,7 @@ export interface NapoleonBridgeFailureMetadata {
   decisionId?: string;
   auditId?: string;
   governanceOutcome?: string;
+  profileMode?: string;
 }
 
 export class NapoleonBridgeError extends Error {
@@ -98,6 +99,7 @@ export class NapoleonBridgeError extends Error {
   decisionId?: string;
   auditId?: string;
   governanceOutcome?: string;
+  profileMode?: string;
 
   constructor(
     reason: NapoleonBridgeFailureReason,
@@ -117,6 +119,7 @@ export class NapoleonBridgeError extends Error {
     this.decisionId = metadata.decisionId;
     this.auditId = metadata.auditId;
     this.governanceOutcome = metadata.governanceOutcome;
+    this.profileMode = metadata.profileMode;
   }
 }
 
@@ -380,6 +383,7 @@ function failClosed(
     requestId,
     reason,
     status,
+    profileMode: evidenceContext?.profileMode,
     blockedEffects: evidenceContext?.blockedEffects ?? [],
   };
   if (evidenceContext?.decisionId) failureAttributes.decisionId = evidenceContext.decisionId;
@@ -390,6 +394,7 @@ function failClosed(
     decisionId: evidenceContext?.decisionId,
     auditId: evidenceContext?.auditId,
     governanceOutcome: evidenceContext?.governanceOutcome,
+    profileMode: evidenceContext?.profileMode,
   });
 }
 

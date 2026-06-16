@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added active profile-mode visibility to fail-closed Napoleon bridge errors, transcript messages, and `bridge_request_failed` telemetry.
 - Added a visible attribution-boundary row to the last successful Napoleon proof panel so returned recommendations and selected-agent findings remain clearly tied to bridge provenance only.
 - Added attribution-boundary tracking to sanitized Napoleon response proof comparisons.
 - Added evaluator coverage for the local Media Session Controller so microphone, camera, playback, child-protected blocking, and no-capture/no-playback boundaries are checked before future voice/avatar expansion.
