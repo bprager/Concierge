@@ -1954,7 +1954,7 @@ test("shows guardian review on child protected taxonomy review drafts before han
 
 test("submits a steering draft through rendered governed controls without local side effects", async () => {
   const dom = installDom();
-  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
     import("@testing-library/react"),
     import("@testing-library/user-event"),
     import("../src/App.js"),
@@ -2049,6 +2049,11 @@ test("submits a steering draft through rendered governed controls without local 
     assert.ok(view.getByText(/audit_steering_rendered/));
     assert.ok(view.getByText("not applied; no memory write; no approval captured; no agent dispatch; no external send."));
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/steering"));
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+    assert.equal(view.queryByText("Napoleon accepted the steering draft for review."), null);
+    assert.equal(view.queryByText(/decision_steering_rendered/), null);
+    assert.equal(view.queryByText(/audit_steering_rendered/), null);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();

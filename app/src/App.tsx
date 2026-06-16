@@ -379,6 +379,17 @@ export function App() {
     setGovernanceReviewSubmissionFailure(null);
   }
 
+  function clearGovernedHandoffResults() {
+    setGovernanceReviewSubmission(null);
+    setGovernanceReviewSubmissionFailure(null);
+    setMemorySubmission(null);
+    setMemorySubmissionFailure(null);
+    setSteeringSubmission(null);
+    setSteeringFailure(null);
+    setTaxonomyReviewSubmission(null);
+    setTaxonomyReviewFailure(null);
+  }
+
   function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {
     setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response));
     setNapoleonProofExportJson(null);
@@ -517,6 +528,7 @@ export function App() {
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearGovernedHandoffResults();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_endpoint", value.trim());
@@ -531,6 +543,7 @@ export function App() {
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearGovernedHandoffResults();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_auth_token", value.trim());
@@ -543,6 +556,7 @@ export function App() {
     setDescriptorMode(value);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearGovernedHandoffResults();
   }
 
   function updateRehearsalMode(enabled: boolean) {
@@ -550,6 +564,7 @@ export function App() {
     if (enabled) {
       setPendingRehearsal(null);
       clearNapoleonPresentation();
+      clearGovernedHandoffResults();
     }
   }
 
@@ -1227,6 +1242,7 @@ export function App() {
       setDescriptorDiscoveryMessage(result.connection.message);
       clearBridgeReadinessProof();
       clearNapoleonPresentation();
+      clearGovernedHandoffResults();
       const discoveryFailed =
         result.connection.failClosedReason === "auth_failure" ||
         result.connection.failClosedReason === "bridge_timeout" ||
@@ -1248,6 +1264,7 @@ export function App() {
       setDescriptorDiscoveryMessage("Descriptor discovery failed closed. Concierge will not attempt live bridge calls.");
       clearBridgeReadinessProof();
       clearNapoleonPresentation();
+      clearGovernedHandoffResults();
       emitEvent("descriptor_discovery_failed", {
         traceId: newTraceId(),
         conversationId,
@@ -1273,6 +1290,7 @@ export function App() {
     setPendingRehearsal(null);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearGovernedHandoffResults();
   }
 
   function updateInput(value: string) {
