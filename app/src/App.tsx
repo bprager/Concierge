@@ -1630,15 +1630,17 @@ export function App() {
 
   function exportBridgeReadinessProof() {
     const traceId = newTraceId();
+    const runtimeValidationSource = isLocalHarnessEndpoint(endpoint)
+      ? "local_harness"
+      : descriptorMode === "live"
+        ? "real_runtime"
+        : "local_simulation";
     const json = exportBridgeReadinessProofJson({
       descriptorConnection,
       readiness: bridgeEvidenceReadiness,
-      runtimeValidationSource: isLocalHarnessEndpoint(endpoint)
-        ? "local_harness"
-        : descriptorMode === "live"
-          ? "real_runtime"
-          : "local_simulation",
+      runtimeValidationSource,
     });
+    const bridgeReadinessProof = JSON.parse(json) as { runtimeValidation?: { promotionGate?: string } };
     const comparison = compareBridgeReadinessProofs(bridgeReadinessProofJson, json);
     setBridgeReadinessProofJson(json);
     setBridgeReadinessProofComparison(comparison);
@@ -1650,11 +1652,8 @@ export function App() {
       signatureState: descriptorConnection.signatureState,
       evidenceCaptureState: bridgeEvidenceReadiness.captureState,
       evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
-      runtimeValidationSource: isLocalHarnessEndpoint(endpoint)
-        ? "local_harness"
-        : descriptorMode === "live"
-          ? "real_runtime"
-          : "local_simulation",
+      runtimeValidationSource,
+      promotionGate: bridgeReadinessProof.runtimeValidation?.promotionGate ?? "unavailable",
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
       lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus ?? "not_run",

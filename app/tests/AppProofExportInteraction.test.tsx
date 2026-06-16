@@ -132,7 +132,14 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     await user.click(screen.getByRole("button", { name: "Export readiness proof" }));
     const readinessExport = screen.getByLabelText("Exported bridge readiness proof");
     assert.ok(readinessExport.textContent?.includes('"source": "local_harness"'));
+    assert.ok(readinessExport.textContent?.includes('"promotionGate": "blocked_until_real_runtime_evidence_passes"'));
     assert.ok(!readinessExport.textContent?.includes("127.0.0.1"));
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const readinessEvent = telemetryBuffer.events?.find((event) => event.event === "bridge_readiness_proof_exported");
+    assert.equal(readinessEvent?.attributes.promotionGate, "blocked_until_real_runtime_evidence_passes");
+    assert.equal(JSON.stringify(readinessEvent).includes("127.0.0.1"), false);
     const rehearsalCheckbox = screen.getByLabelText("Rehearsal Mode");
     if ((rehearsalCheckbox as HTMLInputElement).checked) {
       await user.click(rehearsalCheckbox);
