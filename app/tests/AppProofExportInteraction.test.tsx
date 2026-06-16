@@ -1952,6 +1952,123 @@ test("shows guardian review on child protected taxonomy review drafts before han
   }
 });
 
+test("enables an existing steering draft after governed endpoint readiness becomes valid", async () => {
+  const dom = installDom();
+  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      requestedUrls.push(String(input));
+      const body = init?.body ? JSON.parse(String(init.body)) : {};
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/steering")) {
+        assert.equal(body.requestKind, "chief_of_staff_steering_handoff");
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon accepted the existing steering draft for review.",
+            governanceDecision: {
+              decision_id: "decision_existing_steering",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Capability changes require review before rollout.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: body.traceEnvelope.trace_id,
+              audit_id: "audit_existing_steering",
+            },
+            traceEnvelope: {
+              trace_id: body.traceEnvelope.trace_id,
+              parent_trace_id: body.traceEnvelope.parent_trace_id,
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_existing_steering",
+              timestamp: "2026-06-14T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_existing_steering",
+              trace_id: body.traceEnvelope.trace_id,
+              decision_id: "decision_existing_steering",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:existing-steering"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+    await view.findByText("Chief of Staff steering draft");
+    assert.ok(
+      view.getAllByText(
+        "Chief of Staff steering is blocked until the review draft, endpoint, descriptor preflight, and Rehearsal Mode state are ready.",
+      ).length > 0,
+    );
+    assert.equal(
+      (view.getByRole("button", { name: "Send steering draft to Napoleon review" }) as HTMLButtonElement).disabled,
+      true,
+    );
+
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    assert.ok(
+      view.getAllByText("Chief of Staff steering can be submitted through the governed bridge for Napoleon review.")
+        .length > 0,
+    );
+    assert.equal(view.queryByText("No governed Napoleon endpoint is configured, so this draft remains local."), null);
+    assert.equal(
+      (view.getByRole("button", { name: "Send steering draft to Napoleon review" }) as HTMLButtonElement).disabled,
+      false,
+    );
+
+    await user.click(view.getByRole("button", { name: "Send steering draft to Napoleon review" }));
+    await view.findByText("Napoleon accepted the existing steering draft for review.");
+    assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/steering"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("submits a steering draft through rendered governed controls without local side effects", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([

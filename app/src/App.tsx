@@ -438,7 +438,7 @@ export function App() {
   const steeringHandoffReadiness = describeGovernedHandoffReadiness({
     label: "Chief of Staff steering",
     descriptorConnection,
-    draftReady: Boolean(steeringDraft?.sendState.canSendToNapoleon),
+    draftReady: Boolean(steeringDraft),
     rehearsalMode,
   });
   const taxonomyHandoffReadiness = describeGovernedHandoffReadiness({
@@ -3694,7 +3694,7 @@ export function App() {
         <section className="steering-draft">
           <div>
             <strong>Chief of Staff steering draft</strong>
-            <span>{steeringDraft.sendState.reason}</span>
+            <span>{steeringHandoffReadiness.summary}</span>
           </div>
           <dl>
             <dt>Recommendation</dt>
@@ -3742,7 +3742,7 @@ export function App() {
           <button
             className="secondary"
             onClick={submitSteeringDraft}
-            disabled={!steeringDraft.sendState.canSendToNapoleon || !steeringHandoffReadiness.canSubmit}
+            disabled={!steeringHandoffReadiness.canSubmit}
           >
             Send steering draft to Napoleon review
           </button>
