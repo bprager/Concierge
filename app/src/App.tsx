@@ -145,7 +145,7 @@ import {
   type LocalTextToSpeechResult,
 } from "./textToSpeech.js";
 import { rehearseLocalVoiceTurnSample, type LocalVoiceTurnRehearsalResult } from "./voiceTurnRehearsal.js";
-import { buildGovernedVoicePipelinePlan } from "./voicePipelinePlan.js";
+import { buildGovernedVoicePipelinePlan, exportGovernedVoicePipelineProofJson } from "./voicePipelinePlan.js";
 import {
   localVoiceResponseShapeSample,
   shapeVoiceResponseForSpeech,
@@ -304,6 +304,7 @@ export function App() {
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
   const [bridgeReadinessProofComparison, setBridgeReadinessProofComparison] =
     useState<BridgeReadinessProofComparison | null>(null);
+  const [voicePipelineProofJson, setVoicePipelineProofJson] = useState<string | null>(null);
   const [lastGovernanceReviewState, setLastGovernanceReviewState] = useState<GovernanceReviewState | null>(null);
   const [lastReview, setLastReview] = useState<ReturnType<typeof describeGovernanceReview> | null>(null);
   const [governanceReviewSubmission, setGovernanceReviewSubmission] =
@@ -1740,6 +1741,31 @@ export function App() {
     });
   }
 
+  function exportVoicePipelineProof() {
+    const traceId = newTraceId();
+    const json = exportGovernedVoicePipelineProofJson(governedVoicePipelinePlan, {
+      conversationId,
+    });
+    setVoicePipelineProofJson(json);
+    emitEvent("voice_pipeline_proof_exported", {
+      traceId,
+      conversationId,
+      profileMode: governedVoicePipelinePlan.profileMode,
+      proposalOnly: governedVoicePipelinePlan.proposalOnly,
+      canStartLiveVoice: governedVoicePipelinePlan.canStartLiveVoice,
+      stageCount: governedVoicePipelinePlan.stages.length,
+      blockedEffects: governedVoicePipelinePlan.blockedEffects,
+      microphoneCaptureStarted: governedVoicePipelinePlan.microphoneCaptureStarted,
+      audioPlaybackStarted: governedVoicePipelinePlan.audioPlaybackStarted,
+      rawAudioStored: governedVoicePipelinePlan.rawAudioStored,
+      liveNapoleonContacted: governedVoicePipelinePlan.liveNapoleonContacted,
+      approvalCaptured: governedVoicePipelinePlan.approvalCaptured,
+      memoryWritePerformed: governedVoicePipelinePlan.memoryWritePerformed,
+      agentDispatchPerformed: governedVoicePipelinePlan.agentDispatchPerformed,
+      externalSendPerformed: governedVoicePipelinePlan.externalSendPerformed,
+    });
+  }
+
   function createSteeringDraft() {
     const traceId = newTraceId();
     const draft = draftChiefOfStaffSteering(capabilityLedger, {
@@ -2233,6 +2259,12 @@ export function App() {
             <span>{stage.authorityBoundary}</span>
           </div>
         ))}
+        <button className="secondary" onClick={exportVoicePipelineProof}>
+          Export voice pipeline proof
+        </button>
+        {voicePipelineProofJson ? (
+          <pre aria-label="Exported voice pipeline proof">{voicePipelineProofJson}</pre>
+        ) : null}
         <button className="secondary" onClick={() => void requestMicrophonePermission()}>
           Request microphone permission
         </button>

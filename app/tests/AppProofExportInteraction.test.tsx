@@ -1951,6 +1951,15 @@ test("keeps voice capture blocked until explicit microphone permission is grante
     assert.ok(voiceReadiness.getByText("Governed Napoleon bridge turn: blocked"));
     assert.ok(voiceReadiness.getByText("Live voice can start: no"));
 
+    await user.click(voiceReadiness.getByText("Export voice pipeline proof"));
+    const exportedVoiceProof = voiceReadiness.getByLabelText("Exported voice pipeline proof");
+    assert.ok(exportedVoiceProof.textContent?.includes("concierge_governed_voice_pipeline_proof"));
+    assert.ok(exportedVoiceProof.textContent?.includes('"proposalOnly": true'));
+    assert.ok(exportedVoiceProof.textContent?.includes('"canStartLiveVoice": false'));
+    assert.ok(!exportedVoiceProof.textContent?.includes("endpoint"));
+    assert.ok(!exportedVoiceProof.textContent?.includes("token"));
+    assert.ok(!exportedVoiceProof.textContent?.includes("prompt"));
+
     await user.click(view.getByLabelText("Microphone"));
 
     assert.equal(permissionRequests, 0);

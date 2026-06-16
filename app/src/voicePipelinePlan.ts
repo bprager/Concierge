@@ -41,6 +41,11 @@ export interface GovernedVoicePipelinePlanInput {
   profileMode: NapoleonProfileMode;
 }
 
+export interface GovernedVoicePipelineProofInput {
+  generatedAt?: string;
+  conversationId: string;
+}
+
 const blockedEffects = [
   "microphone_capture",
   "audio_playback",
@@ -135,4 +140,45 @@ export function buildGovernedVoicePipelinePlan(input: GovernedVoicePipelinePlanI
     agentDispatchPerformed: false,
     externalSendPerformed: false,
   };
+}
+
+export function exportGovernedVoicePipelineProofJson(
+  plan: GovernedVoicePipelinePlan,
+  input: GovernedVoicePipelineProofInput,
+): string {
+  return JSON.stringify(
+    {
+      kind: "concierge_governed_voice_pipeline_proof",
+      generatedAt: input.generatedAt ?? new Date().toISOString(),
+      conversationId: input.conversationId,
+      voicePipeline: {
+        proposalOnly: plan.proposalOnly,
+        profileMode: plan.profileMode,
+        childProtected: plan.childProtected,
+        guardianReviewRequired: plan.guardianReviewRequired,
+        canStartLiveVoice: plan.canStartLiveVoice,
+        authorityBoundary: plan.authorityBoundary,
+        stages: plan.stages.map((stage) => ({
+          id: stage.id,
+          label: stage.label,
+          status: stage.status,
+          requiredProof: stage.requiredProof,
+          authorityBoundary: stage.authorityBoundary,
+        })),
+        blockedEffects: plan.blockedEffects,
+      },
+      boundary: {
+        microphoneCaptureStarted: plan.microphoneCaptureStarted,
+        audioPlaybackStarted: plan.audioPlaybackStarted,
+        rawAudioStored: plan.rawAudioStored,
+        liveNapoleonContacted: plan.liveNapoleonContacted,
+        approvalCaptured: plan.approvalCaptured,
+        memoryWritePerformed: plan.memoryWritePerformed,
+        agentDispatchPerformed: plan.agentDispatchPerformed,
+        externalSendPerformed: plan.externalSendPerformed,
+      },
+    },
+    null,
+    2,
+  );
 }
