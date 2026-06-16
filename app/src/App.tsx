@@ -407,6 +407,7 @@ export function App() {
     draftReady: Boolean(taxonomyReviewDraft),
     rehearsalMode,
   });
+  const latestInteractionTraceId = findLatestInteractionTraceId(browserStorage());
 
   function refreshCapabilityLedgerStatus() {
     setCapabilitySignalCount(capabilityLedger.listRecent().length);
@@ -2201,6 +2202,10 @@ export function App() {
           <strong>Last event</strong>
           <span>Last event: {telemetryBufferLastEvent}</span>
         </div>
+        <div>
+          <strong>Latest interaction trace</strong>
+          <span>Latest trace: {latestInteractionTraceId ?? "unavailable"}</span>
+        </div>
         <label>
           Telemetry buffer retention
           <select
@@ -2221,7 +2226,7 @@ export function App() {
         <button className="secondary" onClick={exportLocalTelemetryBuffer}>
           Export telemetry buffer
         </button>
-        <button className="secondary" onClick={exportLatestInteractionTrace}>
+        <button className="secondary" disabled={!latestInteractionTraceId} onClick={exportLatestInteractionTrace}>
           Export latest trace
         </button>
         <button className="secondary" onClick={clearLocalTelemetryBuffer}>

@@ -808,6 +808,7 @@ Acceptance criteria:
 - Turning local telemetry off suppresses ordinary event buffering.
 - Privacy audit events, including camera, microphone, and privacy setting changes, remain buffered even when ordinary telemetry is off.
 - Text Concierge shows local buffer count and last event status.
+- Text Concierge shows whether a latest real interaction trace is available and disables latest-trace export when the buffer only contains non-interaction metadata.
 - Text Concierge lets the user choose a latest-event retention limit of 25, 50, 100, or 200 events and prunes existing buffered metadata when reduced.
 - Text Concierge can export redacted local JSON metadata from the buffer.
 - Text Concierge can export the latest interaction trace as local sanitized metadata with trace, conversation, turn, profile, channel, governance, and event fields while excluding raw prompts, response text, endpoints, bearer tokens, request bodies, and response bodies.

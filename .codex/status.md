@@ -215,6 +215,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added Text Concierge local telemetry buffer controls for count/last-event status, redacted local JSON export, and browser-local clear without external sends or Napoleon approval semantics.
 - Added local interaction trace export from the browser-local telemetry buffer, preserving sanitized trace, conversation, turn, profile, channel, governance, and event metadata while redacting raw prompts, responses, endpoints, tokens, request bodies, and response bodies.
 - Tightened latest interaction trace selection so local proof/export telemetry references the real turn trace instead of becoming the exported interaction trace.
+- Added latest real interaction trace availability to the local telemetry buffer UI and disabled latest-trace export when only non-interaction metadata is buffered.
 - Added a local telemetry buffer retention selector for latest 25, 50, 100, or 200 events, with immediate browser-local pruning when the limit is reduced.
 - Added generated OpenAPI response-required metadata to the bridge operation registry and made live text responses fail closed when Napoleon omits required top-level response fields.
 - Local avatar work now includes a metadata-only VRM model reference loader and Avatar Model panel that validates the local model reference without starting rendering, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.

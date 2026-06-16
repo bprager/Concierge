@@ -1810,6 +1810,42 @@ test("renders local telemetry buffer controls with redacted export and local cle
   }
 });
 
+test("disables latest trace export when no real interaction trace is buffered", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    localStorage.setItem(
+      "concierge_telemetry_buffer_v1",
+      JSON.stringify({
+        schemaVersion: "concierge.telemetry-buffer.v1",
+        maxEvents: 200,
+        events: [
+          {
+            ts: "2026-06-15T00:00:00.000Z",
+            event: "settings_changed",
+            attributes: {
+              traceId: "trace_settings_only",
+            },
+          },
+        ],
+      }),
+    );
+
+    const view = render(<App />);
+    const buffer = within(view.getByLabelText("Local telemetry buffer"));
+
+    assert.ok(buffer.getByText("Latest trace: unavailable"));
+    assert.equal(buffer.getByRole("button", { name: "Export latest trace" }).hasAttribute("disabled"), true);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders local telemetry buffer retention control and prunes stored metadata", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, within }, { App }] = await Promise.all([
