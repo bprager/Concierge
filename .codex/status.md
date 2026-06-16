@@ -222,6 +222,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Sanitized Napoleon response proof export and comparison now preserve returned selected-agent selection reasons as local proof metadata without raw prompt or response text.
 - Napoleon response proof export telemetry now reports selected-agent and selection-reason counts without emitting returned selection-reason text.
 - Sanitized Napoleon response proof export and telemetry now include explicit handled-by provenance and attribution-boundary fields derived only from returned target capability or selected-agent metadata.
+- Last successful Napoleon proof rendering now shows the attribution boundary as a visible detail row, matching the sanitized proof export boundary that returned provenance is not local authority.
 - The Napoleon delegation panel now also displays a returned target capability ID when selected-agent delegation is not returned, while keeping selected agents marked as not returned.
 - Resolved the license documentation drift by replacing the obsolete license-choice TODO with third-party asset license review guidance.
 - Refreshed stale startup report authentication gaps to reflect the current OpenAPI bearer scheme, generated header-only token registry, and remaining live credential-validation dependency.

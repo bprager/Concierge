@@ -105,6 +105,13 @@ test("successful Napoleon response presentation includes returned delegation and
         detail.label === "Blocked effects" && detail.value.includes("memory_write"),
     ),
   );
+  assert.ok(
+    state.proof?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Attribution boundary" &&
+        detail.value === "Returned bridge provenance only; not local authority.",
+    ),
+  );
 });
 
 test("successful Napoleon response proof includes returned target capability without delegation", () => {
