@@ -558,6 +558,7 @@ export function App() {
       rawVideoStored: false,
       approvalCaptured: false,
       memoryWritePerformed: false,
+      agentDispatchPerformed: false,
       externalSendPerformed: false,
     });
     refreshTelemetryBufferStatus();
@@ -3338,6 +3339,10 @@ export function App() {
         <div>
           <strong>Napoleon contact</strong>
           <span>Live Napoleon contacted: no</span>
+        </div>
+        <div>
+          <strong>Agent dispatch</strong>
+          <span>Agent dispatch: {avatarPrivacyDashboard.agentDispatchPerformed ? "yes" : "no"}</span>
         </div>
         <div>
           <strong>Authority boundary</strong>

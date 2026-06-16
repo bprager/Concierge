@@ -28,6 +28,7 @@ test("summarizes avatar privacy controls without granting capture storage or aff
   assert.equal(dashboard.liveNapoleonContacted, false);
   assert.equal(dashboard.memoryWritePerformed, false);
   assert.equal(dashboard.approvalCaptured, false);
+  assert.equal(dashboard.agentDispatchPerformed, false);
   assert.equal(dashboard.externalSendPerformed, false);
   assert.deepEqual(dashboard.blockedEffects, [
     "camera_capture",

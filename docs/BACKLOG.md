@@ -678,7 +678,7 @@ Acceptance criteria:
 - Camera, microphone, avatar affect, and raw media storage default off.
 - Avatar affect and raw media storage preferences persist locally and emit `privacy_setting_changed`.
 - Changing dashboard preferences does not request camera or microphone permission, start capture, store raw audio/video, run live affect models, infer emotion or attention, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
-- The dashboard shows false capture, storage, affect-model, emotion-fact, Napoleon-contact, approval, memory, and external-send fields plus blocked effects.
+- The dashboard shows false capture, storage, affect-model, emotion-fact, Napoleon-contact, approval, memory, agent-dispatch, and external-send fields plus blocked effects.
 - Child protected mode keeps camera, microphone, affect, raw media storage, and animation features under guardian-review-required state even if local preferences are on, and it must not capture guardian approval.
 
 Privacy and safety impact:

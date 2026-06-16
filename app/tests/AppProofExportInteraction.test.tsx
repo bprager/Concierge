@@ -2617,10 +2617,12 @@ test("renders avatar privacy dashboard without starting capture storage or affec
     assert.ok(settingsEvents.every((payload) => payload.attributes.rawAudioStored === false));
     assert.ok(settingsEvents.every((payload) => payload.attributes.rawVideoStored === false));
     assert.ok(settingsEvents.every((payload) => payload.attributes.approvalCaptured === false));
+    assert.ok(settingsEvents.every((payload) => payload.attributes.agentDispatchPerformed === false));
     assert.ok(settingsEvents.every((payload) => payload.attributes.externalSendPerformed === false));
     assert.ok(dashboard.getByText("Affect control: enabled"));
     assert.ok(dashboard.getByText("Raw media storage: enabled"));
     assert.ok(dashboard.getByText("Live affect model started: no"));
+    assert.ok(dashboard.getByText("Agent dispatch: no"));
     assert.ok(dashboard.getByText("Blocked effects: camera_capture, microphone_capture, raw_video_storage, raw_audio_storage, live_affect_model, emotion_fact_claim, attention_inference, avatar_animation, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
   } finally {
     console.info = originalInfo;

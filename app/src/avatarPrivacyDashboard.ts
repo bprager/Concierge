@@ -34,6 +34,7 @@ export interface AvatarPrivacyDashboardState {
   memoryWritePerformed: false;
   approvalCaptured: false;
   guardianApprovalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -85,6 +86,7 @@ export function buildAvatarPrivacyDashboard(input: AvatarPrivacyDashboardInput):
     memoryWritePerformed: false,
     approvalCaptured: false,
     guardianApprovalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     blockedEffects,
   };

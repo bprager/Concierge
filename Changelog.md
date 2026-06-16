@@ -63,6 +63,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Tightened local avatar face/head-pose metadata and UI so agent dispatch is explicitly reported as not performed while estimating local sample pose.
 - Tightened local avatar affect-fusion metadata and UI so agent dispatch is explicitly reported as not performed while deriving uncertainty labels.
 - Tightened local avatar model and renderer readiness metadata and UI so agent dispatch is explicitly reported as not performed while loading model references and preparing renderer preflight.
+- Tightened the avatar privacy dashboard metadata, telemetry, and UI so agent dispatch is explicitly reported as not performed while changing local avatar privacy preferences.
 - Added transcript-level source, fail-closed attribution boundary, and blocked-effect metadata for blocked Napoleon bridge attempts.
 - Added Napoleon delegation panel rendering for returned target capability IDs when selected-agent delegation is not returned.
 - Added last-success proof rendering and sanitized proof export for returned Napoleon target capability IDs when selected-agent delegation is not returned.
