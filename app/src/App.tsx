@@ -861,6 +861,7 @@ export function App() {
       liveNapoleonContacted: result.liveNapoleonContacted,
       memoryWritePerformed: result.memoryWritePerformed,
       approvalCaptured: result.approvalCaptured,
+      agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });
@@ -2564,6 +2565,10 @@ export function App() {
             <div>
               <strong>Napoleon contact</strong>
               <span>Napoleon contact: no</span>
+            </div>
+            <div>
+              <strong>Agent dispatch</strong>
+              <span>Agent dispatch: {bargeInRehearsalResult.agentDispatchPerformed ? "yes" : "no"}</span>
             </div>
             <div>
               <strong>Blocked effects</strong>

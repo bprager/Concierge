@@ -12,6 +12,7 @@ export interface LocalBargeInRehearsalResult {
   liveNapoleonContacted: false;
   memoryWritePerformed: false;
   approvalCaptured: false;
+  agentDispatchPerformed: false;
   externalSendPerformed: false;
   blockedEffects: string[];
 }
@@ -31,6 +32,7 @@ export function rehearseLocalBargeInSample(): LocalBargeInRehearsalResult {
     liveNapoleonContacted: false,
     memoryWritePerformed: false,
     approvalCaptured: false,
+    agentDispatchPerformed: false,
     externalSendPerformed: false,
     blockedEffects: [
       "audio_playback",

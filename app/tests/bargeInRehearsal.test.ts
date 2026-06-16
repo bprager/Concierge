@@ -16,6 +16,7 @@ test("rehearses local barge-in without playback capture or Napoleon contact", ()
   assert.equal(result.liveNapoleonContacted, false);
   assert.equal(result.memoryWritePerformed, false);
   assert.equal(result.approvalCaptured, false);
+  assert.equal(result.agentDispatchPerformed, false);
   assert.equal(result.externalSendPerformed, false);
   assert.deepEqual(result.blockedEffects, [
     "audio_playback",

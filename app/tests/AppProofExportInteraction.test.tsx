@@ -2925,6 +2925,7 @@ test("runs local barge-in rehearsal without contacting Napoleon or starting medi
     assert.ok(rehearsal.getByText("Interrupted output: local-sample-voice at 480 ms"));
     assert.ok(rehearsal.getByText("Next turn prepared: yes"));
     assert.ok(rehearsal.getByText("Napoleon contact: no"));
+    assert.ok(rehearsal.getByText("Agent dispatch: no"));
     assert.ok(rehearsal.getByText("Blocked effects: audio_playback, microphone_capture, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, external_send, agent_dispatch"));
   } finally {
     cleanup();
