@@ -419,7 +419,7 @@ Acceptance criteria:
 - The built-in local voice shaping sample must emit `bridge_provided_provenance=false` and must not prefix the spoken summary with "Napoleon says"; bridge provenance may be true only when a real bridge-derived input supplies it.
 - Running the preparation does not start audio playback, request microphone permission, start microphone capture, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `voice_response_shaped` includes local-preparation marker, shortened state, original and spoken character counts, bridge-provenance marker, capture/playback/storage false, live-Napoleon-contact false, and explicit false side-effect flags.
-- The voice response shaping panel visibly reports `Napoleon contact: no`.
+- The voice response shaping panel visibly reports `Napoleon contact: no` before and after local preparation runs.
 - All blocked effects are visible in the UI.
 - Child protected mode must not treat shaped speech text as guardian approval, recording permission, external speech permission, or Napoleon approval.
 
@@ -636,6 +636,7 @@ Acceptance criteria:
 - Text Concierge exposes a local avatar face/head-pose panel.
 - The panel estimates face-present, head yaw, head pitch, head roll, and confidence from deterministic local sample metadata.
 - The panel shows whether guardian review is required plus camera, face-pose, affect, and attention policy metadata.
+- The panel visibly reports `Live Napoleon contacted: no` before and after local metadata preparation runs.
 - Preparing face/head-pose metadata does not request camera permission, start camera capture, store raw video, run live face detection, infer affect, infer attention, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `camera_state_estimated` includes local-metadata marker, profile mode, child-protected marker, guardian-review-required marker, camera policy, face-pose policy, affect policy, attention policy, face-present state, head yaw, head pitch, head roll, confidence, false capture/storage/live-face-detection/affect/attention/animation/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
 - Child protected face/head-pose preparation shows guardian-review wording and must not treat metadata preparation as guardian approval, camera permission, attention inference, affect inference, animation permission, or Napoleon approval.
@@ -659,6 +660,7 @@ Acceptance criteria:
 - The panel combines deterministic local sample metadata from head-pose shift, voice pause, and text clarification signals.
 - Output uses uncertainty labels such as possible confusion, possible frustration, or low confidence / no signal rather than emotional facts.
 - The panel shows whether guardian review is required plus camera, microphone, storage, affect, and emotion-fact policy metadata.
+- The panel visibly reports `Live Napoleon contacted: no` before and after local metadata preparation runs.
 - Preparing affect-fusion metadata does not request camera or microphone permission, start capture, store raw audio/video, run live face detection, start a live affect model, infer attention, start avatar animation, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `affect_signal_fused` includes local-metadata marker, profile mode, child-protected marker, guardian-review-required marker, camera policy, microphone policy, storage policy, affect policy, emotion-fact policy, uncertainty label, display label, confidence, input signals, false emotion-fact/capture/storage/live-model/attention/animation/live-Napoleon-contact flags, guardian-approval-captured false, and blocked effects.
 - Child protected affect fusion shows guardian-review wording and must not treat metadata preparation as guardian approval, camera permission, microphone permission, emotion inference, attention inference, animation permission, or Napoleon approval.

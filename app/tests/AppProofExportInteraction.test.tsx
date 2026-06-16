@@ -3208,6 +3208,7 @@ test("shapes a local voice response preview without contacting Napoleon or start
     const shaping = within(view.getByLabelText("Voice response shaping"));
     assert.ok(shaping.getByText("Voice response not shaped"));
     assert.ok(shaping.getByText("Audio playback state: stopped"));
+    assert.ok(shaping.getByText("Napoleon contact: no"));
 
     await user.click(view.getByRole("button", { name: "Shape sample response for voice" }));
 
@@ -3866,6 +3867,7 @@ test("estimates avatar face and head pose metadata without camera capture or aff
     const avatarFacePose = within(view.getByLabelText("Avatar face pose"));
     assert.ok(avatarFacePose.getByText("Face pose not estimated"));
     assert.ok(avatarFacePose.getByText("Camera capture started: no"));
+    assert.ok(avatarFacePose.getByText("Live Napoleon contacted: no"));
 
     await user.click(view.getByRole("button", { name: "Estimate local face pose" }));
 
@@ -3953,6 +3955,7 @@ test("fuses local affect metadata as uncertainty without emotion facts or media 
     const avatarAffectFusion = within(view.getByLabelText("Avatar affect fusion"));
     assert.ok(avatarAffectFusion.getByText("Affect signal not fused"));
     assert.ok(avatarAffectFusion.getByText("Emotion claimed as fact: no"));
+    assert.ok(avatarAffectFusion.getByText("Live Napoleon contacted: no"));
 
     await user.click(view.getByRole("button", { name: "Fuse local affect signal" }));
 

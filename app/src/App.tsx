@@ -2624,6 +2624,10 @@ export function App() {
           <strong>Playback state</strong>
           <span>Audio playback state: stopped</span>
         </div>
+        <div>
+          <strong>Napoleon contact</strong>
+          <span>Napoleon contact: no</span>
+        </div>
         {voiceResponseShapeResult ? (
           <>
             <div>
@@ -2649,10 +2653,6 @@ export function App() {
             <div>
               <strong>Playback</strong>
               <span>Audio playback started: no</span>
-            </div>
-            <div>
-              <strong>Napoleon contact</strong>
-              <span>Napoleon contact: {voiceResponseShapeResult.liveNapoleonContacted ? "yes" : "no"}</span>
             </div>
             <div>
               <strong>Agent dispatch</strong>
@@ -2974,6 +2974,10 @@ export function App() {
           <strong>Camera capture</strong>
           <span>Camera capture started: no</span>
         </div>
+        <div>
+          <strong>Napoleon contact</strong>
+          <span>Live Napoleon contacted: no</span>
+        </div>
         {avatarFacePoseResult ? (
           <>
             <div>
@@ -3037,10 +3041,6 @@ export function App() {
               <span>Attention inferred: no</span>
             </div>
             <div>
-              <strong>Napoleon contact</strong>
-              <span>Live Napoleon contacted: no</span>
-            </div>
-            <div>
               <strong>Agent dispatch</strong>
               <span>Agent dispatch: {avatarFacePoseResult.agentDispatchPerformed ? "yes" : "no"}</span>
             </div>
@@ -3075,6 +3075,10 @@ export function App() {
         <div>
           <strong>Emotion fact</strong>
           <span>Emotion claimed as fact: no</span>
+        </div>
+        <div>
+          <strong>Napoleon contact</strong>
+          <span>Live Napoleon contacted: no</span>
         </div>
         {avatarAffectFusionResult ? (
           <>
@@ -3149,10 +3153,6 @@ export function App() {
             <div>
               <strong>Attention</strong>
               <span>Attention inferred: no</span>
-            </div>
-            <div>
-              <strong>Napoleon contact</strong>
-              <span>Live Napoleon contacted: no</span>
             </div>
             <div>
               <strong>Agent dispatch</strong>

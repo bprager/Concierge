@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added always-visible no-Napoleon-contact rows to local voice shaping, avatar face-pose, and avatar affect-fusion panels before samples run.
 - Added a visible no-Napoleon-contact row to the local voice response shaping panel.
 - Added visible no-live-Napoleon-contact rows to the local avatar state and expression panels.
 - Added evaluator coverage for the real Napoleon runtime promotion boundary so local harness or simulation evidence cannot satisfy real-runtime readiness.
