@@ -62,6 +62,14 @@ The validation summary and captured bridge evidence record the runtime validatio
 If the descriptor identifies the local harness but the run is labeled as `real_runtime`, validation fails closed before sending the text turn.
 Standalone bridge evidence capture also accepts `NAPOLEON_BRIDGE_ENDPOINT` as either a base URL or known Concierge bridge operation URL; evaluator-only HTTP mode still uses `NAPOLEON_EVAL_ENDPOINT`.
 
+To compare Concierge's generated bridge paths with a Napoleon integration OpenAPI snapshot:
+
+```bash
+NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napoleon-contract-alignment
+```
+
+This is a local alignment report only. It does not contact Napoleon or grant runtime authority.
+
 The lower-level evaluator-only command is still available:
 
 ```bash
@@ -76,6 +84,7 @@ Review the core documents:
 - [Evaluator](docs/EVALUATOR.md)
 - [Observability](docs/OBSERVABILITY.md)
 - [Rehearsal Mode](docs/REHEARSAL_MODE.md)
+- [Napoleon contract alignment](docs/NAPOLEON_CONTRACT_ALIGNMENT.md)
 - [Interaction stance policy](docs/INTERACTION_STANCE_POLICY.md)
 - [Self-evolution](docs/SELF_EVOLUTION.md)
 - [Evaluation efficiency and CoS improvements](docs/reports/EVALUATION_EFFICIENCY_AND_COS_IMPROVEMENTS.md)

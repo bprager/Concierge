@@ -1,4 +1,4 @@
-.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare generate-bridge-operations eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
+.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment generate-bridge-operations eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
 
 check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare schema-check app-test app-smoke app-build tauri-check
 
@@ -28,6 +28,9 @@ bridge-evidence-capture:
 
 bridge-evidence-compare:
 	PYTHONPATH=evaluator uv run --with PyYAML python scripts/bridge_evidence_compare.py examples/sample_bridge_contract_evidence.json
+
+napoleon-contract-alignment:
+	uv run --with PyYAML python scripts/napoleon_contract_alignment.py --napoleon-openapi $$NAPOLEON_CONTRACT_OPENAPI
 
 generate-bridge-operations:
 	uv run --with PyYAML python scripts/generate_bridge_operations.py

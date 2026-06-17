@@ -228,6 +228,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Chief of Staff steering drafts now attach schema-shaped metadata-only learning signals to evolution proposal drafts and emit local learning-signal telemetry without raw content, local application, memory writes, approval capture, agent dispatch, or external sends.
 - The Chief of Staff steering draft panel now visibly summarizes attached learning-signal count, type, source, raw-text retention state, and proposal-only state before governed handoff.
 - Local Concierge contracts now include first-pass mirrors of Napoleon's CoS package for text turns, OpenAPI-tested canonical operation paths, request-kind and bearer-security validation, governed governance and memory proposal review handoffs, required live response trace/audit provenance, live text side-effect claim rejection, response authority provenance evaluator coverage, child protected bridge response semantics coverage, governed review response semantics coverage, profile-scope drift evaluator coverage, live-runtime artifact semantics evaluator coverage, governed request/response artifact validation, and live/local descriptor checksum/signature state. Remaining mismatches include live runtime validation against a real endpoint.
+- Added `make napoleon-contract-alignment` and `scripts/napoleon_contract_alignment.py` to compare Concierge's local bridge OpenAPI paths with a supplied Napoleon Concierge integration OpenAPI snapshot as non-authorizing local evidence; the current `mimir` snapshot exposes `/cos/descriptor`, `/cos/text-turn`, and related review/discovery paths while Concierge still exposes `/v1/concierge/...`, so live bridge path alignment remains an explicit integration gap.
 - Local voice work now includes deterministic barge-in rehearsal state and a rendered Text Concierge panel that shows planned sample speech interruption, explicit no-agent-dispatch state, and blocked effects without playback, capture, raw audio storage, Napoleon contact, approval capture, memory writes, agent dispatch, or external sends.
 - Local voice work now includes voice response shaping that shortens long bridge-provenance text for future speech while removing unproven Napoleon recommendation and delegated-agent finding claims when provenance is absent, explicitly reports no Napoleon contact before and after local preparation plus no agent dispatch, and the built-in local sample now emits no bridge provenance or "Napoleon says" prefix unless a real bridge-derived input supplies it.
 - Voice response shaping now reports shortened child-protected bridge speech from the spoken body before adding provenance and guardian-review wording, so safety wording cannot hide that returned text was shortened.
@@ -288,11 +289,11 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Next 3 To 5 Priorities
 
-1. Run `make live-runtime-validation` against a real Napoleon runtime endpoint once available.
-2. Validate governance review, memory proposal, steering, and taxonomy handoffs against a real Napoleon runtime once the descriptor exposes live transport URLs and credentials.
-3. Add live Napoleon runtime validation and fixture-backed contract comparison once a runtime transport exists.
-4. Add governed application flow for reviewed taxonomy changes once Napoleon exposes an explicit approval/application endpoint.
-5. Add broader live-runtime artifact comparison once a real Napoleon endpoint is available.
+1. Align Concierge's generated bridge registry and response adapter with the current Napoleon Concierge integration snapshot, or get Napoleon to expose the `/v1/concierge/...` contract, before treating live text sends as runtime-compatible.
+2. Run `make napoleon-contract-alignment` against each new Napoleon integration OpenAPI snapshot before changing bridge paths.
+3. Run `make live-runtime-validation` against a real Napoleon runtime endpoint once the bridge paths and response shapes are aligned.
+4. Validate governance review, memory proposal, steering, and taxonomy handoffs against a real Napoleon runtime once the descriptor exposes live transport URLs and credentials.
+5. Add governed application flow for reviewed taxonomy changes once Napoleon exposes an explicit approval/application endpoint.
 
 ## Useful Validation Commands
 
@@ -300,6 +301,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Evaluator default report path: `make eval`
 - Local bridge harness smoke: `make bridge-harness`
 - App local harness text smoke: `make app-smoke`
+- Napoleon contract path alignment: `NAPOLEON_CONTRACT_OPENAPI=<path> make napoleon-contract-alignment`
 - Napoleon live runtime validation: `NAPOLEON_BRIDGE_ENDPOINT=<base-url> make live-runtime-validation`
 - Napoleon HTTP evaluator only: `NAPOLEON_EVAL_ENDPOINT=<url> make eval-http`
 - Frontend build, if dependencies are installed: `cd app && npm run build`
