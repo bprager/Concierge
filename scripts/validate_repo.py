@@ -117,12 +117,16 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:window\.|document\.)?location\.(?:href|assign|replace)\b"),
     re.compile(r"\b(?:navigator|window\.navigator)\.share\s*\("),
     re.compile(rf"\b(?:{EXTERNAL_TARGET_ATTRIBUTES})\s*=\s*['\"](?:https?://|mailto:)"),
+    re.compile(r"<(?:object|embed)\b[^>\n]*\bdata\s*=\s*['\"]https?://", re.IGNORECASE),
     re.compile(r"\bping\s*=\s*['\"]https?://"),
     re.compile(rf"\[\s*['\"](?:{EXTERNAL_TARGET_ATTRIBUTES})['\"]\s*\]\s*=\s*['\"](?:https?://|mailto:)"),
+    re.compile(r"\b\w*(?:object|embed)\w*\s*\[\s*['\"]data['\"]\s*\]\s*=\s*['\"]https?://", re.IGNORECASE),
     re.compile(r"\[\s*['\"]ping['\"]\s*\]\s*=\s*['\"]https?://"),
+    re.compile(r"\b\w*(?:object|embed)\w*\.data\s*=\s*['\"]https?://", re.IGNORECASE),
     re.compile(
         rf"\bsetAttribute\s*\(\s*['\"](?:{EXTERNAL_TARGET_ATTRIBUTES})['\"]\s*,\s*['\"](?:https?://|mailto:)"
     ),
+    re.compile(r"\b\w*(?:object|embed)\w*\.setAttribute\s*\(\s*['\"]data['\"]\s*,\s*['\"]https?://", re.IGNORECASE),
     re.compile(r"\bsetAttribute\s*\(\s*['\"]ping['\"]\s*,\s*['\"]https?://"),
     re.compile(r"\bhttp-?equiv\s*=\s*['\"]refresh['\"][^>\n]*\bcontent\s*=\s*['\"][^'\"]*url\s*=\s*https?://", re.IGNORECASE),
     re.compile(r"\bcontent\s*=\s*['\"][^'\"]*url\s*=\s*https?://[^>\n]*\bhttp-?equiv\s*=\s*['\"]refresh['\"]", re.IGNORECASE),
