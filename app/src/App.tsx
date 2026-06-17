@@ -1397,6 +1397,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const review = describeGovernanceReview(preview.governanceReview);
     const memoryReviewState = preview.memoryProposal;
     const memoryReview = memoryReviewState.status === "none" ? null : describeMemoryProposalReview(memoryReviewState);
+    const activeProfileMode = mapProfileToNapoleonMode(profile);
 
     emitEvent("rehearsal_preview_created", {
       traceId,
@@ -1414,6 +1415,19 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         profile,
         outcome: preview.governanceReview.outcome,
         decisionId: preview.governanceReview.decisionId,
+      });
+      refreshCapabilityLedgerStatus();
+    }
+    if (!preview.governanceReview.canSendAdvisory) {
+      emitEvent("governance_review_blocked", {
+        traceId,
+        conversationId,
+        turnId,
+        profile,
+        profileMode: activeProfileMode,
+        outcome: preview.governanceReview.outcome,
+        decisionId: preview.governanceReview.decisionId,
+        blockedEffects: preview.governanceReview.blockedEffects,
       });
       refreshCapabilityLedgerStatus();
     }
@@ -1561,8 +1575,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         conversationId,
         turnId: rehearsal.turnId,
         profile,
+        profileMode: mapProfileToNapoleonMode(profile),
         outcome: rehearsal.preview.governanceReview.outcome,
         decisionId: rehearsal.preview.governanceReview.decisionId,
+        blockedEffects: rehearsal.preview.governanceReview.blockedEffects,
       });
       refreshCapabilityLedgerStatus();
       setLastReview(rehearsal.review);
@@ -1587,8 +1603,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         traceId,
         conversationId,
         turnId,
+        profile,
+        profileMode: activeProfileMode,
         outcome: reviewState.outcome,
         decisionId: reviewState.decisionId,
+        blockedEffects: reviewState.blockedEffects,
       });
       refreshCapabilityLedgerStatus();
       setLastReview(reviewView);

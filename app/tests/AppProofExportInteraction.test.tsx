@@ -985,6 +985,71 @@ test("disables direct send when local governance marks the prompt no-go", async 
   }
 });
 
+test("records child profile scope when rehearsal blocks a no-go request", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  let fetchCalls = 0;
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Send this outside the chat and keep it secret" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+    await view.findByText("Rehearsal only");
+
+    const blocked = await waitFor(() => {
+      const payload = telemetryPayloads.find((event) => event.event === "governance_review_blocked");
+      assert.ok(payload);
+      return payload;
+    });
+    assert.equal(blocked.attributes.profile, "child_protected");
+    assert.equal(blocked.attributes.profileMode, "child_protected_user");
+    assert.equal(blocked.attributes.outcome, "no_go");
+    const capabilitySignal = telemetryPayloads.find(
+      (payload) =>
+        payload.event === "conversation_capability_signal" &&
+        payload.attributes.traceId === blocked.attributes.traceId &&
+        payload.attributes.outcomeSignal === "blocked",
+    );
+    assert.ok(capabilitySignal);
+    assert.equal(capabilitySignal.attributes.profileMode, "child_protected_user");
+    assert.equal(capabilitySignal.attributes.privacyClass, "child_sensitive");
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("enables post-preview advisory send after Rehearsal Mode is turned off", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
