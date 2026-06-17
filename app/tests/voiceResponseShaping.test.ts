@@ -96,3 +96,22 @@ test("applies stricter child protected voice shaping constraints", () => {
   assert.equal(child.audioPlaybackStarted, false);
   assert.equal(child.microphoneCaptureStarted, false);
 });
+
+test("reports child protected bridge speech as shortened before adding review wording", () => {
+  const result = shapeVoiceResponseForSpeech({
+    responseText:
+      "Napoleon recommends preparing the bridge rollout plan for guardian review before any remote action proceeds.",
+    speakerLabel: "Napoleon",
+    bridgeProvidedProvenance: true,
+    maxSpokenChars: 150,
+    profileMode: "child_protected",
+  });
+
+  assert.equal(result.profileMode, "child_protected");
+  assert.equal(result.requiresGuardianReviewReminder, true);
+  assert.equal(result.spokenText.includes("guardian review"), true);
+  assert.equal(result.spokenText.includes("remote action proceeds"), false);
+  assert.equal(result.wasShortened, true);
+  assert.equal(result.audioPlaybackStarted, false);
+  assert.equal(result.liveNapoleonContacted, false);
+});

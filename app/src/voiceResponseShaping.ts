@@ -89,12 +89,13 @@ export function shapeVoiceResponseForSpeech(input: VoiceResponseShapeInput): Voi
   const bodyMax = Math.max(1, maxSpokenCharsApplied - prefix.length - guardianReminder.length);
   const spokenBody = firstSpokenSentences(trimmedText, bodyMax);
   const spokenText = `${prefix}${spokenBody}${guardianReminder}`;
+  const wasShortened = spokenBody.length < trimmedText.length;
 
   return {
     localPreparationOnly: true,
     profileMode,
     childProtected,
-    wasShortened: spokenText.length < trimmedText.length,
+    wasShortened,
     originalChars: trimmedText.length,
     spokenChars: spokenText.length,
     maxSpokenCharsApplied,
