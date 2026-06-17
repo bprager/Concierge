@@ -577,12 +577,18 @@ test("steering handoff fails closed when Napoleon returns no-go", async () => {
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("governance_no_go") &&
+      (error as { decisionId?: string }).decisionId === "decision_steering_no_go" &&
+      (error as { auditId?: string }).auditId === "audit_steering_no_go" &&
+      (error as { governanceOutcome?: string }).governanceOutcome === "no_go" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
         JSON.stringify(["memory_write", "agent_dispatch", "external_send", "approval_capture"]),
   );
 
   assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
+  assert.equal(events.at(-1)?.attributes.decisionId, "decision_steering_no_go");
+  assert.equal(events.at(-1)?.attributes.auditId, "audit_steering_no_go");
+  assert.equal(events.at(-1)?.attributes.governanceOutcome, "no_go");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
     "memory_write",
     "agent_dispatch",

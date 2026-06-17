@@ -303,6 +303,7 @@ function failSteeringClosed(
   status?: number,
   blockedEffects: string[] = [],
   descriptorFailureReason?: DescriptorFailClosedReason,
+  governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
 ): never {
   const attributes: Record<string, unknown> = {
     traceId,
@@ -313,10 +314,16 @@ function failSteeringClosed(
     blockedEffects,
   };
   if (descriptorFailureReason) attributes.descriptorFailureReason = descriptorFailureReason;
+  if (governanceReferences?.decisionId) attributes.decisionId = governanceReferences.decisionId;
+  if (governanceReferences?.auditId) attributes.auditId = governanceReferences.auditId;
+  if (governanceReferences?.governanceOutcome) attributes.governanceOutcome = governanceReferences.governanceOutcome;
   emitSteeringEvent(dependencies, "capability_recommendation_send_failed", attributes);
   throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, {
     profileMode,
     descriptorFailureReason,
+    decisionId: governanceReferences?.decisionId,
+    auditId: governanceReferences?.auditId,
+    governanceOutcome: governanceReferences?.governanceOutcome,
   });
 }
 
@@ -472,6 +479,12 @@ export async function submitChiefOfStaffSteeringDraft(
       profileMode,
       response.status,
       payload.governanceDecision.blocked_effects,
+      undefined,
+      {
+        decisionId: payload.governanceDecision.decision_id,
+        auditId: payload.auditEnvelope.audit_id,
+        governanceOutcome: payload.governanceDecision.outcome,
+      },
     );
   }
 

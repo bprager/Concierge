@@ -302,12 +302,18 @@ test("memory proposal submission fails closed when Napoleon denies review", asyn
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("governance_denied") &&
+      (error as { decisionId?: string }).decisionId === "decision_memory_denied" &&
+      (error as { auditId?: string }).auditId === "audit_memory_denied" &&
+      (error as { governanceOutcome?: string }).governanceOutcome === "deny" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
         JSON.stringify(["memory_write", "approval_capture", "external_send"]),
   );
 
   assert.equal(events.at(-1)?.event, "memory_proposal_send_failed");
+  assert.equal(events.at(-1)?.attributes.decisionId, "decision_memory_denied");
+  assert.equal(events.at(-1)?.attributes.auditId, "audit_memory_denied");
+  assert.equal(events.at(-1)?.attributes.governanceOutcome, "deny");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
     "memory_write",
     "approval_capture",

@@ -633,6 +633,7 @@ function failTaxonomyReviewClosed(
   status?: number,
   blockedEffects: string[] = TAXONOMY_REVIEW_BLOCKED_EFFECTS,
   descriptorFailureReason?: DescriptorFailClosedReason,
+  governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
 ): never {
   const attributes: Record<string, unknown> = {
     traceId: dependencies.traceId,
@@ -644,10 +645,16 @@ function failTaxonomyReviewClosed(
     blockedEffects,
   };
   if (descriptorFailureReason) attributes.descriptorFailureReason = descriptorFailureReason;
+  if (governanceReferences?.decisionId) attributes.decisionId = governanceReferences.decisionId;
+  if (governanceReferences?.auditId) attributes.auditId = governanceReferences.auditId;
+  if (governanceReferences?.governanceOutcome) attributes.governanceOutcome = governanceReferences.governanceOutcome;
   emitTaxonomyReviewEvent(dependencies, "capability_taxonomy_review_send_failed", attributes);
   throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, blockedEffects, {
     profileMode,
     descriptorFailureReason,
+    decisionId: governanceReferences?.decisionId,
+    auditId: governanceReferences?.auditId,
+    governanceOutcome: governanceReferences?.governanceOutcome,
   });
 }
 
@@ -815,6 +822,12 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
       profileMode,
       response.status,
       payload.governanceDecision.blocked_effects,
+      undefined,
+      {
+        decisionId: payload.governanceDecision.decision_id,
+        auditId: payload.auditEnvelope.audit_id,
+        governanceOutcome: payload.governanceDecision.outcome,
+      },
     );
   }
 

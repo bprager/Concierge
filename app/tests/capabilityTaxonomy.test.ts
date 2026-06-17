@@ -555,12 +555,18 @@ test("taxonomy review handoff fails closed when Napoleon returns no-go", async (
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("governance_no_go") &&
+      (error as { decisionId?: string }).decisionId === "decision_taxonomy_no_go" &&
+      (error as { auditId?: string }).auditId === "audit_taxonomy_no_go" &&
+      (error as { governanceOutcome?: string }).governanceOutcome === "no_go" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(blockedEffects),
   );
 
   assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
   assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.decisionId, "decision_taxonomy_no_go");
+  assert.equal(events.at(-1)?.attributes.auditId, "audit_taxonomy_no_go");
+  assert.equal(events.at(-1)?.attributes.governanceOutcome, "no_go");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, blockedEffects);
 });
 

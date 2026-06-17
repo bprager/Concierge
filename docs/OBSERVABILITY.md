@@ -89,8 +89,8 @@ Every user turn has:
 | evolution_proposal_created | evolution | proposal_id, risk_level |
 | conversation_capability_signal | capability_intelligence | observed_at, conversation_id, turn_id, profile_mode, channel, topic_label, intent_label, capability_label, capability_status, outcome_signal, confidence, architecture_area, privacy_class |
 | capability_recommendation_created | capability_intelligence | recommendation_id, capability_label, architecture_area, priority_score, score_components, risk_level, evidence_count, suggested_next_step |
-| capability_recommendation_send_failed | capability_intelligence | request_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects |
-| capability_taxonomy_review_send_failed | capability_intelligence | conversation_id, request_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects |
+| capability_recommendation_send_failed | capability_intelligence | request_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome |
+| capability_taxonomy_review_send_failed | capability_intelligence | conversation_id, request_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome |
 | capability_intelligence_answered | capability_intelligence | conversation_id, turn_id, profile_mode, kind, evidence_count |
 | capability_ledger_persisted | capability_intelligence | conversation_id, turn_id, evidence_count, privacy_class, storage |
 | capability_ledger_cleared | capability_intelligence | conversation_id, evidence_count, storage, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
@@ -101,7 +101,7 @@ Every user turn has:
 | capability_taxonomy_reset | capability_intelligence | conversation_id, storage, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | memory_proposal_send_started | governance_ux | conversation_id, request_id, proposal_id, profile_mode |
 | memory_proposal_send_completed | governance_ux | conversation_id, request_id, proposal_id, decision_id, audit_id, outcome, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
-| memory_proposal_send_failed | governance_ux | conversation_id, request_id, proposal_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects |
+| memory_proposal_send_failed | governance_ux | conversation_id, request_id, proposal_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome |
 | governance_review_send_started | governance_ux | conversation_id, request_id, decision_id, audit_id, profile_mode |
 | governance_review_send_completed | governance_ux | conversation_id, request_id, decision_id, audit_id, outcome, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed, applied_locally |
 | governance_review_send_failed | governance_ux | conversation_id, request_id, decision_id, audit_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects |
