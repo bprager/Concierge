@@ -222,6 +222,38 @@ def count_bridge_records(path: Path) -> int:
     return 0
 
 
+def bridge_evidence_operation_summary(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {
+            "lastEvidenceStatus": None,
+            "lastOperationId": None,
+            "lastRequestKind": None,
+            "lastTransport": None,
+            "lastTargetPath": None,
+            "lastRuntimeValidationSource": None,
+        }
+    payload = load_json(path)
+    records = payload if isinstance(payload, list) else payload.get("records", []) if isinstance(payload, dict) else []
+    if not records or not isinstance(records[-1], dict):
+        return {
+            "lastEvidenceStatus": None,
+            "lastOperationId": None,
+            "lastRequestKind": None,
+            "lastTransport": None,
+            "lastTargetPath": None,
+            "lastRuntimeValidationSource": None,
+        }
+    record = records[-1]
+    return {
+        "lastEvidenceStatus": str(record.get("status") or ""),
+        "lastOperationId": str(record.get("operationId") or ""),
+        "lastRequestKind": str(record.get("requestKind") or ""),
+        "lastTransport": str(record.get("transport") or ""),
+        "lastTargetPath": str(record.get("targetPath") or ""),
+        "lastRuntimeValidationSource": str(record.get("runtimeValidationSource") or ""),
+    }
+
+
 def eval_counts(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {
@@ -260,6 +292,7 @@ def write_summary(
             "status": "passed" if bridge_exit_code == 0 else "failed",
             "record_count": count_bridge_records(evidence_path),
             "path": str(evidence_path),
+            **bridge_evidence_operation_summary(evidence_path),
         },
         "httpEvaluator": {
             "status": "passed" if eval_exit_code == 0 else "failed" if eval_exit_code is not None else "not_run",

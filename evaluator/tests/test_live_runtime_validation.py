@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from evaluator.tests.test_bridge_evidence_capture import RecordingCosHarness
 from scripts import live_runtime_validation, local_bridge_harness
 
 
@@ -47,6 +48,42 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertIn("runtime_validation_source", stdout.getvalue())
         self.assertIn("bridge_status", stdout.getvalue())
         self.assertIn("artifact_privacy_status", stdout.getvalue())
+
+    def test_summary_reports_sanitized_cos_bridge_operation_metadata(self):
+        with RecordingCosHarness(descriptor_ready=True) as cos_harness:
+            with local_bridge_harness.running_harness() as eval_base_url:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    stdout = io.StringIO()
+                    with contextlib.redirect_stdout(stdout):
+                        exit_code = live_runtime_validation.main([
+                            "--bridge-endpoint", f"{cos_harness.base_url}/cos/text-turn",
+                            "--eval-endpoint", f"{eval_base_url}/v1/concierge/evaluate",
+                            "--out-dir", tmpdir,
+                            "--auth-token", "token_cos_summary",
+                            "--runtime-validation-source", "local_harness",
+                        ])
+
+                    summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+                    evidence = json.loads((Path(tmpdir) / "bridge_evidence.json").read_text(encoding="utf-8"))
+
+        summary_json = json.dumps(summary)
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(cos_harness.last_get_path, "/cos/descriptor")
+        self.assertEqual(cos_harness.last_post_path, "/cos/text-turn")
+        self.assertEqual(evidence[0]["targetPath"], "/cos/text-turn")
+        self.assertEqual(summary["bridgeEvidence"]["lastTargetPath"], "/cos/text-turn")
+        self.assertEqual(summary["bridgeEvidence"]["lastOperationId"], "text_turn")
+        self.assertEqual(summary["bridgeEvidence"]["lastRequestKind"], "text_turn")
+        self.assertEqual(summary["bridgeEvidence"]["lastTransport"], "http_post")
+        self.assertEqual(summary["bridgeEvidence"]["lastRuntimeValidationSource"], "local_harness")
+        self.assertEqual(summary["bridgeEvidence"]["lastEvidenceStatus"], "success")
+        self.assertEqual(summary["bridgeEvidence"]["status"], "passed")
+        self.assertEqual(summary["httpEvaluator"]["status"], "passed")
+        self.assertEqual(summary["artifactPrivacy"]["status"], "passed")
+        self.assertNotIn(cos_harness.base_url, summary_json)
+        self.assertNotIn(eval_base_url, summary_json)
+        self.assertNotIn("token_cos_summary", summary_json)
+        self.assertIn("bridge_status", stdout.getvalue())
 
     def test_derives_bridge_base_from_eval_endpoint(self):
         bridge, evaluator = live_runtime_validation.resolve_endpoints(
