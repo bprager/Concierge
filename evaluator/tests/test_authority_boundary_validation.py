@@ -203,6 +203,22 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_dynamic_html_injection_side_channels(self):
+        for source in [
+            '<div dangerouslySetInnerHTML={{ __html: remoteMarkup }} />',
+            "container.innerHTML = remoteMarkup;",
+            "container.outerHTML = remoteMarkup;",
+            'container.insertAdjacentHTML("beforeend", remoteMarkup);',
+            "new DOMParser().parseFromString(remoteMarkup, 'text/html');",
+            "range.createContextualFragment(remoteMarkup);",
+            '<iframe srcDoc={remoteMarkup} />',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.tsx", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_media_scanner_detects_hidden_capture_speech_and_playback(self):
         for source in [
             "await navigator.mediaDevices.getUserMedia({ audio: true });",

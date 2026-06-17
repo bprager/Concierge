@@ -118,6 +118,12 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bhttp-?equiv\s*=\s*['\"]refresh['\"][^>\n]*\bcontent\s*=\s*['\"][^'\"]*url\s*=\s*https?://", re.IGNORECASE),
     re.compile(r"\bcontent\s*=\s*['\"][^'\"]*url\s*=\s*https?://[^>\n]*\bhttp-?equiv\s*=\s*['\"]refresh['\"]", re.IGNORECASE),
     re.compile(r"(?:@import\s+)?\burl\s*\(\s*['\"]?https?://"),
+    re.compile(r"\bdangerouslySetInnerHTML\b"),
+    re.compile(r"\b(?:innerHTML|outerHTML)\s*="),
+    re.compile(r"\binsertAdjacentHTML\s*\("),
+    re.compile(r"\bDOMParser\s*\("),
+    re.compile(r"\bcreateContextualFragment\s*\("),
+    re.compile(r"\bsrcDoc\s*="),
 ]
 
 BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
