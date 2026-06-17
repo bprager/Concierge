@@ -411,6 +411,13 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
 
 export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSendPreflightView {
   const descriptor = input.descriptorConnection;
+  const blockedEffects = descriptor.descriptorStatus?.blockedEffects ?? [
+    "runtime_authority",
+    "agent_dispatch",
+    "memory_write",
+    "approval_capture",
+    "external_send",
+  ];
   const evidenceCapture = input.evidenceCaptureState;
   const evidenceComparison = input.evidenceComparisonState;
   const runtimeValidationSource = input.runtimeValidationSource;
@@ -471,6 +478,11 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
         : input.governanceOutcome
           ? `Local governance blocks sending this request: ${input.governanceOutcome}.`
           : "Local governance blocks sending this request.",
+    },
+    {
+      label: "Blocked effects",
+      status: "ready",
+      detail: blockedEffects.join(", "),
     },
     {
       label: "Rehearsal Mode",

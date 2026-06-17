@@ -552,6 +552,32 @@ test("describes local no-go governance in live send preflight", () => {
   );
 });
 
+test("describes blocked effects in live send preflight", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+  });
+
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Blocked effects" &&
+        item.status === "ready" &&
+        item.detail.includes("memory_write") &&
+        item.detail.includes("agent_dispatch") &&
+        item.detail.includes("external_send"),
+    ),
+  );
+});
+
 test("describes live send preflight as ready only for governed bridge attempt", () => {
   const view = describeLiveSendPreflight({
     descriptorConnection: buildDescriptorConnectionState({
