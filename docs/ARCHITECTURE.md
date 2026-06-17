@@ -165,6 +165,8 @@ Live bridge calls fail closed when the Napoleon endpoint is missing, the Chief o
 
 The same repository validation treats lowercase and SVG target spellings such as `srcset`, `formaction`, and `xlink:href` as external browser targets, including bracket assignment and `setAttribute` forms, so alternate markup spellings cannot bypass the governed bridge boundary.
 
+Image preload source-set targets such as `imageSrcSet` and `imagesrcset` are treated as external resource targets in static markup, property assignment, bracket assignment, and `setAttribute` forms, so responsive preload candidates cannot fetch images outside the governed bridge.
+
 Object and embed `data` targets are treated as external load targets only in object/embed element contexts, including static markup, property assignment, bracket assignment, and `setAttribute` forms, so plugin-style content cannot create another outside channel while ordinary application data fields remain usable.
 
 Direct external assignment to `location`, `window.location`, or `document.location` is treated as browser navigation outside the governed bridge, matching the existing checks for `location.href`, `location.assign`, and `location.replace`.

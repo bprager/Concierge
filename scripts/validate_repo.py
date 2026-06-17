@@ -99,7 +99,9 @@ FORBIDDEN_TAURI_NATIVE_PLUGINS = {
 VISIBLE_PERMISSION_HANDLER_SOURCE_ALLOWLIST = {
     "app/src/App.tsx",
 }
-EXTERNAL_TARGET_ATTRIBUTES = r"href|xlink:href|xlinkHref|action|formAction|formaction|src|srcSet|srcset|poster"
+EXTERNAL_TARGET_ATTRIBUTES = (
+    r"href|xlink:href|xlinkHref|action|formAction|formaction|src|srcSet|srcset|imageSrcSet|imagesrcset|poster"
+)
 
 UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bfetch\s*\("),

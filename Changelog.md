@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so external `imageSrcSet` and `imagesrcset` preload targets cannot load image candidates outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so direct external `location`, `window.location`, and `document.location` assignments cannot navigate outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so external `object` and `embed` `data` targets cannot load outside content outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so lowercase and SVG external target variants such as `srcset`, `formaction`, and `xlink:href` cannot create outside side channels outside the governed Napoleon bridge modules.
