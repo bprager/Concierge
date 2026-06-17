@@ -109,6 +109,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bsendBeacon\s*\("),
     re.compile(r"\b(?:Worker|SharedWorker)\s*\("),
     re.compile(r"\bimportScripts\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator)\.serviceWorker\.register\s*\("),
 ]
 
 BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
