@@ -370,6 +370,20 @@ function recommendationMatchesProvenance(
   );
 }
 
+function recommendationProvenanceMatchesEnvelopes(
+  recommendationProvenance: NapoleonRecommendationProvenance,
+  decision: GovernanceDecision,
+  traceEnvelope: TraceEnvelope,
+  auditEnvelope: AuditEnvelope,
+): boolean {
+  return (
+    recommendationProvenance.traceId === traceEnvelope.trace_id &&
+    recommendationProvenance.traceId === decision.trace_id &&
+    recommendationProvenance.auditId === auditEnvelope.audit_id &&
+    recommendationProvenance.auditId === decision.audit_id
+  );
+}
+
 function hasUnprovenNapoleonRecommendationAttribution(
   text: string | undefined,
   recommendationProvenance: NapoleonRecommendationProvenance | undefined,
@@ -783,11 +797,18 @@ export async function sendToNapoleon(
       ? undefined
       : isNapoleonRecommendationProvenance(payload.recommendationProvenance)
         ? payload.recommendationProvenance
-        : undefined;
+        : null;
+  if (
+    recommendationProvenance === null ||
+    (recommendationProvenance &&
+      !recommendationProvenanceMatchesEnvelopes(recommendationProvenance, decision, traceEnvelope, auditEnvelope))
+  ) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
   if (
     hasUnprovenNapoleonRecommendationAttribution(
       payload.text,
-      recommendationProvenance,
+      recommendationProvenance ?? undefined,
       decision,
       traceEnvelope,
       auditEnvelope,
@@ -805,7 +826,7 @@ export async function sendToNapoleon(
     requiresReview: requiresReview(decision),
     targetAgent: payload.targetAgent,
     delegation,
-    recommendationProvenance,
+    recommendationProvenance: recommendationProvenance ?? undefined,
     stance: payload.stance,
   };
 

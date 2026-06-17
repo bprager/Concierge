@@ -38,6 +38,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added governed response adaptation for explicit Napoleon advisory harness `/cos/text-turn` endpoints, preserving blocked effects, delegation provenance, and sanitized evidence without treating the harness as runtime authority.
 - Added Text Concierge readiness comparison support for sanitized explicit `/cos/text-turn` advisory evidence so the UI promotion/evidence panel aligns with the script-side bridge evidence comparator.
 - Added sanitized bridge operation metadata to combined live-runtime validation summaries, including explicit `/cos/text-turn` target-path evidence without endpoint hosts, tokens, raw prompts, request bodies, or response bodies.
+- Hardened live text bridge recommendation provenance so mismatched returned recommendation metadata fails closed before Concierge can display it as Napoleon proof.
 - Added active profile-mode visibility to fail-closed Napoleon bridge errors, transcript messages, and `bridge_request_failed` telemetry.
 - Added a visible attribution-boundary row to the last successful Napoleon proof panel so returned recommendations and selected-agent findings remain clearly tied to bridge provenance only.
 - Added attribution-boundary tracking to sanitized Napoleon response proof comparisons.

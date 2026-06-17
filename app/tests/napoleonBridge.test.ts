@@ -891,6 +891,71 @@ test("live bridge fails closed when response text invents Napoleon recommendatio
   );
 });
 
+test("live bridge fails closed when returned recommendation provenance mismatches response envelopes", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_mismatched_recommendation_provenance",
+          conversationId: "conv_mismatched_recommendation_provenance",
+          turnId: "turn_mismatched_recommendation_provenance",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Prepared the bridge rollout plan for review.",
+              governanceDecision: {
+                decision_id: "decision_mismatched_recommendation_provenance",
+                request_id: "cos_turn_mismatched_recommendation_provenance",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["external_send"],
+                trace_id: "trace_mismatched_recommendation_provenance",
+                audit_id: "audit_mismatched_recommendation_provenance",
+              },
+              traceEnvelope: {
+                trace_id: "trace_mismatched_recommendation_provenance",
+                parent_trace_id: "conv_mismatched_recommendation_provenance",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_mismatched_recommendation_provenance",
+                decision_id: "decision_mismatched_recommendation_provenance",
+                timestamp: "2026-06-12T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_mismatched_recommendation_provenance",
+                trace_id: "trace_mismatched_recommendation_provenance",
+                decision_id: "decision_mismatched_recommendation_provenance",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_mismatched_recommendation_provenance"],
+              },
+              recommendationProvenance: {
+                summary: "preparing the bridge rollout plan for review",
+                traceId: "trace_other_response",
+                auditId: "audit_other_response",
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
 test("live bridge fails closed when response profile mode differs from active user profile", async () => {
   await assert.rejects(
     () =>

@@ -280,6 +280,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added `runtimeValidation.source=local_harness` labeling to standalone evaluator HTTP local harness reports so transport-only evidence remains distinct from real Napoleon runtime validation.
 - Sanitized live-runtime evaluator reports so retained validation artifacts remove evaluator response excerpts before review.
 - Added live-runtime artifact privacy audit in the validation summary, with validation failure if retained bridge/evaluator artifacts contain forbidden raw fields or sensitive runtime endpoint/token values.
+- Hardened live text bridge recommendation provenance: returned Napoleon recommendation metadata now has to match the response trace and audit envelopes before Concierge can keep or display it as proof.
 - Added a bounded browser-local telemetry buffer for emitted local telemetry, with sensitive attribute redaction, ordinary telemetry-off suppression, and continued local buffering for camera, microphone, and privacy-setting audit events.
 - Added Text Concierge local telemetry buffer controls for count/last-event status, redacted local JSON export, and browser-local clear without external sends or Napoleon approval semantics.
 - Added local interaction trace export from the browser-local telemetry buffer, preserving sanitized trace, conversation, turn, profile, channel, governance, and event metadata while redacting raw prompts, responses, endpoints, tokens, request bodies, and response bodies.
