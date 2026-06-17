@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so browser `Worker`, `SharedWorker`, and `importScripts` entry points cannot hide service calls outside the governed Napoleon bridge modules.
 - Added an allowed-effects row to the composer live-send preflight so `prepare_advisory_response` is visible separately from blocked effects before a governed bridge attempt.
 - Added visible row statuses to the rendered composer live-send preflight so `ready`, `warning`, and `blocked` states are readable text instead of only styling.
 - Added a blocked-effects row to the composer live-send preflight so memory writes, approval capture, agent dispatch, and external sends remain visible before a governed bridge attempt.

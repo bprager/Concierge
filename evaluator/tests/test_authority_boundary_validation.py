@@ -124,6 +124,18 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_worker_bypass_entry_points(self):
+        for source in [
+            'const worker = new Worker(new URL("./remoteServiceWorker.ts", import.meta.url));',
+            'const worker = new SharedWorker("/service-worker.js");',
+            'importScripts("https://api.example.test/hidden-service.js");',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_media_scanner_detects_hidden_capture_speech_and_playback(self):
         for source in [
             "await navigator.mediaDevices.getUserMedia({ audio: true });",

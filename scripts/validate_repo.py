@@ -107,6 +107,8 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bWebSocket\s*\("),
     re.compile(r"\bEventSource\s*\("),
     re.compile(r"\bsendBeacon\s*\("),
+    re.compile(r"\b(?:Worker|SharedWorker)\s*\("),
+    re.compile(r"\bimportScripts\s*\("),
 ]
 
 BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
