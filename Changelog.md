@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added governance outcome preservation to remote-denied governance review handoff failed telemetry.
 - Added returned decision, audit, and governance reference preservation to remote-denied memory proposal, Chief of Staff steering, and taxonomy review handoff errors and failed telemetry.
 - Added returned decision, audit, and governance reference visibility to governed handoff failure messages.
 - Added descriptor-specific fail-closed detail to blocked live bridge transcript metadata for descriptor preflight failures.

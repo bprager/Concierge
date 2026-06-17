@@ -187,12 +187,15 @@ function failGovernanceReviewClosed(
   descriptorFailureReason?: DescriptorFailClosedReason,
 ): never {
   const profileMode = profile ? mapProfileToNapoleonMode(profile) : undefined;
+  const governanceOutcome =
+    reason === "governance_no_go" ? "no_go" : reason === "governance_denied" ? "deny" : undefined;
   const attributes: Record<string, unknown> = {
     traceId,
     conversationId: dependencies.conversationId,
     requestId,
     decisionId,
     auditId,
+    governanceOutcome,
     profile,
     profileMode,
     reason,
@@ -204,7 +207,7 @@ function failGovernanceReviewClosed(
   throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, {
     decisionId,
     auditId,
-    governanceOutcome: reason === "governance_no_go" ? "no_go" : reason === "governance_denied" ? "deny" : undefined,
+    governanceOutcome,
     descriptorFailureReason,
     profileMode,
   });

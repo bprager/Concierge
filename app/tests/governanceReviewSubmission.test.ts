@@ -270,6 +270,7 @@ test("governance review submission fails closed when Napoleon denies review", as
 
   assert.equal(events.at(-1)?.event, "governance_review_send_failed");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, ["approval_capture", "external_send"]);
+  assert.equal(events.at(-1)?.attributes.governanceOutcome, "deny");
 });
 
 test("governance review submission rejects response claims that capture approval or apply effects", async () => {
