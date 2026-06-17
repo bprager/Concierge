@@ -109,6 +109,8 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bsendBeacon\s*\("),
     re.compile(r"\b(?:Worker|SharedWorker)\s*\("),
     re.compile(r"\bimportScripts\s*\("),
+    re.compile(r"\bimport\s*\(\s*['\"](?:https?://|data:)"),
+    re.compile(r"\bimport\s+(?:[^;\n]*?\s+from\s+)?['\"](?:https?://|data:)"),
     re.compile(r"\b(?:navigator|window\.navigator)\.serviceWorker\.register\s*\("),
     re.compile(r"\bwindow\.open\s*\("),
     re.compile(r"\b(?:window\.|document\.)?location\.(?:href|assign|replace)\b"),
