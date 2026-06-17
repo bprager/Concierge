@@ -109,6 +109,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bXMLHttpRequest\b"),
     re.compile(r"\bWebSocket\s*\("),
     re.compile(r"\bEventSource\s*\("),
+    re.compile(r"\b(?:RTCPeerConnection|webkitRTCPeerConnection|WebTransport)\s*\("),
     re.compile(r"\bsendBeacon\s*\("),
     re.compile(r"\b(?:Worker|SharedWorker)\s*\("),
     re.compile(r"\bimportScripts\s*\("),

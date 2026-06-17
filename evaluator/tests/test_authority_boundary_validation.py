@@ -124,6 +124,18 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_peer_transport_side_channels(self):
+        for source in [
+            "const peer = new RTCPeerConnection({ iceServers: [] });",
+            "const peer = new webkitRTCPeerConnection({ iceServers: [] });",
+            'const transport = new WebTransport("https://api.example.test/session");',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_worker_bypass_entry_points(self):
         for source in [
             'const worker = new Worker(new URL("./remoteServiceWorker.ts", import.meta.url));',
