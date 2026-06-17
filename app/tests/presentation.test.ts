@@ -604,6 +604,35 @@ test("describes bridge failure transcript message with reason and blocked effect
   assert.ok(message.includes("prepare-only mode"));
 });
 
+test("describes descriptor-specific bridge failure reasons", () => {
+  const missingDescriptor = new NapoleonBridgeError(
+    "descriptor_mismatch",
+    "trace_missing_descriptor",
+    "request_missing_descriptor",
+    undefined,
+    ["external_send"],
+    {
+      descriptorFailureReason: "no_descriptor",
+    },
+  );
+  const checksumMismatch = new NapoleonBridgeError(
+    "descriptor_mismatch",
+    "trace_bad_descriptor",
+    "request_bad_descriptor",
+    undefined,
+    ["external_send"],
+    {
+      descriptorFailureReason: "descriptor_signature_or_checksum_mismatch",
+    },
+  );
+
+  const missingMessage = describeBridgeFailure(missingDescriptor);
+  const checksumTranscript = describeBridgeFailureTranscriptMessage(checksumMismatch);
+
+  assert.ok(missingMessage.includes("descriptor missing"));
+  assert.ok(checksumTranscript.includes("descriptor signature/checksum mismatch"));
+});
+
 test("describes governed handoff failure with blocked effects visible", () => {
   const error = new NapoleonBridgeError("governance_no_go", "trace_handoff", "request_handoff", 200, [
     "memory_write",

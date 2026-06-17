@@ -33,6 +33,7 @@ export interface BridgeContractEvidence {
   decisionId?: string;
   auditId?: string;
   governanceOutcome?: string;
+  descriptorFailureReason?: DescriptorFailClosedReason;
   descriptorStatus: string;
   profileMode: string;
   runtimeValidationSource?: "real_runtime" | "local_harness" | "local_simulation";
@@ -50,6 +51,7 @@ interface BridgeEvidenceContext {
   decisionId?: string;
   auditId?: string;
   governanceOutcome?: string;
+  descriptorFailureReason?: DescriptorFailClosedReason;
   descriptorStatus: string;
   profileMode: string;
   blockedEffects?: string[];
@@ -87,6 +89,7 @@ export interface NapoleonBridgeFailureMetadata {
   decisionId?: string;
   auditId?: string;
   governanceOutcome?: string;
+  descriptorFailureReason?: DescriptorFailClosedReason;
   profileMode?: string;
 }
 
@@ -99,6 +102,7 @@ export class NapoleonBridgeError extends Error {
   decisionId?: string;
   auditId?: string;
   governanceOutcome?: string;
+  descriptorFailureReason?: DescriptorFailClosedReason;
   profileMode?: string;
 
   constructor(
@@ -119,6 +123,7 @@ export class NapoleonBridgeError extends Error {
     this.decisionId = metadata.decisionId;
     this.auditId = metadata.auditId;
     this.governanceOutcome = metadata.governanceOutcome;
+    this.descriptorFailureReason = metadata.descriptorFailureReason;
     this.profileMode = metadata.profileMode;
   }
 }
@@ -158,6 +163,7 @@ function buildFailClosedEvidence(
   if (evidenceContext.decisionId) record.decisionId = evidenceContext.decisionId;
   if (evidenceContext.auditId) record.auditId = evidenceContext.auditId;
   if (evidenceContext.governanceOutcome) record.governanceOutcome = evidenceContext.governanceOutcome;
+  if (evidenceContext.descriptorFailureReason) record.descriptorFailureReason = evidenceContext.descriptorFailureReason;
   if (evidenceContext.blockedEffects) record.blockedEffects = evidenceContext.blockedEffects;
   return record;
 }
@@ -389,11 +395,15 @@ function failClosed(
   if (evidenceContext?.decisionId) failureAttributes.decisionId = evidenceContext.decisionId;
   if (evidenceContext?.auditId) failureAttributes.auditId = evidenceContext.auditId;
   if (evidenceContext?.governanceOutcome) failureAttributes.governanceOutcome = evidenceContext.governanceOutcome;
+  if (evidenceContext?.descriptorFailureReason) {
+    failureAttributes.descriptorFailureReason = evidenceContext.descriptorFailureReason;
+  }
   emitBridgeEvent(dependencies, "bridge_request_failed", failureAttributes);
   throw new NapoleonBridgeError(reason, traceId, requestId, status, evidenceContext?.blockedEffects ?? [], {
     decisionId: evidenceContext?.decisionId,
     auditId: evidenceContext?.auditId,
     governanceOutcome: evidenceContext?.governanceOutcome,
+    descriptorFailureReason: evidenceContext?.descriptorFailureReason,
     profileMode: evidenceContext?.profileMode,
   });
 }
@@ -431,6 +441,7 @@ export async function sendToNapoleon(
     traceId: request.traceId,
     requestId: contract.chiefOfStaffRequest.request_id,
     descriptorStatus: descriptorConnection.state,
+    descriptorFailureReason: descriptorConnection.failClosedReason,
     profileMode: contract.profileMode,
     blockedEffects: contract.blockedEffects,
   };

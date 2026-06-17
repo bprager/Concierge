@@ -68,6 +68,8 @@ test("live bridge fails closed when no Napoleon endpoint is configured", async (
 
 test("live bridge fails closed before fetch when descriptor discovery has not completed", async () => {
   let fetchCalled = false;
+  const events: TelemetryPayload[] = [];
+  const evidence: unknown[] = [];
 
   await assert.rejects(
     () =>
@@ -82,7 +84,8 @@ test("live bridge fails closed before fetch when descriptor discovery has not co
         },
         {
           getEndpoint: () => "https://napoleon.example/concierge",
-          emit: () => undefined,
+          emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
           fetch: async () => {
             fetchCalled = true;
             return { ok: true, json: async () => ({}) };
@@ -93,11 +96,14 @@ test("live bridge fails closed before fetch when descriptor discovery has not co
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "no_descriptor" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(textTurnBlockedEffects),
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "no_descriptor");
+  assert.equal((evidence[0] as { descriptorFailureReason?: string }).descriptorFailureReason, "no_descriptor");
 });
 
 test("live bridge preserves descriptor discovery auth failure before fetch", async () => {
@@ -1013,6 +1019,8 @@ test("live bridge fails closed when delegation provenance disagrees with trace o
 
 test("live bridge fails closed before fetch when discovered descriptor checksum mismatches", async () => {
   let fetchCalled = false;
+  const events: TelemetryPayload[] = [];
+  const evidence: unknown[] = [];
 
   await assert.rejects(
     () =>
@@ -1033,7 +1041,8 @@ test("live bridge fails closed before fetch when discovered descriptor checksum 
             expectedChecksum: "sha256:expected",
             actualChecksum: "sha256:actual",
           },
-          emit: () => undefined,
+          emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
           fetch: async () => {
             fetchCalled = true;
             return { ok: true, json: async () => ({}) };
@@ -1043,8 +1052,15 @@ test("live bridge fails closed before fetch when discovered descriptor checksum 
     (error: unknown) =>
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
-      error.message.includes("descriptor_mismatch"),
+      error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason ===
+        "descriptor_signature_or_checksum_mismatch",
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "descriptor_signature_or_checksum_mismatch");
+  assert.equal(
+    (evidence[0] as { descriptorFailureReason?: string }).descriptorFailureReason,
+    "descriptor_signature_or_checksum_mismatch",
+  );
 });

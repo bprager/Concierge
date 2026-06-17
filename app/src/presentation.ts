@@ -1,5 +1,6 @@
 import type {
   DescriptorConnectionState,
+  DescriptorFailClosedReason,
   GovernanceOutcome,
   GovernanceReviewState,
   MemoryProposalReviewState,
@@ -13,6 +14,22 @@ export interface GovernanceDecisionViewInput {
   decisionId: string;
   auditId: string;
   blockedEffects: string[];
+}
+
+function describeDescriptorFailureReason(reason: DescriptorFailClosedReason | undefined): string {
+  if (reason === "no_endpoint") return "no endpoint";
+  if (reason === "no_descriptor") return "descriptor missing";
+  if (reason === "descriptor_invalid") return "descriptor invalid";
+  if (reason === "descriptor_signature_or_checksum_mismatch") return "descriptor signature/checksum mismatch";
+  if (reason === "auth_failure") return "descriptor auth failure";
+  if (reason === "bridge_timeout") return "descriptor timeout";
+  if (reason === "http_failure") return "descriptor HTTP failure";
+  return "";
+}
+
+function describeBridgeDescriptorDetail(error: NapoleonBridgeError): string {
+  const detail = describeDescriptorFailureReason(error.descriptorFailureReason);
+  return detail ? ` Descriptor: ${detail}.` : "";
 }
 
 export interface GovernanceDecisionView {
@@ -172,7 +189,8 @@ export function describeBridgeFailure(error: unknown): string {
   const audit = error.auditId ? `, audit ${error.auditId}` : "";
   const governance = error.governanceOutcome ? `, governance ${error.governanceOutcome}` : "";
   const profile = error.profileMode ? `, profile ${error.profileMode}` : "";
-  return `Live Napoleon bridge blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}${profile}${decision}${audit}${governance}.${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
+  const descriptor = describeBridgeDescriptorDetail(error);
+  return `Live Napoleon bridge blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}${profile}${decision}${audit}${governance}.${descriptor}${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
 }
 
 export function describeBridgeFailureTranscriptMessage(error: unknown): string {
@@ -187,7 +205,8 @@ export function describeBridgeFailureTranscriptMessage(error: unknown): string {
   const audit = error.auditId ? ` Audit ${error.auditId}.` : "";
   const governance = error.governanceOutcome ? ` Governance ${error.governanceOutcome}.` : "";
   const profile = error.profileMode ? ` Profile ${error.profileMode}.` : "";
-  return `Napoleon bridge blocked: ${error.reason}.${profile}${decision}${audit}${governance}${blockedEffects} Concierge did not execute anything and remains in prepare-only mode.`;
+  const descriptor = describeBridgeDescriptorDetail(error);
+  return `Napoleon bridge blocked: ${error.reason}.${profile}${decision}${audit}${governance}${descriptor}${blockedEffects} Concierge did not execute anything and remains in prepare-only mode.`;
 }
 
 export function describeGovernedHandoffFailure(error: unknown, label: string, primaryEffect: string): string {
@@ -199,7 +218,8 @@ export function describeGovernedHandoffFailure(error: unknown, label: string, pr
     ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
     : "";
   const profile = error.profileMode ? `, profile ${error.profileMode}` : "";
-  return `${label} blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}${profile}.${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
+  const descriptor = describeBridgeDescriptorDetail(error);
+  return `${label} blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}${profile}.${descriptor}${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
 }
 
 function describeEvidenceState(state: LiveBridgeEvidenceState | undefined): string {
