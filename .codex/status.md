@@ -115,6 +115,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added returned decision, audit, and governance references to remote-denied memory proposal, Chief of Staff steering, and taxonomy review handoff errors and failed telemetry.
 - Added returned decision, audit, and governance references to live text bridge fail-closed errors, telemetry, and visible failure messages when Napoleon supplies those references before blocking.
 - Hardened repository authority-boundary validation so Memgraph-prefixed client/API names are rejected case-insensitively as direct memory or graph access.
+- Added stale descriptor discovery as a fail-closed connection state so governed live sends block before request fetch when descriptor cache age exceeds its allowed window.
 - Added generated bridge operation registry output from the canonical OpenAPI bridge contract and repository validation that fails when the generated file is stale.
 - Aligned the generated bridge operation registry with canonical HTTP methods, including descriptor discovery as `GET` and governed handoffs as `POST`, with repository validation for method drift.
 - Added evaluator coverage for generated Napoleon bridge-client contract alignment, named generated operations only, no free-form bridge paths, NapoleonBearer security, required 200-response fields, route-display secrecy, and non-authorizing registry display.

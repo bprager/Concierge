@@ -145,6 +145,50 @@ test("live bridge preserves descriptor discovery auth failure before fetch", asy
   assert.equal(fetchCalled, false);
 });
 
+test("live bridge fails closed before fetch when descriptor discovery cache is stale", async () => {
+  let fetchCalled = false;
+  const events: TelemetryPayload[] = [];
+  const evidence: unknown[] = [];
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_descriptor_stale",
+          conversationId: "conv_descriptor_stale",
+          turnId: "turn_descriptor_stale",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: {
+            ...readyDescriptorConnection,
+            discoveredAt: "2026-06-16T10:00:00.000Z",
+            maxAgeSeconds: 300,
+            now: "2026-06-16T10:06:00.000Z",
+          },
+          emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
+          fetch: async () => {
+            fetchCalled = true;
+            return { ok: true, json: async () => ({}) };
+          },
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "descriptor_stale",
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "descriptor_stale");
+  assert.equal((evidence[0] as { descriptorFailureReason?: string }).descriptorFailureReason, "descriptor_stale");
+});
+
 test("live bridge request sends contract-first payload to configured endpoint", async () => {
   let posted: Record<string, unknown> | undefined;
   let headers: Record<string, string> | undefined;

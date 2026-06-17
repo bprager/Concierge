@@ -41,6 +41,7 @@ export type DescriptorFailClosedReason =
   | "no_descriptor"
   | "descriptor_invalid"
   | "descriptor_signature_or_checksum_mismatch"
+  | "descriptor_stale"
   | "auth_failure"
   | "bridge_timeout"
   | "http_failure";
@@ -52,6 +53,9 @@ export interface DescriptorConnectionInput {
   actualChecksum?: string;
   signatureValid?: boolean;
   failClosedReason?: DescriptorFailClosedReason;
+  discoveredAt?: string;
+  maxAgeSeconds?: number;
+  now?: string;
 }
 
 export interface DescriptorConnectionState {
@@ -287,6 +291,10 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
   const signatureState: DescriptorSignatureState =
     input.signatureValid === undefined ? "not_checked" : input.signatureValid ? "valid" : "invalid";
   const descriptorStatus = input.descriptor ? validateChiefOfStaffDescriptor(input.descriptor) : null;
+  const descriptorFresh =
+    input.discoveredAt === undefined || input.maxAgeSeconds === undefined
+      ? true
+      : Date.parse(input.now ?? new Date().toISOString()) - Date.parse(input.discoveredAt) <= input.maxAgeSeconds * 1000;
 
   if (!input.endpointConfigured) {
     return {
@@ -353,6 +361,18 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
       canAttemptLiveBridge: false,
       failClosedReason: "descriptor_signature_or_checksum_mismatch",
       message: "Napoleon descriptor signature or checksum did not match the expected value.",
+    };
+  }
+
+  if (!descriptorFresh) {
+    return {
+      state: "descriptor_mismatch",
+      descriptorStatus,
+      checksumState,
+      signatureState,
+      canAttemptLiveBridge: false,
+      failClosedReason: "descriptor_stale",
+      message: "Napoleon descriptor discovery is stale, so Concierge must rediscover it before any live bridge send.",
     };
   }
 

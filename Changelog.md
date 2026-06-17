@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added stale descriptor discovery as a fail-closed connection state so governed live sends block before request fetch when descriptor cache age exceeds its allowed window.
 - Hardened repository authority-boundary validation so Memgraph-prefixed client/API names are rejected case-insensitively as direct memory or graph access.
 - Added governance outcome preservation to remote-denied governance review handoff failed telemetry.
 - Added returned decision, audit, and governance reference preservation to remote-denied memory proposal, Chief of Staff steering, and taxonomy review handoff errors and failed telemetry.

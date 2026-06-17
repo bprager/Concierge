@@ -87,6 +87,7 @@ test("OpenAPI descriptor connection enums match runtime fail-closed states", () 
     "no_descriptor",
     "descriptor_invalid",
     "descriptor_signature_or_checksum_mismatch",
+    "descriptor_stale",
     "auth_failure",
     "bridge_timeout",
     "http_failure",

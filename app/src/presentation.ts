@@ -21,6 +21,7 @@ function describeDescriptorFailureReason(reason: DescriptorFailClosedReason | un
   if (reason === "no_descriptor") return "descriptor missing";
   if (reason === "descriptor_invalid") return "descriptor invalid";
   if (reason === "descriptor_signature_or_checksum_mismatch") return "descriptor signature/checksum mismatch";
+  if (reason === "descriptor_stale") return "descriptor stale";
   if (reason === "auth_failure") return "descriptor auth failure";
   if (reason === "bridge_timeout") return "descriptor timeout";
   if (reason === "http_failure") return "descriptor HTTP failure";

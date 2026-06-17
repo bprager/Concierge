@@ -16,6 +16,7 @@ type DescriptorFetch = (url: string, init?: { method?: string; headers?: Record<
 export interface DescriptorDiscoveryDependencies {
   getEndpoint?: () => string | null;
   getAuthToken?: () => string | null;
+  now?: () => string;
   fetch?: DescriptorFetch;
 }
 
@@ -51,6 +52,10 @@ function booleanValue(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
 
+function numberValue(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
 function stringArrayValue(value: unknown): string[] | undefined {
   return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : undefined;
 }
@@ -80,19 +85,22 @@ function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null {
   return null;
 }
 
-function buildInputFromPayload(endpointConfigured: boolean, payload: unknown): DescriptorConnectionInput {
+function buildInputFromPayload(endpointConfigured: boolean, payload: unknown, discoveredAt: string): DescriptorConnectionInput {
   if (!payload || typeof payload !== "object") {
     return { endpointConfigured, descriptor: null };
   }
   const record = payload as Record<string, unknown>;
   const checksum = record.checksum && typeof record.checksum === "object" ? record.checksum as Record<string, unknown> : {};
   const signature = record.signature && typeof record.signature === "object" ? record.signature as Record<string, unknown> : {};
+  const cache = record.cache && typeof record.cache === "object" ? record.cache as Record<string, unknown> : {};
   return {
     endpointConfigured,
     descriptor: parseDescriptor(record.descriptor ?? record),
     expectedChecksum: stringValue(record.expectedChecksum) ?? stringValue(checksum.expected),
     actualChecksum: stringValue(record.actualChecksum) ?? stringValue(checksum.actual),
     signatureValid: booleanValue(record.signatureValid) ?? booleanValue(signature.valid),
+    discoveredAt,
+    maxAgeSeconds: numberValue(record.maxAgeSeconds) ?? numberValue(cache.maxAgeSeconds) ?? 300,
   };
 }
 
@@ -136,6 +144,6 @@ export async function discoverNapoleonDescriptor(
     const input = failureInput(true, "http_failure");
     return { input, connection: buildDescriptorConnectionState(input), source: "live" };
   }
-  const input = buildInputFromPayload(true, payload);
+  const input = buildInputFromPayload(true, payload, dependencies.now?.() ?? new Date().toISOString());
   return { input, connection: buildDescriptorConnectionState(input), source: "live" };
 }

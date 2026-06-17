@@ -86,6 +86,24 @@ test("builds first-class descriptor discovery connection states", () => {
   assert.match(authFailure.message, /authentication/);
 });
 
+test("descriptor connection fails closed when discovery cache is stale", () => {
+  const stale = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:descriptor-ok",
+    actualChecksum: "sha256:descriptor-ok",
+    signatureValid: true,
+    discoveredAt: "2026-06-16T10:00:00.000Z",
+    maxAgeSeconds: 300,
+    now: "2026-06-16T10:06:00.000Z",
+  });
+
+  assert.equal(stale.state, "descriptor_mismatch");
+  assert.equal(stale.canAttemptLiveBridge, false);
+  assert.equal(stale.failClosedReason, "descriptor_stale");
+  assert.match(stale.message, /stale/);
+});
+
 test("builds a text turn contract with governance and observability identifiers", () => {
   const contract = buildTextTurnContract({
     message: "Draft a plan for a safe bridge update",
