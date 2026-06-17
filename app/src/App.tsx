@@ -3911,6 +3911,24 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               {steeringDraft.evolutionProposal.proposal_id}, risk {steeringDraft.evolutionProposal.risk_level},{" "}
               approval required: {steeringDraft.evolutionProposal.approval_required}
             </dd>
+            <dt>Learning signals</dt>
+            <dd>
+              {steeringDraft.evolutionProposal.learning_signals.length} metadata-only{" "}
+              {steeringDraft.evolutionProposal.learning_signals[0]?.signal_type ?? "none"} signal
+              {steeringDraft.evolutionProposal.learning_signals.length === 1 ? "" : "s"} from{" "}
+              {steeringDraft.evolutionProposal.learning_signals[0]?.source ?? "none"}; raw user text:{" "}
+              {steeringDraft.evolutionProposal.learning_signals.some(
+                (signal) => signal.privacy.raw_user_text_stored,
+              )
+                ? "yes"
+                : "no"}
+              ; proposal only:{" "}
+              {steeringDraft.evolutionProposal.learning_signals.every(
+                (signal) => signal.governance_boundary.proposal_only,
+              )
+                ? "yes"
+                : "no"}
+            </dd>
             <dt>Boundary</dt>
             <dd>
               proposal only; no approval captured; no memory write; no agent dispatch; no external send.
