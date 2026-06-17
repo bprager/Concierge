@@ -973,6 +973,9 @@ test("disables direct send when local governance marks the prompt no-go", async 
     const preflight = view.getByText("Live send preflight").closest(".send-preflight") as HTMLElement | null;
     assert.ok(preflight);
     assert.ok(within(preflight).getByText(/Local governance blocks sending this request: no_go/));
+    const allowedEffectsRow = within(preflight).getByText("Allowed effects").closest("div") as HTMLElement | null;
+    assert.ok(allowedEffectsRow);
+    assert.match(allowedEffectsRow.textContent ?? "", /blocked:\s*none/);
     const sendButton = view.getByRole("button", { name: "Send" }) as HTMLButtonElement;
     assert.equal(sendButton.disabled, true);
     assert.equal(requestedUrls.some((url) => url.endsWith("/v1/concierge/turn")), false);

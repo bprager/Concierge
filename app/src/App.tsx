@@ -4415,7 +4415,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             {liveSendPreflight.items.map((item) => (
               <div key={item.label} className={item.status}>
                 <dt>{item.label}</dt>
-                <dd>{item.detail}</dd>
+                <dd>
+                  <span>{item.status}</span>
+                  <span>: </span>
+                  <span>{item.detail}</span>
+                </dd>
               </div>
             ))}
           </dl>

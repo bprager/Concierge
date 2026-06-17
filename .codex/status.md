@@ -72,6 +72,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added blocked-effect visibility to the composer live-send preflight so memory writes, approval capture, agent dispatch, and external sends remain visible before governed bridge attempts.
 - Added allowed-effect visibility to the composer live-send preflight so `prepare_advisory_response` is visible separately from blocked effects before governed bridge attempts.
 - Tightened the allowed-effect preflight row so local `no_go` governance shows allowed effects as `none`.
+- Added readable row statuses to the rendered composer live-send preflight so blocked, warning, and ready states are visible as text.
 - Added in-session readiness tracking from captured `bridge_contract_evidence`, with local registry transport/path/request-kind and raw/secret field comparison before evidence is marked passed.
 - Added a sanitized local bridge readiness proof export with descriptor state, blocked effects, evidence status, last operation transport, last failure reason, and no raw prompts, endpoints, or secrets.
 - Added same-session local bridge readiness proof comparison that reports sanitized proof changes without exposing raw prompts, endpoints, tokens, request bodies, or response bodies.
