@@ -122,6 +122,9 @@ export interface LiveSendPreflightInput {
   inputReady: boolean;
   governanceCanSendAdvisory: boolean;
   rehearsalMode: boolean;
+  evidenceCaptureState?: LiveBridgeEvidenceState;
+  evidenceComparisonState?: LiveBridgeEvidenceState;
+  runtimeValidationSource?: LiveBridgeReadinessInput["runtimeValidationSource"];
 }
 
 export interface LiveSendPreflightItem {
@@ -407,6 +410,12 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
 
 export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSendPreflightView {
   const descriptor = input.descriptorConnection;
+  const evidenceCapture = input.evidenceCaptureState;
+  const evidenceComparison = input.evidenceComparisonState;
+  const runtimeValidationSource = input.runtimeValidationSource;
+  const evidenceCaptureReady = evidenceCapture === undefined || evidenceCapture === "passed";
+  const evidenceComparisonReady = evidenceComparison === undefined || evidenceComparison === "passed";
+  const realRuntimeReady = runtimeValidationSource === undefined || runtimeValidationSource === "real_runtime";
   const items: LiveSendPreflightItem[] = [
     {
       label: "Text ready",
@@ -462,6 +471,32 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
         : "Rehearsal Mode is off for direct governed send attempts.",
     },
   ];
+  if (evidenceCapture !== undefined) {
+    items.push({
+      label: "Evidence capture",
+      status: evidenceCaptureReady ? "ready" : "warning",
+      detail: describeEvidenceState(evidenceCapture),
+    });
+  }
+  if (evidenceComparison !== undefined) {
+    items.push({
+      label: "Evidence comparison",
+      status: evidenceComparisonReady ? "ready" : "warning",
+      detail: describeEvidenceState(evidenceComparison),
+    });
+  }
+  if (runtimeValidationSource !== undefined) {
+    items.push({
+      label: "Runtime validation",
+      status: realRuntimeReady ? "ready" : "warning",
+      detail: describeRuntimeValidationSource(runtimeValidationSource),
+    });
+    items.push({
+      label: "Promotion gate",
+      status: realRuntimeReady && evidenceCaptureReady && evidenceComparisonReady ? "ready" : "warning",
+      detail: describePromotionGate(runtimeValidationSource, !evidenceCaptureReady || !evidenceComparisonReady),
+    });
+  }
   const hasBlocked = items.some((item) => item.status === "blocked") || !descriptor.canAttemptLiveBridge;
   const hasWarning = items.some((item) => item.status === "warning");
   const canAttemptLiveSend = !hasBlocked && !input.rehearsalMode && input.inputReady && input.governanceCanSendAdvisory;

@@ -2207,6 +2207,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       ? buildGovernanceReviewState(currentContract.governanceDecision, profile).canSendAdvisory
       : true,
     rehearsalMode,
+    evidenceCaptureState: bridgeEvidenceReadiness.captureState,
+    evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
+    runtimeValidationSource,
   });
   const governedOperationSummaries = [
     describeBridgeOperationSummary("chief_of_staff_descriptor"),

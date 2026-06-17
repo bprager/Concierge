@@ -547,6 +547,37 @@ test("describes rehearsal mode as not directly live-send attemptable", () => {
   );
 });
 
+test("describes runtime evidence and promotion gate in live send preflight", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+    evidenceCaptureState: "not_run",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "local_harness",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canAttemptLiveSend, true);
+  assert.ok(view.items.some((item) => item.label === "Evidence capture" && item.status === "warning"));
+  assert.ok(view.items.some((item) => item.label === "Evidence comparison" && item.status === "ready"));
+  assert.ok(view.items.some((item) => item.label === "Runtime validation" && item.status === "warning"));
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Promotion gate" &&
+        item.detail.includes("blocked until real Napoleon runtime evidence passes"),
+    ),
+  );
+});
+
 test("describes governed handoff readiness with endpoint and descriptor blockers", () => {
   const blocked = describeGovernedHandoffReadiness({
     label: "Chief of Staff taxonomy review",
