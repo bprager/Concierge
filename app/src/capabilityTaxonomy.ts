@@ -7,6 +7,7 @@ import {
   type AuditEnvelope,
   type ChiefOfStaffRequest,
   type DescriptorConnectionInput,
+  type DescriptorFailClosedReason,
   type GovernanceDecision,
   type GovernanceEvaluationRequest,
   type LocalProfile,
@@ -631,8 +632,9 @@ function failTaxonomyReviewClosed(
   profileMode?: string,
   status?: number,
   blockedEffects: string[] = TAXONOMY_REVIEW_BLOCKED_EFFECTS,
+  descriptorFailureReason?: DescriptorFailClosedReason,
 ): never {
-  emitTaxonomyReviewEvent(dependencies, "capability_taxonomy_review_send_failed", {
+  const attributes: Record<string, unknown> = {
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,
     requestId,
@@ -640,8 +642,13 @@ function failTaxonomyReviewClosed(
     reason,
     status,
     blockedEffects,
+  };
+  if (descriptorFailureReason) attributes.descriptorFailureReason = descriptorFailureReason;
+  emitTaxonomyReviewEvent(dependencies, "capability_taxonomy_review_send_failed", attributes);
+  throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, blockedEffects, {
+    profileMode,
+    descriptorFailureReason,
   });
-  throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, blockedEffects, { profileMode });
 }
 
 export async function submitChiefOfStaffTaxonomyReviewDraft(
@@ -698,6 +705,9 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
       descriptorFailClosedReasonToBridgeFailure(descriptorConnection.failClosedReason),
       requestId,
       profileMode,
+      undefined,
+      TAXONOMY_REVIEW_BLOCKED_EFFECTS,
+      descriptorConnection.failClosedReason,
     );
   }
 

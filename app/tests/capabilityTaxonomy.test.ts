@@ -443,6 +443,48 @@ test("taxonomy review handoff fails closed while Rehearsal Mode is active", asyn
   ]);
 });
 
+test("taxonomy review handoff preserves descriptor checksum failure before fetch", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_deployment_1", topic: "deployment", capability: "release_summary" });
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_taxonomy_review",
+    traceId: "trace_taxonomy_review",
+  });
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffTaxonomyReviewDraft(draft, {
+        conversationId: "conv_taxonomy_review",
+        traceId: "trace_taxonomy_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: {
+          endpointConfigured: true,
+          descriptor: defaultChiefOfStaffDescriptor,
+          expectedChecksum: "sha256:expected",
+          actualChecksum: "sha256:actual",
+        },
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason ===
+        "descriptor_signature_or_checksum_mismatch",
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "descriptor_signature_or_checksum_mismatch");
+});
+
 test("taxonomy review handoff fails closed when Napoleon returns no-go", async () => {
   const ledger = createCapabilityLedger();
   addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });

@@ -7,6 +7,7 @@ import {
   type AuditEnvelope,
   type ChiefOfStaffRequest,
   type DescriptorConnectionInput,
+  type DescriptorFailClosedReason,
   type GovernanceDecision,
   type GovernanceEvaluationRequest,
   type MemoryProposalReviewState,
@@ -172,8 +173,9 @@ function failMemoryProposalClosed(
   profileMode?: string,
   status?: number,
   blockedEffects: string[] = [],
+  descriptorFailureReason?: DescriptorFailClosedReason,
 ): never {
-  emitMemoryProposalEvent(dependencies, "memory_proposal_send_failed", {
+  const attributes: Record<string, unknown> = {
     traceId,
     conversationId: dependencies.conversationId,
     requestId,
@@ -182,8 +184,13 @@ function failMemoryProposalClosed(
     reason,
     status,
     blockedEffects,
+  };
+  if (descriptorFailureReason) attributes.descriptorFailureReason = descriptorFailureReason;
+  emitMemoryProposalEvent(dependencies, "memory_proposal_send_failed", attributes);
+  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, {
+    profileMode,
+    descriptorFailureReason,
   });
-  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, { profileMode });
 }
 
 export async function submitMemoryProposalForReview(
@@ -226,6 +233,7 @@ export async function submitMemoryProposalForReview(
       profileMode,
       undefined,
       blockedEffects,
+      descriptorConnection.failClosedReason,
     );
   }
   if (!descriptorConnection.canAttemptLiveBridge) {
@@ -238,6 +246,7 @@ export async function submitMemoryProposalForReview(
       profileMode,
       undefined,
       blockedEffects,
+      descriptorConnection.failClosedReason,
     );
   }
 

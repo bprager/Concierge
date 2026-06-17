@@ -72,6 +72,7 @@ test("memory proposal submission fails closed without endpoint and does not fetc
 test("memory proposal submission fails closed before fetch when descriptor is not ready", async () => {
   const review = buildReview();
   let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
   await assert.rejects(
     () =>
@@ -85,30 +86,7 @@ test("memory proposal submission fails closed before fetch when descriptor is no
           expectedChecksum: "sha256:expected",
           actualChecksum: "sha256:actual",
         },
-        fetch: async () => {
-          fetchCalled = true;
-          return { ok: true, json: async () => ({}) };
-        },
-      }),
-    (error: unknown) =>
-      error instanceof Error &&
-      error.name === "NapoleonBridgeError" &&
-      error.message.includes("descriptor_mismatch"),
-  );
-
-  assert.equal(fetchCalled, false);
-});
-
-test("memory proposal submission fails closed before fetch when descriptor discovery has not completed", async () => {
-  const review = buildReview();
-  let fetchCalled = false;
-
-  await assert.rejects(
-    () =>
-      submitMemoryProposalForReview(review, {
-        conversationId: "conv_memory",
-        traceId: "trace_submit",
-        getEndpoint: () => "https://napoleon.example/concierge",
+        emit: (event) => events.push(event),
         fetch: async () => {
           fetchCalled = true;
           return { ok: true, json: async () => ({}) };
@@ -118,12 +96,43 @@ test("memory proposal submission fails closed before fetch when descriptor disco
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason ===
+        "descriptor_signature_or_checksum_mismatch",
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "descriptor_signature_or_checksum_mismatch");
+});
+
+test("memory proposal submission fails closed before fetch when descriptor discovery has not completed", async () => {
+  const review = buildReview();
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitMemoryProposalForReview(review, {
+        conversationId: "conv_memory",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "no_descriptor" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
         JSON.stringify(memoryProposalBlockedEffects),
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "no_descriptor");
 });
 
 test("memory proposal submission fails closed while Rehearsal Mode is active", async () => {

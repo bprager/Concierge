@@ -98,6 +98,7 @@ test("governance review submission fails closed while Rehearsal Mode is active",
 test("governance review submission preserves descriptor discovery auth failure before fetch", async () => {
   const review = buildReview();
   let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
   await assert.rejects(
     () =>
@@ -110,16 +111,21 @@ test("governance review submission preserves descriptor discovery auth failure b
           descriptor: null,
           failClosedReason: "auth_failure",
         },
+        emit: (event) => events.push(event),
         fetch: async () => {
           fetchCalled = true;
           return { ok: true, json: async () => ({}) };
         },
       }),
     (error: unknown) =>
-      error instanceof Error && error.name === "NapoleonBridgeError" && error.message.includes("auth_failure"),
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("auth_failure") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "auth_failure",
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "auth_failure");
 });
 
 test("governance review submission posts packet without capturing approval or applying effects", async () => {

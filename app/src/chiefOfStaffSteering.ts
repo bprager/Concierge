@@ -15,6 +15,7 @@ import {
   type AuditEnvelope,
   type ChiefOfStaffRequest,
   type DescriptorConnectionInput,
+  type DescriptorFailClosedReason,
   type GovernanceDecision,
   type GovernanceEvaluationRequest,
   type LocalProfile,
@@ -301,16 +302,22 @@ function failSteeringClosed(
   profileMode?: string,
   status?: number,
   blockedEffects: string[] = [],
+  descriptorFailureReason?: DescriptorFailClosedReason,
 ): never {
-  emitSteeringEvent(dependencies, "capability_recommendation_send_failed", {
+  const attributes: Record<string, unknown> = {
     traceId,
     requestId,
     profileMode,
     reason,
     status,
     blockedEffects,
+  };
+  if (descriptorFailureReason) attributes.descriptorFailureReason = descriptorFailureReason;
+  emitSteeringEvent(dependencies, "capability_recommendation_send_failed", attributes);
+  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, {
+    profileMode,
+    descriptorFailureReason,
   });
-  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, { profileMode });
 }
 
 export async function submitChiefOfStaffSteeringDraft(
@@ -359,6 +366,7 @@ export async function submitChiefOfStaffSteeringDraft(
       profileMode,
       undefined,
       blockedEffects,
+      descriptorConnection.failClosedReason,
     );
   }
 

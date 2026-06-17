@@ -6,6 +6,7 @@ import {
   type AuditEnvelope,
   type ChiefOfStaffRequest,
   type DescriptorConnectionInput,
+  type DescriptorFailClosedReason,
   type GovernanceDecision,
   type GovernanceEvaluationRequest,
   type GovernanceReviewState,
@@ -183,9 +184,10 @@ function failGovernanceReviewClosed(
   profile?: GovernanceReviewState["profile"],
   status?: number,
   blockedEffects: string[] = GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
+  descriptorFailureReason?: DescriptorFailClosedReason,
 ): never {
   const profileMode = profile ? mapProfileToNapoleonMode(profile) : undefined;
-  emitGovernanceReviewEvent(dependencies, "governance_review_send_failed", {
+  const attributes: Record<string, unknown> = {
     traceId,
     conversationId: dependencies.conversationId,
     requestId,
@@ -196,11 +198,14 @@ function failGovernanceReviewClosed(
     reason,
     status,
     blockedEffects,
-  });
+  };
+  if (descriptorFailureReason) attributes.descriptorFailureReason = descriptorFailureReason;
+  emitGovernanceReviewEvent(dependencies, "governance_review_send_failed", attributes);
   throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, {
     decisionId,
     auditId,
     governanceOutcome: reason === "governance_no_go" ? "no_go" : reason === "governance_denied" ? "deny" : undefined,
+    descriptorFailureReason,
     profileMode,
   });
 }
@@ -245,6 +250,9 @@ export async function submitGovernanceReviewForNapoleonReview(
       review.decisionId,
       review.auditId,
       review.profile,
+      undefined,
+      GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
+      descriptorConnection.failClosedReason,
     );
   }
   if (!descriptorConnection.canAttemptLiveBridge) {
@@ -256,6 +264,9 @@ export async function submitGovernanceReviewForNapoleonReview(
       review.decisionId,
       review.auditId,
       review.profile,
+      undefined,
+      GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
+      descriptorConnection.failClosedReason,
     );
   }
 

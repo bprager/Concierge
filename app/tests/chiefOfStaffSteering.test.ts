@@ -170,6 +170,7 @@ test("steering handoff fails closed before fetch when descriptor is not ready", 
     endpointConfigured: true,
   });
   let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
   await assert.rejects(
     () =>
@@ -183,6 +184,7 @@ test("steering handoff fails closed before fetch when descriptor is not ready", 
           expectedChecksum: "sha256:expected",
           actualChecksum: "sha256:actual",
         },
+        emit: (event) => events.push(event),
         fetch: async () => {
           fetchCalled = true;
           return { ok: true, json: async () => ({}) };
@@ -191,10 +193,13 @@ test("steering handoff fails closed before fetch when descriptor is not ready", 
     (error: unknown) =>
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
-      error.message.includes("descriptor_mismatch"),
+      error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason ===
+        "descriptor_signature_or_checksum_mismatch",
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "descriptor_signature_or_checksum_mismatch");
 });
 
 test("steering handoff fails closed before fetch when descriptor discovery has not completed", async () => {
@@ -205,6 +210,7 @@ test("steering handoff fails closed before fetch when descriptor discovery has n
     endpointConfigured: true,
   });
   let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
   await assert.rejects(
     () =>
@@ -212,6 +218,7 @@ test("steering handoff fails closed before fetch when descriptor discovery has n
         conversationId: "conv_steering",
         traceId: "trace_submit",
         getEndpoint: () => "https://napoleon.example/concierge/evolution",
+        emit: (event) => events.push(event),
         fetch: async () => {
           fetchCalled = true;
           return { ok: true, json: async () => ({}) };
@@ -221,11 +228,13 @@ test("steering handoff fails closed before fetch when descriptor discovery has n
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "no_descriptor" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "no_descriptor");
 });
 
 test("steering handoff preserves descriptor discovery auth failure before fetch", async () => {
@@ -236,6 +245,7 @@ test("steering handoff preserves descriptor discovery auth failure before fetch"
     endpointConfigured: true,
   });
   let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
   await assert.rejects(
     () =>
@@ -248,6 +258,7 @@ test("steering handoff preserves descriptor discovery auth failure before fetch"
           descriptor: null,
           failClosedReason: "auth_failure",
         },
+        emit: (event) => events.push(event),
         fetch: async () => {
           fetchCalled = true;
           return { ok: true, json: async () => ({}) };
@@ -257,11 +268,13 @@ test("steering handoff preserves descriptor discovery auth failure before fetch"
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("auth_failure") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "auth_failure" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "auth_failure");
 });
 
 test("steering handoff fails closed while Rehearsal Mode is active", async () => {
