@@ -28,6 +28,9 @@ KNOWN_BRIDGE_PATHS = (
     "/v1/concierge/chief-of-staff/descriptor",
     "/v1/concierge/chief-of-staff/steering",
     "/v1/concierge/memory-proposals",
+    "/cos/descriptor",
+    "/cos/capabilities",
+    "/cos/text-turn",
 )
 
 
@@ -46,10 +49,40 @@ def bridge_url(endpoint: str, path: str = "/v1/concierge/turn") -> str:
     return f"{strip_known_bridge_path(base)}{path}"
 
 
-def get_json(url: str, auth_token: str | None = None) -> tuple[int, dict[str, Any]]:
-    headers = {}
+def is_cos_endpoint(endpoint: str) -> bool:
+    value = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    return (
+        value.endswith("/cos")
+        or value.endswith("/cos/descriptor")
+        or value.endswith("/cos/capabilities")
+        or value.endswith("/cos/text-turn")
+    )
+
+
+def descriptor_url(endpoint: str) -> str:
+    return bridge_url(
+        endpoint,
+        "/cos/descriptor" if is_cos_endpoint(endpoint) else "/v1/concierge/chief-of-staff/descriptor",
+    )
+
+
+def text_turn_url(endpoint: str) -> str:
+    return bridge_url(endpoint, "/cos/text-turn" if is_cos_endpoint(endpoint) else "/v1/concierge/turn")
+
+
+def auth_headers(auth_token: str | None, cos_mode: bool, content_type: bool = False) -> dict[str, str]:
+    headers: dict[str, str] = {"Content-Type": "application/json"} if content_type else {}
     if auth_token:
-        headers["Authorization"] = f"Bearer {auth_token}"
+        if cos_mode:
+            headers["X-Napoleon-Auth"] = auth_token
+        else:
+            headers["Authorization"] = f"Bearer {auth_token}"
+    return headers
+
+
+def get_json(url: str, auth_token: str | None = None, cos_mode: bool = False) -> tuple[int, dict[str, Any]]:
+    headers = {}
+    headers.update(auth_headers(auth_token, cos_mode))
     req = request.Request(url, headers=headers, method="GET")
     try:
         with request.urlopen(req, timeout=10) as response:
@@ -60,10 +93,8 @@ def get_json(url: str, auth_token: str | None = None) -> tuple[int, dict[str, An
         return exc.code, payload
 
 
-def post_json(url: str, payload: dict[str, Any], auth_token: str | None = None) -> tuple[int, dict[str, Any]]:
-    headers = {"Content-Type": "application/json"}
-    if auth_token:
-        headers["Authorization"] = f"Bearer {auth_token}"
+def post_json(url: str, payload: dict[str, Any], auth_token: str | None = None, cos_mode: bool = False) -> tuple[int, dict[str, Any]]:
+    headers = auth_headers(auth_token, cos_mode, content_type=True)
     req = request.Request(
         url,
         data=json.dumps(payload).encode("utf-8"),
@@ -80,10 +111,24 @@ def post_json(url: str, payload: dict[str, Any], auth_token: str | None = None) 
 
 
 def descriptor_connection_from_response(status_code: int, payload: dict[str, Any]) -> dict[str, Any]:
-    descriptor = payload.get("descriptor") if isinstance(payload.get("descriptor"), dict) else {}
-    blocked_effects = descriptor.get("blockedEffects") if isinstance(descriptor.get("blockedEffects"), list) else []
+    descriptor = payload.get("descriptor") if isinstance(payload.get("descriptor"), dict) else payload
+    blocked_effects = (
+        descriptor.get("blockedEffects")
+        if isinstance(descriptor.get("blockedEffects"), list)
+        else descriptor.get("blocked_effects")
+        if isinstance(descriptor.get("blocked_effects"), list)
+        else []
+    )
     checksum = payload.get("checksum") if isinstance(payload.get("checksum"), dict) else {}
     signature = payload.get("signature") if isinstance(payload.get("signature"), dict) else {}
+    cache_policy = descriptor.get("cache_policy") if isinstance(descriptor.get("cache_policy"), dict) else {}
+    runtime_authority = descriptor.get("runtimeAuthority") if "runtimeAuthority" in descriptor else descriptor.get("runtime_authority")
+    command_execution = descriptor.get("commandExecution") if "commandExecution" in descriptor else descriptor.get("command_execution")
+    service_id = descriptor.get("serviceId") or descriptor.get("service_id")
+    fail_closed_cache = (
+        descriptor.get("cachePolicy") == "fail_closed_to_review_required"
+        or cache_policy.get("stale_descriptor_action") == "fail_closed_to_review_required"
+    )
     checksum_state = (
         "matched"
         if checksum.get("expected") is not None and checksum.get("expected") == checksum.get("actual")
@@ -94,10 +139,10 @@ def descriptor_connection_from_response(status_code: int, payload: dict[str, Any
     signature_state = "valid" if signature.get("valid") is True else "invalid" if signature.get("valid") is False else "not_checked"
     ready = (
         status_code == 200
-        and descriptor.get("serviceId") == "napoleon.chief_of_staff"
-        and descriptor.get("runtimeAuthority") is False
-        and descriptor.get("commandExecution") is False
-        and descriptor.get("cachePolicy") == "fail_closed_to_review_required"
+        and service_id == "napoleon.chief_of_staff"
+        and runtime_authority is False
+        and command_execution is False
+        and fail_closed_cache
         and REQUIRED_DESCRIPTOR_BLOCKED_EFFECTS.issubset(set(str(effect) for effect in blocked_effects))
         and checksum_state != "mismatch"
         and signature_state != "invalid"
@@ -105,10 +150,12 @@ def descriptor_connection_from_response(status_code: int, payload: dict[str, Any
     state = "ready" if ready else "descriptor_mismatch"
     return {
         "descriptorStatus": {
-            "serviceId": str(descriptor.get("serviceId") or ""),
+            "serviceId": str(service_id or ""),
             "ready": ready,
-            "runtimeAuthority": descriptor.get("runtimeAuthority") is True,
-            "cachePolicy": str(descriptor.get("cachePolicy") or ""),
+            "runtimeAuthority": runtime_authority is True,
+            "cachePolicy": (
+                "fail_closed_to_review_required" if fail_closed_cache else str(descriptor.get("cachePolicy") or "")
+            ),
             "blockedEffects": [str(effect) for effect in blocked_effects],
         },
         "descriptorConnection": {
@@ -196,10 +243,29 @@ def request_payload(message: str, descriptor_preflight: dict[str, Any]) -> dict[
     }
 
 
+def cos_request_payload(message: str, descriptor_preflight: dict[str, Any]) -> dict[str, Any]:
+    payload = request_payload(message, descriptor_preflight)
+    return {
+        "request_id": payload["chiefOfStaffRequest"]["request_id"],
+        "profile_mode": "adult_owner",
+        "contract_version": "napoleon/concierge/runtime-bridge-schema/v1",
+        "requested_capability": "napoleon.chief_of_staff",
+        "user_text": message,
+        "requested_effects": ["prepare_advisory_response"],
+        "authority_tier": "advisory_review",
+        "approval_requirement": "chief_of_staff_review",
+        "blocked_effects": payload["blockedEffects"],
+        "source_evidence": payload["sourceEvidence"],
+        "actor_id": "concierge.text",
+        "trace_id": payload["traceId"],
+    }
+
+
 def evidence_from_response(
     status_code: int,
     response_payload: dict[str, Any],
     runtime_validation_source: str,
+    target_path: str = "/v1/concierge/turn",
 ) -> dict[str, Any]:
     decision = response_payload.get("governanceDecision") if isinstance(response_payload, dict) else {}
     trace_id = str(decision.get("trace_id") or "trace_bridge_evidence_capture")
@@ -213,7 +279,7 @@ def evidence_from_response(
             "status": "fail_closed",
             "reason": "http_failure",
             "httpStatus": status_code,
-            "targetPath": "/v1/concierge/turn",
+            "targetPath": target_path,
             "traceId": trace_id,
             "requestId": request_id,
             "descriptorStatus": "ready",
@@ -231,7 +297,7 @@ def evidence_from_response(
         "transport": "http_post",
         "status": "success",
         "httpStatus": status_code,
-        "targetPath": "/v1/concierge/turn",
+        "targetPath": target_path,
         "traceId": trace_id,
         "requestId": request_id,
         "decisionId": str(decision.get("decision_id") or ""),
@@ -249,6 +315,66 @@ def evidence_from_response(
         "blockedEffects": delegation.get("blockedEffects")
         if isinstance(delegation.get("blockedEffects"), list)
         else decision.get("blocked_effects", []),
+        "provenanceVerified": True,
+    }
+
+
+def evidence_from_cos_response(
+    status_code: int,
+    response_payload: dict[str, Any],
+    runtime_validation_source: str,
+    request_id: str,
+) -> dict[str, Any]:
+    trace_id = str(response_payload.get("trace_id") or "trace_bridge_evidence_capture")
+    if status_code < 200 or status_code >= 300:
+        return {
+            "kind": "bridge_contract_evidence",
+            "operationId": "text_turn",
+            "requestKind": "text_turn",
+            "transport": "http_post",
+            "status": "fail_closed",
+            "reason": "http_failure",
+            "httpStatus": status_code,
+            "targetPath": "/cos/text-turn",
+            "traceId": trace_id,
+            "requestId": request_id,
+            "descriptorStatus": "ready",
+            "profileMode": "adult_owner",
+            "runtimeValidationSource": runtime_validation_source,
+            "provenanceVerified": False,
+        }
+
+    governance = response_payload.get("governance_decision") if isinstance(response_payload.get("governance_decision"), dict) else {}
+    delegation = response_payload.get("delegation_plan") if isinstance(response_payload.get("delegation_plan"), dict) else {}
+    agents = delegation.get("candidate_agents") if isinstance(delegation.get("candidate_agents"), list) else []
+    blocked_effects = (
+        delegation.get("blocked_effects")
+        if isinstance(delegation.get("blocked_effects"), list)
+        else response_payload.get("blocked_effects", [])
+    )
+    return {
+        "kind": "bridge_contract_evidence",
+        "operationId": "text_turn",
+        "requestKind": "text_turn",
+        "transport": "http_post",
+        "status": "success",
+        "httpStatus": status_code,
+        "targetPath": "/cos/text-turn",
+        "traceId": trace_id,
+        "requestId": request_id,
+        "decisionId": f"decision_{trace_id}",
+        "auditId": str(response_payload.get("audit_id") or ""),
+        "governanceOutcome": str(governance.get("decision") or ""),
+        "descriptorStatus": "ready",
+        "profileMode": "adult_owner",
+        "runtimeValidationSource": runtime_validation_source,
+        "selectedAgentIds": [
+            str(agent.get("agent_id"))
+            for agent in agents
+            if isinstance(agent, dict) and isinstance(agent.get("agent_id"), str)
+        ],
+        "allowedEffects": ["prepare_advisory_response"],
+        "blockedEffects": blocked_effects,
         "provenanceVerified": True,
     }
 
@@ -283,10 +409,8 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         print("bridge evidence capture requires --endpoint, NAPOLEON_BRIDGE_ENDPOINT, or NAPOLEON_EVAL_ENDPOINT", file=sys.stderr)
         return 2
 
-    descriptor_status, descriptor_payload = get_json(
-        bridge_url(endpoint, "/v1/concierge/chief-of-staff/descriptor"),
-        args.auth_token,
-    )
+    cos_mode = is_cos_endpoint(endpoint)
+    descriptor_status, descriptor_payload = get_json(descriptor_url(endpoint), args.auth_token, cos_mode)
     descriptor_preflight = descriptor_connection_from_response(descriptor_status, descriptor_payload)
     if not descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"]:
         print("descriptor preflight failed; bridge evidence capture did not send text turn", file=sys.stderr)
@@ -297,12 +421,13 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         print("bridge evidence capture did not send text turn", file=sys.stderr)
         return 1
 
-    status_code, response_payload = post_json(
-        bridge_url(endpoint),
-        request_payload(args.message, descriptor_preflight),
-        args.auth_token,
-    )
-    records = [evidence_from_response(status_code, response_payload, args.runtime_validation_source)]
+    payload = cos_request_payload(args.message, descriptor_preflight) if cos_mode else request_payload(args.message, descriptor_preflight)
+    status_code, response_payload = post_json(text_turn_url(endpoint), payload, args.auth_token, cos_mode)
+    records = [
+        evidence_from_cos_response(status_code, response_payload, args.runtime_validation_source, str(payload.get("request_id") or ""))
+        if cos_mode
+        else evidence_from_response(status_code, response_payload, args.runtime_validation_source)
+    ]
     violations = bridge_evidence_compare.compare_bridge_evidence_records(records)
     if violations:
         print("captured bridge evidence failed comparison:", file=sys.stderr)

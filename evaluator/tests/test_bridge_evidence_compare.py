@@ -24,6 +24,17 @@ class BridgeEvidenceCompareTest(unittest.TestCase):
 
         self.assertIn("targetPath does not match operation text_turn", violations[0])
 
+    def test_accepts_sanitized_cos_text_turn_harness_evidence(self):
+        record = self.valid_record()
+        record["targetPath"] = "/cos/text-turn"
+        record["runtimeValidationSource"] = "local_harness"
+        record["allowedEffects"] = ["prepare_advisory_response"]
+        record["blockedEffects"] = ["memory_write", "approval_capture", "agent_dispatch", "external_send"]
+
+        violations = bridge_evidence_compare.compare_bridge_evidence_records([record])
+
+        self.assertEqual(violations, [])
+
     def test_rejects_request_kind_that_does_not_match_openapi(self):
         record = self.valid_record()
         record["requestKind"] = "memory_proposal_review"

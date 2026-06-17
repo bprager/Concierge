@@ -136,6 +136,41 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertEqual(harness.last_post_path, "/v1/concierge/turn")
         self.assertEqual(harness.last_turn_payload["descriptorConnection"]["state"], "ready")
 
+    def test_capture_runner_uses_cos_descriptor_before_cos_text_turn(self):
+        with RecordingCosHarness(descriptor_ready=True) as harness:
+            with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    exit_code = bridge_evidence_capture.main(
+                        [
+                            "--endpoint",
+                            f"{harness.base_url}/cos/text-turn",
+                            "--out",
+                            handle.name,
+                            "--auth-token",
+                            "token_cos_capture",
+                            "--runtime-validation-source",
+                            "local_harness",
+                        ]
+                    )
+                handle.seek(0)
+                records = json.load(handle)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(harness.get_count, 1)
+        self.assertEqual(harness.post_count, 1)
+        self.assertEqual(harness.last_get_path, "/cos/descriptor")
+        self.assertEqual(harness.last_post_path, "/cos/text-turn")
+        self.assertEqual(harness.last_auth_header, "token_cos_capture")
+        self.assertEqual(harness.last_turn_payload["profile_mode"], "adult_owner")
+        self.assertEqual(harness.last_turn_payload["requested_capability"], "napoleon.chief_of_staff")
+        self.assertEqual(records[0]["targetPath"], "/cos/text-turn")
+        self.assertEqual(records[0]["requestKind"], "text_turn")
+        self.assertEqual(records[0]["runtimeValidationSource"], "local_harness")
+        self.assertEqual(records[0]["selectedAgentIds"], ["napoleon.passive_brain"])
+        self.assertEqual(bridge_evidence_compare.compare_bridge_evidence_records(records), [])
+        self.assertFalse("token_cos_capture" in json.dumps(records))
+        self.assertFalse(harness.base_url in json.dumps(records))
+
     def test_capture_runner_fails_closed_when_descriptor_discovery_is_invalid(self):
         with RecordingBridgeHarness(descriptor_ready=False) as harness:
             with tempfile.NamedTemporaryFile("w", suffix=".json") as handle:
@@ -165,6 +200,128 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         )
 
         self.assertEqual(detected, "local_harness")
+
+
+class RecordingCosHarness:
+    def __init__(self, descriptor_ready: bool):
+        self.descriptor_ready = descriptor_ready
+        self.get_count = 0
+        self.post_count = 0
+        self.last_get_path = ""
+        self.last_post_path = ""
+        self.last_auth_header = ""
+        self.last_turn_payload = {}
+
+    def __enter__(self):
+        parent = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                parent.get_count += 1
+                parent.last_get_path = self.path
+                parent.last_auth_header = self.headers.get("X-Napoleon-Auth", "")
+                if self.path != "/cos/descriptor":
+                    self.write_json(404, {"error": "not_found"})
+                    return
+                self.write_json(
+                    200,
+                    {
+                        "schema_version": "napoleon/concierge/chief-of-staff-service/v1",
+                        "service_id": "napoleon.chief_of_staff" if parent.descriptor_ready else "bad.service",
+                        "runtime_authority": False,
+                        "command_execution": False,
+                        "cache_policy": {
+                            "ttl_seconds": 300,
+                            "stale_descriptor_action": "fail_closed_to_review_required",
+                        },
+                        "security": {
+                            "descriptor_signature": "pending_future_implementation",
+                            "checksum": "pending_future_implementation",
+                        },
+                        "blocked_effects": [
+                            "runtime_authority",
+                            "memory_write",
+                            "agent_dispatch",
+                            "external_send",
+                        ],
+                    },
+                )
+
+            def do_POST(self):
+                parent.post_count += 1
+                parent.last_post_path = self.path
+                parent.last_auth_header = self.headers.get("X-Napoleon-Auth", "")
+                length = int(self.headers.get("Content-Length", "0"))
+                parent.last_turn_payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                if self.path != "/cos/text-turn":
+                    self.write_json(404, {"error": "not_found"})
+                    return
+                trace_id = parent.last_turn_payload["trace_id"]
+                self.write_json(
+                    202,
+                    {
+                        "schema_version": "napoleon/concierge/runtime-bridge-schema/v1",
+                        "status": "accepted_for_prepare_only",
+                        "answer": "Prepared advisory response.",
+                        "trace_id": trace_id,
+                        "audit_id": f"audit_{trace_id}",
+                        "governance_decision": {
+                            "decision": "allow_prepare_only",
+                            "reason": "Prepare-only advisory response.",
+                            "authority_tier": "prepare_only",
+                            "blocked_effects": [
+                                "memory_write",
+                                "approval_capture",
+                                "agent_dispatch",
+                                "external_send",
+                            ],
+                        },
+                        "delegation_plan": {
+                            "requested_capability": "napoleon.chief_of_staff",
+                            "candidate_agents": [
+                                {
+                                    "agent_id": "napoleon.passive_brain",
+                                    "display_name": "Passive Brain",
+                                    "selection_reason": "Relevant context found.",
+                                    "contribution_summary": "Found the bridge evidence pattern.",
+                                }
+                            ],
+                            "blocked_effects": [
+                                "memory_write",
+                                "approval_capture",
+                                "agent_dispatch",
+                                "external_send",
+                            ],
+                        },
+                        "blocked_effects": [
+                            "memory_write",
+                            "approval_capture",
+                            "agent_dispatch",
+                            "external_send",
+                        ],
+                    },
+                )
+
+            def log_message(self, *_args):
+                return
+
+            def write_json(self, status: int, payload: dict):
+                body = json.dumps(payload).encode("utf-8")
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.base_url = f"http://127.0.0.1:{self.server.server_address[1]}"
+        return self
+
+    def __exit__(self, *_args):
+        self.server.shutdown()
+        self.thread.join(timeout=5)
 
 
 class RecordingBridgeHarness:

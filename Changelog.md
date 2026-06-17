@@ -285,6 +285,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
 - Added explicit Napoleon advisory harness `/cos/descriptor` discovery support, including snake-case descriptor parsing, TTL handling, `X-Napoleon-Auth` header-only auth, and fail-closed rejection of descriptors that grant runtime authority.
+- Added sanitized bridge evidence capture and comparison support for explicit Napoleon advisory harness `/cos/descriptor` plus `/cos/text-turn` flows without exposing endpoint hosts, request text, or tokens.
 - Started maintaining this changelog.
 
 ### Fixed

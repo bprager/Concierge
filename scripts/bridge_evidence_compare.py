@@ -36,6 +36,12 @@ FORBIDDEN_EVIDENCE_FIELDS = {
 }
 SECRET_VALUE_PATTERN = re.compile(r"bearer\s+\S+|secret[_\-\s]?\w*", re.IGNORECASE)
 RUNTIME_VALIDATION_SOURCES = {"real_runtime", "local_harness", "local_simulation"}
+ADVISORY_HARNESS_OPERATION_ALIASES = {
+    ("text_turn", "/cos/text-turn"): {
+        "transport": "http_post",
+        "requestKind": "text_turn",
+    }
+}
 
 
 def load_evidence_records(path: Path) -> list[dict[str, Any]]:
@@ -131,19 +137,24 @@ def compare_bridge_evidence_records(records: list[dict[str, Any]]) -> list[str]:
 
         expected_path = operation["path"]
         expected_transport = operation["transport"]
-        if target_path != expected_path:
+        advisory_alias = ADVISORY_HARNESS_OPERATION_ALIASES.get((operation_id, target_path or ""))
+        if target_path != expected_path and advisory_alias is None:
             violations.append(
                 f"{prefix}: targetPath does not match operation {operation_id}: {target_path} != {expected_path}"
             )
+        if advisory_alias is not None:
+            expected_transport = advisory_alias["transport"]
         if transport != expected_transport:
             violations.append(
                 f"{prefix}: transport does not match operation {operation_id}: {transport} != {expected_transport}"
             )
 
-        expected_request_kind = request_kinds.get(expected_path)
+        expected_request_kind = (
+            advisory_alias["requestKind"] if advisory_alias is not None else request_kinds.get(expected_path)
+        )
         if expected_request_kind and request_kind != expected_request_kind:
             violations.append(
-                f"{prefix}: requestKind does not match OpenAPI for {expected_path}: {request_kind} != {expected_request_kind}"
+                f"{prefix}: requestKind does not match OpenAPI for {target_path}: {request_kind} != {expected_request_kind}"
             )
 
         if status not in {"success", "fail_closed"}:
