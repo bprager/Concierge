@@ -398,6 +398,7 @@ test("taxonomy review handoff fails closed while Rehearsal Mode is active", asyn
       submitChiefOfStaffTaxonomyReviewDraft(draft, {
         conversationId: "conv_taxonomy_review",
         traceId: "trace_taxonomy_submit",
+        profile: "child_protected",
         getEndpoint: () => "https://napoleon.example/concierge",
         descriptorConnection: {
           endpointConfigured: true,
@@ -417,6 +418,7 @@ test("taxonomy review handoff fails closed while Rehearsal Mode is active", asyn
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "child_protected_user" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
         JSON.stringify([
@@ -430,6 +432,7 @@ test("taxonomy review handoff fails closed while Rehearsal Mode is active", asyn
 
   assert.equal(fetchCalled, false);
   assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
   assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
     "memory_write",

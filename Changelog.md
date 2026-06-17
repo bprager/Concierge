@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added active profile-mode visibility to fail-closed governed handoff errors and failed handoff telemetry for memory proposal, governance review, Chief of Staff steering, and taxonomy review submissions.
 - Added active profile-mode visibility to fail-closed Napoleon bridge errors, transcript messages, and `bridge_request_failed` telemetry.
 - Added a visible attribution-boundary row to the last successful Napoleon proof panel so returned recommendations and selected-agent findings remain clearly tied to bridge provenance only.
 - Added attribution-boundary tracking to sanitized Napoleon response proof comparisons.

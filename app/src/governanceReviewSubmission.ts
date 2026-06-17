@@ -184,6 +184,7 @@ function failGovernanceReviewClosed(
   status?: number,
   blockedEffects: string[] = GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
 ): never {
+  const profileMode = profile ? mapProfileToNapoleonMode(profile) : undefined;
   emitGovernanceReviewEvent(dependencies, "governance_review_send_failed", {
     traceId,
     conversationId: dependencies.conversationId,
@@ -191,6 +192,7 @@ function failGovernanceReviewClosed(
     decisionId,
     auditId,
     profile,
+    profileMode,
     reason,
     status,
     blockedEffects,
@@ -199,6 +201,7 @@ function failGovernanceReviewClosed(
     decisionId,
     auditId,
     governanceOutcome: reason === "governance_no_go" ? "no_go" : reason === "governance_denied" ? "deny" : undefined,
+    profileMode,
   });
 }
 

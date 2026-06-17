@@ -169,6 +169,7 @@ function failMemoryProposalClosed(
   traceId: string,
   requestId: string,
   proposalId?: string,
+  profileMode?: string,
   status?: number,
   blockedEffects: string[] = [],
 ): never {
@@ -177,11 +178,12 @@ function failMemoryProposalClosed(
     conversationId: dependencies.conversationId,
     requestId,
     proposalId,
+    profileMode,
     reason,
     status,
     blockedEffects,
   });
-  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects);
+  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, { profileMode });
 }
 
 export async function submitMemoryProposalForReview(
@@ -209,6 +211,7 @@ export async function submitMemoryProposalForReview(
       dependencies.traceId,
       requestId,
       memoryProposal.proposalId,
+      profileMode,
       undefined,
       blockedEffects,
     );
@@ -220,6 +223,7 @@ export async function submitMemoryProposalForReview(
       dependencies.traceId,
       requestId,
       memoryProposal.proposalId,
+      profileMode,
       undefined,
       blockedEffects,
     );
@@ -231,6 +235,7 @@ export async function submitMemoryProposalForReview(
       dependencies.traceId,
       requestId,
       memoryProposal.proposalId,
+      profileMode,
       undefined,
       blockedEffects,
     );
@@ -316,6 +321,7 @@ export async function submitMemoryProposalForReview(
       dependencies.traceId,
       requestId,
       memoryProposal.proposalId,
+      profileMode,
       undefined,
       blockedEffects,
     );
@@ -329,6 +335,7 @@ export async function submitMemoryProposalForReview(
       dependencies.traceId,
       requestId,
       memoryProposal.proposalId,
+      profileMode,
       response.status,
       blockedEffects,
     );
@@ -344,6 +351,7 @@ export async function submitMemoryProposalForReview(
       dependencies.traceId,
       requestId,
       memoryProposal.proposalId,
+      profileMode,
       undefined,
       blockedEffects,
     );
@@ -362,6 +370,7 @@ export async function submitMemoryProposalForReview(
       dependencies.traceId,
       requestId,
       memoryProposal.proposalId,
+      profileMode,
       undefined,
       blockedEffects,
     );
@@ -374,6 +383,7 @@ export async function submitMemoryProposalForReview(
       dependencies.traceId,
       payload.governanceDecision.request_id,
       memoryProposal.proposalId,
+      profileMode,
       response.status,
       payload.governanceDecision.blocked_effects,
     );

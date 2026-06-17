@@ -298,17 +298,19 @@ function failSteeringClosed(
   reason: ConstructorParameters<typeof NapoleonBridgeError>[0],
   traceId: string,
   requestId: string,
+  profileMode?: string,
   status?: number,
   blockedEffects: string[] = [],
 ): never {
   emitSteeringEvent(dependencies, "capability_recommendation_send_failed", {
     traceId,
     requestId,
+    profileMode,
     reason,
     status,
     blockedEffects,
   });
-  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects);
+  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, { profileMode });
 }
 
 export async function submitChiefOfStaffSteeringDraft(
@@ -343,10 +345,10 @@ export async function submitChiefOfStaffSteeringDraft(
     : draft.evolutionProposal;
 
   if (dependencies.rehearsalMode) {
-    failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, undefined, blockedEffects);
+    failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
   }
   if (!endpoint) {
-    failSteeringClosed(dependencies, "no_endpoint", dependencies.traceId, requestId, undefined, blockedEffects);
+    failSteeringClosed(dependencies, "no_endpoint", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
   }
   if (!descriptorConnection.canAttemptLiveBridge) {
     failSteeringClosed(
@@ -354,6 +356,7 @@ export async function submitChiefOfStaffSteeringDraft(
       descriptorFailClosedReasonToBridgeFailure(descriptorConnection.failClosedReason),
       dependencies.traceId,
       requestId,
+      profileMode,
       undefined,
       blockedEffects,
     );
@@ -427,19 +430,19 @@ export async function submitChiefOfStaffSteeringDraft(
     });
   } catch (error) {
     const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
-    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, undefined, blockedEffects);
+    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
   }
 
   if (!response.ok) {
     const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
-    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, response.status, blockedEffects);
+    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, profileMode, response.status, blockedEffects);
   }
 
   let payload: Partial<ChiefOfStaffSteeringSubmissionResult>;
   try {
     payload = (await response.json()) as Partial<ChiefOfStaffSteeringSubmissionResult>;
   } catch {
-    failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, undefined, blockedEffects);
+    failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
   }
   if (
     !hasRequiredBridgeResponseFields(payload, "chief_of_staff_steering") ||
@@ -449,7 +452,7 @@ export async function submitChiefOfStaffSteeringDraft(
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenSteeringSideEffectClaim(payload as Partial<ChiefOfStaffSteeringSubmissionResult> & Record<string, unknown>)
   ) {
-    failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, undefined, blockedEffects);
+    failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
   }
 
   if (payload.governanceDecision.outcome === "deny" || payload.governanceDecision.outcome === "no_go") {
@@ -458,6 +461,7 @@ export async function submitChiefOfStaffSteeringDraft(
       payload.governanceDecision.outcome === "deny" ? "governance_denied" : "governance_no_go",
       dependencies.traceId,
       payload.governanceDecision.request_id,
+      profileMode,
       response.status,
       payload.governanceDecision.blocked_effects,
     );

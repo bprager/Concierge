@@ -628,6 +628,7 @@ function failTaxonomyReviewClosed(
   dependencies: TaxonomyReviewSubmissionDependencies,
   reason: ConstructorParameters<typeof NapoleonBridgeError>[0],
   requestId: string,
+  profileMode?: string,
   status?: number,
   blockedEffects: string[] = TAXONOMY_REVIEW_BLOCKED_EFFECTS,
 ): never {
@@ -635,11 +636,12 @@ function failTaxonomyReviewClosed(
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,
     requestId,
+    profileMode,
     reason,
     status,
     blockedEffects,
   });
-  throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, blockedEffects);
+  throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, blockedEffects, { profileMode });
 }
 
 export async function submitChiefOfStaffTaxonomyReviewDraft(
@@ -685,16 +687,17 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
   );
 
   if (dependencies.rehearsalMode) {
-    failTaxonomyReviewClosed(dependencies, "governance_no_go", requestId);
+    failTaxonomyReviewClosed(dependencies, "governance_no_go", requestId, profileMode);
   }
   if (!endpoint) {
-    failTaxonomyReviewClosed(dependencies, "no_endpoint", requestId);
+    failTaxonomyReviewClosed(dependencies, "no_endpoint", requestId, profileMode);
   }
   if (!descriptorConnection.canAttemptLiveBridge) {
     failTaxonomyReviewClosed(
       dependencies,
       descriptorFailClosedReasonToBridgeFailure(descriptorConnection.failClosedReason),
       requestId,
+      profileMode,
     );
   }
 
@@ -769,19 +772,19 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     });
   } catch (error) {
     const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
-    failTaxonomyReviewClosed(dependencies, reason, requestId);
+    failTaxonomyReviewClosed(dependencies, reason, requestId, profileMode);
   }
 
   if (!response.ok) {
     const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
-    failTaxonomyReviewClosed(dependencies, reason, requestId, response.status);
+    failTaxonomyReviewClosed(dependencies, reason, requestId, profileMode, response.status);
   }
 
   let payload: Partial<ChiefOfStaffTaxonomyReviewSubmissionResult>;
   try {
     payload = (await response.json()) as Partial<ChiefOfStaffTaxonomyReviewSubmissionResult>;
   } catch {
-    failTaxonomyReviewClosed(dependencies, "contract_mismatch", requestId);
+    failTaxonomyReviewClosed(dependencies, "contract_mismatch", requestId, profileMode);
   }
   if (
     !hasRequiredBridgeResponseFields(payload, "chief_of_staff_steering") ||
@@ -791,7 +794,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenTaxonomyReviewSideEffectClaim(payload as Partial<ChiefOfStaffTaxonomyReviewSubmissionResult> & Record<string, unknown>)
   ) {
-    failTaxonomyReviewClosed(dependencies, "contract_mismatch", requestId);
+    failTaxonomyReviewClosed(dependencies, "contract_mismatch", requestId, profileMode);
   }
 
   if (payload.governanceDecision.outcome === "deny" || payload.governanceDecision.outcome === "no_go") {
@@ -799,6 +802,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
       dependencies,
       payload.governanceDecision.outcome === "deny" ? "governance_denied" : "governance_no_go",
       payload.governanceDecision.request_id,
+      profileMode,
       response.status,
       payload.governanceDecision.blocked_effects,
     );

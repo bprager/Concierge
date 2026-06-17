@@ -39,7 +39,7 @@ function buildReview(profile: "adult_owner" | "child_protected" = "adult_owner")
 }
 
 test("governance review submission fails closed without endpoint and does not fetch", async () => {
-  const review = buildReview();
+  const review = buildReview("child_protected");
   let fetchCalled = false;
   const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
@@ -59,6 +59,7 @@ test("governance review submission fails closed without endpoint and does not fe
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("no_endpoint") &&
+      (error as { profileMode?: string }).profileMode === "child_protected_user" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
         JSON.stringify(governanceReviewBlockedEffects),
@@ -66,6 +67,7 @@ test("governance review submission fails closed without endpoint and does not fe
 
   assert.equal(fetchCalled, false);
   assert.equal(events.at(-1)?.event, "governance_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, governanceReviewBlockedEffects);
 });
 

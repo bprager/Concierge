@@ -139,6 +139,7 @@ test("steering handoff fails closed without endpoint and does not fetch", async 
       submitChiefOfStaffSteeringDraft(draft, {
         conversationId: "conv_steering",
         traceId: "trace_submit",
+        profile: "child_protected",
         getEndpoint: () => null,
         emit: (event) => events.push(event),
         fetch: async () => {
@@ -150,12 +151,14 @@ test("steering handoff fails closed without endpoint and does not fetch", async 
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
       error.message.includes("no_endpoint") &&
+      (error as { profileMode?: string }).profileMode === "child_protected_user" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
   );
 
   assert.equal(fetchCalled, false);
   assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, steeringBlockedEffects);
 });
 
