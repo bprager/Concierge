@@ -2200,12 +2200,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const currentContract = currentInput
     ? buildTextTurnContract({ message: currentInput, profile, conversationId, turnId: "turn_preflight", traceId: "trace_preflight" })
     : null;
+  const currentGovernanceReviewState = currentContract
+    ? buildGovernanceReviewState(currentContract.governanceDecision, profile)
+    : null;
+  const localGovernanceBlocksDirectSend = Boolean(currentGovernanceReviewState && !currentGovernanceReviewState.canSendAdvisory);
   const liveSendPreflight = describeLiveSendPreflight({
     descriptorConnection,
     inputReady: Boolean(currentInput),
-    governanceCanSendAdvisory: currentContract
-      ? buildGovernanceReviewState(currentContract.governanceDecision, profile).canSendAdvisory
-      : true,
+    governanceCanSendAdvisory: currentGovernanceReviewState ? currentGovernanceReviewState.canSendAdvisory : true,
     governanceOutcome: currentContract?.governanceDecision.outcome,
     rehearsalMode,
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,
@@ -4419,7 +4421,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           </dl>
         </div>
         <div className="composer-actions">
-          <button onClick={rehearsalMode ? rehearse : () => submit()}>
+          <button disabled={!rehearsalMode && localGovernanceBlocksDirectSend} onClick={rehearsalMode ? rehearse : () => submit()}>
             {rehearsalMode ? "Rehearse" : "Send"}
           </button>
           {pendingRehearsal ? (

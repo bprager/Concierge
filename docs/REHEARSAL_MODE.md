@@ -62,7 +62,7 @@ The avatar privacy dashboard is local preference and status display only, not pe
 
 Sending an advisory request is a separate user action after the preview exists, but it is disabled while Rehearsal Mode remains active. The user must leave Rehearsal Mode before any live governed bridge send can be attempted. The unchanged preview remains available for that separate send after Rehearsal Mode is off; if the prompt changes, the post-preview send stays blocked until a new preview is created. That send still goes through the governed bridge path and remains subject to Chief of Staff and governance decisions.
 
-If the rehearsed turn is `no_go` or denied, Concierge blocks the send action. If the turn is `requires_review`, Concierge shows a review panel. A local acknowledgement can record that the review was seen, but it is not Napoleon approval and does not grant authority.
+If the rehearsed turn is `no_go` or denied, Concierge blocks the send action. Outside Rehearsal Mode, a prompt that local governance classifies as `no_go` keeps the direct Send button disabled before any live bridge attempt. If the turn is `requires_review`, Concierge shows a review panel. A local acknowledgement can record that the review was seen, but it is not Napoleon approval and does not grant authority.
 
 If the turn looks like a memory preference or profile note, Concierge shows a memory proposal review panel. Acknowledging or dismissing that panel is local only: it does not write memory, capture approval, send externally, or append a Napoleon audit record.
 
