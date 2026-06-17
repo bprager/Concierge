@@ -71,6 +71,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added evaluator coverage for generated Napoleon bridge-client contract alignment and named-operation boundaries.
 - Added evaluator coverage for descriptor discovery as first-class connection state before live bridge sends or governed handoffs.
 - Added evaluator coverage for governed voice pipeline proof export and same-session comparison boundaries.
+- Added child-protected guardian-approval-capture blocking to governed voice pipeline proof metadata so future voice remains proposal-only without local guardian approval capture.
 - Added transcript-level source, attribution-boundary, and blocked-effect rendering for successful Napoleon bridge responses.
 - Added transcript-level target capability rendering for successful Napoleon responses when Napoleon returns a capability ID without selected-agent delegation.
 - Changed sanitized Napoleon response proof export and comparison to keep returned target capability separate from selected-agent provenance.

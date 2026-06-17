@@ -58,7 +58,7 @@ export interface GovernedVoicePipelineProofComparison {
   changes: GovernedVoicePipelineProofChange[];
 }
 
-const blockedEffects = [
+const baseBlockedEffects = [
   "microphone_capture",
   "audio_playback",
   "raw_audio_storage",
@@ -68,6 +68,22 @@ const blockedEffects = [
   "agent_dispatch",
   "external_send",
 ];
+
+function blockedEffectsForProfile(profileMode: NapoleonProfileMode): string[] {
+  if (profileMode !== "child_protected_user") return baseBlockedEffects;
+
+  return [
+    "microphone_capture",
+    "audio_playback",
+    "raw_audio_storage",
+    "live_napoleon_contact",
+    "memory_write",
+    "approval_capture",
+    "guardian_approval_capture",
+    "agent_dispatch",
+    "external_send",
+  ];
+}
 
 export function buildGovernedVoicePipelinePlan(input: GovernedVoicePipelinePlanInput): GovernedVoicePipelinePlan {
   const childProtected = input.profileMode === "child_protected_user";
@@ -142,7 +158,7 @@ export function buildGovernedVoicePipelinePlan(input: GovernedVoicePipelinePlanI
         authorityBoundary: "Playback would require explicit local consent; it is not Napoleon approval.",
       },
     ],
-    blockedEffects,
+    blockedEffects: blockedEffectsForProfile(input.profileMode),
     microphoneCaptureStarted: false,
     audioPlaybackStarted: false,
     rawAudioStored: false,

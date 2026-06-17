@@ -53,6 +53,7 @@ test("adds stricter child protected constraints to the governed voice pipeline p
     ),
   );
   assert.equal(plan.canStartLiveVoice, false);
+  assert.ok(plan.blockedEffects.includes("guardian_approval_capture"));
 });
 
 test("exports a sanitized governed voice pipeline proof without raw prompt endpoint or secret fields", () => {
@@ -132,7 +133,13 @@ test("compares sanitized governed voice pipeline proofs without raw prompt endpo
   assert.ok(comparison.summary.includes("changed"));
   assert.deepEqual(
     comparison.changes.map((change: { label: string }) => change.label),
-    ["Profile mode", "Child protected", "Guardian review required", "Authority boundary"],
+    ["Profile mode", "Child protected", "Guardian review required", "Authority boundary", "Blocked effects"],
+  );
+  assert.ok(
+    comparison.changes.some(
+      (change: { label: string; current: string }) =>
+        change.label === "Blocked effects" && change.current.includes("guardian_approval_capture"),
+    ),
   );
   assert.ok(
     comparison.changes.every(

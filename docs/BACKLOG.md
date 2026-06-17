@@ -292,6 +292,7 @@ Acceptance criteria:
 - Text Concierge shows a live voice readiness gate that lists microphone, descriptor, runtime-proof, Rehearsal Mode, and voice-pipeline blockers.
 - The live voice readiness gate remains blocked even when microphone permission is granted until the governed voice pipeline exists.
 - Text Concierge shows a proposal-only governed voice pipeline plan for consent, capture, VAD, STT, governed Napoleon bridge turn, response shaping, TTS, and playback, with every stage blocked until explicit implementation and proof exist.
+- Child protected governed voice pipeline blocked effects include `guardian_approval_capture` so local review wording cannot be treated as captured guardian approval.
 - The plan must not start capture or playback, contact Napoleon, write memory, capture approval, dispatch agents, send externally, or imply Napoleon approval.
 - Text Concierge can export a sanitized local voice pipeline proof containing only proposal state, profile mode, child/guardian-review state, blocked stages, blocked effects, and explicit false side-effect flags, without raw audio, prompts, endpoint hosts, bearer tokens, request bodies, or response bodies.
 - Text Concierge can compare the current voice pipeline proof with the previous proof exported in the same app session, reporting unchanged, changed, invalid previous proof, or no previous proof from sanitized voice pipeline metadata only.
