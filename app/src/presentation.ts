@@ -121,6 +121,7 @@ export interface LiveSendPreflightInput {
   descriptorConnection: DescriptorConnectionState;
   inputReady: boolean;
   governanceCanSendAdvisory: boolean;
+  governanceOutcome?: GovernanceOutcome;
   rehearsalMode: boolean;
   evidenceCaptureState?: LiveBridgeEvidenceState;
   evidenceComparisonState?: LiveBridgeEvidenceState;
@@ -467,7 +468,9 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
       status: input.governanceCanSendAdvisory ? "ready" : "blocked",
       detail: input.governanceCanSendAdvisory
         ? "Local governance allows preparing an advisory bridge request."
-        : "Local governance blocks sending this request.",
+        : input.governanceOutcome
+          ? `Local governance blocks sending this request: ${input.governanceOutcome}.`
+          : "Local governance blocks sending this request.",
     },
     {
       label: "Rehearsal Mode",

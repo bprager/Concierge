@@ -525,6 +525,33 @@ test("describes live send preflight blockers without granting authority", () => 
   assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Rehearsal Mode" && item.status === "warning"));
 });
 
+test("describes local no-go governance in live send preflight", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: false,
+    governanceOutcome: "no_go",
+    rehearsalMode: false,
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canAttemptLiveSend, false);
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Governance send gate" &&
+        item.status === "blocked" &&
+        item.detail.includes("no_go"),
+    ),
+  );
+});
+
 test("describes live send preflight as ready only for governed bridge attempt", () => {
   const view = describeLiveSendPreflight({
     descriptorConnection: buildDescriptorConnectionState({

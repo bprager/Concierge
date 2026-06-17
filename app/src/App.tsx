@@ -2206,6 +2206,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     governanceCanSendAdvisory: currentContract
       ? buildGovernanceReviewState(currentContract.governanceDecision, profile).canSendAdvisory
       : true,
+    governanceOutcome: currentContract?.governanceDecision.outcome,
     rehearsalMode,
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,
     evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
