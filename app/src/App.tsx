@@ -1413,6 +1413,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         conversationId,
         turnId,
         profile,
+        profileMode: activeProfileMode,
         outcome: preview.governanceReview.outcome,
         decisionId: preview.governanceReview.decisionId,
       });
@@ -1436,6 +1437,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         traceId,
         conversationId,
         turnId,
+        profile,
+        profileMode: activeProfileMode,
         proposalId: memoryReviewState.proposalId,
         memoryWritePerformed: memoryReviewState.memoryWritePerformed,
         approvalCaptured: memoryReviewState.approvalCaptured,
@@ -1691,6 +1694,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           conversationId,
           turnId,
           profile,
+          profileMode: activeProfileMode,
           outcome: responseReviewState.outcome,
           decisionId: responseReviewState.decisionId,
         });
@@ -1710,6 +1714,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           traceId,
           conversationId,
           turnId,
+          profile,
+          profileMode: activeProfileMode,
           proposalId: memoryReviewState.proposalId,
           memoryWritePerformed: memoryReviewState.memoryWritePerformed,
           approvalCaptured: memoryReviewState.approvalCaptured,
@@ -1782,6 +1788,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       traceId: pendingRehearsal.traceId,
       conversationId,
       turnId: pendingRehearsal.turnId,
+      profile,
+      profileMode: mapProfileToNapoleonMode(profile),
       decisionId: acknowledgedReview.decisionId,
       approvalCaptured: acknowledgedReview.approvalCaptured,
     });
@@ -1828,6 +1836,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       emitEvent("governance_review_acknowledged_locally", {
         traceId: acknowledgedReview.traceId,
         conversationId,
+        profile: acknowledgedReview.profile,
+        profileMode: mapProfileToNapoleonMode(acknowledgedReview.profile),
         decisionId: acknowledgedReview.decisionId,
         approvalCaptured: acknowledgedReview.approvalCaptured,
       });

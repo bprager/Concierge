@@ -1050,6 +1050,76 @@ test("records child profile scope when rehearsal blocks a no-go request", async 
   }
 });
 
+test("records child profile scope for rehearsal review and memory proposal signals", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  let fetchCalls = 0;
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Remember that I like robotics and share it with Napoleon for review" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+    await view.findByText("Rehearsal only");
+
+    const reviewRequired = await waitFor(() => {
+      const payload = telemetryPayloads.find((event) => event.event === "governance_review_required");
+      assert.ok(payload);
+      return payload;
+    });
+    assert.equal(reviewRequired.attributes.profile, "child_protected");
+    assert.equal(reviewRequired.attributes.profileMode, "child_protected_user");
+
+    const memoryProposal = telemetryPayloads.find((event) => event.event === "memory_proposal_review_created");
+    assert.ok(memoryProposal);
+    assert.equal(memoryProposal.attributes.profile, "child_protected");
+    assert.equal(memoryProposal.attributes.profileMode, "child_protected_user");
+
+    const memorySignal = telemetryPayloads.find(
+      (payload) =>
+        payload.event === "conversation_capability_signal" &&
+        payload.attributes.traceId === memoryProposal.attributes.traceId &&
+        payload.attributes.capabilityLabel === "memory_proposal_review",
+    );
+    assert.ok(memorySignal);
+    assert.equal(memorySignal.attributes.profileMode, "child_protected_user");
+    assert.equal(memorySignal.attributes.privacyClass, "child_sensitive");
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("enables post-preview advisory send after Rehearsal Mode is turned off", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([

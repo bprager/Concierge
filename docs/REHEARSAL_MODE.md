@@ -76,7 +76,7 @@ If the turn looks like a memory preference or profile note, Concierge shows a me
 
 ## Observability
 
-The app emits `rehearsal_preview_created` with trace, conversation, turn, profile, and request identifiers. This event records that a preview was created, not that any external action happened.
+The app emits `rehearsal_preview_created` with trace, conversation, turn, profile, and request identifiers. This event records that a preview was created, not that any external action happened. Local governance review-required, blocked, acknowledged, and memory proposal preview events include the active profile mode so child-protected preview signals stay child-sensitive without contacting Napoleon.
 
 For memory proposals, the app emits local `memory_proposal_review_created`, `memory_proposal_acknowledged_locally`, or `memory_proposal_dismissed_locally` events. These events include proposal and trace identifiers and explicitly record that no memory write or approval capture occurred.
 

@@ -1075,7 +1075,9 @@ export function deriveCapabilitySignalFromEvent(
   const traceId = stringAttr(attributes, "traceId", "trace_unknown");
   const conversationId = stringAttr(attributes, "conversationId", "conv_unknown");
   const turnId = stringAttr(attributes, "turnId", "turn_unknown");
-  const profileMode = normalizeProfileMode(attributes.profile as LocalProfile | NapoleonProfileMode | undefined);
+  const profileMode = normalizeProfileMode(
+    (attributes.profileMode ?? attributes.profile) as LocalProfile | NapoleonProfileMode | undefined,
+  );
   const base = {
     traceId,
     conversationId,
