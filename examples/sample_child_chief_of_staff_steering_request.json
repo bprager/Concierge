@@ -77,6 +77,48 @@
       "capability:child_safe_homework_steps",
       "profile_mode:child_protected_user"
     ],
+    "learning_signals": [
+      {
+        "signal_id": "learnsig_child_steering_request_sample_001",
+        "schema_version": "concierge.learning_signal.v1",
+        "created_at": "2026-06-12T00:00:00.000Z",
+        "conversation_id": "conv_child_steering_request_sample",
+        "turn_id": "turn_child_steering_request_sample",
+        "trace_id": "trace_child_steering_request_sample",
+        "profile_mode": "child_protected_user",
+        "channel": "text",
+        "signal_type": "repeated_pattern",
+        "source": "local_capability_ledger",
+        "capability_id": "child_safe_homework_steps",
+        "architecture_area": "text_ui",
+        "outcome": "degraded",
+        "confidence": 0.76,
+        "severity": "medium",
+        "pattern_count": 4,
+        "evidence_refs": [
+          "trace:trace_child_steering_request_sample",
+          "capability:child_safe_homework_steps"
+        ],
+        "redacted_summary": "Child-protected metadata shows repeated need for simpler homework explanation steps.",
+        "suggested_next_step": "add_evaluator_case",
+        "privacy": {
+          "classification": "child_sensitive",
+          "raw_user_text_stored": false,
+          "raw_audio_stored": false,
+          "raw_video_stored": false,
+          "child_minimized": true,
+          "retention": "local_count_bounded"
+        },
+        "governance_boundary": {
+          "proposal_only": true,
+          "approval_captured": false,
+          "memory_write_performed": false,
+          "agent_dispatch_performed": false,
+          "external_send_performed": false,
+          "applied_locally": false
+        }
+      }
+    ],
     "change": {
       "type": "child_policy_copy",
       "target": "homework_support"

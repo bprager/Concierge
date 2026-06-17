@@ -149,6 +149,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added OpenAPI-governed response artifact validation for child-protected Chief of Staff taxonomy review handoff, including guardian review wording, child profile evidence, and explicit false local-application and side-effect boundary checks.
 - Added child-protected memory proposal request artifact validation with guardian review and child profile enforcement.
 - Added child-protected Chief of Staff steering request artifact validation with required child-safety caution and proposal-only boundary enforcement.
+- Added canonical adult and child Chief of Staff steering request learning-signal examples and repository validation for schema shape, selected-capability alignment, request trace/profile alignment, metadata-only privacy, child minimization, and proposal-only boundaries.
 - Added OpenAPI-governed response artifact validation for child-protected Chief of Staff steering handoff, including guardian review wording, child profile and capability evidence, blocked secret-keeping, and explicit false local-application and side-effect boundary checks.
 - Added OpenAPI-governed request/response sample inventory validation so every `examples/sample*_request.json` and `examples/sample*_response.json` artifact must be registered and schema/boundary validated.
 - Added OpenAPI-governed Chief of Staff descriptor response artifact validation, including contract-only, fail-closed, no-runtime-authority, no-command-execution, checksum/signature, and blocked-effect boundaries.

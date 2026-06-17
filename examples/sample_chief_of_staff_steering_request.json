@@ -71,6 +71,48 @@
       "trace:trace_steering_request_sample",
       "capability:bridge_descriptor_readiness"
     ],
+    "learning_signals": [
+      {
+        "signal_id": "learnsig_steering_request_sample_001",
+        "schema_version": "concierge.learning_signal.v1",
+        "created_at": "2026-06-12T00:00:00.000Z",
+        "conversation_id": "conv_steering_request_sample",
+        "turn_id": "turn_steering_request_sample",
+        "trace_id": "trace_steering_request_sample",
+        "profile_mode": "adult_owner",
+        "channel": "text",
+        "signal_type": "repeated_pattern",
+        "source": "local_capability_ledger",
+        "capability_id": "bridge_descriptor_readiness",
+        "architecture_area": "napoleon_bridge",
+        "outcome": "degraded",
+        "confidence": 0.82,
+        "severity": "medium",
+        "pattern_count": 3,
+        "evidence_refs": [
+          "trace:trace_steering_request_sample",
+          "capability:bridge_descriptor_readiness"
+        ],
+        "redacted_summary": "Local metadata shows repeated descriptor readiness gaps before live Napoleon validation.",
+        "suggested_next_step": "improve_bridge_contract",
+        "privacy": {
+          "classification": "metadata_only",
+          "raw_user_text_stored": false,
+          "raw_audio_stored": false,
+          "raw_video_stored": false,
+          "child_minimized": false,
+          "retention": "local_count_bounded"
+        },
+        "governance_boundary": {
+          "proposal_only": true,
+          "approval_captured": false,
+          "memory_write_performed": false,
+          "agent_dispatch_performed": false,
+          "external_send_performed": false,
+          "applied_locally": false
+        }
+      }
+    ],
     "change": {
       "type": "evaluation_gate",
       "target": "live_bridge_readiness"

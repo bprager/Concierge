@@ -709,6 +709,61 @@ def validate_proposal_only_request_boundary(data: object) -> None:
     scan_forbidden_authority_claims(data, "request")
 
 
+def validate_steering_learning_signals(data: object) -> None:
+    if not isinstance(data, dict):
+        raise SystemExit("Chief of Staff steering request example must be a JSON object")
+    if data.get("requestKind") != "chief_of_staff_steering_handoff":
+        return
+    if data.get("taxonomyReview") is not None or data.get("governanceReview") is not None:
+        return
+    if data.get("recommendation") is None or data.get("evaluatorCaseCandidate") is None:
+        return
+
+    evolution_proposal = data.get("evolutionProposal")
+    recommendation = data.get("recommendation")
+    trace = data.get("traceEnvelope")
+    if not isinstance(evolution_proposal, dict) or not isinstance(recommendation, dict) or not isinstance(trace, dict):
+        raise SystemExit("Chief of Staff steering request examples must include recommendation, evolution proposal, and trace objects")
+
+    learning_signals = evolution_proposal.get("learning_signals")
+    if not isinstance(learning_signals, list) or not learning_signals:
+        raise SystemExit("Chief of Staff steering evolution proposals must include metadata-only learning_signals")
+
+    learning_signal_schema = load_json("schemas/learning_signal.schema.json")
+    expected_profile = data.get("profileMode")
+    expected_capability = recommendation.get("capability")
+    expected_trace = trace.get("trace_id")
+    for index, signal in enumerate(learning_signals):
+        try:
+            jsonschema.validate(signal, learning_signal_schema)
+        except jsonschema.ValidationError as error:
+            raise SystemExit(f"learning_signals[{index}] is invalid: {error.message}") from error
+        if not isinstance(signal, dict):
+            raise SystemExit(f"learning_signals[{index}] must be an object")
+        require_equal(signal.get("source"), "local_capability_ledger", f"learning_signals[{index}].source must use local metadata")
+        require_equal(signal.get("capability_id"), expected_capability, f"learning_signals[{index}].capability_id must match recommendation")
+        require_equal(signal.get("trace_id"), expected_trace, f"learning_signals[{index}].trace_id must match request trace")
+        require_equal(signal.get("profile_mode"), expected_profile, f"learning_signals[{index}].profile_mode must match request profile")
+
+        privacy = signal.get("privacy")
+        boundary = signal.get("governance_boundary")
+        if not isinstance(privacy, dict) or not isinstance(boundary, dict):
+            raise SystemExit(f"learning_signals[{index}] must include privacy and governance_boundary objects")
+        require_equal(privacy.get("raw_user_text_stored"), False, f"learning_signals[{index}] must not store raw user text")
+        require_equal(privacy.get("raw_audio_stored"), False, f"learning_signals[{index}] must not store raw audio")
+        require_equal(privacy.get("raw_video_stored"), False, f"learning_signals[{index}] must not store raw video")
+        require_equal(boundary.get("proposal_only"), True, f"learning_signals[{index}] must remain proposal-only")
+        require_equal(boundary.get("approval_captured"), False, f"learning_signals[{index}] must not capture approval")
+        require_equal(boundary.get("memory_write_performed"), False, f"learning_signals[{index}] must not write memory")
+        require_equal(boundary.get("agent_dispatch_performed"), False, f"learning_signals[{index}] must not dispatch agents")
+        require_equal(boundary.get("external_send_performed"), False, f"learning_signals[{index}] must not send externally")
+        require_equal(boundary.get("applied_locally"), False, f"learning_signals[{index}] must not apply locally")
+
+        if expected_profile == "child_protected_user":
+            require_equal(privacy.get("classification"), "child_sensitive", "child protected learning signals must remain child sensitive")
+            require_equal(privacy.get("child_minimized"), True, "child protected learning signals must be minimized")
+
+
 def openapi_request_examples() -> list[tuple[str, str]]:
     return [
         ("/v1/concierge/memory-proposals", "examples/sample_memory_proposal_request.json"),
@@ -792,6 +847,7 @@ def validate_openapi_request_examples() -> None:
         schema = load_openapi_request_schema(path)
         validate_openapi_instance(schema, data)
         validate_proposal_only_request_boundary(data)
+        validate_steering_learning_signals(data)
         print(f"valid OpenAPI request example: {example_path} against {path}")
 
 
