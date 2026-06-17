@@ -115,6 +115,12 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:navigator|window\.navigator)\.share\s*\("),
     re.compile(r"\b(?:href|action|formAction|src|srcSet|poster)\s*=\s*['\"](?:https?://|mailto:)"),
     re.compile(r"\bping\s*=\s*['\"]https?://"),
+    re.compile(r"\[\s*['\"](?:href|action|formAction|src|srcSet|poster)['\"]\s*\]\s*=\s*['\"](?:https?://|mailto:)"),
+    re.compile(r"\[\s*['\"]ping['\"]\s*\]\s*=\s*['\"]https?://"),
+    re.compile(
+        r"\bsetAttribute\s*\(\s*['\"](?:href|action|formAction|src|srcSet|poster)['\"]\s*,\s*['\"](?:https?://|mailto:)"
+    ),
+    re.compile(r"\bsetAttribute\s*\(\s*['\"]ping['\"]\s*,\s*['\"]https?://"),
     re.compile(r"\bhttp-?equiv\s*=\s*['\"]refresh['\"][^>\n]*\bcontent\s*=\s*['\"][^'\"]*url\s*=\s*https?://", re.IGNORECASE),
     re.compile(r"\bcontent\s*=\s*['\"][^'\"]*url\s*=\s*https?://[^>\n]*\bhttp-?equiv\s*=\s*['\"]refresh['\"]", re.IGNORECASE),
     re.compile(r"(?:@import\s+)?\burl\s*\(\s*['\"]?https?://"),

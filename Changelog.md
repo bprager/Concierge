@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so dynamic external target setters cannot assign outside URLs to browser link, form, resource, or ping targets outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so dynamic HTML injection APIs cannot smuggle external targets around static UI target checks outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so static anchor ping and meta-refresh redirect targets cannot contact outside hosts outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so static external resource targets cannot load outside hosts outside the governed Napoleon bridge modules.

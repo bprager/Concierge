@@ -203,6 +203,26 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_dynamic_external_target_assignments(self):
+        for source in [
+            'image.src = "https://api.example.test/pixel.gif";',
+            'script.src = "https://api.example.test/hidden.js";',
+            'frame.src = "https://api.example.test/widget";',
+            'link.href = "https://api.example.test/hidden.css";',
+            'form.action = "https://api.example.test/send";',
+            'button.formAction = "https://api.example.test/send";',
+            'anchor.ping = "https://api.example.test/audit";',
+            'image["src"] = "https://api.example.test/pixel.gif";',
+            'link.setAttribute("href", "https://api.example.test/hidden.css");',
+            'form.setAttribute("action", "https://api.example.test/send");',
+            'anchor.setAttribute("ping", "https://api.example.test/audit");',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.tsx", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_dynamic_html_injection_side_channels(self):
         for source in [
             '<div dangerouslySetInnerHTML={{ __html: remoteMarkup }} />',
