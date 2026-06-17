@@ -198,6 +198,18 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_browser_cross_context_side_channels(self):
+        for source in [
+            'window.postMessage({ proof }, window.location.origin);',
+            'const channel = new BroadcastChannel("concierge-proof"); channel.postMessage(proof);',
+            "const channel = new MessageChannel(); channel.port1.postMessage(secretProofJson);",
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_clipboard_side_channels(self):
         for source in [
             "await navigator.clipboard.writeText(secretProofJson);",

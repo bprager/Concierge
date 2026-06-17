@@ -173,7 +173,7 @@ Object and embed `data` targets are treated as external load targets only in obj
 
 Direct external assignment to `location`, `window.location`, or `document.location` is treated as browser navigation outside the governed bridge, matching the existing checks for `location.href`, `location.assign`, and `location.replace`.
 
-External `postMessage` target origins, including wildcard targets, are treated as external send side channels so UI code cannot relay data to another browser context outside the governed bridge.
+Browser cross-context messaging such as `postMessage`, `BroadcastChannel`, and `MessageChannel` is treated as a side channel so UI code cannot relay local prompts, responses, tokens, or proof metadata to another browser context outside governed visible flows.
 
 Direct browser clipboard reads, writes, and legacy copy/paste commands are treated as local data side channels so UI code cannot move prompts, responses, tokens, or proof metadata outside governed visible export flows.
 
