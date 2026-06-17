@@ -610,7 +610,9 @@ test("describes governed handoff failure with blocked effects visible", () => {
     "agent_dispatch",
     "external_send",
     "approval_capture",
-  ]);
+  ], {
+    profileMode: "child_protected_user",
+  });
 
   const message = describeGovernedHandoffFailure(
     error,
@@ -620,6 +622,7 @@ test("describes governed handoff failure with blocked effects visible", () => {
 
   assert.ok(message.includes("Chief of Staff steering handoff blocked"));
   assert.ok(message.includes("governance_no_go"));
+  assert.ok(message.includes("profile child_protected_user"));
   assert.ok(message.includes("Blocked effects: memory_write, agent_dispatch, external_send, approval_capture"));
   assert.ok(message.includes("did not apply changes"));
   assert.ok(message.includes("did not write memory"));

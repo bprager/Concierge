@@ -198,7 +198,8 @@ export function describeGovernedHandoffFailure(error: unknown, label: string, pr
   const blockedEffects = error.blockedEffects.length
     ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
     : "";
-  return `${label} blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}.${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
+  const profile = error.profileMode ? `, profile ${error.profileMode}` : "";
+  return `${label} blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}${profile}.${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
 }
 
 function describeEvidenceState(state: LiveBridgeEvidenceState | undefined): string {
