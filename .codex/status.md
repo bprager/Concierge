@@ -110,6 +110,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added presentation coverage proving governed handoff failure messages show descriptor-specific causes instead of flattening them to generic descriptor mismatch.
 - Added rendered app coverage for the governance review handoff control path, proving it sends the canonical proposal-only Chief of Staff review packet and displays returned non-approval side-effect boundaries.
 - Added descriptor-specific live bridge failure detail to blocked assistant transcript metadata so descriptor preflight failures remain traceable in structured local message metadata.
+- Added returned decision, audit, and governance references to governed handoff failure messages so Napoleon-supplied denial context stays visible for blocked review submissions.
 - Added returned decision, audit, and governance references to live text bridge fail-closed errors, telemetry, and visible failure messages when Napoleon supplies those references before blocking.
 - Added generated bridge operation registry output from the canonical OpenAPI bridge contract and repository validation that fails when the generated file is stale.
 - Aligned the generated bridge operation registry with canonical HTTP methods, including descriptor discovery as `GET` and governed handoffs as `POST`, with repository validation for method drift.

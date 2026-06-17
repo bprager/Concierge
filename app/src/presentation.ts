@@ -218,8 +218,11 @@ export function describeGovernedHandoffFailure(error: unknown, label: string, pr
     ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
     : "";
   const profile = error.profileMode ? `, profile ${error.profileMode}` : "";
+  const decision = error.decisionId ? `, decision ${error.decisionId}` : "";
+  const audit = error.auditId ? `, audit ${error.auditId}` : "";
+  const governance = error.governanceOutcome ? `, governance ${error.governanceOutcome}` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
-  return `${label} blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}${profile}.${descriptor}${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
+  return `${label} blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}${profile}${decision}${audit}${governance}.${descriptor}${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
 }
 
 function describeEvidenceState(state: LiveBridgeEvidenceState | undefined): string {

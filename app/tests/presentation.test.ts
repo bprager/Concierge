@@ -660,6 +660,33 @@ test("describes governed handoff failure with blocked effects visible", () => {
   assert.ok(message.includes("did not capture approval"));
 });
 
+test("describes governed handoff failure with returned governance references", () => {
+  const error = new NapoleonBridgeError("governance_denied", "trace_review_handoff", "request_review_handoff", 200, [
+    "memory_write",
+    "agent_dispatch",
+    "external_send",
+    "approval_capture",
+  ], {
+    decisionId: "decision_review_handoff",
+    auditId: "audit_review_handoff",
+    governanceOutcome: "deny",
+    profileMode: "adult_owner",
+  });
+
+  const message = describeGovernedHandoffFailure(
+    error,
+    "Governance review handoff",
+    "submit the review",
+  );
+
+  assert.ok(message.includes("decision decision_review_handoff"));
+  assert.ok(message.includes("audit audit_review_handoff"));
+  assert.ok(message.includes("governance deny"));
+  assert.ok(message.includes("profile adult_owner"));
+  assert.ok(message.includes("Blocked effects: memory_write, agent_dispatch, external_send, approval_capture"));
+  assert.ok(message.includes("did not submit the review"));
+});
+
 test("describes descriptor-specific governed handoff failure reasons", () => {
   const error = new NapoleonBridgeError("descriptor_mismatch", "trace_descriptor_handoff", "request_descriptor_handoff", undefined, [
     "memory_write",
