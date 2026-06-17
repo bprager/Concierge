@@ -40,6 +40,14 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertIn("direct memory or graph access", violations[0])
 
+    def test_scanner_detects_direct_memgraph_access_case_insensitively(self):
+        violations = validate_repo.scan_authority_boundary_text(
+            "app/src/memory.ts",
+            "const client = new MemgraphClient({ host: 'localhost' });",
+        )
+
+        self.assertIn("direct memory or graph access", violations[0])
+
     def test_scanner_detects_direct_agent_or_tool_dispatch(self):
         violations = validate_repo.scan_authority_boundary_text(
             "app/src/router.ts",
