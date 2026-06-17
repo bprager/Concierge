@@ -481,8 +481,8 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
     },
     {
       label: "Allowed effects",
-      status: "ready",
-      detail: "prepare_advisory_response",
+      status: input.governanceCanSendAdvisory ? "ready" : "blocked",
+      detail: input.governanceCanSendAdvisory ? "prepare_advisory_response" : "none",
     },
     {
       label: "Blocked effects",

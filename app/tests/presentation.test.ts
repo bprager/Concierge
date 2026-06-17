@@ -550,6 +550,14 @@ test("describes local no-go governance in live send preflight", () => {
         item.detail.includes("no_go"),
     ),
   );
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Allowed effects" &&
+        item.status === "blocked" &&
+        item.detail === "none",
+    ),
+  );
 });
 
 test("describes blocked effects in live send preflight", () => {
