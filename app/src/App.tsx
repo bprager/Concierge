@@ -224,6 +224,7 @@ export function buildBridgeFailureMessageMetadata(
     ...(activeProfileMode ? { profileMode: activeProfileMode } : {}),
     decisionId: error.decisionId,
     auditId: error.auditId,
+    ...(error.descriptorFailureReason ? { descriptorFailureReason: error.descriptorFailureReason } : {}),
     blockedEffects: error.blockedEffects,
   };
 }

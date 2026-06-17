@@ -31,6 +31,27 @@ test("builds fail-closed transcript metadata for Napoleon bridge errors", () => 
   });
 });
 
+test("builds descriptor-specific transcript metadata for descriptor bridge failures", () => {
+  const metadata = buildBridgeFailureMessageMetadata(
+    new NapoleonBridgeError(
+      "descriptor_mismatch",
+      "trace_descriptor",
+      "request_descriptor",
+      undefined,
+      ["runtime_authority", "memory_write", "external_send"],
+      {
+        descriptorFailureReason: "descriptor_signature_or_checksum_mismatch",
+      },
+    ),
+    "adult_owner",
+  );
+
+  assert.equal(metadata?.source, "Blocked Napoleon governed bridge attempt");
+  assert.equal(metadata?.profileMode, "adult_owner");
+  assert.equal(metadata?.descriptorFailureReason, "descriptor_signature_or_checksum_mismatch");
+  assert.deepEqual(metadata?.blockedEffects, ["runtime_authority", "memory_write", "external_send"]);
+});
+
 test("builds generic fail-closed transcript metadata for unknown bridge failures", () => {
   const metadata = buildBridgeFailureMessageMetadata(new Error("network failed"));
 

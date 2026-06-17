@@ -1,5 +1,6 @@
 import type {
   AuditEnvelope,
+  DescriptorFailClosedReason,
   GovernanceDecision,
   LocalProfile,
   NapoleonProfileMode,
@@ -19,6 +20,7 @@ export interface ConciergeMessage {
     decisionId?: string;
     auditId?: string;
     profileMode?: NapoleonProfileMode;
+    descriptorFailureReason?: DescriptorFailClosedReason;
     blockedEffects?: string[];
   };
 }
