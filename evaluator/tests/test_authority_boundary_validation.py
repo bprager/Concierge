@@ -174,6 +174,22 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_static_external_resource_targets(self):
+        for source in [
+            '<img src="https://api.example.test/pixel.gif" alt="">',
+            '<script src="https://api.example.test/hidden.js"></script>',
+            '<iframe src="https://api.example.test/widget"></iframe>',
+            '<link rel="stylesheet" href="https://api.example.test/hidden.css">',
+            '<source srcSet="https://api.example.test/audio.mp3 1x">',
+            '<div style={{ backgroundImage: "url(https://api.example.test/pixel.gif)" }} />',
+            '@import url("https://api.example.test/hidden.css");',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.tsx", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_media_scanner_detects_hidden_capture_speech_and_playback(self):
         for source in [
             "await navigator.mediaDevices.getUserMedia({ audio: true });",

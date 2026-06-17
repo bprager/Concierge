@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so static external resource targets cannot load outside hosts outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so static external link and form targets cannot create external side channels outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so browser external navigation and share APIs cannot create external side channels outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so browser service-worker registration cannot hide service calls outside the governed Napoleon bridge modules.

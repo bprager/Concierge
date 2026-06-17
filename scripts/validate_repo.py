@@ -113,7 +113,8 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bwindow\.open\s*\("),
     re.compile(r"\b(?:window\.|document\.)?location\.(?:href|assign|replace)\b"),
     re.compile(r"\b(?:navigator|window\.navigator)\.share\s*\("),
-    re.compile(r"\b(?:href|action|formAction)\s*=\s*['\"](?:https?://|mailto:)"),
+    re.compile(r"\b(?:href|action|formAction|src|srcSet|poster)\s*=\s*['\"](?:https?://|mailto:)"),
+    re.compile(r"(?:@import\s+)?\burl\s*\(\s*['\"]?https?://"),
 ]
 
 BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
