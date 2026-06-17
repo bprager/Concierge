@@ -871,6 +871,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       memoryWritePerformed: result.memoryWritePerformed,
       externalSendPerformed: result.externalSendPerformed,
       agentDispatchPerformed: result.agentDispatchPerformed,
+      blockedEffects: result.blockedEffects,
     });
   }
 

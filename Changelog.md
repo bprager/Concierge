@@ -40,6 +40,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened bridge readiness and Napoleon response proof comparisons so pasted proof JSON is rejected when endpoint URLs, loopback hosts, bearer credentials, authorization strings, raw-field names, or secret-like values appear anywhere in the comparison input.
 - Hardened repository authority-boundary validation so runtime UI source cannot add direct `fetch`, `WebSocket`, `EventSource`, `XMLHttpRequest`, or `sendBeacon` network calls outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so direct `invokeAgent`, `runTool`, and `executeTool` calls are rejected alongside existing direct agent/tool dispatch patterns.
+- Added child-protected guardian-approval-capture blocking to wake-word readiness, sample metadata, and telemetry so the future wake-word option cannot imply guardian approval capture.
 - Added rendered child-protected avatar perception coverage and visible guardian-approval-captured boundaries for local gaze, face/head-pose, and affect-fusion panels.
 - Corrected local voice response shaping so child-protected bridge speech reports shortened body text before adding provenance and guardian-review wording.
 - Added child-protected guardian-approval-capture blocking to local voice response shaping so speech previews cannot imply guardian approval was captured.

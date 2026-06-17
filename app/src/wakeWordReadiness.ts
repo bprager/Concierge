@@ -48,7 +48,7 @@ export interface LocalWakeWordDetectionSampleResult {
   blockedEffects: string[];
 }
 
-const blockedWakeWordEffects = [
+const baseBlockedWakeWordEffects = [
   "always_on_listening",
   "microphone_capture",
   "raw_audio_storage",
@@ -58,6 +58,22 @@ const blockedWakeWordEffects = [
   "external_send",
   "agent_dispatch",
 ];
+
+function blockedWakeWordEffectsForProfile(profileMode: LocalProfile): string[] {
+  if (profileMode !== "child_protected") return baseBlockedWakeWordEffects;
+
+  return [
+    "always_on_listening",
+    "microphone_capture",
+    "raw_audio_storage",
+    "live_napoleon_contact",
+    "memory_write",
+    "approval_capture",
+    "guardian_approval_capture",
+    "external_send",
+    "agent_dispatch",
+  ];
+}
 
 export function buildLocalWakeWordReadiness(input: LocalWakeWordReadinessInput): LocalWakeWordReadinessResult {
   const childProtected = input.profileMode === "child_protected";
@@ -79,7 +95,7 @@ export function buildLocalWakeWordReadiness(input: LocalWakeWordReadinessInput):
     approvalCaptured: false,
     externalSendPerformed: false,
     agentDispatchPerformed: false,
-    blockedEffects: blockedWakeWordEffects,
+    blockedEffects: blockedWakeWordEffectsForProfile(input.profileMode),
   };
 }
 
@@ -108,6 +124,6 @@ export function runLocalWakeWordDetectionSample(
     approvalCaptured: false,
     externalSendPerformed: false,
     agentDispatchPerformed: false,
-    blockedEffects: blockedWakeWordEffects,
+    blockedEffects: blockedWakeWordEffectsForProfile(input.profileMode),
   };
 }

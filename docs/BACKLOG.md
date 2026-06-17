@@ -464,6 +464,7 @@ Acceptance criteria:
 - `wake_word_sample_detected` records local sample detection metadata with listening, microphone capture, raw audio storage, live Napoleon contact, approval capture, memory writes, agent dispatch, and external sends false.
 - The wake-word readiness panel visibly reports `Live Napoleon contacted: no` and `Agent dispatch: no` before and after the local sample dry run.
 - Child protected mode shows guardian-review reminder state and must not treat the wake-word option as guardian approval, recording permission, external speech permission, or Napoleon approval.
+- Child protected wake-word readiness and sample blocked effects include `guardian_approval_capture`.
 
 Privacy and safety impact:
 

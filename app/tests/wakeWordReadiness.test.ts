@@ -35,6 +35,7 @@ test("prepares wake word readiness without listening capture or Napoleon contact
     "live_napoleon_contact",
     "memory_write",
     "approval_capture",
+    "guardian_approval_capture",
     "external_send",
     "agent_dispatch",
   ]);
@@ -59,6 +60,7 @@ test("runs a local wake word detection sample without capture storage or Napoleo
   assert.equal(result.approvalCaptured, false);
   assert.equal(result.externalSendPerformed, false);
   assert.equal(result.agentDispatchPerformed, false);
+  assert.ok(result.blockedEffects.includes("guardian_approval_capture"));
   assert.equal(result.authorityBoundary, "Local sample detection only; no always-on listening or live wake-word service is active.");
   assert.equal(JSON.stringify(result).includes("audioData"), false);
 });

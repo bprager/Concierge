@@ -55,3 +55,45 @@ test("renders wake word as a local option that does not start listening", async 
     dom.window.close();
   }
 });
+
+test("renders child protected wake word boundaries with guardian approval capture blocked", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App initialProfile="child_protected" />);
+    const panel = within(view.getByLabelText("Wake word readiness"));
+
+    panel.getByText(/Blocked effects: .*guardian_approval_capture/);
+
+    await user.click(view.getByRole("button", { name: "Run local wake word sample" }));
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const sampleEvent = telemetryBuffer.events?.find((event) => event.event === "wake_word_sample_detected");
+
+    assert.ok(sampleEvent);
+    assert.equal(sampleEvent.attributes.childProtected, true);
+    assert.equal(sampleEvent.attributes.guardianReviewReminder, true);
+    assert.deepEqual(sampleEvent.attributes.blockedEffects, [
+      "always_on_listening",
+      "microphone_capture",
+      "raw_audio_storage",
+      "live_napoleon_contact",
+      "memory_write",
+      "approval_capture",
+      "guardian_approval_capture",
+      "external_send",
+      "agent_dispatch",
+    ]);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
