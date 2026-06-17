@@ -17,6 +17,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added and pushed the initial Concierge scaffold.
 - Verified evaluator stub mode, frontend build, Tauri check, schema validation, Markdown links, and YAML parsing during scaffold packaging.
 - Hardened repository authority-boundary validation so browser `Worker`, `SharedWorker`, and `importScripts` entry points cannot hide service calls outside the governed Napoleon bridge modules.
+- Hardened repository authority-boundary validation so external `postMessage` target origins cannot send browser messages outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so external `imageSrcSet` and `imagesrcset` preload targets cannot load image candidates outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so direct external `location`, `window.location`, and `document.location` assignments cannot navigate outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so external object/embed `data` targets cannot load outside content outside the governed Napoleon bridge modules.
