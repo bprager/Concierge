@@ -1,0 +1,41 @@
+{
+  "signal_id": "learnsig_example_001",
+  "schema_version": "concierge.learning_signal.v1",
+  "created_at": "2026-06-17T02:55:00Z",
+  "conversation_id": "conv_example_001",
+  "turn_id": "turn_example_001",
+  "trace_id": "trace_example_001",
+  "profile_mode": "adult_owner",
+  "channel": "text",
+  "signal_type": "repeated_pattern",
+  "source": "local_capability_ledger",
+  "capability_id": "capability.bridge_readiness_explanation",
+  "architecture_area": "napoleon_bridge",
+  "outcome": "degraded",
+  "confidence": 0.78,
+  "severity": "medium",
+  "pattern_count": 4,
+  "evidence_refs": [
+    "trace:trace_example_001",
+    "event:conversation_capability_signal",
+    "capability:capability.bridge_readiness_explanation"
+  ],
+  "redacted_summary": "Repeated local metadata indicates users ask for clearer bridge readiness explanations.",
+  "suggested_next_step": "add_evaluator_case",
+  "privacy": {
+    "classification": "metadata_only",
+    "raw_user_text_stored": false,
+    "raw_audio_stored": false,
+    "raw_video_stored": false,
+    "child_minimized": false,
+    "retention": "local_count_bounded"
+  },
+  "governance_boundary": {
+    "proposal_only": true,
+    "approval_captured": false,
+    "memory_write_performed": false,
+    "agent_dispatch_performed": false,
+    "external_send_performed": false,
+    "applied_locally": false
+  }
+}

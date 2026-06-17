@@ -266,6 +266,7 @@ Required trace events include:
 - camera_state_estimated
 - eval_case_started
 - eval_case_completed
+- learning_signal_recorded
 - evolution_proposal_created
 - conversation_capability_signal
 - capability_recommendation_created

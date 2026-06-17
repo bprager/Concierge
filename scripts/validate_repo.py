@@ -139,6 +139,7 @@ def validate_json_pairs() -> None:
         ("schemas/user_profile.schema.json", "examples/child_protected_profile.json"),
         ("schemas/interaction_trace.schema.json", "examples/sample_interaction_trace.json"),
         ("schemas/concierge_text_turn.schema.json", "examples/sample_text_turn_contract.json"),
+        ("schemas/learning_signal.schema.json", "examples/sample_learning_signal.json"),
     ]
     resolver = jsonschema.RefResolver.from_schema(
         {},

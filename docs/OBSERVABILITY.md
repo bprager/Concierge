@@ -86,6 +86,7 @@ Every user turn has:
 | camera_state_estimated | perception | present, looking_at_screen, confidence |
 | eval_case_started | evaluator | case_id |
 | eval_case_completed | evaluator | case_id, score |
+| learning_signal_recorded | evolution | signal_id, conversation_id, turn_id, trace_id, profile_mode, channel, signal_type, capability_id, architecture_area, confidence, privacy_class, evidence_ref_count, proposal_only, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | evolution_proposal_created | evolution | proposal_id, risk_level |
 | conversation_capability_signal | capability_intelligence | observed_at, conversation_id, turn_id, profile_mode, channel, topic_label, intent_label, capability_label, capability_status, outcome_signal, confidence, architecture_area, privacy_class |
 | capability_recommendation_created | capability_intelligence | recommendation_id, capability_label, architecture_area, priority_score, score_components, risk_level, evidence_count, suggested_next_step |

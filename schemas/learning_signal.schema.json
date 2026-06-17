@@ -1,0 +1,283 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Concierge Learning Signal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "signal_id",
+    "schema_version",
+    "created_at",
+    "conversation_id",
+    "turn_id",
+    "trace_id",
+    "profile_mode",
+    "channel",
+    "signal_type",
+    "source",
+    "capability_id",
+    "architecture_area",
+    "confidence",
+    "evidence_refs",
+    "privacy",
+    "governance_boundary"
+  ],
+  "properties": {
+    "signal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "concierge.learning_signal.v1"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "conversation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "turn_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_mode": {
+      "type": "string",
+      "enum": [
+        "adult_owner",
+        "child_protected_user",
+        "guest_user",
+        "collaborator_user"
+      ]
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "text",
+        "voice",
+        "avatar"
+      ]
+    },
+    "signal_type": {
+      "type": "string",
+      "enum": [
+        "correction",
+        "interruption",
+        "rating",
+        "repeated_pattern"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "local_user_action",
+        "local_rehearsal",
+        "local_capability_ledger",
+        "governed_bridge_metadata"
+      ]
+    },
+    "capability_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "architecture_area": {
+      "type": "string",
+      "enum": [
+        "text_ui",
+        "governance_ux",
+        "napoleon_bridge",
+        "memory_review",
+        "capability_intelligence",
+        "voice_pipeline",
+        "avatar_pipeline",
+        "observability",
+        "self_evolution",
+        "unknown"
+      ]
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "worked",
+        "degraded",
+        "missing",
+        "blocked_correctly",
+        "unsafe_refused",
+        "unknown"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "user_rating": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5
+    },
+    "pattern_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^(trace|audit|turn|capability|evaluator|event):"
+      }
+    },
+    "redacted_summary": {
+      "type": "string",
+      "maxLength": 240
+    },
+    "suggested_next_step": {
+      "type": "string",
+      "enum": [
+        "no_action",
+        "add_evaluator_case",
+        "draft_evolution_proposal",
+        "improve_bridge_contract",
+        "improve_governance_ux",
+        "improve_voice_pipeline",
+        "improve_avatar_pipeline",
+        "human_review"
+      ]
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "classification",
+        "raw_user_text_stored",
+        "raw_audio_stored",
+        "raw_video_stored",
+        "child_minimized",
+        "retention"
+      ],
+      "properties": {
+        "classification": {
+          "type": "string",
+          "enum": [
+            "metadata_only",
+            "redacted_summary",
+            "child_sensitive"
+          ]
+        },
+        "raw_user_text_stored": {
+          "type": "boolean",
+          "const": false
+        },
+        "raw_audio_stored": {
+          "type": "boolean",
+          "const": false
+        },
+        "raw_video_stored": {
+          "type": "boolean",
+          "const": false
+        },
+        "child_minimized": {
+          "type": "boolean"
+        },
+        "retention": {
+          "type": "string",
+          "enum": [
+            "local_count_bounded",
+            "local_age_bounded",
+            "session_only"
+          ]
+        }
+      }
+    },
+    "governance_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proposal_only",
+        "approval_captured",
+        "memory_write_performed",
+        "agent_dispatch_performed",
+        "external_send_performed",
+        "applied_locally"
+      ],
+      "properties": {
+        "proposal_only": {
+          "type": "boolean",
+          "const": true
+        },
+        "approval_captured": {
+          "type": "boolean",
+          "const": false
+        },
+        "memory_write_performed": {
+          "type": "boolean",
+          "const": false
+        },
+        "agent_dispatch_performed": {
+          "type": "boolean",
+          "const": false
+        },
+        "external_send_performed": {
+          "type": "boolean",
+          "const": false
+        },
+        "applied_locally": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "signal_type": {
+            "const": "rating"
+          }
+        },
+        "required": [
+          "signal_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "user_rating"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "signal_type": {
+            "const": "repeated_pattern"
+          }
+        },
+        "required": [
+          "signal_type"
+        ]
+      },
+      "then": {
+        "required": [
+          "pattern_count"
+        ]
+      }
+    }
+  ]
+}

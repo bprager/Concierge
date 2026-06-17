@@ -796,6 +796,30 @@ Evaluator coverage:
 | SE-007 | Add capability recommendation handoff | P1 | Capability recommendations can become reviewed evolution proposals with evidence, evaluator cases, rollout, and rollback | capability_recommendation_created |
 | SE-008 | Add local Chief of Staff steering draft | P1 | Local capability signals can produce a proposal-only recommendation, evaluator case candidate, and evolution proposal draft; governed submission is allowed only when endpoint and descriptor preflight pass, and it never applies the proposal locally | capability_recommendation_created |
 
+### SE-001 details
+
+User value: Corrections, interruptions, ratings, and repeated patterns can inform improvement proposals without Concierge quietly retaining raw conversation content or changing itself.
+
+Acceptance criteria:
+
+- `schemas/learning_signal.schema.json` defines the metadata-only contract for learning signals.
+- `examples/sample_learning_signal.json` validates against the schema in repository validation.
+- Signals include trace, turn, conversation, profile mode, channel, signal type, source, capability, architecture area, confidence, evidence references, privacy classification, and proposal-only governance boundaries.
+- Supported signal types include `correction`, `interruption`, `rating`, and `repeated_pattern`.
+- Rating signals require a bounded user rating, and repeated-pattern signals require a bounded pattern count.
+- Raw user text, raw audio, and raw video retention are false by contract.
+- Signals cannot capture approval, write memory, dispatch agents, send externally, or apply changes locally.
+- Child-protected signals must remain minimized and child-sensitive where applicable.
+
+Privacy and safety impact:
+
+- Learning signals are inputs to reviewed proposals only, not runtime adaptation commands.
+- Evidence uses trace, audit, event, evaluator, turn, and capability references instead of raw transcripts by default.
+
+Evaluator coverage:
+
+- Covered by repository schema validation and the self-evolution/capability-intelligence evaluator requirements.
+
 ### SE-007 details
 
 User value: High-value repeated misses can become concrete improvement proposals without letting Concierge change itself.

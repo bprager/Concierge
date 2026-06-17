@@ -32,6 +32,8 @@ Responsibilities:
 
 ## 3. Learning signals
 
+Learning signals are metadata-only records validated by `schemas/learning_signal.schema.json`.
+
 Examples:
 
 - User correction
@@ -45,6 +47,8 @@ Examples:
 - Evaluator regression
 - Conversation capability signal
 - Capability recommendation
+
+Each signal must include trace, turn, conversation, profile mode, channel, signal type, capability, architecture area, confidence, evidence references, privacy classification, and explicit proposal-only governance boundaries. The schema supports corrections, interruptions, ratings, and repeated patterns. Raw user text, raw audio, and raw video are false by contract, and child-protected signals must be minimized before they can inform a proposal.
 
 ## 4. Change categories
 
