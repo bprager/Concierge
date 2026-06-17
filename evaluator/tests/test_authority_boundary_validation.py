@@ -198,6 +198,20 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_clipboard_side_channels(self):
+        for source in [
+            "await navigator.clipboard.writeText(secretProofJson);",
+            "await window.navigator.clipboard.write([new ClipboardItem(data)]);",
+            "const copied = await navigator.clipboard.readText();",
+            'document.execCommand("copy");',
+            "document.execCommand('paste');",
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_direct_location_assignment_side_channels(self):
         for source in [
             'window.location = "https://api.example.test/export";',
