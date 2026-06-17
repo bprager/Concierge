@@ -284,6 +284,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a local Voice Turn Rehearsal panel that chains VAD, STT, text authority boundary, and TTS metadata without recording, playback, live Napoleon contact, or side effects.
 - Added CoS-aligned schemas, a sample text turn contract, repository validation script, and `make check`.
 - Added evaluation efficiency and Chief of Staff improvement analysis.
+- Added explicit Napoleon advisory harness `/cos/descriptor` discovery support, including snake-case descriptor parsing, TTL handling, `X-Napoleon-Auth` header-only auth, and fail-closed rejection of descriptors that grant runtime authority.
 - Started maintaining this changelog.
 
 ### Fixed

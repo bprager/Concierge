@@ -58,6 +58,72 @@ test("descriptor discovery fetches canonical descriptor path with header-only au
   assert.equal(result.input.actualChecksum, "sha256:descriptor-ok");
 });
 
+test("descriptor discovery fetches explicit cos descriptor path with harness auth header", async () => {
+  let targetUrl: string | undefined;
+  let headers: Record<string, string> | undefined;
+
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "http://127.0.0.1:8765/cos/text-turn",
+    getAuthToken: () => "token_cos_descriptor",
+    now: () => "2026-06-17T14:40:00.000Z",
+    fetch: async (url, init) => {
+      targetUrl = url;
+      headers = init?.headers;
+      return {
+        ok: true,
+        json: async () => ({
+          schema_version: "napoleon/concierge/chief-of-staff-service/v1",
+          service_id: "napoleon.chief_of_staff",
+          runtime_authority: false,
+          command_execution: false,
+          cache_policy: {
+            ttl_seconds: 300,
+            stale_descriptor_action: "fail_closed_to_review_required",
+          },
+          security: {
+            descriptor_signature: "pending_future_implementation",
+            checksum: "pending_future_implementation",
+          },
+          blocked_effects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+        }),
+      };
+    },
+  });
+
+  assert.equal(targetUrl, "http://127.0.0.1:8765/cos/descriptor");
+  assert.equal(headers?.["X-Napoleon-Auth"], "token_cos_descriptor");
+  assert.equal(headers?.Authorization, undefined);
+  assert.equal(result.connection.state, "ready");
+  assert.equal(result.connection.checksumState, "not_checked");
+  assert.equal(result.connection.signatureState, "not_checked");
+  assert.equal(result.input.maxAgeSeconds, 300);
+  assert.equal(result.input.discoveredAt, "2026-06-17T14:40:00.000Z");
+});
+
+test("descriptor discovery fails closed for cos descriptors that grant runtime authority", async () => {
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "http://127.0.0.1:8765/cos/descriptor",
+    fetch: async () => ({
+      ok: true,
+      json: async () => ({
+        schema_version: "napoleon/concierge/chief-of-staff-service/v1",
+        service_id: "napoleon.chief_of_staff",
+        runtime_authority: true,
+        command_execution: false,
+        cache_policy: {
+          ttl_seconds: 300,
+          stale_descriptor_action: "fail_closed_to_review_required",
+        },
+        blocked_effects: ["runtime_authority", "memory_write"],
+      }),
+    }),
+  });
+
+  assert.equal(result.connection.state, "descriptor_mismatch");
+  assert.equal(result.connection.failClosedReason, "descriptor_invalid");
+  assert.equal(result.connection.canAttemptLiveBridge, false);
+});
+
 test("descriptor discovery reports mismatched checksum as fail-closed descriptor state", async () => {
   const result = await discoverNapoleonDescriptor({
     getEndpoint: () => "https://napoleon.example/concierge",

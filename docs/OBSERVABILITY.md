@@ -137,6 +137,8 @@ Wake-word readiness is represented as a local privacy setting and local display 
 
 The canonical descriptor response sample is validated as contract-only metadata: it must keep runtime authority and command execution false, preserve fail-closed cache policy, carry checksum/signature proof, and keep authority effects blocked.
 
+Explicit Napoleon advisory harness `/cos/descriptor` discovery is parsed as connection metadata only. Its snake-case descriptor fields are mapped into the same descriptor state, optional `X-Napoleon-Auth` credentials remain header-only, pending checksum/signature fields remain `not_checked`, TTL is preserved as the stale-descriptor gate, and any runtime-authority or command-execution grant fails closed as descriptor invalid.
+
 Governed memory proposal review responses that claim memory writes, approval capture, external sends, agent dispatch, or local application are reported as `contract_mismatch` failures through `memory_proposal_send_failed`.
 
 Live text responses that claim memory writes, approval capture, external sends, agent dispatch, or local application are reported as `contract_mismatch` failures through `bridge_request_failed` and remain visible through the bridge-blocked transcript message. The local harness can emit matching forbidden-claim response shapes for text, Chief of Staff steering, and memory proposal review paths so local checks can keep those failure signals exercised.

@@ -44,6 +44,24 @@ function buildDescriptorHeaders(authToken: string | null): Record<string, string
   return authToken ? { Accept: "application/json", Authorization: `Bearer ${authToken}` } : { Accept: "application/json" };
 }
 
+function buildCosDescriptorHeaders(authToken: string | null): Record<string, string> {
+  return authToken ? { Accept: "application/json", "X-Napoleon-Auth": authToken } : { Accept: "application/json" };
+}
+
+function normalizeEndpoint(endpoint: string): string {
+  return endpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
+}
+
+function resolveCosDescriptorEndpoint(endpoint: string): string | null {
+  const normalized = normalizeEndpoint(endpoint);
+  if (normalized.endsWith("/cos/descriptor")) return normalized;
+  if (normalized.endsWith("/cos/text-turn") || normalized.endsWith("/cos/capabilities")) {
+    return normalized.replace(/\/cos\/(?:text-turn|capabilities)$/, "/cos/descriptor");
+  }
+  if (normalized.endsWith("/cos")) return `${normalized}/descriptor`;
+  return null;
+}
+
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
@@ -62,23 +80,31 @@ function stringArrayValue(value: unknown): string[] | undefined {
 
 function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null {
   if (!value || typeof value !== "object") return null;
-  const candidate = value as Partial<ChiefOfStaffDescriptor>;
-  const schemaVersion = stringValue(candidate.schemaVersion);
-  const blockedEffects = stringArrayValue(candidate.blockedEffects);
+  const candidate = value as Partial<ChiefOfStaffDescriptor> & Record<string, unknown>;
+  const schemaVersion = stringValue(candidate.schemaVersion) ?? stringValue(candidate.schema_version);
+  const serviceId = stringValue(candidate.serviceId) ?? stringValue(candidate.service_id);
+  const runtimeAuthority = booleanValue(candidate.runtimeAuthority) ?? booleanValue(candidate.runtime_authority);
+  const commandExecution = booleanValue(candidate.commandExecution) ?? booleanValue(candidate.command_execution);
+  const cachePolicyValue =
+    typeof candidate.cache_policy === "object" && candidate.cache_policy
+      ? (candidate.cache_policy as Record<string, unknown>).stale_descriptor_action
+      : candidate.cachePolicy;
+  const cachePolicy = stringValue(cachePolicyValue);
+  const blockedEffects = stringArrayValue(candidate.blockedEffects) ?? stringArrayValue(candidate.blocked_effects);
   if (
     schemaVersion &&
-    candidate.serviceId === "napoleon.chief_of_staff" &&
-    typeof candidate.runtimeAuthority === "boolean" &&
-    typeof candidate.commandExecution === "boolean" &&
-    candidate.cachePolicy === "fail_closed_to_review_required" &&
+    serviceId === "napoleon.chief_of_staff" &&
+    runtimeAuthority !== undefined &&
+    commandExecution !== undefined &&
+    cachePolicy === "fail_closed_to_review_required" &&
     blockedEffects
   ) {
     return {
       schemaVersion,
-      serviceId: candidate.serviceId,
-      runtimeAuthority: candidate.runtimeAuthority as false,
-      commandExecution: candidate.commandExecution as false,
-      cachePolicy: candidate.cachePolicy,
+      serviceId,
+      runtimeAuthority: runtimeAuthority as false,
+      commandExecution: commandExecution as false,
+      cachePolicy,
       blockedEffects,
     };
   }
@@ -93,6 +119,7 @@ function buildInputFromPayload(endpointConfigured: boolean, payload: unknown, di
   const checksum = record.checksum && typeof record.checksum === "object" ? record.checksum as Record<string, unknown> : {};
   const signature = record.signature && typeof record.signature === "object" ? record.signature as Record<string, unknown> : {};
   const cache = record.cache && typeof record.cache === "object" ? record.cache as Record<string, unknown> : {};
+  const cachePolicy = record.cache_policy && typeof record.cache_policy === "object" ? record.cache_policy as Record<string, unknown> : {};
   return {
     endpointConfigured,
     descriptor: parseDescriptor(record.descriptor ?? record),
@@ -100,7 +127,12 @@ function buildInputFromPayload(endpointConfigured: boolean, payload: unknown, di
     actualChecksum: stringValue(record.actualChecksum) ?? stringValue(checksum.actual),
     signatureValid: booleanValue(record.signatureValid) ?? booleanValue(signature.valid),
     discoveredAt,
-    maxAgeSeconds: numberValue(record.maxAgeSeconds) ?? numberValue(cache.maxAgeSeconds) ?? 300,
+    maxAgeSeconds:
+      numberValue(record.maxAgeSeconds) ??
+      numberValue(cache.maxAgeSeconds) ??
+      numberValue(cachePolicy.ttl_seconds) ??
+      300,
+    now: discoveredAt,
   };
 }
 
@@ -122,11 +154,14 @@ export async function discoverNapoleonDescriptor(
   }
 
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
+  const cosDescriptorEndpoint = resolveCosDescriptorEndpoint(endpoint);
   let response: Awaited<ReturnType<DescriptorFetch>>;
   try {
-    response = await fetcher(resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_descriptor"), {
+    response = await fetcher(cosDescriptorEndpoint ?? resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_descriptor"), {
       method: "GET",
-      headers: buildDescriptorHeaders(getConfiguredAuthToken(dependencies)),
+      headers: cosDescriptorEndpoint
+        ? buildCosDescriptorHeaders(getConfiguredAuthToken(dependencies))
+        : buildDescriptorHeaders(getConfiguredAuthToken(dependencies)),
     });
   } catch (error) {
     const input = failureInput(true, error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure");
