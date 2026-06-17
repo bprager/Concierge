@@ -690,6 +690,19 @@ export async function sendToNapoleon(
     if (!adapted) {
       failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
     }
+    if (
+      hasForbiddenTextTurnSideEffectClaim(adapted as Partial<NapoleonResponse> & Record<string, unknown>) ||
+      hasUnprovenSelectedAgentAttribution(adapted.text, adapted.delegation) ||
+      hasUnprovenNapoleonRecommendationAttribution(
+        adapted.text,
+        adapted.recommendationProvenance,
+        adapted.governanceDecision,
+        adapted.traceEnvelope,
+        adapted.auditEnvelope,
+      )
+    ) {
+      failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+    }
     if (adapted.governanceDecision.outcome === "deny" || adapted.governanceDecision.outcome === "no_go") {
       failClosed(
         dependencies,

@@ -407,6 +407,120 @@ test("live bridge adapts Napoleon advisory harness text-turn responses without s
   assert.equal(JSON.stringify(evidence).includes("Napoleon prepared an advisory status summary."), false);
 });
 
+test("live bridge fails closed when advisory harness text invents Napoleon recommendation attribution", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_cos_unproven_recommendation",
+          conversationId: "conv_cos_unproven_recommendation",
+          turnId: "turn_cos_unproven_recommendation",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Summarize the governed bridge status",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/cos/text-turn",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 202,
+            json: async () => ({
+              schema_version: "napoleon/concierge/text-turn-response/v1",
+              status: "accepted_for_prepare_only",
+              answer: "Napoleon recommends preparing the bridge rollout plan for review.",
+              trace_id: "trace_cos_unproven_recommendation",
+              audit_id: "audit_cos_unproven_recommendation",
+              governance_decision: {
+                schema_version: "napoleon/concierge/governance-decision/v1",
+                decision: "allow_prepare_only",
+                reason: "Advisory preparation only; blocked effects remain unavailable.",
+                authority_tier: "prepare_only",
+                blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+              },
+              delegation_plan: {
+                schema_version: "napoleon/concierge/delegation-plan/v1",
+                status: "candidate_agents_or_no_safe_delegation",
+                requested_capability: "napoleon.chief_of_staff",
+                candidate_agents: [],
+                blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+              },
+              blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
+test("live bridge fails closed when advisory harness text claims side effects were performed", async () => {
+  const events: TelemetryPayload[] = [];
+  const evidence: unknown[] = [];
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_cos_side_effect_claim",
+          conversationId: "conv_cos_side_effect_claim",
+          turnId: "turn_cos_side_effect_claim",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Prepare and send the governed bridge status",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/cos/text-turn",
+          descriptorConnection: readyDescriptorConnection,
+          emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
+          fetch: async () => ({
+            ok: true,
+            status: 202,
+            json: async () => ({
+              schema_version: "napoleon/concierge/text-turn-response/v1",
+              status: "accepted_for_prepare_only",
+              answer: "Napoleon prepared the governed bridge status and sent it externally.",
+              trace_id: "trace_cos_side_effect_claim",
+              audit_id: "audit_cos_side_effect_claim",
+              governance_decision: {
+                schema_version: "napoleon/concierge/governance-decision/v1",
+                decision: "allow_prepare_only",
+                reason: "Advisory preparation only; blocked effects remain unavailable.",
+                authority_tier: "prepare_only",
+                blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+              },
+              delegation_plan: {
+                schema_version: "napoleon/concierge/delegation-plan/v1",
+                status: "candidate_agents_or_no_safe_delegation",
+                requested_capability: "napoleon.chief_of_staff",
+                candidate_agents: [],
+                blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+              },
+              blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "bridge_request_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.equal((evidence.at(-1) as { status?: string; reason?: string; targetPath?: string }).status, "fail_closed");
+  assert.equal((evidence.at(-1) as { status?: string; reason?: string; targetPath?: string }).reason, "contract_mismatch");
+  assert.equal((evidence.at(-1) as { status?: string; reason?: string; targetPath?: string }).targetPath, "/cos/text-turn");
+  assert.equal(JSON.stringify(evidence).includes("Prepare and send the governed bridge status"), false);
+  assert.equal(JSON.stringify(evidence).includes("sent it externally"), false);
+});
+
 test("live bridge captures sanitized fail-closed evidence on auth failure", async () => {
   const evidence: unknown[] = [];
 
