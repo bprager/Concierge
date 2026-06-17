@@ -423,20 +423,29 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
     },
     {
       label: "Descriptor discovered",
-      status: descriptor.failClosedReason === "no_descriptor" ? "blocked" : "ready",
+      status:
+        descriptor.failClosedReason === "no_descriptor" || descriptor.failClosedReason === "descriptor_stale"
+          ? "blocked"
+          : "ready",
       detail:
         descriptor.failClosedReason === "no_descriptor"
           ? "No Napoleon Chief of Staff descriptor has been discovered."
-          : "Descriptor state is available for preflight.",
+          : descriptor.failClosedReason === "descriptor_stale"
+            ? "Napoleon descriptor discovery is stale; rediscover before attempting a live send."
+            : "Descriptor state is available for preflight.",
     },
     {
       label: "Descriptor integrity",
       status:
         descriptor.failClosedReason === "descriptor_signature_or_checksum_mismatch" ||
-        descriptor.failClosedReason === "descriptor_invalid"
+        descriptor.failClosedReason === "descriptor_invalid" ||
+        descriptor.failClosedReason === "descriptor_stale"
           ? "blocked"
           : "ready",
-      detail: `Checksum ${descriptor.checksumState}; signature ${descriptor.signatureState}.`,
+      detail:
+        descriptor.failClosedReason === "descriptor_stale"
+          ? `Descriptor cache is stale. Checksum ${descriptor.checksumState}; signature ${descriptor.signatureState}.`
+          : `Checksum ${descriptor.checksumState}; signature ${descriptor.signatureState}.`,
     },
     {
       label: "Governance send gate",

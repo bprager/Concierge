@@ -456,6 +456,30 @@ test("describes descriptor auth failure as fail-closed readiness", () => {
   assert.ok(view.details.some((detail) => detail.label === "Descriptor" && detail.value.includes("auth_failure")));
 });
 
+test("describes stale descriptor cache as a visible live send preflight blocker", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+      discoveredAt: "2026-06-16T10:00:00.000Z",
+      maxAgeSeconds: 300,
+      now: "2026-06-16T10:06:00.000Z",
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canAttemptLiveSend, false);
+  assert.ok(view.items.some((item) => item.label === "Descriptor discovered" && item.status === "blocked"));
+  assert.ok(view.items.some((item) => item.label === "Descriptor integrity" && item.status === "blocked"));
+  assert.ok(view.items.some((item) => item.detail.includes("stale")));
+});
+
 test("describes live send preflight blockers without granting authority", () => {
   const view = describeLiveSendPreflight({
     descriptorConnection: buildDescriptorConnectionState({
