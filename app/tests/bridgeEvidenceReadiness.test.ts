@@ -49,6 +49,19 @@ test("marks sanitized bridge evidence as captured and compared", () => {
   assert.equal(state.lastTargetPath, "/v1/concierge/turn");
 });
 
+test("accepts explicit cos text-turn advisory evidence for text turn readiness", () => {
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+    ...validEvidence,
+    targetPath: "/cos/text-turn",
+  });
+
+  assert.equal(state.captureState, "passed");
+  assert.equal(state.comparisonState, "passed");
+  assert.equal(state.lastOperationId, "text_turn");
+  assert.equal(state.lastTargetPath, "/cos/text-turn");
+  assert.equal(state.failureReason, undefined);
+});
+
 test("fails comparison for evidence that does not match the bridge registry", () => {
   const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
     ...validEvidence,

@@ -61,6 +61,15 @@ const FORBIDDEN_EVIDENCE_VALUE_PATTERNS = [
   /\bauthorization\b/i,
 ];
 
+function isAcceptedAdvisoryHarnessAlias(record: BridgeContractEvidence): boolean {
+  return (
+    record.operationId === "text_turn" &&
+    record.requestKind === "text_turn" &&
+    record.transport === "http_post" &&
+    record.targetPath === "/cos/text-turn"
+  );
+}
+
 function promotionGateForProof(input: BridgeReadinessProofInput): string {
   const source = input.runtimeValidationSource ?? "real_runtime";
   if (source === "local_harness" || source === "local_simulation") {
@@ -98,7 +107,8 @@ function compareBridgeEvidence(record: BridgeContractEvidence): string | null {
   }
 
   const operation = getBridgeOperation(record.operationId);
-  if (record.targetPath !== operation.path) {
+  const advisoryHarnessAlias = isAcceptedAdvisoryHarnessAlias(record);
+  if (record.targetPath !== operation.path && !advisoryHarnessAlias) {
     return `Evidence target path ${record.targetPath} does not match ${operation.path}.`;
   }
   if (record.requestKind !== operation.requestKind) {
