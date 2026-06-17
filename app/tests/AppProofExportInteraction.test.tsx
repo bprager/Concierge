@@ -2477,6 +2477,59 @@ test("submits a steering draft through rendered governed controls without local 
   }
 });
 
+test("drafting Chief of Staff steering records learning-signal telemetry without raw content", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, render },
+    userEventModule,
+    { App },
+    { emitEvent, capabilityLedger },
+    { clearCapabilityLedger },
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalInfo = console.info;
+  console.info = () => undefined;
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    emitEvent("response_failed", {
+      traceId: "trace_learning_steering",
+      conversationId: "conv_learning_steering",
+      turnId: "turn_learning_steering",
+      profile: "adult_owner",
+      rawMessage: "raw steering miss must not be retained",
+    });
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+    await view.findByText("Chief of Staff steering draft");
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const learningEvent = telemetryBuffer.events?.find((event) => event.event === "learning_signal_recorded");
+
+    assert.ok(learningEvent);
+    assert.equal(learningEvent.attributes.signalType, "repeated_pattern");
+    assert.equal(learningEvent.attributes.source, "local_capability_ledger");
+    assert.equal(learningEvent.attributes.proposalOnly, true);
+    assert.equal(learningEvent.attributes.memoryWritePerformed, false);
+    assert.equal(learningEvent.attributes.agentDispatchPerformed, false);
+    assert.equal(learningEvent.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(learningEvent).includes("raw steering miss"), false);
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("submits a memory proposal through rendered governed controls without local side effects", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

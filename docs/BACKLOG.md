@@ -153,6 +153,7 @@ Acceptance criteria:
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
 - Correctly blocked unsafe requests are classified separately from failed safe requests.
 - Chief of Staff steering drafts only attach evidence from the missing or degraded recommendation bucket that produced the recommendation; correctly blocked unsafe traces are not reused as evolution proposal evidence because of a shared capability label.
+- Chief of Staff steering evolution proposal drafts include metadata-only learning signals from the same selected missing or degraded evidence bucket, and draft creation emits local `learning_signal_recorded` telemetry without raw content or side effects.
 - Recommendations are proposal-only and do not implement features, grant approval, write memory, dispatch agents, or send externally.
 - Local Chief of Staff taxonomy review drafts can recommend metadata-only merge, split, and deprecation review, package evaluator-case and evolution-proposal drafts, and submit them through the governed Chief of Staff bridge only after endpoint and descriptor preflight pass, without applying taxonomy edits or changing Napoleon policy/routing; child-protected taxonomy review drafts and handoffs preserve child profile scope and guardian/owner review wording.
 - Clearing the local capability ledger clears any derived Chief of Staff steering or taxonomy review draft, response, or failure state so obsolete local evidence cannot be submitted or displayed; taxonomy edits clear derived taxonomy review drafts and review results.
@@ -805,6 +806,7 @@ Acceptance criteria:
 - `schemas/learning_signal.schema.json` defines the metadata-only contract for learning signals.
 - `examples/sample_learning_signal.json` validates against the schema in repository validation.
 - Runtime helpers construct schema-shaped learning signals and telemetry attributes from local capability metadata without copying raw conversation content.
+- Chief of Staff steering drafts attach schema-shaped learning signals to evolution proposal drafts and emit local `learning_signal_recorded` telemetry from metadata-only attributes.
 - Signals include trace, turn, conversation, profile mode, channel, signal type, source, capability, architecture area, confidence, evidence references, privacy classification, and proposal-only governance boundaries.
 - Supported signal types include `correction`, `interruption`, `rating`, and `repeated_pattern`.
 - Rating signals require a bounded user rating, and repeated-pattern signals require a bounded pattern count.
@@ -848,6 +850,7 @@ User value: Repeated local capability gaps can be converted into a concrete revi
 Acceptance criteria:
 
 - The draft includes a capability recommendation, architecture area, evidence count, rationale, evaluator case candidate, evolution proposal draft, approval requirement, and rollback plan.
+- The evolution proposal draft includes metadata-only learning signals derived from the selected missing or degraded local capability evidence, not from unrelated correctly blocked unsafe traces.
 - The draft remains local when no governed Napoleon endpoint is configured or descriptor preflight fails, and an existing draft becomes submittable only after current governed endpoint and descriptor readiness pass without Rehearsal Mode.
 - Governed submission posts an `evolution_proposal_review` packet with recommendation, evaluator case candidate, evolution proposal draft, proposal-only boundary, blocked effects, and trace/audit envelopes.
 - Child-protected governed submission includes explicit child-safety caution, child-protected profile scope, and guardian/owner review wording.

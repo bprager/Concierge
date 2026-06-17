@@ -68,6 +68,15 @@ test("drafts proposal-only Chief of Staff steering from capability signals", () 
   assert.ok(draft.evolutionProposal.summary.includes("live_bridge_descriptor_discovery"));
   assert.ok(draft.evolutionProposal.evaluator_cases.includes(draft.evaluatorCaseCandidate.caseId));
   assert.ok(draft.evolutionProposal.evidence.includes("trace:trace_missing_bridge"));
+  assert.equal(draft.evolutionProposal.learning_signals.length, 1);
+  assert.equal(draft.evolutionProposal.learning_signals[0].schema_version, "concierge.learning_signal.v1");
+  assert.equal(draft.evolutionProposal.learning_signals[0].signal_type, "repeated_pattern");
+  assert.equal(draft.evolutionProposal.learning_signals[0].capability_id, "live_bridge_descriptor_discovery");
+  assert.equal(draft.evolutionProposal.learning_signals[0].architecture_area, "napoleon_bridge");
+  assert.equal(draft.evolutionProposal.learning_signals[0].pattern_count, 1);
+  assert.equal(draft.evolutionProposal.learning_signals[0].privacy.raw_user_text_stored, false);
+  assert.equal(draft.evolutionProposal.learning_signals[0].governance_boundary.proposal_only, true);
+  assert.equal(draft.evolutionProposal.learning_signals[0].governance_boundary.memory_write_performed, false);
 });
 
 test("steering draft evidence excludes correctly blocked unsafe signals with the same capability label", () => {
@@ -401,6 +410,22 @@ test("steering handoff posts evolution review packet without applying proposal l
   assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "evolution_proposal_review");
   assert.equal((posted?.chiefOfStaffRequest as { requested_authority_tier: string }).requested_authority_tier, "advisory_review");
   assert.equal((posted?.evolutionProposal as { proposal_id: string }).proposal_id, draft.evolutionProposal.proposal_id);
+  const postedLearningSignals = (posted?.evolutionProposal as {
+    learning_signals: Array<{
+      signal_type: string;
+      source: string;
+      capability_id: string;
+      governance_boundary: { applied_locally: boolean; external_send_performed: boolean };
+      privacy: { raw_user_text_stored: boolean };
+    }>;
+  }).learning_signals;
+  assert.equal(postedLearningSignals.length, 1);
+  assert.equal(postedLearningSignals[0].signal_type, "repeated_pattern");
+  assert.equal(postedLearningSignals[0].source, "local_capability_ledger");
+  assert.equal(postedLearningSignals[0].capability_id, "live_bridge_descriptor_discovery");
+  assert.equal(postedLearningSignals[0].privacy.raw_user_text_stored, false);
+  assert.equal(postedLearningSignals[0].governance_boundary.applied_locally, false);
+  assert.equal(postedLearningSignals[0].governance_boundary.external_send_performed, false);
   assert.equal(targetUrl, "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering");
   assert.equal(headers?.Authorization, "Bearer token_steering");
   assert.equal(JSON.stringify(posted).includes("token_steering"), false);

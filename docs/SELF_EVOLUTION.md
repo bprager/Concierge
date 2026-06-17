@@ -52,6 +52,8 @@ Each signal must include trace, turn, conversation, profile mode, channel, signa
 
 The Text Concierge runtime can now derive these records from local Conversation Capability Intelligence metadata through `app/src/learningSignal.ts`. The helper emits schema-shaped records and count-only telemetry attributes; it does not copy raw conversation text, claim approval, write memory, dispatch agents, send externally, or apply changes locally.
 
+Chief of Staff steering drafts attach these records to evolution proposal drafts when local capability evidence supports the recommendation. Draft creation also emits local `learning_signal_recorded` telemetry from metadata-only attributes, without raw content, approval capture, memory writes, agent dispatch, external sends, or local application.
+
 ## 4. Change categories
 
 | Category | Example | Risk |

@@ -23,6 +23,10 @@ import {
 } from "./contractBridge.js";
 import { NapoleonBridgeError, descriptorFailClosedReasonToBridgeFailure } from "./napoleonBridge.js";
 import { emitEvent, makeTelemetryPayload, type TelemetryPayload } from "./telemetry.js";
+import {
+  buildLearningSignalFromCapabilitySignal,
+  type LearningSignal,
+} from "./learningSignal.js";
 
 type SteeringFetch = (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => Promise<{
   ok: boolean;
@@ -59,6 +63,7 @@ interface EvolutionProposalDraft {
   summary: string;
   risk_level: "low" | "medium" | "high" | "very_high";
   evidence: string[];
+  learning_signals: LearningSignal[];
   change: {
     capability: string;
     architecture_area: CapabilityArchitectureArea;
@@ -138,12 +143,22 @@ export function draftChiefOfStaffSteering(
   const capabilityLabel = top?.label ?? "no_local_capability_gap";
   const architectureArea = top?.architectureArea ?? "observability";
   const confidence = top?.confidence ?? 0;
-  const evidenceRefs = ledger
+  const supportingSignals = ledger
     .listRecent()
-    .filter((signal) => supportsSteeringRecommendation(signal, top))
+    .filter((signal) => supportsSteeringRecommendation(signal, top));
+  const evidenceRefs = supportingSignals
     .flatMap((signal) => signal.evidenceRefs)
     .slice(0, 8);
   const caseId = `capability_gap_${capabilityLabel.replace(/[^a-z0-9_]+/gi, "_").toLowerCase()}`;
+  const learningSignals = supportingSignals.slice(0, 8).map((signal, index) =>
+    buildLearningSignalFromCapabilitySignal(signal, {
+      signalId: `learning_${caseId}_${index + 1}_${signal.traceId.replace(/[^a-z0-9_:-]+/gi, "_")}`,
+      createdAt: signal.observedAt,
+      signalType: "repeated_pattern",
+      patternCount: 1,
+      redactedSummary: `Capability ${signal.capabilityLabel} was ${signal.capabilityStatus} in ${signal.architectureArea}.`,
+    }),
+  );
 
   const recommendation: SteeringRecommendation = {
     capabilityLabel,
@@ -172,6 +187,7 @@ export function draftChiefOfStaffSteering(
       summary: `Improve ${capabilityLabel} in ${architectureArea} based on local capability signals.`,
       risk_level: riskForArchitecture(architectureArea),
       evidence: evidenceRefs,
+      learning_signals: learningSignals,
       change: {
         capability: capabilityLabel,
         architecture_area: architectureArea,

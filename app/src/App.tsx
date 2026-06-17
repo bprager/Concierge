@@ -63,6 +63,7 @@ import {
   submitChiefOfStaffSteeringDraft,
   type ChiefOfStaffSteeringSubmissionResult,
 } from "./chiefOfStaffSteering.js";
+import { buildLearningSignalTelemetryAttributes } from "./learningSignal.js";
 import {
   buildDescriptorConnectionState,
   buildGovernanceReviewState,
@@ -2089,6 +2090,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       externalSendAllowed: draft.boundary.externalSendAllowed,
       canSendToNapoleon: draft.sendState.canSendToNapoleon,
     });
+    for (const learningSignal of draft.evolutionProposal.learning_signals) {
+      const { eventName, ...attributes } = buildLearningSignalTelemetryAttributes(learningSignal);
+      emitEvent(eventName, {
+        traceId,
+        conversationId,
+        ...attributes,
+      });
+    }
     refreshCapabilityLedgerStatus();
   }
 
