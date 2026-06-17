@@ -309,6 +309,62 @@ test("capability taxonomy edit telemetry stays proposal-only without agent dispa
   }
 });
 
+test("records child profile scope when answering local capability intelligence questions", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  let fetchCalls = 0;
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What conversations are most common?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+    await view.findByText(/Most common local conversation topics/);
+
+    const answered = await waitFor(() => {
+      const payload = telemetryPayloads.find((event) => event.event === "capability_intelligence_answered");
+      assert.ok(payload);
+      return payload;
+    });
+    assert.equal(answered.attributes.profile, "child_protected");
+    assert.equal(answered.attributes.profileMode, "child_protected_user");
+    assert.equal(answered.attributes.kind, "common_conversations");
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows Napoleon delegation panel before bridge provenance is returned", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([

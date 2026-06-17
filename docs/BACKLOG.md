@@ -237,6 +237,7 @@ Acceptance criteria:
 - Fail-closed transcript metadata must include the active profile mode on blocked bridge attempts, so profile-scope drift remains visible to the user.
 - Local Rehearsal Mode governance review-required, acknowledgement, and memory proposal telemetry must include the active profile mode so child-protected local preview signals stay child-sensitive without contacting Napoleon.
 - Locally blocked Rehearsal Mode `no_go` previews must emit blocked-governance telemetry with active profile mode and blocked effects, without contacting Napoleon, so child-protected unsafe previews remain child-sensitive local signals.
+- Local capability-intelligence answer telemetry must include the active profile mode so child-protected local query answers stay profile-scoped without contacting Napoleon.
 - Fail-closed memory proposal, governance review, Chief of Staff steering, and taxonomy review handoff messages, errors, and telemetry must include the active profile mode, so blocked governed handoffs preserve child-protected, guest, collaborator, or owner scope.
 - Successful and fail-closed text response telemetry must include the active local profile and Napoleon profile mode, so derived capability intelligence preserves child-protected, guest, collaborator, or owner scope.
 - Successful text responses must fail closed as contract mismatches if they claim memory writes, approval capture, external sends, agent dispatch, or local application.

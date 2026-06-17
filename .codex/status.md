@@ -85,6 +85,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added child-protected text-turn policy telemetry with guardian-review, no-secret-keeping, and blocked memory-write, approval-capture, external-send, and agent-dispatch flags before governed bridge sends.
 - Added child-protected local Rehearsal Mode review-required and memory-proposal telemetry with active profile mode, without contacting Napoleon.
 - Added child-protected local `no_go` rehearsal blocked-governance telemetry with active profile mode and blocked effects, without contacting Napoleon.
+- Added child-protected local capability-intelligence answer telemetry with active profile mode, without contacting Napoleon.
 - Cleared governed review handoff result panels when profile, endpoint, token, descriptor, or Rehearsal Mode state changes so remote review evidence is not reused across stale connection or profile context.
 - Cleared local governance and memory review drafts when the active user profile changes so proposal-only review controls cannot reuse stale adult, guest, collaborator, or child-protected context.
 - Cleared local Chief of Staff steering and taxonomy review drafts when the active user profile changes so proposal-only capability handoffs cannot reuse stale adult, guest, collaborator, or child-protected context.

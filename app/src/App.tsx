@@ -1364,6 +1364,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         conversationId,
         turnId,
         profile,
+        profileMode: mapProfileToNapoleonMode(profile),
         kind: capabilityAnswer.kind,
         evidenceCount: capabilityAnswer.evidenceCount,
       });
@@ -1549,6 +1550,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           conversationId,
           turnId,
           profile,
+          profileMode: mapProfileToNapoleonMode(profile),
           kind: capabilityAnswer.kind,
           evidenceCount: capabilityAnswer.evidenceCount,
         });
