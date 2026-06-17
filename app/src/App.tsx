@@ -421,6 +421,15 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setTaxonomyReviewFailure(null);
   }
 
+  function clearProfileScopedCapabilityDrafts() {
+    setSteeringDraft(null);
+    setSteeringSubmission(null);
+    setSteeringFailure(null);
+    setTaxonomyReviewDraft(null);
+    setTaxonomyReviewSubmission(null);
+    setTaxonomyReviewFailure(null);
+  }
+
   function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {
     setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response));
     setNapoleonProofExportJson(null);
@@ -1334,6 +1343,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearNapoleonPresentation();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
+    clearProfileScopedCapabilityDrafts();
   }
 
   function updateInput(value: string) {

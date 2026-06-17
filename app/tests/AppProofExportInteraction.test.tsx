@@ -2152,6 +2152,30 @@ test("enables an existing steering draft after governed endpoint readiness becom
   }
 });
 
+test("clears profile-scoped steering drafts when user profile changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+    await view.findByText("Chief of Staff steering draft");
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+
+    assert.equal(view.queryByText("Chief of Staff steering draft"), null);
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send steering draft to Napoleon review" })), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("submits a steering draft through rendered governed controls without local side effects", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
