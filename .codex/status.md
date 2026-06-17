@@ -17,6 +17,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added and pushed the initial Concierge scaffold.
 - Verified evaluator stub mode, frontend build, Tauri check, schema validation, Markdown links, and YAML parsing during scaffold packaging.
 - Hardened repository authority-boundary validation so browser `Worker`, `SharedWorker`, and `importScripts` entry points cannot hide service calls outside the governed Napoleon bridge modules.
+- Hardened repository authority-boundary validation so lowercase and SVG external target variants such as `srcset`, `formaction`, and `xlink:href` cannot create alternate browser side channels outside the governed Napoleon bridge modules.
 - Added startup planning reports in `docs/reports/`.
 - Ingested Napoleon's contract-only Chief of Staff integration package: service descriptor, integration guide, architecture notes, OpenAPI, discovery guide, evidence note, and schemas for ChiefOfStaff, agent manifests, governance decisions, user profiles, observability envelopes, and evolution proposals.
 - Updated the five startup reports to reflect the `napoleon.chief_of_staff` descriptor, governance outcomes, authority tiers, profile modes, observability envelope requirements, blocked effects, and non-authority boundary.

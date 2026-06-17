@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so lowercase and SVG external target variants such as `srcset`, `formaction`, and `xlink:href` cannot create outside side channels outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so static and dynamic remote module imports cannot load outside code outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so dynamic external target setters cannot assign outside URLs to browser link, form, resource, or ping targets outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so dynamic HTML injection APIs cannot smuggle external targets around static UI target checks outside the governed Napoleon bridge modules.

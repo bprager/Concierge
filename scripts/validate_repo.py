@@ -99,6 +99,7 @@ FORBIDDEN_TAURI_NATIVE_PLUGINS = {
 VISIBLE_PERMISSION_HANDLER_SOURCE_ALLOWLIST = {
     "app/src/App.tsx",
 }
+EXTERNAL_TARGET_ATTRIBUTES = r"href|xlink:href|xlinkHref|action|formAction|formaction|src|srcSet|srcset|poster"
 
 UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bfetch\s*\("),
@@ -115,12 +116,12 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bwindow\.open\s*\("),
     re.compile(r"\b(?:window\.|document\.)?location\.(?:href|assign|replace)\b"),
     re.compile(r"\b(?:navigator|window\.navigator)\.share\s*\("),
-    re.compile(r"\b(?:href|action|formAction|src|srcSet|poster)\s*=\s*['\"](?:https?://|mailto:)"),
+    re.compile(rf"\b(?:{EXTERNAL_TARGET_ATTRIBUTES})\s*=\s*['\"](?:https?://|mailto:)"),
     re.compile(r"\bping\s*=\s*['\"]https?://"),
-    re.compile(r"\[\s*['\"](?:href|action|formAction|src|srcSet|poster)['\"]\s*\]\s*=\s*['\"](?:https?://|mailto:)"),
+    re.compile(rf"\[\s*['\"](?:{EXTERNAL_TARGET_ATTRIBUTES})['\"]\s*\]\s*=\s*['\"](?:https?://|mailto:)"),
     re.compile(r"\[\s*['\"]ping['\"]\s*\]\s*=\s*['\"]https?://"),
     re.compile(
-        r"\bsetAttribute\s*\(\s*['\"](?:href|action|formAction|src|srcSet|poster)['\"]\s*,\s*['\"](?:https?://|mailto:)"
+        rf"\bsetAttribute\s*\(\s*['\"](?:{EXTERNAL_TARGET_ATTRIBUTES})['\"]\s*,\s*['\"](?:https?://|mailto:)"
     ),
     re.compile(r"\bsetAttribute\s*\(\s*['\"]ping['\"]\s*,\s*['\"]https?://"),
     re.compile(r"\bhttp-?equiv\s*=\s*['\"]refresh['\"][^>\n]*\bcontent\s*=\s*['\"][^'\"]*url\s*=\s*https?://", re.IGNORECASE),
