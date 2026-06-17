@@ -659,3 +659,32 @@ test("describes governed handoff failure with blocked effects visible", () => {
   assert.ok(message.includes("did not send externally"));
   assert.ok(message.includes("did not capture approval"));
 });
+
+test("describes descriptor-specific governed handoff failure reasons", () => {
+  const error = new NapoleonBridgeError("descriptor_mismatch", "trace_descriptor_handoff", "request_descriptor_handoff", undefined, [
+    "memory_write",
+    "agent_dispatch",
+    "external_send",
+    "approval_capture",
+  ], {
+    descriptorFailureReason: "auth_failure",
+    profileMode: "adult_owner",
+  });
+
+  const message = describeGovernedHandoffFailure(
+    error,
+    "Memory proposal handoff",
+    "submit the proposal",
+  );
+
+  assert.ok(message.includes("Memory proposal handoff blocked"));
+  assert.ok(message.includes("descriptor_mismatch"));
+  assert.ok(message.includes("Descriptor: descriptor auth failure"));
+  assert.ok(message.includes("profile adult_owner"));
+  assert.ok(message.includes("Blocked effects: memory_write, agent_dispatch, external_send, approval_capture"));
+  assert.ok(message.includes("did not submit the proposal"));
+  assert.ok(message.includes("did not write memory"));
+  assert.ok(message.includes("did not dispatch agents"));
+  assert.ok(message.includes("did not send externally"));
+  assert.ok(message.includes("did not capture approval"));
+});

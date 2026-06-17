@@ -107,6 +107,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added transcript-visible live text bridge failure messages that include the fail-closed reason and blocked effects where available.
 - Added descriptor-specific live text bridge failure detail so missing descriptor and checksum/signature mismatch preflight blocks are visible in bridge errors, transcript messages, failed bridge telemetry, and sanitized bridge evidence.
 - Added descriptor-specific governed handoff failure detail so memory proposal, governance review, Chief of Staff steering, and taxonomy review preflight blocks carry missing descriptor, checksum/signature mismatch, or descriptor auth failure metadata into errors and failed telemetry.
+- Added presentation coverage proving governed handoff failure messages show descriptor-specific causes instead of flattening them to generic descriptor mismatch.
 - Added returned decision, audit, and governance references to live text bridge fail-closed errors, telemetry, and visible failure messages when Napoleon supplies those references before blocking.
 - Added generated bridge operation registry output from the canonical OpenAPI bridge contract and repository validation that fails when the generated file is stale.
 - Aligned the generated bridge operation registry with canonical HTTP methods, including descriptor discovery as `GET` and governed handoffs as `POST`, with repository validation for method drift.
