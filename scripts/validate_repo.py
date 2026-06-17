@@ -96,6 +96,43 @@ FORBIDDEN_TAURI_NATIVE_PLUGINS = {
     "upload",
     "websocket",
 }
+FORBIDDEN_NODE_AUTHORITY_DEPENDENCIES = {
+    "@anthropic-ai/sdk",
+    "@aws-sdk/client-bedrock-runtime",
+    "@azure/openai",
+    "@google/generative-ai",
+    "@langchain/anthropic",
+    "@langchain/community",
+    "@langchain/core",
+    "@langchain/openai",
+    "@modelcontextprotocol/sdk",
+    "anthropic",
+    "bolt-driver",
+    "child_process",
+    "execa",
+    "langchain",
+    "memgraph",
+    "neo4j-driver",
+    "node-fetch",
+    "ollama",
+    "openai",
+    "shelljs",
+    "socket.io-client",
+    "undici",
+    "ws",
+}
+FORBIDDEN_RUST_AUTHORITY_DEPENDENCIES = {
+    "async-openai",
+    "bolt-client",
+    "ollama-rs",
+    "openai-api-rs",
+    "reqwest",
+    "tokio-tungstenite",
+    "tungstenite",
+    "ureq",
+    "websocket",
+    "neo4rs",
+}
 VISIBLE_PERMISSION_HANDLER_SOURCE_ALLOWLIST = {
     "app/src/App.tsx",
 }
@@ -1060,6 +1097,48 @@ def scan_tauri_cargo_manifest_text(path: str, text: str) -> list[str]:
     return violations
 
 
+def scan_node_package_manifest_text(path: str, text: str) -> list[str]:
+    try:
+        manifest = json.loads(text)
+    except json.JSONDecodeError as exc:
+        return [f"{path}: invalid package manifest JSON: {exc.msg}"]
+
+    violations: list[str] = []
+    dependency_sections = [
+        "dependencies",
+        "devDependencies",
+        "optionalDependencies",
+        "peerDependencies",
+    ]
+    for section in dependency_sections:
+        dependencies = manifest.get(section, {})
+        if not isinstance(dependencies, dict):
+            continue
+        for dependency_name in sorted(dependencies):
+            if dependency_name in FORBIDDEN_NODE_AUTHORITY_DEPENDENCIES:
+                violations.append(f"{path}: forbidden authority client dependency in {section}: {dependency_name}")
+    return violations
+
+
+def scan_cargo_authority_dependency_text(path: str, text: str) -> list[str]:
+    violations: list[str] = []
+    in_dependencies = False
+    for line in text.splitlines():
+        section_match = CARGO_SECTION_PATTERN.match(line)
+        if section_match:
+            in_dependencies = section_match.group("section") == "dependencies"
+            continue
+        if not in_dependencies:
+            continue
+        dependency_match = CARGO_DEPENDENCY_PATTERN.match(line)
+        if not dependency_match:
+            continue
+        dependency_name = dependency_match.group("name")
+        if dependency_name in FORBIDDEN_RUST_AUTHORITY_DEPENDENCIES:
+            violations.append(f"{path}: forbidden authority client dependency: {dependency_name}")
+    return violations
+
+
 def find_tauri_desktop_authority_violations() -> list[str]:
     violations: list[str] = []
     config_path = ROOT / "app/src-tauri/tauri.conf.json"
@@ -1070,6 +1149,21 @@ def find_tauri_desktop_authority_violations() -> list[str]:
         violations.extend(
             scan_tauri_cargo_manifest_text(str(manifest_path.relative_to(ROOT)), manifest_path.read_text(encoding="utf-8")),
         )
+    return sorted(violations)
+
+
+def find_dependency_authority_violations() -> list[str]:
+    violations: list[str] = []
+    package_path = ROOT / "app/package.json"
+    if package_path.exists():
+        violations.extend(
+            scan_node_package_manifest_text(str(package_path.relative_to(ROOT)), package_path.read_text(encoding="utf-8"))
+        )
+    manifest_path = ROOT / "app/src-tauri/Cargo.toml"
+    if manifest_path.exists():
+        relative_path = str(manifest_path.relative_to(ROOT))
+        text = manifest_path.read_text(encoding="utf-8")
+        violations.extend(scan_cargo_authority_dependency_text(relative_path, text))
     return sorted(violations)
 
 
@@ -1096,6 +1190,12 @@ def validate_authority_boundary() -> None:
         raise SystemExit(
             "Concierge desktop configuration enables native authority bypasses:\n"
             + "\n".join(tauri_violations)
+        )
+    dependency_violations = find_dependency_authority_violations()
+    if dependency_violations:
+        raise SystemExit(
+            "Concierge runtime manifests include direct authority client dependencies:\n"
+            + "\n".join(dependency_violations)
         )
     print("authority boundary scan passed")
 

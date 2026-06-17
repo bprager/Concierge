@@ -24,6 +24,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertEqual(violations, [])
 
+    def test_current_runtime_manifests_do_not_include_direct_authority_clients(self):
+        violations = validate_repo.find_dependency_authority_violations()
+
+        self.assertEqual(violations, [])
+
     def test_scanner_detects_direct_process_execution(self):
         violations = validate_repo.scan_authority_boundary_text(
             "app/src-tauri/src/main.rs",
@@ -108,6 +113,41 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertEqual(len(violations), 3)
         self.assertTrue(all("Tauri native bypass plugin dependency" in violation for violation in violations))
+
+    def test_scanner_detects_forbidden_node_authority_client_dependencies(self):
+        source = """
+        {
+          "dependencies": {
+            "openai": "latest",
+            "@anthropic-ai/sdk": "latest",
+            "neo4j-driver": "latest",
+            "langchain": "latest",
+            "ws": "latest"
+          },
+          "devDependencies": {
+            "shelljs": "latest"
+          }
+        }
+        """
+
+        violations = validate_repo.scan_node_package_manifest_text("app/package.json", source)
+
+        self.assertEqual(len(violations), 6)
+        self.assertTrue(all("forbidden authority client dependency" in violation for violation in violations))
+
+    def test_scanner_detects_forbidden_rust_authority_client_dependencies(self):
+        source = """
+        [dependencies]
+        reqwest = "0.12"
+        async-openai = "0.27"
+        neo4rs = "0.8"
+        tokio-tungstenite = "0.26"
+        """
+
+        violations = validate_repo.scan_cargo_authority_dependency_text("app/src-tauri/Cargo.toml", source)
+
+        self.assertEqual(len(violations), 4)
+        self.assertTrue(all("forbidden authority client dependency" in violation for violation in violations))
 
     def test_network_scanner_detects_unallowlisted_fetch_and_socket_calls(self):
         for source in [
