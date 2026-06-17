@@ -2364,6 +2364,172 @@ test("submits a memory proposal through rendered governed controls without local
   }
 });
 
+test("submits a governance review through rendered governed controls without local approval", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      requestedUrls.push(String(input));
+      const body = init?.body ? JSON.parse(String(init.body)) : {};
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/turn")) {
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon prepared the external-send request for review.",
+            profileMode: body.profileMode,
+            targetAgent: "napoleon.chief_of_staff",
+            governanceDecision: {
+              decision_id: "decision_governance_turn_rendered",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "External sends require governed review.",
+              blocked_effects: ["approval_capture", "memory_write", "agent_dispatch", "external_send"],
+              trace_id: body.traceId,
+              audit_id: "audit_governance_turn_rendered",
+            },
+            traceEnvelope: {
+              trace_id: body.traceId,
+              parent_trace_id: "rendered-governance",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_governance_turn_rendered",
+              timestamp: "2026-06-14T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_governance_turn_rendered",
+              trace_id: body.traceId,
+              decision_id: "decision_governance_turn_rendered",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:governance-turn-rendered"],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/steering")) {
+        assert.equal(body.requestKind, "chief_of_staff_steering_handoff");
+        assert.equal(body.handoffKind, "governance_review_handoff");
+        assert.equal(body.boundary.proposalOnly, true);
+        assert.equal(body.boundary.approvalCaptured, false);
+        assert.equal(body.boundary.localApplicationAllowed, false);
+        assert.equal(body.boundary.agentDispatchAllowed, false);
+        assert.ok(body.blockedEffects.includes("approval_capture"));
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon accepted the governance review packet.",
+            governanceDecision: {
+              decision_id: "decision_governance_review_rendered",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Review acknowledgement is not approval.",
+              blocked_effects: ["approval_capture", "memory_write", "agent_dispatch", "external_send"],
+              trace_id: body.traceEnvelope.trace_id,
+              audit_id: "audit_governance_review_rendered",
+            },
+            traceEnvelope: {
+              trace_id: body.traceEnvelope.trace_id,
+              parent_trace_id: body.traceEnvelope.parent_trace_id,
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_governance_review_rendered",
+              timestamp: "2026-06-14T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_governance_review_rendered",
+              trace_id: body.traceEnvelope.trace_id,
+              decision_id: "decision_governance_review_rendered",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:governance-review-rendered"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Prepare an external send for review" },
+    });
+    await user.click(view.getByRole("button", { name: "Send" }));
+    await view.findByText("Napoleon prepared the external-send request for review.");
+    await view.findByText("Governance review readiness");
+    await user.click(view.getByRole("button", { name: "Send governance review to Napoleon" }));
+
+    await view.findByText("Napoleon accepted the governance review packet.");
+    const submissionDetails = view.getByText("Napoleon accepted the governance review packet.").closest("dl") as HTMLElement | null;
+    assert.equal(Boolean(submissionDetails), true);
+    assert.ok(within(submissionDetails as HTMLElement).getByText("Authority tier"));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("advisory_review"));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("Approval requirement"));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("chief_of_staff_and_owner_review"));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("Rationale"));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("Review acknowledgement is not approval."));
+    assert.ok(within(submissionDetails as HTMLElement).getByText("Blocked effects"));
+    assert.ok(
+      within(submissionDetails as HTMLElement).getByText("approval_capture, memory_write, agent_dispatch, external_send"),
+    );
+    assert.ok(view.getByText(/decision_governance_review_rendered/));
+    assert.ok(view.getByText(/audit_governance_review_rendered/));
+    assert.ok(view.getByText("no approval captured; no memory write; no agent dispatch; no external send; no local application."));
+    assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/steering"));
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears profile-scoped memory review drafts when user profile changes", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
