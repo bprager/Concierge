@@ -70,6 +70,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added local governance outcome visibility to the composer live-send preflight governance gate so blocked requests show decisions such as `no_go` before any send attempt.
 - Added rendered direct-send blocking for local `no_go` governance so the main Send button is disabled before any live bridge attempt while descriptor and endpoint blockers still produce visible fail-closed messages when clicked.
 - Added blocked-effect visibility to the composer live-send preflight so memory writes, approval capture, agent dispatch, and external sends remain visible before governed bridge attempts.
+- Added allowed-effect visibility to the composer live-send preflight so `prepare_advisory_response` is visible separately from blocked effects before governed bridge attempts.
 - Added in-session readiness tracking from captured `bridge_contract_evidence`, with local registry transport/path/request-kind and raw/secret field comparison before evidence is marked passed.
 - Added a sanitized local bridge readiness proof export with descriptor state, blocked effects, evidence status, last operation transport, last failure reason, and no raw prompts, endpoints, or secrets.
 - Added same-session local bridge readiness proof comparison that reports sanitized proof changes without exposing raw prompts, endpoints, tokens, request bodies, or response bodies.

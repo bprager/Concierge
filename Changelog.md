@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added an allowed-effects row to the composer live-send preflight so `prepare_advisory_response` is visible separately from blocked effects before a governed bridge attempt.
 - Added a blocked-effects row to the composer live-send preflight so memory writes, approval capture, agent dispatch, and external sends remain visible before a governed bridge attempt.
 - Added rendered direct-send blocking for locally non-executable governance outcomes so prompts classified as `no_go` show the governance gate and keep the main Send button disabled before any live bridge attempt.
 - Added local governance outcome visibility to the composer live-send preflight so blocked sends show decisions such as `no_go` in the governance gate row.

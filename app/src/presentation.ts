@@ -480,6 +480,11 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
           : "Local governance blocks sending this request.",
     },
     {
+      label: "Allowed effects",
+      status: "ready",
+      detail: "prepare_advisory_response",
+    },
+    {
       label: "Blocked effects",
       status: "ready",
       detail: blockedEffects.join(", "),

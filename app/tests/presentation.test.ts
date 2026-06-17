@@ -578,6 +578,30 @@ test("describes blocked effects in live send preflight", () => {
   );
 });
 
+test("describes allowed advisory effect in live send preflight", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+  });
+
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Allowed effects" &&
+        item.status === "ready" &&
+        item.detail === "prepare_advisory_response",
+    ),
+  );
+});
+
 test("describes live send preflight as ready only for governed bridge attempt", () => {
   const view = describeLiveSendPreflight({
     descriptorConnection: buildDescriptorConnectionState({
