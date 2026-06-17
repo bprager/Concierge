@@ -1135,7 +1135,60 @@ def scan_cargo_authority_dependency_text(path: str, text: str) -> list[str]:
             continue
         dependency_name = dependency_match.group("name")
         if dependency_name in FORBIDDEN_RUST_AUTHORITY_DEPENDENCIES:
-            violations.append(f"{path}: forbidden authority client dependency: {dependency_name}")
+                violations.append(f"{path}: forbidden authority client dependency: {dependency_name}")
+    return violations
+
+
+def scan_node_package_lock_text(path: str, text: str) -> list[str]:
+    try:
+        lockfile = json.loads(text)
+    except json.JSONDecodeError as exc:
+        return [f"{path}: invalid package lock JSON: {exc.msg}"]
+
+    packages = lockfile.get("packages", {})
+    if not isinstance(packages, dict):
+        return []
+    root_package = packages.get("", {})
+    if not isinstance(root_package, dict):
+        return []
+
+    root_manifest = {
+        section: root_package.get(section, {})
+        for section in ["dependencies", "devDependencies", "optionalDependencies", "peerDependencies"]
+    }
+    return scan_node_package_manifest_text(path, json.dumps(root_manifest, sort_keys=True))
+
+
+def scan_cargo_lock_authority_dependency_text(path: str, text: str) -> list[str]:
+    violations: list[str] = []
+    in_root_package = False
+    in_dependency_list = False
+
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if line == "[[package]]":
+            in_root_package = False
+            in_dependency_list = False
+            continue
+        if line == 'name = "concierge-desktop"':
+            in_root_package = True
+            continue
+        if not in_root_package:
+            continue
+        if line == "dependencies = [":
+            in_dependency_list = True
+            continue
+        if in_dependency_list and line == "]":
+            in_dependency_list = False
+            continue
+        if not in_dependency_list:
+            continue
+        dependency_match = re.match(r'"([^"]+)"', line)
+        if not dependency_match:
+            continue
+        dependency_name = dependency_match.group(1).split(" ", 1)[0]
+        if dependency_name in FORBIDDEN_RUST_AUTHORITY_DEPENDENCIES:
+            violations.append(f"{path}: forbidden authority client dependency in root lockfile package: {dependency_name}")
     return violations
 
 
@@ -1159,11 +1212,27 @@ def find_dependency_authority_violations() -> list[str]:
         violations.extend(
             scan_node_package_manifest_text(str(package_path.relative_to(ROOT)), package_path.read_text(encoding="utf-8"))
         )
+    package_lock_path = ROOT / "app/package-lock.json"
+    if package_lock_path.exists():
+        violations.extend(
+            scan_node_package_lock_text(
+                str(package_lock_path.relative_to(ROOT)),
+                package_lock_path.read_text(encoding="utf-8"),
+            )
+        )
     manifest_path = ROOT / "app/src-tauri/Cargo.toml"
     if manifest_path.exists():
         relative_path = str(manifest_path.relative_to(ROOT))
         text = manifest_path.read_text(encoding="utf-8")
         violations.extend(scan_cargo_authority_dependency_text(relative_path, text))
+    cargo_lock_path = ROOT / "app/src-tauri/Cargo.lock"
+    if cargo_lock_path.exists():
+        violations.extend(
+            scan_cargo_lock_authority_dependency_text(
+                str(cargo_lock_path.relative_to(ROOT)),
+                cargo_lock_path.read_text(encoding="utf-8"),
+            )
+        )
     return sorted(violations)
 
 

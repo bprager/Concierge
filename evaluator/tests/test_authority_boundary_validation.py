@@ -149,6 +149,53 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         self.assertEqual(len(violations), 4)
         self.assertTrue(all("forbidden authority client dependency" in violation for violation in violations))
 
+    def test_scanner_detects_forbidden_node_lockfile_root_dependencies(self):
+        source = """
+        {
+          "packages": {
+            "": {
+              "dependencies": {
+                "openai": "latest",
+                "neo4j-driver": "latest",
+                "ws": "latest"
+              },
+              "devDependencies": {
+                "shelljs": "latest"
+              }
+            },
+            "node_modules/openai": {
+              "version": "5.0.0"
+            }
+          }
+        }
+        """
+
+        violations = validate_repo.scan_node_package_lock_text("app/package-lock.json", source)
+
+        self.assertEqual(len(violations), 4)
+        self.assertTrue(all("forbidden authority client dependency" in violation for violation in violations))
+
+    def test_scanner_detects_forbidden_cargo_lockfile_root_dependencies(self):
+        source = """
+        [[package]]
+        name = "concierge-desktop"
+        version = "0.1.0"
+        dependencies = [
+         "reqwest",
+         "async-openai",
+         "tokio-tungstenite",
+        ]
+
+        [[package]]
+        name = "reqwest"
+        version = "0.12.0"
+        """
+
+        violations = validate_repo.scan_cargo_lock_authority_dependency_text("app/src-tauri/Cargo.lock", source)
+
+        self.assertEqual(len(violations), 3)
+        self.assertTrue(all("forbidden authority client dependency" in violation for violation in violations))
+
     def test_network_scanner_detects_unallowlisted_fetch_and_socket_calls(self):
         for source in [
             'await fetch("https://api.example.test/send", { method: "POST" });',
