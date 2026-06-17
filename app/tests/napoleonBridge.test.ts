@@ -303,6 +303,110 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   assert.equal(JSON.stringify(evidence).includes("Prepared through Napoleon."), false);
 });
 
+test("live bridge adapts Napoleon advisory harness text-turn responses without side effects", async () => {
+  let posted: Record<string, unknown> | undefined;
+  let headers: Record<string, string> | undefined;
+  let targetUrl: string | undefined;
+  const evidence: unknown[] = [];
+
+  const response = await sendToNapoleon(
+    {
+      traceId: "trace_cos_runtime",
+      conversationId: "conv_cos_runtime",
+      turnId: "turn_cos_runtime",
+      profile: "adult_owner",
+      channel: "text",
+      message: "Summarize the governed bridge status",
+    },
+    {
+      getEndpoint: () => "https://napoleon.example/cos/text-turn",
+      descriptorConnection: readyDescriptorConnection,
+      getAuthToken: () => "token_cos_runtime",
+      emit: () => undefined,
+      captureEvidence: (record) => evidence.push(record),
+      fetch: async (url, init) => {
+        targetUrl = url;
+        headers = init?.headers;
+        posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        return {
+          ok: true,
+          status: 202,
+          json: async () => ({
+            schema_version: "napoleon/concierge/text-turn-response/v1",
+            status: "accepted_for_prepare_only",
+            answer: "Napoleon prepared an advisory status summary.",
+            trace_id: "trace_cos_runtime",
+            audit_id: "audit_cos_runtime",
+            governance_decision: {
+              schema_version: "napoleon/concierge/governance-decision/v1",
+              decision: "allow_prepare_only",
+              reason: "Advisory preparation only; blocked effects remain unavailable.",
+              authority_tier: "prepare_only",
+              blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+            },
+            delegation_plan: {
+              schema_version: "napoleon/concierge/delegation-plan/v1",
+              status: "candidate_agents_or_no_safe_delegation",
+              requested_capability: "napoleon.chief_of_staff",
+              candidate_agents: [
+                {
+                  agent_id: "napoleon.passive_brain",
+                  display_name: "Passive Brain",
+                  selection_reason: "Relevant status memory was available for review.",
+                  contribution_summary: "Found the latest bridge alignment note.",
+                  runtime_invoked: false,
+                },
+              ],
+              blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+            },
+            blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+          }),
+        };
+      },
+    },
+  );
+
+  assert.equal(targetUrl, "https://napoleon.example/cos/text-turn");
+  assert.equal(posted?.contract_version, "napoleon/concierge/runtime-bridge-schema/v1");
+  assert.equal(posted?.requested_capability, "napoleon.chief_of_staff");
+  assert.equal(posted?.user_text, "Summarize the governed bridge status");
+  assert.equal(headers?.["X-Napoleon-Auth"], "token_cos_runtime");
+  assert.equal(headers?.Authorization, undefined);
+  assert.equal(JSON.stringify(posted).includes("token_cos_runtime"), false);
+  assert.equal(response.text, "Napoleon prepared an advisory status summary.");
+  assert.equal(response.governanceDecision.outcome, "allow_prepare_only");
+  assert.equal(response.requiresReview, false);
+  assert.equal(response.delegation?.selectedAgents[0]?.displayName, "Passive Brain");
+  assert.equal(response.delegation?.selectedAgents[0]?.contributionSummary, "Found the latest bridge alignment note.");
+  assert.equal(response.delegation?.selectedAgents[0]?.selectionReason, "Relevant status memory was available for review.");
+  assert.equal(response.delegation?.blockedEffects.includes("external_send"), true);
+  assert.deepEqual(evidence, [
+    {
+      kind: "bridge_contract_evidence",
+      operationId: "text_turn",
+      requestKind: "text_turn",
+      transport: "http_post",
+      status: "success",
+      httpStatus: 202,
+      targetPath: "/cos/text-turn",
+      traceId: "trace_cos_runtime",
+      requestId: "cos_turn_cos_runtime",
+      decisionId: "decision_trace_cos_runtime",
+      auditId: "audit_cos_runtime",
+      governanceOutcome: "allow_prepare_only",
+      descriptorStatus: "ready",
+      profileMode: "adult_owner",
+      selectedAgentIds: ["napoleon.passive_brain"],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+      provenanceVerified: true,
+    },
+  ]);
+  assert.equal(JSON.stringify(evidence).includes("token_cos_runtime"), false);
+  assert.equal(JSON.stringify(evidence).includes("Summarize the governed bridge status"), false);
+  assert.equal(JSON.stringify(evidence).includes("Napoleon prepared an advisory status summary."), false);
+});
+
 test("live bridge captures sanitized fail-closed evidence on auth failure", async () => {
   const evidence: unknown[] = [];
 

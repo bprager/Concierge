@@ -35,6 +35,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added canonical adult and child Chief of Staff steering request learning-signal examples, with repository validation for schema shape, metadata-only privacy, child minimization, and proposal-only boundaries.
 - Added visible metadata-only learning-signal evidence to the Chief of Staff steering draft panel before governed handoff.
 - Added a Napoleon contract alignment checker and documentation for comparing Concierge bridge paths with a supplied Napoleon integration OpenAPI snapshot.
+- Added governed response adaptation for explicit Napoleon advisory harness `/cos/text-turn` endpoints, preserving blocked effects, delegation provenance, and sanitized evidence without treating the harness as runtime authority.
 - Added active profile-mode visibility to fail-closed Napoleon bridge errors, transcript messages, and `bridge_request_failed` telemetry.
 - Added a visible attribution-boundary row to the last successful Napoleon proof panel so returned recommendations and selected-agent findings remain clearly tied to bridge provenance only.
 - Added attribution-boundary tracking to sanitized Napoleon response proof comparisons.

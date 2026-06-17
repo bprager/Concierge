@@ -54,6 +54,7 @@ interface BridgeEvidenceContext {
   descriptorFailureReason?: DescriptorFailClosedReason;
   descriptorStatus: string;
   profileMode: string;
+  targetPath?: string;
   blockedEffects?: string[];
   provenanceVerified?: boolean;
 }
@@ -153,7 +154,7 @@ function buildFailClosedEvidence(
     status: "fail_closed",
     reason,
     httpStatus: status,
-    targetPath: getBridgeOperation(evidenceContext.operationId).path,
+    targetPath: evidenceContext.targetPath ?? getBridgeOperation(evidenceContext.operationId).path,
     traceId: evidenceContext.traceId,
     requestId: evidenceContext.requestId,
     descriptorStatus: evidenceContext.descriptorStatus,
@@ -184,6 +185,41 @@ function getConfiguredAuthToken(dependencies: BridgeDependencies): string | null
 
 function buildBridgeHeaders(authToken: string | null): Record<string, string> {
   return authToken ? { "Content-Type": "application/json", Authorization: `Bearer ${authToken}` } : { "Content-Type": "application/json" };
+}
+
+function buildAdvisoryHarnessHeaders(authToken: string | null): Record<string, string> {
+  return authToken
+    ? { "Content-Type": "application/json", "X-Napoleon-Auth": authToken }
+    : { "Content-Type": "application/json" };
+}
+
+function isAdvisoryHarnessTextTurnEndpoint(endpoint: string): boolean {
+  const normalized = endpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
+  return normalized.endsWith("/cos/text-turn");
+}
+
+function normalizeAdvisoryHarnessTextTurnEndpoint(endpoint: string): string {
+  return endpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
+}
+
+function buildAdvisoryHarnessTextTurnRequest(
+  request: NapoleonRequest,
+  contract: ReturnType<typeof buildTextTurnContract>,
+): Record<string, unknown> {
+  return {
+    request_id: contract.chiefOfStaffRequest.request_id,
+    profile_mode: contract.profileMode,
+    contract_version: "napoleon/concierge/runtime-bridge-schema/v1",
+    requested_capability: "napoleon.chief_of_staff",
+    user_text: request.message,
+    requested_effects: ["prepare_advisory_response"],
+    authority_tier: "advisory_review",
+    approval_requirement: contract.governanceDecision.approval_requirement,
+    blocked_effects: contract.blockedEffects,
+    source_evidence: contract.sourceEvidence,
+    actor_id: contract.actorId,
+    trace_id: request.traceId,
+  };
 }
 
 function isGovernanceDecision(value: unknown): value is GovernanceDecision {
@@ -373,6 +409,123 @@ function hasForbiddenTextTurnSideEffectClaim(payload: Partial<NapoleonResponse> 
   ].some((pattern) => pattern.test(text));
 }
 
+function mapAdvisoryHarnessAuthorityTier(value: unknown): GovernanceDecision["authority_tier"] {
+  if (
+    value === "metadata_only" ||
+    value === "advisory_review" ||
+    value === "prepare_only" ||
+    value === "approval_required" ||
+    value === "prohibited"
+  ) {
+    return value;
+  }
+  return "advisory_review";
+}
+
+function isAdvisoryHarnessResponse(value: unknown): value is Record<string, unknown> {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return Boolean(
+    typeof candidate.schema_version === "string" &&
+      typeof candidate.status === "string" &&
+      typeof candidate.answer === "string" &&
+      typeof candidate.trace_id === "string" &&
+      typeof candidate.audit_id === "string" &&
+      candidate.governance_decision &&
+      typeof candidate.governance_decision === "object" &&
+      candidate.delegation_plan &&
+      typeof candidate.delegation_plan === "object" &&
+      isStringArray(candidate.blocked_effects),
+  );
+}
+
+function adaptAdvisoryHarnessResponse(
+  payload: unknown,
+  request: NapoleonRequest,
+  contract: ReturnType<typeof buildTextTurnContract>,
+): NapoleonResponse | null {
+  if (!isAdvisoryHarnessResponse(payload)) return null;
+  const governance = payload.governance_decision as Record<string, unknown>;
+  const delegationPlan = payload.delegation_plan as Record<string, unknown>;
+  const outcome = governance.decision;
+  if (
+    outcome !== "allow_prepare_only" &&
+    outcome !== "deny" &&
+    outcome !== "requires_review" &&
+    outcome !== "no_go"
+  ) {
+    return null;
+  }
+  const blockedEffects = isStringArray(payload.blocked_effects)
+    ? payload.blocked_effects
+    : isStringArray(governance.blocked_effects)
+      ? governance.blocked_effects
+      : contract.blockedEffects;
+  const decisionId = `decision_${payload.trace_id}`;
+  const governanceDecision: GovernanceDecision = {
+    decision_id: decisionId,
+    request_id: contract.chiefOfStaffRequest.request_id,
+    outcome,
+    authority_tier: mapAdvisoryHarnessAuthorityTier(governance.authority_tier),
+    approval_requirement:
+      outcome === "allow_prepare_only" ? "none_for_prepare_only" : contract.governanceDecision.approval_requirement,
+    rationale: typeof governance.reason === "string" ? governance.reason : "Napoleon advisory harness response.",
+    blocked_effects: blockedEffects,
+    trace_id: String(payload.trace_id),
+    audit_id: String(payload.audit_id),
+  };
+  const traceEnvelope: TraceEnvelope = {
+    trace_id: String(payload.trace_id),
+    parent_trace_id: request.conversationId,
+    actor_id: "napoleon.chief_of_staff",
+    request_id: contract.chiefOfStaffRequest.request_id,
+    decision_id: decisionId,
+    timestamp: new Date(0).toISOString(),
+  };
+  const auditEnvelope: AuditEnvelope = {
+    audit_id: String(payload.audit_id),
+    trace_id: String(payload.trace_id),
+    decision_id: decisionId,
+    actor_id: "napoleon.chief_of_staff",
+    authority_tier: governanceDecision.authority_tier,
+    approval_requirement: governanceDecision.approval_requirement,
+    evidence_links: [`trace:${payload.trace_id}`],
+  };
+  const candidateAgents = Array.isArray(delegationPlan.candidate_agents) ? delegationPlan.candidate_agents : [];
+  const selectedAgents = candidateAgents
+    .filter((agent): agent is Record<string, unknown> => Boolean(agent && typeof agent === "object"))
+    .map((agent) => ({
+      agentId: typeof agent.agent_id === "string" ? agent.agent_id : "napoleon.unknown_agent",
+      displayName: typeof agent.display_name === "string" ? agent.display_name : "Napoleon candidate agent",
+      selectionReason:
+        typeof agent.selection_reason === "string" ? agent.selection_reason : "Napoleon returned candidate delegation.",
+      contributionSummary: typeof agent.contribution_summary === "string" ? agent.contribution_summary : undefined,
+    }));
+  const delegationBlockedEffects = isStringArray(delegationPlan.blocked_effects)
+    ? delegationPlan.blocked_effects
+    : blockedEffects;
+  return {
+    text: String(payload.answer),
+    profileMode: contract.profileMode,
+    governanceDecision,
+    traceEnvelope,
+    auditEnvelope,
+    requiresReview: requiresReview(governanceDecision),
+    targetAgent:
+      typeof delegationPlan.requested_capability === "string"
+        ? delegationPlan.requested_capability
+        : "napoleon.chief_of_staff",
+    delegation: {
+      selectedAgents,
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: delegationBlockedEffects,
+      governanceState: governanceDecision.outcome,
+      traceId: traceEnvelope.trace_id,
+      auditId: auditEnvelope.audit_id,
+    },
+  };
+}
+
 function failClosed(
   dependencies: BridgeDependencies,
   reason: NapoleonBridgeFailureReason,
@@ -472,26 +625,35 @@ export async function sendToNapoleon(
     );
   }
 
-  const targetEndpoint = resolveNapoleonBridgeOperation(endpoint, "text_turn");
+  const advisoryHarnessMode = isAdvisoryHarnessTextTurnEndpoint(endpoint);
+  const targetEndpoint = advisoryHarnessMode
+    ? normalizeAdvisoryHarnessTextTurnEndpoint(endpoint)
+    : resolveNapoleonBridgeOperation(endpoint, "text_turn");
+  const targetPath = advisoryHarnessMode ? "/cos/text-turn" : getBridgeOperation("text_turn").path;
+  evidenceContext.targetPath = targetPath;
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<BridgeFetch>>;
   try {
     response = await fetcher(targetEndpoint, {
       method: "POST",
-      headers: buildBridgeHeaders(authToken),
-      body: JSON.stringify({
-        requestKind: "text_turn",
-        ...request,
-        profileMode: contract.profileMode,
-        descriptorStatus: descriptorConnection.descriptorStatus,
-        descriptorConnection,
-        chiefOfStaffRequest: contract.chiefOfStaffRequest,
-        governanceRequest: contract.governanceRequest,
-        traceEnvelope: contract.traceEnvelope,
-        auditEnvelope: contract.auditEnvelope,
-        blockedEffects: contract.blockedEffects,
-        sourceEvidence: contract.sourceEvidence,
-      }),
+      headers: advisoryHarnessMode ? buildAdvisoryHarnessHeaders(authToken) : buildBridgeHeaders(authToken),
+      body: JSON.stringify(
+        advisoryHarnessMode
+          ? buildAdvisoryHarnessTextTurnRequest(request, contract)
+          : {
+              requestKind: "text_turn",
+              ...request,
+              profileMode: contract.profileMode,
+              descriptorStatus: descriptorConnection.descriptorStatus,
+              descriptorConnection,
+              chiefOfStaffRequest: contract.chiefOfStaffRequest,
+              governanceRequest: contract.governanceRequest,
+              traceEnvelope: contract.traceEnvelope,
+              auditEnvelope: contract.auditEnvelope,
+              blockedEffects: contract.blockedEffects,
+              sourceEvidence: contract.sourceEvidence,
+            },
+      ),
     });
   } catch (error) {
     const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
@@ -508,6 +670,57 @@ export async function sendToNapoleon(
     payload = (await response.json()) as Partial<NapoleonResponse>;
   } catch {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
+  if (advisoryHarnessMode) {
+    const adapted = adaptAdvisoryHarnessResponse(payload, request, contract);
+    if (!adapted) {
+      failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+    }
+    if (adapted.governanceDecision.outcome === "deny" || adapted.governanceDecision.outcome === "no_go") {
+      failClosed(
+        dependencies,
+        adapted.governanceDecision.outcome === "deny" ? "governance_denied" : "governance_no_go",
+        request.traceId,
+        adapted.governanceDecision.request_id,
+        response.status,
+        {
+          ...evidenceContext,
+          requestId: adapted.governanceDecision.request_id,
+          decisionId: adapted.governanceDecision.decision_id,
+          auditId: adapted.auditEnvelope.audit_id,
+          governanceOutcome: adapted.governanceDecision.outcome,
+          blockedEffects: adapted.governanceDecision.blocked_effects,
+        },
+      );
+    }
+    emitBridgeEvent(dependencies, "bridge_request_completed", {
+      traceId: request.traceId,
+      mode: "http",
+      outcome: adapted.governanceDecision.outcome,
+      decisionId: adapted.governanceDecision.decision_id,
+      auditId: adapted.auditEnvelope.audit_id,
+    });
+    captureBridgeEvidence(dependencies, {
+      kind: "bridge_contract_evidence",
+      operationId: "text_turn",
+      requestKind: "text_turn",
+      transport: getBridgeOperation("text_turn").transport,
+      status: "success",
+      httpStatus: response.status ?? 202,
+      targetPath,
+      traceId: request.traceId,
+      requestId: adapted.governanceDecision.request_id,
+      decisionId: adapted.governanceDecision.decision_id,
+      auditId: adapted.auditEnvelope.audit_id,
+      governanceOutcome: adapted.governanceDecision.outcome,
+      descriptorStatus: descriptorConnection.state,
+      profileMode: adapted.profileMode,
+      selectedAgentIds: adapted.delegation?.selectedAgents.map((agent) => agent.agentId) ?? [],
+      allowedEffects: adapted.delegation?.allowedEffects ?? [],
+      blockedEffects: adapted.delegation?.blockedEffects ?? adapted.governanceDecision.blocked_effects,
+      provenanceVerified: true,
+    });
+    return adapted;
   }
   const textTurnOperation = getBridgeOperation("text_turn");
   if (!hasRequiredBridgeResponseFields(payload, textTurnOperation.id)) {
@@ -610,7 +823,7 @@ export async function sendToNapoleon(
     transport: getBridgeOperation("text_turn").transport,
     status: "success",
     httpStatus: response.status ?? 200,
-    targetPath: getBridgeOperation("text_turn").path,
+    targetPath,
     traceId: request.traceId,
     requestId: normalized.governanceDecision.request_id,
     decisionId: normalized.governanceDecision.decision_id,
