@@ -95,6 +95,7 @@ test("applies stricter child protected voice shaping constraints", () => {
   assert.equal(child.authorityBoundary, "Child protected speech preview is shortened, slower, and still requires guardian/owner review; it is not Napoleon approval.");
   assert.equal(child.audioPlaybackStarted, false);
   assert.equal(child.microphoneCaptureStarted, false);
+  assert.ok(child.blockedEffects.includes("guardian_approval_capture"));
 });
 
 test("reports child protected bridge speech as shortened before adding review wording", () => {

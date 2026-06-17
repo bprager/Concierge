@@ -69,6 +69,33 @@ function removeUnprovenAttributionClaims(text: string): string {
     .trim();
 }
 
+const baseBlockedEffects = [
+  "audio_playback",
+  "microphone_capture",
+  "raw_audio_storage",
+  "live_napoleon_contact",
+  "memory_write",
+  "approval_capture",
+  "external_send",
+  "agent_dispatch",
+];
+
+function blockedEffectsForProfile(profileMode: VoiceResponseShapeResult["profileMode"]): string[] {
+  if (profileMode !== "child_protected") return baseBlockedEffects;
+
+  return [
+    "audio_playback",
+    "microphone_capture",
+    "raw_audio_storage",
+    "live_napoleon_contact",
+    "memory_write",
+    "approval_capture",
+    "guardian_approval_capture",
+    "external_send",
+    "agent_dispatch",
+  ];
+}
+
 export function shapeVoiceResponseForSpeech(input: VoiceResponseShapeInput): VoiceResponseShapeResult {
   const trimmedText = (input.bridgeProvidedProvenance
     ? input.responseText.trim()
@@ -115,15 +142,6 @@ export function shapeVoiceResponseForSpeech(input: VoiceResponseShapeInput): Voi
     approvalCaptured: false,
     agentDispatchPerformed: false,
     externalSendPerformed: false,
-    blockedEffects: [
-      "audio_playback",
-      "microphone_capture",
-      "raw_audio_storage",
-      "live_napoleon_contact",
-      "memory_write",
-      "approval_capture",
-      "external_send",
-      "agent_dispatch",
-    ],
+    blockedEffects: blockedEffectsForProfile(profileMode),
   };
 }

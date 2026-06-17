@@ -485,6 +485,7 @@ Acceptance criteria:
 - Child protected shaping emits slower pacing metadata and a guardian-review reminder.
 - The UI displays profile, pacing, guardian-review reminder, authority boundary, and blocked effects.
 - Running child protected shaping does not start audio playback, request microphone permission, start microphone capture, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- Child protected shaping blocked effects include `guardian_approval_capture`.
 - `voice_response_shaped` includes profile mode, child-protected marker, applied character budget, pacing, guardian-review reminder state, bridge-provenance marker, and explicit false side-effect flags.
 - Child protected shaped speech remains a local preview only and must not be treated as Napoleon approval, guardian approval, recording permission, external speech permission, or permission to keep secrets.
 
