@@ -50,6 +50,8 @@ Examples:
 
 Each signal must include trace, turn, conversation, profile mode, channel, signal type, capability, architecture area, confidence, evidence references, privacy classification, and explicit proposal-only governance boundaries. The schema supports corrections, interruptions, ratings, and repeated patterns. Raw user text, raw audio, and raw video are false by contract, and child-protected signals must be minimized before they can inform a proposal.
 
+The Text Concierge runtime can now derive these records from local Conversation Capability Intelligence metadata through `app/src/learningSignal.ts`. The helper emits schema-shaped records and count-only telemetry attributes; it does not copy raw conversation text, claim approval, write memory, dispatch agents, send externally, or apply changes locally.
+
 ## 4. Change categories
 
 | Category | Example | Risk |

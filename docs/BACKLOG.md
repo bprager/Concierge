@@ -804,6 +804,7 @@ Acceptance criteria:
 
 - `schemas/learning_signal.schema.json` defines the metadata-only contract for learning signals.
 - `examples/sample_learning_signal.json` validates against the schema in repository validation.
+- Runtime helpers construct schema-shaped learning signals and telemetry attributes from local capability metadata without copying raw conversation content.
 - Signals include trace, turn, conversation, profile mode, channel, signal type, source, capability, architecture area, confidence, evidence references, privacy classification, and proposal-only governance boundaries.
 - Supported signal types include `correction`, `interruption`, `rating`, and `repeated_pattern`.
 - Rating signals require a bounded user rating, and repeated-pattern signals require a bounded pattern count.
