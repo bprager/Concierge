@@ -66,6 +66,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added the same promotion gate to sanitized bridge readiness proof exports and same-session proof comparisons.
 - Added promotion-gate and explicit no-agent-dispatch metadata to bridge readiness proof export telemetry so local audit events match sanitized proof exports.
 - Added a composer-side live-send preflight checklist for text readiness, endpoint configuration, descriptor discovery, descriptor integrity, local governance send gate, Rehearsal Mode state, runtime-validation source, evidence capture/comparison, and promotion-gate warnings.
+- Added descriptor auth failure, timeout, and HTTP failure visibility to the composer live-send preflight descriptor-discovery row so those states are blocked explicitly instead of only affecting the aggregate summary.
 - Added in-session readiness tracking from captured `bridge_contract_evidence`, with local registry transport/path/request-kind and raw/secret field comparison before evidence is marked passed.
 - Added a sanitized local bridge readiness proof export with descriptor state, blocked effects, evidence status, last operation transport, last failure reason, and no raw prompts, endpoints, or secrets.
 - Added same-session local bridge readiness proof comparison that reports sanitized proof changes without exposing raw prompts, endpoints, tokens, request bodies, or response bodies.

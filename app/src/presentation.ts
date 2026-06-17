@@ -416,6 +416,16 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
   const evidenceCaptureReady = evidenceCapture === undefined || evidenceCapture === "passed";
   const evidenceComparisonReady = evidenceComparison === undefined || evidenceComparison === "passed";
   const realRuntimeReady = runtimeValidationSource === undefined || runtimeValidationSource === "real_runtime";
+  const descriptorDiscoveryBlocked =
+    descriptor.failClosedReason === "no_descriptor" ||
+    descriptor.failClosedReason === "descriptor_stale" ||
+    descriptor.failClosedReason === "auth_failure" ||
+    descriptor.failClosedReason === "bridge_timeout" ||
+    descriptor.failClosedReason === "http_failure";
+  const descriptorIntegrityBlocked =
+    descriptor.failClosedReason === "descriptor_signature_or_checksum_mismatch" ||
+    descriptor.failClosedReason === "descriptor_invalid" ||
+    descriptor.failClosedReason === "descriptor_stale";
   const items: LiveSendPreflightItem[] = [
     {
       label: "Text ready",
@@ -432,28 +442,24 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
     },
     {
       label: "Descriptor discovered",
-      status:
-        descriptor.failClosedReason === "no_descriptor" || descriptor.failClosedReason === "descriptor_stale"
-          ? "blocked"
-          : "ready",
+      status: descriptorDiscoveryBlocked ? "blocked" : "ready",
       detail:
         descriptor.failClosedReason === "no_descriptor"
           ? "No Napoleon Chief of Staff descriptor has been discovered."
           : descriptor.failClosedReason === "descriptor_stale"
             ? "Napoleon descriptor discovery is stale; rediscover before attempting a live send."
+            : descriptorDiscoveryBlocked
+              ? `${descriptor.failClosedReason}: ${descriptor.message}`
             : "Descriptor state is available for preflight.",
     },
     {
       label: "Descriptor integrity",
-      status:
-        descriptor.failClosedReason === "descriptor_signature_or_checksum_mismatch" ||
-        descriptor.failClosedReason === "descriptor_invalid" ||
-        descriptor.failClosedReason === "descriptor_stale"
-          ? "blocked"
-          : "ready",
+      status: descriptorIntegrityBlocked ? "blocked" : "ready",
       detail:
         descriptor.failClosedReason === "descriptor_stale"
           ? `Descriptor cache is stale. Checksum ${descriptor.checksumState}; signature ${descriptor.signatureState}.`
+          : descriptor.failClosedReason === "descriptor_invalid"
+            ? descriptor.message
           : `Checksum ${descriptor.checksumState}; signature ${descriptor.signatureState}.`,
     },
     {

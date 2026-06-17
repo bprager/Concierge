@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added descriptor transport failure reasons to the composer live-send preflight so auth failure, timeout, and HTTP descriptor discovery failures are visible as blocked checklist rows.
 - Added runtime-validation source, evidence capture/comparison, and promotion-gate rows to the composer live-send preflight so local harness or pending evidence remains visible before governed sends.
 - Added visible live-send preflight blockers for stale Napoleon descriptor discovery cache so the checklist matches the fail-closed bridge state.
 - Added stale descriptor discovery as a fail-closed connection state so governed live sends block before request fetch when descriptor cache age exceeds its allowed window.

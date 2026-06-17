@@ -480,6 +480,30 @@ test("describes stale descriptor cache as a visible live send preflight blocker"
   assert.ok(view.items.some((item) => item.detail.includes("stale")));
 });
 
+test("describes descriptor transport failures as visible live send preflight blockers", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: null,
+      failClosedReason: "auth_failure",
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canAttemptLiveSend, false);
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Descriptor discovered" &&
+        item.status === "blocked" &&
+        item.detail.includes("auth_failure"),
+    ),
+  );
+});
+
 test("describes live send preflight blockers without granting authority", () => {
   const view = describeLiveSendPreflight({
     descriptorConnection: buildDescriptorConnectionState({
