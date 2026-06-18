@@ -250,6 +250,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'await window["fetch"]("https://api.example.test/send");',
             'const socket = new window["WebSocket"]("wss://api.example.test/live");',
             'navigator["sendBeacon"]("https://api.example.test/audit", payload);',
+            'window["navigator"]["sendBeacon"]("https://api.example.test/audit", payload);',
+            'globalThis["navigator"]["sendBeacon"]("https://api.example.test/audit", payload);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
