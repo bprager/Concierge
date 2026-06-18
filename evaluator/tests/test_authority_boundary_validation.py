@@ -725,6 +725,19 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("bridge module network call must use named generated operation resolution", violations[0])
 
+    def test_network_scanner_rejects_browser_storage_mutation_inside_bridge_modules(self):
+        for source in [
+            'localStorage.setItem("rawPrompt", rawPromptText);',
+            'window.sessionStorage.removeItem("bridge_readiness_proof");',
+            'globalThis["localStorage"]["setItem"]("token", bridgeToken);',
+            'window["sessionStorage"]["clear"]();',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/napoleonBridge.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_allows_bridge_modules_to_fetch_named_operation_targets(self):
         for source in [
             """

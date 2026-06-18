@@ -1126,25 +1126,25 @@ def find_direct_authority_boundary_violations() -> list[str]:
 
 
 def scan_ungoverned_network_text(path: str, text: str) -> list[str]:
+    storage_violations: list[str] = []
+    if path not in BOUNDED_BROWSER_STORAGE_SOURCE_ALLOWLIST:
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            for pattern in BROWSER_STORAGE_PERSISTENCE_PATTERNS:
+                if pattern.search(line):
+                    storage_violations.append(
+                        f"{path}:{line_number}: ungoverned network call outside Napoleon bridge modules"
+                    )
+                    break
     if path in GOVERNED_NETWORK_SOURCE_ALLOWLIST:
-        violations: list[str] = []
+        violations: list[str] = storage_violations
         for line_number, line in enumerate(text.splitlines(), start=1):
             if BRIDGE_MODULE_DIRECT_TARGET_PATTERN.search(line):
                 violations.append(
                     f"{path}:{line_number}: bridge module network call must use named generated operation resolution"
                 )
         return violations
-    violations: list[str] = []
+    violations: list[str] = storage_violations
     for line_number, line in enumerate(text.splitlines(), start=1):
-        line_has_violation = False
-        if path not in BOUNDED_BROWSER_STORAGE_SOURCE_ALLOWLIST:
-            for pattern in BROWSER_STORAGE_PERSISTENCE_PATTERNS:
-                if pattern.search(line):
-                    violations.append(f"{path}:{line_number}: ungoverned network call outside Napoleon bridge modules")
-                    line_has_violation = True
-                    break
-            if line_has_violation:
-                continue
         for pattern in UNGOVERNED_NETWORK_PATTERNS:
             if pattern.search(line):
                 violations.append(f"{path}:{line_number}: ungoverned network call outside Napoleon bridge modules")
