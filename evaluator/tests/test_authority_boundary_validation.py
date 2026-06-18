@@ -629,6 +629,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'new window["DOMParser"]().parseFromString(remoteMarkup, "text/html");',
             'range["createContextualFragment"](remoteMarkup);',
             '<iframe srcdoc={remoteMarkup} />',
+            "document.write(remoteMarkup);",
+            "document.writeln(remoteMarkup);",
+            'document["write"](remoteMarkup);',
+            'document["writeln"](remoteMarkup);',
+            "HTMLDocument.prototype.write.call(document, remoteMarkup);",
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.tsx", source)

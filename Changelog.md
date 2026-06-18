@@ -26,6 +26,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened repository authority-boundary validation so dot-property dynamic code execution aliases such as `new window.Function(...)` cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style dynamic code execution aliases such as `window["eval"]`, `globalThis["Function"]`, and string-timer aliases cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style dynamic HTML injection aliases such as `container["innerHTML"]`, `window["DOMParser"]`, and lowercase `srcdoc` cannot smuggle external targets around governed bridge checks.
+- Hardened repository authority-boundary validation so `document.write`, `document.writeln`, and bracket-style document write aliases cannot smuggle external targets around governed bridge checks.
 - Hardened repository authority-boundary validation so bracket-style privileged browser device, account, notification, push, and payment API aliases cannot bypass governed visible Concierge flows.
 - Hardened repository authority-boundary validation so bracket-style browser peer and session transport constructors such as `window["RTCPeerConnection"]` and `window["WebTransport"]` cannot create network paths outside the governed Napoleon bridge modules.
 - Hardened live text bridge response validation so response text that implies an external send, such as "sent it", fails closed even when explicit side-effect boundary fields are false.
@@ -52,6 +53,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened repository authority-boundary validation so static and dynamic remote module imports cannot load outside code outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so dynamic external target setters cannot assign outside URLs to browser link, form, resource, or ping targets outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so dynamic HTML injection APIs cannot smuggle external targets around static UI target checks outside the governed Napoleon bridge modules.
+- Hardened repository authority-boundary validation so `document.write` and `document.writeln` cannot inject outside targets around static UI target checks outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so static anchor ping and meta-refresh redirect targets cannot contact outside hosts outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so static external resource targets cannot load outside hosts outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so static external link and form targets cannot create external side channels outside the governed Napoleon bridge modules.

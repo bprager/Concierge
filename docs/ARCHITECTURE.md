@@ -169,7 +169,7 @@ Browser peer and transport APIs such as `RTCPeerConnection`, `webkitRTCPeerConne
 
 Privileged browser device, account, notification, push, and payment APIs, including bracket-style aliases such as `navigator["usb"]["requestDevice"]`, `window["Notification"]["requestPermission"]`, and `window["PaymentRequest"]`, are treated as ungoverned authority paths outside visible Concierge controls and the governed Napoleon bridge.
 
-Dynamic HTML injection APIs, including bracket-style aliases such as `container["innerHTML"]`, `window["DOMParser"]`, `range["createContextualFragment"]`, and lowercase `srcdoc`, are treated as ungoverned markup paths because they can smuggle external targets around static UI checks.
+Dynamic HTML injection APIs, including bracket-style aliases such as `container["innerHTML"]`, `window["DOMParser"]`, `range["createContextualFragment"]`, lowercase `srcdoc`, `document.write`, and `document.writeln`, are treated as ungoverned markup paths because they can smuggle external targets around static UI checks.
 
 Dynamic code execution APIs, including bracket-style aliases for eval and Function calls, constructor calls with or without `new`, indirect constructor-constructor access, dot-property aliases such as `new window.Function(...)`, and string-timer aliases, are treated as hidden authority paths and are rejected from Concierge runtime source.
 
