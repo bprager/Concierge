@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened live text bridge response validation so response text that implies an external send, such as "sent it", fails closed even when explicit side-effect boundary fields are false.
 - Hardened repository authority-boundary validation so privileged browser device, account, notification, push, and payment APIs cannot bypass governed visible Concierge flows.
 - Hardened repository authority-boundary validation so bracket-style browser persistence, cross-context messaging, and clipboard aliases cannot retain or move local Concierge data outside governed visible flows.
 - Hardened repository authority-boundary validation so browser dynamic code execution such as `eval`, `new Function`, and string-based timers cannot create hidden authority paths in Concierge runtime source.

@@ -420,6 +420,7 @@ function hasForbiddenTextTurnSideEffectClaim(payload: Partial<NapoleonResponse> 
     /\b(dispatched|called|ran|invoked)\s+(?:an?\s+)?agent\b/i,
     /\b(applied|implemented)\s+(?:the\s+)?(?:change|proposal|plan|it)\s+locally\b/i,
     /\b(sent|emailed|posted|published|shared|delivered)\b.{0,80}\b(externally|outside|email|message|deployment summary)\b/i,
+    /\b(sent|emailed|posted|published|shared|delivered)\s+(?:it|this|that|the\s+(?:plan|proposal|summary|message|draft|response))\b/i,
   ].some((pattern) => pattern.test(text));
 }
 
