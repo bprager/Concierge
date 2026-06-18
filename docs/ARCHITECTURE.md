@@ -191,7 +191,7 @@ Browser cross-context messaging such as `postMessage`, `BroadcastChannel`, and `
 
 Direct browser clipboard reads, writes, and legacy copy/paste commands are treated as local data side channels so UI code cannot move prompts, responses, tokens, or proof metadata outside governed visible export flows.
 
-Browser file picker APIs and FileReader are treated as local data side channels so UI code cannot read, write, or export local files outside governed visible import/export flows.
+Browser file picker APIs, FileReader constructors, and FileReader `readAs...` methods are treated as local data side channels so UI code cannot read, write, or export local files outside governed visible import/export flows.
 
 WebAssembly compilation/instantiation and object URL creation are treated as local executable side channels so UI code cannot introduce hidden runtime behavior outside governed visible flows.
 

@@ -291,8 +291,13 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "const handle = await globalThis.showSaveFilePicker();",
             "const directory = await window.showDirectoryPicker();",
             "const reader = new FileReader();",
+            "reader.readAsText(file);",
+            "reader.readAsArrayBuffer(file);",
+            "reader.readAsDataURL(file);",
+            "reader.readAsBinaryString(file);",
             'const [handle] = await window["showOpenFilePicker"]();',
             'const reader = new window["FileReader"]();',
+            'reader["readAsText"](file);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)

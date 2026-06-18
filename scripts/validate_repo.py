@@ -265,6 +265,10 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"](?:showOpenFilePicker|showSaveFilePicker|showDirectoryPicker)['\"]\s*\]\s*\("),
     re.compile(r"\bFileReader\s*\("),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]FileReader['\"]\s*\]\s*\("),
+    re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$]*\.(?:readAsText|readAsArrayBuffer|readAsDataURL|readAsBinaryString)\s*\("),
+    re.compile(
+        r"\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:readAsText|readAsArrayBuffer|readAsDataURL|readAsBinaryString)['\"]\s*\]\s*\("
+    ),
     re.compile(r"\bWebAssembly\.(?:compile|compileStreaming|instantiate|instantiateStreaming)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:compile|compileStreaming|instantiate|instantiateStreaming)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\s*\("),
