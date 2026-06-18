@@ -69,13 +69,13 @@ APPROVED_BROWSER_STORAGE_KEYS = {
 }
 
 BOUNDED_BROWSER_STORAGE_KEY_PATTERN = re.compile(
-    r"\b(?:localStorage|sessionStorage|storage)\s*\.\s*(?:setItem|removeItem)\s*\(\s*['\"](?P<key>[^'\"]+)['\"]"
+    r"\b(?:localStorage|sessionStorage|storage)\s*\.\s*(?:getItem|setItem|removeItem)\s*\(\s*['\"](?P<key>[^'\"]+)['\"]"
 )
 BOUNDED_BROWSER_STORAGE_KEY_CONSTANT_PATTERN = re.compile(
     r"\b(?:const|let|var)\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*['\"](?P<key>[^'\"]+)['\"]"
 )
 BOUNDED_BROWSER_STORAGE_VARIABLE_KEY_PATTERN = re.compile(
-    r"\b(?:localStorage|sessionStorage|storage)\s*\.\s*(?:setItem|removeItem)\s*\(\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    r"\b(?:localStorage|sessionStorage|storage)\s*\.\s*(?:getItem|setItem|removeItem)\s*\(\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
 )
 
 AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [

@@ -753,12 +753,18 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_rejects_unapproved_browser_storage_keys_inside_bounded_modules(self):
         for source in [
             'localStorage.setItem("raw_prompt_cache", rawPromptText);',
+            'localStorage.getItem("raw_prompt_cache");',
             'localStorage.removeItem("bridge_readiness_proof");',
             'storage.setItem("concierge_raw_transcript_v1", rawTranscript);',
+            'storage.getItem("concierge_raw_transcript_v1");',
             'storage.removeItem("napoleon_descriptor_token_cache");',
             """
             const RAW_PROMPT_CACHE_KEY = "raw_prompt_cache";
             storage.setItem(RAW_PROMPT_CACHE_KEY, rawPromptText);
+            """,
+            """
+            const RAW_PROMPT_CACHE_KEY = "raw_prompt_cache";
+            storage.getItem(RAW_PROMPT_CACHE_KEY);
             """,
             """
             const BRIDGE_PROOF_CACHE_KEY = "bridge_readiness_proof";
@@ -776,11 +782,16 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'localStorage.setItem("napoleon_endpoint", value.trim());',
             'localStorage.removeItem("napoleon_auth_token");',
             'localStorage.setItem("concierge_camera_enabled", String(enabled));',
+            'localStorage.getItem("concierge_camera_enabled");',
             'storage.setItem("concierge_telemetry_buffer_v1", JSON.stringify(next));',
             'storage.removeItem("concierge_capability_taxonomy_v1");',
             """
             const TELEMETRY_BUFFER_STORAGE_KEY = "concierge_telemetry_buffer_v1";
             storage.setItem(TELEMETRY_BUFFER_STORAGE_KEY, JSON.stringify(next));
+            """,
+            """
+            const TELEMETRY_BUFFER_STORAGE_KEY = "concierge_telemetry_buffer_v1";
+            storage.getItem(TELEMETRY_BUFFER_STORAGE_KEY);
             """,
         ]:
             with self.subTest(source=source):
