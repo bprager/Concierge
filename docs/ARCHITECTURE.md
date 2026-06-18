@@ -179,7 +179,7 @@ Image preload source-set targets such as `imageSrcSet` and `imagesrcset` are tre
 
 Object and embed `data` targets are treated as external load targets only in object/embed element contexts, including static markup, property assignment, bracket assignment, and `setAttribute` forms, so plugin-style content cannot create another outside channel while ordinary application data fields remain usable.
 
-Direct assignment to `location`, `window.location`, or `document.location` is treated as browser navigation outside the governed bridge, including variable-based targets, matching the existing checks for `location.href`, `location.assign`, and `location.replace`.
+Direct assignment to `location`, `window.location`, `document.location`, `globalThis.location`, or bracket-style `window["location"]` aliases is treated as browser navigation outside the governed bridge, including variable-based targets, matching the existing checks for `location.href`, `location.assign`, and `location.replace`.
 
 Browser cross-context messaging such as `postMessage`, `BroadcastChannel`, and `MessageChannel` is treated as a side channel so UI code cannot relay local prompts, responses, tokens, or proof metadata to another browser context outside governed visible flows.
 
