@@ -285,6 +285,21 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_browser_file_access_side_channels(self):
+        for source in [
+            "const [handle] = await window.showOpenFilePicker();",
+            "const handle = await globalThis.showSaveFilePicker();",
+            "const directory = await window.showDirectoryPicker();",
+            "const reader = new FileReader();",
+            'const [handle] = await window["showOpenFilePicker"]();',
+            'const reader = new window["FileReader"]();',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_bracket_access_browser_persistence_and_context_aliases(self):
         for source in [
             'const db = await globalThis["indexedDB"]["open"]("concierge-raw-transcripts");',
