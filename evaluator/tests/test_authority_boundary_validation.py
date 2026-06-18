@@ -30,12 +30,17 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         self.assertEqual(violations, [])
 
     def test_scanner_detects_direct_process_execution(self):
-        violations = validate_repo.scan_authority_boundary_text(
-            "app/src-tauri/src/main.rs",
+        for source in [
             'let child = std::process::Command::new("osascript").spawn();',
-        )
+            'const command = new Deno.Command("osascript", { args });',
+            'const child = Bun.spawn(["osascript", "-e", script]);',
+            'const result = Bun.spawnSync(["sh", "-c", script]);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_authority_boundary_text("app/src-tauri/src/main.rs", source)
 
-        self.assertIn("direct process or shell execution", violations[0])
+                self.assertTrue(violations)
+                self.assertIn("direct process or shell execution", violations[0])
 
     def test_scanner_detects_direct_memory_or_graph_access(self):
         violations = validate_repo.scan_authority_boundary_text(
