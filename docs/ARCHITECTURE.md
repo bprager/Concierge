@@ -183,6 +183,8 @@ Direct assignment to `location`, `window.location`, `document.location`, `global
 
 Programmatic form submission APIs such as `form.submit()`, `form.requestSubmit()`, `document.forms[0].submit()`, bracket-style submission aliases, and `HTMLFormElement.prototype.submit.call(...)` are treated as external-send side channels outside the governed bridge, even when a form target is assembled dynamically.
 
+Programmatic DOM clicks such as `anchor.click()`, `downloadLink.click()`, `button.click()`, bracket-style `click` aliases, and anchor/button prototype click calls are treated as navigation or form side channels outside the governed bridge.
+
 Browser cross-context messaging such as `postMessage`, `BroadcastChannel`, and `MessageChannel` is treated as a side channel so UI code cannot relay local prompts, responses, tokens, or proof metadata to another browser context outside governed visible flows.
 
 Direct browser clipboard reads, writes, and legacy copy/paste commands are treated as local data side channels so UI code cannot move prompts, responses, tokens, or proof metadata outside governed visible export flows.
