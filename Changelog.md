@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so bracket-style dynamic HTML injection aliases such as `container["innerHTML"]`, `window["DOMParser"]`, and lowercase `srcdoc` cannot smuggle external targets around governed bridge checks.
 - Hardened repository authority-boundary validation so bracket-style privileged browser device, account, notification, push, and payment API aliases cannot bypass governed visible Concierge flows.
 - Hardened repository authority-boundary validation so bracket-style browser peer and session transport constructors such as `window["RTCPeerConnection"]` and `window["WebTransport"]` cannot create network paths outside the governed Napoleon bridge modules.
 - Hardened live text bridge response validation so response text that implies an external send, such as "sent it", fails closed even when explicit side-effect boundary fields are false.

@@ -220,10 +220,15 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"(?:@import\s+)?\burl\s*\(\s*['\"]?https?://"),
     re.compile(r"\bdangerouslySetInnerHTML\b"),
     re.compile(r"\b(?:innerHTML|outerHTML)\s*="),
+    re.compile(r"\[\s*['\"](?:innerHTML|outerHTML)['\"]\s*\]\s*="),
     re.compile(r"\binsertAdjacentHTML\s*\("),
+    re.compile(r"\[\s*['\"]insertAdjacentHTML['\"]\s*\]\s*\("),
     re.compile(r"\bDOMParser\s*\("),
+    re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]DOMParser['\"]\s*\]\s*\("),
     re.compile(r"\bcreateContextualFragment\s*\("),
+    re.compile(r"\[\s*['\"]createContextualFragment['\"]\s*\]\s*\("),
     re.compile(r"\bsrcDoc\s*="),
+    re.compile(r"\bsrcdoc\s*="),
 ]
 
 BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
