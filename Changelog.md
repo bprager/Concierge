@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so bracket-style media capture, speech, audio context, and playback aliases cannot start hidden voice/avatar behavior outside visible permission handlers.
 - Hardened repository authority-boundary validation so concatenated agent/tool dispatch aliases and bracketed tool execution cannot bypass the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so indirect constructor-constructor dynamic code execution cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style `Function(...)` calls without `new` cannot create hidden authority paths in Concierge runtime source.

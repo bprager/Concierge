@@ -16,6 +16,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Captured project constraints around Napoleon governance, local-first capture, child mode, observability, and controlled self-evolution.
 - Added and pushed the initial Concierge scaffold.
 - Verified evaluator stub mode, frontend build, Tauri check, schema validation, Markdown links, and YAML parsing during scaffold packaging.
+- Hardened repository authority-boundary validation so bracket-style media capture, speech, audio context, and playback aliases cannot start hidden voice/avatar behavior outside visible permission handlers.
 - Hardened repository authority-boundary validation so concatenated agent/tool dispatch aliases and bracketed tool execution cannot bypass the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so indirect constructor-constructor dynamic code execution cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style `Function(...)` calls without `new` cannot create hidden authority paths in Concierge runtime source.

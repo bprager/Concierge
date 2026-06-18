@@ -253,10 +253,14 @@ BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
 
 HIDDEN_MEDIA_OR_SPEECH_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bgetUserMedia\s*\("),
+    re.compile(r"\[\s*['\"]getUserMedia['\"]\s*\]\s*\("),
     re.compile(r"\b(?:AudioContext|webkitAudioContext)\s*\("),
+    re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"](?:AudioContext|webkitAudioContext)['\"]\s*\]\s*\("),
     re.compile(r"\bSpeechRecognition\s*\("),
+    re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]SpeechRecognition['\"]\s*\]\s*\("),
     re.compile(r"\bspeechSynthesis\b"),
     re.compile(r"\.play\s*\("),
+    re.compile(r"\[\s*['\"]play['\"]\s*\]\s*\("),
 ]
 
 
