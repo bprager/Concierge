@@ -304,6 +304,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'await Notification.requestPermission();',
             "await registration.pushManager.subscribe(options);",
             "const request = new PaymentRequest(methods, details);",
+            'await navigator["usb"]["requestDevice"]({ filters: [] });',
+            'await window["navigator"]["credentials"]["get"]({ password: true });',
+            'await window["Notification"]["requestPermission"]();',
+            'await registration["pushManager"]["subscribe"](options);',
+            'const request = new window["PaymentRequest"](methods, details);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)

@@ -165,6 +165,8 @@ Live bridge calls fail closed when the Napoleon endpoint is missing, the Chief o
 
 Browser peer and transport APIs such as `RTCPeerConnection`, `webkitRTCPeerConnection`, and `WebTransport`, including bracket-style constructor aliases such as `window["RTCPeerConnection"]` and `window["WebTransport"]`, are treated as ungoverned network paths outside the bridge, so future UI features cannot open peer or session transports beside Napoleon.
 
+Privileged browser device, account, notification, push, and payment APIs, including bracket-style aliases such as `navigator["usb"]["requestDevice"]`, `window["Notification"]["requestPermission"]`, and `window["PaymentRequest"]`, are treated as ungoverned authority paths outside visible Concierge controls and the governed Napoleon bridge.
+
 The same repository validation treats lowercase and SVG target spellings such as `srcset`, `formaction`, and `xlink:href` as external browser targets, including bracket assignment and `setAttribute` forms, so alternate markup spellings cannot bypass the governed bridge boundary.
 
 Image preload source-set targets such as `imageSrcSet` and `imagesrcset` are treated as external resource targets in static markup, property assignment, bracket assignment, and `setAttribute` forms, so responsive preload candidates cannot fetch images outside the governed bridge.
