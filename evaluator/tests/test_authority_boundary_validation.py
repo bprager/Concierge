@@ -95,6 +95,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'const runner = new globalThis["Function"]("payload", userSuppliedScript);',
             'window["setTimeout"]("fetch(`https://api.example.test/send`)", 0);',
             'globalThis["setInterval"]("navigator.sendBeacon(`/audit`)", 1000);',
+            "globalThis.eval(userSuppliedScript);",
+            "const runner = new window.Function('payload', userSuppliedScript);",
+            'window.setTimeout("fetch(`https://api.example.test/send`)", 0);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_authority_boundary_text("app/src/dynamicCode.ts", source)
