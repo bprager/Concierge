@@ -304,6 +304,7 @@ test("child protected taxonomy review handoff keeps child scope and guardian rev
   const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
     conversationId: "conv_child_taxonomy_review",
     traceId: "trace_child_taxonomy_review",
+    profile: "child_protected",
   });
   let posted: Record<string, unknown> | undefined;
 
@@ -380,6 +381,132 @@ test("child protected taxonomy review handoff keeps child scope and guardian rev
     (posted?.auditEnvelope as { approval_requirement: string }).approval_requirement,
     "guardian_and_owner_review_required_before_child_protected_taxonomy_change",
   );
+});
+
+test("taxonomy review handoff rejects an adult draft when child protected is active before fetch", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_adult_taxonomy_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_adult_taxonomy_2", topic: "deployment", capability: "release_summary" });
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_taxonomy_profile_mismatch",
+    traceId: "trace_taxonomy_adult_draft",
+    profile: "adult_owner",
+  });
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffTaxonomyReviewDraft(draft, {
+        conversationId: "conv_taxonomy_profile_mismatch",
+        traceId: "trace_taxonomy_child_active",
+        profile: "child_protected",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: {
+          endpointConfigured: true,
+          descriptor: defaultChiefOfStaffDescriptor,
+          expectedChecksum: "sha256:local-static",
+          actualChecksum: "sha256:local-static",
+          signatureValid: true,
+        },
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "child_protected_user" &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify([
+          "memory_write",
+          "agent_dispatch",
+          "external_send",
+          "approval_capture",
+          "runtime_authority",
+        ]),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
+});
+
+test("taxonomy review handoff rejects a child draft when adult owner is active before fetch", async () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_child_taxonomy_mismatch",
+      conversationId: "conv_child_taxonomy_mismatch",
+      turnId: "turn_child_taxonomy_mismatch",
+      profileMode: "child_protected_user",
+      channel: "text",
+      topicLabel: "support",
+      intentLabel: "ask_help",
+      capabilityLabel: "child_safe_response",
+      capabilityStatus: "working",
+      outcomeSignal: "answered",
+      confidence: 0.7,
+      evidenceRefs: ["trace:trace_child_taxonomy_mismatch"],
+      architectureArea: "text_ui",
+      privacyClass: "child_sensitive",
+      suggestedNextStep: "no_action",
+    }),
+  );
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_taxonomy_profile_mismatch",
+    traceId: "trace_taxonomy_child_draft",
+    profile: "child_protected",
+  });
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffTaxonomyReviewDraft(draft, {
+        conversationId: "conv_taxonomy_profile_mismatch",
+        traceId: "trace_taxonomy_adult_active",
+        profile: "adult_owner",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: {
+          endpointConfigured: true,
+          descriptor: defaultChiefOfStaffDescriptor,
+          expectedChecksum: "sha256:local-static",
+          actualChecksum: "sha256:local-static",
+          signatureValid: true,
+        },
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "adult_owner" &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify([
+          "memory_write",
+          "agent_dispatch",
+          "external_send",
+          "approval_capture",
+          "runtime_authority",
+        ]),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "adult_owner");
 });
 
 test("taxonomy review handoff fails closed while Rehearsal Mode is active", async () => {

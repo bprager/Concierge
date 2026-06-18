@@ -663,6 +663,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
   dependencies: TaxonomyReviewSubmissionDependencies,
 ): Promise<ChiefOfStaffTaxonomyReviewSubmissionResult> {
   const profileMode = mapProfileToNapoleonMode(dependencies.profile ?? "adult_owner");
+  const draftProfileModes = new Set(draft.evolutionProposal.affected_profiles);
   const isChildProtected = profileMode === "child_protected_user";
   const approvalRequirement = isChildProtected
     ? "guardian_and_owner_review_required_before_child_protected_taxonomy_change"
@@ -700,6 +701,9 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     },
   );
 
+  if (!draftProfileModes.has(profileMode)) {
+    failTaxonomyReviewClosed(dependencies, "governance_no_go", requestId, profileMode);
+  }
   if (dependencies.rehearsalMode) {
     failTaxonomyReviewClosed(dependencies, "governance_no_go", requestId, profileMode);
   }
