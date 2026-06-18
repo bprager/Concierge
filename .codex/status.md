@@ -16,6 +16,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Captured project constraints around Napoleon governance, local-first capture, child mode, observability, and controlled self-evolution.
 - Added and pushed the initial Concierge scaffold.
 - Verified evaluator stub mode, frontend build, Tauri check, schema validation, Markdown links, and YAML parsing during scaffold packaging.
+- Hardened repository authority-boundary validation so bracket-style browser network API access such as `globalThis["fetch"]`, `window["WebSocket"]`, and `navigator["sendBeacon"]` cannot bypass the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so browser `Worker`, `SharedWorker`, and `importScripts` entry points cannot hide service calls outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so frontend and desktop manifests plus root lockfile declarations cannot add direct LLM, agent, memory/graph, shell/process, or alternate transport client dependencies around the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so same-origin browser messaging channels such as `postMessage`, `BroadcastChannel`, and `MessageChannel` cannot move local Concierge data outside governed visible flows.

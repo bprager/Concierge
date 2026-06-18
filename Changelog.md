@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so bracket-style browser network API access such as `globalThis["fetch"]`, `window["WebSocket"]`, and `navigator["sendBeacon"]` cannot bypass the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so frontend and desktop manifests plus root lockfile declarations cannot add direct LLM, agent, memory/graph, shell/process, or alternate transport client dependencies around the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so same-origin browser messaging channels such as `postMessage`, `BroadcastChannel`, and `MessageChannel` cannot move local Concierge data outside governed visible flows.
 - Hardened repository authority-boundary validation so direct browser clipboard reads, writes, and legacy copy/paste commands cannot move local Concierge data outside governed visible flows.
