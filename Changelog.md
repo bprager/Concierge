@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so privileged browser device, account, notification, push, and payment APIs cannot bypass governed visible Concierge flows.
 - Hardened repository authority-boundary validation so bracket-style browser persistence, cross-context messaging, and clipboard aliases cannot retain or move local Concierge data outside governed visible flows.
 - Hardened repository authority-boundary validation so browser dynamic code execution such as `eval`, `new Function`, and string-based timers cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so browser persistence APIs such as `indexedDB`, Cache Storage, and `document.cookie` cannot retain Concierge data outside explicit bounded local metadata stores.

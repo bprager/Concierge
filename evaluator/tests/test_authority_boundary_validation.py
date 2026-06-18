@@ -291,6 +291,23 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_privileged_browser_device_account_and_payment_side_channels(self):
+        for source in [
+            "await navigator.usb.requestDevice({ filters: [] });",
+            "await navigator.serial.requestPort();",
+            "await navigator.hid.requestDevice({ filters: [] });",
+            "await navigator.bluetooth.requestDevice({ acceptAllDevices: true });",
+            "await navigator.credentials.get({ password: true });",
+            'await Notification.requestPermission();',
+            "await registration.pushManager.subscribe(options);",
+            "const request = new PaymentRequest(methods, details);",
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_worker_bypass_entry_points(self):
         for source in [
             'const worker = new Worker(new URL("./remoteServiceWorker.ts", import.meta.url));',
