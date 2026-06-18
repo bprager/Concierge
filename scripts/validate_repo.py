@@ -198,7 +198,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bwindow\.open\s*\("),
     re.compile(r"\bwindow\s*\[\s*['\"]open['\"]\s*\]\s*\("),
     re.compile(r"\b(?:window\.|document\.)?location\.(?:href|assign|replace)\b"),
-    re.compile(r"\b(?:window\.|document\.)?location\s*=\s*['\"](?:https?://|mailto:)"),
+    re.compile(r"\b(?:window\.|document\.)?location\s*="),
     re.compile(r"\b(?:navigator|window\.navigator)\.share\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]share['\"]\s*\]\s*\("),
     re.compile(r"\bpostMessage\s*\("),

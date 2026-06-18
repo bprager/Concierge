@@ -51,6 +51,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened repository authority-boundary validation so external `postMessage` target origins cannot send browser messages outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so external `imageSrcSet` and `imagesrcset` preload targets cannot load image candidates outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so direct external `location`, `window.location`, and `document.location` assignments cannot navigate outside the governed Napoleon bridge modules.
+- Hardened repository authority-boundary validation so variable-based direct `location`, `window.location`, and `document.location` assignments cannot navigate outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so external object/embed `data` targets cannot load outside content outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so lowercase and SVG external target variants such as `srcset`, `formaction`, and `xlink:href` cannot create alternate browser side channels outside the governed Napoleon bridge modules.
 - Added startup planning reports in `docs/reports/`.

@@ -459,6 +459,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'window.location = "https://api.example.test/export";',
             'document.location = "https://api.example.test/audit";',
             'location = "mailto:team@example.test?body=secret";',
+            "location = outboundUrl;",
+            "window.location = outboundUrl;",
+            "document.location = outboundUrl;",
             'window.location["href"] = "https://api.example.test/send";',
             'document.location["href"] = "mailto:team@example.test?body=secret";',
         ]:
