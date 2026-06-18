@@ -327,6 +327,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'globalThis["history"]["replaceState"]({ prompt: rawPromptText }, "", "/turn");',
             "window.name = secretProofJson;",
             'globalThis["name"] = rawPromptText;',
+            'localStorage.setItem("rawPrompt", rawPromptText);',
+            'window.sessionStorage.setItem("secretProof", secretProofJson);',
+            'globalThis["localStorage"]["setItem"]("token", bridgeToken);',
+            'window["sessionStorage"]["setItem"]("responseText", responseText);',
             'await window["navigator"]["clipboard"]["writeText"](secretProofJson);',
         ]:
             with self.subTest(source=source):

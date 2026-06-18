@@ -47,6 +47,12 @@ GOVERNED_NETWORK_SOURCE_ALLOWLIST = {
     "app/src/napoleonBridge.ts",
 }
 
+BOUNDED_BROWSER_STORAGE_SOURCE_ALLOWLIST = {
+    "app/src/App.tsx",
+    "app/src/capabilityLedgerStorage.ts",
+    "app/src/telemetry.ts",
+}
+
 AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (
         re.compile(
@@ -277,6 +283,13 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bHTMLDocument\.prototype\.(?:write|writeln)\.call\s*\("),
     re.compile(r"\bsrcDoc\s*="),
     re.compile(r"\bsrcdoc\s*="),
+]
+
+BROWSER_STORAGE_PERSISTENCE_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\.setItem\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\[\s*['\"]setItem['\"]\s*\]\s*\("
+    ),
 ]
 
 BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
@@ -1123,6 +1136,15 @@ def scan_ungoverned_network_text(path: str, text: str) -> list[str]:
         return violations
     violations: list[str] = []
     for line_number, line in enumerate(text.splitlines(), start=1):
+        line_has_violation = False
+        if path not in BOUNDED_BROWSER_STORAGE_SOURCE_ALLOWLIST:
+            for pattern in BROWSER_STORAGE_PERSISTENCE_PATTERNS:
+                if pattern.search(line):
+                    violations.append(f"{path}:{line_number}: ungoverned network call outside Napoleon bridge modules")
+                    line_has_violation = True
+                    break
+            if line_has_violation:
+                continue
         for pattern in UNGOVERNED_NETWORK_PATTERNS:
             if pattern.search(line):
                 violations.append(f"{path}:{line_number}: ungoverned network call outside Napoleon bridge modules")
