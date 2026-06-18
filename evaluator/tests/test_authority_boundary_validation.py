@@ -101,6 +101,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "const runner = Function('payload', userSuppliedScript);",
             "const runner = globalThis.Function('payload', userSuppliedScript);",
             "const runner = window.Function('payload', userSuppliedScript);",
+            'const runner = window["Function"]("payload", userSuppliedScript);',
+            'const runner = globalThis["Function"]("payload", userSuppliedScript);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_authority_boundary_text("app/src/dynamicCode.ts", source)

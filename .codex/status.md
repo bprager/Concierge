@@ -16,6 +16,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Captured project constraints around Napoleon governance, local-first capture, child mode, observability, and controlled self-evolution.
 - Added and pushed the initial Concierge scaffold.
 - Verified evaluator stub mode, frontend build, Tauri check, schema validation, Markdown links, and YAML parsing during scaffold packaging.
+- Hardened repository authority-boundary validation so bracket-style `Function(...)` calls without `new` cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so `Function(...)` constructor calls without `new` cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so dot-property dynamic code execution aliases such as `new window.Function(...)` cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style dynamic code execution aliases such as `window["eval"]`, `globalThis["Function"]`, and string-timer aliases cannot create hidden authority paths in Concierge runtime source.
