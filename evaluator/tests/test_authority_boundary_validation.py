@@ -224,6 +224,21 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_bracket_access_browser_side_channels(self):
+        for source in [
+            'window["postMessage"]({ payload }, "*");',
+            'await navigator["clipboard"].writeText(secretProofJson);',
+            'await window["navigator"]["share"]({ text: "send this outside Concierge" });',
+            'window["open"]("https://api.example.test/export", "_blank");',
+            'window["location"]["href"] = "https://api.example.test/export";',
+            'await navigator["serviceWorker"]["register"]("/hidden-service-worker.js");',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_peer_transport_side_channels(self):
         for source in [
             "const peer = new RTCPeerConnection({ iceServers: [] });",
