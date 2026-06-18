@@ -331,6 +331,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'window.sessionStorage.setItem("secretProof", secretProofJson);',
             'globalThis["localStorage"]["setItem"]("token", bridgeToken);',
             'window["sessionStorage"]["setItem"]("responseText", responseText);',
+            'localStorage.removeItem("bridge_readiness_proof");',
+            "window.sessionStorage.clear();",
+            'globalThis["localStorage"]["removeItem"]("napoleon_descriptor");',
+            'window["sessionStorage"]["clear"]();',
             'await window["navigator"]["clipboard"]["writeText"](secretProofJson);',
         ]:
             with self.subTest(source=source):
