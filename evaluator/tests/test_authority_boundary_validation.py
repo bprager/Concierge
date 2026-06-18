@@ -32,6 +32,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_scanner_detects_direct_process_execution(self):
         for source in [
             'let child = std::process::Command::new("osascript").spawn();',
+            'execFile("osascript", args);',
+            'execFileSync("osascript", args);',
+            'spawnSync("sh", ["-c", script]);',
             'const command = new Deno.Command("osascript", { args });',
             'const child = Bun.spawn(["osascript", "-e", script]);',
             'const result = Bun.spawnSync(["sh", "-c", script]);',

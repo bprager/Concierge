@@ -83,7 +83,7 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (
         re.compile(
             r"\b(child_process|std::process|subprocess|os\.system)\b"
-            r"|\b(?:exec|spawn)\s*\("
+            r"|\b(?:exec|execFile|execFileSync|execSync|spawn|spawnSync)\s*\("
             r"|\bDeno\.Command\s*\("
             r"|\bBun\.spawnSync\s*\("
             r"|\bCommand::new\s*\("
