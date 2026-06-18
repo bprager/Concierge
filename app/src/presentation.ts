@@ -4,6 +4,7 @@ import type {
   GovernanceOutcome,
   GovernanceReviewState,
   MemoryProposalReviewState,
+  NapoleonProfileMode,
   RehearsalPreview,
 } from "./contractBridge.js";
 import type { ConciergeMessage, NapoleonDelegation, NapoleonResponse } from "./types.js";
@@ -147,6 +148,7 @@ export type MicrophonePermissionStatus = "not_requested" | "requested" | "grante
 
 export interface LiveVoiceReadinessInput {
   descriptorConnection: DescriptorConnectionState;
+  profileMode?: NapoleonProfileMode;
   microphoneEnabled: boolean;
   microphonePermissionStatus: MicrophonePermissionStatus;
   evidenceCaptureState?: LiveBridgeEvidenceState;
@@ -344,6 +346,7 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
   const realRuntimeReady =
     runtimeValidationSource === "real_runtime" && evidenceCapture === "passed" && evidenceComparison === "passed";
   const descriptorReady = input.descriptorConnection.canAttemptLiveBridge;
+  const childProtected = input.profileMode === "child_protected_user";
   const blockedEffects = [
     "microphone_capture",
     "audio_playback",
@@ -351,6 +354,7 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
     "live_napoleon_contact",
     "memory_write",
     "approval_capture",
+    ...(childProtected ? ["guardian_approval_capture"] : []),
     "agent_dispatch",
     "external_send",
   ];
@@ -360,8 +364,9 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
     status: "blocked",
     canStartLiveVoice: false,
     summary: "Live voice is blocked because the governed voice pipeline is not implemented.",
-    caveat:
-      "This voice readiness gate is not Napoleon approval, not microphone consent, not permission to speak externally, and not a live voice start command.",
+    caveat: childProtected
+      ? "This voice readiness gate is not Napoleon approval, not microphone consent, not guardian approval, not permission to speak externally, and not a live voice start command."
+      : "This voice readiness gate is not Napoleon approval, not microphone consent, not permission to speak externally, and not a live voice start command.",
     blockedEffects,
     items: [
       {
@@ -388,7 +393,7 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
       },
       {
         label: "Runtime proof",
-        status: realRuntimeReady ? "ready" : "warning",
+        status: realRuntimeReady ? "ready" : "blocked",
         detail: realRuntimeReady
           ? "Real Napoleon runtime evidence has passed for the bridge."
           : "Real Napoleon runtime proof is not available for live voice.",

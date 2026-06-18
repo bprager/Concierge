@@ -3745,6 +3745,36 @@ test("keeps voice capture blocked until explicit microphone permission is grante
   }
 });
 
+test("shows guardian approval blocked in child protected live voice readiness", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App initialProfile="child_protected" />);
+
+    await view.findByText("Voice readiness");
+    const voiceReadiness = within(view.getByLabelText("Voice readiness"));
+
+    assert.ok(voiceReadiness.getByText("Live voice readiness"));
+    assert.ok(
+      voiceReadiness.getByText(
+        "This voice readiness gate is not Napoleon approval, not microphone consent, not guardian approval, not permission to speak externally, and not a live voice start command.",
+      ),
+    );
+    assert.ok(
+      voiceReadiness.getByText(
+        "Blocked effects: microphone_capture, audio_playback, raw_audio_storage, live_napoleon_contact, memory_write, approval_capture, guardian_approval_capture, agent_dispatch, external_send",
+      ),
+    );
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("camera and microphone permission telemetry records no agent dispatch", async () => {
   const dom = installDom();
   const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([

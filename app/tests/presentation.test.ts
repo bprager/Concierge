@@ -398,6 +398,52 @@ test("describes live voice readiness as blocked until the governed voice pipelin
   assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Voice pipeline" && item.status === "blocked"));
 });
 
+test("describes missing real runtime proof as a live voice blocker", () => {
+  const view = describeLiveVoiceReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    microphoneEnabled: true,
+    microphonePermissionStatus: "granted",
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "local_harness",
+    rehearsalMode: false,
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canStartLiveVoice, false);
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Runtime proof" && item.status === "blocked"));
+  assert.ok(view.items.some((item: { label: string; detail: string }) => item.label === "Runtime proof" && item.detail.includes("not available")));
+});
+
+test("describes child protected live voice readiness with guardian approval blocked", () => {
+  const view = describeLiveVoiceReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    microphoneEnabled: true,
+    microphonePermissionStatus: "granted",
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+    rehearsalMode: false,
+    profileMode: "child_protected_user",
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.ok(view.blockedEffects.includes("guardian_approval_capture"));
+  assert.ok(view.caveat.includes("guardian approval"));
+});
+
 test("describes last fail-closed live send in bridge readiness", () => {
   const view = describeLiveBridgeReadiness({
     descriptorConnection: buildDescriptorConnectionState({

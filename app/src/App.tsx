@@ -2246,6 +2246,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   });
   const liveVoiceReadiness = describeLiveVoiceReadiness({
     descriptorConnection,
+    profileMode: mapProfileToNapoleonMode(profile),
     microphoneEnabled,
     microphonePermissionStatus,
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,
