@@ -89,6 +89,8 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
             r"|\b(?:globalThis|window)\s*\[\s*['\"]Function['\"]\s*\]\s*\("
             r"|\bnew\s+(?:globalThis|window)\s*\[\s*['\"]Function['\"]\s*\]\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"]set(?:Timeout|Interval)['\"]\s*\]\s*\(\s*['\"]"
+            r"|\.\s*constructor\s*\.\s*constructor\s*\("
+            r"|\[\s*['\"]constructor['\"]\s*\]\s*\[\s*['\"]constructor['\"]\s*\]\s*\("
         ),
         "direct dynamic code execution",
     ),

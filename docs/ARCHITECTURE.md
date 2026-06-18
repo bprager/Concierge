@@ -169,7 +169,7 @@ Privileged browser device, account, notification, push, and payment APIs, includ
 
 Dynamic HTML injection APIs, including bracket-style aliases such as `container["innerHTML"]`, `window["DOMParser"]`, `range["createContextualFragment"]`, and lowercase `srcdoc`, are treated as ungoverned markup paths because they can smuggle external targets around static UI checks.
 
-Dynamic code execution APIs, including bracket-style aliases for eval and Function calls, constructor calls with or without `new`, dot-property aliases such as `new window.Function(...)`, and string-timer aliases, are treated as hidden authority paths and are rejected from Concierge runtime source.
+Dynamic code execution APIs, including bracket-style aliases for eval and Function calls, constructor calls with or without `new`, indirect constructor-constructor access, dot-property aliases such as `new window.Function(...)`, and string-timer aliases, are treated as hidden authority paths and are rejected from Concierge runtime source.
 
 The same repository validation treats lowercase and SVG target spellings such as `srcset`, `formaction`, and `xlink:href` as external browser targets, including bracket assignment and `setAttribute` forms, so alternate markup spellings cannot bypass the governed bridge boundary.
 

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so indirect constructor-constructor dynamic code execution cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style `Function(...)` calls without `new` cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so `Function(...)` constructor calls without `new` cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so dot-property dynamic code execution aliases such as `new window.Function(...)` cannot create hidden authority paths in Concierge runtime source.
