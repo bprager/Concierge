@@ -10,6 +10,7 @@ import {
   type GovernanceDecision,
   type GovernanceEvaluationRequest,
   type GovernanceReviewState,
+  type LocalProfile,
   type TraceEnvelope,
 } from "./contractBridge.js";
 import { NapoleonBridgeError, descriptorFailClosedReasonToBridgeFailure } from "./napoleonBridge.js";
@@ -27,6 +28,7 @@ type GovernanceReviewFetch = (
 interface GovernanceReviewSubmissionDependencies {
   conversationId: string;
   traceId: string;
+  profile?: LocalProfile;
   rehearsalMode?: boolean;
   getEndpoint?: () => string | null;
   getAuthToken?: () => string | null;
@@ -217,7 +219,9 @@ export async function submitGovernanceReviewForNapoleonReview(
   review: GovernanceReviewState,
   dependencies: GovernanceReviewSubmissionDependencies,
 ): Promise<GovernanceReviewSubmissionResult> {
-  const profileMode = mapProfileToNapoleonMode(review.profile);
+  const reviewProfileMode = mapProfileToNapoleonMode(review.profile);
+  const activeProfile = dependencies.profile ?? review.profile;
+  const profileMode = mapProfileToNapoleonMode(activeProfile);
   const requestId = `cos_${dependencies.traceId}`;
   const localDecisionId = `local_governance_${dependencies.traceId}`;
   const localAuditId = `local_audit_${dependencies.traceId}`;
@@ -231,6 +235,19 @@ export async function submitGovernanceReviewForNapoleonReview(
   );
   const blockedEffects = GOVERNANCE_REVIEW_BLOCKED_EFFECTS;
 
+  if (reviewProfileMode !== profileMode) {
+    failGovernanceReviewClosed(
+      dependencies,
+      "governance_no_go",
+      dependencies.traceId,
+      requestId,
+      review.decisionId,
+      review.auditId,
+      activeProfile,
+      undefined,
+      blockedEffects,
+    );
+  }
   if (dependencies.rehearsalMode || review.outcome === "no_go" || review.outcome === "deny") {
     failGovernanceReviewClosed(
       dependencies,

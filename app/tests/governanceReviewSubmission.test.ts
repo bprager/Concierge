@@ -128,6 +128,78 @@ test("governance review submission preserves descriptor discovery auth failure b
   assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "auth_failure");
 });
 
+test("governance review submission rejects an adult review when child protected is active before fetch", async () => {
+  const review = buildReview("adult_owner");
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitGovernanceReviewForNapoleonReview(review, {
+        conversationId: "conv_governance",
+        traceId: "trace_child_submit_mismatch",
+        profile: "child_protected",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "child_protected_user" &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(governanceReviewBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "governance_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, governanceReviewBlockedEffects);
+});
+
+test("governance review submission rejects a child review when adult owner is active before fetch", async () => {
+  const review = buildReview("child_protected");
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitGovernanceReviewForNapoleonReview(review, {
+        conversationId: "conv_governance",
+        traceId: "trace_adult_submit_mismatch",
+        profile: "adult_owner",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "adult_owner" &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(governanceReviewBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "governance_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "adult_owner");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, governanceReviewBlockedEffects);
+});
+
 test("governance review submission posts packet without capturing approval or applying effects", async () => {
   const review = buildReview("child_protected");
   let posted: Record<string, unknown> | undefined;

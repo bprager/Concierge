@@ -1871,6 +1871,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const result = await submitGovernanceReviewForNapoleonReview(lastGovernanceReviewState, {
         conversationId,
         traceId,
+        profile,
         rehearsalMode,
         descriptorConnection: currentDescriptorInput(),
       });
