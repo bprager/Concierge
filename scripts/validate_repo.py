@@ -71,6 +71,12 @@ APPROVED_BROWSER_STORAGE_KEYS = {
 BOUNDED_BROWSER_STORAGE_KEY_PATTERN = re.compile(
     r"\b(?:localStorage|sessionStorage|storage)\s*\.\s*(?:setItem|removeItem)\s*\(\s*['\"](?P<key>[^'\"]+)['\"]"
 )
+BOUNDED_BROWSER_STORAGE_KEY_CONSTANT_PATTERN = re.compile(
+    r"\b(?:const|let|var)\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*['\"](?P<key>[^'\"]+)['\"]"
+)
+BOUNDED_BROWSER_STORAGE_VARIABLE_KEY_PATTERN = re.compile(
+    r"\b(?:localStorage|sessionStorage|storage)\s*\.\s*(?:setItem|removeItem)\s*\(\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+)
 
 AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (
@@ -1169,10 +1175,21 @@ def find_direct_authority_boundary_violations() -> list[str]:
 def scan_ungoverned_network_text(path: str, text: str) -> list[str]:
     storage_violations: list[str] = []
     if path in BOUNDED_BROWSER_STORAGE_SOURCE_ALLOWLIST:
+        storage_key_constants: dict[str, str] = {}
+        for line in text.splitlines():
+            key_constant_match = BOUNDED_BROWSER_STORAGE_KEY_CONSTANT_PATTERN.search(line)
+            if key_constant_match:
+                storage_key_constants[key_constant_match.group("name")] = key_constant_match.group("key")
         for line_number, line in enumerate(text.splitlines(), start=1):
             key_match = BOUNDED_BROWSER_STORAGE_KEY_PATTERN.search(line)
             if key_match and key_match.group("key") not in APPROVED_BROWSER_STORAGE_KEYS:
                 storage_violations.append(f"{path}:{line_number}: unapproved browser storage key")
+                continue
+            variable_key_match = BOUNDED_BROWSER_STORAGE_VARIABLE_KEY_PATTERN.search(line)
+            if variable_key_match:
+                key = storage_key_constants.get(variable_key_match.group("name"))
+                if key is not None and key not in APPROVED_BROWSER_STORAGE_KEYS:
+                    storage_violations.append(f"{path}:{line_number}: unapproved browser storage key")
     else:
         for line_number, line in enumerate(text.splitlines(), start=1):
             for pattern in BROWSER_STORAGE_PERSISTENCE_PATTERNS:

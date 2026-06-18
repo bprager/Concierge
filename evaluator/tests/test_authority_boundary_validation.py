@@ -756,6 +756,14 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'localStorage.removeItem("bridge_readiness_proof");',
             'storage.setItem("concierge_raw_transcript_v1", rawTranscript);',
             'storage.removeItem("napoleon_descriptor_token_cache");',
+            """
+            const RAW_PROMPT_CACHE_KEY = "raw_prompt_cache";
+            storage.setItem(RAW_PROMPT_CACHE_KEY, rawPromptText);
+            """,
+            """
+            const BRIDGE_PROOF_CACHE_KEY = "bridge_readiness_proof";
+            localStorage.removeItem(BRIDGE_PROOF_CACHE_KEY);
+            """,
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/App.tsx", source)
@@ -770,6 +778,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'localStorage.setItem("concierge_camera_enabled", String(enabled));',
             'storage.setItem("concierge_telemetry_buffer_v1", JSON.stringify(next));',
             'storage.removeItem("concierge_capability_taxonomy_v1");',
+            """
+            const TELEMETRY_BUFFER_STORAGE_KEY = "concierge_telemetry_buffer_v1";
+            storage.setItem(TELEMETRY_BUFFER_STORAGE_KEY, JSON.stringify(next));
+            """,
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/App.tsx", source)
