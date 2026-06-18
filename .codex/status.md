@@ -53,6 +53,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened repository authority-boundary validation so direct external `location`, `window.location`, and `document.location` assignments cannot navigate outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so variable-based direct `location`, `window.location`, and `document.location` assignments cannot navigate outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so `globalThis.location` and bracket-style `window["location"]` assignments cannot navigate outside the governed Napoleon bridge modules.
+- Hardened repository authority-boundary validation so bracketed `location["href"]`, `location["assign"]`, and `location["replace"]` aliases cannot navigate outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so external object/embed `data` targets cannot load outside content outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so lowercase and SVG external target variants such as `srcset`, `formaction`, and `xlink:href` cannot create alternate browser side channels outside the governed Napoleon bridge modules.
 - Added startup planning reports in `docs/reports/`.
