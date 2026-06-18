@@ -17,6 +17,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added and pushed the initial Concierge scaffold.
 - Verified evaluator stub mode, frontend build, Tauri check, schema validation, Markdown links, and YAML parsing during scaffold packaging.
 - Scoped Conversation Capability Intelligence answers and Chief of Staff steering draft evidence to the active profile so child-protected, guest, collaborator, and owner signals are not mixed in recommendations.
+- Hardened Chief of Staff steering handoff so stale drafts scoped to a different active profile fail closed before any governed endpoint call.
 - Hardened repository authority-boundary validation so WebAssembly and object URL creation cannot introduce hidden local executable paths outside governed visible flows.
 - Hardened repository authority-boundary validation so browser file picker and FileReader APIs cannot move local files or proofs outside governed visible flows.
 - Hardened repository authority-boundary validation so bracket-style global Tauri invoke aliases cannot call native commands outside the governed Napoleon bridge.

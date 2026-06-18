@@ -322,6 +322,10 @@ function hasForbiddenSteeringSideEffectClaim(payload: Partial<ChiefOfStaffSteeri
   return requiredFalseFields.some((field) => payload[field] !== false);
 }
 
+function draftMatchesActiveProfile(draft: ChiefOfStaffSteeringDraft, profileMode: NapoleonProfileMode): boolean {
+  return draft.evolutionProposal.affected_profiles.includes(profileMode);
+}
+
 function failSteeringClosed(
   dependencies: SteeringSubmissionDependencies,
   reason: ConstructorParameters<typeof NapoleonBridgeError>[0],
@@ -386,6 +390,9 @@ export async function submitChiefOfStaffSteeringDraft(
       }
     : draft.evolutionProposal;
 
+  if (!draftMatchesActiveProfile(draft, profileMode)) {
+    failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
+  }
   if (dependencies.rehearsalMode) {
     failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
   }

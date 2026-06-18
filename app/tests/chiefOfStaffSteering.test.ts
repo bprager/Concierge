@@ -54,6 +54,7 @@ test("drafts proposal-only Chief of Staff steering from capability signals", () 
     conversationId: "conv_steering",
     traceId: "trace_steering",
     endpointConfigured: false,
+    profileMode: "adult_owner",
   });
 
   assert.equal(draft.sendState.canSendToNapoleon, false);
@@ -126,6 +127,7 @@ test("steering draft evidence excludes correctly blocked unsafe signals with the
     conversationId: "conv_steering",
     traceId: "trace_steering",
     endpointConfigured: false,
+    profileMode: "adult_owner",
   });
 
   assert.equal(draft.recommendation.capabilityLabel, "memory_review");
@@ -188,12 +190,133 @@ test("steering draft uses only the active profile capability evidence", () => {
   assert.equal(childDraft.evolutionProposal.evidence.includes("trace:trace_adult_bridge_gap"), false);
 });
 
+test("steering handoff rejects a draft scoped to a different active profile before fetch", async () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_adult_only_gap",
+      conversationId: "conv_profile_mismatch",
+      turnId: "turn_adult_only_gap",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "bridge",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "adult_only_bridge_gap",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.89,
+      evidenceRefs: ["trace:trace_adult_only_gap"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+  const adultDraft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_adult_draft",
+    endpointConfigured: true,
+    profileMode: "adult_owner",
+  });
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffSteeringDraft(adultDraft, {
+        conversationId: "conv_steering",
+        traceId: "trace_child_submit_mismatch",
+        profile: "child_protected",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "child_protected_user" &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
+});
+
+test("steering handoff rejects child-scoped drafts when adult owner is active before fetch", async () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_child_only_gap",
+      conversationId: "conv_child_profile_mismatch",
+      turnId: "turn_child_only_gap",
+      profileMode: "child_protected_user",
+      channel: "text",
+      topicLabel: "school",
+      intentLabel: "ask_help",
+      capabilityLabel: "child_only_help_gap",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.9,
+      evidenceRefs: ["trace:trace_child_only_gap"],
+      architectureArea: "text_ui",
+      privacyClass: "child_sensitive",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+  const childDraft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_child_draft",
+    endpointConfigured: true,
+    profileMode: "child_protected_user",
+  });
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffSteeringDraft(childDraft, {
+        conversationId: "conv_steering",
+        traceId: "trace_adult_submit_mismatch",
+        profile: "adult_owner",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "adult_owner" &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "adult_owner");
+});
+
 test("steering handoff fails closed without endpoint and does not fetch", async () => {
   const ledger = createCapabilityLedger();
   const draft = draftChiefOfStaffSteering(ledger, {
     conversationId: "conv_steering",
     traceId: "trace_steering",
     endpointConfigured: false,
+    profileMode: "child_protected_user",
   });
   let fetchCalled = false;
   const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
@@ -530,6 +653,7 @@ test("child protected steering handoff includes child safety caution and child p
     conversationId: "conv_child_steering",
     traceId: "trace_child_steering",
     endpointConfigured: true,
+    profileMode: "child_protected_user",
   });
   let posted: Record<string, unknown> | undefined;
 
