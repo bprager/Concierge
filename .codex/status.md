@@ -36,9 +36,10 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened repository authority-boundary validation so bracket-style dynamic HTML injection aliases such as `container["innerHTML"]`, `window["DOMParser"]`, and lowercase `srcdoc` cannot smuggle external targets around governed bridge checks.
 - Hardened repository authority-boundary validation so `document.write`, `document.writeln`, and bracket-style document write aliases cannot smuggle external targets around governed bridge checks.
 - Hardened repository authority-boundary validation so bracket-style privileged browser device, account, notification, push, and payment API aliases cannot bypass governed visible Concierge flows.
+- Hardened repository authority-boundary validation so browser geolocation reads and watches cannot access location outside governed visible Concierge controls.
 - Hardened repository authority-boundary validation so bracket-style browser peer and session transport constructors such as `window["RTCPeerConnection"]` and `window["WebTransport"]` cannot create network paths outside the governed Napoleon bridge modules.
 - Hardened live text bridge response validation so shorthand external-send claims such as "sent it" fail closed even when explicit side-effect boundary fields are false.
-- Hardened repository authority-boundary validation so privileged browser device, account, notification, push, and payment APIs cannot bypass governed visible Concierge flows.
+- Hardened repository authority-boundary validation so privileged browser device, location, account, notification, push, and payment APIs cannot bypass governed visible Concierge flows.
 - Hardened repository authority-boundary validation so bracket-style browser persistence, cross-context messaging, and clipboard aliases cannot retain or move local Concierge data outside governed visible flows.
 - Hardened repository authority-boundary validation so browser dynamic code execution such as `eval`, `new Function`, and string-based timers cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so browser persistence APIs such as `indexedDB`, Cache Storage, and `document.cookie` cannot retain Concierge data outside explicit bounded local metadata stores.
