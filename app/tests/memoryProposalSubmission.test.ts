@@ -169,6 +169,78 @@ test("memory proposal submission fails closed while Rehearsal Mode is active", a
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, memoryProposalBlockedEffects);
 });
 
+test("memory proposal submission rejects an adult proposal when child protected is active before fetch", async () => {
+  const review = buildReview("adult_owner");
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitMemoryProposalForReview(review, {
+        conversationId: "conv_memory",
+        traceId: "trace_child_submit_mismatch",
+        profile: "child_protected",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "child_protected_user" &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(memoryProposalBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "memory_proposal_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, memoryProposalBlockedEffects);
+});
+
+test("memory proposal submission rejects a child proposal when adult owner is active before fetch", async () => {
+  const review = buildReview("child_protected");
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitMemoryProposalForReview(review, {
+        conversationId: "conv_memory",
+        traceId: "trace_adult_submit_mismatch",
+        profile: "adult_owner",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "adult_owner" &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(memoryProposalBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "memory_proposal_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "adult_owner");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, memoryProposalBlockedEffects);
+});
+
 test("memory proposal submission posts review packet without writing memory or capturing approval", async () => {
   const review = buildReview();
   let posted: Record<string, unknown> | undefined;

@@ -1911,6 +1911,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const result = await submitMemoryProposalForReview(lastMemoryReviewState, {
         conversationId,
         traceId,
+        profile,
         rehearsalMode,
         descriptorConnection: currentDescriptorInput(),
       });

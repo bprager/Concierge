@@ -10,6 +10,7 @@ import {
   type DescriptorFailClosedReason,
   type GovernanceDecision,
   type GovernanceEvaluationRequest,
+  type LocalProfile,
   type MemoryProposalReviewState,
   type TraceEnvelope,
 } from "./contractBridge.js";
@@ -28,6 +29,7 @@ type MemoryProposalFetch = (
 interface MemoryProposalSubmissionDependencies {
   conversationId: string;
   traceId: string;
+  profile?: LocalProfile;
   rehearsalMode?: boolean;
   getEndpoint?: () => string | null;
   getAuthToken?: () => string | null;
@@ -204,7 +206,8 @@ export async function submitMemoryProposalForReview(
   memoryProposal: MemoryProposalReviewState,
   dependencies: MemoryProposalSubmissionDependencies,
 ): Promise<MemoryProposalSubmissionResult> {
-  const profileMode = mapProfileToNapoleonMode(memoryProposal.profile);
+  const proposalProfileMode = mapProfileToNapoleonMode(memoryProposal.profile);
+  const profileMode = dependencies.profile ? mapProfileToNapoleonMode(dependencies.profile) : proposalProfileMode;
   const requestId = `cos_${dependencies.traceId}`;
   const localDecisionId = `local_memory_${dependencies.traceId}`;
   const localAuditId = `local_audit_${dependencies.traceId}`;
@@ -218,6 +221,18 @@ export async function submitMemoryProposalForReview(
   );
   const blockedEffects = ["memory_write", "approval_capture", "external_send", "agent_dispatch", "runtime_authority"];
 
+  if (proposalProfileMode !== profileMode) {
+    failMemoryProposalClosed(
+      dependencies,
+      "governance_no_go",
+      dependencies.traceId,
+      requestId,
+      memoryProposal.proposalId,
+      profileMode,
+      undefined,
+      blockedEffects,
+    );
+  }
   if (dependencies.rehearsalMode) {
     failMemoryProposalClosed(
       dependencies,

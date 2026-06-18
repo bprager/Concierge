@@ -262,6 +262,7 @@ Acceptance criteria:
 - Locally blocked Rehearsal Mode `no_go` previews must emit blocked-governance telemetry with active profile mode and blocked effects, without contacting Napoleon, so child-protected unsafe previews remain child-sensitive local signals.
 - Local capability-intelligence answer telemetry must include the active profile mode so child-protected local query answers stay profile-scoped without contacting Napoleon.
 - Local capability-intelligence answers and Chief of Staff steering drafts must filter source evidence to the active profile before aggregation or recommendation, so child-protected, guest, collaborator, and owner evidence is not mixed across contexts.
+- Memory proposal handoff helpers must re-check the proposal profile against the active profile at submission time and fail closed before any request fetch on mismatch.
 - Chief of Staff steering handoff helpers must re-check the draft's affected profile against the active profile at submission time and fail closed before any request fetch on mismatch.
 - Fail-closed memory proposal, governance review, Chief of Staff steering, and taxonomy review handoff messages, errors, and telemetry must include the active profile mode, so blocked governed handoffs preserve child-protected, guest, collaborator, or owner scope.
 - Successful and fail-closed text response telemetry must include the active local profile and Napoleon profile mode, so derived capability intelligence preserves child-protected, guest, collaborator, or owner scope.
