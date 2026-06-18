@@ -50,6 +50,7 @@ GOVERNED_NETWORK_SOURCE_ALLOWLIST = {
 BOUNDED_BROWSER_STORAGE_SOURCE_ALLOWLIST = {
     "app/src/App.tsx",
     "app/src/capabilityLedgerStorage.ts",
+    "app/src/connectionStorage.ts",
     "app/src/telemetry.ts",
 }
 
@@ -311,9 +312,11 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
 ]
 
 BROWSER_STORAGE_PERSISTENCE_PATTERNS: list[re.Pattern[str]] = [
-    re.compile(r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\.(?:setItem|removeItem|clear)\s*\("),
     re.compile(
-        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\[\s*['\"](?:setItem|removeItem|clear)['\"]\s*\]\s*\("
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\.(?:getItem|setItem|removeItem|clear)\s*\("
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\[\s*['\"](?:getItem|setItem|removeItem|clear)['\"]\s*\]\s*\("
     ),
     re.compile(r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\.[A-Za-z_$][A-Za-z0-9_$]*\s*="),
     re.compile(

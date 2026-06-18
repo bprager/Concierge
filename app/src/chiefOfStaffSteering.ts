@@ -8,6 +8,7 @@ import {
 } from "./capabilityLedger.js";
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
+import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
   buildDescriptorConnectionState,
   defaultChiefOfStaffDescriptor,
@@ -231,16 +232,13 @@ function emitSteeringEvent(dependencies: SteeringSubmissionDependencies, event: 
 
 function getConfiguredEndpoint(dependencies: SteeringSubmissionDependencies): string | null {
   if (dependencies.getEndpoint) return dependencies.getEndpoint();
-  if (typeof localStorage === "undefined") return null;
-  return localStorage.getItem("napoleon_endpoint");
+  return readConfiguredEndpointFromStorage();
 }
 
 function getConfiguredAuthToken(dependencies: SteeringSubmissionDependencies): string | null {
   if (dependencies.getAuthToken) return dependencies.getAuthToken();
   if (dependencies.getEndpoint) return null;
-  if (typeof localStorage === "undefined") return null;
-  const token = localStorage.getItem("napoleon_auth_token");
-  return token?.trim() ? token.trim() : null;
+  return readConfiguredAuthTokenFromStorage();
 }
 
 function buildSteeringHeaders(authToken: string | null): Record<string, string> {

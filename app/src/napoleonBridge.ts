@@ -2,6 +2,7 @@ import type { NapoleonDelegation, NapoleonRecommendationProvenance, NapoleonRequ
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import { getBridgeOperation, type BridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
+import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
   buildDescriptorConnectionState,
   buildTextTurnContract,
@@ -171,16 +172,13 @@ function buildFailClosedEvidence(
 
 function getConfiguredEndpoint(dependencies: BridgeDependencies): string | null {
   if (dependencies.getEndpoint) return dependencies.getEndpoint();
-  if (typeof localStorage === "undefined") return null;
-  return localStorage.getItem("napoleon_endpoint");
+  return readConfiguredEndpointFromStorage();
 }
 
 function getConfiguredAuthToken(dependencies: BridgeDependencies): string | null {
   if (dependencies.getAuthToken) return dependencies.getAuthToken();
   if (dependencies.getEndpoint) return null;
-  if (typeof localStorage === "undefined") return null;
-  const token = localStorage.getItem("napoleon_auth_token");
-  return token?.trim() ? token.trim() : null;
+  return readConfiguredAuthTokenFromStorage();
 }
 
 function buildBridgeHeaders(authToken: string | null): Record<string, string> {

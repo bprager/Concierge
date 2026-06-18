@@ -1,4 +1,5 @@
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
+import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
   buildDescriptorConnectionState,
   type ChiefOfStaffDescriptor,
@@ -28,16 +29,13 @@ export interface DescriptorDiscoveryResult {
 
 function getConfiguredEndpoint(dependencies: DescriptorDiscoveryDependencies): string | null {
   if (dependencies.getEndpoint) return dependencies.getEndpoint();
-  if (typeof localStorage === "undefined") return null;
-  return localStorage.getItem("napoleon_endpoint");
+  return readConfiguredEndpointFromStorage();
 }
 
 function getConfiguredAuthToken(dependencies: DescriptorDiscoveryDependencies): string | null {
   if (dependencies.getAuthToken) return dependencies.getAuthToken();
   if (dependencies.getEndpoint) return null;
-  if (typeof localStorage === "undefined") return null;
-  const token = localStorage.getItem("napoleon_auth_token");
-  return token?.trim() ? token.trim() : null;
+  return readConfiguredAuthTokenFromStorage();
 }
 
 function buildDescriptorHeaders(authToken: string | null): Record<string, string> {

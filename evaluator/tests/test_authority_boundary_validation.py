@@ -328,9 +328,13 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "window.name = secretProofJson;",
             'globalThis["name"] = rawPromptText;',
             'localStorage.setItem("rawPrompt", rawPromptText);',
+            'localStorage.getItem("rawPrompt");',
             'window.sessionStorage.setItem("secretProof", secretProofJson);',
+            'window.sessionStorage.getItem("secretProof");',
             'globalThis["localStorage"]["setItem"]("token", bridgeToken);',
+            'globalThis["localStorage"]["getItem"]("token");',
             'window["sessionStorage"]["setItem"]("responseText", responseText);',
+            'window["sessionStorage"]["getItem"]("responseText");',
             "localStorage.rawPrompt = rawPromptText;",
             'window.sessionStorage["secretProof"] = secretProofJson;',
             'globalThis["localStorage"].bridgeToken = bridgeToken;',
@@ -736,12 +740,14 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_rejects_browser_storage_mutation_inside_bridge_modules(self):
         for source in [
             'localStorage.setItem("rawPrompt", rawPromptText);',
+            'localStorage.getItem("napoleon_endpoint");',
             "localStorage.rawPrompt = rawPromptText;",
             "delete localStorage.rawPrompt;",
             'window.sessionStorage.removeItem("bridge_readiness_proof");',
             'window["sessionStorage"]["responseText"] = responseText;',
             'delete window["sessionStorage"]["responseText"];',
             'globalThis["localStorage"]["setItem"]("token", bridgeToken);',
+            'globalThis["localStorage"]["getItem"]("napoleon_auth_token");',
             'window["sessionStorage"]["clear"]();',
         ]:
             with self.subTest(source=source):
@@ -796,6 +802,18 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/App.tsx", source)
+
+                self.assertEqual(violations, [])
+
+        for source in [
+            'localStorage.getItem("napoleon_endpoint");',
+            """
+            const NAPOLEON_AUTH_TOKEN_STORAGE_KEY = "napoleon_auth_token";
+            localStorage.getItem(NAPOLEON_AUTH_TOKEN_STORAGE_KEY);
+            """,
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/connectionStorage.ts", source)
 
                 self.assertEqual(violations, [])
 
