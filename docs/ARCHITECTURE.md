@@ -189,7 +189,7 @@ Programmatic DOM clicks such as `anchor.click()`, `downloadLink.click()`, `butto
 
 Browser cross-context messaging such as `postMessage`, `BroadcastChannel`, and `MessageChannel` is treated as a side channel so UI code cannot relay local prompts, responses, tokens, or proof metadata to another browser context outside governed visible flows.
 
-Direct browser clipboard reads, writes, and legacy copy/paste commands are treated as local data side channels so UI code cannot move prompts, responses, tokens, or proof metadata outside governed visible export flows.
+Direct browser clipboard reads, writes, mixed dot/bracket clipboard aliases, and legacy copy/paste commands are treated as local data side channels so UI code cannot move prompts, responses, tokens, or proof metadata outside governed visible export flows.
 
 Browser file picker APIs, FileReader constructors, and FileReader `readAs...` methods are treated as local data side channels so UI code cannot read, write, or export local files outside governed visible import/export flows.
 

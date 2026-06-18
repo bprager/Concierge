@@ -484,6 +484,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "await navigator.clipboard.writeText(secretProofJson);",
             "await window.navigator.clipboard.write([new ClipboardItem(data)]);",
             "const copied = await navigator.clipboard.readText();",
+            'await navigator.clipboard["writeText"](secretProofJson);',
+            'await navigator["clipboard"]["readText"]();',
             'document.execCommand("copy");',
             "document.execCommand('paste');",
         ]:

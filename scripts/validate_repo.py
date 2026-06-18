@@ -258,7 +258,13 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]postMessage['\"]\s*\]\s*\("),
     re.compile(r"\b(?:BroadcastChannel|MessageChannel)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.clipboard\.(?:read|readText|write|writeText)\s*\("),
+    re.compile(
+        r"\b(?:navigator|window\.navigator)\.clipboard\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("
+    ),
     re.compile(r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\.\s*(?:read|readText|write|writeText)\s*\("),
+    re.compile(
+        r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("
+    ),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("),
     re.compile(r"\bdocument\.execCommand\s*\(\s*['\"](?:copy|cut|paste)['\"]", re.IGNORECASE),
     re.compile(r"\b(?:globalThis|window)\.(?:showOpenFilePicker|showSaveFilePicker|showDirectoryPicker)\s*\("),
