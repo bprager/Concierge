@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Scoped Conversation Capability Intelligence answers and Chief of Staff steering draft evidence to the active profile so child-protected, guest, collaborator, and owner signals are not mixed in recommendations.
 - Hardened repository authority-boundary validation so WebAssembly and object URL creation cannot introduce hidden local executable paths outside governed visible flows.
 - Hardened repository authority-boundary validation so browser file picker and FileReader APIs cannot move local files or proofs outside governed visible flows.
 - Hardened repository authority-boundary validation so bracket-style global Tauri invoke aliases cannot call native commands outside the governed Napoleon bridge.

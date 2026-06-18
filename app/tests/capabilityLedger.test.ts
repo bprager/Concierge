@@ -535,6 +535,67 @@ test("answers next capability recommendation questions without granting authorit
   assert.equal(answer.boundary.externalSendAllowed, false);
 });
 
+test("answers capability questions from the active profile scope only", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_adult_missing",
+      conversationId: "conv_profile_scope",
+      turnId: "turn_adult_missing",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "bridge",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "adult_bridge_gap",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.88,
+      evidenceRefs: ["trace:trace_adult_missing"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_child_missing",
+      conversationId: "conv_profile_scope",
+      turnId: "turn_child_missing",
+      profileMode: "child_protected_user",
+      channel: "text",
+      topicLabel: "school",
+      intentLabel: "ask_help",
+      capabilityLabel: "child_safe_help_gap",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.92,
+      evidenceRefs: ["trace:trace_child_missing"],
+      architectureArea: "text_ui",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+
+  const adultAnswer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, undefined, {
+    profileMode: "adult_owner",
+  });
+  const childAnswer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, undefined, {
+    profileMode: "child_protected_user",
+  });
+
+  assert.ok(adultAnswer);
+  assert.ok(childAnswer);
+  if (!adultAnswer || !childAnswer) throw new Error("expected profile-scoped answers");
+  assert.deepEqual(adultAnswer.rows.map((row) => row.label), ["adult_bridge_gap"]);
+  assert.deepEqual(childAnswer.rows.map((row) => row.label), ["child_safe_help_gap"]);
+  assert.equal(adultAnswer.evidenceCount, 1);
+  assert.equal(childAnswer.evidenceCount, 1);
+  assert.equal(JSON.stringify(adultAnswer).includes("child_safe_help_gap"), false);
+  assert.equal(JSON.stringify(childAnswer).includes("adult_bridge_gap"), false);
+});
+
 test("does not answer unrelated questions as capability intelligence queries", () => {
   const ledger = createCapabilityLedger();
 

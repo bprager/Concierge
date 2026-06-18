@@ -133,6 +133,61 @@ test("steering draft evidence excludes correctly blocked unsafe signals with the
   assert.equal(draft.evolutionProposal.evidence.includes("trace:trace_blocked_memory_write"), false);
 });
 
+test("steering draft uses only the active profile capability evidence", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_adult_bridge_gap",
+      conversationId: "conv_profile_steering",
+      turnId: "turn_adult_bridge_gap",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "bridge",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "adult_bridge_gap",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.88,
+      evidenceRefs: ["trace:trace_adult_bridge_gap"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_child_help_gap",
+      conversationId: "conv_profile_steering",
+      turnId: "turn_child_help_gap",
+      profileMode: "child_protected_user",
+      channel: "text",
+      topicLabel: "school",
+      intentLabel: "ask_help",
+      capabilityLabel: "child_safe_help_gap",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.92,
+      evidenceRefs: ["trace:trace_child_help_gap"],
+      architectureArea: "text_ui",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+
+  const childDraft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_child_steering",
+    endpointConfigured: false,
+    profileMode: "child_protected_user",
+  });
+
+  assert.equal(childDraft.recommendation.capabilityLabel, "child_safe_help_gap");
+  assert.deepEqual(childDraft.evolutionProposal.evidence, ["trace:trace_child_help_gap"]);
+  assert.equal(childDraft.evolutionProposal.evidence.includes("trace:trace_adult_bridge_gap"), false);
+});
+
 test("steering handoff fails closed without endpoint and does not fetch", async () => {
   const ledger = createCapabilityLedger();
   const draft = draftChiefOfStaffSteering(ledger, {

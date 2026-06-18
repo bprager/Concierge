@@ -19,6 +19,7 @@ import {
   type GovernanceDecision,
   type GovernanceEvaluationRequest,
   type LocalProfile,
+  type NapoleonProfileMode,
   type TraceEnvelope,
 } from "./contractBridge.js";
 import { NapoleonBridgeError, descriptorFailClosedReasonToBridgeFailure } from "./napoleonBridge.js";
@@ -38,6 +39,7 @@ interface SteeringDraftOptions {
   conversationId: string;
   traceId: string;
   endpointConfigured: boolean;
+  profileMode?: LocalProfile | NapoleonProfileMode;
 }
 
 interface SteeringRecommendation {
@@ -134,17 +136,27 @@ function supportsSteeringRecommendation(signal: ConversationCapabilitySignal, ro
   return signal.capabilityStatus === "degraded" && signal.suggestedNextStep !== "needs_human_review";
 }
 
+function normalizeSteeringProfileMode(profileMode: LocalProfile | NapoleonProfileMode | undefined): NapoleonProfileMode | undefined {
+  if (!profileMode) return undefined;
+  if (profileMode === "child_protected") return "child_protected_user";
+  return profileMode;
+}
+
 export function draftChiefOfStaffSteering(
   ledger: CapabilityLedger,
   options: SteeringDraftOptions,
 ): ChiefOfStaffSteeringDraft {
-  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger);
+  const profileMode = normalizeSteeringProfileMode(options.profileMode);
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, undefined, {
+    profileMode,
+  });
   const top = answer?.rows[0];
   const capabilityLabel = top?.label ?? "no_local_capability_gap";
   const architectureArea = top?.architectureArea ?? "observability";
   const confidence = top?.confidence ?? 0;
   const supportingSignals = ledger
     .listRecent()
+    .filter((signal) => !profileMode || signal.profileMode === profileMode)
     .filter((signal) => supportsSteeringRecommendation(signal, top));
   const evidenceRefs = supportingSignals
     .flatMap((signal) => signal.evidenceRefs)
@@ -193,7 +205,7 @@ export function draftChiefOfStaffSteering(
         architecture_area: architectureArea,
         requested_action: recommendation.suggestedNextStep,
       },
-      affected_profiles: ["adult_owner"],
+      affected_profiles: [profileMode ?? "adult_owner"],
       affected_channels: ["text"],
       evaluator_cases: [caseId],
       approval_required: "Napoleon Chief of Staff and owner review before implementation or rollout.",

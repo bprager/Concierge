@@ -858,12 +858,15 @@ export function answerCapabilityQuestion(
   question: string,
   ledger: CapabilityLedger,
   taxonomy?: CapabilityTaxonomy,
-  options: { now?: string | Date } = {},
+  options: { now?: string | Date; profileMode?: LocalProfile | NapoleonProfileMode } = {},
 ): CapabilityQuestionAnswer | null {
   const kind = classifyCapabilityQuestion(question);
   if (!kind) return null;
 
-  const rawSignals = ledger.listRecent();
+  const activeProfileMode = options.profileMode ? normalizeProfileMode(options.profileMode) : null;
+  const rawSignals = ledger
+    .listRecent()
+    .filter((signal) => !activeProfileMode || signal.profileMode === activeProfileMode);
   const signals = applyTaxonomyToSignals(rawSignals, taxonomy);
   const aggregate = aggregateCapabilitySignals(rawSignals, taxonomy);
   const windows = trendWindows(signals, options.now);

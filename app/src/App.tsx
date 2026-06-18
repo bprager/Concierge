@@ -1359,7 +1359,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
-    const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy);
+    const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
+      profileMode: mapProfileToNapoleonMode(profile),
+    });
     if (capabilityAnswer) {
       emitEvent("capability_intelligence_answered", {
         traceId,
@@ -1545,7 +1547,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (!rehearsal) {
       const traceId = newTraceId();
       const turnId = `turn_${Date.now().toString(16)}`;
-      const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy);
+      const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
+        profileMode: mapProfileToNapoleonMode(profile),
+      });
       if (capabilityAnswer) {
         emitEvent("capability_intelligence_answered", {
           traceId,
@@ -2073,6 +2077,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       conversationId,
       traceId,
       endpointConfigured: Boolean(endpoint.trim()),
+      profileMode: mapProfileToNapoleonMode(profile),
     });
     setSteeringDraft(draft);
     setSteeringSubmission(null);
