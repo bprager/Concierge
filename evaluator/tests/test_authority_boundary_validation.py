@@ -300,6 +300,21 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_browser_local_executable_side_channels(self):
+        for source in [
+            "const module = await WebAssembly.compile(bytes);",
+            "const instance = await WebAssembly.instantiate(bytes, imports);",
+            "const url = URL.createObjectURL(new Blob([script], { type: 'text/javascript' }));",
+            "const url = window.URL.createObjectURL(blob);",
+            'const instance = await window["WebAssembly"]["instantiate"](bytes, imports);',
+            'const url = globalThis["URL"]["createObjectURL"](blob);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_bracket_access_browser_persistence_and_context_aliases(self):
         for source in [
             'const db = await globalThis["indexedDB"]["open"]("concierge-raw-transcripts");',

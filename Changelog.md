@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so WebAssembly and object URL creation cannot introduce hidden local executable paths outside governed visible flows.
 - Hardened repository authority-boundary validation so browser file picker and FileReader APIs cannot move local files or proofs outside governed visible flows.
 - Hardened repository authority-boundary validation so bracket-style global Tauri invoke aliases cannot call native commands outside the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so bracket-style media capture, speech, audio context, and playback aliases cannot start hidden voice/avatar behavior outside visible permission handlers.
