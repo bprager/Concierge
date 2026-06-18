@@ -169,6 +169,8 @@ Privileged browser device, account, notification, push, and payment APIs, includ
 
 Dynamic HTML injection APIs, including bracket-style aliases such as `container["innerHTML"]`, `window["DOMParser"]`, `range["createContextualFragment"]`, and lowercase `srcdoc`, are treated as ungoverned markup paths because they can smuggle external targets around static UI checks.
 
+Dynamic code execution APIs, including bracket-style aliases such as `window["eval"]`, `globalThis["Function"]`, and string-timer aliases, are treated as hidden authority paths and are rejected from Concierge runtime source.
+
 The same repository validation treats lowercase and SVG target spellings such as `srcset`, `formaction`, and `xlink:href` as external browser targets, including bracket assignment and `setAttribute` forms, so alternate markup spellings cannot bypass the governed bridge boundary.
 
 Image preload source-set targets such as `imageSrcSet` and `imagesrcset` are treated as external resource targets in static markup, property assignment, bracket assignment, and `setAttribute` forms, so responsive preload candidates cannot fetch images outside the governed bridge.
