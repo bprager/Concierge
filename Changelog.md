@@ -45,6 +45,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened repository authority-boundary validation so variable-based direct `location`, `window.location`, and `document.location` assignments cannot navigate outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so `globalThis.location` and bracket-style `window["location"]` assignments cannot navigate outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so bracketed `location["href"]`, `location["assign"]`, and `location["replace"]` aliases cannot navigate outside the governed Napoleon bridge modules.
+- Hardened repository authority-boundary validation so programmatic form submission APIs such as `form.submit()`, `form.requestSubmit()`, and `HTMLFormElement.prototype.submit.call(...)` cannot send outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so external `object` and `embed` `data` targets cannot load outside content outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so lowercase and SVG external target variants such as `srcset`, `formaction`, and `xlink:href` cannot create outside side channels outside the governed Napoleon bridge modules.
 - Hardened repository authority-boundary validation so static and dynamic remote module imports cannot load outside code outside the governed Napoleon bridge modules.

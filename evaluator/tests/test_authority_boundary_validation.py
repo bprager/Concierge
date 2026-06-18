@@ -492,6 +492,21 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_programmatic_form_submission_side_channels(self):
+        for source in [
+            "form.submit();",
+            "form.requestSubmit();",
+            "document.forms[0].submit();",
+            'form["submit"]();',
+            'form["requestSubmit"]();',
+            "HTMLFormElement.prototype.submit.call(form);",
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.tsx", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_static_external_resource_targets(self):
         for source in [
             '<img src="https://api.example.test/pixel.gif" alt="">',
