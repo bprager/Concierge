@@ -290,6 +290,16 @@ BROWSER_STORAGE_PERSISTENCE_PATTERNS: list[re.Pattern[str]] = [
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\[\s*['\"](?:setItem|removeItem|clear)['\"]\s*\]\s*\("
     ),
+    re.compile(r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\.[A-Za-z_$][A-Za-z0-9_$]*\s*="),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\s*\[\s*['\"][^'\"]+['\"]\s*\]\s*="
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\.[A-Za-z_$][A-Za-z0-9_$]*\s*="
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\[\s*['\"][^'\"]+['\"]\s*\]\s*="
+    ),
 ]
 
 BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(

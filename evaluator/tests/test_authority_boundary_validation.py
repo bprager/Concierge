@@ -331,6 +331,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'window.sessionStorage.setItem("secretProof", secretProofJson);',
             'globalThis["localStorage"]["setItem"]("token", bridgeToken);',
             'window["sessionStorage"]["setItem"]("responseText", responseText);',
+            "localStorage.rawPrompt = rawPromptText;",
+            'window.sessionStorage["secretProof"] = secretProofJson;',
+            'globalThis["localStorage"].bridgeToken = bridgeToken;',
+            'window["sessionStorage"]["responseText"] = responseText;',
             'localStorage.removeItem("bridge_readiness_proof");',
             "window.sessionStorage.clear();",
             'globalThis["localStorage"]["removeItem"]("napoleon_descriptor");',
@@ -728,7 +732,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_rejects_browser_storage_mutation_inside_bridge_modules(self):
         for source in [
             'localStorage.setItem("rawPrompt", rawPromptText);',
+            "localStorage.rawPrompt = rawPromptText;",
             'window.sessionStorage.removeItem("bridge_readiness_proof");',
+            'window["sessionStorage"]["responseText"] = responseText;',
             'globalThis["localStorage"]["setItem"]("token", bridgeToken);',
             'window["sessionStorage"]["clear"]();',
         ]:
