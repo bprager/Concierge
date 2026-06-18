@@ -177,6 +177,8 @@ Dynamic code execution APIs, including bracket-style aliases for eval and Functi
 
 Direct memory and graph write aliases, including split bracket forms such as `window["write" + "Memory"]`, `globalThis["save" + "Memory"]`, and `window["graph" + "_write"]`, are rejected so memory review remains proposal-only through Napoleon instead of becoming a local write path.
 
+Direct agent and tool dispatch aliases, including split bracket forms such as `window["dispatch" + "Agent"]`, `globalThis["call" + "Tool"]`, and `window["execute" + "Tool"]`, are rejected so Concierge cannot become a local router or tool runner beside Napoleon.
+
 Browser persistence and context-state APIs, including IndexedDB, Cache Storage, cookies, `localStorage`/`sessionStorage` method reads, method writes, property assignments, method removals, property deletions, and clears outside bounded connection settings, local settings, telemetry, and capability metadata modules, including inside governed bridge modules, `history.pushState`/`history.replaceState`, `window.name`, and bracket-style aliases, are treated as ungoverned retention paths outside the explicit bounded local metadata stores. Bounded storage modules may read, write, or remove only approved endpoint, token, privacy-toggle, telemetry-buffer, capability-ledger, and taxonomy keys, including when those keys are routed through simple local constants, so new raw prompt, proof, transcript, descriptor, or token caches cannot be added silently.
 
 The same repository validation treats lowercase and SVG target spellings such as `srcset`, `formaction`, and `xlink:href` as external browser targets, including bracket assignment and `setAttribute` forms, so alternate markup spellings cannot bypass the governed bridge boundary.

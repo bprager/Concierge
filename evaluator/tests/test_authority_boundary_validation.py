@@ -79,7 +79,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "await runTool('calendar.lookup', payload);",
             "await executeTool(toolName, payload);",
             'await window["invoke" + "Agent"](request);',
+            'await window["dispatch" + "Agent"](request);',
             'await globalThis["run" + "Tool"]("calendar.lookup", payload);',
+            'await globalThis["call" + "Tool"]("calendar.lookup", payload);',
+            'await window["execute" + "Tool"](toolName, payload);',
             'await tool["execute"](payload);',
         ]:
             with self.subTest(source=source):
