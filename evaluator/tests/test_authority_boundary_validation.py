@@ -321,6 +321,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'await window["indexedDB"]["deleteDatabase"]("concierge-proof-cache");',
             'const channel = new globalThis["BroadcastChannel"]("concierge-proof");',
             'const channel = new window["MessageChannel"]();',
+            'history.pushState({ proof: secretProofJson }, "", "/review");',
+            'window.history.replaceState({ prompt: rawPromptText }, "", "/turn");',
+            'window["history"]["pushState"]({ proof: secretProofJson }, "", "/review");',
+            'globalThis["history"]["replaceState"]({ prompt: rawPromptText }, "", "/turn");',
             'await window["navigator"]["clipboard"]["writeText"](secretProofJson);',
         ]:
             with self.subTest(source=source):

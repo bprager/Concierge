@@ -243,6 +243,8 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bwindow\s*\[\s*['\"]caches['\"]\s*\]\s*\[\s*['\"](?:open|delete|match|put)['\"]\s*\]\s*\("),
     re.compile(r"\bglobalThis\s*\[\s*['\"]caches['\"]\s*\]\s*\[\s*['\"](?:open|delete|match|put)['\"]\s*\]\s*\("),
     re.compile(r"\bdocument\.cookie\s*="),
+    re.compile(r"\b(?:history|window\.history)\.(?:pushState|replaceState)\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\[\s*['\"](?:pushState|replaceState)['\"]\s*\]\s*\("),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"](?:BroadcastChannel|MessageChannel)['\"]\s*\]\s*\("),
     re.compile(rf"\b(?:{EXTERNAL_TARGET_ATTRIBUTES})\s*=\s*['\"](?:https?://|mailto:)"),
     re.compile(r"<(?:object|embed)\b[^>\n]*\bdata\s*=\s*['\"]https?://", re.IGNORECASE),
