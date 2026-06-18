@@ -66,6 +66,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "await invokeAgent(request);",
             "await runTool('calendar.lookup', payload);",
             "await executeTool(toolName, payload);",
+            'await window["invoke" + "Agent"](request);',
+            'await globalThis["run" + "Tool"]("calendar.lookup", payload);',
+            'await tool["execute"](payload);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_authority_boundary_text("app/src/router.ts", source)
