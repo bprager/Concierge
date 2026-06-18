@@ -335,6 +335,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'window.sessionStorage["secretProof"] = secretProofJson;',
             'globalThis["localStorage"].bridgeToken = bridgeToken;',
             'window["sessionStorage"]["responseText"] = responseText;',
+            "delete localStorage.rawPrompt;",
+            'delete window.sessionStorage["secretProof"];',
+            'delete globalThis["localStorage"].bridgeToken;',
+            'delete window["sessionStorage"]["responseText"];',
             'localStorage.removeItem("bridge_readiness_proof");',
             "window.sessionStorage.clear();",
             'globalThis["localStorage"]["removeItem"]("napoleon_descriptor");',
@@ -733,8 +737,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         for source in [
             'localStorage.setItem("rawPrompt", rawPromptText);',
             "localStorage.rawPrompt = rawPromptText;",
+            "delete localStorage.rawPrompt;",
             'window.sessionStorage.removeItem("bridge_readiness_proof");',
             'window["sessionStorage"]["responseText"] = responseText;',
+            'delete window["sessionStorage"]["responseText"];',
             'globalThis["localStorage"]["setItem"]("token", bridgeToken);',
             'window["sessionStorage"]["clear"]();',
         ]:
