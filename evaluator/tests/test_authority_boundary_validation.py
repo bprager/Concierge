@@ -325,6 +325,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'window.history.replaceState({ prompt: rawPromptText }, "", "/turn");',
             'window["history"]["pushState"]({ proof: secretProofJson }, "", "/review");',
             'globalThis["history"]["replaceState"]({ prompt: rawPromptText }, "", "/turn");',
+            "window.name = secretProofJson;",
+            'globalThis["name"] = rawPromptText;',
             'await window["navigator"]["clipboard"]["writeText"](secretProofJson);',
         ]:
             with self.subTest(source=source):
