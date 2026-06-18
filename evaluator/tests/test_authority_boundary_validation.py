@@ -750,6 +750,32 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_rejects_unapproved_browser_storage_keys_inside_bounded_modules(self):
+        for source in [
+            'localStorage.setItem("raw_prompt_cache", rawPromptText);',
+            'localStorage.removeItem("bridge_readiness_proof");',
+            'storage.setItem("concierge_raw_transcript_v1", rawTranscript);',
+            'storage.removeItem("napoleon_descriptor_token_cache");',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/App.tsx", source)
+
+                self.assertTrue(violations)
+                self.assertIn("unapproved browser storage key", violations[0])
+
+    def test_network_scanner_allows_approved_browser_storage_keys_inside_bounded_modules(self):
+        for source in [
+            'localStorage.setItem("napoleon_endpoint", value.trim());',
+            'localStorage.removeItem("napoleon_auth_token");',
+            'localStorage.setItem("concierge_camera_enabled", String(enabled));',
+            'storage.setItem("concierge_telemetry_buffer_v1", JSON.stringify(next));',
+            'storage.removeItem("concierge_capability_taxonomy_v1");',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/App.tsx", source)
+
+                self.assertEqual(violations, [])
+
     def test_network_scanner_allows_bridge_modules_to_fetch_named_operation_targets(self):
         for source in [
             """

@@ -53,6 +53,25 @@ BOUNDED_BROWSER_STORAGE_SOURCE_ALLOWLIST = {
     "app/src/telemetry.ts",
 }
 
+APPROVED_BROWSER_STORAGE_KEYS = {
+    "concierge_avatar_affect_enabled",
+    "concierge_camera_enabled",
+    "concierge_capability_ledger_v1",
+    "concierge_capability_taxonomy_v1",
+    "concierge_microphone_enabled",
+    "concierge_raw_media_storage_enabled",
+    "concierge_telemetry_buffer_max_events",
+    "concierge_telemetry_buffer_v1",
+    "concierge_telemetry_enabled",
+    "concierge_wake_word_enabled",
+    "napoleon_auth_token",
+    "napoleon_endpoint",
+}
+
+BOUNDED_BROWSER_STORAGE_KEY_PATTERN = re.compile(
+    r"\b(?:localStorage|sessionStorage|storage)\s*\.\s*(?:setItem|removeItem)\s*\(\s*['\"](?P<key>[^'\"]+)['\"]"
+)
+
 AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (
         re.compile(
@@ -1149,7 +1168,12 @@ def find_direct_authority_boundary_violations() -> list[str]:
 
 def scan_ungoverned_network_text(path: str, text: str) -> list[str]:
     storage_violations: list[str] = []
-    if path not in BOUNDED_BROWSER_STORAGE_SOURCE_ALLOWLIST:
+    if path in BOUNDED_BROWSER_STORAGE_SOURCE_ALLOWLIST:
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            key_match = BOUNDED_BROWSER_STORAGE_KEY_PATTERN.search(line)
+            if key_match and key_match.group("key") not in APPROVED_BROWSER_STORAGE_KEYS:
+                storage_violations.append(f"{path}:{line_number}: unapproved browser storage key")
+    else:
         for line_number, line in enumerate(text.splitlines(), start=1):
             for pattern in BROWSER_STORAGE_PERSISTENCE_PATTERNS:
                 if pattern.search(line):
