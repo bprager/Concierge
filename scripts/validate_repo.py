@@ -175,11 +175,17 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\b(?:navigator|window\.navigator)\.(?:usb|serial|hid|bluetooth|credentials)\."
         r"(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\s*\("
     ),
+    re.compile(r"\b(?:navigator|window\.navigator)\.permissions\.query\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.geolocation\.(?:getCurrentPosition|watchPosition)\s*\("),
     re.compile(
         r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"](?:usb|serial|hid|bluetooth|credentials)['\"]\s*\]"
         r"\s*\[\s*['\"](?:requestDevice|requestPort|get|create|store|preventSilentAccess)['\"]\s*\]\s*\("
+    ),
+    re.compile(
+        r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])"
+        r"\s*\[\s*['\"]permissions['\"]\s*\]"
+        r"\s*\[\s*['\"]query['\"]\s*\]\s*\("
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])"
