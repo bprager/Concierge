@@ -579,6 +579,66 @@ test("clears Napoleon proof and delegation when user profile changes", async () 
   }
 });
 
+test("clears bridge failure banner when user profile changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+      return harnessJsonResponse(200, {
+        descriptor: {
+          schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+          serviceId: "napoleon.chief_of_staff",
+          runtimeAuthority: false,
+          commandExecution: false,
+          cachePolicy: "fail_closed_to_review_required",
+          blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+        },
+        checksum: { expected: "sha256:ui", actual: "sha256:ui" },
+        signature: { valid: true },
+      });
+    }
+    assert.equal(url, "http://127.0.0.1:8787/v1/concierge/turn");
+    return harnessJsonResponse(401, { error: "auth failed" });
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Draft a profile-scoped bridge failure" } });
+    await waitFor(() => assert.equal(composer.value, "Draft a profile-scoped bridge failure"));
+    await waitFor(() => assert.equal((view.getByRole("button", { name: "Send" }) as HTMLButtonElement).disabled, false));
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    await view.findByText("Bridge blocked");
+    assert.ok(document.querySelector(".bridge-failure"));
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+
+    assert.equal(document.querySelector(".bridge-failure"), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears Napoleon proof and delegation when bridge connection settings change", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

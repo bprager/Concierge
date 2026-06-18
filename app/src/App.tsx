@@ -396,6 +396,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setNapoleonProofComparison(null);
   }
 
+  function clearVisibleTurnBoundaryState() {
+    setLastDecision(null);
+    setLastBridgeFailure(null);
+  }
+
   function clearGovernanceReviewHandoff() {
     setLastGovernanceReviewState(null);
     setGovernanceReviewSubmission(null);
@@ -572,6 +577,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearVisibleTurnBoundaryState();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     if (typeof localStorage === "undefined") return;
@@ -588,6 +594,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearVisibleTurnBoundaryState();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     if (typeof localStorage === "undefined") return;
@@ -602,6 +609,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setDescriptorMode(value);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearVisibleTurnBoundaryState();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
   }
@@ -611,6 +619,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (enabled) {
       setPendingRehearsal(null);
       clearNapoleonPresentation();
+      clearVisibleTurnBoundaryState();
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
     }
@@ -1293,6 +1302,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setDescriptorDiscoveryMessage(result.connection.message);
       clearBridgeReadinessProof();
       clearNapoleonPresentation();
+      clearVisibleTurnBoundaryState();
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
       const discoveryFailed =
@@ -1316,6 +1326,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setDescriptorDiscoveryMessage("Descriptor discovery failed closed. Concierge will not attempt live bridge calls.");
       clearBridgeReadinessProof();
       clearNapoleonPresentation();
+      clearVisibleTurnBoundaryState();
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
       emitEvent("descriptor_discovery_failed", {
@@ -1343,6 +1354,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setPendingRehearsal(null);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
+    clearVisibleTurnBoundaryState();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     clearProfileScopedCapabilityDrafts();

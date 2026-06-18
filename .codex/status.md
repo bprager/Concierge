@@ -21,6 +21,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened Chief of Staff steering handoff so stale drafts scoped to a different active profile fail closed before any governed endpoint call.
 - Hardened governance review handoff so stale review packets scoped to a different active profile fail closed before any governed endpoint call.
 - Hardened Chief of Staff taxonomy review handoff so stale taxonomy review drafts scoped to a different active profile fail closed before any governed endpoint call.
+- Hardened profile changes so visible bridge failure banners clear with returned Napoleon proof, delegation, and governed handoff state.
 - Hardened live voice readiness so missing real-runtime proof is a blocker and child-protected readiness visibly blocks guardian approval capture.
 - Hardened repository authority-boundary validation so WebAssembly and object URL creation cannot introduce hidden local executable paths outside governed visible flows.
 - Hardened repository authority-boundary validation so browser file picker and FileReader APIs cannot move local files or proofs outside governed visible flows.
