@@ -53,6 +53,18 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertIn("direct memory or graph access", violations[0])
 
+    def test_scanner_detects_direct_memory_write_aliases(self):
+        for source in [
+            'await window["write" + "Memory"](proposal);',
+            'await globalThis["save" + "Memory"](proposal);',
+            'await window["graph" + "_write"](payload);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_authority_boundary_text("app/src/memory.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("direct memory or graph access", violations[0])
+
     def test_scanner_detects_direct_agent_or_tool_dispatch(self):
         violations = validate_repo.scan_authority_boundary_text(
             "app/src/router.ts",

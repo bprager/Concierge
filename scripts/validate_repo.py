@@ -91,7 +91,9 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (
         re.compile(
             r"\b(memgraph\w*|neo4j|bolt://|writeMemory|saveMemory|memoryGraph)\b"
-            r"|\bgraph_write\s*\(",
+            r"|\bgraph_write\s*\("
+            r"|\b(?:globalThis|window)\s*\[\s*['\"](?:write|save)['\"]\s*\+\s*['\"]Memory['\"]\s*\]\s*\("
+            r"|\b(?:globalThis|window)\s*\[\s*['\"]graph['\"]\s*\+\s*['\"]_write['\"]\s*\]\s*\(",
             re.IGNORECASE,
         ),
         "direct memory or graph access",
