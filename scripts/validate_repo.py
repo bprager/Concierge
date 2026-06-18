@@ -158,6 +158,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bEventSource\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]EventSource['\"]\s*\]\s*\("),
     re.compile(r"\b(?:RTCPeerConnection|webkitRTCPeerConnection|WebTransport)\s*\("),
+    re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"](?:RTCPeerConnection|webkitRTCPeerConnection|WebTransport)['\"]\s*\]\s*\("),
     re.compile(
         r"\b(?:navigator|window\.navigator)\.(?:usb|serial|hid|bluetooth|credentials)\."
         r"(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\s*\("

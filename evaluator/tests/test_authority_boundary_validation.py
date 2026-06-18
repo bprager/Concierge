@@ -284,6 +284,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "const peer = new RTCPeerConnection({ iceServers: [] });",
             "const peer = new webkitRTCPeerConnection({ iceServers: [] });",
             'const transport = new WebTransport("https://api.example.test/session");',
+            'const peer = new window["RTCPeerConnection"]({ iceServers: [] });',
+            'const peer = new globalThis["webkitRTCPeerConnection"]({ iceServers: [] });',
+            'const transport = new window["WebTransport"]("https://api.example.test/session");',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
