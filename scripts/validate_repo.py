@@ -83,6 +83,7 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
             r"\beval\s*\("
             r"|\bnew\s+Function\s*\("
             r"|\bnew\s+(?:globalThis|window)\.Function\s*\("
+            r"|\b(?:globalThis\.|window\.)?Function\s*\("
             r"|\bset(?:Timeout|Interval)\s*\(\s*['\"]"
             r"|\b(?:globalThis|window)\s*\[\s*['\"]eval['\"]\s*\]\s*\("
             r"|\bnew\s+(?:globalThis|window)\s*\[\s*['\"]Function['\"]\s*\]\s*\("
