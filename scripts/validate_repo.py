@@ -78,6 +78,7 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         re.compile(
             r"@tauri-apps/api/"
             r"|\binvoke\s*\("
+            r"|\b(?:globalThis|window)\s*\[\s*['\"]__TAURI__['\"]\s*\]\s*\[\s*['\"](?:core|tauri)['\"]\s*\]\s*\[\s*['\"]invoke['\"]\s*\]\s*\("
         ),
         "direct Tauri native bridge access",
     ),

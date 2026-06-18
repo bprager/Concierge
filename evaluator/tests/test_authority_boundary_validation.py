@@ -80,6 +80,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         for source in [
             'import { invoke } from "@tauri-apps/api/core";',
             'await invoke("write_memory", payload);',
+            'await window.__TAURI__.core.invoke("write_memory", payload);',
+            'await globalThis.__TAURI__.tauri.invoke("dispatch_agent", payload);',
+            'await window["__TAURI__"]["core"]["invoke"]("external_send", payload);',
             "#[tauri::command]\nfn write_memory() {}",
         ]:
             with self.subTest(source=source):
