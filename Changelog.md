@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation so browser dynamic code execution such as `eval`, `new Function`, and string-based timers cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so browser persistence APIs such as `indexedDB`, Cache Storage, and `document.cookie` cannot retain Concierge data outside explicit bounded local metadata stores.
 - Hardened repository authority-boundary validation so bracket-style browser side-channel API access such as `window["postMessage"]`, `navigator["clipboard"]`, `window["open"]`, and `navigator["serviceWorker"]` cannot move local Concierge data outside governed visible flows.
 - Hardened repository authority-boundary validation so bracket-style browser network API access such as `globalThis["fetch"]`, `window["WebSocket"]`, and `navigator["sendBeacon"]` cannot bypass the governed Napoleon bridge modules.

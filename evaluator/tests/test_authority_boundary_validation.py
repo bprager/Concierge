@@ -85,6 +85,19 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("direct Tauri native bridge access", violations[0])
 
+    def test_scanner_detects_dynamic_code_execution(self):
+        for source in [
+            "eval(userSuppliedScript);",
+            "const runner = new Function('payload', userSuppliedScript);",
+            'setTimeout("fetch(`https://api.example.test/send`)", 0);',
+            'setInterval("navigator.sendBeacon(`/audit`)", 1000);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_authority_boundary_text("app/src/dynamicCode.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("direct dynamic code execution", violations[0])
+
     def test_scanner_detects_tauri_configured_native_bypass_plugins(self):
         source = """
         {

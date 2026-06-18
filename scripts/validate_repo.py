@@ -78,6 +78,14 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         ),
         "direct Tauri native bridge access",
     ),
+    (
+        re.compile(
+            r"\beval\s*\("
+            r"|\bnew\s+Function\s*\("
+            r"|\bset(?:Timeout|Interval)\s*\(\s*['\"]"
+        ),
+        "direct dynamic code execution",
+    ),
 ]
 
 ALLOWED_TAURI_COMMANDS = {"app_status"}
