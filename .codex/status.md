@@ -17,6 +17,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added and pushed the initial Concierge scaffold.
 - Verified evaluator stub mode, frontend build, Tauri check, schema validation, Markdown links, and YAML parsing during scaffold packaging.
 - Added a local Chief of Staff steering draft export so the user can inspect the full proposal packet, evaluator case candidate, evolution proposal draft, and proposal-only boundary without contacting Napoleon or applying changes.
+- Hardened local voice and avatar sample panels so switching user profiles clears profile-scoped dry-run results before adult-owner and child-protected metadata can mix.
 - Hardened local voice pipeline proof exports so switching user profiles clears stale exported proof JSON and comparison state before adult-owner and child-protected readiness metadata can mix.
 - Added rendered UI coverage confirming that `Napoleon recommends...` wording is shown with matching visible recommendation proof and the returned-provenance attribution boundary.
 - Added sanitized Napoleon reference summaries to local interaction trace exports so request, decision, audit, governance, failure, and blocked-effect metadata are visible without raw prompts, responses, endpoints, tokens, request bodies, or response bodies.

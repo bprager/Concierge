@@ -590,6 +590,24 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setVoicePipelineProofComparison(null);
   }
 
+  function clearLocalVoiceAndAvatarSampleResults() {
+    setVadSampleSegments(null);
+    setSttSampleResult(null);
+    setTtsSampleResult(null);
+    setVoiceTurnRehearsalResult(null);
+    setBargeInRehearsalResult(null);
+    setVoiceResponseShapeResult(null);
+    setWakeWordDetectionSampleResult(null);
+    setNeutralAvatarStateResult(null);
+    setAvatarExpressionResult(null);
+    setAvatarLipSyncResult(null);
+    setAvatarGazeResult(null);
+    setAvatarFacePoseResult(null);
+    setAvatarAffectFusionResult(null);
+    setAvatarModelResult(null);
+    setAvatarRendererReadinessResult(null);
+  }
+
   function updateEndpoint(value: string) {
     setEndpoint(value);
     setSteeringDraftExportJson(null);
@@ -1450,6 +1468,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setPendingRehearsal(null);
     clearBridgeReadinessProof();
     clearVoicePipelineProof();
+    clearLocalVoiceAndAvatarSampleResults();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
     clearChiefOfStaffCapabilities();

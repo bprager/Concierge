@@ -3991,6 +3991,41 @@ test("clears voice pipeline proof when user profile changes", async () => {
   }
 });
 
+test("clears local voice and avatar sample results when user profile changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Voice response shaping");
+    const shaping = within(view.getByLabelText("Voice response shaping"));
+    const avatarState = within(view.getByLabelText("Avatar state"));
+    assert.ok(shaping.getByText("Voice response not shaped"));
+    assert.ok(avatarState.getByText("Avatar state not prepared"));
+
+    await user.click(view.getByRole("button", { name: "Shape sample response for voice" }));
+    await user.click(view.getByRole("button", { name: "Prepare neutral avatar state" }));
+    assert.ok(shaping.getByText("Shortened for speech: yes"));
+    assert.ok(avatarState.getByText("Avatar state: neutral_listening"));
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+
+    assert.ok(shaping.getByText("Voice response not shaped"));
+    assert.ok(avatarState.getByText("Avatar state not prepared"));
+    assert.equal(shaping.queryByText("Profile: adult_owner"), null);
+    assert.equal(avatarState.queryByText("Profile: adult_owner"), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows guardian approval blocked in child protected live voice readiness", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([
