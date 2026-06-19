@@ -219,17 +219,17 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:navigator|window\.navigator)\.permissions\.query\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.geolocation\.(?:getCurrentPosition|watchPosition)\s*\("),
     re.compile(
-        r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])"
+        r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"](?:usb|serial|hid|bluetooth|credentials)['\"]\s*\]"
         r"\s*\[\s*['\"](?:requestDevice|requestPort|get|create|store|preventSilentAccess)['\"]\s*\]\s*\("
     ),
     re.compile(
-        r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])"
+        r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"]permissions['\"]\s*\]"
         r"\s*\[\s*['\"]query['\"]\s*\]\s*\("
     ),
     re.compile(
-        r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])"
+        r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"]geolocation['\"]\s*\]"
         r"\s*\[\s*['\"](?:getCurrentPosition|watchPosition)['\"]\s*\]\s*\("
     ),
@@ -248,7 +248,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bimport\s*\(\s*['\"](?:https?://|data:)"),
     re.compile(r"\bimport\s+(?:[^;\n]*?\s+from\s+)?['\"](?:https?://|data:)"),
     re.compile(r"\b(?:navigator|window\.navigator)\.serviceWorker\.register\s*\("),
-    re.compile(r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]serviceWorker['\"]\s*\]\s*\[\s*['\"]register['\"]\s*\]\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]serviceWorker['\"]\s*\]\s*\[\s*['\"]register['\"]\s*\]\s*\("),
     re.compile(r"\bwindow\.open\s*\("),
     re.compile(r"\bwindow\s*\[\s*['\"]open['\"]\s*\]\s*\("),
     re.compile(r"\b(?:window\.|document\.)?location\.(?:href|assign|replace)\b"),
@@ -263,7 +263,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"]click['\"]\s*\]\s*\("),
     re.compile(r"\bHTML(?:Anchor|Button)Element\.prototype\.click\.call\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.share\s*\("),
-    re.compile(r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]share['\"]\s*\]\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]share['\"]\s*\]\s*\("),
     re.compile(r"\bpostMessage\s*\("),
     re.compile(r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]postMessage['\"]\s*\]\s*\("),
     re.compile(r"\b(?:BroadcastChannel|MessageChannel)\s*\("),
@@ -271,9 +271,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(
         r"\b(?:navigator|window\.navigator)\.clipboard\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("
     ),
-    re.compile(r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\.\s*(?:read|readText|write|writeText)\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\.\s*(?:read|readText|write|writeText)\s*\("),
     re.compile(
-        r"\b(?:navigator|window\.navigator|window\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("
+        r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("
     ),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("),
     re.compile(r"\bdocument\.execCommand\s*\(\s*['\"](?:copy|cut|paste)['\"]", re.IGNORECASE),

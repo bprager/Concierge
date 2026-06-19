@@ -311,6 +311,21 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_global_navigator_bracket_side_channels(self):
+        for source in [
+            'await globalThis["navigator"]["share"]({ text: "send this outside Concierge" });',
+            'await globalThis["navigator"]["serviceWorker"]["register"]("/hidden-service-worker.js");',
+            'await globalThis["navigator"]["permissions"]["query"]({ name: "microphone" });',
+            'globalThis["navigator"]["geolocation"]["getCurrentPosition"](onPosition);',
+            'await globalThis["navigator"]["usb"]["requestDevice"]({ filters: [] });',
+            'await globalThis["navigator"]["credentials"]["get"]({ password: true });',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_browser_persistence_side_channels(self):
         for source in [
             'const db = await indexedDB.open("concierge-raw-transcripts");',

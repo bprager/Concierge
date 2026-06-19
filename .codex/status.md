@@ -31,6 +31,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened repository authority-boundary validation so split bracket agent and tool dispatch aliases cannot bypass governed Napoleon routing.
 - Hardened repository authority-boundary validation so JavaScript runtime process APIs such as `execFileSync`, `spawnSync`, `Deno.Command`, and `Bun.spawnSync` cannot execute local commands beside Napoleon governance.
 - Hardened repository authority-boundary validation so bracket-style JavaScript process aliases such as `childProcess["execFile"]`, `globalThis["Deno"]["Command"]`, and `window["Bun"]["spawnSync"]` cannot execute local commands beside Napoleon governance.
+- Hardened repository authority-boundary validation so `globalThis["navigator"]` bracket aliases cannot bypass external-send, service-worker, permissions, geolocation, device, credentials, or clipboard guardrails.
 - Hardened repository authority-boundary validation so concatenated agent/tool dispatch aliases and bracketed tool execution cannot bypass the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so indirect constructor-constructor dynamic code execution cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style `Function(...)` calls without `new` cannot create hidden authority paths in Concierge runtime source.
