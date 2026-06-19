@@ -49,6 +49,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened repository authority-boundary validation so bracket-style legacy clipboard commands cannot move local Concierge data outside governed visible export flows.
 - Hardened repository authority-boundary validation so bracket-style FileReader constructor aliases cannot read local files outside governed visible import/export flows.
 - Hardened repository authority-boundary validation so bracketed IndexedDB and Cache Storage `.call(...)` and `.apply(...)` aliases cannot retain prompts, proofs, transcripts, or responses outside bounded visible stores.
+- Hardened repository authority-boundary validation so bracketed localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.
 - Hardened repository authority-boundary validation so bracketed history state `.call(...)` and `.apply(...)` aliases cannot retain prompts, proofs, or responses in browser URL state around governed flows.
 - Hardened repository authority-boundary validation so history state `.call(...)` and `.apply(...)` aliases cannot retain prompts, proofs, or responses in browser URL state around governed flows.
 - Hardened repository authority-boundary validation so file picker `.call(...)` and `.apply(...)` aliases cannot read local files around governed visible import/export flows.
