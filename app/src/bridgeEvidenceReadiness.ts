@@ -152,6 +152,15 @@ function compareBridgeEvidence(record: BridgeContractEvidence): string | null {
   if (record.status === "success" && !record.provenanceVerified) {
     return "Successful bridge evidence must have verified provenance.";
   }
+  if (
+    record.status === "success" &&
+    advisoryHarnessAlias &&
+    (record.traceEnvelopeObserved !== true ||
+      record.traceEnvelopeMatched !== true ||
+      record.traceTargetPath !== "/cos/trace/{trace_id}")
+  ) {
+    return "Advisory harness evidence must include a matching observed trace envelope.";
+  }
   return null;
 }
 

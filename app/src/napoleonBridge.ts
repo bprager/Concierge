@@ -58,6 +58,9 @@ export interface BridgeContractEvidence {
   allowedEffects?: string[];
   blockedEffects?: string[];
   provenanceVerified: boolean;
+  traceEnvelopeObserved?: boolean;
+  traceEnvelopeMatched?: boolean;
+  traceTargetPath?: "/cos/trace/{trace_id}";
 }
 
 interface BridgeEvidenceContext {
@@ -214,6 +217,16 @@ function isAdvisoryHarnessTextTurnEndpoint(endpoint: string): boolean {
 
 function normalizeAdvisoryHarnessTextTurnEndpoint(endpoint: string): string {
   return endpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
+}
+
+function buildAdvisoryHarnessTraceEndpoint(textTurnEndpoint: string, traceId: string): string {
+  const normalized = normalizeAdvisoryHarnessTextTurnEndpoint(textTurnEndpoint);
+  const base = normalized.replace(/\/cos\/text-turn$/, "");
+  return `${base}/cos/trace/${encodeURIComponent(traceId)}`;
+}
+
+function isAdvisoryHarnessTraceEnvelope(value: unknown, traceId: string): boolean {
+  return Boolean(value && typeof value === "object" && (value as { trace_id?: unknown }).trace_id === traceId);
 }
 
 function buildAdvisoryHarnessTextTurnRequest(
@@ -753,6 +766,48 @@ export async function sendToNapoleon(
         },
       );
     }
+    let traceEnvelopeObserved = false;
+    let traceEnvelopeMatched = false;
+    try {
+      const traceResponse = await fetcher(buildAdvisoryHarnessTraceEndpoint(targetEndpoint, adapted.traceEnvelope.trace_id), {
+        method: "GET",
+        headers: buildAdvisoryHarnessHeaders(authToken),
+      });
+      if (!traceResponse.ok) {
+        failClosed(dependencies, "contract_mismatch", request.traceId, adapted.governanceDecision.request_id, traceResponse.status, {
+          ...evidenceContext,
+          requestId: adapted.governanceDecision.request_id,
+          decisionId: adapted.governanceDecision.decision_id,
+          auditId: adapted.auditEnvelope.audit_id,
+          governanceOutcome: adapted.governanceDecision.outcome,
+          blockedEffects: adapted.governanceDecision.blocked_effects,
+        });
+      }
+      const tracePayload = await traceResponse.json();
+      traceEnvelopeObserved = true;
+      traceEnvelopeMatched = isAdvisoryHarnessTraceEnvelope(tracePayload, adapted.traceEnvelope.trace_id);
+      if (!traceEnvelopeMatched) {
+        failClosed(dependencies, "contract_mismatch", request.traceId, adapted.governanceDecision.request_id, traceResponse.status, {
+          ...evidenceContext,
+          requestId: adapted.governanceDecision.request_id,
+          decisionId: adapted.governanceDecision.decision_id,
+          auditId: adapted.auditEnvelope.audit_id,
+          governanceOutcome: adapted.governanceDecision.outcome,
+          blockedEffects: adapted.governanceDecision.blocked_effects,
+        });
+      }
+    } catch (error) {
+      if (error instanceof NapoleonBridgeError) throw error;
+      const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "contract_mismatch";
+      failClosed(dependencies, reason, request.traceId, adapted.governanceDecision.request_id, undefined, {
+        ...evidenceContext,
+        requestId: adapted.governanceDecision.request_id,
+        decisionId: adapted.governanceDecision.decision_id,
+        auditId: adapted.auditEnvelope.audit_id,
+        governanceOutcome: adapted.governanceDecision.outcome,
+        blockedEffects: adapted.governanceDecision.blocked_effects,
+      });
+    }
     emitBridgeEvent(dependencies, "bridge_request_completed", {
       traceId: request.traceId,
       mode: "http",
@@ -779,6 +834,9 @@ export async function sendToNapoleon(
       allowedEffects: adapted.delegation?.allowedEffects ?? [],
       blockedEffects: adapted.delegation?.blockedEffects ?? adapted.governanceDecision.blocked_effects,
       provenanceVerified: true,
+      traceEnvelopeObserved,
+      traceEnvelopeMatched,
+      traceTargetPath: "/cos/trace/{trace_id}",
     });
     return adapted;
   }

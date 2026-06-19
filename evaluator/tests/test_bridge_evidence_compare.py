@@ -48,7 +48,7 @@ class BridgeEvidenceCompareTest(unittest.TestCase):
 
         violations = bridge_evidence_compare.compare_bridge_evidence_records([record])
 
-        self.assertTrue(any("observed trace envelope must match" in violation for violation in violations))
+        self.assertTrue(any("matching observed trace envelope" in violation for violation in violations))
 
     def test_rejects_request_kind_that_does_not_match_openapi(self):
         record = self.valid_record()

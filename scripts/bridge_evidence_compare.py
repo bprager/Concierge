@@ -180,7 +180,13 @@ def compare_bridge_evidence_records(records: list[dict[str, Any]]) -> list[str]:
                 violations.append(f"{prefix}: success evidence must have verified provenance")
             if "reason" in record:
                 violations.append(f"{prefix}: success evidence must not include a fail-closed reason")
-            if record.get("traceEnvelopeObserved") is True and record.get("traceEnvelopeMatched") is not True:
+            if advisory_alias is not None and (
+                record.get("traceEnvelopeObserved") is not True
+                or record.get("traceEnvelopeMatched") is not True
+                or record.get("traceTargetPath") != "/cos/trace/{trace_id}"
+            ):
+                violations.append(f"{prefix}: advisory harness success evidence must include a matching observed trace envelope")
+            elif record.get("traceEnvelopeObserved") is True and record.get("traceEnvelopeMatched") is not True:
                 violations.append(f"{prefix}: observed trace envelope must match the text-turn trace")
         if status == "fail_closed":
             require_string(record, "reason", index, violations)

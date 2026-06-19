@@ -53,6 +53,9 @@ test("accepts explicit cos text-turn advisory evidence for text turn readiness",
   const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
     ...validEvidence,
     targetPath: "/cos/text-turn",
+    traceEnvelopeObserved: true,
+    traceEnvelopeMatched: true,
+    traceTargetPath: "/cos/trace/{trace_id}",
   });
 
   assert.equal(state.captureState, "passed");
@@ -60,6 +63,20 @@ test("accepts explicit cos text-turn advisory evidence for text turn readiness",
   assert.equal(state.lastOperationId, "text_turn");
   assert.equal(state.lastTargetPath, "/cos/text-turn");
   assert.equal(state.failureReason, undefined);
+});
+
+test("fails comparison for cos text-turn evidence without matching trace proof", () => {
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+    ...validEvidence,
+    targetPath: "/cos/text-turn",
+    traceEnvelopeObserved: true,
+    traceEnvelopeMatched: false,
+    traceTargetPath: "/cos/trace/{trace_id}",
+  });
+
+  assert.equal(state.captureState, "passed");
+  assert.equal(state.comparisonState, "failed");
+  assert.ok(state.failureReason?.includes("matching observed trace envelope"));
 });
 
 test("fails comparison for evidence that does not match the bridge registry", () => {
