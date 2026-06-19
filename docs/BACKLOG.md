@@ -31,7 +31,7 @@ User value: A broader evaluator catches governance, privacy, memory, and contrac
 Acceptance criteria:
 
 - The evaluator suite has at least 15 scenarios.
-- Scenarios cover adult, child protected, guest/collaborator, adversarial, self-evolution, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed behavior, descriptor connection state, bridge-client contract alignment, bridge delegation provenance, bridge response authority provenance, child protected bridge response semantics, governed review response semantics, profile-scope drift, live-runtime artifact semantics, real-runtime promotion boundaries, voice pipeline proof export/comparison, media session controller boundaries, and conversation capability intelligence.
+- Scenarios cover adult, child protected, guest/collaborator, adversarial, self-evolution, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed behavior, descriptor connection state, bridge-client contract alignment, bridge delegation provenance, bridge response authority provenance, child protected bridge response semantics, governed review response semantics, profile-scope drift, live-runtime artifact semantics, real-runtime promotion boundaries, voice pipeline proof export/comparison, media session controller boundaries, local avatar readiness/privacy boundaries, and conversation capability intelligence.
 - Coverage tests verify the required scenario IDs and artifact checks.
 
 Privacy and safety impact:
@@ -41,7 +41,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by `MEMORY-PROPOSAL-001`, `BRIDGE-FAILURE-001`, `PRIVACY-SETTINGS-001`, `CONTRACT-MISMATCH-001`, `DESCRIPTOR-CONNECTION-STATE-001`, `BRIDGE-CLIENT-CONTRACT-001`, `BRIDGE-FIXTURE-DELEGATION-001`, `DELEGATION-PANEL-STATE-001`, `BRIDGE-RESPONSE-PROVENANCE-001`, `CHILD-BRIDGE-RESPONSE-SEMANTICS-001`, `GOVERNED-REVIEW-RESPONSE-SEMANTICS-001`, `PROFILE-SCOPE-DRIFT-001`, `LIVE-RUNTIME-ARTIFACT-SEMANTICS-001`, `REAL-RUNTIME-PROMOTION-BOUNDARY-001`, `VOICE-PIPELINE-PROOF-001`, `MEDIA-SESSION-CONTROLLER-001`, and `CAPABILITY-INTELLIGENCE-001`.
+- Covered by `MEMORY-PROPOSAL-001`, `BRIDGE-FAILURE-001`, `PRIVACY-SETTINGS-001`, `CONTRACT-MISMATCH-001`, `DESCRIPTOR-CONNECTION-STATE-001`, `BRIDGE-CLIENT-CONTRACT-001`, `BRIDGE-FIXTURE-DELEGATION-001`, `DELEGATION-PANEL-STATE-001`, `BRIDGE-RESPONSE-PROVENANCE-001`, `CHILD-BRIDGE-RESPONSE-SEMANTICS-001`, `GOVERNED-REVIEW-RESPONSE-SEMANTICS-001`, `PROFILE-SCOPE-DRIFT-001`, `LIVE-RUNTIME-ARTIFACT-SEMANTICS-001`, `REAL-RUNTIME-PROMOTION-BOUNDARY-001`, `VOICE-PIPELINE-PROOF-001`, `MEDIA-SESSION-CONTROLLER-001`, `AVATAR-LOCAL-BOUNDARY-001`, and `CAPABILITY-INTELLIGENCE-001`.
 
 ## Milestone P1: Text Concierge MVP
 
@@ -596,7 +596,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by pure avatar state tests and rendered app interaction tests for local preparation without camera, perception, animation, Napoleon contact, or side effects.
+- Covered by pure avatar state tests, rendered app interaction tests, and `AVATAR-LOCAL-BOUNDARY-001` for local preparation without camera, perception, animation, Napoleon contact, or side effects.
 
 ### AV-002 details
 

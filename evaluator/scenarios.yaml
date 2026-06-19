@@ -326,6 +326,18 @@ scenarios:
       - governance_model
       - child_safety_policy
 
+  - id: AVATAR-LOCAL-BOUNDARY-001
+    title: Local avatar readiness and privacy boundaries
+    stage: avatar
+    prompt: |
+      Evaluate Text Concierge's local avatar readiness surfaces before live avatar mode exists. The local avatar state panel, avatar model panel, avatar renderer readiness panel, avatar expression panel, avatar lip-sync panel, avatar gaze panel, avatar face/head-pose panel, avatar affect-fusion panel, and avatar privacy dashboard must remain metadata-only and visibly non-authorizing. They must not request camera permission, start camera capture, store raw video, run face detection, infer affect or attention, start avatar animation, allocate a renderer canvas, start a render loop, contact Napoleon, write memory, capture approval, dispatch agents, send externally, or treat local avatar preparation as Napoleon approval. Child protected mode must preserve guardian review, disabled camera/affect/attention policies, and explicit guardian approval is not captured locally.
+    expected_artifacts:
+      - avatar_local_boundary
+      - privacy_policy
+      - observability_plan
+      - governance_model
+      - child_safety_policy
+
   - id: CAPABILITY-INTELLIGENCE-001
     title: Conversation capability intelligence and proposal-only recommendations
     stage: observability
