@@ -269,6 +269,67 @@ test("exports last successful Napoleon response proof without raw text endpoint 
   assert.ok(!json.toLocaleLowerCase().includes("token"));
 });
 
+test("exports selected-agent proof arrays from returned provenance instead of display strings", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge rollout",
+    profile: "adult_owner",
+    conversationId: "conv_response_export_multi_agent",
+    turnId: "turn_response_export_multi_agent",
+    traceId: "trace_response_export_multi_agent",
+    governanceOutcome: "requires_review",
+  });
+  const state = buildSuccessfulNapoleonResponsePresentation({
+    text: "Passive Brain and Evaluator reviewed the rollout evidence.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: true,
+    delegation: {
+      selectedAgents: [
+        {
+          agentId: "passive_brain",
+          displayName: "Passive Brain",
+          selectionReason: "Prior bridge context is relevant.",
+          contributionSummary: "bridge context",
+        },
+        {
+          agentId: "evaluator",
+          displayName: "Evaluator",
+          selectionReason: "Runtime evidence should be checked.",
+          contributionSummary: "runtime evidence",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["memory_write", "external_send", "agent_dispatch"],
+      governanceState: "requires_review",
+      traceId: "trace_response_export_multi_agent",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+
+  const json = exportNapoleonResponseProofJson(state, {
+    generatedAt: "2026-06-13T00:00:00.000Z",
+    conversationId: "conv_response_export_multi_agent",
+  });
+  const proof = JSON.parse(json) as {
+    responseProof: {
+      selectedAgents: string[];
+      selectedAgentReasons: string[];
+      allowedEffects: string[];
+      blockedEffects: string[];
+    };
+  };
+
+  assert.deepEqual(proof.responseProof.selectedAgents, ["Passive Brain", "Evaluator"]);
+  assert.deepEqual(proof.responseProof.selectedAgentReasons, [
+    "Passive Brain: Prior bridge context is relevant.",
+    "Evaluator: Runtime evidence should be checked.",
+  ]);
+  assert.deepEqual(proof.responseProof.allowedEffects, ["prepare_advisory_response"]);
+  assert.deepEqual(proof.responseProof.blockedEffects, ["memory_write", "external_send", "agent_dispatch"]);
+});
+
 test("compares sanitized Napoleon response proof exports", () => {
   const previous = responseProofJson({
     traceId: "trace_previous",

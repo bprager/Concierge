@@ -5,6 +5,7 @@ import type { NapoleonResponse } from "./types.js";
 export interface NapoleonResponsePresentationState {
   delegation: DelegationView | null;
   proof: NapoleonResponseProofView | null;
+  proofMetadata?: NapoleonResponseProofMetadata;
 }
 
 export interface NapoleonResponseProofExportInput {
@@ -22,6 +23,16 @@ export interface NapoleonResponseProofComparison {
   status: "not_available" | "unchanged" | "changed" | "invalid_previous" | "invalid_current";
   summary: string;
   changes: NapoleonResponseProofChange[];
+}
+
+interface NapoleonResponseProofMetadata {
+  handledBy: string;
+  targetCapability: string;
+  recommendation: string;
+  selectedAgents: string[];
+  selectedAgentReasons: string[];
+  allowedEffects: string[];
+  blockedEffects: string[];
 }
 
 const FORBIDDEN_RESPONSE_PROOF_KEYS = new Set([
@@ -74,9 +85,23 @@ function optionalProofDetailValue(proof: NapoleonResponseProofView, label: strin
 export function buildSuccessfulNapoleonResponsePresentation(
   response: NapoleonResponse,
 ): NapoleonResponsePresentationState {
+  const selectedAgents = response.delegation?.selectedAgents ?? [];
+  const agentNames = selectedAgents.map((agent) => agent.displayName);
+  const targetCapability = response.targetAgent ?? "unavailable";
+  const recommendation = response.recommendationProvenance?.summary ?? "unavailable";
+
   return {
     delegation: describeDelegation(response.delegation, response.targetAgent),
     proof: describeNapoleonResponseProof(response),
+    proofMetadata: {
+      handledBy: agentNames.join(", ") || targetCapability || "unavailable",
+      targetCapability,
+      recommendation,
+      selectedAgents: agentNames,
+      selectedAgentReasons: selectedAgents.map((agent) => `${agent.displayName}: ${agent.selectionReason}`),
+      allowedEffects: response.delegation?.allowedEffects ?? ["prepare_advisory_response"],
+      blockedEffects: response.delegation?.blockedEffects ?? response.governanceDecision.blocked_effects,
+    },
   };
 }
 
@@ -131,6 +156,16 @@ export function exportNapoleonResponseProofJson(
     );
   }
 
+  const metadata: NapoleonResponseProofMetadata = state.proofMetadata ?? {
+    handledBy: optionalProofDetailValue(proof, "Capability or agents"),
+    targetCapability: optionalProofDetailValue(proof, "Target capability"),
+    recommendation: optionalProofDetailValue(proof, "Napoleon recommendation"),
+    selectedAgents: splitList(proofDetailValue(proof, "Selected agents")),
+    selectedAgentReasons: splitList(proofDetailValue(proof, "Why selected")),
+    allowedEffects: splitList(proofDetailValue(proof, "Allowed effects")),
+    blockedEffects: splitList(proofDetailValue(proof, "Blocked effects")),
+  };
+
   return JSON.stringify(
     {
       kind: "concierge_napoleon_response_proof",
@@ -142,19 +177,19 @@ export function exportNapoleonResponseProofJson(
       responseProof: {
         status: proof.status,
         heading: proof.heading,
-        handledBy: optionalProofDetailValue(proof, "Capability or agents"),
+        handledBy: metadata.handledBy,
         attributionBoundary: "Returned bridge provenance only; not local authority.",
         governance: proofDetailValue(proof, "Governance"),
         profileMode: proofDetailValue(proof, "Profile mode"),
         decisionId: proofDetailValue(proof, "Decision"),
         traceId: proofDetailValue(proof, "Trace"),
         auditId: proofDetailValue(proof, "Audit"),
-        targetCapability: optionalProofDetailValue(proof, "Target capability"),
-        recommendation: optionalProofDetailValue(proof, "Napoleon recommendation"),
-        selectedAgents: splitList(proofDetailValue(proof, "Selected agents")),
-        selectedAgentReasons: splitList(proofDetailValue(proof, "Why selected")),
-        allowedEffects: splitList(proofDetailValue(proof, "Allowed effects")),
-        blockedEffects: splitList(proofDetailValue(proof, "Blocked effects")),
+        targetCapability: metadata.targetCapability,
+        recommendation: metadata.recommendation,
+        selectedAgents: metadata.selectedAgents,
+        selectedAgentReasons: metadata.selectedAgentReasons,
+        allowedEffects: metadata.allowedEffects,
+        blockedEffects: metadata.blockedEffects,
       },
       boundary: {
         approvalCaptured: false,
