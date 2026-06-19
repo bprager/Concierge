@@ -601,6 +601,7 @@ export function describeDelegation(
     heading: "Napoleon delegation",
     body: contribution || "Napoleon provided delegation provenance for this response.",
     details: [
+      { label: "Target capability", value: targetCapability ?? "not returned" },
       { label: "Selected agents", value: agentLabels },
       { label: "Why selected", value: selectionReasons },
       { label: "Allowed effects", value: delegation.allowedEffects.join(", ") },

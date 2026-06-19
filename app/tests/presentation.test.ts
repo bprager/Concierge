@@ -158,24 +158,28 @@ test("describes child memory proposal with guardian review and no secret keeping
 });
 
 test("describes Napoleon delegation only from bridge-provided provenance", () => {
-  const view = describeDelegation({
-    selectedAgents: [
-      {
-        agentId: "napoleon.passive_brain",
-        displayName: "Passive Brain",
-        selectionReason: "Relevant deployment history was found.",
-        contributionSummary: "Found the previous deployment risk note.",
-      },
-    ],
-    allowedEffects: ["prepare_advisory_response"],
-    blockedEffects: ["external_send", "memory_write"],
-    governanceState: "requires_review",
-    traceId: "trace_delegate",
-    auditId: "audit_delegate",
-  });
+  const view = describeDelegation(
+    {
+      selectedAgents: [
+        {
+          agentId: "napoleon.passive_brain",
+          displayName: "Passive Brain",
+          selectionReason: "Relevant deployment history was found.",
+          contributionSummary: "Found the previous deployment risk note.",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["external_send", "memory_write"],
+      governanceState: "requires_review",
+      traceId: "trace_delegate",
+      auditId: "audit_delegate",
+    },
+    "napoleon.chief_of_staff",
+  );
 
   assert.equal(view.heading, "Napoleon delegation");
   assert.ok(view.body.includes("Passive Brain found Found the previous deployment risk note."));
+  assert.ok(view.details.some((detail) => detail.label === "Target capability" && detail.value === "napoleon.chief_of_staff"));
   assert.ok(view.details.some((detail) => detail.label === "Selected agents" && detail.value.includes("Passive Brain")));
   assert.ok(view.details.some((detail) => detail.label === "Why selected" && detail.value.includes("Relevant deployment history")));
   assert.ok(view.details.some((detail) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
