@@ -270,10 +270,12 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         for source in [
             'await fetch("https://api.example.test/send", { method: "POST" });',
             'await window.fetch("https://api.example.test/send");',
+            'await fetch.call(window, "https://api.example.test/send", { method: "POST" });',
             "const request = new XMLHttpRequest();",
             'const socket = new WebSocket("wss://api.example.test/live");',
             'const events = new EventSource("https://api.example.test/events");',
             'navigator.sendBeacon("https://api.example.test/audit", payload);',
+            'navigator.sendBeacon.apply(navigator, ["https://api.example.test/audit", payload]);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
@@ -512,6 +514,7 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         for source in [
             'await navigator.serviceWorker.register("/hidden-service-worker.js");',
             'await window.navigator.serviceWorker.register(new URL("./serviceWorker.ts", import.meta.url));',
+            'await navigator.serviceWorker.register.call(navigator.serviceWorker, "/hidden-service-worker.js");',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
@@ -522,10 +525,13 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_detects_external_navigation_and_share_side_channels(self):
         for source in [
             'window.open("https://api.example.test/export", "_blank");',
+            'window.open.call(window, "https://api.example.test/export", "_blank");',
             'window.location.href = "mailto:team@example.test?body=secret";',
             'location.assign("https://api.example.test/send");',
+            'location.assign.call(location, "https://api.example.test/send");',
             'document.location.replace("https://api.example.test/audit");',
             'await navigator.share({ text: "send this outside Concierge" });',
+            'await navigator.share.apply(navigator, [{ text: "send this outside Concierge" }]);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
