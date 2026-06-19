@@ -341,6 +341,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:history|window\.history)\.(?:pushState|replaceState)\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\[\s*['\"](?:pushState|replaceState)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\[\s*['\"](?:pushState|replaceState)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\.\s*(?:pushState|replaceState)\s*\("),
     re.compile(r"\b(?:globalThis|window)\.name\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]name['\"]\s*\]\s*="),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"](?:BroadcastChannel|MessageChannel)['\"]\s*\]\s*\("),
@@ -385,6 +386,9 @@ BROWSER_STORAGE_PERSISTENCE_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\[\s*['\"](?:getItem|setItem|removeItem|clear)['\"]\s*\]\s*\("
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\.\s*(?:getItem|setItem|removeItem|clear)\s*\("
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\[\s*['\"](?:getItem|setItem|removeItem|clear)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
