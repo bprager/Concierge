@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened latest interaction trace exports so malformed blocked-effect references use the same `[redacted]` marker as other sanitized Napoleon reference metadata, with regression coverage for the local trace export.
 - Added a local Chief of Staff steering draft export that lets the user inspect the recommendation, evaluator case candidate, evolution proposal draft, learning-signal count, send state, and proposal-only boundary without contacting Napoleon or applying changes; stale exports clear when connection or descriptor context changes.
 - Hardened Conversation Capability Intelligence storage so every appended ledger signal is re-sanitized before later Chief of Staff steering drafts, persistence, export, or query answers can reuse evidence references.
 - Added sanitized advisory Chief of Staff capability state to local bridge readiness proof exports, including capability count, IDs, authority tiers, blocked effects, and false runtime-authority state without raw responses, endpoint hosts, or tokens.

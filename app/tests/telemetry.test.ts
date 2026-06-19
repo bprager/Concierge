@@ -497,6 +497,57 @@ test("interaction trace export reconstructs one sanitized trace from buffered ev
   }
 });
 
+test("interaction trace export redacts malformed blocked-effect references consistently", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  console.info = () => undefined;
+
+  try {
+    emitEvent("user_message_received", {
+      traceId: "trace_malformed_blocked_effects",
+      conversationId: "conv_malformed_blocked_effects",
+      turnId: "turn_malformed_blocked_effects",
+      channel: "text",
+      profile: "adult_owner",
+    });
+    emitEvent("response_failed", {
+      traceId: "trace_malformed_blocked_effects",
+      conversationId: "conv_malformed_blocked_effects",
+      turnId: "turn_malformed_blocked_effects",
+      profile: "adult_owner",
+      governanceOutcome: "no_go",
+      blockedEffects: ["memory_write", { value: "agent_dispatch" }, 7],
+    });
+
+    const trace = JSON.parse(exportInteractionTraceJson(localStorage, "trace_malformed_blocked_effects")) as {
+      napoleon_references: {
+        blocked_effects: string[];
+      };
+    };
+
+    assert.deepEqual(trace.napoleon_references.blocked_effects, ["memory_write", "[redacted]", "[redacted]"]);
+  } finally {
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
+});
+
 test("latest interaction trace ignores local proof export event traces", () => {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://127.0.0.1:5173/",

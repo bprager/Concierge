@@ -18,6 +18,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Verified evaluator stub mode, frontend build, Tauri check, schema validation, Markdown links, and YAML parsing during scaffold packaging.
 - Added a local Chief of Staff steering draft export so the user can inspect the full proposal packet, evaluator case candidate, evolution proposal draft, and proposal-only boundary without contacting Napoleon or applying changes.
 - Added sanitized Napoleon reference summaries to local interaction trace exports so request, decision, audit, governance, failure, and blocked-effect metadata are visible without raw prompts, responses, endpoints, tokens, request bodies, or response bodies.
+- Hardened latest interaction trace exports so malformed blocked-effect references use the same `[redacted]` marker as other sanitized Napoleon reference metadata.
 - Scoped Conversation Capability Intelligence answers and Chief of Staff steering draft evidence to the active profile so child-protected, guest, collaborator, and owner signals are not mixed in recommendations.
 - Hardened memory proposal review handoff so stale proposals scoped to a different active profile fail closed before any governed endpoint call.
 - Hardened Chief of Staff steering handoff so stale drafts scoped to a different active profile fail closed before any governed endpoint call.

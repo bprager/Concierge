@@ -437,7 +437,7 @@ function safeReferenceArrayAttribute(events: TelemetryPayload[], key: string): s
   for (const event of [...events].reverse()) {
     const value = event.attributes[key];
     if (Array.isArray(value) && value.length > 0) {
-      return value.map((item) => (typeof item === "string" ? safeReferenceString(item) : "redacted")).slice(0, 20);
+      return value.map((item) => (typeof item === "string" ? safeReferenceString(item) : "[redacted]")).slice(0, 20);
     }
   }
   return ["not_returned"];
