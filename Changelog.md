@@ -367,6 +367,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Fixed
 
 - Reject live Napoleon text responses that claim memory writes, approval capture, agent dispatch, local application, or external sends even when those claims appear only in response text.
+- Hardened repository validation so bracket-style legacy clipboard commands such as `document["execCommand"] (...)` and `globalThis["document"]["execCommand"] (...)` cannot move local Concierge data outside governed visible export flows.
 - Hardened repository validation so bracket-style browser messaging constructor calls such as `globalThis["BroadcastChannel"] (...)` and `window["MessageChannel"] (...)` cannot create hidden cross-context side channels around the governed bridge.
 - Aligned the OpenAPI descriptor connection contract with runtime fail-closed descriptor states for authentication failure, timeout, and HTTP failure.
 - Fixed bridge evidence capture so `NAPOLEON_BRIDGE_ENDPOINT` can drive descriptor discovery and governed text-turn evidence without requiring the evaluator endpoint variable.

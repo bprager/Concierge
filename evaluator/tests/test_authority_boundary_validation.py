@@ -544,6 +544,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'await navigator["clipboard"]["readText"]();',
             'document.execCommand("copy");',
             "document.execCommand('paste');",
+            'document["execCommand"]("copy");',
+            'globalThis["document"]["execCommand"]("paste");',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
