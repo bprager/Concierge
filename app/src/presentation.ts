@@ -646,6 +646,7 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
       { label: "Target capability", value: targetCapability || "not returned" },
       { label: "Selected agents", value: agentLabels || "not returned" },
       { label: "Why selected", value: selectionReasons || "not returned" },
+      { label: "Napoleon recommendation", value: recommendation || "not returned" },
       {
         label: "Capability or agents",
         value: agentLabels || targetCapability || "No selected-agent provenance returned",

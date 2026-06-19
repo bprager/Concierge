@@ -226,6 +226,7 @@ test("exports last successful Napoleon response proof without raw text endpoint 
       heading: string;
       handledBy: string;
       attributionBoundary: string;
+      recommendation: string;
       governance: string;
       profileMode: string;
       traceId: string;
@@ -248,6 +249,7 @@ test("exports last successful Napoleon response proof without raw text endpoint 
   assert.equal(proof.responseProof.status, "verified");
   assert.equal(proof.responseProof.handledBy, "Passive Brain");
   assert.equal(proof.responseProof.attributionBoundary, "Returned bridge provenance only; not local authority.");
+  assert.equal(proof.responseProof.recommendation, "keeping the rollout in review");
   assert.equal(proof.responseProof.traceId, "trace_response_export");
   assert.equal(proof.responseProof.governance, "requires_review");
   assert.equal(proof.responseProof.profileMode, "child_protected_user");
@@ -333,6 +335,22 @@ test("compares Napoleon response proof attribution boundary changes", () => {
 
   assert.equal(comparison.status, "changed");
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Attribution boundary"));
+});
+
+test("compares Napoleon response proof recommendation provenance changes", () => {
+  const previous = JSON.parse(responseProofJson({ traceId: "trace_previous_recommendation" })) as {
+    responseProof: { recommendation?: string };
+  };
+  const current = JSON.parse(responseProofJson({ traceId: "trace_current_recommendation" })) as {
+    responseProof: { recommendation?: string };
+  };
+  previous.responseProof.recommendation = "keeping the rollout in review";
+  current.responseProof.recommendation = "preparing the bridge rollout plan for review";
+
+  const comparison = compareNapoleonResponseProofs(JSON.stringify(previous), JSON.stringify(current));
+
+  assert.equal(comparison.status, "changed");
+  assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Napoleon recommendation"));
 });
 
 test("rejects missing or unsafe previous Napoleon response proof comparison input", () => {
