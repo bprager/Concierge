@@ -162,6 +162,59 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
   }
 });
 
+test("exports sanitized advisory capability discovery state in readiness proof", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    runtimeValidationSource: "local_harness",
+    generatedAt: "2026-06-13T00:00:00.000Z",
+    advisoryCapabilities: {
+      state: "ready",
+      serviceId: "napoleon.chief_of_staff",
+      capabilityCount: 2,
+      capabilityIds: ["napoleon.capability.answer", "napoleon.capability.steering"],
+      authorityTiers: ["prepare_only", "proposal_only"],
+      runtimeAuthority: false,
+      blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
+      proposalOnly: true,
+    },
+  });
+  const proof = JSON.parse(exported) as {
+    advisoryCapabilities: {
+      state: string;
+      serviceId: string;
+      capabilityCount: number;
+      capabilityIds: string[];
+      authorityTiers: string[];
+      runtimeAuthority: boolean;
+      blockedEffects: string[];
+      proposalOnly: boolean;
+    };
+  };
+
+  assert.equal(proof.advisoryCapabilities.state, "ready");
+  assert.equal(proof.advisoryCapabilities.serviceId, "napoleon.chief_of_staff");
+  assert.equal(proof.advisoryCapabilities.capabilityCount, 2);
+  assert.deepEqual(proof.advisoryCapabilities.capabilityIds, [
+    "napoleon.capability.answer",
+    "napoleon.capability.steering",
+  ]);
+  assert.deepEqual(proof.advisoryCapabilities.authorityTiers, ["prepare_only", "proposal_only"]);
+  assert.equal(proof.advisoryCapabilities.runtimeAuthority, false);
+  assert.equal(proof.advisoryCapabilities.proposalOnly, true);
+  assert.ok(proof.advisoryCapabilities.blockedEffects.includes("external_send"));
+  assert.equal(exported.includes("127.0.0.1"), false);
+  assert.equal(exported.includes("token"), false);
+});
+
 test("redacts unsafe bridge evidence values before exporting readiness proof", () => {
   const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
     ...validEvidence,

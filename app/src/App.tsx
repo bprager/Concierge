@@ -2076,6 +2076,27 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       descriptorConnection,
       readiness: bridgeEvidenceReadiness,
       runtimeValidationSource,
+      advisoryCapabilities: chiefOfStaffCapabilities
+        ? {
+            state: chiefOfStaffCapabilities.state,
+            serviceId: chiefOfStaffCapabilities.serviceId,
+            capabilityCount: chiefOfStaffCapabilities.capabilities.length,
+            capabilityIds: chiefOfStaffCapabilities.capabilities.map((capability) => capability.id),
+            authorityTiers: Array.from(new Set(chiefOfStaffCapabilities.capabilities.map((capability) => capability.authorityTier))),
+            runtimeAuthority: false,
+            blockedEffects: chiefOfStaffCapabilities.blockedEffects,
+            proposalOnly: true,
+          }
+        : {
+            state: "not_fetched",
+            serviceId: null,
+            capabilityCount: 0,
+            capabilityIds: [],
+            authorityTiers: [],
+            runtimeAuthority: false,
+            blockedEffects: [],
+            proposalOnly: true,
+          },
     });
     const bridgeReadinessProof = JSON.parse(json) as { runtimeValidation?: { promotionGate?: string } };
     const comparison = compareBridgeReadinessProofs(bridgeReadinessProofJson, json);

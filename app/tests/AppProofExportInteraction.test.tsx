@@ -55,6 +55,22 @@ test("exports and compares Napoleon proof through rendered app controls", async 
         signature: { valid: true },
       });
     }
+    if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/capabilities") {
+      return harnessJsonResponse(200, {
+        serviceId: "napoleon.chief_of_staff",
+        capabilities: [
+          {
+            id: "napoleon.capability.answer",
+            label: "Answer with governance",
+            description: "Prepare advisory answers through Napoleon.",
+            authorityTier: "prepare_only",
+            proposalOnly: true,
+          },
+        ],
+        runtimeAuthority: false,
+        blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
+      });
+    }
 
     assert.equal(url, "http://127.0.0.1:8787/v1/concierge/turn");
     const body = JSON.parse(String(init?.body ?? "{}")) as {
@@ -132,10 +148,16 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(readinessPanel).getByText("Local harness only; not real Napoleon runtime validation"));
     assert.ok(within(readinessPanel).getByText("Promotion gate"));
     assert.ok(within(readinessPanel).getByText("blocked until real Napoleon runtime evidence passes"));
+    await user.click(screen.getByRole("button", { name: "Discover advisory capabilities" }));
+    await screen.findByText("Advisory Chief of Staff capabilities discovered. This is not Napoleon approval.");
     await user.click(screen.getByRole("button", { name: "Export readiness proof" }));
     const readinessExport = screen.getByLabelText("Exported bridge readiness proof");
     assert.ok(readinessExport.textContent?.includes('"source": "local_harness"'));
     assert.ok(readinessExport.textContent?.includes('"promotionGate": "blocked_until_real_runtime_evidence_passes"'));
+    assert.ok(readinessExport.textContent?.includes('"advisoryCapabilities"'));
+    assert.ok(readinessExport.textContent?.includes('"capabilityCount": 1'));
+    assert.ok(readinessExport.textContent?.includes('"napoleon.capability.answer"'));
+    assert.ok(readinessExport.textContent?.includes('"runtimeAuthority": false'));
     assert.ok(!readinessExport.textContent?.includes("127.0.0.1"));
     const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;

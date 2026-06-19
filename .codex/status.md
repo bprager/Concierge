@@ -67,6 +67,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened bridge evidence comparison and live runtime artifact privacy audits to reject snake_case raw-field aliases such as `response_text`, `request_body`, and `bearer_token`.
 - Hardened repository authority-boundary validation to reject root `@tauri-apps/api` imports alongside Tauri submodule imports in UI/runtime source.
 - Hardened Conversation Capability Intelligence storage so appended ledger signals are re-sanitized before Chief of Staff steering drafts, persistence, export, or query answers can reuse evidence references.
+- Added advisory Chief of Staff capability discovery state to sanitized bridge readiness proof exports as metadata-only count, ID, authority-tier, blocked-effect, and false-authority evidence.
 - Hardened Conversation Capability Intelligence so labels and evidence references are sanitized before local storage, query answers, persistence, export, and steering evidence selection.
 - Hardened learning signals so raw-looking summaries and non-local evidence references are dropped before proposal-only Chief of Staff steering evidence can use them.
 - Hardened repository authority-boundary validation so bracket-style FileReader constructor aliases cannot read local files outside governed visible import/export flows.

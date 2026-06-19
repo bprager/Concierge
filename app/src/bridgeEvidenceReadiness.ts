@@ -20,6 +20,16 @@ export interface BridgeReadinessProofInput {
   readiness: BridgeEvidenceReadinessState;
   runtimeValidationSource?: "real_runtime" | "local_harness" | "local_simulation";
   generatedAt?: string;
+  advisoryCapabilities?: {
+    state: "not_fetched" | "blocked" | "ready";
+    serviceId?: string | null;
+    capabilityCount: number;
+    capabilityIds: string[];
+    authorityTiers: string[];
+    runtimeAuthority: false;
+    blockedEffects: string[];
+    proposalOnly: true;
+  };
 }
 
 export interface BridgeReadinessProofChange {
@@ -197,6 +207,16 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         lastFailureReason: sanitizeReadinessProofString(input.readiness.lastFailureReason),
         failureReason: sanitizeReadinessProofString(input.readiness.failureReason),
         blockedEffects,
+      },
+      advisoryCapabilities: {
+        state: input.advisoryCapabilities?.state ?? "not_fetched",
+        serviceId: sanitizeReadinessProofString(input.advisoryCapabilities?.serviceId ?? undefined),
+        capabilityCount: input.advisoryCapabilities?.capabilityCount ?? 0,
+        capabilityIds: sanitizeReadinessProofList(input.advisoryCapabilities?.capabilityIds ?? []),
+        authorityTiers: sanitizeReadinessProofList(input.advisoryCapabilities?.authorityTiers ?? []),
+        runtimeAuthority: false,
+        blockedEffects: sanitizeReadinessProofList(input.advisoryCapabilities?.blockedEffects ?? []),
+        proposalOnly: true,
       },
       runtimeValidation: {
         source: input.runtimeValidationSource ?? "real_runtime",
