@@ -3699,6 +3699,66 @@ test("renders local telemetry buffer controls with redacted export and local cle
   }
 });
 
+test("clears telemetry and interaction trace exports when user profile changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    localStorage.setItem(
+      "concierge_telemetry_buffer_v1",
+      JSON.stringify({
+        schemaVersion: "concierge.telemetry-buffer.v1",
+        maxEvents: 200,
+        events: [
+          {
+            ts: "2026-06-15T00:00:00.000Z",
+            event: "user_message_received",
+            attributes: {
+              traceId: "trace_profile_export",
+              conversationId: "conv_profile_export",
+              turnId: "turn_profile_export",
+              channel: "text",
+              profile: "adult_owner",
+            },
+          },
+          {
+            ts: "2026-06-15T00:00:01.000Z",
+            event: "response_failed",
+            attributes: {
+              traceId: "trace_profile_export",
+              conversationId: "conv_profile_export",
+              turnId: "turn_profile_export",
+              profile: "adult_owner",
+              profileMode: "adult_owner",
+              bridgeFailureReason: "no_endpoint",
+              blockedEffects: ["memory_write"],
+            },
+          },
+        ],
+      }),
+    );
+
+    const view = render(<App />);
+    const buffer = within(view.getByLabelText("Local telemetry buffer"));
+
+    fireEvent.click(buffer.getByRole("button", { name: "Export telemetry buffer" }));
+    fireEvent.click(buffer.getByRole("button", { name: "Export latest trace" }));
+    assert.ok(buffer.getByLabelText("Telemetry buffer export"));
+    assert.ok(buffer.getByLabelText("Latest interaction trace export"));
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+
+    assert.equal(buffer.queryByLabelText("Telemetry buffer export"), null);
+    assert.equal(buffer.queryByLabelText("Latest interaction trace export"), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("disables latest trace export when no real interaction trace is buffered", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([

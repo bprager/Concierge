@@ -1467,6 +1467,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setProfile(value);
     setPendingRehearsal(null);
     setCapabilityExportJson(null);
+    setTelemetryBufferExportJson(null);
+    setInteractionTraceExportJson(null);
     clearBridgeReadinessProof();
     clearVoicePipelineProof();
     clearLocalVoiceAndAvatarSampleResults();

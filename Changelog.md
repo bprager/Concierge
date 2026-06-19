@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened local telemetry and interaction trace exports so switching profiles clears already-rendered metadata snapshots before adult-owner and child-protected trace views can linger across scopes.
 - Hardened Conversation Capability Intelligence exports so switching profiles clears already-rendered local metadata JSON before adult-owner and child-protected evidence views can linger across scopes.
 - Hardened local voice and avatar sample panels so profile changes clear profile-scoped dry-run results before adult-owner and child-protected metadata can be mixed.
 - Hardened voice pipeline proof exports so profile changes clear stale proof JSON and comparison state before adult-owner and child-protected voice readiness metadata can be mixed.
