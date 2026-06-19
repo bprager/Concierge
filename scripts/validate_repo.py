@@ -372,6 +372,9 @@ BROWSER_STORAGE_PERSISTENCE_PATTERNS: list[re.Pattern[str]] = [
         r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\.(?:getItem|setItem|removeItem|clear)\s*\("
     ),
     re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\.(?:getItem|setItem|removeItem|clear)\.(?:call|apply)\s*\("
+    ),
+    re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\[\s*['\"](?:getItem|setItem|removeItem|clear)['\"]\s*\]\s*\("
     ),
     re.compile(r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\.[A-Za-z_$][A-Za-z0-9_$]*\s*="),
