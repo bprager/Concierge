@@ -2092,6 +2092,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       responseAuditId: proofDetail("Audit"),
       selectedAgentCount: countReturnedList(proofDetail("Selected agents"), ","),
       selectedAgentSelectionReasonCount: countReturnedList(proofDetail("Why selected"), ";"),
+      allowedEffectCount: countReturnedList(proofDetail("Allowed effects"), ","),
+      blockedEffectCount: countReturnedList(proofDetail("Blocked effects"), ","),
       targetCapabilityReturned: targetCapabilityProof !== "unavailable" && targetCapabilityProof !== "not returned",
       recommendationProvenanceReturned: recommendationProof !== "unavailable" && recommendationProof !== "not returned",
       proofComparisonStatus: comparison.status,
