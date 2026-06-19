@@ -82,6 +82,29 @@ function optionalProofDetailValue(proof: NapoleonResponseProofView, label: strin
   return value === "not returned" || value === "No selected-agent provenance returned" ? "unavailable" : value;
 }
 
+function sanitizeResponseProofString(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "unavailable";
+  if (FORBIDDEN_RESPONSE_PROOF_VALUE_PATTERNS.some((pattern) => pattern.test(trimmed))) return "redacted";
+  return trimmed;
+}
+
+function sanitizeResponseProofList(values: string[]): string[] {
+  return values.map((value) => sanitizeResponseProofString(value));
+}
+
+function sanitizeResponseProofMetadata(metadata: NapoleonResponseProofMetadata): NapoleonResponseProofMetadata {
+  return {
+    handledBy: sanitizeResponseProofString(metadata.handledBy),
+    targetCapability: sanitizeResponseProofString(metadata.targetCapability),
+    recommendation: sanitizeResponseProofString(metadata.recommendation),
+    selectedAgents: sanitizeResponseProofList(metadata.selectedAgents),
+    selectedAgentReasons: sanitizeResponseProofList(metadata.selectedAgentReasons),
+    allowedEffects: sanitizeResponseProofList(metadata.allowedEffects),
+    blockedEffects: sanitizeResponseProofList(metadata.blockedEffects),
+  };
+}
+
 export function buildSuccessfulNapoleonResponsePresentation(
   response: NapoleonResponse,
 ): NapoleonResponsePresentationState {
@@ -156,7 +179,7 @@ export function exportNapoleonResponseProofJson(
     );
   }
 
-  const metadata: NapoleonResponseProofMetadata = state.proofMetadata ?? {
+  const metadata: NapoleonResponseProofMetadata = sanitizeResponseProofMetadata(state.proofMetadata ?? {
     handledBy: optionalProofDetailValue(proof, "Capability or agents"),
     targetCapability: optionalProofDetailValue(proof, "Target capability"),
     recommendation: optionalProofDetailValue(proof, "Napoleon recommendation"),
@@ -164,7 +187,7 @@ export function exportNapoleonResponseProofJson(
     selectedAgentReasons: splitList(proofDetailValue(proof, "Why selected")),
     allowedEffects: splitList(proofDetailValue(proof, "Allowed effects")),
     blockedEffects: splitList(proofDetailValue(proof, "Blocked effects")),
-  };
+  });
 
   return JSON.stringify(
     {

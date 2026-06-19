@@ -330,6 +330,73 @@ test("exports selected-agent proof arrays from returned provenance instead of di
   assert.deepEqual(proof.responseProof.blockedEffects, ["memory_write", "external_send", "agent_dispatch"]);
 });
 
+test("redacts unsafe returned provenance before exporting Napoleon response proof", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge rollout",
+    profile: "adult_owner",
+    conversationId: "conv_response_export_redaction",
+    turnId: "turn_response_export_redaction",
+    traceId: "trace_response_export_redaction",
+    governanceOutcome: "requires_review",
+  });
+  const state = buildSuccessfulNapoleonResponsePresentation({
+    text: "Napoleon returned sanitized response text.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: true,
+    targetAgent: "http://127.0.0.1:8787/v1/concierge/turn",
+    delegation: {
+      selectedAgents: [
+        {
+          agentId: "unsafe_agent",
+          displayName: "Bearer local-secret-token",
+          selectionReason: "Use http://127.0.0.1:8787 with Authorization bearer local-secret-token.",
+          contributionSummary: "unsafe provenance",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response", "Bearer local-secret-token"],
+      blockedEffects: ["memory_write", "http://127.0.0.1:8787/private"],
+      governanceState: "requires_review",
+      traceId: "trace_response_export_redaction",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+    recommendationProvenance: {
+      summary: "Review http://127.0.0.1:8787/private with bearer local-secret-token.",
+      traceId: "trace_response_export_redaction",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+
+  const json = exportNapoleonResponseProofJson(state, {
+    generatedAt: "2026-06-13T00:00:00.000Z",
+    conversationId: "conv_response_export_redaction",
+  });
+  const proof = JSON.parse(json) as {
+    responseProof: {
+      handledBy: string;
+      targetCapability: string;
+      recommendation: string;
+      selectedAgents: string[];
+      selectedAgentReasons: string[];
+      allowedEffects: string[];
+      blockedEffects: string[];
+    };
+  };
+
+  assert.equal(json.includes("127.0.0.1"), false);
+  assert.equal(json.toLocaleLowerCase().includes("local-secret-token"), false);
+  assert.equal(json.toLocaleLowerCase().includes("bearer"), false);
+  assert.equal(proof.responseProof.handledBy, "redacted");
+  assert.equal(proof.responseProof.targetCapability, "redacted");
+  assert.equal(proof.responseProof.recommendation, "redacted");
+  assert.deepEqual(proof.responseProof.selectedAgents, ["redacted"]);
+  assert.deepEqual(proof.responseProof.selectedAgentReasons, ["redacted"]);
+  assert.deepEqual(proof.responseProof.allowedEffects, ["prepare_advisory_response", "redacted"]);
+  assert.deepEqual(proof.responseProof.blockedEffects, ["memory_write", "redacted"]);
+});
+
 test("compares sanitized Napoleon response proof exports", () => {
   const previous = responseProofJson({
     traceId: "trace_previous",
