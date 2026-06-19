@@ -123,6 +123,8 @@ Napoleon response proof export telemetry may also report whether a target capabi
 
 Napoleon response proof export telemetry may report allowed and blocked effect counts with `allowedEffectCount` and `blockedEffectCount`, but returned effect names remain in the sanitized local export body and visible UI instead of telemetry attributes.
 
+Count-only Napoleon response proof telemetry derives selected-agent, selection-reason, allowed-effect, and blocked-effect totals from the sanitized proof export arrays, so punctuation inside returned text cannot inflate counts and the returned text remains local-only.
+
 Governed memory proposal, governance review, Chief of Staff steering, and taxonomy review failure events and visible failure messages carry the active profile mode alongside fail-closed reason, returned decision/audit/governance references when available, and blocked-effect metadata. This keeps child-protected, guest, collaborator, or owner scope visible and preserves Napoleon-supplied denial context when a governed handoff is blocked before or after contacting Napoleon.
 
 The governed-route registry displayed near bridge readiness shows the generated OpenAPI-required response fields for each route, making contract-mismatch expectations visible without retaining endpoint hosts, bearer tokens, prompts, request bodies, or response bodies.

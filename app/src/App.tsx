@@ -2071,13 +2071,15 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setNapoleonProofComparison(comparison);
     const proof = lastNapoleonPresentation.proof;
     const proofDetail = (label: string) => proof?.details.find((detail) => detail.label === label)?.value ?? "unavailable";
-    const countReturnedList = (value: string, separator: string) =>
-      value === "unavailable" || value === "not returned"
-        ? 0
-        : value
-            .split(separator)
-            .map((item) => item.trim())
-            .filter(Boolean).length;
+    const proofArrayCount = (key: string) => {
+      try {
+        const parsed = JSON.parse(json) as { responseProof?: Record<string, unknown> };
+        const value = parsed.responseProof?.[key];
+        return Array.isArray(value) ? value.length : 0;
+      } catch {
+        return 0;
+      }
+    };
     const targetCapabilityProof = proofDetail("Target capability");
     const recommendationProof = proofDetail("Napoleon recommendation");
     emitEvent("napoleon_response_proof_exported", {
@@ -2090,10 +2092,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       profileMode: proofDetail("Profile mode"),
       responseTraceId: proofDetail("Trace"),
       responseAuditId: proofDetail("Audit"),
-      selectedAgentCount: countReturnedList(proofDetail("Selected agents"), ","),
-      selectedAgentSelectionReasonCount: countReturnedList(proofDetail("Why selected"), ";"),
-      allowedEffectCount: countReturnedList(proofDetail("Allowed effects"), ","),
-      blockedEffectCount: countReturnedList(proofDetail("Blocked effects"), ","),
+      selectedAgentCount: proofArrayCount("selectedAgents"),
+      selectedAgentSelectionReasonCount: proofArrayCount("selectedAgentReasons"),
+      allowedEffectCount: proofArrayCount("allowedEffects"),
+      blockedEffectCount: proofArrayCount("blockedEffects"),
       targetCapabilityReturned: targetCapabilityProof !== "unavailable" && targetCapabilityProof !== "not returned",
       recommendationProvenanceReturned: recommendationProof !== "unavailable" && recommendationProof !== "not returned",
       proofComparisonStatus: comparison.status,

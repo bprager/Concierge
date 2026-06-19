@@ -22,6 +22,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a metadata-only recommendation-provenance flag to Napoleon response proof export telemetry without emitting returned recommendation text.
 - Added a metadata-only target-capability flag to Napoleon response proof export telemetry so target capability stays separate from selected-agent provenance.
 - Added count-only allowed-effect and blocked-effect metadata to Napoleon response proof export telemetry without emitting returned effect names.
+- Hardened Napoleon response proof export telemetry counts to derive selected-agent, selection-reason, allowed-effect, and blocked-effect totals from sanitized proof arrays instead of display text punctuation.
 - Hardened repository authority-boundary validation so mixed bracket/dot direct history state and localStorage/sessionStorage aliases cannot retain, erase, or move prompts, proofs, tokens, or responses around governed flows.
 - Hardened repository authority-boundary validation so mixed bracket/dot localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.
 - Hardened repository authority-boundary validation so bracketed localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.

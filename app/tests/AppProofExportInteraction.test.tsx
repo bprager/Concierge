@@ -101,7 +101,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
           {
             agentId: "passive_brain",
             displayName: "Passive Brain",
-            selectionReason: "Prior bridge context is relevant to the request.",
+            selectionReason: "Prior bridge context is relevant; deployment context was requested.",
             contributionSummary: "bridge context",
           },
         ],
