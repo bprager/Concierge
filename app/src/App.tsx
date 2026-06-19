@@ -1446,6 +1446,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   }
 
   async function discoverCapabilities() {
+    clearBridgeReadinessProof();
     const result = await discoverChiefOfStaffCapabilities({
       endpoint: endpoint.trim() || null,
       authToken: authToken.trim() || null,

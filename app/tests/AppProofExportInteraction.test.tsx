@@ -497,6 +497,68 @@ test("clears bridge readiness proof when descriptor mode changes", async () => {
   }
 });
 
+test("clears bridge readiness proof when advisory capabilities are discovered", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+  const requestedUrls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+      return harnessJsonResponse(200, {
+        descriptor: {
+          schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+          serviceId: "napoleon.chief_of_staff",
+          runtimeAuthority: false,
+          commandExecution: false,
+          cachePolicy: "fail_closed_to_review_required",
+          blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+        },
+        checksum: { expected: "sha256:ui", actual: "sha256:ui" },
+        signature: { valid: true },
+      });
+    }
+    assert.equal(url, "http://127.0.0.1:8787/v1/concierge/chief-of-staff/capabilities");
+    return harnessJsonResponse(200, {
+      serviceId: "napoleon.chief_of_staff",
+      capabilities: [
+        {
+          id: "napoleon.capability.answer",
+          label: "Answer with governance",
+          description: "Prepare advisory answers through Napoleon.",
+          authorityTier: "prepare_only",
+          proposalOnly: true,
+        },
+      ],
+      runtimeAuthority: false,
+      blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
+    });
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+
+    fireEvent.click(view.getByRole("button", { name: "Use local harness" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    fireEvent.click(view.getByRole("button", { name: "Export readiness proof" }));
+    assert.ok(view.getByLabelText("Exported bridge readiness proof"));
+
+    fireEvent.click(view.getByRole("button", { name: "Discover advisory capabilities" }));
+
+    await view.findByText("Advisory Chief of Staff capabilities discovered. This is not Napoleon approval.");
+    assert.equal(view.queryByLabelText("Exported bridge readiness proof"), null);
+    assert.equal(view.queryByText("Readiness proof comparison"), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears captured bridge evidence readiness when endpoint changes", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

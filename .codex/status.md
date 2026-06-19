@@ -76,6 +76,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened bridge readiness and Napoleon response proof comparisons to reject snake_case raw-field aliases such as `response_text`, `request_body`, and `bearer_token` in UI-side proof inputs.
 - Hardened bridge evidence comparison and live runtime artifact privacy audits to reject snake_case raw-field aliases such as `response_text`, `request_body`, and `bearer_token`.
 - Hardened bridge evidence readiness so endpoint, bearer-token, descriptor mode, and descriptor discovery changes reset captured runtime evidence before stale validation can promote a new connection context.
+- Cleared rendered bridge readiness proof exports and comparison state when advisory Chief of Staff capabilities are discovered so stale capability metadata is not left visible.
 - Hardened repository authority-boundary validation to reject root `@tauri-apps/api` imports alongside Tauri submodule imports in UI/runtime source.
 - Hardened Conversation Capability Intelligence storage so appended ledger signals are re-sanitized before Chief of Staff steering drafts, persistence, export, or query answers can reuse evidence references.
 - Added advisory Chief of Staff capability discovery state to sanitized bridge readiness proof exports as metadata-only count, ID, authority-tier, blocked-effect, and false-authority evidence.
@@ -224,6 +225,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Cleared rendered Napoleon proof and delegation provenance when descriptor mode changes or descriptor discovery refreshes connection state so descriptor-scoped bridge evidence is not reused after preflight changes.
 - Cleared rendered Napoleon proof and delegation provenance when Rehearsal Mode is enabled so live bridge evidence is not shown while Concierge is in local-only preview mode.
 - Cleared captured bridge evidence readiness and rendered bridge readiness proof exports when Rehearsal Mode is enabled so local-only preview mode cannot display stale live validation.
+- Cleared rendered bridge readiness proof exports and comparison state when advisory Chief of Staff capabilities are discovered so local proof metadata is regenerated from the latest capability discovery.
 - Added evaluator coverage for child protected bridge response semantics so valid bridge responses still preserve guardian review, no secret-keeping, memory minimization, blocked effects, and stricter child fail-closed behavior.
 - Added evaluator coverage for governed memory proposal and Chief of Staff steering review response semantics so `requires_review` remains non-approval and reviewed packets stay proposal-only, not locally applied.
 - Added evaluator coverage for profile-scope drift so guest, collaborator, and child protected responses cannot widen themselves into adult owner or owner-only authority.

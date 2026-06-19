@@ -11,6 +11,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened bridge evidence readiness so active profile changes reset captured runtime evidence before adult-owner and child-protected validation state can be mixed.
 - Hardened Rehearsal Mode activation so captured bridge evidence readiness and rendered bridge readiness proof exports reset before live validation can linger in local-only preview mode.
 - Hardened bridge evidence readiness so endpoint, bearer-token, descriptor mode, and descriptor discovery changes reset captured runtime evidence before stale validation can promote a new connection context.
+- Hardened bridge readiness proof exports so advisory Chief of Staff capability discovery clears already-rendered proof JSON and comparison state before stale capability metadata can linger.
 - Hardened Chief of Staff steering drafts so local capability taxonomy edits clear already-rendered proposal drafts, exports, submissions, and failures before obsolete labels can be handed off.
 - Hardened local telemetry and interaction trace exports so switching profiles clears already-rendered metadata snapshots before adult-owner and child-protected trace views can linger across scopes.
 - Hardened Conversation Capability Intelligence exports so switching profiles clears already-rendered local metadata JSON before adult-owner and child-protected evidence views can linger across scopes.
