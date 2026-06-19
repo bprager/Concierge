@@ -280,9 +280,13 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:navigator|window\.navigator)\.share\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]share['\"]\s*\]\s*\("),
     re.compile(r"\bpostMessage\s*\("),
+    re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$.]*\.postMessage\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]postMessage['\"]\s*\]\s*\("),
     re.compile(r"\b(?:BroadcastChannel|MessageChannel)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.clipboard\.(?:read|readText|write|writeText)\s*\("),
+    re.compile(
+        r"\b(?:navigator|window\.navigator)\.clipboard\.(?:read|readText|write|writeText)\.(?:call|apply)\s*\("
+    ),
     re.compile(
         r"\b(?:navigator|window\.navigator)\.clipboard\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("
     ),

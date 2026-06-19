@@ -195,9 +195,9 @@ Programmatic form submission APIs such as `form.submit()`, `form.requestSubmit()
 
 Programmatic DOM clicks such as `anchor.click()`, `downloadLink.click()`, `button.click()`, bracket-style `click` aliases, and anchor/button prototype click calls are treated as navigation or form side channels outside the governed bridge.
 
-Browser cross-context messaging such as `postMessage`, `BroadcastChannel`, and `MessageChannel` is treated as a side channel so UI code cannot relay local prompts, responses, tokens, or proof metadata to another browser context outside governed visible flows.
+Browser cross-context messaging such as `postMessage`, `BroadcastChannel`, `MessageChannel`, and call/apply aliases such as `window.postMessage.call(...)` is treated as a side channel so UI code cannot relay local prompts, responses, tokens, or proof metadata to another browser context outside governed visible flows.
 
-Direct browser clipboard reads, writes, mixed dot/bracket clipboard aliases, and legacy copy/paste commands are treated as local data side channels so UI code cannot move prompts, responses, tokens, or proof metadata outside governed visible export flows.
+Direct browser clipboard reads, writes, mixed dot/bracket clipboard aliases, call/apply aliases such as `navigator.clipboard.writeText.call(...)`, and legacy copy/paste commands are treated as local data side channels so UI code cannot move prompts, responses, tokens, or proof metadata outside governed visible export flows.
 
 Browser file picker APIs, FileReader constructors including bracket-style aliases such as `window["FileReader"] (...)`, and FileReader `readAs...` methods including call/apply aliases such as `reader.readAsText.call(...)` are treated as local data side channels so UI code cannot read, write, or export local files outside governed visible import/export flows.
 

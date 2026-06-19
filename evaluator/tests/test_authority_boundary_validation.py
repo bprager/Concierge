@@ -542,7 +542,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_detects_external_post_message_side_channels(self):
         for source in [
             'window.postMessage({ payload }, "https://api.example.test");',
+            'window.postMessage.call(window, { payload }, "https://api.example.test");',
             'parent.postMessage(payload, "*");',
+            'parent.postMessage.apply(parent, [payload, "*"]);',
             'otherWindow.postMessage(payload, "mailto:team@example.test");',
         ]:
             with self.subTest(source=source):
@@ -554,8 +556,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_detects_browser_cross_context_side_channels(self):
         for source in [
             'window.postMessage({ proof }, window.location.origin);',
+            'globalThis.postMessage.call(globalThis, { proof }, window.location.origin);',
             'const channel = new BroadcastChannel("concierge-proof"); channel.postMessage(proof);',
+            'const channel = new BroadcastChannel("concierge-proof"); channel.postMessage.call(channel, proof);',
             "const channel = new MessageChannel(); channel.port1.postMessage(secretProofJson);",
+            "const channel = new MessageChannel(); channel.port1.postMessage.apply(channel.port1, [secretProofJson]);",
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
@@ -566,8 +571,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_detects_clipboard_side_channels(self):
         for source in [
             "await navigator.clipboard.writeText(secretProofJson);",
+            "await navigator.clipboard.writeText.call(navigator.clipboard, secretProofJson);",
             "await window.navigator.clipboard.write([new ClipboardItem(data)]);",
+            "await window.navigator.clipboard.write.apply(window.navigator.clipboard, [items]);",
             "const copied = await navigator.clipboard.readText();",
+            "const copied = await navigator.clipboard.readText.apply(navigator.clipboard);",
             'await navigator.clipboard["writeText"](secretProofJson);',
             'await navigator["clipboard"]["readText"]();',
             'document.execCommand("copy");',
