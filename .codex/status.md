@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added contract-alignment report classification for supported advisory harness paths, local Concierge handoff aliases, Napoleon review/evolution paths that still need explicit runtime mapping, and review paths without a current local alias.
 - Added metadata-only `/cos/trace/{trace_id}` observability checks to explicit Napoleon advisory harness app sends, evidence capture, and live-runtime summaries; the records only show whether the trace envelope was observed and matched the text-turn trace.
 - Added the AI handoff structure in `.codex/`.
 - Added root `AGENTS.md` guidance for future agents.

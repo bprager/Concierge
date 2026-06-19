@@ -87,6 +87,129 @@ paths:
         self.assertEqual(report["napoleonOnlyPaths"], [])
         self.assertEqual(report["conciergeOnlyPaths"], [])
 
+    def test_classifies_advisory_runtime_and_unmapped_review_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            local = self.write_yaml(
+                directory,
+                "local.yaml",
+                """
+openapi: 3.1.0
+paths:
+  /v1/concierge/chief-of-staff/descriptor:
+    get:
+      responses:
+        "200": {description: descriptor}
+  /v1/concierge/chief-of-staff/capabilities:
+    get:
+      responses:
+        "200": {description: capabilities}
+  /v1/concierge/chief-of-staff/steering:
+    post:
+      responses:
+        "200": {description: steering}
+  /v1/concierge/evaluate:
+    post:
+      responses:
+        "200": {description: evaluation}
+  /v1/concierge/turn:
+    post:
+      responses:
+        "200": {description: turn}
+""",
+            )
+            napoleon = self.write_yaml(
+                directory,
+                "napoleon.yaml",
+                """
+openapi: 3.1.0
+x-napoleon-runtime-authority: false
+paths:
+  /cos/descriptor:
+    get:
+      responses:
+        "200": {description: descriptor}
+  /cos/capabilities:
+    get:
+      responses:
+        "200": {description: capabilities}
+  /cos/text-turn:
+    post:
+      responses:
+        "202": {description: accepted}
+  /cos/trace/{trace_id}:
+    get:
+      responses:
+        "200": {description: trace}
+  /chief-of-staff/requests:
+    post:
+      responses:
+        "202": {description: request}
+  /chief-of-staff/reviews/evolution-proposals:
+    post:
+      responses:
+        "202": {description: evolution review}
+  /chief-of-staff/reviews/governance:
+    post:
+      responses:
+        "202": {description: governance review}
+  /chief-of-staff/reviews/evaluation:
+    post:
+      responses:
+        "202": {description: evaluation review}
+  /chief-of-staff/reviews/new-agent-proposals:
+    post:
+      responses:
+        "202": {description: new agent review}
+  /governance/evaluate:
+    post:
+      responses:
+        "200": {description: governance}
+  /observability/traces:
+    post:
+      responses:
+        "202": {description: trace}
+  /evolution/proposals:
+    post:
+      responses:
+        "202": {description: evolution}
+  /agents:
+    get:
+      responses:
+        "200": {description: agents}
+  /agents/{agent_id}:
+    get:
+      responses:
+        "200": {description: agent}
+  /profiles/{profile_id}:
+    get:
+      responses:
+        "200": {description: profile}
+""",
+            )
+
+            report = napoleon_contract_alignment.build_alignment_report(local, napoleon)
+
+        self.assertEqual(
+            report["supportedAdvisoryRuntimePaths"],
+            ["/cos/capabilities", "/cos/descriptor", "/cos/text-turn", "/cos/trace/{trace_id}"],
+        )
+        self.assertIn("/chief-of-staff/reviews/evolution-proposals", report["napoleonReviewContractPaths"])
+        self.assertIn("/evolution/proposals", report["napoleonReviewPathsNeedingRuntimeMapping"])
+        self.assertIn("/observability/traces", report["napoleonReviewPathsNeedingRuntimeMapping"])
+        self.assertIn("/chief-of-staff/requests", report["napoleonReviewPathsWithoutLocalAlias"])
+        self.assertIn("/chief-of-staff/reviews/new-agent-proposals", report["napoleonReviewPathsWithoutLocalAlias"])
+        self.assertIn("/observability/traces", report["napoleonReviewPathsWithoutLocalAlias"])
+        self.assertNotIn("/evolution/proposals", report["napoleonReviewPathsWithoutLocalAlias"])
+        steering_alias = next(
+            alias
+            for alias in report["conciergeLocalHandoffAliases"]
+            if alias["localOperation"] == "chief_of_staff_steering"
+        )
+        self.assertEqual(steering_alias["runtimeMappingStatus"], "local_alias_not_explicit_napoleon_runtime_path")
+        self.assertIn("/chief-of-staff/reviews/governance", steering_alias["napoleonContractPaths"])
+        self.assertFalse(steering_alias["sideEffectsPerformed"])
+
 
 if __name__ == "__main__":
     unittest.main()
