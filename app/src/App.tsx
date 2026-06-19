@@ -115,6 +115,7 @@ import {
   describeLiveSendPreflight,
   describeMemoryProposalReview,
   describeNapoleonTranscriptMetadata,
+  sanitizeVisibleProvenanceValue,
   summarizeRehearsalPreview,
 } from "./presentation.js";
 import {
@@ -224,10 +225,10 @@ export function buildBridgeFailureMessageMetadata(
     attributionBoundary: "No Napoleon response was accepted; fail-closed local state only.",
     governanceOutcome: error.governanceOutcome,
     ...(activeProfileMode ? { profileMode: activeProfileMode } : {}),
-    decisionId: error.decisionId,
-    auditId: error.auditId,
+    decisionId: error.decisionId ? sanitizeVisibleProvenanceValue(error.decisionId) : undefined,
+    auditId: error.auditId ? sanitizeVisibleProvenanceValue(error.auditId) : undefined,
     ...(error.descriptorFailureReason ? { descriptorFailureReason: error.descriptorFailureReason } : {}),
-    blockedEffects: error.blockedEffects,
+    blockedEffects: error.blockedEffects.map((effect) => sanitizeVisibleProvenanceValue(effect)),
   };
 }
 

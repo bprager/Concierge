@@ -116,14 +116,14 @@ const FORBIDDEN_VISIBLE_PROVENANCE_PATTERNS = [
   /\bsecret\b/i,
 ];
 
-function sanitizeVisibleProvenanceValue(value: string | undefined, fallback = "not returned"): string {
+export function sanitizeVisibleProvenanceValue(value: string | undefined, fallback = "not returned"): string {
   const trimmed = value?.trim() ?? "";
   if (!trimmed) return fallback;
   if (FORBIDDEN_VISIBLE_PROVENANCE_PATTERNS.some((pattern) => pattern.test(trimmed))) return "redacted";
   return trimmed;
 }
 
-function sanitizeVisibleProvenanceList(values: string[] | undefined, fallback = "not returned"): string {
+export function sanitizeVisibleProvenanceList(values: string[] | undefined, fallback = "not returned"): string {
   if (!values?.length) return fallback;
   return values.map((value) => sanitizeVisibleProvenanceValue(value)).join(", ");
 }

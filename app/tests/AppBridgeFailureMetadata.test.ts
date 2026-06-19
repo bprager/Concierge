@@ -52,6 +52,32 @@ test("builds descriptor-specific transcript metadata for descriptor bridge failu
   assert.deepEqual(metadata?.blockedEffects, ["runtime_authority", "memory_write", "external_send"]);
 });
 
+test("redacts unsafe returned provenance from fail-closed transcript metadata", () => {
+  const metadata = buildBridgeFailureMessageMetadata(
+    new NapoleonBridgeError(
+      "governance_denied",
+      "trace_failure_metadata",
+      "request_failure_metadata",
+      200,
+      ["memory_write", "http://127.0.0.1:8787/private", "Bearer local-secret-token"],
+      {
+        decisionId: "Bearer local-secret-token",
+        auditId: "http://127.0.0.1:8787/audit",
+        governanceOutcome: "deny",
+      },
+    ),
+    "adult_owner",
+  );
+  const visibleText = JSON.stringify(metadata).toLocaleLowerCase();
+
+  assert.equal(visibleText.includes("127.0.0.1"), false);
+  assert.equal(visibleText.includes("local-secret-token"), false);
+  assert.equal(visibleText.includes("bearer"), false);
+  assert.equal(metadata?.decisionId, "redacted");
+  assert.equal(metadata?.auditId, "redacted");
+  assert.deepEqual(metadata?.blockedEffects, ["memory_write", "redacted", "redacted"]);
+});
+
 test("builds generic fail-closed transcript metadata for unknown bridge failures", () => {
   const metadata = buildBridgeFailureMessageMetadata(new Error("network failed"));
 
