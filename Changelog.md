@@ -19,6 +19,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added returned target capability to successful Napoleon delegation details so the text UI shows both the handling capability and selected agents when Napoleon provides both.
 - Added browser CORS preflight support to the local Napoleon-compatible harness so the rendered Text Concierge shell can validate the local endpoint preset without treating it as real runtime authority.
 - Added returned Napoleon recommendation provenance to sanitized last-success proof exports and comparisons so recommendation attribution stays auditable without raw response text.
+- Added a metadata-only recommendation-provenance flag to Napoleon response proof export telemetry without emitting returned recommendation text.
 - Hardened repository authority-boundary validation so mixed bracket/dot direct history state and localStorage/sessionStorage aliases cannot retain, erase, or move prompts, proofs, tokens, or responses around governed flows.
 - Hardened repository authority-boundary validation so mixed bracket/dot localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.
 - Hardened repository authority-boundary validation so bracketed localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.

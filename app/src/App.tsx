@@ -2078,6 +2078,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             .split(separator)
             .map((item) => item.trim())
             .filter(Boolean).length;
+    const recommendationProof = proofDetail("Napoleon recommendation");
     emitEvent("napoleon_response_proof_exported", {
       traceId,
       conversationId,
@@ -2090,6 +2091,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       responseAuditId: proofDetail("Audit"),
       selectedAgentCount: countReturnedList(proofDetail("Selected agents"), ","),
       selectedAgentSelectionReasonCount: countReturnedList(proofDetail("Why selected"), ";"),
+      recommendationProvenanceReturned: recommendationProof !== "unavailable" && recommendationProof !== "not returned",
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
       approvalCaptured: false,
