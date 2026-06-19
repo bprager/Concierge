@@ -365,9 +365,13 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         for source in [
             "const module = await WebAssembly.compile(bytes);",
             "const instance = await WebAssembly.instantiate(bytes, imports);",
+            "const module = new WebAssembly.Module(bytes);",
+            "const instance = new WebAssembly.Instance(module, imports);",
             "const url = URL.createObjectURL(new Blob([script], { type: 'text/javascript' }));",
             "const url = window.URL.createObjectURL(blob);",
             'const instance = await window["WebAssembly"]["instantiate"](bytes, imports);',
+            'const module = new window["WebAssembly"]["Module"](bytes);',
+            'const instance = new globalThis["WebAssembly"]["Instance"](module, imports);',
             'const url = globalThis["URL"]["createObjectURL"](blob);',
         ]:
             with self.subTest(source=source):

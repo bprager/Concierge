@@ -292,7 +292,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:readAsText|readAsArrayBuffer|readAsDataURL|readAsBinaryString)['\"]\s*\]\s*\("
     ),
     re.compile(r"\bWebAssembly\.(?:compile|compileStreaming|instantiate|instantiateStreaming)\s*\("),
+    re.compile(r"\bnew\s+WebAssembly\.(?:Module|Instance)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:compile|compileStreaming|instantiate|instantiateStreaming)['\"]\s*\]\s*\("),
+    re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:Module|Instance)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
     re.compile(r"\b(?:indexedDB|window\.indexedDB)\.(?:open|deleteDatabase)\s*\("),
