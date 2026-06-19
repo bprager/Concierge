@@ -149,6 +149,38 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
   }
 });
 
+test("redacts unsafe bridge evidence values before exporting readiness proof", () => {
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+    ...validEvidence,
+    targetPath: "http://127.0.0.1:8787/v1/concierge/turn",
+    blockedEffects: ["memory_write", "http://127.0.0.1:8787/private"],
+  });
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: state,
+    runtimeValidationSource: "local_harness",
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    evidence: {
+      lastTargetPath?: string;
+      blockedEffects: string[];
+    };
+  };
+
+  assert.equal(exported.includes("127.0.0.1"), false);
+  assert.equal(proof.evidence.lastTargetPath, "redacted");
+  assert.deepEqual(proof.evidence.blockedEffects, ["memory_write", "redacted"]);
+});
+
 test("reports unavailable comparison for the first exported bridge readiness proof", () => {
   const descriptorConnection = buildDescriptorConnectionState({
     endpointConfigured: true,

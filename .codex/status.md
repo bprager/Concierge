@@ -57,6 +57,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened Napoleon response proof export telemetry counts to use sanitized proof arrays so punctuation inside returned reason text cannot inflate count-only metadata.
 - Hardened sanitized Napoleon response proof exports to preserve multi-agent returned provenance arrays before rendering, instead of reconstructing proof lists from UI display rows.
 - Hardened sanitized Napoleon response proof exports to redact unsafe returned provenance values such as endpoint-like strings, loopback hosts, bearer credentials, and authorization text before local proof JSON is created.
+- Hardened bridge readiness proof exports to redact unsafe captured evidence values such as endpoint-like paths, loopback hosts, bearer credentials, and authorization text before local readiness proof JSON is created.
 - Hardened Conversation Capability Intelligence so labels and evidence references are sanitized before local storage, query answers, persistence, export, and steering evidence selection.
 - Hardened learning signals so raw-looking summaries and non-local evidence references are dropped before proposal-only Chief of Staff steering evidence can use them.
 - Hardened repository authority-boundary validation so bracket-style FileReader constructor aliases cannot read local files outside governed visible import/export flows.

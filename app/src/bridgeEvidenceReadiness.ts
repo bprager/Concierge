@@ -101,6 +101,18 @@ function containsForbiddenEvidenceContent(value: unknown): boolean {
   });
 }
 
+function sanitizeReadinessProofString(value: string | undefined): string | undefined {
+  if (value === undefined) return undefined;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (FORBIDDEN_EVIDENCE_VALUE_PATTERNS.some((pattern) => pattern.test(trimmed))) return "redacted";
+  return trimmed;
+}
+
+function sanitizeReadinessProofList(values: string[]): string[] {
+  return values.map((value) => sanitizeReadinessProofString(value) ?? "unavailable");
+}
+
 function compareBridgeEvidence(record: BridgeContractEvidence): string | null {
   if (containsForbiddenEvidenceContent(record)) {
     return "Evidence contains a raw or secret field and cannot be used for readiness.";
@@ -144,7 +156,8 @@ export function updateBridgeEvidenceReadinessState(
 
 export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput): string {
   const descriptorStatus = input.descriptorConnection.descriptorStatus;
-  const blockedEffects = input.readiness.lastBlockedEffects ?? descriptorStatus?.blockedEffects ?? [];
+  const blockedEffects = sanitizeReadinessProofList(input.readiness.lastBlockedEffects ?? descriptorStatus?.blockedEffects ?? []);
+  const descriptorBlockedEffects = sanitizeReadinessProofList(descriptorStatus?.blockedEffects ?? []);
 
   return JSON.stringify(
     {
@@ -161,7 +174,7 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         serviceId: descriptorStatus?.serviceId,
         runtimeAuthority: descriptorStatus?.runtimeAuthority ?? false,
         cachePolicy: descriptorStatus?.cachePolicy,
-        blockedEffects: descriptorStatus?.blockedEffects ?? [],
+        blockedEffects: descriptorBlockedEffects,
         failClosedReason: input.descriptorConnection.failClosedReason,
       },
       evidence: {
@@ -170,9 +183,9 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         lastEvidenceStatus: input.readiness.lastEvidenceStatus,
         lastOperationId: input.readiness.lastOperationId,
         lastTransport: input.readiness.lastTransport,
-        lastTargetPath: input.readiness.lastTargetPath,
-        lastFailureReason: input.readiness.lastFailureReason,
-        failureReason: input.readiness.failureReason,
+        lastTargetPath: sanitizeReadinessProofString(input.readiness.lastTargetPath),
+        lastFailureReason: sanitizeReadinessProofString(input.readiness.lastFailureReason),
+        failureReason: sanitizeReadinessProofString(input.readiness.failureReason),
         blockedEffects,
       },
       runtimeValidation: {
