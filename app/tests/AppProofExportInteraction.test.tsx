@@ -3587,9 +3587,12 @@ test("renders local telemetry buffer controls with redacted export and local cle
               turnId: "turn_buffer_ui",
               profile: "adult_owner",
               profileMode: "adult_owner",
+              requestId: "cos_turn_buffer_ui",
+              decisionId: "decision_buffer_ui",
+              auditId: "audit_buffer_ui",
               bridgeFailureReason: "governance_no_go",
               governanceOutcome: "no_go",
-              blockedEffects: ["memory_write"],
+              blockedEffects: ["memory_write", { value: "agent_dispatch" }, "https://napoleon.example/blocked"],
             },
           },
         ],
@@ -3621,6 +3624,24 @@ test("renders local telemetry buffer controls with redacted export and local cle
     assert.match(traceExport.value, /"turn_id": "turn_buffer_ui"/);
     assert.match(traceExport.value, /"governance_decision": "no_go"/);
     assert.match(traceExport.value, /not Napoleon approval/);
+    const trace = JSON.parse(traceExport.value) as {
+      napoleon_references: {
+        request_id: string;
+        decision_id: string;
+        audit_id: string;
+        governance_outcome: string;
+        bridge_failure_reason: string;
+        blocked_effects: string[];
+      };
+    };
+    assert.deepEqual(trace.napoleon_references, {
+      request_id: "cos_turn_buffer_ui",
+      decision_id: "decision_buffer_ui",
+      audit_id: "audit_buffer_ui",
+      governance_outcome: "no_go",
+      bridge_failure_reason: "governance_no_go",
+      blocked_effects: ["memory_write", "[redacted]", "[redacted]"],
+    });
     assert.doesNotMatch(traceExport.value, /napoleon\.example/);
 
     await user.click(buffer.getByRole("button", { name: "Clear telemetry buffer" }));

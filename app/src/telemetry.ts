@@ -358,6 +358,7 @@ function sanitizeTelemetryValue(value: unknown): unknown {
     }
     return sanitized;
   }
+  if (typeof value === "string") return safeReferenceString(value);
   return value;
 }
 
