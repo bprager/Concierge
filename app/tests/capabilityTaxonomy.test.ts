@@ -778,6 +778,81 @@ test("taxonomy review handoff rejects response claims that apply taxonomy or sid
   ]);
 });
 
+test("taxonomy review handoff rejects response text that claims taxonomy application", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_deployment_1", topic: "deployment", capability: "release_summary" });
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_taxonomy_review",
+    traceId: "trace_taxonomy_review",
+  });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffTaxonomyReviewDraft(draft, {
+        conversationId: "conv_taxonomy_review",
+        traceId: "trace_taxonomy_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: {
+          endpointConfigured: true,
+          descriptor: defaultChiefOfStaffDescriptor,
+          expectedChecksum: "sha256:local-static",
+          actualChecksum: "sha256:local-static",
+          signatureValid: true,
+        },
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon reviewed the taxonomy and applied the proposal locally.",
+            governanceDecision: {
+              decision_id: "decision_taxonomy_text_side_effect",
+              request_id: "cos_trace_taxonomy_submit",
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Review response text must not claim taxonomy application.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: "trace_taxonomy_submit",
+              audit_id: "audit_taxonomy_text_side_effect",
+            },
+            traceEnvelope: {
+              trace_id: "trace_taxonomy_submit",
+              parent_trace_id: "conv_taxonomy_review",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_taxonomy_submit",
+              decision_id: "decision_taxonomy_text_side_effect",
+              timestamp: "2026-06-13T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_taxonomy_text_side_effect",
+              trace_id: "trace_taxonomy_submit",
+              decision_id: "decision_taxonomy_text_side_effect",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:trace_taxonomy_submit"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            externalSendPerformed: false,
+            agentDispatchPerformed: false,
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+});
+
 test("taxonomy review handoff rejects review responses that omit explicit false side-effect boundaries", async () => {
   const ledger = createCapabilityLedger();
   addWorkingSignal(ledger, { traceId: "trace_deploy_1", topic: "deploy", capability: "release_summary" });

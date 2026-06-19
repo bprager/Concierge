@@ -1,5 +1,6 @@
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
+import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import type { CapabilityArchitectureArea, ConversationCapabilitySignal, RecommendationBoundary } from "./capabilityLedger.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
@@ -620,7 +621,7 @@ function hasForbiddenTaxonomyReviewSideEffectClaim(
     "externalSendPerformed",
     "agentDispatchPerformed",
   ];
-  return requiredFalseFields.some((field) => payload[field] !== false);
+  return requiredFalseFields.some((field) => payload[field] !== false) || hasForbiddenSideEffectTextClaim(payload.text);
 }
 
 function failTaxonomyReviewClosed(

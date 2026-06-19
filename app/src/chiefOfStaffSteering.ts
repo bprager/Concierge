@@ -8,6 +8,7 @@ import {
 } from "./capabilityLedger.js";
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
+import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
   buildDescriptorConnectionState,
@@ -317,7 +318,7 @@ function hasForbiddenSteeringSideEffectClaim(payload: Partial<ChiefOfStaffSteeri
     "externalSendPerformed",
     "agentDispatchPerformed",
   ];
-  return requiredFalseFields.some((field) => payload[field] !== false);
+  return requiredFalseFields.some((field) => payload[field] !== false) || hasForbiddenSideEffectTextClaim(payload.text);
 }
 
 function draftMatchesActiveProfile(draft: ChiefOfStaffSteeringDraft, profileMode: NapoleonProfileMode): boolean {

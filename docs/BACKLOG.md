@@ -267,6 +267,7 @@ Acceptance criteria:
 - Returned recommendation provenance must also match the response trace and audit envelopes before Concierge can keep or display it, even when the response text does not explicitly claim "Napoleon recommends...".
 - Successful text responses that claim selected-agent findings, such as "Passive Brain found...", must include matching selected-agent contribution provenance or fail closed as a contract mismatch.
 - Successful text responses that imply blocked side effects happened, including shorthand external-send claims such as "sent it", must fail closed as contract mismatches even when explicit side-effect boundary fields are false.
+- Governed review handoff responses that imply blocked side effects happened, including local proposal application claims, must fail closed as contract mismatches even when explicit side-effect boundary fields are false.
 - Successful text responses must fail closed as contract mismatches when returned profile mode differs from the active Concierge user profile, so child protected, guest, and collaborator responses cannot widen themselves into adult owner scope.
 - Fail-closed transcript metadata must include the active profile mode on blocked bridge attempts, so profile-scope drift remains visible to the user.
 - Local Rehearsal Mode governance review-required, acknowledgement, and memory proposal telemetry must include the active profile mode so child-protected local preview signals stay child-sensitive without contacting Napoleon.

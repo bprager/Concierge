@@ -34,7 +34,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened repository authority-boundary validation so `globalThis["navigator"]` bracket aliases cannot bypass external-send, service-worker, permissions, geolocation, device, credentials, or clipboard guardrails.
 - Hardened repository authority-boundary validation so hidden display capture, device enumeration, and media recording APIs cannot start future voice/avatar capture or recording outside visible permission handlers.
 - Hardened live bridge response validation so returned delegation cannot mark forbidden authority effects, including `agent_dispatch`, as allowed or claim advisory harness candidate agents were runtime-invoked.
-- Hardened governed memory and governance review handoff validation so response text cannot claim memory writes, approval capture, agent dispatch, external sends, or local application when the explicit side-effect boundary fields are false.
+- Hardened governed review handoff validation so response text cannot claim memory writes, approval capture, agent dispatch, external sends, or local application when the explicit side-effect boundary fields are false.
 - Hardened repository authority-boundary validation so concatenated agent/tool dispatch aliases and bracketed tool execution cannot bypass the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so indirect constructor-constructor dynamic code execution cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style `Function(...)` calls without `new` cannot create hidden authority paths in Concierge runtime source.
