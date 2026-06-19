@@ -244,10 +244,13 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\s*\[\s*['\"](?:getCurrentPosition|watchPosition)['\"]\s*\]\s*\("
     ),
     re.compile(r"\bNotification\.requestPermission\s*\("),
+    re.compile(r"\bNotification\.requestPermission\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\[\s*['\"]requestPermission['\"]\s*\]\s*\("),
     re.compile(r"\bpushManager\.subscribe\s*\("),
+    re.compile(r"\b\w+(?:\.\w+)*\.pushManager\.subscribe\.(?:call|apply)\s*\("),
     re.compile(r"\b\w+\s*\[\s*['\"]pushManager['\"]\s*\]\s*\[\s*['\"]subscribe['\"]\s*\]\s*\("),
     re.compile(r"\bPaymentRequest\s*\("),
+    re.compile(r"\b(?:PaymentRequest|(?:globalThis|window)\.PaymentRequest)\.(?:call|apply)\s*\("),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]PaymentRequest['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]PaymentRequest['\"]\s*\]\s*\("),
     re.compile(r"\bsendBeacon\s*\("),

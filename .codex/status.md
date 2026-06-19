@@ -49,6 +49,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened repository authority-boundary validation so bracket-style legacy clipboard commands cannot move local Concierge data outside governed visible export flows.
 - Hardened repository authority-boundary validation so bracket-style FileReader constructor aliases cannot read local files outside governed visible import/export flows.
 - Hardened repository authority-boundary validation so concatenated agent/tool dispatch aliases and bracketed tool execution cannot bypass the governed Napoleon bridge.
+- Hardened repository authority-boundary validation so `.call(...)` and `.apply(...)` aliases cannot bypass notification, push subscription, or payment guardrails outside governed visible Concierge controls.
 - Hardened repository authority-boundary validation so indirect constructor-constructor dynamic code execution cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style `Function(...)` calls without `new` cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so `Function(...)` constructor calls without `new` cannot create hidden authority paths in Concierge runtime source.
