@@ -893,7 +893,7 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/napoleonBridge.ts", source)
 
                 self.assertTrue(violations)
-                self.assertIn("bridge module network call must use named generated operation resolution", violations[0])
+                self.assertIn("bridge module network call must use named generated operation or Napoleon review resolution", violations[0])
 
     def test_network_scanner_rejects_browser_storage_mutation_inside_bridge_modules(self):
         for source in [
@@ -986,11 +986,27 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
               method: "GET",
             });
             """,
+            """
+            const target = resolveNapoleonGovernanceReviewOperation(endpoint);
+            response = await fetcher(target.url, { method: "POST" });
+            """,
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/descriptorDiscovery.ts", source)
 
                 self.assertEqual(violations, [])
+
+    def test_network_scanner_rejects_direct_napoleon_review_paths_inside_bridge_modules(self):
+        for source in [
+            'response = await fetcher("https://napoleon.example/chief-of-staff/reviews/governance", { method: "POST" });',
+            'response = await fetcher(endpoint + "/chief-of-staff/reviews/governance", { method: "POST" });',
+            'response = await fetcher(`${endpoint}/chief-of-staff/reviews/governance`, { method: "POST" });',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/governanceReviewSubmission.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("bridge module network call must use named generated operation or Napoleon review resolution", violations[0])
 
     def test_scanner_allows_governed_bridge_and_proposal_language(self):
         violations = validate_repo.scan_authority_boundary_text(

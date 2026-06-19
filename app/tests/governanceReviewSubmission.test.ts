@@ -263,6 +263,8 @@ test("governance review submission posts packet without capturing approval or ap
   assert.equal(JSON.stringify(posted).includes("token_governance"), false);
   assert.equal(posted?.requestKind, "chief_of_staff_steering_handoff");
   assert.equal(posted?.handoffKind, "governance_review_handoff");
+  assert.equal(posted?.bridgeTargetPath, "/v1/concierge/chief-of-staff/steering");
+  assert.equal(posted?.bridgeTargetOperation, "chief_of_staff_steering");
   assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "governance_review");
   assert.equal((posted?.chiefOfStaffRequest as { requested_authority_tier: string }).requested_authority_tier, "advisory_review");
   assert.equal(posted?.profileMode, "child_protected_user");
@@ -281,6 +283,72 @@ test("governance review submission posts packet without capturing approval or ap
   assert.equal(result.externalSendPerformed, false);
   assert.equal(result.appliedLocally, false);
   assert.equal(result.governanceDecision.outcome, "requires_review");
+});
+
+test("governance review submission maps Napoleon root endpoint to explicit governance review path", async () => {
+  const review = buildReview();
+  let posted: Record<string, unknown> | undefined;
+  let targetUrl: string | undefined;
+
+  await submitGovernanceReviewForNapoleonReview(review, {
+    conversationId: "conv_governance",
+    traceId: "trace_submit",
+    getEndpoint: () => "https://napoleon.example",
+    descriptorConnection: readyDescriptorConnection,
+    fetch: async (url: string, init?: TestFetchInit) => {
+      targetUrl = url;
+      posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return {
+        ok: true,
+        status: 202,
+        json: async () => ({
+          text: "Napoleon accepted the governance review packet.",
+          governanceDecision: {
+            decision_id: "decision_governance_remote",
+            request_id: "cos_trace_submit",
+            outcome: "requires_review",
+            authority_tier: "advisory_review",
+            approval_requirement: "owner_review",
+            rationale: "Governance review requires Napoleon proof before action.",
+            blocked_effects: ["approval_capture", "memory_write", "external_send"],
+            trace_id: "trace_submit",
+            audit_id: "audit_governance_remote",
+          },
+          traceEnvelope: {
+            trace_id: "trace_submit",
+            parent_trace_id: "conv_governance",
+            actor_id: "napoleon.governance",
+            request_id: "cos_trace_submit",
+            decision_id: "decision_governance_remote",
+            timestamp: "2026-06-15T00:00:00.000Z",
+          },
+          auditEnvelope: {
+            audit_id: "audit_governance_remote",
+            trace_id: "trace_submit",
+            decision_id: "decision_governance_remote",
+            actor_id: "napoleon.governance",
+            authority_tier: "advisory_review",
+            approval_requirement: "owner_review",
+            evidence_links: ["trace:trace_governance"],
+          },
+          appliedLocally: false,
+          memoryWritePerformed: false,
+          approvalCaptured: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+        }),
+      };
+    },
+  });
+
+  assert.equal(targetUrl, "https://napoleon.example/chief-of-staff/reviews/governance");
+  assert.equal(posted?.requestKind, "governance_review_handoff");
+  assert.equal(posted?.handoffKind, "governance_review_handoff");
+  assert.equal(posted?.bridgeTargetPath, "/chief-of-staff/reviews/governance");
+  assert.equal(posted?.bridgeTargetOperation, "governance_review");
+  assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "governance_review");
+  assert.equal((posted?.governanceRequest as { target: string }).target, "napoleon.governance");
+  assert.equal((posted?.boundary as { approvalCaptured: boolean }).approvalCaptured, false);
 });
 
 test("governance review submission fails closed when Napoleon denies review", async () => {

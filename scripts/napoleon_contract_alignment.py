@@ -32,6 +32,10 @@ NAPOLEON_REVIEW_CONTRACT_PATHS = {
     "/evolution/proposals",
 }
 
+SUPPORTED_REVIEW_RUNTIME_PATHS = {
+    "/chief-of-staff/reviews/governance",
+}
+
 NAPOLEON_DISCOVERY_CONTRACT_PATHS = {
     "/agents",
     "/agents/{agent_id}",
@@ -123,6 +127,7 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
     napoleon_only = sorted(napoleon_set - concierge_set)
     concierge_only = sorted(concierge_set - napoleon_set)
     supported_advisory_runtime_paths = present_paths(napoleon_set, SUPPORTED_ADVISORY_RUNTIME_PATHS)
+    supported_review_runtime_paths = present_paths(napoleon_set, SUPPORTED_REVIEW_RUNTIME_PATHS)
     napoleon_review_contract_paths = present_paths(napoleon_set, NAPOLEON_REVIEW_CONTRACT_PATHS)
     napoleon_discovery_contract_paths = present_paths(napoleon_set, NAPOLEON_DISCOVERY_CONTRACT_PATHS)
     aliases = local_handoff_aliases(concierge_set, napoleon_set)
@@ -135,7 +140,9 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
     review_paths_needing_runtime_mapping = sorted(
         path
         for path in napoleon_review_contract_paths
-        if path not in concierge_set and path not in SUPPORTED_ADVISORY_RUNTIME_PATHS
+        if path not in concierge_set
+        and path not in SUPPORTED_ADVISORY_RUNTIME_PATHS
+        and path not in SUPPORTED_REVIEW_RUNTIME_PATHS
     )
     review_paths_without_local_alias = sorted(path for path in review_paths_needing_runtime_mapping if path not in alias_covered_paths)
 
@@ -148,6 +155,7 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
         "napoleonOnlyPaths": napoleon_only,
         "conciergeOnlyPaths": concierge_only,
         "supportedAdvisoryRuntimePaths": supported_advisory_runtime_paths,
+        "supportedReviewRuntimePaths": supported_review_runtime_paths,
         "napoleonReviewContractPaths": napoleon_review_contract_paths,
         "napoleonDiscoveryContractPaths": napoleon_discovery_contract_paths,
         "conciergeLocalHandoffAliases": aliases,

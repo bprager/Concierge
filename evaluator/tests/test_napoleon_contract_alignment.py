@@ -194,9 +194,11 @@ paths:
             report["supportedAdvisoryRuntimePaths"],
             ["/cos/capabilities", "/cos/descriptor", "/cos/text-turn", "/cos/trace/{trace_id}"],
         )
+        self.assertEqual(report["supportedReviewRuntimePaths"], ["/chief-of-staff/reviews/governance"])
         self.assertIn("/chief-of-staff/reviews/evolution-proposals", report["napoleonReviewContractPaths"])
         self.assertIn("/evolution/proposals", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertIn("/observability/traces", report["napoleonReviewPathsNeedingRuntimeMapping"])
+        self.assertNotIn("/chief-of-staff/reviews/governance", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertIn("/chief-of-staff/requests", report["napoleonReviewPathsWithoutLocalAlias"])
         self.assertIn("/chief-of-staff/reviews/new-agent-proposals", report["napoleonReviewPathsWithoutLocalAlias"])
         self.assertIn("/observability/traces", report["napoleonReviewPathsWithoutLocalAlias"])

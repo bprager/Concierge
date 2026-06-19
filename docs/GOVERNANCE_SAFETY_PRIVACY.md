@@ -53,7 +53,7 @@ Every review panel must show decision ID, audit ID, authority tier, approval req
 
 Local acknowledgement is not approval. It records that the review state was seen, but it must not execute side effects, write memory, send externally, dispatch agents, or capture Napoleon approval.
 
-Live governance review handoff is also not approval. It sends the visible review packet through the governed Chief of Staff bridge only after endpoint and descriptor preflight pass and Rehearsal Mode is off. The handoff keeps approval capture, memory writes, agent dispatch, external sends, local application, and runtime authority blocked. Remote `deny` or `no_go` outcomes remain blocked, and any response that claims Concierge performed those effects is a contract mismatch.
+Live governance review handoff is also not approval. It sends the visible review packet through a named governed review route only after endpoint and descriptor preflight pass and Rehearsal Mode is off. Generated Concierge-compatible endpoints and the local harness use the canonical Chief of Staff steering route; Napoleon root or explicit review endpoints use `/chief-of-staff/reviews/governance`. The handoff keeps approval capture, memory writes, agent dispatch, external sends, local application, and runtime authority blocked. Remote `deny` or `no_go` outcomes remain blocked, and any response that claims Concierge performed those effects is a contract mismatch.
 
 Child protected mode uses stricter wording. It must not imply secret-keeping, hidden external action, or guardian-bypassing approval.
 

@@ -3,10 +3,14 @@ import test from "node:test";
 import {
   BRIDGE_OPERATIONS,
   GENERATED_BRIDGE_CONTRACT_SOURCE,
+  NAPOLEON_REVIEW_OPERATIONS,
+  buildGovernanceReviewBridgeTarget,
   buildNapoleonBridgeUrl,
+  buildNapoleonReviewUrl,
   describeBridgeOperationSummary,
   describeTaxonomyReviewBridgeSummary,
   getBridgeOperation,
+  getNapoleonReviewOperation,
 } from "../src/bridgeOperations.js";
 
 const { readFileSync } = await import("node:fs");
@@ -115,6 +119,12 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   assert.equal(getBridgeOperation("text_turn").requestKind, "text_turn");
   assert.equal(getBridgeOperation("chief_of_staff_steering").requestKind, "chief_of_staff_steering_handoff");
   assert.equal(getBridgeOperation("memory_proposal_review").requestKind, "memory_proposal_review_handoff");
+  assert.equal(getNapoleonReviewOperation("governance_review").requestKind, "governance_review_handoff");
+  assert.equal(getNapoleonReviewOperation("governance_review").path, "/chief-of-staff/reviews/governance");
+  assert.deepEqual(
+    NAPOLEON_REVIEW_OPERATIONS.map((operation) => operation.governedBridgeOnly),
+    [true],
+  );
 });
 
 test("bridge operation registry exposes canonical required response fields", () => {
@@ -203,6 +213,59 @@ test("bridge URL builder drops pasted operation query strings before resolving a
     ),
     "https://napoleon.example/concierge/v1/concierge/turn",
   );
+});
+
+test("Napoleon review URL builder resolves explicit governance review paths", () => {
+  assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example", "governance_review"),
+    "https://napoleon.example/chief-of-staff/reviews/governance",
+  );
+  assert.equal(
+    buildNapoleonReviewUrl(
+      "https://napoleon.example/chief-of-staff/reviews/governance?debug=1",
+      "governance_review",
+    ),
+    "https://napoleon.example/chief-of-staff/reviews/governance",
+  );
+});
+
+test("governance review target keeps generated Concierge endpoints compatible", () => {
+  assert.deepEqual(buildGovernanceReviewBridgeTarget("https://napoleon.example/concierge"), {
+    url: "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering",
+    path: "/v1/concierge/chief-of-staff/steering",
+    requestKind: "chief_of_staff_steering_handoff",
+    operationId: "chief_of_staff_steering",
+  });
+  assert.deepEqual(
+    buildGovernanceReviewBridgeTarget("https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering"),
+    {
+      url: "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering",
+      path: "/v1/concierge/chief-of-staff/steering",
+      requestKind: "chief_of_staff_steering_handoff",
+      operationId: "chief_of_staff_steering",
+    },
+  );
+  assert.deepEqual(buildGovernanceReviewBridgeTarget("http://127.0.0.1:8787"), {
+    url: "http://127.0.0.1:8787/v1/concierge/chief-of-staff/steering",
+    path: "/v1/concierge/chief-of-staff/steering",
+    requestKind: "chief_of_staff_steering_handoff",
+    operationId: "chief_of_staff_steering",
+  });
+});
+
+test("governance review target maps Napoleon root endpoints to the explicit review contract path", () => {
+  assert.deepEqual(buildGovernanceReviewBridgeTarget("https://napoleon.example"), {
+    url: "https://napoleon.example/chief-of-staff/reviews/governance",
+    path: "/chief-of-staff/reviews/governance",
+    requestKind: "governance_review_handoff",
+    operationId: "governance_review",
+  });
+  assert.deepEqual(buildGovernanceReviewBridgeTarget("https://napoleon.example/chief-of-staff/reviews/governance"), {
+    url: "https://napoleon.example/chief-of-staff/reviews/governance",
+    path: "/chief-of-staff/reviews/governance",
+    requestKind: "governance_review_handoff",
+    operationId: "governance_review",
+  });
 });
 
 test("describes governed bridge operation routes without endpoint hosts or secrets", () => {

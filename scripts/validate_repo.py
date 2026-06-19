@@ -425,8 +425,11 @@ BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
     r"\b(?:fetcher|fetch)\s*\(\s*("
     r"['\"]https?://"
     r"|['\"][^'\"]*/v1/"
+    r"|['\"][^'\"]*/chief-of-staff/"
     r"|`[^`]*\$\{[^`]*\}[^`]*/v1/"
+    r"|`[^`]*\$\{[^`]*\}[^`]*/chief-of-staff/"
     r"|\w+\s*\+\s*['\"][^'\"]*/v1/"
+    r"|\w+\s*\+\s*['\"][^'\"]*/chief-of-staff/"
     r")"
 )
 
@@ -1327,7 +1330,7 @@ def scan_ungoverned_network_text(path: str, text: str) -> list[str]:
         for line_number, line in enumerate(text.splitlines(), start=1):
             if BRIDGE_MODULE_DIRECT_TARGET_PATTERN.search(line):
                 violations.append(
-                    f"{path}:{line_number}: bridge module network call must use named generated operation resolution"
+                    f"{path}:{line_number}: bridge module network call must use named generated operation or Napoleon review resolution"
                 )
         return violations
     violations: list[str] = storage_violations

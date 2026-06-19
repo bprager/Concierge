@@ -1,4 +1,4 @@
-import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
+import { resolveNapoleonGovernanceReviewOperation } from "./bridgeEndpoint.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
@@ -341,16 +341,18 @@ export async function submitGovernanceReviewForNapoleonReview(
     profileMode,
   });
 
-  const targetEndpoint = resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_steering");
+  const target = resolveNapoleonGovernanceReviewOperation(endpoint);
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<GovernanceReviewFetch>>;
   try {
-    response = await fetcher(targetEndpoint, {
+    response = await fetcher(target.url, {
       method: "POST",
       headers: buildGovernanceReviewHeaders(authToken),
       body: JSON.stringify({
-        requestKind: "chief_of_staff_steering_handoff",
+        requestKind: target.requestKind,
         handoffKind: "governance_review_handoff",
+        bridgeTargetPath: target.path,
+        bridgeTargetOperation: target.operationId,
         profileMode,
         descriptorStatus: descriptorConnection.descriptorStatus,
         descriptorConnection,

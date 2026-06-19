@@ -11,6 +11,7 @@ NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napol
 The report is local evidence only. It does not contact Napoleon, approve a runtime, write memory, dispatch agents, send externally, or grant authority. It also separates exact path drift from practical integration readiness:
 
 - `supportedAdvisoryRuntimePaths` lists Napoleon advisory harness paths Concierge already knows how to use directly, such as `/cos/descriptor`, `/cos/capabilities`, `/cos/text-turn`, and `/cos/trace/{trace_id}`.
+- `supportedReviewRuntimePaths` lists Napoleon review paths Concierge can target explicitly through a named governed bridge alias, while still requiring proof-bearing review responses.
 - `conciergeLocalHandoffAliases` lists local generated Concierge operations that currently package review handoffs, such as Chief of Staff steering or evaluator review packets. These are aliases, not proof that Napoleon's broader review endpoints are runtime-compatible.
 - `napoleonReviewPathsNeedingRuntimeMapping` lists Napoleon review, governance, observability, and evolution paths that still need explicit bridge-client mapping or a Napoleon-side `/v1/concierge/...` equivalent before Concierge should send to them.
 - `napoleonReviewPathsWithoutLocalAlias` lists contract paths that do not even have a current local handoff alias.
@@ -55,6 +56,8 @@ Concierge can also adapt an explicitly configured `/cos/text-turn` Napoleon advi
 
 Sanitized evidence capture and comparison now accept the explicit `/cos/descriptor` plus `/cos/text-turn` advisory harness flow while preserving the actual `/cos/text-turn` target path and privacy checks. After a successful explicit `/cos/text-turn` app send or capture, Concierge records only whether the observability envelope was observed and matched the returned text-turn trace. The trace envelope body, endpoint host, request body, response body, and token are not retained.
 
+Governance review handoff now has a named Napoleon review-path mapping. Generated Concierge-compatible endpoints, including the local harness, continue to use `/v1/concierge/chief-of-staff/steering` with the `chief_of_staff_steering_handoff` request kind. Napoleon root endpoints or explicit governance review endpoints use `/chief-of-staff/reviews/governance` with the `governance_review_handoff` request kind. Both paths still require descriptor preflight, Rehearsal Mode off, matching governance/trace/audit proof, and explicit false side-effect fields before Concierge displays the handoff as reviewed.
+
 This is still not full path alignment. The remaining work is to align the broader review/evolution proposal paths with Napoleon's `/chief-of-staff/...`, `/governance/...`, `/observability/...`, and `/evolution/...` surfaces or to have Napoleon expose the `/v1/concierge/...` contract.
 
 ## Review and Evolution Mapping Gap
@@ -66,11 +69,14 @@ The known Napoleon review/evolution surfaces that still need explicit runtime ma
 - `/chief-of-staff/requests`
 - `/chief-of-staff/reviews/evaluation`
 - `/chief-of-staff/reviews/evolution-proposals`
-- `/chief-of-staff/reviews/governance`
 - `/chief-of-staff/reviews/new-agent-proposals`
 - `/governance/evaluate`
 - `/observability/traces`
 - `/evolution/proposals`
+
+The explicit review path currently mapped is:
+
+- `/chief-of-staff/reviews/governance`
 
 The current local aliases are useful packaging boundaries:
 
