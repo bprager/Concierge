@@ -450,6 +450,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setTaxonomyReviewFailure(null);
   }
 
+  function clearTaxonomyReviewDraftState() {
+    setTaxonomyReviewDraft(null);
+    setTaxonomyReviewSubmission(null);
+    setTaxonomyReviewFailure(null);
+  }
+
   function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {
     setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response));
     setNapoleonProofExportJson(null);
@@ -628,6 +634,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
+    clearTaxonomyReviewDraftState();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_endpoint", value.trim());
@@ -648,6 +655,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
+    clearTaxonomyReviewDraftState();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_auth_token", value.trim());
@@ -666,6 +674,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
+    clearTaxonomyReviewDraftState();
   }
 
   function updateRehearsalMode(enabled: boolean) {
@@ -680,6 +689,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       clearChiefOfStaffCapabilities();
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
+      clearTaxonomyReviewDraftState();
     }
   }
 
@@ -1409,6 +1419,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       clearChiefOfStaffCapabilities();
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
+      clearTaxonomyReviewDraftState();
       const discoveryFailed =
         result.connection.failClosedReason === "auth_failure" ||
         result.connection.failClosedReason === "bridge_timeout" ||
@@ -1436,6 +1447,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       clearChiefOfStaffCapabilities();
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
+      clearTaxonomyReviewDraftState();
       emitEvent("descriptor_discovery_failed", {
         traceId: newTraceId(),
         conversationId,

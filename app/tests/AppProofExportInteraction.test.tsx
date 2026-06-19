@@ -2704,6 +2704,60 @@ test("clears stale taxonomy review drafts when local capability metadata is clea
   }
 });
 
+test("clears taxonomy review drafts when Napoleon endpoint changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Draft taxonomy review" }));
+    await view.findByText("Chief of Staff taxonomy review draft");
+
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+
+    assert.equal(view.queryByText("Chief of Staff taxonomy review draft"), null);
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send taxonomy review to Napoleon review" })), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
+test("clears taxonomy review drafts when Rehearsal Mode is enabled", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      fireEvent.click(rehearsalCheckbox);
+    }
+
+    await user.click(view.getByRole("button", { name: "Draft taxonomy review" }));
+    await view.findByText("Chief of Staff taxonomy review draft");
+
+    fireEvent.click(rehearsalCheckbox);
+
+    assert.equal(view.queryByText("Chief of Staff taxonomy review draft"), null);
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send taxonomy review to Napoleon review" })), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows guardian review on child protected taxonomy review drafts before handoff", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([

@@ -212,6 +212,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Cleared local governance and memory review drafts when the active user profile changes so proposal-only review controls cannot reuse stale adult, guest, collaborator, or child-protected context.
 - Cleared local Chief of Staff steering and taxonomy review drafts when the active user profile changes so proposal-only capability handoffs cannot reuse stale adult, guest, collaborator, or child-protected context.
 - Cleared local governance and memory review drafts when endpoint, bearer token, descriptor mode, descriptor discovery, or Rehearsal Mode state changes so proposal-only review controls cannot reuse stale connection or live/local context.
+- Cleared local Chief of Staff taxonomy review drafts and results when endpoint, bearer token, descriptor mode, descriptor discovery, or Rehearsal Mode state changes so taxonomy packets cannot reuse stale handoff context.
 - Tightened Chief of Staff steering draft evidence so correctly blocked unsafe traces are not included in evolution proposal evidence when they merely share a capability label with the selected missing/degraded recommendation.
 - Preserved unreadable Napoleon descriptor response bodies as fail-closed HTTP descriptor state so descriptor parser failures do not escape connection preflight or expose response details.
 - Added full returned governance context to governed review response panels, including authority tier, approval requirement, rationale, blocked effects, trace, and audit details.
