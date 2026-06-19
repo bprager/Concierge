@@ -68,6 +68,28 @@ export interface MemoryProposalReviewView {
   details: Array<{ label: string; value: string }>;
 }
 
+export interface GovernedReviewResponseInput {
+  text: string;
+  governanceDecision: {
+    outcome: string;
+    decision_id: string;
+    authority_tier: string;
+    approval_requirement: string;
+    rationale: string;
+    blocked_effects: string[];
+  };
+  traceEnvelope: {
+    trace_id: string;
+  };
+  auditEnvelope: {
+    audit_id: string;
+  };
+}
+
+export interface GovernedReviewResponseView {
+  rows: Array<{ label: string; value: string }>;
+}
+
 export interface DelegationView {
   heading: string;
   body: string;
@@ -776,6 +798,33 @@ export function describeGovernedHandoffReadiness(
       "This handoff readiness check is not Napoleon approval, does not apply changes, does not write memory, does not dispatch agents, and does not send externally.",
     blockedEffects,
     items,
+  };
+}
+
+export function describeGovernedReviewResponse(
+  result: GovernedReviewResponseInput,
+  localEffects: string,
+): GovernedReviewResponseView {
+  return {
+    rows: [
+      { label: "Napoleon review response", value: sanitizeVisibleProvenanceValue(result.text) },
+      {
+        label: "Governance",
+        value: `${sanitizeVisibleProvenanceValue(result.governanceDecision.outcome)}, decision ${sanitizeVisibleProvenanceValue(
+          result.governanceDecision.decision_id,
+        )}`,
+      },
+      { label: "Authority tier", value: sanitizeVisibleProvenanceValue(result.governanceDecision.authority_tier) },
+      {
+        label: "Approval requirement",
+        value: sanitizeVisibleProvenanceValue(result.governanceDecision.approval_requirement),
+      },
+      { label: "Rationale", value: sanitizeVisibleProvenanceValue(result.governanceDecision.rationale) },
+      { label: "Trace", value: sanitizeVisibleProvenanceValue(result.traceEnvelope.trace_id) },
+      { label: "Audit", value: sanitizeVisibleProvenanceValue(result.auditEnvelope.audit_id) },
+      { label: "Blocked effects", value: sanitizeVisibleProvenanceList(result.governanceDecision.blocked_effects) },
+      { label: "Local effects", value: sanitizeVisibleProvenanceValue(localEffects) },
+    ],
   };
 }
 

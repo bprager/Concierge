@@ -14,6 +14,7 @@ import {
   describeBridgeFailureTranscriptMessage,
   describeGovernedHandoffFailure,
   describeGovernedHandoffReadiness,
+  describeGovernedReviewResponse,
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
@@ -1011,6 +1012,49 @@ test("describes governed handoff failure with returned governance references", (
   assert.ok(message.includes("profile adult_owner"));
   assert.ok(message.includes("Blocked effects: memory_write, agent_dispatch, external_send, approval_capture"));
   assert.ok(message.includes("did not submit the review"));
+});
+
+test("redacts unsafe returned provenance from governed review responses", () => {
+  const view = describeGovernedReviewResponse(
+    {
+      text: "Review stored at http://127.0.0.1:8787/private with Bearer local-secret-token",
+      governanceDecision: {
+        outcome: "requires_review",
+        decision_id: "Bearer local-secret-token",
+        authority_tier: "advisory_review",
+        approval_requirement: "Napoleon Chief of Staff review",
+        rationale: "See http://127.0.0.1:8787/private",
+        blocked_effects: ["memory_write", "http://127.0.0.1:8787/private", "Bearer local-secret-token"],
+      },
+      traceEnvelope: {
+        trace_id: "http://127.0.0.1:8787/trace",
+      },
+      auditEnvelope: {
+        audit_id: "Bearer audit-secret",
+      },
+    },
+    "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
+  );
+  const visibleText = JSON.stringify(view).toLocaleLowerCase();
+
+  assert.equal(visibleText.includes("127.0.0.1"), false);
+  assert.equal(visibleText.includes("local-secret-token"), false);
+  assert.equal(visibleText.includes("audit-secret"), false);
+  assert.equal(visibleText.includes("bearer"), false);
+  assert.deepEqual(view.rows, [
+    { label: "Napoleon review response", value: "redacted" },
+    { label: "Governance", value: "requires_review, decision redacted" },
+    { label: "Authority tier", value: "advisory_review" },
+    { label: "Approval requirement", value: "Napoleon Chief of Staff review" },
+    { label: "Rationale", value: "redacted" },
+    { label: "Trace", value: "redacted" },
+    { label: "Audit", value: "redacted" },
+    { label: "Blocked effects", value: "memory_write, redacted, redacted" },
+    {
+      label: "Local effects",
+      value: "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
+    },
+  ]);
 });
 
 test("describes descriptor-specific governed handoff failure reasons", () => {

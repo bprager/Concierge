@@ -60,6 +60,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened visible Napoleon delegation and proof panels to redact unsafe returned provenance values such as endpoint-like strings, loopback hosts, bearer credentials, authorization text, token-like values, and secret-like values before display.
 - Hardened visible fail-closed bridge and governed handoff messages to redact unsafe returned blocked-effect values such as endpoint-like strings, loopback hosts, bearer credentials, token-like values, and secret-like values before display.
 - Hardened visible Napoleon transcript metadata to redact unsafe returned target capability, decision, audit, and blocked-effect values before display.
+- Hardened visible governed review responses to redact unsafe returned review text, decision, audit, trace, rationale, and blocked-effect values before display.
 - Hardened bridge readiness proof exports to redact unsafe captured evidence values such as endpoint-like paths, loopback hosts, bearer credentials, and authorization text before local readiness proof JSON is created.
 - Hardened Conversation Capability Intelligence storage so appended ledger signals are re-sanitized before Chief of Staff steering drafts, persistence, export, or query answers can reuse evidence references.
 - Hardened Conversation Capability Intelligence so labels and evidence references are sanitized before local storage, query answers, persistence, export, and steering evidence selection.

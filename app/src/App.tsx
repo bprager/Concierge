@@ -107,6 +107,7 @@ import {
   describeDelegation,
   describeGovernedHandoffFailure,
   describeGovernedHandoffReadiness,
+  describeGovernedReviewResponse,
   describeGovernanceDecision,
   describeGovernanceReview,
   describeLiveBridgeReadiness,
@@ -2458,28 +2459,16 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const napoleonDelegationView = lastNapoleonPresentation.delegation ?? describeDelegation(undefined);
 
   function renderGovernedReviewResponse(result: GovernedReviewResponseView, localEffects: string) {
+    const responseView = describeGovernedReviewResponse(result, localEffects);
+
     return (
       <dl>
-        <dt>Napoleon review response</dt>
-        <dd>{result.text}</dd>
-        <dt>Governance</dt>
-        <dd>
-          {result.governanceDecision.outcome}, decision {result.governanceDecision.decision_id}
-        </dd>
-        <dt>Authority tier</dt>
-        <dd>{result.governanceDecision.authority_tier}</dd>
-        <dt>Approval requirement</dt>
-        <dd>{result.governanceDecision.approval_requirement}</dd>
-        <dt>Rationale</dt>
-        <dd>{result.governanceDecision.rationale}</dd>
-        <dt>Trace</dt>
-        <dd>{result.traceEnvelope.trace_id}</dd>
-        <dt>Audit</dt>
-        <dd>{result.auditEnvelope.audit_id}</dd>
-        <dt>Blocked effects</dt>
-        <dd>{result.governanceDecision.blocked_effects.join(", ")}</dd>
-        <dt>Local effects</dt>
-        <dd>{localEffects}</dd>
+        {responseView.rows.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
       </dl>
     );
   }
