@@ -40,6 +40,51 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             self.assertEqual(response["delegation"]["selectedAgents"][0]["displayName"], "Passive Brain")
             self.assertIn("memory_write", response["delegation"]["blockedEffects"])
 
+    def test_harness_supports_browser_cors_for_descriptor_and_text_turn(self):
+        with local_bridge_harness.running_harness() as base_url:
+            preflight = request.Request(
+                f"{base_url}/v1/concierge/turn",
+                headers={
+                    "Origin": "http://127.0.0.1:5178",
+                    "Access-Control-Request-Method": "POST",
+                    "Access-Control-Request-Headers": "authorization,content-type",
+                },
+                method="OPTIONS",
+            )
+            with request.urlopen(preflight, timeout=10) as response:
+                self.assertEqual(response.status, 204)
+                self.assertEqual(response.headers.get("Access-Control-Allow-Origin"), "*")
+                self.assertIn("POST", response.headers.get("Access-Control-Allow-Methods", ""))
+                self.assertIn("Authorization", response.headers.get("Access-Control-Allow-Headers", ""))
+
+            descriptor_req = request.Request(
+                f"{base_url}/v1/concierge/chief-of-staff/descriptor",
+                headers={"Origin": "http://127.0.0.1:5178", "Authorization": "Bearer local-harness-token"},
+                method="GET",
+            )
+            with request.urlopen(descriptor_req, timeout=10) as response:
+                self.assertEqual(response.headers.get("Access-Control-Allow-Origin"), "*")
+
+            turn_req = request.Request(
+                f"{base_url}/v1/concierge/turn",
+                data=json.dumps(
+                    {
+                        "requestKind": "text_turn",
+                        "traceId": "trace_cors",
+                        "profileMode": "adult_owner",
+                        "chiefOfStaffRequest": {"request_id": "cos_trace_cors"},
+                    }
+                ).encode("utf-8"),
+                headers={
+                    "Origin": "http://127.0.0.1:5178",
+                    "Authorization": "Bearer local-harness-token",
+                    "Content-Type": "application/json",
+                },
+                method="POST",
+            )
+            with request.urlopen(turn_req, timeout=10) as response:
+                self.assertEqual(response.headers.get("Access-Control-Allow-Origin"), "*")
+
     def test_harness_can_build_text_turn_response_with_forbidden_side_effect_claims(self):
         payload = {
             "requestKind": "text_turn",

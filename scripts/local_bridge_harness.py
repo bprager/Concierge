@@ -153,6 +153,11 @@ def build_review_response(
 class HarnessHandler(BaseHTTPRequestHandler):
     server_version = "ConciergeLocalBridgeHarness/0.1"
 
+    def do_OPTIONS(self) -> None:
+        self.send_response(204)
+        self.write_cors_headers()
+        self.end_headers()
+
     def do_GET(self) -> None:
         if self.path == "/v1/concierge/chief-of-staff/descriptor":
             self.write_json(
@@ -220,10 +225,17 @@ class HarnessHandler(BaseHTTPRequestHandler):
     def write_json(self, status: int, payload: dict[str, Any]) -> None:
         body = json.dumps(payload).encode("utf-8")
         self.send_response(status)
+        self.write_cors_headers()
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def write_cors_headers(self) -> None:
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Authorization, X-Napoleon-Auth, Content-Type")
+        self.send_header("Access-Control-Max-Age", "600")
 
     def log_message(self, _format: str, *_args: Any) -> None:
         return

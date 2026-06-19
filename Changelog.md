@@ -17,6 +17,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened live voice readiness so missing real-runtime proof is a blocker and child-protected readiness visibly blocks guardian approval capture.
 - Added OpenAPI-required response fields to the visible governed Napoleon route registry so contract-mismatch expectations are shown without exposing endpoint hosts or tokens.
 - Added returned target capability to successful Napoleon delegation details so the text UI shows both the handling capability and selected agents when Napoleon provides both.
+- Added browser CORS preflight support to the local Napoleon-compatible harness so the rendered Text Concierge shell can validate the local endpoint preset without treating it as real runtime authority.
 - Hardened repository authority-boundary validation so mixed bracket/dot direct history state and localStorage/sessionStorage aliases cannot retain, erase, or move prompts, proofs, tokens, or responses around governed flows.
 - Hardened repository authority-boundary validation so mixed bracket/dot localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.
 - Hardened repository authority-boundary validation so bracketed localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.
