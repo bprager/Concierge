@@ -15,6 +15,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened Chief of Staff taxonomy review handoff so stale taxonomy review drafts scoped to a different active profile fail closed before any governed endpoint call.
 - Hardened profile changes so visible bridge failure banners clear with returned Napoleon proof, delegation, and governed handoff state instead of lingering across user scopes.
 - Hardened live voice readiness so missing real-runtime proof is a blocker and child-protected readiness visibly blocks guardian approval capture.
+- Hardened repository authority-boundary validation so mixed bracket/dot localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.
 - Hardened repository authority-boundary validation so bracketed localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.
 - Hardened repository authority-boundary validation so bracketed IndexedDB and Cache Storage `.call(...)` and `.apply(...)` aliases cannot retain prompts, proofs, transcripts, or responses outside bounded visible stores.
 - Hardened repository authority-boundary validation so bracketed history state `.call(...)` and `.apply(...)` aliases cannot retain prompts, proofs, or responses in browser URL state around governed flows.
