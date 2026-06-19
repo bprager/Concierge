@@ -216,8 +216,16 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\b(?:navigator|window\.navigator)\.(?:usb|serial|hid|bluetooth|credentials)\."
         r"(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\s*\("
     ),
+    re.compile(
+        r"\b(?:navigator|window\.navigator)\.(?:usb|serial|hid|bluetooth|credentials)\."
+        r"(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\.(?:call|apply)\s*\("
+    ),
     re.compile(r"\b(?:navigator|window\.navigator)\.permissions\.query\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator)\.permissions\.query\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.geolocation\.(?:getCurrentPosition|watchPosition)\s*\("),
+    re.compile(
+        r"\b(?:navigator|window\.navigator)\.geolocation\.(?:getCurrentPosition|watchPosition)\.(?:call|apply)\s*\("
+    ),
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"](?:usb|serial|hid|bluetooth|credentials)['\"]\s*\]"
@@ -289,6 +297,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]FileReader['\"]\s*\]\s*\("),
     re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$]*\.(?:readAsText|readAsArrayBuffer|readAsDataURL|readAsBinaryString)\s*\("),
     re.compile(
+        r"\b[A-Za-z_$][A-Za-z0-9_$]*\.(?:readAsText|readAsArrayBuffer|readAsDataURL|readAsBinaryString)\.(?:call|apply)\s*\("
+    ),
+    re.compile(
         r"\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:readAsText|readAsArrayBuffer|readAsDataURL|readAsBinaryString)['\"]\s*\]\s*\("
     ),
     re.compile(r"\bWebAssembly\.(?:compile|compileStreaming|instantiate|instantiateStreaming)\s*\("),
@@ -300,8 +311,10 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
     re.compile(r"\b(?:indexedDB|window\.indexedDB)\.(?:open|deleteDatabase)\s*\("),
+    re.compile(r"\b(?:indexedDB|window\.indexedDB)\.(?:open|deleteDatabase)\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]indexedDB['\"]\s*\]\s*\[\s*['\"](?:open|deleteDatabase)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:caches|window\.caches)\.(?:open|delete|match|put)\s*\("),
+    re.compile(r"\b(?:caches|window\.caches)\.(?:open|delete|match|put)\.(?:call|apply)\s*\("),
     re.compile(r"\bwindow\s*\[\s*['\"]caches['\"]\s*\]\s*\[\s*['\"](?:open|delete|match|put)['\"]\s*\]\s*\("),
     re.compile(r"\bglobalThis\s*\[\s*['\"]caches['\"]\s*\]\s*\[\s*['\"](?:open|delete|match|put)['\"]\s*\]\s*\("),
     re.compile(r"\bdocument\.cookie\s*="),

@@ -23,6 +23,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened Chief of Staff taxonomy review handoff so stale taxonomy review drafts scoped to a different active profile fail closed before any governed endpoint call.
 - Hardened profile changes so visible bridge failure banners clear with returned Napoleon proof, delegation, and governed handoff state.
 - Hardened live voice readiness so missing real-runtime proof is a blocker and child-protected readiness visibly blocks guardian approval capture.
+- Hardened repository authority-boundary validation so `.call(...)` and `.apply(...)` aliases cannot bypass browser persistence, FileReader, permission, geolocation, device, or credential guardrails outside governed visible flows.
 - Hardened repository authority-boundary validation so WebAssembly `Module` and `Instance` constructors cannot introduce hidden local executable paths outside governed visible flows.
 - Hardened repository authority-boundary validation so `createObjectURL.call(...)` and `createObjectURL.apply(...)` aliases cannot introduce hidden local executable paths outside governed visible flows.
 - Hardened repository authority-boundary validation so bracket-style object URL creation aliases cannot introduce hidden local executable paths outside governed visible flows.

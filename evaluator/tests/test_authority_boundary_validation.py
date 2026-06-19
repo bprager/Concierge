@@ -329,7 +329,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_detects_browser_persistence_side_channels(self):
         for source in [
             'const db = await indexedDB.open("concierge-raw-transcripts");',
+            'const db = await indexedDB.open.call(indexedDB, "concierge-raw-transcripts");',
             'const cache = await caches.open("concierge-hidden-cache");',
+            'const cache = await window.caches.open.apply(window.caches, ["concierge-hidden-cache"]);',
             'await window["caches"]["open"]("concierge-hidden-cache");',
             'document.cookie = "concierge_secret=raw-transcript";',
             'window.document.cookie = "concierge_secret=raw-transcript";',
@@ -349,6 +351,7 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "const directory = await window.showDirectoryPicker();",
             "const reader = new FileReader();",
             "reader.readAsText(file);",
+            "reader.readAsText.call(reader, file);",
             "reader.readAsArrayBuffer(file);",
             "reader.readAsDataURL(file);",
             "reader.readAsBinaryString(file);",
@@ -447,13 +450,17 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_detects_privileged_browser_device_account_and_payment_side_channels(self):
         for source in [
             "await navigator.usb.requestDevice({ filters: [] });",
+            "await navigator.usb.requestDevice.call(navigator.usb, { filters: [] });",
             "await navigator.serial.requestPort();",
             "await navigator.hid.requestDevice({ filters: [] });",
             "await navigator.bluetooth.requestDevice({ acceptAllDevices: true });",
             "await navigator.credentials.get({ password: true });",
+            "await navigator.credentials.get.apply(navigator.credentials, [{ password: true }]);",
             'await navigator.permissions.query({ name: "camera" });',
+            'await navigator.permissions.query.call(navigator.permissions, { name: "camera" });',
             'await window.navigator.permissions.query({ name: "geolocation" });',
             "navigator.geolocation.getCurrentPosition(onPosition);",
+            "navigator.geolocation.getCurrentPosition.call(navigator.geolocation, onPosition);",
             "const watchId = navigator.geolocation.watchPosition(onPosition);",
             'await Notification.requestPermission();',
             "await registration.pushManager.subscribe(options);",
