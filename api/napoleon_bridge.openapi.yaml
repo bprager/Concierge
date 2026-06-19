@@ -328,6 +328,48 @@ paths:
                         enum: [not_checked, valid, invalid]
                       canAttemptLiveBridge:
                         type: boolean
+  /v1/concierge/chief-of-staff/capabilities:
+    get:
+      summary: Return advisory Chief of Staff capabilities without granting authority
+      security:
+        - NapoleonBearer: []
+      responses:
+        "200":
+          description: Advisory capability catalog
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [serviceId, capabilities, runtimeAuthority, blockedEffects]
+                properties:
+                  serviceId:
+                    type: string
+                    const: napoleon.chief_of_staff
+                  capabilities:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, label, description, authorityTier, proposalOnly]
+                      properties:
+                        id:
+                          type: string
+                        label:
+                          type: string
+                        description:
+                          type: string
+                        authorityTier:
+                          type: string
+                          enum: [metadata_only, advisory_review, prepare_only, approval_required, prohibited]
+                        proposalOnly:
+                          type: boolean
+                          const: true
+                  runtimeAuthority:
+                    type: boolean
+                    const: false
+                  blockedEffects:
+                    type: array
+                    items:
+                      type: string
   /v1/concierge/chief-of-staff/steering:
     post:
       summary: Submit a proposal-only capability steering draft to Napoleon Chief of Staff review

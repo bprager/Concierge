@@ -29,6 +29,28 @@ DESCRIPTOR = {
     ],
 }
 
+CAPABILITIES = {
+    "serviceId": "napoleon.chief_of_staff",
+    "capabilities": [
+        {
+            "id": "napoleon.capability.governed_text_turn",
+            "label": "Governed text turn",
+            "description": "Prepare advisory text responses with governance, trace, and audit provenance.",
+            "authorityTier": "prepare_only",
+            "proposalOnly": True,
+        },
+        {
+            "id": "napoleon.capability.capability_steering",
+            "label": "Capability steering review",
+            "description": "Review metadata-only capability recommendations and evolution proposal drafts.",
+            "authorityTier": "advisory_review",
+            "proposalOnly": True,
+        },
+    ],
+    "runtimeAuthority": False,
+    "blockedEffects": DESCRIPTOR["blockedEffects"],
+}
+
 
 def governance_response(trace_id: str, request_id: str, decision_id: str, audit_id: str) -> dict[str, Any]:
     return {
@@ -173,6 +195,9 @@ class HarnessHandler(BaseHTTPRequestHandler):
                     "blockedEffects": DESCRIPTOR["blockedEffects"],
                 },
             )
+            return
+        if self.path == "/v1/concierge/chief-of-staff/capabilities":
+            self.write_json(200, CAPABILITIES)
             return
         self.write_json(404, {"error": "not_found"})
 

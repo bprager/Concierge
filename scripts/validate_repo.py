@@ -40,6 +40,7 @@ AUTHORITY_SOURCE_EXCLUDED_PARTS = {
 
 GOVERNED_NETWORK_SOURCE_ALLOWLIST = {
     "app/src/capabilityTaxonomy.ts",
+    "app/src/chiefOfStaffCapabilities.ts",
     "app/src/chiefOfStaffSteering.ts",
     "app/src/descriptorDiscovery.ts",
     "app/src/governanceReviewSubmission.ts",
@@ -795,6 +796,31 @@ def validate_descriptor_response_boundary(data: object) -> None:
             raise SystemExit(f"Descriptor response must keep {effect} blocked")
 
 
+def validate_capabilities_response_boundary(data: object) -> None:
+    if not isinstance(data, dict):
+        raise SystemExit("Capabilities response example must be a JSON object")
+
+    require_equal(data.get("serviceId"), "napoleon.chief_of_staff", "capabilities response serviceId must match Chief of Staff")
+    require_equal(data.get("runtimeAuthority"), False, "capabilities response must not grant runtime authority")
+    capabilities = data.get("capabilities")
+    if not isinstance(capabilities, list):
+        raise SystemExit("capabilities response must include capabilities list")
+    for index, capability in enumerate(capabilities):
+        if not isinstance(capability, dict):
+            raise SystemExit(f"capabilities[{index}] must be an object")
+        require_equal(capability.get("proposalOnly"), True, f"capabilities[{index}] must remain proposal-only")
+        authority_tier = capability.get("authorityTier")
+        if authority_tier not in {"metadata_only", "advisory_review", "prepare_only", "approval_required", "prohibited"}:
+            raise SystemExit(f"capabilities[{index}] has invalid authorityTier: {authority_tier!r}")
+
+    blocked_effects = data.get("blockedEffects")
+    if not isinstance(blocked_effects, list):
+        raise SystemExit("capabilities response must include blockedEffects list")
+    for effect in ["runtime_authority", "memory_write", "agent_dispatch", "approval_capture", "external_send"]:
+        if effect not in blocked_effects:
+            raise SystemExit(f"Capabilities response must keep {effect} blocked")
+
+
 def validate_child_text_response_boundary(data: object) -> None:
     if not isinstance(data, dict):
         raise SystemExit("Child text response example must be a JSON object")
@@ -1106,6 +1132,11 @@ def openapi_response_examples() -> list[tuple[str, str, str]]:
             "200",
             "examples/sample_chief_of_staff_descriptor_response.json",
         ),
+        (
+            "/v1/concierge/chief-of-staff/capabilities",
+            "200",
+            "examples/sample_chief_of_staff_capabilities_response.json",
+        ),
         ("/v1/concierge/turn", "200", "examples/sample_text_turn_response.json"),
         ("/v1/concierge/turn", "200", "examples/sample_child_text_turn_response.json"),
         ("/v1/concierge/memory-proposals", "200", "examples/sample_memory_proposal_response.json"),
@@ -1182,6 +1213,10 @@ def validate_openapi_response_examples() -> None:
         validate_openapi_instance(schema, data)
         if example_path.endswith("sample_chief_of_staff_descriptor_response.json"):
             validate_descriptor_response_boundary(data)
+            print(f"valid OpenAPI response example: {example_path} against {path} {status_code}")
+            continue
+        if example_path.endswith("sample_chief_of_staff_capabilities_response.json"):
+            validate_capabilities_response_boundary(data)
             print(f"valid OpenAPI response example: {example_path} against {path} {status_code}")
             continue
         validate_bridge_response_provenance(data)
@@ -1572,7 +1607,7 @@ def validate_bridge_contract_alignment() -> None:
             transport_mismatch.append(
                 f"{operation['id']} registry={operation.get('transport')} openapi={transports.get(path)}"
             )
-        if operation["id"] != "chief_of_staff_descriptor" and request_kinds.get(path) != operation.get("requestKind"):
+        if operation["id"] not in {"chief_of_staff_descriptor", "chief_of_staff_capabilities"} and request_kinds.get(path) != operation.get("requestKind"):
             request_kind_mismatch.append(
                 f"{operation['id']} registry={operation.get('requestKind')} openapi={request_kinds.get(path)}"
             )

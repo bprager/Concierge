@@ -5,6 +5,15 @@ export const GENERATED_BRIDGE_CONTRACT_SOURCE = "api/napoleon_bridge.openapi.yam
 
 export const GENERATED_BRIDGE_OPERATIONS = [
   {
+    id: "chief_of_staff_capabilities",
+    path: "/v1/concierge/chief-of-staff/capabilities",
+    requestKind: "chief_of_staff_capabilities",
+    transport: "http_get",
+    responseRequired: ["serviceId", "capabilities", "runtimeAuthority", "blockedEffects"],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+  {
     id: "chief_of_staff_descriptor",
     path: "/v1/concierge/chief-of-staff/descriptor",
     requestKind: "chief_of_staff_descriptor",

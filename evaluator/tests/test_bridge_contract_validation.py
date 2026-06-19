@@ -20,7 +20,7 @@ class BridgeContractValidationTest(unittest.TestCase):
 
         for operation in operations:
             with self.subTest(operation=operation["id"]):
-                if operation["id"] == "chief_of_staff_descriptor":
+                if operation["id"] in {"chief_of_staff_descriptor", "chief_of_staff_capabilities"}:
                     continue
                 self.assertEqual(operation["requestKind"], request_kinds[operation["path"]])
 
@@ -58,6 +58,13 @@ class BridgeContractValidationTest(unittest.TestCase):
 
         validate_repo.validate_openapi_instance(schema, response)
         validate_repo.validate_descriptor_response_boundary(response)
+
+    def test_sample_chief_of_staff_capabilities_response_matches_openapi_response_contract(self):
+        response = validate_repo.load_json("examples/sample_chief_of_staff_capabilities_response.json")
+        schema = validate_repo.load_openapi_response_schema("/v1/concierge/chief-of-staff/capabilities", "200")
+
+        validate_repo.validate_openapi_instance(schema, response)
+        validate_repo.validate_capabilities_response_boundary(response)
 
     def test_sample_text_turn_response_matches_openapi_response_contract(self):
         response = validate_repo.load_json("examples/sample_text_turn_response.json")

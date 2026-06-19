@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Hardened Conversation Capability Intelligence storage so every appended ledger signal is re-sanitized before later Chief of Staff steering drafts, persistence, export, or query answers can reuse evidence references.
+- Added descriptor-gated Chief of Staff advisory capability discovery as metadata-only connection state, including canonical `/v1/concierge/chief-of-staff/capabilities` and explicit `/cos/capabilities` support without granting approval, memory writes, agent dispatch, or external sends.
 - Hardened learning signals so proposal evidence drops raw-looking summaries and non-local evidence references before Chief of Staff steering drafts or telemetry counts can use them.
 - Hardened Conversation Capability Intelligence metadata so raw-looking labels, email addresses, URLs, token-shaped values, and non-local evidence references are redacted before local storage, query answers, persistence, export, or steering evidence selection.
 - Scoped Conversation Capability Intelligence answers and Chief of Staff steering draft evidence to the active profile so child-protected, guest, collaborator, and owner signals are not mixed in recommendations.

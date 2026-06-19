@@ -63,6 +63,10 @@ import {
   submitChiefOfStaffSteeringDraft,
   type ChiefOfStaffSteeringSubmissionResult,
 } from "./chiefOfStaffSteering.js";
+import {
+  discoverChiefOfStaffCapabilities,
+  type ChiefOfStaffCapabilityDiscoveryResult,
+} from "./chiefOfStaffCapabilities.js";
 import { buildLearningSignalTelemetryAttributes } from "./learningSignal.js";
 import {
   buildDescriptorConnectionState,
@@ -304,6 +308,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [descriptorMode, setDescriptorMode] = useState<"discovered" | "live" | "missing" | "checksum_mismatch">("discovered");
   const [liveDescriptorInput, setLiveDescriptorInput] = useState<DescriptorConnectionInput | null>(null);
   const [descriptorDiscoveryMessage, setDescriptorDiscoveryMessage] = useState<string | null>(null);
+  const [chiefOfStaffCapabilities, setChiefOfStaffCapabilities] =
+    useState<ChiefOfStaffCapabilityDiscoveryResult | null>(null);
   const [pendingRehearsal, setPendingRehearsal] = useState<PendingRehearsal | null>(null);
   const [endpoint, setEndpoint] = useState(() =>
     typeof localStorage === "undefined" ? "" : localStorage.getItem("napoleon_endpoint") ?? "",
@@ -401,6 +407,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   function clearVisibleTurnBoundaryState() {
     setLastDecision(null);
     setLastBridgeFailure(null);
+  }
+
+  function clearChiefOfStaffCapabilities() {
+    setChiefOfStaffCapabilities(null);
   }
 
   function clearGovernanceReviewHandoff() {
@@ -580,6 +590,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
+    clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     if (typeof localStorage === "undefined") return;
@@ -597,6 +608,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
+    clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     if (typeof localStorage === "undefined") return;
@@ -612,6 +624,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
+    clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
   }
@@ -622,6 +635,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setPendingRehearsal(null);
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
+      clearChiefOfStaffCapabilities();
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
     }
@@ -1348,6 +1362,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       clearBridgeReadinessProof();
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
+      clearChiefOfStaffCapabilities();
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
       const discoveryFailed =
@@ -1372,6 +1387,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       clearBridgeReadinessProof();
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
+      clearChiefOfStaffCapabilities();
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
       emitEvent("descriptor_discovery_failed", {
@@ -1381,6 +1397,28 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         error: String(error),
       });
     }
+  }
+
+  async function discoverCapabilities() {
+    const result = await discoverChiefOfStaffCapabilities({
+      endpoint: endpoint.trim() || null,
+      authToken: authToken.trim() || null,
+      descriptorReady: descriptorConnection.canAttemptLiveBridge,
+    });
+    setChiefOfStaffCapabilities(result);
+    emitEvent(result.state === "ready" ? "chief_of_staff_capabilities_discovered" : "chief_of_staff_capabilities_blocked", {
+      traceId: newTraceId(),
+      conversationId,
+      capabilityCount: result.capabilities.length,
+      serviceId: result.serviceId ?? "not_returned",
+      runtimeAuthority: result.runtimeAuthority,
+      blockedEffects: result.blockedEffects,
+      approvalCaptured: result.approvalCaptured,
+      memoryWritePerformed: result.memoryWritePerformed,
+      agentDispatchPerformed: result.agentDispatchPerformed,
+      externalSendPerformed: result.externalSendPerformed,
+    });
+    refreshTelemetryBufferStatus();
   }
 
   function useLocalHarnessEndpoint() {
@@ -1400,6 +1438,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
+    clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     clearProfileScopedCapabilityDrafts();
@@ -2340,6 +2379,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   });
   const governedOperationSummaries = [
     describeBridgeOperationSummary("chief_of_staff_descriptor"),
+    describeBridgeOperationSummary("chief_of_staff_capabilities"),
     describeBridgeOperationSummary("text_turn"),
     describeBridgeOperationSummary("memory_proposal_review"),
     describeBridgeOperationSummary("chief_of_staff_steering"),
@@ -2522,6 +2562,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         </label>
         <button className="secondary" onClick={() => void discoverDescriptor()}>
           Discover descriptor
+        </button>
+        <button className="secondary" disabled={!descriptorConnection.canAttemptLiveBridge} onClick={() => void discoverCapabilities()}>
+          Discover advisory capabilities
         </button>
         <button className="secondary" onClick={useLocalHarnessEndpoint}>
           Use local harness
@@ -3851,6 +3894,48 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           <strong>Cache policy</strong>
           <span>{descriptorStatus?.cachePolicy ?? "unavailable"}</span>
         </div>
+      </section>
+
+      <section className={`contract-status ${chiefOfStaffCapabilities?.state ?? "blocked"}`}>
+        <div>
+          <strong>Advisory capabilities</strong>
+          <span>
+            {chiefOfStaffCapabilities
+              ? chiefOfStaffCapabilities.message
+              : "Not fetched. Discover the descriptor first, then fetch advisory capabilities explicitly."}
+          </span>
+        </div>
+        <div>
+          <strong>Capability count</strong>
+          <span>{chiefOfStaffCapabilities?.capabilities.length ?? 0}</span>
+        </div>
+        <div>
+          <strong>Runtime authority</strong>
+          <span>{chiefOfStaffCapabilities?.runtimeAuthority ? "enabled" : "blocked"}</span>
+        </div>
+        <div>
+          <strong>Boundary</strong>
+          <span>Advisory metadata only; not Napoleon approval.</span>
+        </div>
+        <div>
+          <strong>Blocked effects</strong>
+          <span>{(chiefOfStaffCapabilities?.blockedEffects ?? ["memory_write", "approval_capture", "agent_dispatch", "external_send"]).join(", ")}</span>
+        </div>
+        {chiefOfStaffCapabilities?.capabilities.length ? (
+          <dl>
+            {chiefOfStaffCapabilities.capabilities.map((capability) => (
+              <div key={capability.id}>
+                <dt>{capability.label}</dt>
+                <dd>
+                  <span>{capability.id}</span>
+                  <span>{capability.description}</span>
+                  <span>Authority tier: {capability.authorityTier}</span>
+                  <span>Proposal only: {capability.proposalOnly ? "yes" : "no"}</span>
+                </dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
       </section>
 
       <section className="bridge-operations">

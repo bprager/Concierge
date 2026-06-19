@@ -1,0 +1,35 @@
+{
+  "serviceId": "napoleon.chief_of_staff",
+  "capabilities": [
+    {
+      "id": "napoleon.capability.governed_text_turn",
+      "label": "Governed text turn",
+      "description": "Prepare advisory text responses through Napoleon with governance, trace, and audit provenance.",
+      "authorityTier": "prepare_only",
+      "proposalOnly": true
+    },
+    {
+      "id": "napoleon.capability.capability_steering",
+      "label": "Capability steering review",
+      "description": "Review metadata-only capability recommendations and evolution proposal drafts.",
+      "authorityTier": "advisory_review",
+      "proposalOnly": true
+    }
+  ],
+  "runtimeAuthority": false,
+  "blockedEffects": [
+    "runtime_authority",
+    "command_execution",
+    "task_routing",
+    "agent_dispatch",
+    "registry_runtime_activation",
+    "graph_write",
+    "memory_write",
+    "audit_append",
+    "event_publication",
+    "approval_capture",
+    "external_send",
+    "service_control",
+    "remediation"
+  ]
+}

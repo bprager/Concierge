@@ -16,13 +16,17 @@ OUTPUT_PATH = ROOT / "app/src/generatedBridgeOperations.ts"
 
 OPERATION_IDS_BY_PATH = {
     "/v1/concierge/turn": "text_turn",
+    "/v1/concierge/chief-of-staff/capabilities": "chief_of_staff_capabilities",
     "/v1/concierge/chief-of-staff/descriptor": "chief_of_staff_descriptor",
     "/v1/concierge/chief-of-staff/steering": "chief_of_staff_steering",
     "/v1/concierge/memory-proposals": "memory_proposal_review",
     "/v1/concierge/evaluate": "evaluate",
 }
 
-DESCRIPTOR_REQUEST_KIND = "chief_of_staff_descriptor"
+GET_REQUEST_KINDS_BY_PATH = {
+    "/v1/concierge/chief-of-staff/capabilities": "chief_of_staff_capabilities",
+    "/v1/concierge/chief-of-staff/descriptor": "chief_of_staff_descriptor",
+}
 
 HTTP_METHOD_TO_TRANSPORT = {
     "get": "http_get",
@@ -48,8 +52,9 @@ def request_kind_for(path: str, operation: dict[str, Any]) -> str:
     request_kind = schema.get("properties", {}).get("requestKind", {}).get("const")
     if request_kind:
         return str(request_kind)
-    if path == "/v1/concierge/chief-of-staff/descriptor":
-        return DESCRIPTOR_REQUEST_KIND
+    request_kind = GET_REQUEST_KINDS_BY_PATH.get(path)
+    if request_kind:
+        return request_kind
     raise SystemExit(f"OpenAPI path lacks requestKind const: {path}")
 
 

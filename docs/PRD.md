@@ -203,6 +203,7 @@ Text Concierge shall:
 - Resolve user profile
 - Identify intent
 - Request context only through governed Napoleon APIs
+- Discover advisory Chief of Staff capabilities only after descriptor discovery and present them as non-authorizing metadata
 - Ask concise clarification when needed
 - Route to Napoleon or specialized agents through the bridge
 - Preview governed turns locally in Rehearsal Mode before sending a live bridge request

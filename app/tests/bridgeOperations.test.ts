@@ -111,6 +111,7 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   }
 
   assert.equal(getBridgeOperation("chief_of_staff_descriptor").transport, "http_get");
+  assert.equal(getBridgeOperation("chief_of_staff_capabilities").requestKind, "chief_of_staff_capabilities");
   assert.equal(getBridgeOperation("text_turn").requestKind, "text_turn");
   assert.equal(getBridgeOperation("chief_of_staff_steering").requestKind, "chief_of_staff_steering_handoff");
   assert.equal(getBridgeOperation("memory_proposal_review").requestKind, "memory_proposal_review_handoff");
@@ -128,6 +129,12 @@ test("bridge operation registry exposes canonical required response fields", () 
     "ready",
     "runtimeAuthority",
     "cachePolicy",
+    "blockedEffects",
+  ]);
+  assert.deepEqual(getBridgeOperation("chief_of_staff_capabilities").responseRequired, [
+    "serviceId",
+    "capabilities",
+    "runtimeAuthority",
     "blockedEffects",
   ]);
   assert.deepEqual(getBridgeOperation("chief_of_staff_steering").responseRequired, [
@@ -224,6 +231,7 @@ test("describes governed bridge operation routes without endpoint hosts or secre
 test("describes all core governed operation routes for the UI", () => {
   const summaries = [
     describeBridgeOperationSummary("chief_of_staff_descriptor"),
+    describeBridgeOperationSummary("chief_of_staff_capabilities"),
     describeBridgeOperationSummary("text_turn"),
     describeBridgeOperationSummary("memory_proposal_review"),
     describeBridgeOperationSummary("chief_of_staff_steering"),
@@ -234,6 +242,7 @@ test("describes all core governed operation routes for the UI", () => {
     summaries.map((summary) => summary.label),
     [
       "Descriptor discovery",
+      "Chief of Staff capabilities",
       "Text turn",
       "Memory proposal review",
       "Chief of Staff steering",
@@ -244,6 +253,7 @@ test("describes all core governed operation routes for the UI", () => {
     summaries.map((summary) => summary.path),
     [
       "/v1/concierge/chief-of-staff/descriptor",
+      "/v1/concierge/chief-of-staff/capabilities",
       "/v1/concierge/turn",
       "/v1/concierge/memory-proposals",
       "/v1/concierge/chief-of-staff/steering",

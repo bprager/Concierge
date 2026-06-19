@@ -5,6 +5,7 @@ import {
 
 export type BridgeOperationId =
   | "text_turn"
+  | "chief_of_staff_capabilities"
   | "chief_of_staff_descriptor"
   | "chief_of_staff_steering"
   | "memory_proposal_review"
@@ -15,6 +16,7 @@ export interface BridgeOperation {
   path: `/v1/concierge/${string}`;
   requestKind:
     | "text_turn"
+    | "chief_of_staff_capabilities"
     | "chief_of_staff_descriptor"
     | "chief_of_staff_steering_handoff"
     | "memory_proposal_review_handoff"
@@ -69,6 +71,7 @@ export function buildNapoleonBridgeUrl(configuredEndpoint: string, operationId: 
 }
 
 const BRIDGE_OPERATION_LABELS: Record<BridgeOperationId, string> = {
+  chief_of_staff_capabilities: "Chief of Staff capabilities",
   chief_of_staff_descriptor: "Descriptor discovery",
   chief_of_staff_steering: "Chief of Staff steering",
   evaluate: "Evaluator request",
