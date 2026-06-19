@@ -739,11 +739,17 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_media_scanner_detects_hidden_capture_speech_and_playback(self):
         for source in [
             "await navigator.mediaDevices.getUserMedia({ audio: true });",
+            "await navigator.mediaDevices.getDisplayMedia({ video: true });",
+            "await navigator.mediaDevices.enumerateDevices();",
+            "const recorder = new MediaRecorder(stream);",
             "const audio = new AudioContext();",
             "const speech = new SpeechRecognition();",
             "window.speechSynthesis.speak(utterance);",
             "await clip.play();",
             'await navigator.mediaDevices["getUserMedia"]({ audio: true });',
+            'await navigator.mediaDevices["getDisplayMedia"]({ video: true });',
+            'await navigator["mediaDevices"]["enumerateDevices"]();',
+            'const recorder = new window["MediaRecorder"](stream);',
             'const audio = new window["AudioContext"]();',
             'const speech = new globalThis["SpeechRecognition"]();',
             'window["speechSynthesis"]["speak"](utterance);',
