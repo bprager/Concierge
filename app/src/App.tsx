@@ -565,6 +565,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     mutate(next);
     setCapabilityTaxonomy(next);
     persistCapabilityTaxonomyToStorage(browserStorage(), next);
+    setSteeringDraft(null);
+    setSteeringDraftExportJson(null);
+    setSteeringSubmission(null);
+    setSteeringFailure(null);
     setTaxonomyReviewDraft(null);
     setTaxonomyReviewSubmission(null);
     setTaxonomyReviewFailure(null);

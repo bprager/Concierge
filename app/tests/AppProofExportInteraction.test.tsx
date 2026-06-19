@@ -3135,6 +3135,54 @@ test("submits a governance review through rendered governed controls without loc
   }
 });
 
+test("clears stale steering drafts when capability taxonomy edits change labels", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, fireEvent, render },
+    userEventModule,
+    { App },
+    { emitEvent, capabilityLedger },
+    { clearCapabilityLedger },
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalInfo = console.info;
+  console.info = () => undefined;
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    emitEvent("response_failed", {
+      traceId: "trace_steering_taxonomy_edit",
+      conversationId: "conv_steering_taxonomy_edit",
+      turnId: "turn_steering_taxonomy_edit",
+      profile: "adult_owner",
+    });
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+    await view.findByText("Chief of Staff steering draft");
+    await user.click(view.getByRole("button", { name: "Export steering draft" }));
+    assert.ok(view.getByLabelText("Exported Chief of Staff steering draft"));
+
+    fireEvent.change(view.getByLabelText("Label"), { target: { value: "capability:bridge_failure_handling" } });
+    fireEvent.change(view.getByPlaceholderText("New local label"), { target: { value: "bridge_recovery" } });
+    fireEvent.click(view.getByRole("button", { name: "Rename label" }));
+
+    assert.equal(Boolean(view.queryByText("Chief of Staff steering draft")), false);
+    assert.equal(Boolean(view.queryByLabelText("Exported Chief of Staff steering draft")), false);
+  } finally {
+    console.info = originalInfo;
+    clearCapabilityLedger(capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears profile-scoped memory review drafts when user profile changes", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([

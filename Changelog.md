@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened Chief of Staff steering drafts so local capability taxonomy edits clear already-rendered proposal drafts, exports, submissions, and failures before obsolete labels can be handed off.
 - Hardened local telemetry and interaction trace exports so switching profiles clears already-rendered metadata snapshots before adult-owner and child-protected trace views can linger across scopes.
 - Hardened Conversation Capability Intelligence exports so switching profiles clears already-rendered local metadata JSON before adult-owner and child-protected evidence views can linger across scopes.
 - Hardened local voice and avatar sample panels so profile changes clear profile-scoped dry-run results before adult-owner and child-protected metadata can be mixed.
