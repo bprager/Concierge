@@ -37,6 +37,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened governed review handoff validation so response text cannot claim memory writes, approval capture, agent dispatch, external sends, or local application when the explicit side-effect boundary fields are false.
 - Added child-protected voice policy telemetry for local voice shaping so stricter pacing, guardian-review reminders, and blocked side effects are visible without starting playback, capture, or Napoleon contact.
 - Added child-protected avatar policy telemetry for local avatar state so disabled camera/affect policies, guardian approval boundaries, and blocked side effects are visible without starting capture, animation, or Napoleon contact.
+- Hardened repository authority-boundary validation so bracket-style browser messaging constructor calls cannot create hidden cross-context side channels around the governed bridge.
 - Hardened repository authority-boundary validation so concatenated agent/tool dispatch aliases and bracketed tool execution cannot bypass the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so indirect constructor-constructor dynamic code execution cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style `Function(...)` calls without `new` cannot create hidden authority paths in Concierge runtime source.
