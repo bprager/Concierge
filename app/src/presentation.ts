@@ -82,6 +82,30 @@ export interface NapoleonResponseProofView {
   details: Array<{ label: string; value: string }>;
 }
 
+const FORBIDDEN_VISIBLE_PROVENANCE_PATTERNS = [
+  /\bhttps?:\/\//i,
+  /\bwss?:\/\//i,
+  /\blocalhost\b/i,
+  /\b127\.0\.0\.1\b/,
+  /\b0\.0\.0\.0\b/,
+  /\bbearer\b/i,
+  /\bauthorization\b/i,
+  /\btoken\b/i,
+  /\bsecret\b/i,
+];
+
+function sanitizeVisibleProvenanceValue(value: string | undefined, fallback = "not returned"): string {
+  const trimmed = value?.trim() ?? "";
+  if (!trimmed) return fallback;
+  if (FORBIDDEN_VISIBLE_PROVENANCE_PATTERNS.some((pattern) => pattern.test(trimmed))) return "redacted";
+  return trimmed;
+}
+
+function sanitizeVisibleProvenanceList(values: string[] | undefined, fallback = "not returned"): string {
+  if (!values?.length) return fallback;
+  return values.map((value) => sanitizeVisibleProvenanceValue(value)).join(", ");
+}
+
 export function describeNapoleonTranscriptMetadata(
   response: NapoleonResponse,
 ): NonNullable<ConciergeMessage["metadata"]> {
@@ -552,13 +576,14 @@ export function describeDelegation(
   delegation: NapoleonDelegation | undefined,
   targetCapability?: string,
 ): DelegationView {
+  const safeTargetCapability = sanitizeVisibleProvenanceValue(targetCapability);
   if (!delegation || delegation.selectedAgents.length === 0) {
     if (targetCapability) {
       return {
         heading: "Napoleon target capability",
-        body: `Napoleon returned target capability ${targetCapability}, but did not include selected-agent delegation provenance.`,
+        body: `Napoleon returned target capability ${safeTargetCapability}, but did not include selected-agent delegation provenance.`,
         details: [
-          { label: "Target capability", value: targetCapability },
+          { label: "Target capability", value: safeTargetCapability },
           { label: "Selected agents", value: "not returned" },
           { label: "Why selected", value: "not returned" },
           { label: "Allowed effects", value: "not returned" },
@@ -587,40 +612,66 @@ export function describeDelegation(
   }
 
   const agentLabels = delegation.selectedAgents
-    .map((agent) => `${agent.displayName} (${agent.agentId}): ${agent.selectionReason}`)
+    .map(
+      (agent) =>
+        `${sanitizeVisibleProvenanceValue(agent.displayName)} (${sanitizeVisibleProvenanceValue(
+          agent.agentId,
+        )}): ${sanitizeVisibleProvenanceValue(agent.selectionReason)}`,
+    )
     .join("; ");
   const selectionReasons = delegation.selectedAgents
-    .map((agent) => `${agent.displayName}: ${agent.selectionReason}`)
+    .map(
+      (agent) =>
+        `${sanitizeVisibleProvenanceValue(agent.displayName)}: ${sanitizeVisibleProvenanceValue(
+          agent.selectionReason,
+        )}`,
+    )
     .join("; ");
   const contribution = delegation.selectedAgents
     .filter((agent) => agent.contributionSummary)
-    .map((agent) => `${agent.displayName} found ${agent.contributionSummary}.`)
+    .map(
+      (agent) =>
+        `${sanitizeVisibleProvenanceValue(agent.displayName)} found ${sanitizeVisibleProvenanceValue(
+          agent.contributionSummary,
+        )}.`,
+    )
     .join(" ");
 
   return {
     heading: "Napoleon delegation",
     body: contribution || "Napoleon provided delegation provenance for this response.",
     details: [
-      { label: "Target capability", value: targetCapability ?? "not returned" },
+      { label: "Target capability", value: safeTargetCapability },
       { label: "Selected agents", value: agentLabels },
       { label: "Why selected", value: selectionReasons },
-      { label: "Allowed effects", value: delegation.allowedEffects.join(", ") },
-      { label: "Blocked effects", value: delegation.blockedEffects.join(", ") },
-      { label: "Governance state", value: delegation.governanceState },
-      { label: "Trace", value: delegation.traceId },
-      { label: "Audit", value: delegation.auditId },
+      { label: "Allowed effects", value: sanitizeVisibleProvenanceList(delegation.allowedEffects) },
+      { label: "Blocked effects", value: sanitizeVisibleProvenanceList(delegation.blockedEffects) },
+      { label: "Governance state", value: sanitizeVisibleProvenanceValue(delegation.governanceState) },
+      { label: "Trace", value: sanitizeVisibleProvenanceValue(delegation.traceId) },
+      { label: "Audit", value: sanitizeVisibleProvenanceValue(delegation.auditId) },
     ],
   };
 }
 
 export function describeNapoleonResponseProof(response: NapoleonResponse): NapoleonResponseProofView {
-  const agentLabels = response.delegation?.selectedAgents.map((agent) => agent.displayName).join(", ") || "";
+  const agentLabels =
+    response.delegation?.selectedAgents.map((agent) => sanitizeVisibleProvenanceValue(agent.displayName)).join(", ") ||
+    "";
   const selectionReasons =
     response.delegation?.selectedAgents
-      .map((agent) => `${agent.displayName}: ${agent.selectionReason}`)
+      .map(
+        (agent) =>
+          `${sanitizeVisibleProvenanceValue(agent.displayName)}: ${sanitizeVisibleProvenanceValue(
+            agent.selectionReason,
+          )}`,
+      )
       .join("; ") || "";
-  const targetCapability = response.targetAgent ?? "";
-  const recommendation = response.recommendationProvenance?.summary;
+  const targetCapability = response.targetAgent
+    ? sanitizeVisibleProvenanceValue(response.targetAgent, "")
+    : "";
+  const recommendation = response.recommendationProvenance?.summary
+    ? sanitizeVisibleProvenanceValue(response.recommendationProvenance.summary, "")
+    : undefined;
   const status: NapoleonResponseProofView["status"] = agentLabels || targetCapability || recommendation ? "verified" : "limited";
   const proofParts = [
     targetCapability ? `Capability: ${targetCapability}` : "",
@@ -653,13 +704,15 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
       },
       {
         label: "Allowed effects",
-        value: response.delegation?.allowedEffects.join(", ") || "prepare_advisory_response",
+        value: response.delegation?.allowedEffects
+          ? sanitizeVisibleProvenanceList(response.delegation.allowedEffects)
+          : "prepare_advisory_response",
       },
       {
         label: "Blocked effects",
-        value:
-          response.delegation?.blockedEffects.join(", ") ||
-          response.governanceDecision.blocked_effects.join(", "),
+        value: sanitizeVisibleProvenanceList(
+          response.delegation?.blockedEffects || response.governanceDecision.blocked_effects,
+        ),
       },
     ],
   };

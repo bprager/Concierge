@@ -199,6 +199,55 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.ok(empty.details.some((detail) => detail.label === "Audit" && detail.value === "not returned"));
 });
 
+test("redacts unsafe returned provenance from visible Napoleon delegation and proof views", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the deployment risk",
+    profile: "adult_owner",
+    conversationId: "conv_visible_redaction",
+    turnId: "turn_visible_redaction",
+    traceId: "trace_visible_redaction",
+  });
+  const delegation = {
+    selectedAgents: [
+      {
+        agentId: "napoleon.passive_brain",
+        displayName: "Bearer local-secret-token",
+        selectionReason: "Use http://127.0.0.1:8787 with Authorization bearer local-secret-token.",
+        contributionSummary: "http://127.0.0.1:8787/private",
+      },
+    ],
+    allowedEffects: ["prepare_advisory_response", "Bearer local-secret-token"],
+    blockedEffects: ["memory_write", "http://127.0.0.1:8787/private"],
+    governanceState: "requires_review",
+    traceId: "trace_visible_redaction",
+    auditId: contract.auditEnvelope.audit_id,
+  };
+
+  const delegationView = describeDelegation(delegation, "http://127.0.0.1:8787/v1/concierge/turn");
+  const proofView = describeNapoleonResponseProof({
+    text: "Napoleon returned sanitized response text.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: true,
+    targetAgent: "http://127.0.0.1:8787/v1/concierge/turn",
+    delegation,
+    recommendationProvenance: {
+      summary: "Review http://127.0.0.1:8787/private with bearer local-secret-token.",
+      traceId: "trace_visible_redaction",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+  const visibleText = JSON.stringify({ delegationView, proofView }).toLocaleLowerCase();
+
+  assert.equal(visibleText.includes("127.0.0.1"), false);
+  assert.equal(visibleText.includes("local-secret-token"), false);
+  assert.equal(visibleText.includes("bearer"), false);
+  assert.ok(delegationView.details.some((detail) => detail.label === "Target capability" && detail.value === "redacted"));
+  assert.ok(proofView.details.some((detail) => detail.label === "Napoleon recommendation" && detail.value === "redacted"));
+});
+
 test("describes successful Napoleon response proof from returned provenance only", () => {
   const contract = buildTextTurnContract({
     message: "Summarize the deployment risk",
