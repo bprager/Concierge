@@ -199,7 +199,7 @@ Browser cross-context messaging such as `postMessage`, `BroadcastChannel`, `Mess
 
 Direct browser clipboard reads, writes, mixed dot/bracket clipboard aliases, call/apply aliases such as `navigator.clipboard.writeText.call(...)`, and legacy copy/paste commands are treated as local data side channels so UI code cannot move prompts, responses, tokens, or proof metadata outside governed visible export flows.
 
-Browser file picker APIs, FileReader constructors including bracket-style aliases such as `window["FileReader"] (...)`, and FileReader `readAs...` methods including call/apply aliases such as `reader.readAsText.call(...)` are treated as local data side channels so UI code cannot read, write, or export local files outside governed visible import/export flows.
+Browser file picker APIs including call/apply aliases such as `window.showOpenFilePicker.call(...)` and `globalThis.showDirectoryPicker.apply(...)`, FileReader constructors including bracket-style aliases such as `window["FileReader"] (...)`, and FileReader `readAs...` methods including call/apply aliases such as `reader.readAsText.call(...)` are treated as local data side channels so UI code cannot read, write, or export local files outside governed visible import/export flows.
 
 WebAssembly compilation/instantiation, including `Module` and `Instance` constructors and bracket-style aliases, plus object URL creation aliases such as `URL["createObjectURL"] (...)` and `URL.createObjectURL.call(...)` are treated as local executable side channels so UI code cannot introduce hidden runtime behavior outside governed visible flows.
 

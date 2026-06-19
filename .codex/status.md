@@ -48,6 +48,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened repository authority-boundary validation so bracket-style browser messaging constructor calls cannot create hidden cross-context side channels around the governed bridge.
 - Hardened repository authority-boundary validation so bracket-style legacy clipboard commands cannot move local Concierge data outside governed visible export flows.
 - Hardened repository authority-boundary validation so bracket-style FileReader constructor aliases cannot read local files outside governed visible import/export flows.
+- Hardened repository authority-boundary validation so file picker `.call(...)` and `.apply(...)` aliases cannot read local files around governed visible import/export flows.
 - Hardened repository authority-boundary validation so concatenated agent/tool dispatch aliases and bracketed tool execution cannot bypass the governed Napoleon bridge.
 - Hardened repository authority-boundary validation so `.apply(...)` document-write aliases cannot smuggle external markup around governed bridge checks.
 - Hardened repository authority-boundary validation so `.apply(...)` prototype aliases cannot submit forms or trigger DOM clicks around the governed bridge.

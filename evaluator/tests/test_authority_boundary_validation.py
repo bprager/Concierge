@@ -349,8 +349,12 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_detects_browser_file_access_side_channels(self):
         for source in [
             "const [handle] = await window.showOpenFilePicker();",
+            "const [handle] = await window.showOpenFilePicker.call(window);",
+            "const [handle] = await globalThis.showOpenFilePicker.apply(globalThis);",
             "const handle = await globalThis.showSaveFilePicker();",
+            "const handle = await window.showSaveFilePicker.call(window);",
             "const directory = await window.showDirectoryPicker();",
+            "const directory = await globalThis.showDirectoryPicker.apply(globalThis);",
             "const reader = new FileReader();",
             "reader.readAsText(file);",
             "reader.readAsText.call(reader, file);",

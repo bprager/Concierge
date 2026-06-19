@@ -305,6 +305,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         re.IGNORECASE,
     ),
     re.compile(r"\b(?:globalThis|window)\.(?:showOpenFilePicker|showSaveFilePicker|showDirectoryPicker)\s*\("),
+    re.compile(r"\b(?:globalThis|window)\.(?:showOpenFilePicker|showSaveFilePicker|showDirectoryPicker)\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"](?:showOpenFilePicker|showSaveFilePicker|showDirectoryPicker)['\"]\s*\]\s*\("),
     re.compile(r"\bFileReader\s*\("),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]FileReader['\"]\s*\]\s*\("),
