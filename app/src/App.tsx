@@ -1466,6 +1466,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   function updateProfile(value: LocalProfile) {
     setProfile(value);
     setPendingRehearsal(null);
+    setCapabilityExportJson(null);
     clearBridgeReadinessProof();
     clearVoicePipelineProof();
     clearLocalVoiceAndAvatarSampleResults();

@@ -315,6 +315,44 @@ test("capability ledger export and clear telemetry stays proposal-only without a
   }
 });
 
+test("clears exported capability metadata when user profile changes", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, fireEvent, render },
+    { App },
+    { emitEvent, capabilityLedger },
+    { clearCapabilityLedger },
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    emitEvent("response_failed", {
+      traceId: "trace_export_profile_scope",
+      conversationId: "conv_export_profile_scope",
+      turnId: "turn_export_profile_scope",
+      profile: "adult_owner",
+    });
+
+    const view = render(<App />);
+
+    fireEvent.click(view.getByRole("button", { name: "Export local capability metadata" }));
+    await view.findByLabelText("Exported local capability metadata");
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+
+    assert.equal(view.queryByLabelText("Exported local capability metadata"), null);
+  } finally {
+    clearCapabilityLedger(capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("capability taxonomy edit telemetry stays proposal-only without agent dispatch", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render }, { App }, { emitEvent }] = await Promise.all([
