@@ -2673,6 +2673,98 @@ test("Chief of Staff steering draft displays metadata-only learning signals with
   }
 });
 
+test("exports a local Chief of Staff steering draft without sending or applying it", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, render },
+    userEventModule,
+    { App },
+    { emitEvent, capabilityLedger },
+    { clearCapabilityLedger },
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalInfo = console.info;
+  const originalFetch = globalThis.fetch;
+  let fetchCalls = 0;
+  console.info = () => undefined;
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    globalThis.fetch = (async () => {
+      fetchCalls += 1;
+      return new Response(JSON.stringify({ error: "unexpected fetch" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as typeof fetch;
+    emitEvent("response_failed", {
+      traceId: "trace_export_steering",
+      conversationId: "conv_export_steering",
+      turnId: "turn_export_steering",
+      profile: "adult_owner",
+      rawMessage: "raw export steering miss must not be retained",
+    });
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+    await view.findByText("Chief of Staff steering draft");
+    await user.click(view.getByRole("button", { name: "Export steering draft" }));
+
+    const exportBlock = view.getByLabelText("Exported Chief of Staff steering draft");
+    assert.ok(exportBlock.textContent?.includes('"kind": "concierge_chief_of_staff_steering_draft"'));
+    assert.ok(exportBlock.textContent?.includes('"proposalOnly": true'));
+    assert.ok(exportBlock.textContent?.includes('"approvalCaptured": false'));
+    assert.ok(exportBlock.textContent?.includes('"agentDispatchAllowed": false'));
+    assert.ok(exportBlock.textContent?.includes('"evaluatorCaseCandidate"'));
+    assert.ok(exportBlock.textContent?.includes('"evolutionProposal"'));
+    assert.ok(exportBlock.textContent?.includes('"learningSignalCount": 1'));
+    assert.equal(exportBlock.textContent?.includes("raw export steering miss"), false);
+    assert.equal(exportBlock.textContent?.includes("127.0.0.1"), false);
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
+test("clears exported steering drafts when Napoleon endpoint changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }, { capabilityLedger }, { clearCapabilityLedger }] =
+    await Promise.all([
+      import("@testing-library/react"),
+      import("@testing-library/user-event"),
+      import("../src/App.js"),
+      import("../src/telemetry.js"),
+      import("../src/capabilityLedger.js"),
+    ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+    await view.findByText("Chief of Staff steering draft");
+    await user.click(view.getByRole("button", { name: "Export steering draft" }));
+    assert.ok(view.getByLabelText("Exported Chief of Staff steering draft").textContent?.includes("proposal packet"));
+
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+
+    assert.equal(view.queryByLabelText("Exported Chief of Staff steering draft"), null);
+    assert.ok(view.getByText("Chief of Staff steering draft"));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("submits a memory proposal through rendered governed controls without local side effects", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

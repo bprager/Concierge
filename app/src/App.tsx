@@ -387,6 +387,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
   const [steeringDraft, setSteeringDraft] = useState<ReturnType<typeof draftChiefOfStaffSteering> | null>(null);
+  const [steeringDraftExportJson, setSteeringDraftExportJson] = useState<string | null>(null);
   const [steeringSubmission, setSteeringSubmission] = useState<ChiefOfStaffSteeringSubmissionResult | null>(null);
   const [steeringFailure, setSteeringFailure] = useState<string | null>(null);
   const [capabilityTaxonomy, setCapabilityTaxonomy] = useState(() => loadCapabilityTaxonomyFromStorage(browserStorage()));
@@ -441,6 +442,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function clearProfileScopedCapabilityDrafts() {
     setSteeringDraft(null);
+    setSteeringDraftExportJson(null);
     setSteeringSubmission(null);
     setSteeringFailure(null);
     setTaxonomyReviewDraft(null);
@@ -585,6 +587,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function updateEndpoint(value: string) {
     setEndpoint(value);
+    setSteeringDraftExportJson(null);
     setLiveDescriptorInput(null);
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
@@ -603,6 +606,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function updateAuthToken(value: string) {
     setAuthToken(value);
+    setSteeringDraftExportJson(null);
     setLiveDescriptorInput(null);
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
@@ -621,6 +625,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function updateDescriptorMode(value: "discovered" | "live" | "missing" | "checksum_mismatch") {
     setDescriptorMode(value);
+    setSteeringDraftExportJson(null);
     clearBridgeReadinessProof();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
@@ -631,6 +636,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function updateRehearsalMode(enabled: boolean) {
     setRehearsalMode(enabled);
+    setSteeringDraftExportJson(null);
     if (enabled) {
       setPendingRehearsal(null);
       clearNapoleonPresentation();
@@ -1359,6 +1365,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setLiveDescriptorInput(result.input);
       setDescriptorMode("live");
       setDescriptorDiscoveryMessage(result.connection.message);
+      setSteeringDraftExportJson(null);
       clearBridgeReadinessProof();
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
@@ -1384,6 +1391,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setLiveDescriptorInput(failedInput);
       setDescriptorMode("live");
       setDescriptorDiscoveryMessage("Descriptor discovery failed closed. Concierge will not attempt live bridge calls.");
+      setSteeringDraftExportJson(null);
       clearBridgeReadinessProof();
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
@@ -2031,6 +2039,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setTaxonomyRenameValue("");
     setTaxonomyMergeTarget("");
     setSteeringDraft(null);
+    setSteeringDraftExportJson(null);
     setSteeringSubmission(null);
     setSteeringFailure(null);
     setTaxonomyReviewDraft(null);
@@ -2207,6 +2216,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       profileMode: mapProfileToNapoleonMode(profile),
     });
     setSteeringDraft(draft);
+    setSteeringDraftExportJson(null);
     setSteeringSubmission(null);
     setSteeringFailure(null);
     emitEvent("capability_recommendation_created", {
@@ -2231,6 +2241,43 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       });
     }
     refreshCapabilityLedgerStatus();
+  }
+
+  function exportSteeringDraft() {
+    if (!steeringDraft) return;
+    const traceId = newTraceId();
+    setSteeringDraftExportJson(
+      JSON.stringify(
+        {
+          kind: "concierge_chief_of_staff_steering_draft",
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          caveat:
+            "Local proposal packet only. It is not Napoleon approval and does not apply changes, write memory, dispatch agents, capture approval, or send externally.",
+          recommendation: steeringDraft.recommendation,
+          evaluatorCaseCandidate: steeringDraft.evaluatorCaseCandidate,
+          evolutionProposal: steeringDraft.evolutionProposal,
+          learningSignalCount: steeringDraft.evolutionProposal.learning_signals.length,
+          sendState: steeringDraft.sendState,
+          boundary: steeringDraft.boundary,
+        },
+        null,
+        2,
+      ),
+    );
+    emitEvent("chief_of_staff_steering_draft_exported", {
+      traceId,
+      conversationId,
+      capability: steeringDraft.recommendation.capabilityLabel,
+      evaluatorCaseId: steeringDraft.evaluatorCaseCandidate.caseId,
+      proposalId: steeringDraft.evolutionProposal.proposal_id,
+      learningSignalCount: steeringDraft.evolutionProposal.learning_signals.length,
+      proposalOnly: steeringDraft.boundary.proposalOnly,
+      approvalCaptured: steeringDraft.boundary.approvalCaptured,
+      memoryWriteAllowed: steeringDraft.boundary.memoryWriteAllowed,
+      agentDispatchAllowed: steeringDraft.boundary.agentDispatchAllowed,
+      externalSendAllowed: steeringDraft.boundary.externalSendAllowed,
+    });
   }
 
   async function submitSteeringDraft() {
@@ -4102,6 +4149,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               proposal only; no approval captured; no memory write; no agent dispatch; no external send.
             </dd>
           </dl>
+          <button className="secondary" onClick={exportSteeringDraft}>
+            Export steering draft
+          </button>
+          {steeringDraftExportJson ? (
+            <pre aria-label="Exported Chief of Staff steering draft">{steeringDraftExportJson}</pre>
+          ) : null}
           <section className={`send-preflight ${steeringHandoffReadiness.status}`}>
             <div>
               <strong>{steeringHandoffReadiness.heading}</strong>
