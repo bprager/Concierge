@@ -585,6 +585,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setBridgeReadinessProofComparison(null);
   }
 
+  function clearVoicePipelineProof() {
+    setVoicePipelineProofJson(null);
+    setVoicePipelineProofComparison(null);
+  }
+
   function updateEndpoint(value: string) {
     setEndpoint(value);
     setSteeringDraftExportJson(null);
@@ -1444,6 +1449,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setProfile(value);
     setPendingRehearsal(null);
     clearBridgeReadinessProof();
+    clearVoicePipelineProof();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
     clearChiefOfStaffCapabilities();

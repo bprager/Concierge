@@ -3961,6 +3961,36 @@ test("keeps voice capture blocked until explicit microphone permission is grante
   }
 });
 
+test("clears voice pipeline proof when user profile changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+
+    await view.findByText("Voice readiness");
+    const voiceReadiness = within(view.getByLabelText("Voice readiness"));
+    await user.click(voiceReadiness.getByText("Export voice pipeline proof"));
+    assert.ok(voiceReadiness.getByLabelText("Exported voice pipeline proof"));
+
+    await user.click(voiceReadiness.getByText("Export voice pipeline proof"));
+    assert.ok(voiceReadiness.getByText("Voice pipeline proof comparison"));
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+
+    assert.equal(voiceReadiness.queryByLabelText("Exported voice pipeline proof"), null);
+    assert.equal(voiceReadiness.queryByText("Voice pipeline proof comparison"), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows guardian approval blocked in child protected live voice readiness", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([
