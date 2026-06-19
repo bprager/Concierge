@@ -372,6 +372,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "const instance = new WebAssembly.Instance(module, imports);",
             "const url = URL.createObjectURL(new Blob([script], { type: 'text/javascript' }));",
             "const url = window.URL.createObjectURL(blob);",
+            "const url = URL.createObjectURL.call(URL, blob);",
+            "const url = window.URL.createObjectURL.apply(window.URL, [blob]);",
             'const url = URL["createObjectURL"](blob);',
             'const url = window.URL["createObjectURL"](blob);',
             'const instance = await window["WebAssembly"]["instantiate"](bytes, imports);',
