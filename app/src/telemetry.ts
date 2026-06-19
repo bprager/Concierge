@@ -36,8 +36,19 @@ export interface InteractionTraceExport {
   user_profile: "adult_owner" | "child_protected" | "guest" | "collaborator";
   channel: "text" | "voice" | "avatar";
   governance_decision?: string;
+  napoleon_references?: InteractionTraceNapoleonReferences;
   caveat: string;
   events: TelemetryPayload[];
+}
+
+export interface InteractionTraceNapoleonReferences {
+  request_id: string;
+  decision_id: string;
+  audit_id: string;
+  governance_outcome: string;
+  blocked_effects: string[];
+  bridge_failure_reason?: string;
+  descriptor_failure_reason?: string;
 }
 
 export const TELEMETRY_BUFFER_STORAGE_KEY = "concierge_telemetry_buffer_v1";
@@ -184,6 +195,7 @@ export function exportInteractionTraceJson(storage: Storage | null | undefined, 
     .map((event) => sanitizeTelemetryPayload(event));
   const first = events[0];
   const lastWithGovernance = [...events].reverse().find((event) => typeof event.attributes.governanceOutcome === "string");
+  const napoleonReferences = interactionTraceNapoleonReferences(events);
   const exportPayload: InteractionTraceExport = {
     schemaVersion: "concierge.interaction-trace.export.v1",
     generatedAt: new Date().toISOString(),
@@ -195,6 +207,7 @@ export function exportInteractionTraceJson(storage: Storage | null | undefined, 
     ...(lastWithGovernance
       ? { governance_decision: stringAttribute(lastWithGovernance, "governanceOutcome", "not_returned") }
       : {}),
+    ...(napoleonReferences ? { napoleon_references: napoleonReferences } : {}),
     caveat: INTERACTION_TRACE_EXPORT_CAVEAT,
     events,
   };
@@ -371,4 +384,53 @@ function channelAttribute(payload: TelemetryPayload | undefined): InteractionTra
     return channel;
   }
   return "text";
+}
+
+function interactionTraceNapoleonReferences(events: TelemetryPayload[]): InteractionTraceNapoleonReferences | null {
+  if (!events.length) return null;
+  const references: InteractionTraceNapoleonReferences = {
+    request_id: safeReferenceAttribute(events, "requestId"),
+    decision_id: safeReferenceAttribute(events, "decisionId"),
+    audit_id: safeReferenceAttribute(events, "auditId"),
+    governance_outcome: safeReferenceAttribute(events, "governanceOutcome", "outcome"),
+    blocked_effects: safeReferenceArrayAttribute(events, "blockedEffects"),
+  };
+  const bridgeFailureReason = safeReferenceAttribute(events, "bridgeFailureReason", "reason");
+  const descriptorFailureReason = safeReferenceAttribute(events, "descriptorFailureReason");
+  if (bridgeFailureReason !== "not_returned") {
+    references.bridge_failure_reason = bridgeFailureReason;
+  }
+  if (descriptorFailureReason !== "not_returned") {
+    references.descriptor_failure_reason = descriptorFailureReason;
+  }
+  return references;
+}
+
+function safeReferenceAttribute(events: TelemetryPayload[], ...keys: string[]): string {
+  for (const event of [...events].reverse()) {
+    for (const key of keys) {
+      const value = event.attributes[key];
+      if (typeof value === "string" && value.length > 0) {
+        return safeReferenceString(value);
+      }
+    }
+  }
+  return "not_returned";
+}
+
+function safeReferenceArrayAttribute(events: TelemetryPayload[], key: string): string[] {
+  for (const event of [...events].reverse()) {
+    const value = event.attributes[key];
+    if (Array.isArray(value) && value.length > 0) {
+      return value.map((item) => (typeof item === "string" ? safeReferenceString(item) : "redacted")).slice(0, 20);
+    }
+  }
+  return ["not_returned"];
+}
+
+function safeReferenceString(value: string): string {
+  if (/https?:\/\//i.test(value)) return "[redacted]";
+  if (/\b(localhost|127\.0\.0\.1|0\.0\.0\.0)\b/i.test(value)) return "[redacted]";
+  if (/\b(bearer|authorization|token|secret)\b/i.test(value)) return "[redacted]";
+  return value;
 }

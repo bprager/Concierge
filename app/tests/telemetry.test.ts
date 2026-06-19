@@ -433,6 +433,13 @@ test("interaction trace export reconstructs one sanitized trace from buffered ev
       user_profile: string;
       channel: string;
       governance_decision: string;
+      napoleon_references: {
+        request_id: string;
+        decision_id: string;
+        audit_id: string;
+        governance_outcome: string;
+        blocked_effects: string[];
+      };
       caveat: string;
       events: Array<{ event: string; attributes: Record<string, unknown> }>;
     };
@@ -444,6 +451,13 @@ test("interaction trace export reconstructs one sanitized trace from buffered ev
     assert.equal(trace.user_profile, "adult_owner");
     assert.equal(trace.channel, "text");
     assert.equal(trace.governance_decision, "requires_review");
+    assert.deepEqual(trace.napoleon_references, {
+      request_id: "cos_turn_export_trace",
+      decision_id: "decision_export_trace",
+      audit_id: "audit_export_trace",
+      governance_outcome: "requires_review",
+      blocked_effects: ["not_returned"],
+    });
     assert.deepEqual(trace.events.map((event) => event.event), [
       "user_message_received",
       "bridge_request_completed",

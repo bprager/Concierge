@@ -17,6 +17,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added and pushed the initial Concierge scaffold.
 - Verified evaluator stub mode, frontend build, Tauri check, schema validation, Markdown links, and YAML parsing during scaffold packaging.
 - Added a local Chief of Staff steering draft export so the user can inspect the full proposal packet, evaluator case candidate, evolution proposal draft, and proposal-only boundary without contacting Napoleon or applying changes.
+- Added sanitized Napoleon reference summaries to local interaction trace exports so request, decision, audit, governance, failure, and blocked-effect metadata are visible without raw prompts, responses, endpoints, tokens, request bodies, or response bodies.
 - Scoped Conversation Capability Intelligence answers and Chief of Staff steering draft evidence to the active profile so child-protected, guest, collaborator, and owner signals are not mixed in recommendations.
 - Hardened memory proposal review handoff so stale proposals scoped to a different active profile fail closed before any governed endpoint call.
 - Hardened Chief of Staff steering handoff so stale drafts scoped to a different active profile fail closed before any governed endpoint call.
@@ -398,6 +399,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added a bounded browser-local telemetry buffer for emitted local telemetry, with sensitive attribute redaction, ordinary telemetry-off suppression, and continued local buffering for camera, microphone, and privacy-setting audit events.
 - Added Text Concierge local telemetry buffer controls for count/last-event status, redacted local JSON export, and browser-local clear without external sends or Napoleon approval semantics.
 - Added local interaction trace export from the browser-local telemetry buffer, preserving sanitized trace, conversation, turn, profile, channel, governance, and event metadata while redacting raw prompts, responses, endpoints, tokens, request bodies, and response bodies.
+- Added sanitized Napoleon reference summaries to local interaction trace exports so returned request, decision, audit, governance, failure, and blocked-effect metadata is visible without raw prompts, responses, endpoints, tokens, request bodies, or response bodies.
 - Tightened latest interaction trace selection so local proof/export telemetry references the real turn trace instead of becoming the exported interaction trace.
 - Added latest real interaction trace availability to the local telemetry buffer UI and disabled latest-trace export when only non-interaction metadata is buffered.
 - Added a local telemetry buffer retention selector for latest 25, 50, 100, or 200 events, with immediate browser-local pruning when the limit is reduced.
