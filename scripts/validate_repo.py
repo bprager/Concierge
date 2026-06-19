@@ -296,6 +296,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:compile|compileStreaming|instantiate|instantiateStreaming)['\"]\s*\]\s*\("),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:Module|Instance)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\s*\("),
+    re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
     re.compile(r"\b(?:indexedDB|window\.indexedDB)\.(?:open|deleteDatabase)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]indexedDB['\"]\s*\]\s*\[\s*['\"](?:open|deleteDatabase)['\"]\s*\]\s*\("),
