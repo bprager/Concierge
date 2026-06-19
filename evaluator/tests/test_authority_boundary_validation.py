@@ -414,6 +414,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'globalThis["history"]["replaceState"]({ prompt: rawPromptText }, "", "/turn");',
             'history.pushState.call(history, { proof: secretProofJson }, "", "/review");',
             'window.history.replaceState.apply(window.history, [{ prompt: rawPromptText }, "", "/turn"]);',
+            'window["history"]["pushState"].call(window.history, { proof: secretProofJson }, "", "/review");',
+            'globalThis["history"]["replaceState"].apply(globalThis.history, [{ prompt: rawPromptText }, "", "/turn"]);',
             "window.name = secretProofJson;",
             'globalThis["name"] = rawPromptText;',
             'localStorage.setItem("rawPrompt", rawPromptText);',
