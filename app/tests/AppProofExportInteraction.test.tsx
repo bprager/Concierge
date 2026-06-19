@@ -4392,6 +4392,29 @@ test("uses stricter child protected voice shaping without contacting Napoleon or
     assert.equal(shaping.queryByText(/Napoleon says/), null);
     assert.ok(shaping.getByText("Authority boundary: Child protected speech preview is shortened, slower, and still requires guardian/owner review; it is not Napoleon approval."));
     assert.ok(shaping.getByText("Audio playback started: no"));
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const childVoicePolicyEvent = telemetryBuffer.events?.find((event) => event.event === "child_voice_policy_applied");
+    assert.ok(childVoicePolicyEvent);
+    assert.equal(childVoicePolicyEvent.attributes.profileMode, "child_protected");
+    assert.equal(childVoicePolicyEvent.attributes.pacing, "slow");
+    assert.equal(childVoicePolicyEvent.attributes.requiresGuardianReviewReminder, true);
+    assert.equal(childVoicePolicyEvent.attributes.audioPlaybackStarted, false);
+    assert.equal(childVoicePolicyEvent.attributes.microphoneCaptureStarted, false);
+    assert.equal(childVoicePolicyEvent.attributes.liveNapoleonContacted, false);
+    assert.deepEqual(childVoicePolicyEvent.attributes.blockedEffects, [
+      "audio_playback",
+      "microphone_capture",
+      "raw_audio_storage",
+      "live_napoleon_contact",
+      "memory_write",
+      "approval_capture",
+      "guardian_approval_capture",
+      "external_send",
+      "agent_dispatch",
+    ]);
   } finally {
     cleanup();
     dom.window.close();

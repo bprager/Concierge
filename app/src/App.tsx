@@ -1018,6 +1018,27 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });
+    if (result.childProtected) {
+      emitEvent("child_voice_policy_applied", {
+        traceId,
+        conversationId,
+        profileMode: result.profileMode,
+        childProtected: result.childProtected,
+        maxSpokenCharsApplied: result.maxSpokenCharsApplied,
+        pacing: result.pacing,
+        requiresGuardianReviewReminder: result.requiresGuardianReviewReminder,
+        localPreparationOnly: result.localPreparationOnly,
+        audioPlaybackStarted: result.audioPlaybackStarted,
+        microphoneCaptureStarted: result.microphoneCaptureStarted,
+        rawAudioStored: result.rawAudioStored,
+        liveNapoleonContacted: result.liveNapoleonContacted,
+        memoryWritePerformed: result.memoryWritePerformed,
+        approvalCaptured: result.approvalCaptured,
+        agentDispatchPerformed: result.agentDispatchPerformed,
+        externalSendPerformed: result.externalSendPerformed,
+        blockedEffects: result.blockedEffects,
+      });
+    }
   }
 
   function runLocalNeutralAvatarState() {
