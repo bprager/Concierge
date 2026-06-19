@@ -152,6 +152,7 @@ Acceptance criteria:
 - Easy-to-evolve and recommended-next answers use deterministic local ranking from count, confidence, capability status, architecture area, and suggested next step.
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
 - Correctly blocked unsafe requests are classified separately from failed safe requests.
+- Capability ledger storage re-sanitizes appended labels and evidence references before any persistence, export, query answer, or Chief of Staff steering draft can reuse them.
 - Chief of Staff steering drafts only attach evidence from the missing or degraded recommendation bucket that produced the recommendation; correctly blocked unsafe traces are not reused as evolution proposal evidence because of a shared capability label.
 - Chief of Staff steering evolution proposal drafts include metadata-only learning signals from the same selected missing or degraded evidence bucket, and draft creation emits local `learning_signal_recorded` telemetry without raw content or side effects.
 - The Chief of Staff steering draft panel shows learning-signal count, type, source, raw-text retention state, and proposal-only state before a governed handoff can be submitted.

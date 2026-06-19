@@ -190,6 +190,50 @@ test("steering draft uses only the active profile capability evidence", () => {
   assert.equal(childDraft.evolutionProposal.evidence.includes("trace:trace_adult_bridge_gap"), false);
 });
 
+test("steering draft redacts unsafe proposal evidence references from existing ledger entries", () => {
+  const ledger = createCapabilityLedger();
+  const sanitizedSignal = buildCapabilitySignal({
+    traceId: "trace_raw_evidence_gap",
+    conversationId: "conv_raw_evidence_gap",
+    turnId: "turn_raw_evidence_gap",
+    profileMode: "adult_owner",
+    channel: "text",
+    topicLabel: "bridge",
+    intentLabel: "send_to_napoleon",
+    capabilityLabel: "bridge_contract_gap",
+    capabilityStatus: "missing",
+    outcomeSignal: "bridge_failed",
+    confidence: 0.9,
+    evidenceRefs: ["trace:trace_raw_evidence_gap"],
+    architectureArea: "bridge",
+    privacyClass: "metadata_only",
+    suggestedNextStep: "create_evolution_proposal",
+  });
+  appendCapabilitySignal(ledger, {
+    ...sanitizedSignal,
+    evidenceRefs: [
+      "trace:trace_raw_evidence_gap",
+      "https://127.0.0.1:8787/private",
+      "Bearer local-secret-token",
+    ],
+  });
+
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_steering",
+    endpointConfigured: false,
+    profileMode: "adult_owner",
+  });
+
+  assert.deepEqual(draft.evolutionProposal.evidence, [
+    "trace:trace_raw_evidence_gap",
+    "redacted_ref",
+    "redacted_ref",
+  ]);
+  assert.equal(JSON.stringify(draft.evolutionProposal).includes("127.0.0.1"), false);
+  assert.equal(JSON.stringify(draft.evolutionProposal).includes("local-secret-token"), false);
+});
+
 test("steering handoff rejects a draft scoped to a different active profile before fetch", async () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(

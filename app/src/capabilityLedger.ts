@@ -340,9 +340,10 @@ export function createCapabilityLedger(
 
   return {
     append(signal) {
-      signals.push(signal);
+      const sanitizedSignal = buildCapabilitySignal(signal);
+      signals.push(sanitizedSignal);
       prune();
-      return signal;
+      return sanitizedSignal;
     },
     clear() {
       signals.length = 0;
