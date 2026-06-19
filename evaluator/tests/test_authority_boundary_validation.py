@@ -990,6 +990,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             const target = resolveNapoleonGovernanceReviewOperation(endpoint);
             response = await fetcher(target.url, { method: "POST" });
             """,
+            """
+            const target = resolveNapoleonEvolutionProposalReviewOperation(endpoint);
+            response = await fetcher(target.url, { method: "POST" });
+            """,
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/descriptorDiscovery.ts", source)
@@ -1001,6 +1005,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'response = await fetcher("https://napoleon.example/chief-of-staff/reviews/governance", { method: "POST" });',
             'response = await fetcher(endpoint + "/chief-of-staff/reviews/governance", { method: "POST" });',
             'response = await fetcher(`${endpoint}/chief-of-staff/reviews/governance`, { method: "POST" });',
+            'response = await fetcher("https://napoleon.example/chief-of-staff/reviews/evolution-proposals", { method: "POST" });',
+            'response = await fetcher(endpoint + "/chief-of-staff/reviews/evolution-proposals", { method: "POST" });',
+            'response = await fetcher(`${endpoint}/chief-of-staff/reviews/evolution-proposals`, { method: "POST" });',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/governanceReviewSubmission.ts", source)

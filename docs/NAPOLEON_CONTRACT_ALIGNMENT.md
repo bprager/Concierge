@@ -58,6 +58,8 @@ Sanitized evidence capture and comparison now accept the explicit `/cos/descript
 
 Governance review handoff now has a named Napoleon review-path mapping. Generated Concierge-compatible endpoints, including the local harness, continue to use `/v1/concierge/chief-of-staff/steering` with the `chief_of_staff_steering_handoff` request kind. Napoleon root endpoints or explicit governance review endpoints use `/chief-of-staff/reviews/governance` with the `governance_review_handoff` request kind. Both paths still require descriptor preflight, Rehearsal Mode off, matching governance/trace/audit proof, and explicit false side-effect fields before Concierge displays the handoff as reviewed.
 
+Evolution proposal review handoff now has the same named Napoleon review-path mapping for Chief of Staff steering and taxonomy review packets. Generated Concierge-compatible endpoints, including the local harness, continue to use `/v1/concierge/chief-of-staff/steering` with the `chief_of_staff_steering_handoff` request kind. Napoleon root endpoints or explicit evolution proposal review endpoints use `/chief-of-staff/reviews/evolution-proposals` with the `evolution_proposal_review_handoff` request kind. Both paths still require descriptor preflight, Rehearsal Mode off, matching governance/trace/audit proof, and explicit false side-effect fields before Concierge displays the handoff as reviewed.
+
 This is still not full path alignment. The remaining work is to align the broader review/evolution proposal paths with Napoleon's `/chief-of-staff/...`, `/governance/...`, `/observability/...`, and `/evolution/...` surfaces or to have Napoleon expose the `/v1/concierge/...` contract.
 
 ## Review and Evolution Mapping Gap
@@ -68,7 +70,6 @@ The known Napoleon review/evolution surfaces that still need explicit runtime ma
 
 - `/chief-of-staff/requests`
 - `/chief-of-staff/reviews/evaluation`
-- `/chief-of-staff/reviews/evolution-proposals`
 - `/chief-of-staff/reviews/new-agent-proposals`
 - `/governance/evaluate`
 - `/observability/traces`
@@ -76,6 +77,7 @@ The known Napoleon review/evolution surfaces that still need explicit runtime ma
 
 The explicit review path currently mapped is:
 
+- `/chief-of-staff/reviews/evolution-proposals`
 - `/chief-of-staff/reviews/governance`
 
 The current local aliases are useful packaging boundaries:

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a named Napoleon `/chief-of-staff/reviews/evolution-proposals` review-path mapping for governed Chief of Staff steering and taxonomy evolution review handoffs while preserving generated Concierge endpoint and local harness compatibility.
 - Added a named Napoleon `/chief-of-staff/reviews/governance` review-path mapping for governed governance review handoffs while preserving generated Concierge endpoint and local harness compatibility.
 - Added contract-alignment report classification for supported advisory harness paths, local Concierge handoff aliases, Napoleon review/evolution paths that still need explicit runtime mapping, and review paths with no local alias.
 - Added metadata-only `/cos/trace/{trace_id}` observability checks to explicit Napoleon advisory harness text sends, evidence capture, and live-runtime summaries, including comparator coverage that rejects missing or mismatched trace envelopes for `/cos/text-turn` success evidence.

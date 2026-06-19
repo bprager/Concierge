@@ -6,7 +6,7 @@ import {
   type ConversationCapabilitySignal,
   type RecommendationBoundary,
 } from "./capabilityLedger.js";
-import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
+import { resolveNapoleonEvolutionProposalReviewOperation } from "./bridgeEndpoint.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
@@ -454,15 +454,17 @@ export async function submitChiefOfStaffSteeringDraft(
     profileMode,
   });
 
-  const targetEndpoint = resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_steering");
+  const target = resolveNapoleonEvolutionProposalReviewOperation(endpoint);
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<SteeringFetch>>;
   try {
-    response = await fetcher(targetEndpoint, {
+    response = await fetcher(target.url, {
       method: "POST",
       headers: buildSteeringHeaders(authToken),
       body: JSON.stringify({
-        requestKind: "chief_of_staff_steering_handoff",
+        requestKind: target.requestKind,
+        bridgeTargetPath: target.path,
+        bridgeTargetOperation: target.operationId,
         profileMode,
         descriptorStatus: descriptorConnection.descriptorStatus,
         descriptorConnection,

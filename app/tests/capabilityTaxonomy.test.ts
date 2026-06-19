@@ -278,6 +278,8 @@ test("submits taxonomy review draft through governed bridge without applying loc
   assert.equal(headers?.Authorization, "Bearer taxonomy_token");
   assert.equal(JSON.stringify(posted).includes("taxonomy_token"), false);
   assert.equal(posted?.requestKind, "chief_of_staff_steering_handoff");
+  assert.equal(posted?.bridgeTargetPath, "/v1/concierge/chief-of-staff/steering");
+  assert.equal(posted?.bridgeTargetOperation, "chief_of_staff_steering");
   assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "evolution_proposal_review");
   assert.equal((posted?.recommendation as { capability: string }).capability, "capability_taxonomy_review");
   assert.equal((posted?.recommendation as { proposalOnly: boolean }).proposalOnly, true);
@@ -295,6 +297,82 @@ test("submits taxonomy review draft through governed bridge without applying loc
   assert.equal(result.approvalCaptured, false);
   assert.equal(result.agentDispatchPerformed, false);
   assert.equal(result.externalSendPerformed, false);
+});
+
+test("taxonomy review draft maps Napoleon root endpoints to explicit evolution proposal review path", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_taxonomy_root_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_taxonomy_root_2", topic: "deployment", capability: "release_summary" });
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_taxonomy_review_root",
+    traceId: "trace_taxonomy_review_root",
+  });
+  let posted: Record<string, unknown> | undefined;
+  let targetUrl: string | undefined;
+
+  await submitChiefOfStaffTaxonomyReviewDraft(draft, {
+    conversationId: "conv_taxonomy_review_root",
+    traceId: "trace_taxonomy_submit_root",
+    getEndpoint: () => "https://napoleon.example",
+    descriptorConnection: {
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:local-static",
+      actualChecksum: "sha256:local-static",
+      signatureValid: true,
+    },
+    fetch: async (url: string, init?: { method?: string; headers?: Record<string, string>; body?: string }) => {
+      targetUrl = url;
+      posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return {
+        ok: true,
+        json: async () => ({
+          text: "Napoleon accepted the explicit taxonomy evolution review packet.",
+          governanceDecision: {
+            decision_id: "decision_taxonomy_root",
+            request_id: "cos_trace_taxonomy_submit_root",
+            outcome: "requires_review",
+            authority_tier: "advisory_review",
+            approval_requirement: "chief_of_staff_and_owner_review",
+            rationale: "Taxonomy cleanup requires review before applying labels.",
+            blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+            trace_id: "trace_taxonomy_submit_root",
+            audit_id: "audit_taxonomy_root",
+          },
+          traceEnvelope: {
+            trace_id: "trace_taxonomy_submit_root",
+            parent_trace_id: "conv_taxonomy_review_root",
+            actor_id: "napoleon.chief_of_staff",
+            request_id: "cos_trace_taxonomy_submit_root",
+            decision_id: "decision_taxonomy_root",
+            timestamp: "2026-06-19T00:00:00.000Z",
+          },
+          auditEnvelope: {
+            audit_id: "audit_taxonomy_root",
+            trace_id: "trace_taxonomy_submit_root",
+            decision_id: "decision_taxonomy_root",
+            actor_id: "napoleon.chief_of_staff",
+            authority_tier: "advisory_review",
+            approval_requirement: "chief_of_staff_and_owner_review",
+            evidence_links: ["trace:trace_taxonomy_submit_root"],
+          },
+          appliedLocally: false,
+          memoryWritePerformed: false,
+          approvalCaptured: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+        }),
+      };
+    },
+  });
+
+  assert.equal(targetUrl, "https://napoleon.example/chief-of-staff/reviews/evolution-proposals");
+  assert.equal(posted?.requestKind, "evolution_proposal_review_handoff");
+  assert.equal(posted?.bridgeTargetPath, "/chief-of-staff/reviews/evolution-proposals");
+  assert.equal(posted?.bridgeTargetOperation, "evolution_proposal_review");
+  assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "evolution_proposal_review");
+  assert.equal((posted?.taxonomyReview as { reviewType: string }).reviewType, "chief_of_staff_taxonomy_review");
+  assert.equal((posted?.boundary as { proposalOnly: boolean }).proposalOnly, true);
 });
 
 test("child protected taxonomy review handoff keeps child scope and guardian review", async () => {

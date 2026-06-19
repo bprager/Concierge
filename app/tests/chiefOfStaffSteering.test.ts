@@ -649,6 +649,9 @@ test("steering handoff posts evolution review packet without applying proposal l
   assert.equal(postedLearningSignals[0].governance_boundary.applied_locally, false);
   assert.equal(postedLearningSignals[0].governance_boundary.external_send_performed, false);
   assert.equal(targetUrl, "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering");
+  assert.equal(posted?.requestKind, "chief_of_staff_steering_handoff");
+  assert.equal(posted?.bridgeTargetPath, "/v1/concierge/chief-of-staff/steering");
+  assert.equal(posted?.bridgeTargetOperation, "chief_of_staff_steering");
   assert.equal(headers?.Authorization, "Bearer token_steering");
   assert.equal(JSON.stringify(posted).includes("token_steering"), false);
   assert.deepEqual((posted?.boundary as {
@@ -669,6 +672,94 @@ test("steering handoff posts evolution review packet without applying proposal l
   assert.equal(result.approvalCaptured, false);
   assert.equal(result.externalSendPerformed, false);
   assert.equal(result.governanceDecision.outcome, "requires_review");
+});
+
+test("steering handoff maps Napoleon root endpoints to explicit evolution proposal review path", async () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_missing_evolution_path",
+      conversationId: "conv_missing_evolution_path",
+      turnId: "turn_missing_evolution_path",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "napoleon integration",
+      intentLabel: "submit_evolution_proposal",
+      capabilityLabel: "evolution_review_handoff",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.89,
+      evidenceRefs: ["trace:trace_missing_evolution_path"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "create_evolution_proposal",
+    }),
+  );
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_steering_root",
+    endpointConfigured: true,
+  });
+  let posted: Record<string, unknown> | undefined;
+  let targetUrl: string | undefined;
+
+  await submitChiefOfStaffSteeringDraft(draft, {
+    conversationId: "conv_steering",
+    traceId: "trace_submit_root",
+    getEndpoint: () => "https://napoleon.example",
+    descriptorConnection: readyDescriptorConnection,
+    fetch: async (url, init) => {
+      targetUrl = url;
+      posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return {
+        ok: true,
+        json: async () => ({
+          text: "Napoleon accepted the explicit evolution proposal review packet.",
+          governanceDecision: {
+            decision_id: "decision_steering_root",
+            request_id: "cos_trace_submit_root",
+            outcome: "requires_review",
+            authority_tier: "advisory_review",
+            approval_requirement: "chief_of_staff_and_owner_review",
+            rationale: "Evolution proposals require review before implementation.",
+            blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+            trace_id: "trace_submit_root",
+            audit_id: "audit_steering_root",
+          },
+          traceEnvelope: {
+            trace_id: "trace_submit_root",
+            parent_trace_id: "conv_steering",
+            actor_id: "napoleon.chief_of_staff",
+            request_id: "cos_trace_submit_root",
+            decision_id: "decision_steering_root",
+            timestamp: "2026-06-19T00:00:00.000Z",
+          },
+          auditEnvelope: {
+            audit_id: "audit_steering_root",
+            trace_id: "trace_submit_root",
+            decision_id: "decision_steering_root",
+            actor_id: "napoleon.chief_of_staff",
+            authority_tier: "advisory_review",
+            approval_requirement: "chief_of_staff_and_owner_review",
+            evidence_links: ["trace:trace_submit_root"],
+          },
+          appliedLocally: false,
+          memoryWritePerformed: false,
+          approvalCaptured: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+        }),
+      };
+    },
+  });
+
+  assert.equal(targetUrl, "https://napoleon.example/chief-of-staff/reviews/evolution-proposals");
+  assert.equal(posted?.requestKind, "evolution_proposal_review_handoff");
+  assert.equal(posted?.bridgeTargetPath, "/chief-of-staff/reviews/evolution-proposals");
+  assert.equal(posted?.bridgeTargetOperation, "evolution_proposal_review");
+  assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "evolution_proposal_review");
+  assert.equal((posted?.boundary as { proposalOnly: boolean }).proposalOnly, true);
 });
 
 test("child protected steering handoff includes child safety caution and child profile scope", async () => {

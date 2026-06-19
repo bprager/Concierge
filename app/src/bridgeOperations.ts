@@ -11,7 +11,7 @@ export type BridgeOperationId =
   | "memory_proposal_review"
   | "evaluate";
 
-export type NapoleonReviewOperationId = "governance_review";
+export type NapoleonReviewOperationId = "evolution_proposal_review" | "governance_review";
 
 export interface BridgeOperation {
   id: BridgeOperationId;
@@ -46,7 +46,7 @@ export interface BridgeOperationSummary {
 interface NapoleonReviewOperation {
   id: NapoleonReviewOperationId;
   path: `/chief-of-staff/${string}`;
-  requestKind: "governance_review_handoff";
+  requestKind: "evolution_proposal_review_handoff" | "governance_review_handoff";
   transport: "http_post";
   responseRequired: readonly string[];
   governedBridgeOnly: true;
@@ -58,6 +58,25 @@ export { GENERATED_BRIDGE_CONTRACT_SOURCE };
 export const BRIDGE_OPERATIONS: BridgeOperation[] = [...GENERATED_BRIDGE_OPERATIONS];
 
 export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [
+  {
+    id: "evolution_proposal_review",
+    path: "/chief-of-staff/reviews/evolution-proposals",
+    requestKind: "evolution_proposal_review_handoff",
+    transport: "http_post",
+    responseRequired: [
+      "text",
+      "governanceDecision",
+      "traceEnvelope",
+      "auditEnvelope",
+      "appliedLocally",
+      "memoryWritePerformed",
+      "approvalCaptured",
+      "agentDispatchPerformed",
+      "externalSendPerformed",
+    ],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
   {
     id: "governance_review",
     path: "/chief-of-staff/reviews/governance",
@@ -133,6 +152,30 @@ export function buildNapoleonReviewUrl(configuredEndpoint: string, operationId: 
   const trimmed = configuredEndpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
   if (trimmed.endsWith(operation.path)) return trimmed;
   return `${stripKnownBridgeOperationPath(trimmed)}${operation.path}`;
+}
+
+export interface EvolutionProposalReviewBridgeTarget {
+  url: string;
+  path: "/v1/concierge/chief-of-staff/steering" | "/chief-of-staff/reviews/evolution-proposals";
+  requestKind: "chief_of_staff_steering_handoff" | "evolution_proposal_review_handoff";
+  operationId: "chief_of_staff_steering" | "evolution_proposal_review";
+}
+
+export function buildEvolutionProposalReviewBridgeTarget(configuredEndpoint: string): EvolutionProposalReviewBridgeTarget {
+  if (isGeneratedConciergeEndpoint(configuredEndpoint)) {
+    return {
+      url: buildNapoleonBridgeUrl(configuredEndpoint, "chief_of_staff_steering"),
+      path: "/v1/concierge/chief-of-staff/steering",
+      requestKind: "chief_of_staff_steering_handoff",
+      operationId: "chief_of_staff_steering",
+    };
+  }
+  return {
+    url: buildNapoleonReviewUrl(configuredEndpoint, "evolution_proposal_review"),
+    path: "/chief-of-staff/reviews/evolution-proposals",
+    requestKind: "evolution_proposal_review_handoff",
+    operationId: "evolution_proposal_review",
+  };
 }
 
 export interface GovernanceReviewBridgeTarget {

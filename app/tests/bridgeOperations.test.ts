@@ -4,6 +4,7 @@ import {
   BRIDGE_OPERATIONS,
   GENERATED_BRIDGE_CONTRACT_SOURCE,
   NAPOLEON_REVIEW_OPERATIONS,
+  buildEvolutionProposalReviewBridgeTarget,
   buildGovernanceReviewBridgeTarget,
   buildNapoleonBridgeUrl,
   buildNapoleonReviewUrl,
@@ -119,11 +120,19 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   assert.equal(getBridgeOperation("text_turn").requestKind, "text_turn");
   assert.equal(getBridgeOperation("chief_of_staff_steering").requestKind, "chief_of_staff_steering_handoff");
   assert.equal(getBridgeOperation("memory_proposal_review").requestKind, "memory_proposal_review_handoff");
+  assert.equal(
+    getNapoleonReviewOperation("evolution_proposal_review").requestKind,
+    "evolution_proposal_review_handoff",
+  );
+  assert.equal(
+    getNapoleonReviewOperation("evolution_proposal_review").path,
+    "/chief-of-staff/reviews/evolution-proposals",
+  );
   assert.equal(getNapoleonReviewOperation("governance_review").requestKind, "governance_review_handoff");
   assert.equal(getNapoleonReviewOperation("governance_review").path, "/chief-of-staff/reviews/governance");
   assert.deepEqual(
     NAPOLEON_REVIEW_OPERATIONS.map((operation) => operation.governedBridgeOnly),
-    [true],
+    [true, true],
   );
 });
 
@@ -217,6 +226,17 @@ test("bridge URL builder drops pasted operation query strings before resolving a
 
 test("Napoleon review URL builder resolves explicit governance review paths", () => {
   assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example", "evolution_proposal_review"),
+    "https://napoleon.example/chief-of-staff/reviews/evolution-proposals",
+  );
+  assert.equal(
+    buildNapoleonReviewUrl(
+      "https://napoleon.example/chief-of-staff/reviews/evolution-proposals?debug=1",
+      "evolution_proposal_review",
+    ),
+    "https://napoleon.example/chief-of-staff/reviews/evolution-proposals",
+  );
+  assert.equal(
     buildNapoleonReviewUrl("https://napoleon.example", "governance_review"),
     "https://napoleon.example/chief-of-staff/reviews/governance",
   );
@@ -226,6 +246,48 @@ test("Napoleon review URL builder resolves explicit governance review paths", ()
       "governance_review",
     ),
     "https://napoleon.example/chief-of-staff/reviews/governance",
+  );
+});
+
+test("evolution proposal review target keeps generated Concierge endpoints compatible", () => {
+  assert.deepEqual(buildEvolutionProposalReviewBridgeTarget("https://napoleon.example/concierge"), {
+    url: "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering",
+    path: "/v1/concierge/chief-of-staff/steering",
+    requestKind: "chief_of_staff_steering_handoff",
+    operationId: "chief_of_staff_steering",
+  });
+  assert.deepEqual(
+    buildEvolutionProposalReviewBridgeTarget("https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering"),
+    {
+      url: "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering",
+      path: "/v1/concierge/chief-of-staff/steering",
+      requestKind: "chief_of_staff_steering_handoff",
+      operationId: "chief_of_staff_steering",
+    },
+  );
+  assert.deepEqual(buildEvolutionProposalReviewBridgeTarget("http://127.0.0.1:8787"), {
+    url: "http://127.0.0.1:8787/v1/concierge/chief-of-staff/steering",
+    path: "/v1/concierge/chief-of-staff/steering",
+    requestKind: "chief_of_staff_steering_handoff",
+    operationId: "chief_of_staff_steering",
+  });
+});
+
+test("evolution proposal review target maps Napoleon root endpoints to the explicit review contract path", () => {
+  assert.deepEqual(buildEvolutionProposalReviewBridgeTarget("https://napoleon.example"), {
+    url: "https://napoleon.example/chief-of-staff/reviews/evolution-proposals",
+    path: "/chief-of-staff/reviews/evolution-proposals",
+    requestKind: "evolution_proposal_review_handoff",
+    operationId: "evolution_proposal_review",
+  });
+  assert.deepEqual(
+    buildEvolutionProposalReviewBridgeTarget("https://napoleon.example/chief-of-staff/reviews/evolution-proposals"),
+    {
+      url: "https://napoleon.example/chief-of-staff/reviews/evolution-proposals",
+      path: "/chief-of-staff/reviews/evolution-proposals",
+      requestKind: "evolution_proposal_review_handoff",
+      operationId: "evolution_proposal_review",
+    },
   );
 });
 
