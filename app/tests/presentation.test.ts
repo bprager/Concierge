@@ -325,6 +325,43 @@ test("describes transcript metadata with returned target capability provenance",
   assert.deepEqual(metadata.blockedEffects, contract.governanceDecision.blocked_effects);
 });
 
+test("redacts unsafe returned provenance from visible transcript metadata", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge readiness",
+    profile: "adult_owner",
+    conversationId: "conv_transcript_redaction",
+    turnId: "turn_transcript_redaction",
+    traceId: "trace_transcript_redaction",
+    governanceOutcome: "requires_review",
+  });
+
+  const metadata = describeNapoleonTranscriptMetadata({
+    text: "Napoleon prepared a bridge readiness summary.",
+    profileMode: "adult_owner",
+    governanceDecision: {
+      ...contract.governanceDecision,
+      decision_id: "Bearer local-secret-token",
+      blocked_effects: ["memory_write", "http://127.0.0.1:8787/private", "Bearer local-secret-token"],
+    },
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: {
+      ...contract.auditEnvelope,
+      audit_id: "http://127.0.0.1:8787/audit",
+    },
+    requiresReview: true,
+    targetAgent: "http://127.0.0.1:8787/v1/concierge/turn",
+  });
+  const visibleText = JSON.stringify(metadata).toLocaleLowerCase();
+
+  assert.equal(visibleText.includes("127.0.0.1"), false);
+  assert.equal(visibleText.includes("local-secret-token"), false);
+  assert.equal(visibleText.includes("bearer"), false);
+  assert.equal(metadata.targetCapability, "redacted");
+  assert.equal(metadata.decisionId, "redacted");
+  assert.equal(metadata.auditId, "redacted");
+  assert.deepEqual(metadata.blockedEffects, ["memory_write", "redacted", "redacted"]);
+});
+
 test("does not invent agent or recommendation proof when provenance is absent", () => {
   const contract = buildTextTurnContract({
     message: "Summarize the deployment risk",

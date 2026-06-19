@@ -112,12 +112,12 @@ export function describeNapoleonTranscriptMetadata(
   return {
     source: "Napoleon governed bridge",
     attributionBoundary: "Returned bridge provenance only; not local authority.",
-    ...(response.targetAgent ? { targetCapability: response.targetAgent } : {}),
+    ...(response.targetAgent ? { targetCapability: sanitizeVisibleProvenanceValue(response.targetAgent) } : {}),
     governanceOutcome: response.governanceDecision.outcome,
-    decisionId: response.governanceDecision.decision_id,
-    auditId: response.auditEnvelope.audit_id,
+    decisionId: sanitizeVisibleProvenanceValue(response.governanceDecision.decision_id),
+    auditId: sanitizeVisibleProvenanceValue(response.auditEnvelope.audit_id),
     profileMode: response.profileMode,
-    blockedEffects: response.governanceDecision.blocked_effects,
+    blockedEffects: response.governanceDecision.blocked_effects.map((effect) => sanitizeVisibleProvenanceValue(effect)),
   };
 }
 
