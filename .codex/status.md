@@ -400,6 +400,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added Text Concierge local telemetry buffer controls for count/last-event status, redacted local JSON export, and browser-local clear without external sends or Napoleon approval semantics.
 - Added local interaction trace export from the browser-local telemetry buffer, preserving sanitized trace, conversation, turn, profile, channel, governance, and event metadata while redacting raw prompts, responses, endpoints, tokens, request bodies, and response bodies.
 - Added sanitized Napoleon reference summaries to local interaction trace exports so returned request, decision, audit, governance, failure, and blocked-effect metadata is visible without raw prompts, responses, endpoints, tokens, request bodies, or response bodies.
+- Hardened interaction trace Napoleon reference summaries so successful-turn explanation fields are not mislabeled as bridge failure reasons.
 - Tightened latest interaction trace selection so local proof/export telemetry references the real turn trace instead of becoming the exported interaction trace.
 - Added latest real interaction trace availability to the local telemetry buffer UI and disabled latest-trace export when only non-interaction metadata is buffered.
 - Added a local telemetry buffer retention selector for latest 25, 50, 100, or 200 events, with immediate browser-local pruning when the limit is reduced.

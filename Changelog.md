@@ -224,6 +224,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added Text Concierge controls to show local telemetry buffer status, export redacted local buffer metadata, and clear the browser-local buffer without sending externally or implying Napoleon approval.
 - Added Text Concierge local interaction trace export from the telemetry buffer, preserving sanitized trace, conversation, turn, profile, channel, governance, and event metadata without raw prompts, responses, endpoints, tokens, request bodies, or response bodies.
 - Added sanitized Napoleon reference summaries to local interaction trace exports, surfacing request, decision, audit, governance, failure, and blocked-effect metadata without raw prompts, responses, endpoints, tokens, request bodies, or response bodies.
+- Hardened interaction trace Napoleon reference summaries so bridge failure reasons are derived only from explicit bridge failure attributes or failure events, not generic successful-turn explanation fields.
 - Tightened latest interaction trace selection so local proof/export telemetry points back to the real turn trace instead of being exported as the conversation trace.
 - Added visible latest-trace availability in the local telemetry buffer and disabled latest-trace export when only non-interaction metadata is buffered.
 - Added a Text Concierge local telemetry buffer retention selector for latest 25, 50, 100, or 200 events, pruning existing browser-local metadata when reduced.

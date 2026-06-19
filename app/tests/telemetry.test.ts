@@ -406,6 +406,13 @@ test("interaction trace export reconstructs one sanitized trace from buffered ev
       auditId: "audit_export_trace",
       bearerToken: "secret-token",
     });
+    emitEvent("stance_selected", {
+      traceId: "trace_export_trace",
+      conversationId: "conv_export_trace",
+      turnId: "turn_export_trace",
+      stance: "owner_prepare_only",
+      reason: "successful turns must not convert generic reasons into bridge failures",
+    });
     emitEvent("response_generated", {
       traceId: "trace_export_trace",
       conversationId: "conv_export_trace",
@@ -458,15 +465,17 @@ test("interaction trace export reconstructs one sanitized trace from buffered ev
       governance_outcome: "requires_review",
       blocked_effects: ["not_returned"],
     });
+    assert.equal("bridge_failure_reason" in trace.napoleon_references, false);
     assert.deepEqual(trace.events.map((event) => event.event), [
       "user_message_received",
       "bridge_request_completed",
+      "stance_selected",
       "response_generated",
     ]);
     assert.equal(trace.events[0].attributes.rawPrompt, "[redacted]");
     assert.equal(trace.events[0].attributes.endpoint, "[redacted]");
     assert.equal(trace.events[1].attributes.bearerToken, "[redacted]");
-    assert.equal(trace.events[2].attributes.responseText, "[redacted]");
+    assert.equal(trace.events[3].attributes.responseText, "[redacted]");
     assert.equal(JSON.stringify(trace).includes("do not export this prompt"), false);
     assert.equal(JSON.stringify(trace).includes("do not export this response"), false);
     assert.equal(JSON.stringify(trace).includes("napoleon.example.test"), false);

@@ -395,9 +395,13 @@ function interactionTraceNapoleonReferences(events: TelemetryPayload[]): Interac
     governance_outcome: safeReferenceAttribute(events, "governanceOutcome", "outcome"),
     blocked_effects: safeReferenceArrayAttribute(events, "blockedEffects"),
   };
-  const bridgeFailureReason = safeReferenceAttribute(events, "bridgeFailureReason", "reason");
+  const explicitBridgeFailureReason = safeReferenceAttribute(events, "bridgeFailureReason");
+  const bridgeFailureReason =
+    explicitBridgeFailureReason !== "not_returned"
+      ? explicitBridgeFailureReason
+      : safeReferenceAttributeFromFailureEvents(events, "reason");
   const descriptorFailureReason = safeReferenceAttribute(events, "descriptorFailureReason");
-  if (bridgeFailureReason !== "not_returned") {
+  if (bridgeFailureReason && bridgeFailureReason !== "not_returned") {
     references.bridge_failure_reason = bridgeFailureReason;
   }
   if (descriptorFailureReason !== "not_returned") {
@@ -416,6 +420,17 @@ function safeReferenceAttribute(events: TelemetryPayload[], ...keys: string[]): 
     }
   }
   return "not_returned";
+}
+
+function safeReferenceAttributeFromFailureEvents(events: TelemetryPayload[], key: string): string | null {
+  for (const event of [...events].reverse()) {
+    if (!event.event.endsWith("_failed") && event.event !== "bridge_request_failed") continue;
+    const value = event.attributes[key];
+    if (typeof value === "string" && value.length > 0) {
+      return safeReferenceString(value);
+    }
+  }
+  return null;
 }
 
 function safeReferenceArrayAttribute(events: TelemetryPayload[], key: string): string[] {
