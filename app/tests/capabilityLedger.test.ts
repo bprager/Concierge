@@ -79,6 +79,46 @@ test("builds valid capability signals without storing raw message text", () => {
   assert.equal(JSON.stringify(signal).includes("raw text"), false);
 });
 
+test("redacts raw-looking content from capability labels and evidence references", () => {
+  const ledger = createCapabilityLedger();
+  const signal = buildCapabilitySignal({
+    traceId: "trace_sensitive_label",
+    conversationId: "conv_sensitive_label",
+    turnId: "turn_sensitive_label",
+    profileMode: "adult_owner",
+    channel: "text",
+    topicLabel: "Email alice@example.com the launch secret",
+    intentLabel: "Summarize https://private.example.test/roadmap",
+    capabilityLabel: "Use bearer sk-live-secret-token for deployment",
+    capabilityStatus: "missing",
+    outcomeSignal: "bridge_failed",
+    confidence: 0.7,
+    evidenceRefs: [
+      "trace:trace_sensitive_label",
+      "user said email alice@example.com the launch secret",
+      "https://private.example.test/roadmap",
+    ],
+    architectureArea: "bridge",
+    privacyClass: "metadata_only",
+    suggestedNextStep: "write_evaluator_case",
+  });
+  appendCapabilitySignal(ledger, signal);
+
+  const snapshot = serializeCapabilityLedger(ledger);
+  const exported = exportCapabilityLedger(ledger);
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger);
+  const combined = JSON.stringify({ signal, snapshot, exported, answer });
+
+  assert.equal(combined.includes("alice@example.com"), false);
+  assert.equal(combined.includes("private.example.test"), false);
+  assert.equal(combined.includes("sk-live-secret-token"), false);
+  assert.equal(combined.includes("launch secret"), false);
+  assert.equal(signal.topicLabel, "redacted_label");
+  assert.equal(signal.intentLabel, "redacted_label");
+  assert.equal(signal.capabilityLabel, "redacted_label");
+  assert.deepEqual(signal.evidenceRefs, ["trace:trace_sensitive_label", "redacted_ref", "redacted_ref"]);
+});
+
 test("ledger stores bounded recent signals and aggregates by required dimensions", () => {
   const ledger = createCapabilityLedger({ maxSignals: 2 });
   const first = buildCapabilitySignal({

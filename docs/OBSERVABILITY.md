@@ -229,7 +229,7 @@ Example:
 }
 ```
 
-Capability intelligence logs and persisted snapshots must avoid raw user content by default. Store timestamps, labels, counts, trend deltas, score components, confidence, privacy class, architecture area, suggested next step, taxonomy edits, retention settings, scoring caveats, and trace references rather than transcripts. Local export is JSON metadata only and does not grant permission to share externally.
+Capability intelligence logs and persisted snapshots must avoid raw user content by default. Store timestamps, sanitized machine labels, counts, trend deltas, score components, confidence, privacy class, architecture area, suggested next step, taxonomy edits, retention settings, scoring caveats, and allowlisted local trace/event/audit references rather than transcripts. Sentence-like labels, email addresses, URLs, token-shaped values, and non-local evidence references are redacted before storage or export. Local export is JSON metadata only and does not grant permission to share externally.
 
 ## 7. Redaction policy
 

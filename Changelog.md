@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened Conversation Capability Intelligence metadata so raw-looking labels, email addresses, URLs, token-shaped values, and non-local evidence references are redacted before local storage, query answers, persistence, export, or steering evidence selection.
 - Scoped Conversation Capability Intelligence answers and Chief of Staff steering draft evidence to the active profile so child-protected, guest, collaborator, and owner signals are not mixed in recommendations.
 - Hardened memory proposal review handoff so stale proposals scoped to a different active profile fail closed before any governed endpoint call.
 - Hardened Chief of Staff steering handoff so stale drafts scoped to a different active profile fail closed before any governed endpoint call.

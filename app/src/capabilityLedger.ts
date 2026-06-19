@@ -258,6 +258,40 @@ function clampConfidence(confidence: number): number {
   return Math.max(0, Math.min(1, confidence));
 }
 
+const SAFE_METADATA_LABEL_PATTERN = /^[a-z0-9][a-z0-9_.-]{0,63}$/i;
+const SAFE_EVIDENCE_REF_PATTERN =
+  /^(trace|event|turn|decision|audit|request|proposal|capability|taxonomy):[a-z0-9][a-z0-9_.:-]{0,95}$/i;
+const SENSITIVE_METADATA_PATTERN =
+  /(@|https?:\/\/|www\.|bearer\s+|sk-[a-z0-9_-]{8,}|secret|token|password|credential)/i;
+
+function sanitizeCapabilityMetadataLabel(value: string): string {
+  const trimmed = value.trim();
+  if (
+    !trimmed ||
+    trimmed.length > 64 ||
+    /\s/.test(trimmed) ||
+    SENSITIVE_METADATA_PATTERN.test(trimmed) ||
+    !SAFE_METADATA_LABEL_PATTERN.test(trimmed)
+  ) {
+    return "redacted_label";
+  }
+  return trimmed;
+}
+
+function sanitizeCapabilityEvidenceRef(value: string): string {
+  const trimmed = value.trim();
+  if (
+    !trimmed ||
+    trimmed.length > 128 ||
+    /\s/.test(trimmed) ||
+    SENSITIVE_METADATA_PATTERN.test(trimmed) ||
+    !SAFE_EVIDENCE_REF_PATTERN.test(trimmed)
+  ) {
+    return "redacted_ref";
+  }
+  return trimmed;
+}
+
 function normalizeProfileMode(profile: LocalProfile | NapoleonProfileMode | undefined): NapoleonProfileMode {
   if (profile === "child_protected") return "child_protected_user";
   return profile ?? "adult_owner";
@@ -281,13 +315,13 @@ export function buildCapabilitySignal(input: CapabilitySignalInput): Conversatio
     turnId: input.turnId,
     profileMode,
     channel: input.channel,
-    topicLabel: input.topicLabel,
-    intentLabel: input.intentLabel,
-    capabilityLabel: input.capabilityLabel,
+    topicLabel: sanitizeCapabilityMetadataLabel(input.topicLabel),
+    intentLabel: sanitizeCapabilityMetadataLabel(input.intentLabel),
+    capabilityLabel: sanitizeCapabilityMetadataLabel(input.capabilityLabel),
     capabilityStatus: input.capabilityStatus,
     outcomeSignal: input.outcomeSignal,
     confidence: clampConfidence(input.confidence),
-    evidenceRefs: [...input.evidenceRefs],
+    evidenceRefs: input.evidenceRefs.map(sanitizeCapabilityEvidenceRef),
     architectureArea: input.architectureArea,
     privacyClass: privacyClassForProfile(profileMode, input.privacyClass),
     suggestedNextStep: input.suggestedNextStep,
