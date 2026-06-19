@@ -400,6 +400,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         for source in [
             'const db = await globalThis["indexedDB"]["open"]("concierge-raw-transcripts");',
             'await window["indexedDB"]["deleteDatabase"]("concierge-proof-cache");',
+            'const db = await globalThis["indexedDB"]["open"].call(globalThis.indexedDB, "concierge-raw-transcripts");',
+            'await window["indexedDB"]["deleteDatabase"].apply(window.indexedDB, ["concierge-proof-cache"]);',
+            'const cache = await globalThis["caches"]["open"].call(globalThis.caches, "concierge-hidden-cache");',
+            'await window["caches"]["put"].apply(window.caches, [request, response]);',
             'const channel = new globalThis["BroadcastChannel"]("concierge-proof");',
             'const channel = globalThis["BroadcastChannel"]("concierge-proof");',
             'const channel = new window["MessageChannel"]();',
