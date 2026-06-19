@@ -186,6 +186,11 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(napoleonReply).getByText("napoleon.chief_of_staff"));
     assert.ok(within(napoleonReply).getByText("Blocked effects"));
     assert.ok(within(napoleonReply).getByText("memory_write, approval_capture, external_send, agent_dispatch"));
+    const napoleonProofPanel = screen.getByText("Last successful Napoleon proof").closest("section") as HTMLElement;
+    assert.ok(napoleonProofPanel);
+    assert.ok(within(napoleonProofPanel).getByText("Napoleon recommendation"));
+    assert.ok(within(napoleonProofPanel).getByText("keeping this as a governed review draft"));
+    assert.ok(within(napoleonProofPanel).getByText("Returned bridge provenance only; not local authority."));
     const textTurnTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };

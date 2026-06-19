@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered UI coverage tying `Napoleon recommends...` response wording to visible recommendation proof and the returned-provenance attribution boundary.
 - Hardened local telemetry buffer exports so nested unsafe string values inside arrays or objects are recursively redacted before visible JSON export, with rendered UI coverage for Napoleon trace references and unsafe blocked-effect metadata.
 - Hardened latest interaction trace exports so malformed blocked-effect references use the same `[redacted]` marker as other sanitized Napoleon reference metadata, with regression coverage for the local trace export.
 - Added a local Chief of Staff steering draft export that lets the user inspect the recommendation, evaluator case candidate, evolution proposal draft, learning-signal count, send state, and proposal-only boundary without contacting Napoleon or applying changes; stale exports clear when connection or descriptor context changes.
