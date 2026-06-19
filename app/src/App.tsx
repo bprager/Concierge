@@ -673,6 +673,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setSteeringDraftExportJson(null);
     if (enabled) {
       setPendingRehearsal(null);
+      clearBridgeReadinessProof();
+      clearBridgeEvidenceReadiness();
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
       clearChiefOfStaffCapabilities();

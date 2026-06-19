@@ -222,6 +222,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Cleared rendered Napoleon proof and delegation provenance when the bridge endpoint or bearer token changes so connection-scoped bridge evidence is not reused after descriptor invalidation.
 - Cleared rendered Napoleon proof and delegation provenance when descriptor mode changes or descriptor discovery refreshes connection state so descriptor-scoped bridge evidence is not reused after preflight changes.
 - Cleared rendered Napoleon proof and delegation provenance when Rehearsal Mode is enabled so live bridge evidence is not shown while Concierge is in local-only preview mode.
+- Cleared captured bridge evidence readiness and rendered bridge readiness proof exports when Rehearsal Mode is enabled so local-only preview mode cannot display stale live validation.
 - Added evaluator coverage for child protected bridge response semantics so valid bridge responses still preserve guardian review, no secret-keeping, memory minimization, blocked effects, and stricter child fail-closed behavior.
 - Added evaluator coverage for governed memory proposal and Chief of Staff steering review response semantics so `requires_review` remains non-approval and reviewed packets stay proposal-only, not locally applied.
 - Added evaluator coverage for profile-scope drift so guest, collaborator, and child protected responses cannot widen themselves into adult owner or owner-only authority.
