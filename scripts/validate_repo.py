@@ -412,8 +412,11 @@ BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
 
 HIDDEN_MEDIA_OR_SPEECH_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bgetUserMedia\s*\("),
+    re.compile(r"\bgetUserMedia\.(?:call|apply)\s*\("),
     re.compile(r"\bgetDisplayMedia\s*\("),
+    re.compile(r"\bgetDisplayMedia\.(?:call|apply)\s*\("),
     re.compile(r"\benumerateDevices\s*\("),
+    re.compile(r"\benumerateDevices\.(?:call|apply)\s*\("),
     re.compile(r"\[\s*['\"](?:getUserMedia|getDisplayMedia|enumerateDevices)['\"]\s*\]\s*\("),
     re.compile(r"\bMediaRecorder\s*\("),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]MediaRecorder['\"]\s*\]\s*\("),
@@ -423,6 +426,7 @@ HIDDEN_MEDIA_OR_SPEECH_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]SpeechRecognition['\"]\s*\]\s*\("),
     re.compile(r"\bspeechSynthesis\b"),
     re.compile(r"\.play\s*\("),
+    re.compile(r"\.play\.(?:call|apply)\s*\("),
     re.compile(r"\[\s*['\"]play['\"]\s*\]\s*\("),
 ]
 
