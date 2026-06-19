@@ -35,6 +35,7 @@ FORBIDDEN_EVIDENCE_FIELDS = {
     "url",
 }
 SECRET_VALUE_PATTERN = re.compile(r"bearer\s+\S+|secret[_\-\s]?\w*", re.IGNORECASE)
+FIELD_SEPARATOR_PATTERN = re.compile(r"[^a-z0-9]+")
 RUNTIME_VALIDATION_SOURCES = {"real_runtime", "local_harness", "local_simulation"}
 ADVISORY_HARNESS_OPERATION_ALIASES = {
     ("text_turn", "/cos/text-turn"): {
@@ -42,6 +43,13 @@ ADVISORY_HARNESS_OPERATION_ALIASES = {
         "requestKind": "text_turn",
     }
 }
+
+
+def normalized_evidence_field_name(field: str) -> str:
+    return FIELD_SEPARATOR_PATTERN.sub("", field.lower())
+
+
+FORBIDDEN_EVIDENCE_FIELD_KEYS = {normalized_evidence_field_name(field) for field in FORBIDDEN_EVIDENCE_FIELDS}
 
 
 def load_evidence_records(path: Path) -> list[dict[str, Any]]:
@@ -68,7 +76,7 @@ def find_privacy_violations(record: Any, path: str = "$") -> list[str]:
     if isinstance(record, dict):
         for key, value in record.items():
             key_path = f"{path}.{key}"
-            if key in FORBIDDEN_EVIDENCE_FIELDS:
+            if normalized_evidence_field_name(key) in FORBIDDEN_EVIDENCE_FIELD_KEYS:
                 violations.append(f"{key_path}: forbidden evidence field {key}")
             violations.extend(find_privacy_violations(value, key_path))
     elif isinstance(record, list):

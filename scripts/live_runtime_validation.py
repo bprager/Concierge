@@ -8,6 +8,7 @@ import contextlib
 import io
 import json
 import os
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -53,6 +54,14 @@ FORBIDDEN_ARTIFACT_FIELDS = {
     "token",
     "url",
 }
+FIELD_SEPARATOR_PATTERN = re.compile(r"[^a-z0-9]+")
+
+
+def normalized_artifact_field_name(field: str) -> str:
+    return FIELD_SEPARATOR_PATTERN.sub("", field.lower())
+
+
+FORBIDDEN_ARTIFACT_FIELD_KEYS = {normalized_artifact_field_name(field) for field in FORBIDDEN_ARTIFACT_FIELDS}
 
 
 def runtime_validation_caveat(source: str) -> str:
@@ -173,7 +182,7 @@ def artifact_privacy_violations(value: Any, sensitive_values: set[str], path: st
     if isinstance(value, dict):
         for key, nested in value.items():
             key_path = f"{path}.{key}"
-            if key in FORBIDDEN_ARTIFACT_FIELDS:
+            if normalized_artifact_field_name(key) in FORBIDDEN_ARTIFACT_FIELD_KEYS:
                 violations.append(f"{key_path}: forbidden artifact field {key}")
             violations.extend(artifact_privacy_violations(nested, sensitive_values, key_path))
     elif isinstance(value, list):

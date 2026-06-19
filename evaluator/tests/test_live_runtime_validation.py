@@ -219,6 +219,29 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertNotIn("raw response", json.dumps(audit))
         self.assertNotIn("127.0.0.1:8787", json.dumps(audit))
 
+    def test_artifact_privacy_audit_rejects_snake_case_raw_fields(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            artifact = Path(tmpdir) / "artifact.json"
+            artifact.write_text(
+                json.dumps({
+                    "safe": "metadata",
+                    "response_text": "redacted value should still be a forbidden retained field",
+                    "request_body": {"shape": "also forbidden"},
+                    "bearer_token": "redacted",
+                }),
+                encoding="utf-8",
+            )
+
+            audit = live_runtime_validation.audit_artifact_privacy([artifact], set())
+
+        self.assertEqual(audit["status"], "failed")
+        self.assertEqual(audit["checked_count"], 1)
+        self.assertEqual(audit["violation_count"], 3)
+        violations = audit["artifacts"][0]["violations"]
+        self.assertTrue(any("forbidden artifact field response_text" in violation for violation in violations))
+        self.assertTrue(any("forbidden artifact field request_body" in violation for violation in violations))
+        self.assertTrue(any("forbidden artifact field bearer_token" in violation for violation in violations))
+
 
 if __name__ == "__main__":
     unittest.main()

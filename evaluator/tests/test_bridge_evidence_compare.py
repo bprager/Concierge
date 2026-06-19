@@ -61,6 +61,18 @@ class BridgeEvidenceCompareTest(unittest.TestCase):
         self.assertTrue(any("forbidden evidence field message" in violation for violation in violations))
         self.assertTrue(any("secret-like evidence value" in violation for violation in violations))
 
+    def test_rejects_snake_case_raw_payload_or_secret_fields(self):
+        record = self.valid_record()
+        record["response_text"] = "redacted value should still be a forbidden retained field"
+        record["request_body"] = {"safe": "shape"}
+        record["bearer_token"] = "redacted"
+
+        violations = bridge_evidence_compare.compare_bridge_evidence_records([record])
+
+        self.assertTrue(any("forbidden evidence field response_text" in violation for violation in violations))
+        self.assertTrue(any("forbidden evidence field request_body" in violation for violation in violations))
+        self.assertTrue(any("forbidden evidence field bearer_token" in violation for violation in violations))
+
     def test_rejects_invalid_runtime_validation_source(self):
         record = self.valid_record()
         record["runtimeValidationSource"] = "localhost_but_probably_real"
