@@ -354,7 +354,7 @@ Acceptance criteria:
 - Child protected live voice readiness and governed voice pipeline blocked effects include `guardian_approval_capture` so local review wording cannot be treated as captured guardian approval.
 - The plan must not start capture or playback, contact Napoleon, write memory, capture approval, dispatch agents, send externally, or imply Napoleon approval.
 - Text Concierge can export a sanitized local voice pipeline proof containing only proposal state, profile mode, child/guardian-review state, blocked stages, blocked effects, and explicit false side-effect flags, without raw audio, prompts, endpoint hosts, bearer tokens, request bodies, or response bodies.
-- Text Concierge can compare the current voice pipeline proof with the previous proof exported in the same app session, reporting unchanged, changed, invalid previous proof, or no previous proof from sanitized voice pipeline metadata only.
+- Text Concierge can compare the current voice pipeline proof with the previous proof exported in the same app session, reporting unchanged, changed, invalid previous proof, or no previous proof from sanitized voice pipeline metadata only, while rejecting proof JSON that contains unsafe raw/secret field names, normalized snake_case raw-field aliases, endpoint-like values, bearer credentials, or raw audio/request/response fields.
 - Permission checks do not write memory, capture approval, dispatch agents, send externally, or store raw audio.
 - Child protected mode must keep the same visible capture boundary and cannot treat microphone permission as guardian approval.
 
@@ -365,7 +365,7 @@ Privacy and safety impact:
 - The live voice gate is derived from local settings, permission state, descriptor readiness, and bridge proof state; it is not a command to start capture or contact Napoleon.
 - The pipeline plan is local derived display state only and is not executable.
 - Voice pipeline proof export is local metadata only; it is not Napoleon approval, not live runtime evidence, and not permission to start capture, playback, memory writes, agent dispatch, or external sends.
-- Voice pipeline proof comparison is local metadata only and must not expose raw audio, prompts, endpoint hosts, bearer tokens, request bodies, response bodies, or authority claims.
+- Voice pipeline proof comparison is local metadata only and must not expose raw audio, prompts, endpoint hosts, bearer tokens, request bodies, response bodies, or authority claims; unsafe raw/secret field names and normalized snake_case raw-field aliases are rejected before comparison.
 
 Evaluator coverage:
 

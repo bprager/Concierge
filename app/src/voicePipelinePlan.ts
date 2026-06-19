@@ -222,8 +222,50 @@ const forbiddenProofFragments = [
   "rawAudioData",
 ];
 
+const forbiddenProofKeys = [
+  "endpoint",
+  "host",
+  "token",
+  "authToken",
+  "bearerToken",
+  "bearer_token",
+  "prompt",
+  "rawPrompt",
+  "raw_prompt",
+  "message",
+  "requestBody",
+  "request_body",
+  "responseBody",
+  "response_body",
+  "responseText",
+  "response_text",
+  "rawAudioData",
+  "raw_audio_data",
+  "rawAudio",
+  "raw_audio",
+];
+
+const forbiddenProofKeyNames = new Set(forbiddenProofKeys.map((key) => key.toLocaleLowerCase()));
+const forbiddenProofNormalizedKeyNames = new Set(
+  forbiddenProofKeys.map((key) => key.replace(/[_-]/g, "").toLocaleLowerCase()),
+);
+
 function hasForbiddenProofFragment(value: string): boolean {
   return forbiddenProofFragments.some((fragment) => value.includes(fragment));
+}
+
+function hasForbiddenProofContent(value: unknown): boolean {
+  if (typeof value === "string") return hasForbiddenProofFragment(value);
+  if (Array.isArray(value)) return value.some((item) => hasForbiddenProofContent(item));
+  if (!value || typeof value !== "object") return false;
+
+  return Object.entries(value).some(([key, nested]) => {
+    const keyName = key.toLocaleLowerCase();
+    const normalizedKeyName = key.replace(/[_-]/g, "").toLocaleLowerCase();
+    if (forbiddenProofKeyNames.has(keyName)) return true;
+    if (forbiddenProofNormalizedKeyNames.has(normalizedKeyName)) return true;
+    return hasForbiddenProofContent(nested);
+  });
 }
 
 function listValue(value: unknown): string {
@@ -266,6 +308,7 @@ function parseVoicePipelineProof(json: string): null | {
     };
     if (parsed.kind !== "concierge_governed_voice_pipeline_proof") return null;
     if (!parsed.voicePipeline) return null;
+    if (hasForbiddenProofContent(parsed)) return null;
     return parsed;
   } catch {
     return null;

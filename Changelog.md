@@ -35,6 +35,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened visible governed review responses so unsafe returned review text, decision, audit, trace, rationale, or blocked-effect values are redacted before display.
 - Hardened bridge readiness proof exports so unsafe captured evidence values such as endpoint-like paths, loopback hosts, bearer credentials, or authorization text are redacted before local readiness proof JSON is created.
 - Hardened bridge readiness and Napoleon response proof comparison so snake_case raw-field aliases such as `response_text`, `request_body`, and `bearer_token` are rejected in UI-side proof inputs.
+- Hardened governed voice pipeline proof comparison so snake_case raw-field aliases such as `raw_audio_data`, `request_body`, and `response_text` are rejected before local proof metadata can be compared.
 - Hardened bridge evidence comparison and live runtime artifact privacy audits so snake_case raw-field aliases such as `response_text`, `request_body`, and `bearer_token` are rejected before evidence can be retained.
 - Hardened repository authority-boundary validation so root `@tauri-apps/api` imports are rejected alongside Tauri submodule imports, preventing UI code from regaining native authority paths outside the governed bridge.
 - Hardened repository authority-boundary validation so mixed bracket/dot direct history state and localStorage/sessionStorage aliases cannot retain, erase, or move prompts, proofs, tokens, or responses around governed flows.

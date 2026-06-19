@@ -169,3 +169,26 @@ test("rejects missing or unsafe previous governed voice pipeline proof compariso
   );
   assert.equal(unsafe.status, "invalid_previous");
 });
+
+test("rejects governed voice pipeline proof comparison input containing snake_case raw fields", () => {
+  const current = exportGovernedVoicePipelineProofJson(buildGovernedVoicePipelinePlan({ profileMode: "adult_owner" }), {
+    generatedAt: "2026-06-16T00:00:00.000Z",
+    conversationId: "conv_voice_pipeline",
+  });
+
+  const unsafe = compareGovernedVoicePipelineProofs(
+    JSON.stringify({
+      kind: "concierge_governed_voice_pipeline_proof",
+      voicePipeline: {
+        proposalOnly: true,
+        raw_audio_data: "raw sample",
+        request_body: { response_text: "raw response" },
+      },
+    }),
+    current,
+  );
+
+  assert.equal(unsafe.status, "invalid_previous");
+  assert.equal(JSON.stringify(unsafe).includes("raw sample"), false);
+  assert.equal(JSON.stringify(unsafe).includes("raw response"), false);
+});
