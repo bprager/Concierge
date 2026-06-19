@@ -336,6 +336,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bdocument\s*\[\s*['\"]cookie['\"]\s*\]\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]\s*\[\s*['\"]cookie['\"]\s*\]\s*="),
     re.compile(r"\b(?:history|window\.history)\.(?:pushState|replaceState)\s*\("),
+    re.compile(r"\b(?:history|window\.history)\.(?:pushState|replaceState)\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\[\s*['\"](?:pushState|replaceState)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\.name\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]name['\"]\s*\]\s*="),
