@@ -116,6 +116,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_scanner_detects_direct_tauri_native_bridge_access(self):
         for source in [
             'import { invoke } from "@tauri-apps/api/core";',
+            'import * as tauri from "@tauri-apps/api";',
+            'const tauri = require("@tauri-apps/api");',
             'await invoke("write_memory", payload);',
             'await window.__TAURI__.core.invoke("write_memory", payload);',
             'await globalThis.__TAURI__.tauri.invoke("dispatch_agent", payload);',
