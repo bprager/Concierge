@@ -1070,6 +1070,28 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       externalSendPerformed: result.externalSendPerformed,
       blockedEffects: result.blockedEffects,
     });
+    if (result.childProtected) {
+      emitEvent("child_avatar_policy_applied", {
+        traceId,
+        conversationId,
+        profileMode: result.profileMode,
+        childProtected: result.childProtected,
+        cameraPolicy: result.cameraPolicy,
+        affectPolicy: result.affectPolicy,
+        guardianApprovalCaptured: result.guardianApprovalCaptured,
+        localDisplayOnly: result.localDisplayOnly,
+        cameraCaptureStarted: result.cameraCaptureStarted,
+        faceDetectionStarted: result.faceDetectionStarted,
+        affectInferred: result.affectInferred,
+        avatarAnimationStarted: result.avatarAnimationStarted,
+        liveNapoleonContacted: result.liveNapoleonContacted,
+        memoryWritePerformed: result.memoryWritePerformed,
+        approvalCaptured: result.approvalCaptured,
+        agentDispatchPerformed: result.agentDispatchPerformed,
+        externalSendPerformed: result.externalSendPerformed,
+        blockedEffects: result.blockedEffects,
+      });
+    }
   }
 
   function runLocalAvatarExpressionMapping() {

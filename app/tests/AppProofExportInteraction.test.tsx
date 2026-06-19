@@ -4567,6 +4567,32 @@ test("applies child protected avatar state constraints from rendered profile con
     assert.ok(avatarState.getByText("Affect policy: disabled"));
     assert.ok(avatarState.getByText("Guardian reminder: Guardian review is required before child avatar camera or affect features."));
     assert.ok(avatarState.getByText("Guardian approval captured: no"));
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const childAvatarPolicyEvent = telemetryBuffer.events?.find((event) => event.event === "child_avatar_policy_applied");
+    assert.ok(childAvatarPolicyEvent);
+    assert.equal(childAvatarPolicyEvent.attributes.profileMode, "child_protected");
+    assert.equal(childAvatarPolicyEvent.attributes.cameraPolicy, "disabled_until_guardian_review");
+    assert.equal(childAvatarPolicyEvent.attributes.affectPolicy, "disabled");
+    assert.equal(childAvatarPolicyEvent.attributes.guardianApprovalCaptured, false);
+    assert.equal(childAvatarPolicyEvent.attributes.cameraCaptureStarted, false);
+    assert.equal(childAvatarPolicyEvent.attributes.affectInferred, false);
+    assert.equal(childAvatarPolicyEvent.attributes.avatarAnimationStarted, false);
+    assert.equal(childAvatarPolicyEvent.attributes.liveNapoleonContacted, false);
+    assert.deepEqual(childAvatarPolicyEvent.attributes.blockedEffects, [
+      "camera_capture",
+      "face_detection",
+      "affect_inference",
+      "avatar_animation",
+      "live_napoleon_contact",
+      "memory_write",
+      "approval_capture",
+      "guardian_approval_capture",
+      "external_send",
+      "agent_dispatch",
+    ]);
   } finally {
     cleanup();
     dom.window.close();
