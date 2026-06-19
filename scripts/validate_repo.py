@@ -366,7 +366,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\[\s*['\"]createContextualFragment['\"]\s*\]\s*\("),
     re.compile(r"\bdocument\.(?:write|writeln)\s*\("),
     re.compile(r"\bdocument\s*\[\s*['\"](?:write|writeln)['\"]\s*\]\s*\("),
-    re.compile(r"\bHTMLDocument\.prototype\.(?:write|writeln)\.call\s*\("),
+    re.compile(r"\bHTMLDocument\.prototype\.(?:write|writeln)\.(?:call|apply)\s*\("),
     re.compile(r"\bsrcDoc\s*="),
     re.compile(r"\bsrcdoc\s*="),
 ]
