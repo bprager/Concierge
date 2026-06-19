@@ -853,7 +853,7 @@ Acceptance criteria:
 
 - `schemas/learning_signal.schema.json` defines the metadata-only contract for learning signals.
 - `examples/sample_learning_signal.json` validates against the schema in repository validation.
-- Runtime helpers construct schema-shaped learning signals and telemetry attributes from local capability metadata without copying raw conversation content.
+- Runtime helpers construct schema-shaped learning signals and telemetry attributes from sanitized local capability metadata without copying raw conversation content.
 - Chief of Staff steering drafts attach schema-shaped learning signals to evolution proposal drafts and emit local `learning_signal_recorded` telemetry from metadata-only attributes.
 - Signals include trace, turn, conversation, profile mode, channel, signal type, source, capability, architecture area, confidence, evidence references, privacy classification, and proposal-only governance boundaries.
 - Supported signal types include `correction`, `interruption`, `rating`, and `repeated_pattern`.
@@ -865,7 +865,7 @@ Acceptance criteria:
 Privacy and safety impact:
 
 - Learning signals are inputs to reviewed proposals only, not runtime adaptation commands.
-- Evidence uses trace, audit, event, evaluator, turn, and capability references instead of raw transcripts by default.
+- Evidence uses allowlisted local trace, audit, event, evaluator, turn, and capability references instead of raw transcripts by default; raw-looking summaries and references are dropped before proposal drafting.
 
 Evaluator coverage:
 

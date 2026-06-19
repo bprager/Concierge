@@ -160,6 +160,26 @@ function clampConfidence(confidence: number): number {
   return Math.max(0, Math.min(1, confidence));
 }
 
+const SAFE_LEARNING_LABEL_PATTERN = /^[a-z0-9][a-z0-9_.-]{0,63}$/i;
+const SAFE_LEARNING_EVIDENCE_REF_PATTERN =
+  /^(trace|audit|turn|capability|evaluator|event):[a-z0-9][a-z0-9_.:-]{0,95}$/i;
+const SENSITIVE_LEARNING_METADATA_PATTERN =
+  /(@|https?:\/\/|www\.|bearer\s+|sk-[a-z0-9_-]{8,}|secret|token|password|credential)/i;
+
+function sanitizeLearningLabel(value: string): string {
+  const trimmed = value.trim();
+  if (
+    !trimmed ||
+    trimmed.length > 64 ||
+    /\s/.test(trimmed) ||
+    SENSITIVE_LEARNING_METADATA_PATTERN.test(trimmed) ||
+    !SAFE_LEARNING_LABEL_PATTERN.test(trimmed)
+  ) {
+    return "redacted_label";
+  }
+  return trimmed;
+}
+
 function normalizeProfileMode(profileMode: NapoleonProfileMode): LearningSignalProfileMode {
   if (profileMode === "child_protected_user") return "child_protected_user";
   if (profileMode === "guest") return "guest_user";
@@ -228,14 +248,24 @@ function privacyFor(profileMode: LearningSignalProfileMode, privacyClass: Capabi
 }
 
 function normalizeEvidenceRefs(evidenceRefs: string[], capabilityId: string): string[] {
-  const refs = evidenceRefs.filter((ref) => /^(trace|audit|turn|capability|evaluator|event):/.test(ref));
-  refs.push(`capability:${capabilityId}`);
+  const refs = evidenceRefs
+    .map((ref) => ref.trim())
+    .filter(
+      (ref) =>
+        ref.length <= 128 &&
+        !/\s/.test(ref) &&
+        !SENSITIVE_LEARNING_METADATA_PATTERN.test(ref) &&
+        SAFE_LEARNING_EVIDENCE_REF_PATTERN.test(ref),
+    );
+  refs.push(`capability:${sanitizeLearningLabel(capabilityId)}`);
   return Array.from(new Set(refs));
 }
 
 function optionalRedactedSummary(summary: string | undefined): string | undefined {
   if (!summary) return undefined;
-  return summary.slice(0, 240);
+  const trimmed = summary.trim();
+  if (!trimmed || SENSITIVE_LEARNING_METADATA_PATTERN.test(trimmed)) return undefined;
+  return trimmed.slice(0, 240);
 }
 
 export function buildLearningSignal(input: LearningSignalInput): LearningSignal {
@@ -251,7 +281,7 @@ export function buildLearningSignal(input: LearningSignalInput): LearningSignal 
     channel: input.channel,
     signal_type: input.signalType,
     source: input.source,
-    capability_id: input.capabilityId,
+    capability_id: sanitizeLearningLabel(input.capabilityId),
     architecture_area: input.architectureArea,
     confidence: clampConfidence(input.confidence),
     evidence_refs: normalizeEvidenceRefs(input.evidenceRefs, input.capabilityId),

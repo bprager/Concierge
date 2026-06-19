@@ -50,7 +50,7 @@ Examples:
 
 Each signal must include trace, turn, conversation, profile mode, channel, signal type, capability, architecture area, confidence, evidence references, privacy classification, and explicit proposal-only governance boundaries. The schema supports corrections, interruptions, ratings, and repeated patterns. Raw user text, raw audio, and raw video are false by contract, and child-protected signals must be minimized before they can inform a proposal.
 
-The Text Concierge runtime can now derive these records from local Conversation Capability Intelligence metadata through `app/src/learningSignal.ts`. The helper emits schema-shaped records and count-only telemetry attributes; it does not copy raw conversation text, claim approval, write memory, dispatch agents, send externally, or apply changes locally.
+The Text Concierge runtime can now derive these records from local Conversation Capability Intelligence metadata through `app/src/learningSignal.ts`. The helper emits schema-shaped records and count-only telemetry attributes; it sanitizes capability labels, allowlists local evidence references, drops raw-looking redacted summaries that contain email addresses, URLs, token-shaped values, or secret wording, and does not copy raw conversation text, claim approval, write memory, dispatch agents, send externally, or apply changes locally.
 
 Chief of Staff steering drafts attach these records to evolution proposal drafts when local capability evidence supports the recommendation. Draft creation also emits local `learning_signal_recorded` telemetry from metadata-only attributes, without raw content, approval capture, memory writes, agent dispatch, external sends, or local application.
 

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildCapabilitySignal } from "../src/capabilityLedger.js";
 import {
+  buildLearningSignal,
   buildLearningSignalFromCapabilitySignal,
   buildLearningSignalTelemetryAttributes,
 } from "../src/learningSignal.js";
@@ -161,4 +162,46 @@ test("learning signal telemetry attributes expose counts and boundaries without 
   assert.equal(attributes.externalSendPerformed, false);
   assert.equal("redactedSummary" in attributes, false);
   assert.equal(JSON.stringify(attributes).includes("Should not appear"), false);
+});
+
+test("direct learning signal construction redacts raw-looking summaries and evidence references", () => {
+  const learningSignal = buildLearningSignal({
+    signalId: "learning_direct_sensitive",
+    createdAt: "2026-06-16T12:15:00.000Z",
+    conversationId: "conv_direct_sensitive",
+    turnId: "turn_direct_sensitive",
+    traceId: "trace_direct_sensitive",
+    profileMode: "adult_owner",
+    channel: "text",
+    signalType: "repeated_pattern",
+    source: "local_capability_ledger",
+    capabilityId: "release_summary",
+    architectureArea: "napoleon_bridge",
+    outcome: "missing",
+    confidence: 0.71,
+    patternCount: 2,
+    evidenceRefs: [
+      "trace:trace_direct_sensitive",
+      "event:response_failed",
+      "audit:audit_direct_sensitive",
+      "trace:user said email alice@example.com the launch secret",
+      "https://private.example.test/roadmap",
+    ],
+    redactedSummary: "Email alice@example.com using bearer sk-live-secret-token about the launch secret.",
+    suggestedNextStep: "draft_evolution_proposal",
+    privacyClass: "metadata_only",
+  });
+  const combined = JSON.stringify(learningSignal);
+
+  assert.equal(combined.includes("alice@example.com"), false);
+  assert.equal(combined.includes("private.example.test"), false);
+  assert.equal(combined.includes("sk-live-secret-token"), false);
+  assert.equal(combined.includes("launch secret"), false);
+  assert.deepEqual(learningSignal.evidence_refs, [
+    "trace:trace_direct_sensitive",
+    "event:response_failed",
+    "audit:audit_direct_sensitive",
+    "capability:release_summary",
+  ]);
+  assert.equal(Object.hasOwn(learningSignal, "redacted_summary"), false);
 });
