@@ -191,9 +191,9 @@ Object and embed `data` targets are treated as external load targets only in obj
 
 Direct assignment to `location`, `window.location`, `document.location`, `globalThis.location`, or bracket-style `window["location"]` aliases is treated as browser navigation outside the governed bridge, including variable-based targets, matching the existing checks for `location.href`, `location.assign`, `location.replace`, and bracketed `location["href"]`, `location["assign"]`, or `location["replace"]` aliases.
 
-Programmatic form submission APIs such as `form.submit()`, `form.requestSubmit()`, `document.forms[0].submit()`, bracket-style submission aliases, and `HTMLFormElement.prototype.submit.call(...)` are treated as external-send side channels outside the governed bridge, even when a form target is assembled dynamically.
+Programmatic form submission APIs such as `form.submit()`, `form.requestSubmit()`, `document.forms[0].submit()`, bracket-style submission aliases, and prototype call/apply aliases such as `HTMLFormElement.prototype.submit.call(...)` and `HTMLFormElement.prototype.requestSubmit.apply(...)` are treated as external-send side channels outside the governed bridge, even when a form target is assembled dynamically.
 
-Programmatic DOM clicks such as `anchor.click()`, `downloadLink.click()`, `button.click()`, bracket-style `click` aliases, and anchor/button prototype click calls are treated as navigation or form side channels outside the governed bridge.
+Programmatic DOM clicks such as `anchor.click()`, `downloadLink.click()`, `button.click()`, bracket-style `click` aliases, and anchor/button prototype call/apply aliases such as `HTMLAnchorElement.prototype.click.call(...)` and `HTMLButtonElement.prototype.click.apply(...)` are treated as navigation or form side channels outside the governed bridge.
 
 Browser cross-context messaging such as `postMessage`, `BroadcastChannel`, `MessageChannel`, postMessage call/apply aliases such as `window.postMessage.call(...)`, and constructor call/apply aliases such as `BroadcastChannel.call(...)` and `window.MessageChannel.apply(...)` is treated as a side channel so UI code cannot relay local prompts, responses, tokens, or proof metadata to another browser context outside governed visible flows.
 

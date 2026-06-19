@@ -647,6 +647,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'form["submit"]();',
             'form["requestSubmit"]();',
             "HTMLFormElement.prototype.submit.call(form);",
+            "HTMLFormElement.prototype.submit.apply(form);",
+            "HTMLFormElement.prototype.requestSubmit.apply(form);",
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.tsx", source)
@@ -661,7 +663,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "submitButton.click();",
             'anchor["click"]();',
             "HTMLAnchorElement.prototype.click.call(anchor);",
+            "HTMLAnchorElement.prototype.click.apply(anchor);",
             "HTMLButtonElement.prototype.click.call(submitButton);",
+            "HTMLButtonElement.prototype.click.apply(submitButton);",
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.tsx", source)
