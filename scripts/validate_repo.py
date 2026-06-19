@@ -239,6 +239,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b\w+\s*\[\s*['\"]pushManager['\"]\s*\]\s*\[\s*['\"]subscribe['\"]\s*\]\s*\("),
     re.compile(r"\bPaymentRequest\s*\("),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]PaymentRequest['\"]\s*\]\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]PaymentRequest['\"]\s*\]\s*\("),
     re.compile(r"\bsendBeacon\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\("),

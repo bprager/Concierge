@@ -456,6 +456,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'await window["Notification"]["requestPermission"]();',
             'await registration["pushManager"]["subscribe"](options);',
             'const request = new window["PaymentRequest"](methods, details);',
+            'const request = window["PaymentRequest"](methods, details);',
+            'const request = globalThis["PaymentRequest"](methods, details);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)

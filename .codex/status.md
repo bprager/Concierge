@@ -48,6 +48,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened repository authority-boundary validation so bracket-style dynamic code execution aliases such as `window["eval"]`, `globalThis["Function"]`, and string-timer aliases cannot create hidden authority paths in Concierge runtime source.
 - Hardened repository authority-boundary validation so bracket-style dynamic HTML injection aliases such as `container["innerHTML"]`, `window["DOMParser"]`, and lowercase `srcdoc` cannot smuggle external targets around governed bridge checks.
 - Hardened repository authority-boundary validation so `document.write`, `document.writeln`, and bracket-style document write aliases cannot smuggle external targets around governed bridge checks.
+- Hardened repository authority-boundary validation so bracket-style Payment Request constructor aliases cannot start payment flows outside governed visible Concierge controls.
 - Hardened repository authority-boundary validation so bracket-style privileged browser device, account, notification, push, and payment API aliases cannot bypass governed visible Concierge flows.
 - Hardened repository authority-boundary validation so browser permission-state queries cannot inspect camera, microphone, or location permissions outside governed visible Concierge controls.
 - Hardened repository authority-boundary validation so browser geolocation reads and watches cannot access location outside governed visible Concierge controls.
