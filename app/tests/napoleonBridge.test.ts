@@ -1406,6 +1406,140 @@ test("live bridge fails closed when delegation provenance disagrees with trace o
   );
 });
 
+test("live bridge fails closed when returned delegation allows forbidden side effects", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_forbidden_delegation_effects",
+          conversationId: "conv_forbidden_delegation_effects",
+          turnId: "turn_forbidden_delegation_effects",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft and send the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Prepared through Napoleon.",
+              governanceDecision: {
+                decision_id: "decision_forbidden_delegation_effects",
+                request_id: "cos_turn_forbidden_delegation_effects",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["external_send", "memory_write", "agent_dispatch", "approval_capture"],
+                trace_id: "trace_forbidden_delegation_effects",
+                audit_id: "audit_forbidden_delegation_effects",
+              },
+              traceEnvelope: {
+                trace_id: "trace_forbidden_delegation_effects",
+                parent_trace_id: "conv_forbidden_delegation_effects",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_forbidden_delegation_effects",
+                decision_id: "decision_forbidden_delegation_effects",
+                timestamp: "2026-06-12T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_forbidden_delegation_effects",
+                trace_id: "trace_forbidden_delegation_effects",
+                decision_id: "decision_forbidden_delegation_effects",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_forbidden_delegation_effects"],
+              },
+              delegation: {
+                selectedAgents: [
+                  {
+                    agentId: "napoleon.passive_brain",
+                    displayName: "Passive Brain",
+                    selectionReason: "Relevant deployment history was found.",
+                    contributionSummary: "Found the prior bridge rollout note.",
+                  },
+                ],
+                allowedEffects: ["prepare_advisory_response", "external_send", "memory_write"],
+                blockedEffects: ["agent_dispatch", "approval_capture"],
+                governanceState: "requires_review",
+                traceId: "trace_forbidden_delegation_effects",
+                auditId: "audit_forbidden_delegation_effects",
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
+test("live bridge fails closed when advisory harness claims candidate agents were invoked", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_cos_runtime_invoked",
+          conversationId: "conv_cos_runtime_invoked",
+          turnId: "turn_cos_runtime_invoked",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Summarize the governed bridge status",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/cos/text-turn",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 202,
+            json: async () => ({
+              schema_version: "napoleon/concierge/text-turn-response/v1",
+              status: "accepted_for_prepare_only",
+              answer: "Napoleon prepared an advisory status summary.",
+              trace_id: "trace_cos_runtime_invoked",
+              audit_id: "audit_cos_runtime_invoked",
+              governance_decision: {
+                schema_version: "napoleon/concierge/governance-decision/v1",
+                decision: "allow_prepare_only",
+                reason: "Advisory preparation only; blocked effects remain unavailable.",
+                authority_tier: "prepare_only",
+                blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+              },
+              delegation_plan: {
+                schema_version: "napoleon/concierge/delegation-plan/v1",
+                status: "candidate_agents_or_no_safe_delegation",
+                requested_capability: "napoleon.chief_of_staff",
+                candidate_agents: [
+                  {
+                    agent_id: "napoleon.passive_brain",
+                    display_name: "Passive Brain",
+                    selection_reason: "Relevant status memory was available for review.",
+                    contribution_summary: "Found the latest bridge alignment note.",
+                    runtime_invoked: true,
+                  },
+                ],
+                blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+              },
+              blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
 test("live bridge fails closed before fetch when discovered descriptor checksum mismatches", async () => {
   let fetchCalled = false;
   const events: TelemetryPayload[] = [];

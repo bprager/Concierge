@@ -20,6 +20,21 @@ type BridgeFetch = (url: string, init?: { method?: string; headers?: Record<stri
   json: () => Promise<unknown>;
 }>;
 
+const FORBIDDEN_DELEGATION_ALLOWED_EFFECTS = new Set([
+  "approval_capture",
+  "audit_append",
+  "command_execution",
+  "event_publication",
+  "external_send",
+  "graph_write",
+  "memory_write",
+  "registry_runtime_activation",
+  "remediation",
+  "runtime_authority",
+  "service_control",
+  "task_routing",
+]);
+
 export interface BridgeContractEvidence {
   kind: "bridge_contract_evidence";
   operationId: BridgeOperationId;
@@ -293,6 +308,17 @@ function isNapoleonDelegation(value: unknown): value is NapoleonDelegation {
   );
 }
 
+function hasForbiddenDelegationAllowedEffects(allowedEffects: string[]): boolean {
+  return allowedEffects.some((effect) => FORBIDDEN_DELEGATION_ALLOWED_EFFECTS.has(effect));
+}
+
+function advisoryHarnessClaimsRuntimeInvocation(delegationPlan: Record<string, unknown>): boolean {
+  const candidateAgents = Array.isArray(delegationPlan.candidate_agents) ? delegationPlan.candidate_agents : [];
+  return candidateAgents.some(
+    (agent) => Boolean(agent && typeof agent === "object" && (agent as Record<string, unknown>).runtime_invoked === true),
+  );
+}
+
 function isNapoleonRecommendationProvenance(value: unknown): value is NapoleonRecommendationProvenance {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<NapoleonRecommendationProvenance>;
@@ -460,6 +486,13 @@ function adaptAdvisoryHarnessResponse(
   if (!isAdvisoryHarnessResponse(payload)) return null;
   const governance = payload.governance_decision as Record<string, unknown>;
   const delegationPlan = payload.delegation_plan as Record<string, unknown>;
+  if (
+    (isStringArray(delegationPlan.allowed_effects) &&
+      hasForbiddenDelegationAllowedEffects(delegationPlan.allowed_effects)) ||
+    advisoryHarnessClaimsRuntimeInvocation(delegationPlan)
+  ) {
+    return null;
+  }
   const outcome = governance.decision;
   if (
     outcome !== "allow_prepare_only" &&
@@ -799,6 +832,9 @@ export async function sendToNapoleon(
         ? payload.delegation
         : null;
   if (delegation === null) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
+  if (delegation && hasForbiddenDelegationAllowedEffects(delegation.allowedEffects)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
   if (hasUnprovenSelectedAgentAttribution(payload.text, delegation)) {
