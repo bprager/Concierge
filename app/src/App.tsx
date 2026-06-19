@@ -589,6 +589,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setBridgeReadinessProofComparison(null);
   }
 
+  function clearBridgeEvidenceReadiness() {
+    setBridgeEvidenceReadiness(buildBridgeEvidenceReadinessState());
+  }
+
   function clearVoicePipelineProof() {
     setVoicePipelineProofJson(null);
     setVoicePipelineProofComparison(null);
@@ -618,6 +622,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setLiveDescriptorInput(null);
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
+    clearBridgeEvidenceReadiness();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
     clearChiefOfStaffCapabilities();
@@ -637,6 +642,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setLiveDescriptorInput(null);
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
+    clearBridgeEvidenceReadiness();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
     clearChiefOfStaffCapabilities();
@@ -654,6 +660,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setDescriptorMode(value);
     setSteeringDraftExportJson(null);
     clearBridgeReadinessProof();
+    clearBridgeEvidenceReadiness();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
     clearChiefOfStaffCapabilities();
@@ -1394,6 +1401,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setDescriptorDiscoveryMessage(result.connection.message);
       setSteeringDraftExportJson(null);
       clearBridgeReadinessProof();
+      clearBridgeEvidenceReadiness();
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
       clearChiefOfStaffCapabilities();
@@ -1420,6 +1428,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setDescriptorDiscoveryMessage("Descriptor discovery failed closed. Concierge will not attempt live bridge calls.");
       setSteeringDraftExportJson(null);
       clearBridgeReadinessProof();
+      clearBridgeEvidenceReadiness();
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
       clearChiefOfStaffCapabilities();

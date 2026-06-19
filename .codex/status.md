@@ -75,6 +75,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened bridge readiness proof exports to redact unsafe captured evidence values such as endpoint-like paths, loopback hosts, bearer credentials, and authorization text before local readiness proof JSON is created.
 - Hardened bridge readiness and Napoleon response proof comparisons to reject snake_case raw-field aliases such as `response_text`, `request_body`, and `bearer_token` in UI-side proof inputs.
 - Hardened bridge evidence comparison and live runtime artifact privacy audits to reject snake_case raw-field aliases such as `response_text`, `request_body`, and `bearer_token`.
+- Hardened bridge evidence readiness so endpoint, bearer-token, descriptor mode, and descriptor discovery changes reset captured runtime evidence before stale validation can promote a new connection context.
 - Hardened repository authority-boundary validation to reject root `@tauri-apps/api` imports alongside Tauri submodule imports in UI/runtime source.
 - Hardened Conversation Capability Intelligence storage so appended ledger signals are re-sanitized before Chief of Staff steering drafts, persistence, export, or query answers can reuse evidence references.
 - Added advisory Chief of Staff capability discovery state to sanitized bridge readiness proof exports as metadata-only count, ID, authority-tier, blocked-effect, and false-authority evidence.
