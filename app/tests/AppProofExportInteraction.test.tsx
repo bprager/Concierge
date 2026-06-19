@@ -218,6 +218,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
       .at(-1);
     assert.equal(napoleonProofEvent?.attributes.selectedAgentCount, 1);
     assert.equal(napoleonProofEvent?.attributes.selectedAgentSelectionReasonCount, 1);
+    assert.equal(napoleonProofEvent?.attributes.targetCapabilityReturned, true);
     assert.equal(napoleonProofEvent?.attributes.recommendationProvenanceReturned, true);
     assert.equal(
       Object.values(napoleonProofEvent?.attributes ?? {}).some((value) =>

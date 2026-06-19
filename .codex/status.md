@@ -52,6 +52,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added browser CORS preflight support to the local Napoleon-compatible harness so the rendered Text Concierge shell can validate the local endpoint preset without treating it as real runtime authority.
 - Added returned Napoleon recommendation provenance to sanitized last-success proof exports and comparisons so recommendation attribution stays auditable without raw response text.
 - Added a metadata-only `recommendationProvenanceReturned` flag to Napoleon response proof export telemetry without emitting returned recommendation text.
+- Added a metadata-only `targetCapabilityReturned` flag to Napoleon response proof export telemetry so returned capability provenance stays separate from selected-agent counts.
 - Hardened repository authority-boundary validation so bracket-style FileReader constructor aliases cannot read local files outside governed visible import/export flows.
 - Hardened repository authority-boundary validation so bracketed IndexedDB and Cache Storage `.call(...)` and `.apply(...)` aliases cannot retain prompts, proofs, transcripts, or responses outside bounded visible stores.
 - Hardened repository authority-boundary validation so bracketed localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.
