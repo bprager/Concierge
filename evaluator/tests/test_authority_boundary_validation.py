@@ -351,6 +351,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "reader.readAsBinaryString(file);",
             'const [handle] = await window["showOpenFilePicker"]();',
             'const reader = new window["FileReader"]();',
+            'const reader = window["FileReader"]();',
+            'const reader = globalThis["FileReader"]();',
             'reader["readAsText"](file);',
         ]:
             with self.subTest(source=source):
