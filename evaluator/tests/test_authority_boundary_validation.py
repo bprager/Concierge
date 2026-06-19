@@ -45,6 +45,20 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("direct process or shell execution", violations[0])
 
+    def test_scanner_detects_direct_process_execution_aliases(self):
+        for source in [
+            'await childProcess["execFile"]("osascript", args);',
+            'await childProcess["spawnSync"]("sh", ["-c", script]);',
+            'const command = new globalThis["Deno"]["Command"]("osascript", { args });',
+            'const child = globalThis["Bun"]["spawn"](["osascript", "-e", script]);',
+            'const result = window["Bun"]["spawnSync"](["sh", "-c", script]);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_authority_boundary_text("app/src/processAlias.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("direct process or shell execution", violations[0])
+
     def test_scanner_detects_direct_memory_or_graph_access(self):
         violations = validate_repo.scan_authority_boundary_text(
             "app/src/memory.ts",

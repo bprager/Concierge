@@ -84,8 +84,11 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         re.compile(
             r"\b(child_process|std::process|subprocess|os\.system)\b"
             r"|\b(?:exec|execFile|execFileSync|execSync|spawn|spawnSync)\s*\("
+            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:execFile|execFileSync|execSync|spawn|spawnSync)['\"]\s*\]\s*\("
             r"|\bDeno\.Command\s*\("
+            r"|\b(?:globalThis|window)\s*\[\s*['\"]Deno['\"]\s*\]\s*\[\s*['\"]Command['\"]\s*\]\s*\("
             r"|\bBun\.spawnSync\s*\("
+            r"|\b(?:globalThis|window)\s*\[\s*['\"]Bun['\"]\s*\]\s*\[\s*['\"](?:spawn|spawnSync)['\"]\s*\]\s*\("
             r"|\bCommand::new\s*\("
         ),
         "direct process or shell execution",
