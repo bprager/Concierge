@@ -219,6 +219,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added evaluator coverage for bridge delegation provenance and bridge contract fixture fail-closed behavior.
 - Added evaluator coverage for bridge response authority provenance so invented Napoleon recommendations, invented selected-agent findings, and side-effect claims require matching provenance or fail closed.
 - Cleared rendered Napoleon proof and delegation provenance when the active user profile changes so profile-scoped bridge evidence is not reused across child, guest, collaborator, and owner contexts.
+- Cleared captured bridge evidence readiness and rendered bridge readiness proof exports when the active user profile changes so adult-owner and child-protected validation state is not mixed.
 - Cleared rendered Napoleon proof and delegation provenance when the bridge endpoint or bearer token changes so connection-scoped bridge evidence is not reused after descriptor invalidation.
 - Cleared rendered Napoleon proof and delegation provenance when descriptor mode changes or descriptor discovery refreshes connection state so descriptor-scoped bridge evidence is not reused after preflight changes.
 - Cleared rendered Napoleon proof and delegation provenance when Rehearsal Mode is enabled so live bridge evidence is not shown while Concierge is in local-only preview mode.
