@@ -30,10 +30,25 @@ class BridgeEvidenceCompareTest(unittest.TestCase):
         record["runtimeValidationSource"] = "local_harness"
         record["allowedEffects"] = ["prepare_advisory_response"]
         record["blockedEffects"] = ["memory_write", "approval_capture", "agent_dispatch", "external_send"]
+        record["traceEnvelopeObserved"] = True
+        record["traceEnvelopeMatched"] = True
+        record["traceTargetPath"] = "/cos/trace/{trace_id}"
 
         violations = bridge_evidence_compare.compare_bridge_evidence_records([record])
 
         self.assertEqual(violations, [])
+
+    def test_rejects_observed_cos_trace_when_it_does_not_match_text_turn(self):
+        record = self.valid_record()
+        record["targetPath"] = "/cos/text-turn"
+        record["runtimeValidationSource"] = "local_harness"
+        record["traceEnvelopeObserved"] = True
+        record["traceEnvelopeMatched"] = False
+        record["traceTargetPath"] = "/cos/trace/{trace_id}"
+
+        violations = bridge_evidence_compare.compare_bridge_evidence_records([record])
+
+        self.assertTrue(any("observed trace envelope must match" in violation for violation in violations))
 
     def test_rejects_request_kind_that_does_not_match_openapi(self):
         record = self.valid_record()

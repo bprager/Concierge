@@ -137,6 +137,12 @@ def compare_bridge_evidence_records(records: list[dict[str, Any]]) -> list[str]:
         require_string_list(record, "selectedAgentIds", index, violations)
         require_string_list(record, "allowedEffects", index, violations)
         require_string_list(record, "blockedEffects", index, violations)
+        if "traceEnvelopeObserved" in record:
+            require_bool(record, "traceEnvelopeObserved", index, violations)
+        if "traceEnvelopeMatched" in record:
+            require_bool(record, "traceEnvelopeMatched", index, violations)
+        if "traceTargetPath" in record and record.get("traceTargetPath") != "/cos/trace/{trace_id}":
+            violations.append(f"{prefix}: traceTargetPath must be /cos/trace/{{trace_id}}")
 
         operation = operations.get(operation_id or "")
         if operation is None:
@@ -174,6 +180,8 @@ def compare_bridge_evidence_records(records: list[dict[str, Any]]) -> list[str]:
                 violations.append(f"{prefix}: success evidence must have verified provenance")
             if "reason" in record:
                 violations.append(f"{prefix}: success evidence must not include a fail-closed reason")
+            if record.get("traceEnvelopeObserved") is True and record.get("traceEnvelopeMatched") is not True:
+                violations.append(f"{prefix}: observed trace envelope must match the text-turn trace")
         if status == "fail_closed":
             require_string(record, "reason", index, violations)
             if provenance_verified is not False:

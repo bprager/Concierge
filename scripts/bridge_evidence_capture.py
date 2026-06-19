@@ -31,6 +31,7 @@ KNOWN_BRIDGE_PATHS = (
     "/cos/descriptor",
     "/cos/capabilities",
     "/cos/text-turn",
+    "/cos/trace",
 )
 
 
@@ -68,6 +69,11 @@ def descriptor_url(endpoint: str) -> str:
 
 def text_turn_url(endpoint: str) -> str:
     return bridge_url(endpoint, "/cos/text-turn" if is_cos_endpoint(endpoint) else "/v1/concierge/turn")
+
+
+def cos_trace_url(endpoint: str, trace_id: str) -> str:
+    base = strip_known_bridge_path(endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/"))
+    return f"{base}/cos/trace/{trace_id}"
 
 
 def auth_headers(auth_token: str | None, cos_mode: bool, content_type: bool = False) -> dict[str, str]:
@@ -324,6 +330,8 @@ def evidence_from_cos_response(
     response_payload: dict[str, Any],
     runtime_validation_source: str,
     request_id: str,
+    trace_payload: dict[str, Any] | None = None,
+    trace_status_code: int | None = None,
 ) -> dict[str, Any]:
     trace_id = str(response_payload.get("trace_id") or "trace_bridge_evidence_capture")
     if status_code < 200 or status_code >= 300:
@@ -352,6 +360,9 @@ def evidence_from_cos_response(
         if isinstance(delegation.get("blocked_effects"), list)
         else response_payload.get("blocked_effects", [])
     )
+    trace_observed = trace_status_code == 200 and isinstance(trace_payload, dict)
+    returned_trace_id = str((trace_payload or {}).get("trace_id") or "")
+    trace_matched = trace_observed and returned_trace_id == trace_id
     return {
         "kind": "bridge_contract_evidence",
         "operationId": "text_turn",
@@ -376,6 +387,9 @@ def evidence_from_cos_response(
         "allowedEffects": ["prepare_advisory_response"],
         "blockedEffects": blocked_effects,
         "provenanceVerified": True,
+        "traceEnvelopeObserved": trace_observed,
+        "traceEnvelopeMatched": trace_matched,
+        "traceTargetPath": "/cos/trace/{trace_id}",
     }
 
 
@@ -423,8 +437,21 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
 
     payload = cos_request_payload(args.message, descriptor_preflight) if cos_mode else request_payload(args.message, descriptor_preflight)
     status_code, response_payload = post_json(text_turn_url(endpoint), payload, args.auth_token, cos_mode)
+    trace_status_code: int | None = None
+    trace_payload: dict[str, Any] | None = None
+    if cos_mode and 200 <= status_code < 300:
+        trace_id = str(response_payload.get("trace_id") or "")
+        if trace_id:
+            trace_status_code, trace_payload = get_json(cos_trace_url(endpoint, trace_id), args.auth_token, cos_mode)
     records = [
-        evidence_from_cos_response(status_code, response_payload, args.runtime_validation_source, str(payload.get("request_id") or ""))
+        evidence_from_cos_response(
+            status_code,
+            response_payload,
+            args.runtime_validation_source,
+            str(payload.get("request_id") or ""),
+            trace_payload,
+            trace_status_code,
+        )
         if cos_mode
         else evidence_from_response(status_code, response_payload, args.runtime_validation_source)
     ]

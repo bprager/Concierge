@@ -240,6 +240,9 @@ def bridge_evidence_operation_summary(path: Path) -> dict[str, Any]:
             "lastTransport": None,
             "lastTargetPath": None,
             "lastRuntimeValidationSource": None,
+            "traceEnvelopeObserved": None,
+            "traceEnvelopeMatched": None,
+            "traceTargetPath": None,
         }
     payload = load_json(path)
     records = payload if isinstance(payload, list) else payload.get("records", []) if isinstance(payload, dict) else []
@@ -251,6 +254,9 @@ def bridge_evidence_operation_summary(path: Path) -> dict[str, Any]:
             "lastTransport": None,
             "lastTargetPath": None,
             "lastRuntimeValidationSource": None,
+            "traceEnvelopeObserved": None,
+            "traceEnvelopeMatched": None,
+            "traceTargetPath": None,
         }
     record = records[-1]
     return {
@@ -260,6 +266,9 @@ def bridge_evidence_operation_summary(path: Path) -> dict[str, Any]:
         "lastTransport": str(record.get("transport") or ""),
         "lastTargetPath": str(record.get("targetPath") or ""),
         "lastRuntimeValidationSource": str(record.get("runtimeValidationSource") or ""),
+        "traceEnvelopeObserved": record.get("traceEnvelopeObserved"),
+        "traceEnvelopeMatched": record.get("traceEnvelopeMatched"),
+        "traceTargetPath": str(record.get("traceTargetPath") or ""),
     }
 
 

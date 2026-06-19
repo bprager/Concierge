@@ -156,9 +156,10 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
                 records = json.load(handle)
 
         self.assertEqual(exit_code, 0)
-        self.assertEqual(harness.get_count, 1)
+        self.assertEqual(harness.get_count, 2)
         self.assertEqual(harness.post_count, 1)
         self.assertEqual(harness.last_get_path, "/cos/descriptor")
+        self.assertEqual(harness.get_paths, ["/cos/descriptor", "/cos/trace/trace_bridge_evidence_capture"])
         self.assertEqual(harness.last_post_path, "/cos/text-turn")
         self.assertEqual(harness.last_auth_header, "token_cos_capture")
         self.assertEqual(harness.last_turn_payload["profile_mode"], "adult_owner")
@@ -167,6 +168,9 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertEqual(records[0]["requestKind"], "text_turn")
         self.assertEqual(records[0]["runtimeValidationSource"], "local_harness")
         self.assertEqual(records[0]["selectedAgentIds"], ["napoleon.passive_brain"])
+        self.assertTrue(records[0]["traceEnvelopeObserved"])
+        self.assertTrue(records[0]["traceEnvelopeMatched"])
+        self.assertEqual(records[0]["traceTargetPath"], "/cos/trace/{trace_id}")
         self.assertEqual(bridge_evidence_compare.compare_bridge_evidence_records(records), [])
         self.assertFalse("token_cos_capture" in json.dumps(records))
         self.assertFalse(harness.base_url in json.dumps(records))
@@ -206,6 +210,7 @@ class RecordingCosHarness:
     def __init__(self, descriptor_ready: bool):
         self.descriptor_ready = descriptor_ready
         self.get_count = 0
+        self.get_paths = []
         self.post_count = 0
         self.last_get_path = ""
         self.last_post_path = ""
@@ -218,8 +223,31 @@ class RecordingCosHarness:
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self):
                 parent.get_count += 1
-                parent.last_get_path = self.path
+                parent.get_paths.append(self.path)
                 parent.last_auth_header = self.headers.get("X-Napoleon-Auth", "")
+                if self.path.startswith("/cos/trace/"):
+                    trace_id = self.path.rsplit("/", 1)[-1]
+                    self.write_json(
+                        200,
+                        {
+                            "trace_id": trace_id,
+                            "audit_id": f"audit_{trace_id}",
+                            "events": [
+                                {
+                                    "event_type": "advisory_text_turn_prepared",
+                                    "authority_tier": "prepare_only",
+                                    "blocked_effects": [
+                                        "memory_write",
+                                        "approval_capture",
+                                        "agent_dispatch",
+                                        "external_send",
+                                    ],
+                                }
+                            ],
+                        },
+                    )
+                    return
+                parent.last_get_path = self.path
                 if self.path != "/cos/descriptor":
                     self.write_json(404, {"error": "not_found"})
                     return

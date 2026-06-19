@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added metadata-only `/cos/trace/{trace_id}` observability checks to explicit Napoleon advisory harness evidence capture and live-runtime summaries; the records only show whether the trace envelope was observed and matched the text-turn trace.
 - Added the AI handoff structure in `.codex/`.
 - Added root `AGENTS.md` guidance for future agents.
 - Mapped Concierge context to canonical docs, schemas, evaluator, app, and service files.
