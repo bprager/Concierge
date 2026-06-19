@@ -21,6 +21,7 @@ type BridgeFetch = (url: string, init?: { method?: string; headers?: Record<stri
 }>;
 
 const FORBIDDEN_DELEGATION_ALLOWED_EFFECTS = new Set([
+  "agent_dispatch",
   "approval_capture",
   "audit_append",
   "command_execution",
