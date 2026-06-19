@@ -1,5 +1,6 @@
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
+import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
   buildDescriptorConnectionState,
@@ -171,7 +172,7 @@ function hasForbiddenGovernanceReviewSideEffectClaim(
     "externalSendPerformed",
     "agentDispatchPerformed",
   ];
-  return requiredFalseFields.some((field) => payload[field] !== false);
+  return requiredFalseFields.some((field) => payload[field] !== false) || hasForbiddenSideEffectTextClaim(payload.text);
 }
 
 function failGovernanceReviewClosed(

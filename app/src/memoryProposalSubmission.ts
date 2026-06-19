@@ -1,5 +1,6 @@
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
+import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
   buildDescriptorConnectionState,
@@ -161,7 +162,8 @@ function hasForbiddenMemoryProposalSideEffectClaim(
     "agentDispatchPerformed",
   ];
   if (requiredFalseFields.some((field) => payload[field] !== false)) return true;
-  return payload.appliedLocally !== undefined && payload.appliedLocally !== false;
+  if (payload.appliedLocally !== undefined && payload.appliedLocally !== false) return true;
+  return hasForbiddenSideEffectTextClaim(payload.text);
 }
 
 function failMemoryProposalClosed(

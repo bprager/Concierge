@@ -407,6 +407,69 @@ test("governance review submission rejects response claims that capture approval
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, governanceReviewBlockedEffects);
 });
 
+test("governance review submission rejects response text that claims local application", async () => {
+  const review = buildReview();
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitGovernanceReviewForNapoleonReview(review, {
+        conversationId: "conv_governance",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon accepted the review and applied the proposal locally.",
+            governanceDecision: {
+              decision_id: "decision_governance_text_side_effect",
+              request_id: "cos_trace_submit",
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "owner_review",
+              rationale: "Governance review responses must not claim local application in text.",
+              blocked_effects: ["approval_capture", "memory_write", "agent_dispatch", "external_send"],
+              trace_id: "trace_submit",
+              audit_id: "audit_governance_text_side_effect",
+            },
+            traceEnvelope: {
+              trace_id: "trace_submit",
+              parent_trace_id: "conv_governance",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_submit",
+              decision_id: "decision_governance_text_side_effect",
+              timestamp: "2026-06-15T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_governance_text_side_effect",
+              trace_id: "trace_submit",
+              decision_id: "decision_governance_text_side_effect",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "owner_review",
+              evidence_links: ["trace:trace_submit"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "governance_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+});
+
 test("governance review submission rejects review responses that omit canonical required text", async () => {
   const review = buildReview();
   const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
