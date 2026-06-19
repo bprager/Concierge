@@ -97,6 +97,19 @@ test("fails comparison when evidence contains raw payload fields", () => {
   assert.ok(state.failureReason?.includes("raw or secret"));
 });
 
+test("fails comparison when evidence contains snake_case raw payload aliases", () => {
+  const evidenceWithRawPayloadAlias = {
+    ...validEvidence,
+    request_body: { response_text: "raw response text must not be stored" },
+  } as unknown as BridgeContractEvidence;
+
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), evidenceWithRawPayloadAlias);
+
+  assert.equal(state.captureState, "passed");
+  assert.equal(state.comparisonState, "failed");
+  assert.ok(state.failureReason?.includes("raw or secret"));
+});
+
 test("exports sanitized bridge readiness proof without raw prompts endpoints or secrets", () => {
   const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
     ...validEvidence,
@@ -298,6 +311,31 @@ test("rejects previous bridge readiness proof containing forbidden raw fields", 
   });
 
   const comparison = compareBridgeReadinessProofs(previousProofWithRawField, currentProof);
+
+  assert.equal(comparison.status, "invalid_previous");
+  assert.equal(JSON.stringify(comparison).includes("raw user text"), false);
+});
+
+test("rejects bridge readiness proof comparison input containing snake_case raw fields", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+  const currentProof = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const previousProofWithRawFieldAlias = JSON.stringify({
+    kind: "concierge_bridge_readiness_proof",
+    descriptor: { state: "ready" },
+    evidence: { request_body: { response_text: "raw user text" } },
+  });
+
+  const comparison = compareBridgeReadinessProofs(previousProofWithRawFieldAlias, currentProof);
 
   assert.equal(comparison.status, "invalid_previous");
   assert.equal(JSON.stringify(comparison).includes("raw user text"), false);

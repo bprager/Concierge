@@ -497,6 +497,21 @@ test("rejects missing or unsafe previous Napoleon response proof comparison inpu
   assert.equal(unsafe.status, "invalid_previous");
 });
 
+test("rejects Napoleon response proof comparison input containing snake_case raw fields", () => {
+  const current = responseProofJson({ traceId: "trace_current_snake_case_raw" });
+  const unsafe = compareNapoleonResponseProofs(
+    JSON.stringify({
+      kind: "concierge_napoleon_response_proof",
+      responseProof: { response_text: "raw response text", request_body: { bearer_token: "secret" } },
+    }),
+    current,
+  );
+
+  assert.equal(unsafe.status, "invalid_previous");
+  assert.equal(JSON.stringify(unsafe).includes("raw response text"), false);
+  assert.equal(JSON.stringify(unsafe).includes("secret"), false);
+});
+
 test("rejects Napoleon response proof comparison input containing endpoint or secret values", () => {
   const current = responseProofJson({ traceId: "trace_current" });
   const previousWithEndpointValue = JSON.stringify({

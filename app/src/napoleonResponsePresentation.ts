@@ -39,20 +39,28 @@ const FORBIDDEN_RESPONSE_PROOF_KEYS = new Set([
   "authToken",
   "authorization",
   "bearerToken",
+  "bearer_token",
   "endpoint",
   "host",
   "message",
   "prompt",
   "rawPrompt",
+  "raw_prompt",
   "requestBody",
+  "request_body",
   "responseBody",
+  "response_body",
   "responseText",
+  "response_text",
   "text",
   "token",
 ]);
 
 const FORBIDDEN_RESPONSE_PROOF_KEY_NAMES = new Set(
   [...FORBIDDEN_RESPONSE_PROOF_KEYS].map((key) => key.toLocaleLowerCase()),
+);
+const FORBIDDEN_RESPONSE_PROOF_NORMALIZED_KEY_NAMES = new Set(
+  [...FORBIDDEN_RESPONSE_PROOF_KEYS].map((key) => key.replace(/[_-]/g, "").toLocaleLowerCase()),
 );
 
 const FORBIDDEN_RESPONSE_PROOF_VALUE_PATTERNS = [
@@ -235,7 +243,9 @@ function containsForbiddenResponseProofContent(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
 
   return Object.entries(value).some(([key, nested]) => {
+    const normalizedKey = key.replace(/[_-]/g, "").toLocaleLowerCase();
     if (FORBIDDEN_RESPONSE_PROOF_KEY_NAMES.has(key.toLocaleLowerCase())) return true;
+    if (FORBIDDEN_RESPONSE_PROOF_NORMALIZED_KEY_NAMES.has(normalizedKey)) return true;
     return containsForbiddenResponseProofContent(nested);
   });
 }
