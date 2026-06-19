@@ -332,6 +332,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'const cache = await caches.open("concierge-hidden-cache");',
             'await window["caches"]["open"]("concierge-hidden-cache");',
             'document.cookie = "concierge_secret=raw-transcript";',
+            'window.document.cookie = "concierge_secret=raw-transcript";',
+            'document["cookie"] = "concierge_secret=raw-transcript";',
+            'window["document"]["cookie"] = "concierge_secret=raw-transcript";',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
