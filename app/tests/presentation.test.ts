@@ -896,6 +896,32 @@ test("describes descriptor-specific bridge failure reasons", () => {
   assert.ok(checksumTranscript.includes("descriptor signature/checksum mismatch"));
 });
 
+test("redacts unsafe returned provenance from bridge failure messages", () => {
+  const error = new NapoleonBridgeError("governance_denied", "trace_failure_redaction", "request_failure_redaction", 200, [
+    "memory_write",
+    "http://127.0.0.1:8787/private",
+    "Bearer local-secret-token",
+  ], {
+    decisionId: "decision_failure_redaction",
+    auditId: "audit_failure_redaction",
+    governanceOutcome: "deny",
+    profileMode: "adult_owner",
+  });
+
+  const bridgeMessage = describeBridgeFailure(error);
+  const transcriptMessage = describeBridgeFailureTranscriptMessage(error);
+  const handoffMessage = describeGovernedHandoffFailure(error, "Chief of Staff steering handoff", "submit the draft");
+  const visibleText = `${bridgeMessage}\n${transcriptMessage}\n${handoffMessage}`.toLocaleLowerCase();
+
+  assert.equal(visibleText.includes("127.0.0.1"), false);
+  assert.equal(visibleText.includes("local-secret-token"), false);
+  assert.equal(visibleText.includes("bearer"), false);
+  assert.ok(bridgeMessage.includes("Blocked effects: memory_write, redacted, redacted"));
+  assert.ok(transcriptMessage.includes("Blocked effects: memory_write, redacted, redacted"));
+  assert.ok(handoffMessage.includes("Blocked effects: memory_write, redacted, redacted"));
+  assert.ok(handoffMessage.includes("did not submit the draft"));
+});
+
 test("describes governed handoff failure with blocked effects visible", () => {
   const error = new NapoleonBridgeError("governance_no_go", "trace_handoff", "request_handoff", 200, [
     "memory_write",

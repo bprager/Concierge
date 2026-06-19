@@ -214,7 +214,7 @@ export function describeBridgeFailure(error: unknown): string {
   }
 
   const blockedEffects = error.blockedEffects.length
-    ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
+    ? ` Blocked effects: ${sanitizeVisibleProvenanceList(error.blockedEffects)}.`
     : "";
   const decision = error.decisionId ? `, decision ${error.decisionId}` : "";
   const audit = error.auditId ? `, audit ${error.auditId}` : "";
@@ -230,7 +230,7 @@ export function describeBridgeFailureTranscriptMessage(error: unknown): string {
   }
 
   const blockedEffects = error.blockedEffects.length
-    ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
+    ? ` Blocked effects: ${sanitizeVisibleProvenanceList(error.blockedEffects)}.`
     : "";
   const decision = error.decisionId ? ` Decision ${error.decisionId}.` : "";
   const audit = error.auditId ? ` Audit ${error.auditId}.` : "";
@@ -246,7 +246,7 @@ export function describeGovernedHandoffFailure(error: unknown, label: string, pr
   }
 
   const blockedEffects = error.blockedEffects.length
-    ? ` Blocked effects: ${error.blockedEffects.join(", ")}.`
+    ? ` Blocked effects: ${sanitizeVisibleProvenanceList(error.blockedEffects)}.`
     : "";
   const profile = error.profileMode ? `, profile ${error.profileMode}` : "";
   const decision = error.decisionId ? `, decision ${error.decisionId}` : "";
