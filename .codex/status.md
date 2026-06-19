@@ -47,6 +47,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added child-protected avatar policy telemetry for local avatar state so disabled camera/affect policies, guardian approval boundaries, and blocked side effects are visible without starting capture, animation, or Napoleon contact.
 - Hardened repository authority-boundary validation so bracket-style browser messaging constructor calls cannot create hidden cross-context side channels around the governed bridge.
 - Hardened repository authority-boundary validation so bracket-style legacy clipboard commands cannot move local Concierge data outside governed visible export flows.
+- Added OpenAPI-required response fields to the visible governed Napoleon route registry so contract-mismatch expectations are shown without exposing endpoint hosts or tokens.
 - Hardened repository authority-boundary validation so bracket-style FileReader constructor aliases cannot read local files outside governed visible import/export flows.
 - Hardened repository authority-boundary validation so bracketed IndexedDB and Cache Storage `.call(...)` and `.apply(...)` aliases cannot retain prompts, proofs, transcripts, or responses outside bounded visible stores.
 - Hardened repository authority-boundary validation so bracketed localStorage and sessionStorage `.call(...)` and `.apply(...)` aliases cannot retain or erase prompts, proofs, tokens, or responses outside bounded visible metadata modules.

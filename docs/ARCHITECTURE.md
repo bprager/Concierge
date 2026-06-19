@@ -165,6 +165,8 @@ Live bridge calls fail closed when the Napoleon endpoint is missing, the Chief o
 
 Governance review submissions also re-check the review profile against the active profile and fail closed before any request fetch if the user has switched context.
 
+The visible governed route registry includes the generated OpenAPI-required response fields for each route, so contract-mismatch expectations are visible without exposing endpoint hosts, bearer tokens, prompts, request bodies, or response bodies.
+
 Browser peer and transport APIs such as `RTCPeerConnection`, `webkitRTCPeerConnection`, and `WebTransport`, including bracket-style constructor aliases such as `window["RTCPeerConnection"]` and `window["WebTransport"]`, are treated as ungoverned network paths outside the bridge, so future UI features cannot open peer or session transports beside Napoleon.
 
 Beacon sends are also blocked through direct, call/apply, and bracket-style navigator aliases, including `navigator.sendBeacon.apply(...)`, `window["navigator"]["sendBeacon"]`, and `globalThis["navigator"]["sendBeacon"]`, so UI code cannot emit one-way audit, prompt, proof, or telemetry payloads around the governed bridge.

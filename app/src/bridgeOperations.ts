@@ -35,6 +35,8 @@ export interface BridgeOperationSummary {
   boundary: string;
   tokenHandling: string;
   sideEffects: string;
+  requiredResponseFields: readonly string[];
+  requiredResponseSummary: string;
 }
 
 export { GENERATED_BRIDGE_CONTRACT_SOURCE };
@@ -91,6 +93,8 @@ export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOpe
     boundary: "Governed Napoleon bridge only",
     tokenHandling: "Bearer token is sent only in the Authorization header",
     sideEffects: "No memory write, approval capture, agent dispatch, or external send is performed by Concierge",
+    requiredResponseFields: operation.responseRequired,
+    requiredResponseSummary: operation.responseRequired.join(", "),
   };
 }
 

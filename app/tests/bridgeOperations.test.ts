@@ -208,11 +208,17 @@ test("describes governed bridge operation routes without endpoint hosts or secre
   assert.equal(summary.boundary, "Governed Napoleon bridge only");
   assert.equal(summary.tokenHandling, "Bearer token is sent only in the Authorization header");
   assert.equal(summary.sideEffects, "No memory write, approval capture, agent dispatch, or external send is performed by Concierge");
+  assert.deepEqual(summary.requiredResponseFields, ["text", "governanceDecision", "traceEnvelope", "auditEnvelope"]);
+  assert.equal(summary.requiredResponseSummary, "text, governanceDecision, traceEnvelope, auditEnvelope");
   assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
   assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 
   const descriptorSummary = describeBridgeOperationSummary("chief_of_staff_descriptor");
   assert.equal(descriptorSummary.transport, "HTTP GET");
+  assert.equal(
+    descriptorSummary.requiredResponseSummary,
+    "serviceId, ready, runtimeAuthority, cachePolicy, blockedEffects",
+  );
 });
 
 test("describes all core governed operation routes for the UI", () => {
@@ -246,4 +252,15 @@ test("describes all core governed operation routes for the UI", () => {
   );
   assert.equal(summaries.at(-1)?.operationId, "chief_of_staff_steering");
   assert.equal(summaries.at(-1)?.requestKind, "chief_of_staff_steering_handoff");
+  assert.deepEqual(summaries.at(-1)?.requiredResponseFields, [
+    "text",
+    "governanceDecision",
+    "traceEnvelope",
+    "auditEnvelope",
+    "appliedLocally",
+    "memoryWritePerformed",
+    "approvalCaptured",
+    "agentDispatchPerformed",
+    "externalSendPerformed",
+  ]);
 });

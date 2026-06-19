@@ -3868,6 +3868,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                 <span>{operation.path}</span>
                 <span>{operation.requestKind}</span>
                 <span>{operation.boundary}</span>
+                <span>Required response fields: {operation.requiredResponseSummary}</span>
                 {operation.id !== operation.operationId ? <span>Canonical operation: {operation.operationId}</span> : null}
               </dd>
             </div>
