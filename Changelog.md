@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added named Napoleon `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}` metadata discovery mappings without agent dispatch, registry updates, memory writes, approval capture, external sends, or runtime authority.
 - Added a named Napoleon `/observability/traces` mapping for evidence-only observability trace handoffs without trace append authority, audit authority, task routing, approval capture, memory writes, agent dispatch, external sends, or local application.
 - Added a named Napoleon `/evolution/proposals` mapping for proposal-only evolution proposal submission handoffs without local application, registry updates, trace appends, task routing, approval capture, memory writes, agent dispatch, or external sends.
 - Added a named Napoleon `/governance/evaluate` mapping for governed governance evaluation handoffs without approval capture or side effects.

@@ -3,7 +3,10 @@ import test from "node:test";
 import {
   BRIDGE_OPERATIONS,
   GENERATED_BRIDGE_CONTRACT_SOURCE,
+  NAPOLEON_DISCOVERY_OPERATIONS,
   NAPOLEON_REVIEW_OPERATIONS,
+  buildAgentManifestBridgeTarget,
+  buildAgentManifestListBridgeTarget,
   buildChiefOfStaffRequestBridgeTarget,
   buildEvolutionProposalSubmissionBridgeTarget,
   buildEvaluationReviewBridgeTarget,
@@ -12,11 +15,14 @@ import {
   buildGovernanceReviewBridgeTarget,
   buildNewAgentProposalReviewBridgeTarget,
   buildNapoleonBridgeUrl,
+  buildNapoleonDiscoveryUrl,
   buildNapoleonReviewUrl,
   buildObservabilityTraceBridgeTarget,
+  buildProfileBridgeTarget,
   describeBridgeOperationSummary,
   describeTaxonomyReviewBridgeSummary,
   getBridgeOperation,
+  getNapoleonDiscoveryOperation,
   getNapoleonReviewOperation,
 } from "../src/bridgeOperations.js";
 
@@ -164,6 +170,37 @@ test("bridge operations declare governed transport and bearer-token policy", () 
     NAPOLEON_REVIEW_OPERATIONS.map((operation) => operation.governedBridgeOnly),
     [true, true, true, true, true, true, true, true],
   );
+});
+
+test("Napoleon discovery operations declare metadata-only governed targets", () => {
+  assert.deepEqual(
+    NAPOLEON_DISCOVERY_OPERATIONS.map((operation) => operation.path),
+    ["/agents", "/agents/{agent_id}", "/profiles/{profile_id}"],
+  );
+  assert.equal(getNapoleonDiscoveryOperation("agent_manifest_list").requestKind, "agent_manifest_discovery");
+  assert.equal(getNapoleonDiscoveryOperation("agent_manifest").requestKind, "agent_manifest_discovery");
+  assert.equal(getNapoleonDiscoveryOperation("profile").requestKind, "profile_metadata_discovery");
+  assert.deepEqual(
+    NAPOLEON_DISCOVERY_OPERATIONS.map((operation) => operation.governedBridgeOnly),
+    [true, true, true],
+  );
+  assert.deepEqual(
+    NAPOLEON_DISCOVERY_OPERATIONS.map((operation) => operation.tokenPlacement),
+    ["authorization_header_only", "authorization_header_only", "authorization_header_only"],
+  );
+  assert.deepEqual(getNapoleonDiscoveryOperation("agent_manifest").responseRequired, [
+    "agentId",
+    "runtimeAuthority",
+    "agentDispatchPerformed",
+    "blockedEffects",
+  ]);
+  assert.deepEqual(getNapoleonDiscoveryOperation("profile").responseRequired, [
+    "profileId",
+    "runtimeAuthority",
+    "memoryWritePerformed",
+    "approvalCaptured",
+    "blockedEffects",
+  ]);
 });
 
 test("bridge operation registry exposes canonical required response fields", () => {
@@ -328,6 +365,58 @@ test("Napoleon review URL builder resolves explicit governance review paths", ()
     ),
     "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals",
   );
+});
+
+test("Napoleon discovery URL builder resolves explicit agent and profile metadata paths", () => {
+  assert.equal(
+    buildNapoleonDiscoveryUrl("https://napoleon.example", "agent_manifest_list"),
+    "https://napoleon.example/agents",
+  );
+  assert.equal(
+    buildNapoleonDiscoveryUrl("https://napoleon.example/agents?debug=1", "agent_manifest_list"),
+    "https://napoleon.example/agents",
+  );
+  assert.equal(
+    buildNapoleonDiscoveryUrl("https://napoleon.example", "agent_manifest", { agentId: "passive brain/one" }),
+    "https://napoleon.example/agents/passive%20brain%2Fone",
+  );
+  assert.equal(
+    buildNapoleonDiscoveryUrl("https://napoleon.example/agents/passive_brain?debug=1", "agent_manifest", {
+      agentId: "chief_of_staff",
+    }),
+    "https://napoleon.example/agents/chief_of_staff",
+  );
+  assert.equal(
+    buildNapoleonDiscoveryUrl("https://napoleon.example", "profile", { profileId: "child protected" }),
+    "https://napoleon.example/profiles/child%20protected",
+  );
+  assert.equal(
+    buildNapoleonDiscoveryUrl("https://napoleon.example/profiles/adult_owner?debug=1", "profile", {
+      profileId: "child_protected",
+    }),
+    "https://napoleon.example/profiles/child_protected",
+  );
+});
+
+test("Napoleon discovery bridge targets expose metadata-only side effect boundaries", () => {
+  assert.deepEqual(buildAgentManifestListBridgeTarget("https://napoleon.example"), {
+    url: "https://napoleon.example/agents",
+    path: "/agents",
+    requestKind: "agent_manifest_discovery",
+    operationId: "agent_manifest_list",
+  });
+  assert.deepEqual(buildAgentManifestBridgeTarget("https://napoleon.example", "passive_brain"), {
+    url: "https://napoleon.example/agents/passive_brain",
+    path: "/agents/{agent_id}",
+    requestKind: "agent_manifest_discovery",
+    operationId: "agent_manifest",
+  });
+  assert.deepEqual(buildProfileBridgeTarget("https://napoleon.example", "adult_owner"), {
+    url: "https://napoleon.example/profiles/adult_owner",
+    path: "/profiles/{profile_id}",
+    requestKind: "profile_metadata_discovery",
+    operationId: "profile",
+  });
 });
 
 test("governance evaluation target maps Napoleon endpoints to the explicit evaluation contract path", () => {

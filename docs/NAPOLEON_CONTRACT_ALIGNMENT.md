@@ -12,6 +12,7 @@ The report is local evidence only. It does not contact Napoleon, approve a runti
 
 - `supportedAdvisoryRuntimePaths` lists Napoleon advisory harness paths Concierge already knows how to use directly, such as `/cos/descriptor`, `/cos/capabilities`, `/cos/text-turn`, and `/cos/trace/{trace_id}`.
 - `supportedReviewRuntimePaths` lists Napoleon review paths Concierge can target explicitly through a named governed bridge alias, while still requiring proof-bearing review responses.
+- `supportedDiscoveryRuntimePaths` lists Napoleon metadata discovery paths Concierge can target explicitly through named governed bridge aliases, such as `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}`. These are metadata-only reads and do not dispatch agents, update registries, write memory, capture approval, send externally, or grant runtime authority.
 - `conciergeLocalHandoffAliases` lists local generated Concierge operations that currently package review handoffs, such as Chief of Staff steering or evaluator review packets. These are aliases, not proof that Napoleon's broader review endpoints are runtime-compatible.
 - `napoleonReviewPathsNeedingRuntimeMapping` lists Napoleon review, governance, observability, and evolution paths that still need explicit bridge-client mapping or a Napoleon-side `/v1/concierge/...` equivalent before Concierge should send to them.
 - `napoleonReviewPathsWithoutLocalAlias` lists contract paths that do not even have a current local handoff alias.
@@ -72,7 +73,9 @@ Evaluator review handoff now has a named Napoleon review-path mapping for HTTP e
 
 New agent proposal review now has a named Napoleon review-path mapping. Napoleon root endpoints or explicit new-agent proposal review endpoints use `/chief-of-staff/reviews/new-agent-proposals` with the `new_agent_proposal_review_handoff` request kind. The handoff remains proposal-only: it cannot activate an agent, write to the registry, dispatch an agent, capture approval, write memory, send externally, or apply local changes.
 
-This is still not full path alignment because Concierge intentionally keeps generated `/v1/concierge/...` local contract paths and Napoleon also exposes discovery/profile surfaces such as `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}`. The review, governance, observability, and evolution handoff surfaces now have explicit named runtime mappings.
+Napoleon agent and profile metadata discovery now has named runtime mapping for `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}`. These targets are read-only connection metadata surfaces. They cannot be used as local agent dispatch, registry update, profile memory write, approval capture, external send, or runtime authority paths.
+
+This is still not full path alignment because Concierge intentionally keeps generated `/v1/concierge/...` local contract paths alongside Napoleon's advisory `/cos/...` and review/evidence paths. The review, governance, observability, evolution, discovery, and profile metadata surfaces now have explicit named runtime mappings.
 
 ## Review and Evolution Mapping Gap
 
@@ -90,6 +93,9 @@ The explicit request/review path currently mapped is:
 - `/evolution/proposals`
 - `/governance/evaluate`
 - `/observability/traces`
+- `/agents`
+- `/agents/{agent_id}`
+- `/profiles/{profile_id}`
 
 The current local aliases are useful packaging boundaries:
 

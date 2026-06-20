@@ -85,6 +85,28 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             with request.urlopen(turn_req, timeout=10) as response:
                 self.assertEqual(response.headers.get("Access-Control-Allow-Origin"), "*")
 
+    def test_harness_serves_metadata_only_agent_and_profile_discovery(self):
+        with local_bridge_harness.running_harness() as base_url:
+            agents = self.fetch_json(f"{base_url}/agents")
+            agent = self.fetch_json(f"{base_url}/agents/passive_brain")
+            profile = self.fetch_json(f"{base_url}/profiles/adult_owner")
+
+            self.assertEqual(agents["agents"][0]["agentId"], "passive_brain")
+            self.assertFalse(agents["runtimeAuthority"])
+            self.assertFalse(agents["agentDispatchPerformed"])
+            self.assertFalse(agents["memoryWritePerformed"])
+            self.assertFalse(agents["approvalCaptured"])
+            self.assertFalse(agents["externalSendPerformed"])
+            self.assertEqual(agent["agentId"], "passive_brain")
+            self.assertFalse(agent["runtimeAuthority"])
+            self.assertFalse(agent["agentDispatchPerformed"])
+            self.assertIn("agent_dispatch", agent["blockedEffects"])
+            self.assertEqual(profile["profileId"], "adult_owner")
+            self.assertFalse(profile["runtimeAuthority"])
+            self.assertFalse(profile["memoryWritePerformed"])
+            self.assertFalse(profile["approvalCaptured"])
+            self.assertIn("memory_write", profile["blockedEffects"])
+
     def test_harness_can_build_text_turn_response_with_forbidden_side_effect_claims(self):
         payload = {
             "requestKind": "text_turn",

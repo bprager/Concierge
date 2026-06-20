@@ -11,6 +11,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Iterator
+from urllib.parse import unquote
 
 
 DESCRIPTOR = {
@@ -50,6 +51,60 @@ CAPABILITIES = {
     "runtimeAuthority": False,
     "blockedEffects": DESCRIPTOR["blockedEffects"],
 }
+
+AGENT_MANIFESTS = [
+    {
+        "agentId": "passive_brain",
+        "displayName": "Passive Brain",
+        "description": "Surfaces relevant Napoleon context for governed Concierge responses.",
+        "allowedEffects": ["prepare_advisory_response"],
+        "blockedEffects": DESCRIPTOR["blockedEffects"],
+        "runtimeAuthority": False,
+        "agentDispatchPerformed": False,
+    },
+    {
+        "agentId": "chief_of_staff",
+        "displayName": "Chief of Staff",
+        "description": "Reviews advisory recommendations and proposal drafts through Napoleon governance.",
+        "allowedEffects": ["review_proposal"],
+        "blockedEffects": DESCRIPTOR["blockedEffects"],
+        "runtimeAuthority": False,
+        "agentDispatchPerformed": False,
+    },
+]
+
+PROFILE_METADATA = {
+    "adult_owner": {
+        "profileId": "adult_owner",
+        "label": "Adult owner",
+        "retentionMode": "derived_signals_only",
+        "runtimeAuthority": False,
+        "memoryWritePerformed": False,
+        "approvalCaptured": False,
+        "blockedEffects": DESCRIPTOR["blockedEffects"],
+    },
+    "child_protected": {
+        "profileId": "child_protected",
+        "label": "Child protected",
+        "retentionMode": "minimal_derived_signals_only",
+        "runtimeAuthority": False,
+        "memoryWritePerformed": False,
+        "approvalCaptured": False,
+        "blockedEffects": DESCRIPTOR["blockedEffects"],
+    },
+}
+
+
+def discovery_boundary(extra: dict[str, Any] | None = None) -> dict[str, Any]:
+    return {
+        "runtimeAuthority": False,
+        "agentDispatchPerformed": False,
+        "memoryWritePerformed": False,
+        "approvalCaptured": False,
+        "externalSendPerformed": False,
+        "blockedEffects": DESCRIPTOR["blockedEffects"],
+        **(extra or {}),
+    }
 
 
 def governance_response(trace_id: str, request_id: str, decision_id: str, audit_id: str) -> dict[str, Any]:
@@ -198,6 +253,25 @@ class HarnessHandler(BaseHTTPRequestHandler):
             return
         if self.path == "/v1/concierge/chief-of-staff/capabilities":
             self.write_json(200, CAPABILITIES)
+            return
+        if self.path == "/agents":
+            self.write_json(200, discovery_boundary({"agents": AGENT_MANIFESTS}))
+            return
+        if self.path.startswith("/agents/"):
+            agent_id = unquote(self.path.removeprefix("/agents/"))
+            manifest = next((agent for agent in AGENT_MANIFESTS if agent["agentId"] == agent_id), None)
+            if manifest is None:
+                self.write_json(404, discovery_boundary({"error": "agent_not_found", "agentId": agent_id}))
+                return
+            self.write_json(200, discovery_boundary(manifest))
+            return
+        if self.path.startswith("/profiles/"):
+            profile_id = unquote(self.path.removeprefix("/profiles/"))
+            profile = PROFILE_METADATA.get(profile_id)
+            if profile is None:
+                self.write_json(404, discovery_boundary({"error": "profile_not_found", "profileId": profile_id}))
+                return
+            self.write_json(200, discovery_boundary(profile))
             return
         self.write_json(404, {"error": "not_found"})
 

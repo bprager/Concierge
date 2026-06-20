@@ -1014,6 +1014,18 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             const target = resolveNapoleonNewAgentProposalReviewOperation(endpoint);
             response = await fetcher(target.url, { method: "POST" });
             """,
+            """
+            const target = resolveNapoleonAgentManifestListOperation(endpoint);
+            response = await fetcher(target.url, { method: "GET" });
+            """,
+            """
+            const target = resolveNapoleonAgentManifestOperation(endpoint, agentId);
+            response = await fetcher(target.url, { method: "GET" });
+            """,
+            """
+            const target = resolveNapoleonProfileOperation(endpoint, profileId);
+            response = await fetcher(target.url, { method: "GET" });
+            """,
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/descriptorDiscovery.ts", source)
@@ -1040,6 +1052,15 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'response = await fetcher("https://napoleon.example/observability/traces", { method: "POST" });',
             'response = await fetcher(endpoint + "/observability/traces", { method: "POST" });',
             'response = await fetcher(`${endpoint}/observability/traces`, { method: "POST" });',
+            'response = await fetcher("https://napoleon.example/agents", { method: "GET" });',
+            'response = await fetcher(endpoint + "/agents", { method: "GET" });',
+            'response = await fetcher(`${endpoint}/agents`, { method: "GET" });',
+            'response = await fetcher("https://napoleon.example/agents/passive_brain", { method: "GET" });',
+            'response = await fetcher(endpoint + "/agents/passive_brain", { method: "GET" });',
+            'response = await fetcher(`${endpoint}/agents/${agentId}`, { method: "GET" });',
+            'response = await fetcher("https://napoleon.example/profiles/adult_owner", { method: "GET" });',
+            'response = await fetcher(endpoint + "/profiles/adult_owner", { method: "GET" });',
+            'response = await fetcher(`${endpoint}/profiles/${profileId}`, { method: "GET" });',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/governanceReviewSubmission.ts", source)

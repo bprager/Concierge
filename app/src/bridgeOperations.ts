@@ -21,6 +21,8 @@ export type NapoleonReviewOperationId =
   | "new_agent_proposal_review"
   | "observability_trace";
 
+export type NapoleonDiscoveryOperationId = "agent_manifest_list" | "agent_manifest" | "profile";
+
 export interface BridgeOperation {
   id: BridgeOperationId;
   path: `/v1/concierge/${string}`;
@@ -64,6 +66,16 @@ interface NapoleonReviewOperation {
     | "new_agent_proposal_review_handoff"
     | "observability_trace_handoff";
   transport: "http_post";
+  responseRequired: readonly string[];
+  governedBridgeOnly: true;
+  tokenPlacement: "authorization_header_only";
+}
+
+interface NapoleonDiscoveryOperation {
+  id: NapoleonDiscoveryOperationId;
+  path: "/agents" | "/agents/{agent_id}" | "/profiles/{profile_id}";
+  requestKind: "agent_manifest_discovery" | "profile_metadata_discovery";
+  transport: "http_get";
   responseRequired: readonly string[];
   governedBridgeOnly: true;
   tokenPlacement: "authorization_header_only";
@@ -216,6 +228,52 @@ export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [
   },
 ];
 
+export const NAPOLEON_DISCOVERY_OPERATIONS: NapoleonDiscoveryOperation[] = [
+  {
+    id: "agent_manifest_list",
+    path: "/agents",
+    requestKind: "agent_manifest_discovery",
+    transport: "http_get",
+    responseRequired: [
+      "agents",
+      "runtimeAuthority",
+      "agentDispatchPerformed",
+      "blockedEffects",
+    ],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+  {
+    id: "agent_manifest",
+    path: "/agents/{agent_id}",
+    requestKind: "agent_manifest_discovery",
+    transport: "http_get",
+    responseRequired: [
+      "agentId",
+      "runtimeAuthority",
+      "agentDispatchPerformed",
+      "blockedEffects",
+    ],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+  {
+    id: "profile",
+    path: "/profiles/{profile_id}",
+    requestKind: "profile_metadata_discovery",
+    transport: "http_get",
+    responseRequired: [
+      "profileId",
+      "runtimeAuthority",
+      "memoryWritePerformed",
+      "approvalCaptured",
+      "blockedEffects",
+    ],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+];
+
 export function getBridgeOperation(id: BridgeOperationId): BridgeOperation {
   const operation = BRIDGE_OPERATIONS.find((candidate) => candidate.id === id);
   if (!operation) {
@@ -232,6 +290,14 @@ export function getNapoleonReviewOperation(id: NapoleonReviewOperationId): Napol
   return operation;
 }
 
+export function getNapoleonDiscoveryOperation(id: NapoleonDiscoveryOperationId): NapoleonDiscoveryOperation {
+  const operation = NAPOLEON_DISCOVERY_OPERATIONS.find((candidate) => candidate.id === id);
+  if (!operation) {
+    throw new Error(`Unknown Napoleon discovery operation: ${id}`);
+  }
+  return operation;
+}
+
 function stripKnownBridgeOperationPath(configuredEndpoint: string): string {
   const trimmed = configuredEndpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
   for (const operation of BRIDGE_OPERATIONS) {
@@ -243,6 +309,15 @@ function stripKnownBridgeOperationPath(configuredEndpoint: string): string {
     if (trimmed.endsWith(operation.path)) {
       return trimmed.slice(0, -operation.path.length).replace(/\/+$/, "");
     }
+  }
+  if (trimmed.endsWith("/agents")) {
+    return trimmed.slice(0, -"/agents".length).replace(/\/+$/, "");
+  }
+  if (/\/agents\/[^/]+$/.test(trimmed)) {
+    return trimmed.replace(/\/agents\/[^/]+$/, "").replace(/\/+$/, "");
+  }
+  if (/\/profiles\/[^/]+$/.test(trimmed)) {
+    return trimmed.replace(/\/profiles\/[^/]+$/, "").replace(/\/+$/, "");
   }
   return trimmed;
 }
@@ -270,6 +345,25 @@ export function buildNapoleonReviewUrl(configuredEndpoint: string, operationId: 
   const trimmed = configuredEndpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
   if (trimmed.endsWith(operation.path)) return trimmed;
   return `${stripKnownBridgeOperationPath(trimmed)}${operation.path}`;
+}
+
+export function buildNapoleonDiscoveryUrl(
+  configuredEndpoint: string,
+  operationId: NapoleonDiscoveryOperationId,
+  pathParams: { agentId?: string; profileId?: string } = {},
+): string {
+  const operation = getNapoleonDiscoveryOperation(operationId);
+  const trimmed = configuredEndpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
+  if (operation.id === "agent_manifest_list") {
+    if (trimmed.endsWith("/agents")) return trimmed;
+    return `${stripKnownBridgeOperationPath(trimmed)}/agents`;
+  }
+  if (operation.id === "agent_manifest") {
+    if (!pathParams.agentId) throw new Error("Napoleon agent manifest discovery requires agentId");
+    return `${stripKnownBridgeOperationPath(trimmed)}/agents/${encodeURIComponent(pathParams.agentId)}`;
+  }
+  if (!pathParams.profileId) throw new Error("Napoleon profile discovery requires profileId");
+  return `${stripKnownBridgeOperationPath(trimmed)}/profiles/${encodeURIComponent(pathParams.profileId)}`;
 }
 
 export interface EvolutionProposalReviewBridgeTarget {
@@ -425,6 +519,54 @@ export function buildObservabilityTraceBridgeTarget(configuredEndpoint: string):
     path: "/observability/traces",
     requestKind: "observability_trace_handoff",
     operationId: "observability_trace",
+  };
+}
+
+export interface AgentManifestListBridgeTarget {
+  url: string;
+  path: "/agents";
+  requestKind: "agent_manifest_discovery";
+  operationId: "agent_manifest_list";
+}
+
+export function buildAgentManifestListBridgeTarget(configuredEndpoint: string): AgentManifestListBridgeTarget {
+  return {
+    url: buildNapoleonDiscoveryUrl(configuredEndpoint, "agent_manifest_list"),
+    path: "/agents",
+    requestKind: "agent_manifest_discovery",
+    operationId: "agent_manifest_list",
+  };
+}
+
+export interface AgentManifestBridgeTarget {
+  url: string;
+  path: "/agents/{agent_id}";
+  requestKind: "agent_manifest_discovery";
+  operationId: "agent_manifest";
+}
+
+export function buildAgentManifestBridgeTarget(configuredEndpoint: string, agentId: string): AgentManifestBridgeTarget {
+  return {
+    url: buildNapoleonDiscoveryUrl(configuredEndpoint, "agent_manifest", { agentId }),
+    path: "/agents/{agent_id}",
+    requestKind: "agent_manifest_discovery",
+    operationId: "agent_manifest",
+  };
+}
+
+export interface ProfileBridgeTarget {
+  url: string;
+  path: "/profiles/{profile_id}";
+  requestKind: "profile_metadata_discovery";
+  operationId: "profile";
+}
+
+export function buildProfileBridgeTarget(configuredEndpoint: string, profileId: string): ProfileBridgeTarget {
+  return {
+    url: buildNapoleonDiscoveryUrl(configuredEndpoint, "profile", { profileId }),
+    path: "/profiles/{profile_id}",
+    requestKind: "profile_metadata_discovery",
+    operationId: "profile",
   };
 }
 

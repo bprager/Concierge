@@ -49,6 +49,12 @@ NAPOLEON_DISCOVERY_CONTRACT_PATHS = {
     "/profiles/{profile_id}",
 }
 
+SUPPORTED_DISCOVERY_RUNTIME_PATHS = {
+    "/agents",
+    "/agents/{agent_id}",
+    "/profiles/{profile_id}",
+}
+
 LOCAL_HANDOFF_ALIAS_CANDIDATES = [
     {
         "localPath": "/v1/concierge/chief-of-staff/steering",
@@ -137,6 +143,7 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
     supported_review_runtime_paths = present_paths(napoleon_set, SUPPORTED_REVIEW_RUNTIME_PATHS)
     napoleon_review_contract_paths = present_paths(napoleon_set, NAPOLEON_REVIEW_CONTRACT_PATHS)
     napoleon_discovery_contract_paths = present_paths(napoleon_set, NAPOLEON_DISCOVERY_CONTRACT_PATHS)
+    supported_discovery_runtime_paths = present_paths(napoleon_set, SUPPORTED_DISCOVERY_RUNTIME_PATHS)
     aliases = local_handoff_aliases(concierge_set, napoleon_set)
     alias_covered_paths = {
         path
@@ -152,6 +159,9 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
         and path not in SUPPORTED_REVIEW_RUNTIME_PATHS
     )
     review_paths_without_local_alias = sorted(path for path in review_paths_needing_runtime_mapping if path not in alias_covered_paths)
+    discovery_paths_needing_runtime_mapping = sorted(
+        path for path in napoleon_discovery_contract_paths if path not in SUPPORTED_DISCOVERY_RUNTIME_PATHS
+    )
 
     return {
         "aligned": not napoleon_only and not concierge_only,
@@ -163,11 +173,13 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
         "conciergeOnlyPaths": concierge_only,
         "supportedAdvisoryRuntimePaths": supported_advisory_runtime_paths,
         "supportedReviewRuntimePaths": supported_review_runtime_paths,
+        "supportedDiscoveryRuntimePaths": supported_discovery_runtime_paths,
         "napoleonReviewContractPaths": napoleon_review_contract_paths,
         "napoleonDiscoveryContractPaths": napoleon_discovery_contract_paths,
         "conciergeLocalHandoffAliases": aliases,
         "napoleonReviewPathsNeedingRuntimeMapping": review_paths_needing_runtime_mapping,
         "napoleonReviewPathsWithoutLocalAlias": review_paths_without_local_alias,
+        "napoleonDiscoveryPathsNeedingRuntimeMapping": discovery_paths_needing_runtime_mapping,
         "napoleonRuntimeAuthority": napoleon.get("x-napoleon-runtime-authority"),
         "nonAuthorityBoundary": "alignment_check_only",
         "sideEffectsPerformed": False,

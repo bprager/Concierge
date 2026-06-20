@@ -207,7 +207,16 @@ paths:
                 "/observability/traces",
             ],
         )
+        self.assertEqual(
+            report["supportedDiscoveryRuntimePaths"],
+            ["/agents", "/agents/{agent_id}", "/profiles/{profile_id}"],
+        )
+        self.assertEqual(report["napoleonDiscoveryPathsNeedingRuntimeMapping"], [])
         self.assertIn("/chief-of-staff/reviews/evolution-proposals", report["napoleonReviewContractPaths"])
+        self.assertEqual(
+            report["napoleonDiscoveryContractPaths"],
+            ["/agents", "/agents/{agent_id}", "/profiles/{profile_id}"],
+        )
         self.assertNotIn("/chief-of-staff/requests", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/chief-of-staff/reviews/evaluation", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/chief-of-staff/reviews/evolution-proposals", report["napoleonReviewPathsNeedingRuntimeMapping"])

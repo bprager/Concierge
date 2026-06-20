@@ -1,4 +1,6 @@
 import {
+  buildAgentManifestBridgeTarget,
+  buildAgentManifestListBridgeTarget,
   buildEvaluationReviewBridgeTarget,
   buildEvolutionProposalSubmissionBridgeTarget,
   buildEvolutionProposalReviewBridgeTarget,
@@ -8,6 +10,9 @@ import {
   buildNewAgentProposalReviewBridgeTarget,
   buildNapoleonBridgeUrl,
   buildObservabilityTraceBridgeTarget,
+  buildProfileBridgeTarget,
+  type AgentManifestBridgeTarget,
+  type AgentManifestListBridgeTarget,
   type BridgeOperationId,
   type ChiefOfStaffRequestBridgeTarget,
   type EvaluationReviewBridgeTarget,
@@ -17,6 +22,7 @@ import {
   type GovernanceReviewBridgeTarget,
   type NewAgentProposalReviewBridgeTarget,
   type ObservabilityTraceBridgeTarget,
+  type ProfileBridgeTarget,
 } from "./bridgeOperations.js";
 
 export function resolveNapoleonBridgeOperation(configuredEndpoint: string, operationId: BridgeOperationId): string {
@@ -65,4 +71,21 @@ export function resolveNapoleonObservabilityTraceOperation(
   configuredEndpoint: string,
 ): ObservabilityTraceBridgeTarget {
   return buildObservabilityTraceBridgeTarget(configuredEndpoint);
+}
+
+export function resolveNapoleonAgentManifestListOperation(
+  configuredEndpoint: string,
+): AgentManifestListBridgeTarget {
+  return buildAgentManifestListBridgeTarget(configuredEndpoint);
+}
+
+export function resolveNapoleonAgentManifestOperation(
+  configuredEndpoint: string,
+  agentId: string,
+): AgentManifestBridgeTarget {
+  return buildAgentManifestBridgeTarget(configuredEndpoint, agentId);
+}
+
+export function resolveNapoleonProfileOperation(configuredEndpoint: string, profileId: string): ProfileBridgeTarget {
+  return buildProfileBridgeTarget(configuredEndpoint, profileId);
 }
