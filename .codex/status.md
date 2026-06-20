@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added bridge-level blocked effects, governance state, trace ID, and audit ID to target-capability-only Napoleon delegation presentation while keeping selected-agent fields marked as not returned.
 - Hardened rendered live bridge readiness so live descriptor discovery alone is treated as missing real-runtime validation, exported as unavailable, and promotion-blocked until non-local evidence capture and comparison both pass.
 - Hardened live bridge, live voice, composer preflight readiness, and sanitized readiness proof exports so missing runtime-validation source is treated as unproven and promotion-blocked instead of as real Napoleon runtime evidence.
 - Added explicit advisory `/cos` endpoint-form rows and required-proof rows to the governed route panel for descriptor discovery, advisory capability discovery, and text turns, including visible `/cos/trace/{trace_id}` proof requirements for text turns while keeping endpoint hosts, tokens, and authority claims out of the view.

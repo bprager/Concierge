@@ -161,6 +161,24 @@ test("successful Napoleon response proof includes returned target capability wit
         detail.value === "target capability only; selected-agent delegation not returned",
     ),
   );
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Blocked effects" && detail.value.includes("memory_write"),
+    ),
+  );
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Governance state" && detail.value === "requires_review",
+    ),
+  );
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Trace" && detail.value === "trace_target_capability",
+    ),
+  );
   assert.equal(state.proof?.status, "verified");
   assert.ok(state.proof?.summary.includes("Capability: napoleon.chief_of_staff"));
   assert.ok(

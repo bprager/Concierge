@@ -96,6 +96,13 @@ export interface DelegationView {
   details: Array<{ label: string; value: string }>;
 }
 
+export interface DelegationFallbackProvenance {
+  blockedEffects?: string[];
+  governanceState?: string;
+  traceId?: string;
+  auditId?: string;
+}
+
 export interface NapoleonResponseProofView {
   heading: string;
   status: "verified" | "limited";
@@ -605,10 +612,15 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
 export function describeDelegation(
   delegation: NapoleonDelegation | undefined,
   targetCapability?: string,
+  fallback?: DelegationFallbackProvenance,
 ): DelegationView {
   const safeTargetCapability = sanitizeVisibleProvenanceValue(targetCapability);
   if (!delegation || delegation.selectedAgents.length === 0) {
     if (targetCapability) {
+      const safeBlockedEffects = sanitizeVisibleProvenanceList(fallback?.blockedEffects);
+      const safeGovernanceState = sanitizeVisibleProvenanceValue(fallback?.governanceState);
+      const safeTraceId = sanitizeVisibleProvenanceValue(fallback?.traceId);
+      const safeAuditId = sanitizeVisibleProvenanceValue(fallback?.auditId);
       return {
         heading: "Napoleon target capability",
         body: `Napoleon returned target capability ${safeTargetCapability}, but did not include selected-agent delegation provenance.`,
@@ -618,10 +630,10 @@ export function describeDelegation(
           { label: "Selected agents", value: "not returned" },
           { label: "Why selected", value: "not returned" },
           { label: "Allowed effects", value: "not returned" },
-          { label: "Blocked effects", value: "not returned" },
-          { label: "Governance state", value: "not returned" },
-          { label: "Trace", value: "not returned" },
-          { label: "Audit", value: "not returned" },
+          { label: "Blocked effects", value: safeBlockedEffects },
+          { label: "Governance state", value: safeGovernanceState },
+          { label: "Trace", value: safeTraceId },
+          { label: "Audit", value: safeAuditId },
         ],
       };
     }

@@ -122,7 +122,12 @@ export function buildSuccessfulNapoleonResponsePresentation(
   const recommendation = response.recommendationProvenance?.summary ?? "unavailable";
 
   return {
-    delegation: describeDelegation(response.delegation, response.targetAgent),
+    delegation: describeDelegation(response.delegation, response.targetAgent, {
+      blockedEffects: response.governanceDecision.blocked_effects,
+      governanceState: response.governanceDecision.outcome,
+      traceId: response.traceEnvelope.trace_id,
+      auditId: response.auditEnvelope.audit_id,
+    }),
     proof: describeNapoleonResponseProof(response),
     proofMetadata: {
       handledBy: agentNames.join(", ") || targetCapability || "unavailable",
