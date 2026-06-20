@@ -10,6 +10,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 - Added a sanitized live-runtime promotion review draft to the combined validation runner so bridge evidence, evaluator status, artifact privacy, and non-authority boundaries are retained without endpoint hosts, tokens, prompts, or response text.
 - Added a machine-readable live-runtime promotion readiness gate with blocking reasons so local harness or simulation evidence cannot be mistaken for locally promotion-ready real Napoleon evidence.
+- Added descriptor-first real-runtime alignment metadata to live-runtime preflight reports so missing endpoint diagnostics name accepted endpoint forms without storing hosts or tokens.
 - Added a sanitized live-runtime preflight report for missing endpoint configuration, preserving false side-effect boundaries without storing endpoint hosts or tokens.
 - Hardened bridge contract alignment so TypeScript bridge operation IDs and request-kind typing are derived from the generated OpenAPI registry instead of a duplicate hand-written union.
 - Added a provenance-source row to the Napoleon delegation panel so returned selected-agent delegation is visibly distinct from metadata-only discovery and target-capability-only responses.

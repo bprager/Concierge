@@ -33,6 +33,16 @@ BOUNDARY = (
     "not release approval, not a memory write, not agent dispatch, not an "
     "external send, and not authority to apply self-evolution changes."
 )
+ACCEPTED_BRIDGE_ENDPOINT_FORMS = [
+    "Napoleon base URL",
+    "/v1/concierge/turn",
+    "/v1/concierge/chief-of-staff/descriptor",
+    "/v1/concierge/chief-of-staff/steering",
+    "/v1/concierge/memory-proposals",
+    "/cos/descriptor",
+    "/cos/capabilities",
+    "/cos/text-turn",
+]
 REDACTED_REPORT_FIELDS = {"response_excerpt"}
 RUNTIME_VALIDATION_SOURCES = ("real_runtime", "local_harness", "local_simulation")
 FORBIDDEN_ARTIFACT_FIELDS = {
@@ -116,6 +126,19 @@ def live_runtime_preflight(bridge_endpoint: str | None, eval_endpoint: str | Non
         "evaluatorEndpointConfiguredOrDerived": eval_configured,
         "expectedBridgeConfiguration": "Set NAPOLEON_BRIDGE_ENDPOINT to a Napoleon base URL or known governed bridge operation URL.",
         "expectedEvaluatorConfiguration": "Set NAPOLEON_EVAL_ENDPOINT only when the evaluator endpoint differs from /v1/concierge/evaluate on the bridge base.",
+        "runtimeAlignment": {
+            "requiredBridgeEndpointEnv": "NAPOLEON_BRIDGE_ENDPOINT",
+            "requiredEvaluatorEndpointEnv": "NAPOLEON_EVAL_ENDPOINT",
+            "acceptedBridgeEndpointForms": ACCEPTED_BRIDGE_ENDPOINT_FORMS,
+            "descriptorDiscoveryRequired": True,
+            "descriptorFirstEndpoint": "/cos/descriptor",
+            "capabilityDiscoveryEndpoint": "/cos/capabilities",
+            "textTurnEndpoint": "/cos/text-turn",
+            "traceEvidenceEndpoint": "/cos/trace/{trace_id}",
+            "localHarnessSubstituteAllowed": False,
+            "nextValidationCommand": "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make live-runtime-validation",
+            "boundary": "A local harness or simulation can test shape only; it cannot prove real Napoleon runtime readiness.",
+        },
         "endpointHostStored": False,
         "tokenStored": False,
         "approvalCaptured": False,

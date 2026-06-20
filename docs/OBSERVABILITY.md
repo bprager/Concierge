@@ -158,7 +158,7 @@ The readiness panel and sanitized readiness proof export include a promotion gat
 
 Combined live-runtime validation summaries also include a machine-readable `promotionReadiness` gate with blocking reasons. This gate is local review evidence only; it does not grant Napoleon approval, release approval, memory writes, agent dispatch, external sends, approval capture, or permission to apply self-evolution changes.
 
-When live-runtime validation is run without a configured endpoint, it writes a sanitized `preflight.json` that records missing configuration and explicit false side-effect fields without retaining endpoint hosts or tokens.
+When live-runtime validation is run without a configured endpoint, it writes a sanitized `preflight.json` that records missing configuration, accepted real-runtime endpoint forms, descriptor-first `/cos/descriptor` and `/cos/text-turn` alignment, and explicit false side-effect fields without retaining endpoint hosts or tokens. It also records that local harness or simulation evidence is shape-only and cannot substitute for real Napoleon runtime readiness.
 
 The standalone `make eval-http-local-harness` report is also labeled with `runtimeValidation.source=local_harness` and a caveat that it validates local evaluator transport only, not real Napoleon runtime behavior.
 

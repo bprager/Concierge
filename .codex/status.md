@@ -11,6 +11,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Recently Completed
 
 - Added a sanitized live-runtime `preflight.json` report for missing endpoint configuration so `make live-runtime-validation` leaves local, non-authorizing diagnostic evidence without endpoint hosts, tokens, prompts, request bodies, response bodies, approval capture, memory writes, agent dispatch, external sends, or local application.
+- Added descriptor-first real-runtime alignment metadata to `preflight.json`, including accepted bridge endpoint forms, `/cos/descriptor`, `/cos/text-turn`, and the local-harness-is-not-real-runtime boundary without retaining endpoint hosts or tokens.
 - Added a machine-readable live-runtime `promotionReadiness` gate with blocking reasons to `summary.json` and the local promotion review draft, so local harness or simulation evidence stays blocked until real Napoleon runtime evidence, evaluator HTTP mode, and artifact privacy all pass.
 - Added a sanitized live-runtime promotion review draft to the combined validation runner, linked from `summary.json`, so real-runtime evidence can carry a human-review packet without storing endpoints, tokens, prompts, request bodies, response bodies, or response text.
 - Derived runtime bridge operation IDs and request-kind typing from the generated OpenAPI bridge operation registry so TypeScript can no longer carry a stale duplicate operation union beside the canonical contract.

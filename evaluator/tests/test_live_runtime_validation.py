@@ -192,6 +192,18 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             self.assertEqual(preflight["status"], "blocked")
             self.assertEqual(preflight["reason"], "missing_bridge_endpoint")
             self.assertIn("NAPOLEON_BRIDGE_ENDPOINT", preflight["missingConfiguration"])
+            self.assertEqual(preflight["runtimeAlignment"]["requiredBridgeEndpointEnv"], "NAPOLEON_BRIDGE_ENDPOINT")
+            self.assertEqual(preflight["runtimeAlignment"]["requiredEvaluatorEndpointEnv"], "NAPOLEON_EVAL_ENDPOINT")
+            self.assertIn("/cos/descriptor", preflight["runtimeAlignment"]["acceptedBridgeEndpointForms"])
+            self.assertIn("/cos/text-turn", preflight["runtimeAlignment"]["acceptedBridgeEndpointForms"])
+            self.assertFalse(preflight["runtimeAlignment"]["localHarnessSubstituteAllowed"])
+            self.assertTrue(preflight["runtimeAlignment"]["descriptorDiscoveryRequired"])
+            self.assertEqual(preflight["runtimeAlignment"]["descriptorFirstEndpoint"], "/cos/descriptor")
+            self.assertEqual(preflight["runtimeAlignment"]["textTurnEndpoint"], "/cos/text-turn")
+            self.assertEqual(
+                preflight["runtimeAlignment"]["nextValidationCommand"],
+                "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make live-runtime-validation",
+            )
             self.assertFalse(preflight["endpointHostStored"])
             self.assertFalse(preflight["tokenStored"])
             self.assertFalse(preflight["approvalCaptured"])
