@@ -33,6 +33,7 @@ NAPOLEON_REVIEW_CONTRACT_PATHS = {
 }
 
 SUPPORTED_REVIEW_RUNTIME_PATHS = {
+    "/chief-of-staff/requests",
     "/chief-of-staff/reviews/evaluation",
     "/chief-of-staff/reviews/evolution-proposals",
     "/chief-of-staff/reviews/governance",

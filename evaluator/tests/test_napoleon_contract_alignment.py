@@ -197,6 +197,7 @@ paths:
         self.assertEqual(
             report["supportedReviewRuntimePaths"],
             [
+                "/chief-of-staff/requests",
                 "/chief-of-staff/reviews/evaluation",
                 "/chief-of-staff/reviews/evolution-proposals",
                 "/chief-of-staff/reviews/governance",
@@ -206,11 +207,11 @@ paths:
         self.assertIn("/chief-of-staff/reviews/evolution-proposals", report["napoleonReviewContractPaths"])
         self.assertIn("/evolution/proposals", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertIn("/observability/traces", report["napoleonReviewPathsNeedingRuntimeMapping"])
+        self.assertNotIn("/chief-of-staff/requests", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/chief-of-staff/reviews/evaluation", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/chief-of-staff/reviews/evolution-proposals", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/chief-of-staff/reviews/governance", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/chief-of-staff/reviews/new-agent-proposals", report["napoleonReviewPathsNeedingRuntimeMapping"])
-        self.assertIn("/chief-of-staff/requests", report["napoleonReviewPathsWithoutLocalAlias"])
         self.assertIn("/observability/traces", report["napoleonReviewPathsWithoutLocalAlias"])
         self.assertNotIn("/evolution/proposals", report["napoleonReviewPathsWithoutLocalAlias"])
         steering_alias = next(

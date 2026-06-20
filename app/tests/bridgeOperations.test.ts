@@ -4,6 +4,7 @@ import {
   BRIDGE_OPERATIONS,
   GENERATED_BRIDGE_CONTRACT_SOURCE,
   NAPOLEON_REVIEW_OPERATIONS,
+  buildChiefOfStaffRequestBridgeTarget,
   buildEvaluationReviewBridgeTarget,
   buildEvolutionProposalReviewBridgeTarget,
   buildGovernanceReviewBridgeTarget,
@@ -122,6 +123,8 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   assert.equal(getBridgeOperation("text_turn").requestKind, "text_turn");
   assert.equal(getBridgeOperation("chief_of_staff_steering").requestKind, "chief_of_staff_steering_handoff");
   assert.equal(getBridgeOperation("memory_proposal_review").requestKind, "memory_proposal_review_handoff");
+  assert.equal(getNapoleonReviewOperation("chief_of_staff_request").requestKind, "chief_of_staff_request_handoff");
+  assert.equal(getNapoleonReviewOperation("chief_of_staff_request").path, "/chief-of-staff/requests");
   assert.equal(getNapoleonReviewOperation("evaluation_review").requestKind, "evaluation_review_handoff");
   assert.equal(getNapoleonReviewOperation("evaluation_review").path, "/chief-of-staff/reviews/evaluation");
   assert.equal(
@@ -144,7 +147,7 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   );
   assert.deepEqual(
     NAPOLEON_REVIEW_OPERATIONS.map((operation) => operation.governedBridgeOnly),
-    [true, true, true, true],
+    [true, true, true, true, true],
   );
 });
 
@@ -238,6 +241,14 @@ test("bridge URL builder drops pasted operation query strings before resolving a
 
 test("Napoleon review URL builder resolves explicit governance review paths", () => {
   assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example", "chief_of_staff_request"),
+    "https://napoleon.example/chief-of-staff/requests",
+  );
+  assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example/chief-of-staff/requests?debug=1", "chief_of_staff_request"),
+    "https://napoleon.example/chief-of-staff/requests",
+  );
+  assert.equal(
     buildNapoleonReviewUrl("https://napoleon.example", "evaluation_review"),
     "https://napoleon.example/chief-of-staff/reviews/evaluation",
   );
@@ -278,6 +289,21 @@ test("Napoleon review URL builder resolves explicit governance review paths", ()
     ),
     "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals",
   );
+});
+
+test("Chief of Staff request target maps Napoleon endpoints to the explicit request contract path", () => {
+  assert.deepEqual(buildChiefOfStaffRequestBridgeTarget("https://napoleon.example"), {
+    url: "https://napoleon.example/chief-of-staff/requests",
+    path: "/chief-of-staff/requests",
+    requestKind: "chief_of_staff_request_handoff",
+    operationId: "chief_of_staff_request",
+  });
+  assert.deepEqual(buildChiefOfStaffRequestBridgeTarget("https://napoleon.example/chief-of-staff/requests?debug=1"), {
+    url: "https://napoleon.example/chief-of-staff/requests",
+    path: "/chief-of-staff/requests",
+    requestKind: "chief_of_staff_request_handoff",
+    operationId: "chief_of_staff_request",
+  });
 });
 
 test("evaluation review target keeps generated Concierge endpoints compatible", () => {

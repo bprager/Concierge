@@ -159,6 +159,15 @@ class LocalBridgeHarnessTest(unittest.TestCase):
                     "memoryProposal": {"proposalId": "memory_harness"},
                 },
             )
+            chief_request = self.post_json(
+                f"{base_url}/chief-of-staff/requests",
+                {
+                    "requestKind": "chief_of_staff_request_handoff",
+                    "traceEnvelope": {"trace_id": "trace_chief_request", "request_id": "cos_trace_chief_request"},
+                    "auditEnvelope": {},
+                    "chiefOfStaffRequest": {"request_id": "cos_trace_chief_request"},
+                },
+            )
             new_agent = self.post_json(
                 f"{base_url}/chief-of-staff/reviews/new-agent-proposals",
                 {
@@ -171,12 +180,18 @@ class LocalBridgeHarnessTest(unittest.TestCase):
 
             self.assertEqual(steering["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(memory["governanceDecision"]["outcome"], "requires_review")
+            self.assertEqual(chief_request["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(new_agent["governanceDecision"]["outcome"], "requires_review")
             self.assertFalse(steering["appliedLocally"])
             self.assertFalse(steering["memoryWritePerformed"])
             self.assertFalse(steering["approvalCaptured"])
             self.assertFalse(steering["agentDispatchPerformed"])
             self.assertFalse(steering["externalSendPerformed"])
+            self.assertFalse(chief_request["appliedLocally"])
+            self.assertFalse(chief_request["memoryWritePerformed"])
+            self.assertFalse(chief_request["approvalCaptured"])
+            self.assertFalse(chief_request["agentDispatchPerformed"])
+            self.assertFalse(chief_request["externalSendPerformed"])
             self.assertFalse(new_agent["appliedLocally"])
             self.assertFalse(new_agent["memoryWritePerformed"])
             self.assertFalse(new_agent["approvalCaptured"])

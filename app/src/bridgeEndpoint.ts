@@ -2,9 +2,11 @@ import {
   buildEvaluationReviewBridgeTarget,
   buildEvolutionProposalReviewBridgeTarget,
   buildGovernanceReviewBridgeTarget,
+  buildChiefOfStaffRequestBridgeTarget,
   buildNewAgentProposalReviewBridgeTarget,
   buildNapoleonBridgeUrl,
   type BridgeOperationId,
+  type ChiefOfStaffRequestBridgeTarget,
   type EvaluationReviewBridgeTarget,
   type EvolutionProposalReviewBridgeTarget,
   type GovernanceReviewBridgeTarget,
@@ -13,6 +15,12 @@ import {
 
 export function resolveNapoleonBridgeOperation(configuredEndpoint: string, operationId: BridgeOperationId): string {
   return buildNapoleonBridgeUrl(configuredEndpoint, operationId);
+}
+
+export function resolveNapoleonChiefOfStaffRequestOperation(
+  configuredEndpoint: string,
+): ChiefOfStaffRequestBridgeTarget {
+  return buildChiefOfStaffRequestBridgeTarget(configuredEndpoint);
 }
 
 export function resolveNapoleonGovernanceReviewOperation(configuredEndpoint: string): GovernanceReviewBridgeTarget {

@@ -215,6 +215,9 @@ class HarnessHandler(BaseHTTPRequestHandler):
         if self.path == "/v1/concierge/evaluate":
             self.handle_evaluate(payload)
             return
+        if self.path == "/chief-of-staff/requests":
+            self.handle_review(payload, "chief_of_staff_request_handoff", applied_locally=False)
+            return
         if self.path == "/chief-of-staff/reviews/evaluation":
             self.handle_evaluate(payload, expected_request_kind="evaluation_review_handoff")
             return

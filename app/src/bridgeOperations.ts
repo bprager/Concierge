@@ -12,6 +12,7 @@ export type BridgeOperationId =
   | "evaluate";
 
 export type NapoleonReviewOperationId =
+  | "chief_of_staff_request"
   | "evaluation_review"
   | "evolution_proposal_review"
   | "governance_review"
@@ -51,6 +52,7 @@ interface NapoleonReviewOperation {
   id: NapoleonReviewOperationId;
   path: `/chief-of-staff/${string}`;
   requestKind:
+    | "chief_of_staff_request_handoff"
     | "evaluation_review_handoff"
     | "evolution_proposal_review_handoff"
     | "governance_review_handoff"
@@ -66,6 +68,25 @@ export { GENERATED_BRIDGE_CONTRACT_SOURCE };
 export const BRIDGE_OPERATIONS: BridgeOperation[] = [...GENERATED_BRIDGE_OPERATIONS];
 
 export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [
+  {
+    id: "chief_of_staff_request",
+    path: "/chief-of-staff/requests",
+    requestKind: "chief_of_staff_request_handoff",
+    transport: "http_post",
+    responseRequired: [
+      "text",
+      "governanceDecision",
+      "traceEnvelope",
+      "auditEnvelope",
+      "appliedLocally",
+      "memoryWritePerformed",
+      "approvalCaptured",
+      "agentDispatchPerformed",
+      "externalSendPerformed",
+    ],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
   {
     id: "evaluation_review",
     path: "/chief-of-staff/reviews/evaluation",
@@ -277,6 +298,22 @@ export function buildNewAgentProposalReviewBridgeTarget(
     path: "/chief-of-staff/reviews/new-agent-proposals",
     requestKind: "new_agent_proposal_review_handoff",
     operationId: "new_agent_proposal_review",
+  };
+}
+
+export interface ChiefOfStaffRequestBridgeTarget {
+  url: string;
+  path: "/chief-of-staff/requests";
+  requestKind: "chief_of_staff_request_handoff";
+  operationId: "chief_of_staff_request";
+}
+
+export function buildChiefOfStaffRequestBridgeTarget(configuredEndpoint: string): ChiefOfStaffRequestBridgeTarget {
+  return {
+    url: buildNapoleonReviewUrl(configuredEndpoint, "chief_of_staff_request"),
+    path: "/chief-of-staff/requests",
+    requestKind: "chief_of_staff_request_handoff",
+    operationId: "chief_of_staff_request",
   };
 }
 

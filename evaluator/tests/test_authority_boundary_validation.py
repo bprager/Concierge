@@ -991,6 +991,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             response = await fetcher(target.url, { method: "POST" });
             """,
             """
+            const target = resolveNapoleonChiefOfStaffRequestOperation(endpoint);
+            response = await fetcher(target.url, { method: "POST" });
+            """,
+            """
             const target = resolveNapoleonEvolutionProposalReviewOperation(endpoint);
             response = await fetcher(target.url, { method: "POST" });
             """,
