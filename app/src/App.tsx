@@ -183,6 +183,22 @@ function storedBoolean(key: string, fallback: boolean): boolean {
   return fallback;
 }
 
+type RuntimeValidationSource = "real_runtime" | "local_harness" | "local_simulation";
+
+function deriveRuntimeValidationSource(input: {
+  endpoint: string;
+  descriptorMode: "discovered" | "live" | "missing" | "checksum_mismatch";
+  evidenceCaptureState: "not_run" | "passed" | "failed";
+  evidenceComparisonState: "not_run" | "passed" | "failed";
+}): RuntimeValidationSource | undefined {
+  if (isLocalHarnessEndpoint(input.endpoint)) return "local_harness";
+  if (input.descriptorMode !== "live") return "local_simulation";
+  if (input.evidenceCaptureState === "passed" && input.evidenceComparisonState === "passed") {
+    return "real_runtime";
+  }
+  return undefined;
+}
+
 interface PendingRehearsal {
   content: string;
   traceId: string;
@@ -2136,11 +2152,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function exportBridgeReadinessProof() {
     const traceId = newTraceId();
-    const runtimeValidationSource = isLocalHarnessEndpoint(endpoint)
-      ? "local_harness"
-      : descriptorMode === "live"
-        ? "real_runtime"
-        : "local_simulation";
+    const runtimeValidationSource = deriveRuntimeValidationSource({
+      endpoint,
+      descriptorMode,
+      evidenceCaptureState: bridgeEvidenceReadiness.captureState,
+      evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
+    });
     const json = exportBridgeReadinessProofJson({
       descriptorConnection,
       readiness: bridgeEvidenceReadiness,
@@ -2179,7 +2196,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       signatureState: descriptorConnection.signatureState,
       evidenceCaptureState: bridgeEvidenceReadiness.captureState,
       evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
-      runtimeValidationSource,
+      runtimeValidationSource: runtimeValidationSource ?? "unavailable",
       promotionGate: bridgeReadinessProof.runtimeValidation?.promotionGate ?? "unavailable",
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
@@ -2463,11 +2480,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     taxonomyCounts[dimension].map((row) => ({ ...row, value: `${dimension}:${row.label}` })),
   );
   const selectedTaxonomyRow = taxonomyRows.find((row) => row.value === selectedTaxonomyLabel);
-  const runtimeValidationSource = isLocalHarnessEndpoint(endpoint)
-    ? "local_harness"
-    : descriptorMode === "live"
-      ? "real_runtime"
-      : "local_simulation";
+  const runtimeValidationSource = deriveRuntimeValidationSource({
+    endpoint,
+    descriptorMode,
+    evidenceCaptureState: bridgeEvidenceReadiness.captureState,
+    evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
+  });
   const liveBridgeReadiness = describeLiveBridgeReadiness({
     descriptorConnection,
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,

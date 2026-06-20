@@ -319,6 +319,66 @@ test("exports and compares Napoleon proof through rendered app controls", async 
   }
 });
 
+test("live descriptor discovery alone does not export real runtime validation", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, screen, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    assert.equal(url, "https://napoleon.example.test/v1/concierge/chief-of-staff/descriptor");
+    return harnessJsonResponse(200, {
+      descriptor: {
+        schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+        serviceId: "napoleon.chief_of_staff",
+        runtimeAuthority: false,
+        commandExecution: false,
+        cachePolicy: "fail_closed_to_review_required",
+        blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+      },
+      checksum: { expected: "sha256:live", actual: "sha256:live" },
+      signature: { valid: true },
+    });
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "https://napoleon.example.test" } });
+    fireEvent.change(view.getByLabelText("Descriptor"), { target: { value: "live" } });
+    await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("https://napoleon.example.test/v1/concierge/chief-of-staff/descriptor")),
+    );
+
+    const readinessPanel = view.getByText("Live bridge readiness").closest("section") as HTMLElement;
+    assert.ok(readinessPanel);
+    assert.ok(within(readinessPanel).getByText("Runtime validation source unavailable"));
+    assert.ok(within(readinessPanel).getByText("blocked until real Napoleon runtime evidence passes"));
+
+    await user.click(view.getByRole("button", { name: "Export readiness proof" }));
+    const readinessExport = view.getByLabelText("Exported bridge readiness proof");
+    assert.ok(readinessExport.textContent?.includes('"source": "unavailable"'));
+    assert.ok(readinessExport.textContent?.includes('"promotionGate": "blocked_until_real_runtime_evidence_passes"'));
+    assert.equal(readinessExport.textContent?.includes('"source": "real_runtime"'), false);
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const readinessEvent = telemetryBuffer.events?.find((event) => event.event === "bridge_readiness_proof_exported");
+    assert.equal(readinessEvent?.attributes.runtimeValidationSource, "unavailable");
+    assert.equal(readinessEvent?.attributes.promotionGate, "blocked_until_real_runtime_evidence_passes");
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("capability ledger export and clear telemetry stays proposal-only without agent dispatch", async () => {
   const dom = installDom();
   const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
