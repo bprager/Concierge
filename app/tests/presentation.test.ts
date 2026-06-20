@@ -415,6 +415,7 @@ test("describes live bridge readiness as ready only when descriptor and evidence
     }),
     evidenceCaptureState: "passed",
     evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
   });
 
   assert.equal(view.status, "ready");
@@ -450,6 +451,36 @@ test("describes local harness bridge readiness as validation warning only", () =
       (detail) =>
         detail.label === "Runtime validation" &&
         detail.value === "Local harness only; not real Napoleon runtime validation",
+    ),
+  );
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Promotion gate" &&
+        detail.value === "blocked until real Napoleon runtime evidence passes",
+    ),
+  );
+});
+
+test("describes missing runtime source as unproven bridge readiness", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canSendLive, true);
+  assert.ok(view.summary.includes("real Napoleon runtime validation has not been proven"));
+  assert.ok(
+    view.details.some(
+      (detail) => detail.label === "Runtime validation" && detail.value === "Runtime validation source unavailable",
     ),
   );
   assert.ok(
@@ -503,6 +534,28 @@ test("describes missing real runtime proof as a live voice blocker", () => {
     evidenceCaptureState: "passed",
     evidenceComparisonState: "passed",
     runtimeValidationSource: "local_harness",
+    rehearsalMode: false,
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canStartLiveVoice, false);
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Runtime proof" && item.status === "blocked"));
+  assert.ok(view.items.some((item: { label: string; detail: string }) => item.label === "Runtime proof" && item.detail.includes("not available")));
+});
+
+test("describes missing runtime source as a live voice blocker", () => {
+  const view = describeLiveVoiceReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    microphoneEnabled: true,
+    microphonePermissionStatus: "granted",
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
     rehearsalMode: false,
   });
 
@@ -608,6 +661,9 @@ test("describes stale descriptor cache as a visible live send preflight blocker"
     inputReady: true,
     governanceCanSendAdvisory: true,
     rehearsalMode: false,
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
   });
 
   assert.equal(view.status, "blocked");
@@ -627,6 +683,9 @@ test("describes descriptor transport failures as visible live send preflight blo
     inputReady: true,
     governanceCanSendAdvisory: true,
     rehearsalMode: false,
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
   });
 
   assert.equal(view.status, "blocked");
@@ -759,6 +818,9 @@ test("describes live send preflight as ready only for governed bridge attempt", 
     inputReady: true,
     governanceCanSendAdvisory: true,
     rehearsalMode: false,
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
   });
 
   assert.equal(view.status, "ready");
@@ -815,6 +877,41 @@ test("describes runtime evidence and promotion gate in live send preflight", () 
   assert.ok(view.items.some((item) => item.label === "Evidence capture" && item.status === "warning"));
   assert.ok(view.items.some((item) => item.label === "Evidence comparison" && item.status === "ready"));
   assert.ok(view.items.some((item) => item.label === "Runtime validation" && item.status === "warning"));
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Promotion gate" &&
+        item.detail.includes("blocked until real Napoleon runtime evidence passes"),
+    ),
+  );
+});
+
+test("describes missing runtime source as unproven in live send preflight", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canAttemptLiveSend, true);
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Runtime validation" &&
+        item.status === "warning" &&
+        item.detail.includes("source is unavailable"),
+    ),
+  );
   assert.ok(
     view.items.some(
       (item) =>

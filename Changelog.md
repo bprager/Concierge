@@ -29,6 +29,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added contract-alignment report classification for supported advisory harness paths, local Concierge handoff aliases, Napoleon review/evolution paths that still need explicit runtime mapping, and review paths with no local alias.
 - Added metadata-only `/cos/trace/{trace_id}` observability checks to explicit Napoleon advisory harness text sends, evidence capture, and live-runtime summaries, including comparator coverage that rejects missing or mismatched trace envelopes for `/cos/text-turn` success evidence.
 - Hardened bridge evidence readiness so active profile changes reset captured runtime evidence before adult-owner and child-protected validation state can be mixed.
+- Hardened live bridge and live voice readiness so missing runtime-validation source is shown as unproven and promotion-blocked instead of being treated as real Napoleon runtime evidence.
 - Hardened Rehearsal Mode activation so captured bridge evidence readiness and rendered bridge readiness proof exports reset before live validation can linger in local-only preview mode.
 - Hardened bridge evidence readiness so endpoint, bearer-token, descriptor mode, and descriptor discovery changes reset captured runtime evidence before stale validation can promote a new connection context.
 - Hardened bridge readiness proof exports so advisory Chief of Staff capability discovery clears already-rendered proof JSON and comparison state before stale capability metadata can linger.

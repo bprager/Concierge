@@ -287,10 +287,14 @@ function describeEvidenceState(state: LiveBridgeEvidenceState | undefined): stri
 function describeRuntimeValidationSource(source: LiveBridgeReadinessInput["runtimeValidationSource"]): string {
   if (source === "local_harness") return "Local harness only; not real Napoleon runtime validation";
   if (source === "local_simulation") return "Local simulation only; not real Napoleon runtime validation";
+  if (source === undefined) return "Runtime validation source unavailable";
   return "Real Napoleon runtime";
 }
 
 function describePromotionGate(source: LiveBridgeReadinessInput["runtimeValidationSource"], evidencePending: boolean): string {
+  if (source === undefined) {
+    return "blocked until real Napoleon runtime evidence passes";
+  }
   if (source === "local_harness" || source === "local_simulation") {
     return "blocked until real Napoleon runtime evidence passes";
   }
@@ -309,8 +313,9 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
   ];
   const evidenceCapture = input.evidenceCaptureState ?? "not_run";
   const evidenceComparison = input.evidenceComparisonState ?? "not_run";
-  const runtimeValidationSource = input.runtimeValidationSource ?? "real_runtime";
+  const runtimeValidationSource = input.runtimeValidationSource;
   const localOnlyValidation = runtimeValidationSource === "local_harness" || runtimeValidationSource === "local_simulation";
+  const runtimeValidationMissing = runtimeValidationSource === undefined;
   const integrityMismatch =
     descriptor.failClosedReason === "descriptor_signature_or_checksum_mismatch" ||
     descriptor.checksumState === "mismatch" ||
@@ -321,7 +326,7 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
   const canSendLive = descriptor.canAttemptLiveBridge && !evidenceFailed;
   const status: LiveBridgeReadinessView["status"] = !canSendLive
     ? "blocked"
-    : evidencePending || lastSendFailedClosed || localOnlyValidation
+    : evidencePending || lastSendFailedClosed || localOnlyValidation || runtimeValidationMissing
       ? "warning"
       : "ready";
 
@@ -349,6 +354,8 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
   } else if (localOnlyValidation && !evidencePending) {
     summary =
       "Local harness or simulation checks pass, but real Napoleon runtime validation has not been proven in this UI session.";
+  } else if (runtimeValidationMissing && !evidencePending) {
+    summary = "Bridge checks pass, but real Napoleon runtime validation has not been proven in this UI session.";
   } else if (evidencePending) {
     summary = "Descriptor preflight passes, but bridge evidence capture or comparison has not been verified in this UI session.";
   } else {
@@ -388,7 +395,7 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
 export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): LiveVoiceReadinessView {
   const evidenceCapture = input.evidenceCaptureState ?? "not_run";
   const evidenceComparison = input.evidenceComparisonState ?? "not_run";
-  const runtimeValidationSource = input.runtimeValidationSource ?? "real_runtime";
+  const runtimeValidationSource = input.runtimeValidationSource;
   const realRuntimeReady =
     runtimeValidationSource === "real_runtime" && evidenceCapture === "passed" && evidenceComparison === "passed";
   const descriptorReady = input.descriptorConnection.canAttemptLiveBridge;
@@ -474,7 +481,7 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
   const runtimeValidationSource = input.runtimeValidationSource;
   const evidenceCaptureReady = evidenceCapture === undefined || evidenceCapture === "passed";
   const evidenceComparisonReady = evidenceComparison === undefined || evidenceComparison === "passed";
-  const realRuntimeReady = runtimeValidationSource === undefined || runtimeValidationSource === "real_runtime";
+  const realRuntimeReady = runtimeValidationSource === "real_runtime";
   const descriptorDiscoveryBlocked =
     descriptor.failClosedReason === "no_descriptor" ||
     descriptor.failClosedReason === "descriptor_stale" ||
@@ -562,18 +569,19 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
       detail: describeEvidenceState(evidenceComparison),
     });
   }
-  if (runtimeValidationSource !== undefined) {
-    items.push({
-      label: "Runtime validation",
-      status: realRuntimeReady ? "ready" : "warning",
-      detail: describeRuntimeValidationSource(runtimeValidationSource),
-    });
-    items.push({
-      label: "Promotion gate",
-      status: realRuntimeReady && evidenceCaptureReady && evidenceComparisonReady ? "ready" : "warning",
-      detail: describePromotionGate(runtimeValidationSource, !evidenceCaptureReady || !evidenceComparisonReady),
-    });
-  }
+  items.push({
+    label: "Runtime validation",
+    status: realRuntimeReady ? "ready" : "warning",
+    detail:
+      runtimeValidationSource === undefined
+        ? "Runtime validation source is unavailable; real Napoleon runtime evidence has not been proven."
+        : describeRuntimeValidationSource(runtimeValidationSource),
+  });
+  items.push({
+    label: "Promotion gate",
+    status: realRuntimeReady && evidenceCaptureReady && evidenceComparisonReady ? "ready" : "warning",
+    detail: describePromotionGate(runtimeValidationSource, !evidenceCaptureReady || !evidenceComparisonReady),
+  });
   const hasBlocked = items.some((item) => item.status === "blocked") || !descriptor.canAttemptLiveBridge;
   const hasWarning = items.some((item) => item.status === "warning");
   const canAttemptLiveSend = !hasBlocked && !input.rehearsalMode && input.inputReady && input.governanceCanSendAdvisory;
