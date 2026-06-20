@@ -16,6 +16,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added a sanitized live-runtime preflight report for missing endpoint configuration, preserving false side-effect boundaries without storing endpoint hosts or tokens.
 - Added repository validation that checks documented current evaluator scenario counts against `evaluator/scenarios.yaml`, preventing stale readiness reports from overstating or understating local coverage.
 - Hardened repository authority-boundary validation so bracketed `navigator` device, credential, permission, geolocation, and clipboard aliases are rejected even when invoked through `.call(...)` or `.apply(...)`.
+- Hardened repository authority-boundary validation so bracketed cross-context channel, notification, payment, file-picker, and file-reader aliases are rejected when invoked through `.call(...)` or `.apply(...)`.
 - Hardened bridge contract alignment so TypeScript bridge operation IDs and request-kind typing are derived from the generated OpenAPI registry instead of a duplicate hand-written union.
 - Added a provenance-source row to the Napoleon delegation panel so returned selected-agent delegation is visibly distinct from metadata-only discovery and target-capability-only responses.
 - Added bridge-level blocked-effect, governance, trace, and audit fallback rows to target-capability-only Napoleon delegation responses while keeping selected-agent provenance marked as not returned.
