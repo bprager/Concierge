@@ -104,6 +104,35 @@ def resolve_endpoints(
     return bridge, evaluator
 
 
+def live_runtime_preflight(bridge_endpoint: str | None, eval_endpoint: str | None) -> dict[str, Any]:
+    bridge_configured = bridge_endpoint is not None
+    eval_configured = eval_endpoint is not None
+    missing_configuration = [] if bridge_configured else ["NAPOLEON_BRIDGE_ENDPOINT"]
+    return {
+        "status": "ready_to_attempt" if bridge_configured else "blocked",
+        "reason": "ready" if bridge_configured else "missing_bridge_endpoint",
+        "missingConfiguration": missing_configuration,
+        "bridgeEndpointConfigured": bridge_configured,
+        "evaluatorEndpointConfiguredOrDerived": eval_configured,
+        "expectedBridgeConfiguration": "Set NAPOLEON_BRIDGE_ENDPOINT to a Napoleon base URL or known governed bridge operation URL.",
+        "expectedEvaluatorConfiguration": "Set NAPOLEON_EVAL_ENDPOINT only when the evaluator endpoint differs from /v1/concierge/evaluate on the bridge base.",
+        "endpointHostStored": False,
+        "tokenStored": False,
+        "approvalCaptured": False,
+        "memoryWritePerformed": False,
+        "agentDispatchPerformed": False,
+        "externalSendPerformed": False,
+        "appliedLocally": False,
+        "boundary": BOUNDARY,
+    }
+
+
+def write_preflight(path: Path, bridge_endpoint: str | None, eval_endpoint: str | None) -> dict[str, Any]:
+    preflight = live_runtime_preflight(bridge_endpoint, eval_endpoint)
+    path.write_text(json.dumps(preflight, indent=2) + "\n", encoding="utf-8")
+    return preflight
+
+
 def run_bridge_capture(
     bridge_endpoint: str,
     out_path: Path,
@@ -442,6 +471,9 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     auth_token = args.auth_token or endpoint_from_env(active_env, "NAPOLEON_EVAL_TOKEN")
     bridge_endpoint, eval_endpoint = resolve_endpoints(args.bridge_endpoint, args.eval_endpoint, active_env)
     if bridge_endpoint is None:
+        out_dir = Path(args.out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint)
         print(
             "live runtime validation requires --bridge-endpoint, NAPOLEON_BRIDGE_ENDPOINT, "
             "or NAPOLEON_EVAL_ENDPOINT",
@@ -451,6 +483,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint)
     evidence_path = out_dir / "bridge_evidence.json"
     eval_report_path = out_dir / "eval_http.json"
     summary_path = out_dir / "summary.json"

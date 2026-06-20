@@ -186,8 +186,18 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 exit_code = live_runtime_validation.main(["--out-dir", tmpdir], env={})
 
+            preflight = json.loads((Path(tmpdir) / "preflight.json").read_text(encoding="utf-8"))
             self.assertEqual(exit_code, 2)
             self.assertIn("NAPOLEON_BRIDGE_ENDPOINT", stderr.getvalue())
+            self.assertEqual(preflight["status"], "blocked")
+            self.assertEqual(preflight["reason"], "missing_bridge_endpoint")
+            self.assertIn("NAPOLEON_BRIDGE_ENDPOINT", preflight["missingConfiguration"])
+            self.assertFalse(preflight["endpointHostStored"])
+            self.assertFalse(preflight["tokenStored"])
+            self.assertFalse(preflight["approvalCaptured"])
+            self.assertFalse(preflight["memoryWritePerformed"])
+            self.assertFalse(preflight["agentDispatchPerformed"])
+            self.assertFalse(preflight["externalSendPerformed"])
             self.assertFalse((Path(tmpdir) / "summary.json").exists())
 
     def test_sanitize_eval_report_removes_nested_response_excerpts(self):

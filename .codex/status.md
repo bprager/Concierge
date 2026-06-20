@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a sanitized live-runtime `preflight.json` report for missing endpoint configuration so `make live-runtime-validation` leaves local, non-authorizing diagnostic evidence without endpoint hosts, tokens, prompts, request bodies, response bodies, approval capture, memory writes, agent dispatch, external sends, or local application.
 - Added a machine-readable live-runtime `promotionReadiness` gate with blocking reasons to `summary.json` and the local promotion review draft, so local harness or simulation evidence stays blocked until real Napoleon runtime evidence, evaluator HTTP mode, and artifact privacy all pass.
 - Added a sanitized live-runtime promotion review draft to the combined validation runner, linked from `summary.json`, so real-runtime evidence can carry a human-review packet without storing endpoints, tokens, prompts, request bodies, response bodies, or response text.
 - Derived runtime bridge operation IDs and request-kind typing from the generated OpenAPI bridge operation registry so TypeScript can no longer carry a stale duplicate operation union beside the canonical contract.
@@ -353,7 +354,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 - No runtime blocker is known from the handoff setup itself.
 - Real Napoleon HTTP evaluator-only mode requires a configured `NAPOLEON_EVAL_ENDPOINT`; `make eval-http-local-harness` only verifies local HTTP evaluator plumbing.
-- Live Chief of Staff/Napoleon runtime alignment could not be verified because the remote descriptor has no populated live HTTP/MCP/stdio base URL and no local `NAPOLEON_BRIDGE_ENDPOINT` or `NAPOLEON_EVAL_ENDPOINT` is configured.
+- Live Chief of Staff/Napoleon runtime alignment could not be verified because the remote descriptor has no populated live HTTP/MCP/stdio base URL and no local `NAPOLEON_BRIDGE_ENDPOINT` or `NAPOLEON_EVAL_ENDPOINT` is configured; missing configuration now produces a sanitized local live-runtime `preflight.json` diagnostic.
 - License docs are now consistent: `LICENSE` is MIT, and `LICENSE-TODO.md` tracks only third-party asset license review.
 
 ## Known Bugs Or Risks
