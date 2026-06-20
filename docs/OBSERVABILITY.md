@@ -126,6 +126,8 @@ Napoleon response proof export telemetry may also report whether a target capabi
 
 Napoleon response proof export telemetry may report allowed and blocked effect counts with `allowedEffectCount` and `blockedEffectCount`, but returned effect names remain in the sanitized local export body and visible UI instead of telemetry attributes.
 
+Explicit advisory harness text sends normalize configured `/cos`, `/cos/descriptor`, `/cos/capabilities`, and `/cos/text-turn` endpoints to `POST /cos/text-turn` before recording sanitized bridge evidence. The evidence still records only the `/cos/text-turn` target path and matching `/cos/trace/{trace_id}` proof state, not endpoint hosts, tokens, prompts, request bodies, response bodies, or trace bodies.
+
 Count-only Napoleon response proof telemetry derives selected-agent, selection-reason, allowed-effect, and blocked-effect totals from the sanitized proof export arrays, so punctuation inside returned text cannot inflate counts and the returned text remains local-only.
 
 Sanitized Napoleon response proof exports preserve selected-agent names, selection reasons, allowed effects, and blocked effects from returned bridge provenance arrays before rendering, so multi-agent proof is not reconstructed from semicolon- or comma-delimited UI rows.

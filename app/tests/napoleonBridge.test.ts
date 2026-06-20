@@ -424,6 +424,65 @@ test("live bridge adapts Napoleon advisory harness text-turn responses without s
   assert.equal(JSON.stringify(evidence).includes("Napoleon prepared an advisory status summary."), false);
 });
 
+test("live bridge resolves an advisory harness cos base endpoint to text-turn and trace paths", async () => {
+  const requestedUrls: string[] = [];
+
+  const response = await sendToNapoleon(
+    {
+      traceId: "trace_cos_base_runtime",
+      conversationId: "conv_cos_base_runtime",
+      turnId: "turn_cos_base_runtime",
+      profile: "adult_owner",
+      channel: "text",
+      message: "Summarize the current governed bridge status",
+    },
+    {
+      getEndpoint: () => "https://napoleon.example/cos",
+      descriptorConnection: readyDescriptorConnection,
+      emit: () => undefined,
+      fetch: async (url) => {
+        requestedUrls.push(url);
+        if (url.endsWith("/cos/trace/trace_cos_base_runtime")) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({ trace_id: "trace_cos_base_runtime", events: [] }),
+          };
+        }
+        return {
+          ok: true,
+          status: 202,
+          json: async () => ({
+            schema_version: "napoleon/concierge/text-turn-response/v1",
+            status: "accepted_for_prepare_only",
+            answer: "Napoleon prepared an advisory status summary.",
+            trace_id: "trace_cos_base_runtime",
+            audit_id: "audit_cos_base_runtime",
+            governance_decision: {
+              decision: "allow_prepare_only",
+              reason: "Advisory preparation only; blocked effects remain unavailable.",
+              authority_tier: "prepare_only",
+              blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+            },
+            delegation_plan: {
+              requested_capability: "napoleon.chief_of_staff",
+              candidate_agents: [],
+              blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+            },
+            blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+          }),
+        };
+      },
+    },
+  );
+
+  assert.deepEqual(requestedUrls, [
+    "https://napoleon.example/cos/text-turn",
+    "https://napoleon.example/cos/trace/trace_cos_base_runtime",
+  ]);
+  assert.equal(response.governanceDecision.outcome, "allow_prepare_only");
+});
+
 test("live bridge fails closed when advisory harness trace envelope does not match the text turn", async () => {
   const evidence: unknown[] = [];
 

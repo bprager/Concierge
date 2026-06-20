@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added `/cos` base endpoint support for explicit Napoleon advisory harness text sends, normalizing `/cos`, `/cos/descriptor`, and `/cos/capabilities` to `/cos/text-turn` without changing authority boundaries.
 - Added a sanitized live-runtime promotion review draft to the combined validation runner so bridge evidence, evaluator status, artifact privacy, and non-authority boundaries are retained without endpoint hosts, tokens, prompts, or response text.
 - Added a machine-readable live-runtime promotion readiness gate with blocking reasons so local harness or simulation evidence cannot be mistaken for locally promotion-ready real Napoleon evidence.
 - Added descriptor-first real-runtime alignment metadata to live-runtime preflight reports so missing endpoint diagnostics name accepted endpoint forms without storing hosts or tokens.

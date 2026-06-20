@@ -210,9 +210,14 @@ function buildAdvisoryHarnessHeaders(authToken: string | null): Record<string, s
     : { "Content-Type": "application/json" };
 }
 
-function isAdvisoryHarnessTextTurnEndpoint(endpoint: string): boolean {
+function resolveAdvisoryHarnessTextTurnEndpoint(endpoint: string): string | null {
   const normalized = endpoint.trim().split(/[?#]/, 1)[0].replace(/\/+$/, "");
-  return normalized.endsWith("/cos/text-turn");
+  if (normalized.endsWith("/cos/text-turn")) return normalized;
+  if (normalized.endsWith("/cos/descriptor") || normalized.endsWith("/cos/capabilities")) {
+    return normalized.replace(/\/cos\/(?:descriptor|capabilities)$/, "/cos/text-turn");
+  }
+  if (normalized.endsWith("/cos")) return `${normalized}/text-turn`;
+  return null;
 }
 
 function normalizeAdvisoryHarnessTextTurnEndpoint(endpoint: string): string {
@@ -685,9 +690,10 @@ export async function sendToNapoleon(
     );
   }
 
-  const advisoryHarnessMode = isAdvisoryHarnessTextTurnEndpoint(endpoint);
-  const targetEndpoint = advisoryHarnessMode
-    ? normalizeAdvisoryHarnessTextTurnEndpoint(endpoint)
+  const advisoryHarnessTextTurnEndpoint = resolveAdvisoryHarnessTextTurnEndpoint(endpoint);
+  const advisoryHarnessMode = Boolean(advisoryHarnessTextTurnEndpoint);
+  const targetEndpoint = advisoryHarnessTextTurnEndpoint
+    ? normalizeAdvisoryHarnessTextTurnEndpoint(advisoryHarnessTextTurnEndpoint)
     : resolveNapoleonBridgeOperation(endpoint, "text_turn");
   const targetPath = advisoryHarnessMode ? "/cos/text-turn" : getBridgeOperation("text_turn").path;
   evidenceContext.targetPath = targetPath;

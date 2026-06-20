@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added explicit Napoleon advisory harness `/cos` base endpoint support for live text sends, normalizing `/cos`, `/cos/descriptor`, and `/cos/capabilities` to `/cos/text-turn` while preserving descriptor preflight, trace proof, and non-authority boundaries.
 - Added a sanitized live-runtime `preflight.json` report for missing endpoint configuration so `make live-runtime-validation` leaves local, non-authorizing diagnostic evidence without endpoint hosts, tokens, prompts, request bodies, response bodies, approval capture, memory writes, agent dispatch, external sends, or local application.
 - Added descriptor-first real-runtime alignment metadata to `preflight.json`, including accepted bridge endpoint forms, `/cos/descriptor`, `/cos/text-turn`, and the local-harness-is-not-real-runtime boundary without retaining endpoint hosts or tokens.
 - Added a machine-readable live-runtime `promotionReadiness` gate with blocking reasons to `summary.json` and the local promotion review draft, so local harness or simulation evidence stays blocked until real Napoleon runtime evidence, evaluator HTTP mode, and artifact privacy all pass.
