@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a provenance-source row to Napoleon delegation presentation so returned bridge delegation, target-capability-only responses, and absent selected-agent provenance stay visibly distinct.
 - Added visible Napoleon metadata discovery in the connection area after advisory capability discovery, showing returned agent manifests and active profile metadata while keeping all dispatch, registry, memory, approval, external-send, and runtime authority paths blocked.
 - Added named Napoleon `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}` metadata discovery mappings plus local harness and validation coverage, while keeping agent dispatch, registry updates, memory writes, approval capture, external sends, and runtime authority blocked.
 - Added a named Napoleon `/observability/traces` mapping for evidence-only observability trace handoffs without trace append authority, audit authority, task routing, approval capture, memory writes, agent dispatch, external sends, or local application.

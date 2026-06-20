@@ -147,6 +147,7 @@ artifacts:
     required_terms:
       - "persistent Napoleon delegation panel"
       - "selected agents not returned"
+      - "provenance source not returned"
       - "why selected not returned"
       - "allowed effects not returned"
       - "blocked effects not returned"
@@ -154,7 +155,9 @@ artifacts:
       - "trace ID not returned"
       - "audit ID not returned"
       - "returned target capability"
+      - "target-capability-only"
       - "not selected-agent provenance"
+      - "returned bridge delegation"
       - "not returned"
       - "returned bridge provenance only"
       - "does not invent selected agents"

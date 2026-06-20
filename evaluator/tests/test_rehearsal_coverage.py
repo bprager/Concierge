@@ -310,6 +310,7 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertFalse(checks["delegation_panel_state"]["found"])
         self.assertIn("persistent Napoleon delegation panel", checks["delegation_panel_state"]["missing_terms"])
         self.assertIn("selected agents not returned", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("provenance source not returned", checks["delegation_panel_state"]["missing_terms"])
         self.assertIn("why selected not returned", checks["delegation_panel_state"]["missing_terms"])
         self.assertIn("allowed effects not returned", checks["delegation_panel_state"]["missing_terms"])
         self.assertIn("blocked effects not returned", checks["delegation_panel_state"]["missing_terms"])
@@ -317,7 +318,9 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("trace ID not returned", checks["delegation_panel_state"]["missing_terms"])
         self.assertIn("audit ID not returned", checks["delegation_panel_state"]["missing_terms"])
         self.assertIn("returned target capability", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("target-capability-only", checks["delegation_panel_state"]["missing_terms"])
         self.assertIn("not selected-agent provenance", checks["delegation_panel_state"]["missing_terms"])
+        self.assertIn("returned bridge delegation", checks["delegation_panel_state"]["missing_terms"])
         self.assertIn("does not invent selected agents", checks["delegation_panel_state"]["missing_terms"])
         self.assertIn("does not invent recommendations", checks["delegation_panel_state"]["missing_terms"])
 

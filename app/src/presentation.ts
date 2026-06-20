@@ -606,6 +606,7 @@ export function describeDelegation(
         body: `Napoleon returned target capability ${safeTargetCapability}, but did not include selected-agent delegation provenance.`,
         details: [
           { label: "Target capability", value: safeTargetCapability },
+          { label: "Provenance source", value: "target capability only; selected-agent delegation not returned" },
           { label: "Selected agents", value: "not returned" },
           { label: "Why selected", value: "not returned" },
           { label: "Allowed effects", value: "not returned" },
@@ -622,6 +623,7 @@ export function describeDelegation(
       body: "No Napoleon delegation provenance was included with this response, so Concierge will not attribute the answer to a capability or agent.",
       details: [
         { label: "Target capability", value: "not returned" },
+        { label: "Provenance source", value: "not returned" },
         { label: "Selected agents", value: "not returned" },
         { label: "Why selected", value: "not returned" },
         { label: "Allowed effects", value: "not returned" },
@@ -664,6 +666,7 @@ export function describeDelegation(
     body: contribution || "Napoleon provided delegation provenance for this response.",
     details: [
       { label: "Target capability", value: safeTargetCapability },
+      { label: "Provenance source", value: "returned bridge delegation; not local metadata discovery" },
       { label: "Selected agents", value: agentLabels },
       { label: "Why selected", value: selectionReasons },
       { label: "Allowed effects", value: sanitizeVisibleProvenanceList(delegation.allowedEffects) },

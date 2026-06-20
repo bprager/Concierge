@@ -96,6 +96,13 @@ test("successful Napoleon response presentation includes returned delegation and
 
   assert.equal(state.delegation?.heading, "Napoleon delegation");
   assert.ok(state.delegation?.body.includes("Passive Brain"));
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Provenance source" &&
+        detail.value === "returned bridge delegation; not local metadata discovery",
+    ),
+  );
   assert.equal(state.proof?.heading, "Last successful Napoleon proof");
   assert.equal(state.proof?.status, "verified");
   assert.ok(state.proof?.summary.includes("Napoleon recommendation"));
@@ -145,6 +152,13 @@ test("successful Napoleon response proof includes returned target capability wit
     state.delegation?.details.some(
       (detail: { label: string; value: string }) =>
         detail.label === "Selected agents" && detail.value === "not returned",
+    ),
+  );
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Provenance source" &&
+        detail.value === "target capability only; selected-agent delegation not returned",
     ),
   );
   assert.equal(state.proof?.status, "verified");
