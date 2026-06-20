@@ -236,13 +236,28 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
+        r"\s*\[\s*['\"](?:usb|serial|hid|bluetooth|credentials)['\"]\s*\]"
+        r"\s*\[\s*['\"](?:requestDevice|requestPort|get|create|store|preventSilentAccess)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
+        r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"]permissions['\"]\s*\]"
         r"\s*\[\s*['\"]query['\"]\s*\]\s*\("
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
+        r"\s*\[\s*['\"]permissions['\"]\s*\]"
+        r"\s*\[\s*['\"]query['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
+        r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"]geolocation['\"]\s*\]"
         r"\s*\[\s*['\"](?:getCurrentPosition|watchPosition)['\"]\s*\]\s*\("
+    ),
+    re.compile(
+        r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
+        r"\s*\[\s*['\"]geolocation['\"]\s*\]"
+        r"\s*\[\s*['\"](?:getCurrentPosition|watchPosition)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(r"\bNotification\.requestPermission\s*\("),
     re.compile(r"\bNotification\.requestPermission\.(?:call|apply)\s*\("),
@@ -298,6 +313,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\.\s*(?:read|readText|write|writeText)\s*\("),
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("
+    ),
+    re.compile(
+        r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("),
     re.compile(r"\bdocument\.execCommand\s*\(\s*['\"](?:copy|cut|paste)['\"]", re.IGNORECASE),
