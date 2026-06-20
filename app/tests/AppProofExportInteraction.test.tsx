@@ -1980,6 +1980,29 @@ test("shows taxonomy review in governed routes as the canonical steering handoff
   }
 });
 
+test("shows explicit advisory endpoint forms and trace proof in governed routes", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App />);
+    const routesPanel = view.getByText("Governed Napoleon routes").closest("section") as HTMLElement;
+    assert.ok(routesPanel);
+    const routes = within(routesPanel);
+
+    assert.equal(routes.getAllByText("Accepted endpoint forms: /cos, /cos/descriptor, /cos/capabilities, /cos/text-turn").length, 3);
+    assert.ok(routes.getByText("Required proof: /cos/trace/{trace_id}"));
+    assert.equal(routesPanel.textContent?.includes("127.0.0.1"), false);
+    assert.equal(routesPanel.textContent?.includes("secret-token"), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows fail-closed transcript metadata when Napoleon returns no-go", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

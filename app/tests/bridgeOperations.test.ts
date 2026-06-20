@@ -647,6 +647,7 @@ test("describes governed bridge operation routes without endpoint hosts or secre
     summary.acceptedEndpointSummary,
     "Accepted explicit advisory forms: /cos, /cos/descriptor, /cos/capabilities, /cos/text-turn; live sends normalize to /cos/text-turn and require matching /cos/trace/{trace_id} proof.",
   );
+  assert.equal(summary.requiredProofSummary, "/cos/trace/{trace_id}");
   assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
   assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 

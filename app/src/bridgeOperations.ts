@@ -34,6 +34,7 @@ export interface BridgeOperationSummary {
   requiredResponseSummary: string;
   acceptedEndpointForms?: readonly string[];
   acceptedEndpointSummary?: string;
+  requiredProofSummary?: string;
 }
 
 interface NapoleonReviewOperation {
@@ -582,6 +583,10 @@ const ADVISORY_HARNESS_ENDPOINT_SUMMARIES: Partial<Record<BridgeOperationId, str
     "Accepted explicit advisory forms: /cos, /cos/descriptor, /cos/capabilities, /cos/text-turn; live sends normalize to /cos/text-turn and require matching /cos/trace/{trace_id} proof.",
 };
 
+const BRIDGE_OPERATION_REQUIRED_PROOF_SUMMARIES: Partial<Record<BridgeOperationId, string>> = {
+  text_turn: "/cos/trace/{trace_id}",
+};
+
 export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOperationSummary {
   const operation = getBridgeOperation(id);
   return {
@@ -601,6 +606,7 @@ export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOpe
     requiredResponseSummary: operation.responseRequired.join(", "),
     acceptedEndpointForms: ADVISORY_HARNESS_ENDPOINT_FORMS[operation.id],
     acceptedEndpointSummary: ADVISORY_HARNESS_ENDPOINT_SUMMARIES[operation.id],
+    requiredProofSummary: BRIDGE_OPERATION_REQUIRED_PROOF_SUMMARIES[operation.id],
   };
 }
 
