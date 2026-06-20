@@ -5,6 +5,7 @@ import {
   GENERATED_BRIDGE_CONTRACT_SOURCE,
   NAPOLEON_REVIEW_OPERATIONS,
   buildChiefOfStaffRequestBridgeTarget,
+  buildEvolutionProposalSubmissionBridgeTarget,
   buildEvaluationReviewBridgeTarget,
   buildEvolutionProposalReviewBridgeTarget,
   buildGovernanceEvaluationBridgeTarget,
@@ -141,6 +142,11 @@ test("bridge operations declare governed transport and bearer-token policy", () 
     getNapoleonReviewOperation("evolution_proposal_review").path,
     "/chief-of-staff/reviews/evolution-proposals",
   );
+  assert.equal(
+    getNapoleonReviewOperation("evolution_proposal_submission").requestKind,
+    "evolution_proposal_submission_handoff",
+  );
+  assert.equal(getNapoleonReviewOperation("evolution_proposal_submission").path, "/evolution/proposals");
   assert.equal(getNapoleonReviewOperation("governance_review").requestKind, "governance_review_handoff");
   assert.equal(getNapoleonReviewOperation("governance_review").path, "/chief-of-staff/reviews/governance");
   assert.equal(
@@ -153,7 +159,7 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   );
   assert.deepEqual(
     NAPOLEON_REVIEW_OPERATIONS.map((operation) => operation.governedBridgeOnly),
-    [true, true, true, true, true, true],
+    [true, true, true, true, true, true, true],
   );
 });
 
@@ -282,6 +288,14 @@ test("Napoleon review URL builder resolves explicit governance review paths", ()
     "https://napoleon.example/chief-of-staff/reviews/evolution-proposals",
   );
   assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example", "evolution_proposal_submission"),
+    "https://napoleon.example/evolution/proposals",
+  );
+  assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example/evolution/proposals?debug=1", "evolution_proposal_submission"),
+    "https://napoleon.example/evolution/proposals",
+  );
+  assert.equal(
     buildNapoleonReviewUrl("https://napoleon.example", "governance_review"),
     "https://napoleon.example/chief-of-staff/reviews/governance",
   );
@@ -405,6 +419,21 @@ test("evolution proposal review target maps Napoleon root endpoints to the expli
       operationId: "evolution_proposal_review",
     },
   );
+});
+
+test("evolution proposal submission target maps Napoleon endpoints to the explicit proposal contract path", () => {
+  assert.deepEqual(buildEvolutionProposalSubmissionBridgeTarget("https://napoleon.example"), {
+    url: "https://napoleon.example/evolution/proposals",
+    path: "/evolution/proposals",
+    requestKind: "evolution_proposal_submission_handoff",
+    operationId: "evolution_proposal_submission",
+  });
+  assert.deepEqual(buildEvolutionProposalSubmissionBridgeTarget("https://napoleon.example/evolution/proposals?debug=1"), {
+    url: "https://napoleon.example/evolution/proposals",
+    path: "/evolution/proposals",
+    requestKind: "evolution_proposal_submission_handoff",
+    operationId: "evolution_proposal_submission",
+  });
 });
 
 test("governance review target keeps generated Concierge endpoints compatible", () => {

@@ -177,6 +177,18 @@ class LocalBridgeHarnessTest(unittest.TestCase):
                     "agentProposal": {"agentId": "proposed_agent_harness"},
                 },
             )
+            evolution_submission = self.post_json(
+                f"{base_url}/evolution/proposals",
+                {
+                    "requestKind": "evolution_proposal_submission_handoff",
+                    "traceEnvelope": {
+                        "trace_id": "trace_evolution_submission",
+                        "request_id": "evo_trace_submission",
+                    },
+                    "auditEnvelope": {},
+                    "evolutionProposal": {"proposal_id": "evo_submission_harness"},
+                },
+            )
             governance_evaluation = self.post_json(
                 f"{base_url}/governance/evaluate",
                 {
@@ -191,6 +203,7 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             self.assertEqual(memory["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(chief_request["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(new_agent["governanceDecision"]["outcome"], "requires_review")
+            self.assertEqual(evolution_submission["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(governance_evaluation["governanceDecision"]["outcome"], "requires_review")
             self.assertFalse(steering["appliedLocally"])
             self.assertFalse(steering["memoryWritePerformed"])
@@ -207,6 +220,11 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             self.assertFalse(new_agent["approvalCaptured"])
             self.assertFalse(new_agent["agentDispatchPerformed"])
             self.assertFalse(new_agent["externalSendPerformed"])
+            self.assertFalse(evolution_submission["appliedLocally"])
+            self.assertFalse(evolution_submission["memoryWritePerformed"])
+            self.assertFalse(evolution_submission["approvalCaptured"])
+            self.assertFalse(evolution_submission["agentDispatchPerformed"])
+            self.assertFalse(evolution_submission["externalSendPerformed"])
             self.assertFalse(governance_evaluation["appliedLocally"])
             self.assertFalse(governance_evaluation["memoryWritePerformed"])
             self.assertFalse(governance_evaluation["approvalCaptured"])

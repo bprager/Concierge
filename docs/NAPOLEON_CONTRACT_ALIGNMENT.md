@@ -64,6 +64,8 @@ Governance review handoff now has a named Napoleon review-path mapping. Generate
 
 Evolution proposal review handoff now has the same named Napoleon review-path mapping for Chief of Staff steering and taxonomy review packets. Generated Concierge-compatible endpoints, including the local harness, continue to use `/v1/concierge/chief-of-staff/steering` with the `chief_of_staff_steering_handoff` request kind. Napoleon root endpoints or explicit evolution proposal review endpoints use `/chief-of-staff/reviews/evolution-proposals` with the `evolution_proposal_review_handoff` request kind. Both paths still require descriptor preflight, Rehearsal Mode off, matching governance/trace/audit proof, and explicit false side-effect fields before Concierge displays the handoff as reviewed.
 
+Evolution proposal submission now has a named Napoleon path mapping. Napoleon root endpoints or explicit evolution proposal endpoints use `/evolution/proposals` with the `evolution_proposal_submission_handoff` request kind. The handoff is proposal-only evidence for Napoleon review; Concierge still cannot apply evolution changes, write memory, update registries, capture approval, dispatch agents, send externally, append traces, route tasks, or treat the response as local authority.
+
 Evaluator review handoff now has a named Napoleon review-path mapping for HTTP evaluator mode. Generated Concierge-compatible endpoints, including the local harness, continue to use `/v1/concierge/evaluate` with the `evaluator_prompt` request kind. Napoleon root endpoints or explicit evaluation review endpoints use `/chief-of-staff/reviews/evaluation` with the `evaluation_review_handoff` request kind. The retained evaluator report is still sanitized before it is kept as local validation evidence, and the handoff remains non-authorizing.
 
 New agent proposal review now has a named Napoleon review-path mapping. Napoleon root endpoints or explicit new-agent proposal review endpoints use `/chief-of-staff/reviews/new-agent-proposals` with the `new_agent_proposal_review_handoff` request kind. The handoff remains proposal-only: it cannot activate an agent, write to the registry, dispatch an agent, capture approval, write memory, send externally, or apply local changes.
@@ -77,7 +79,6 @@ Concierge currently packages local governance review, Chief of Staff steering, t
 The known Napoleon review/evolution surfaces that still need explicit runtime mapping are:
 
 - `/observability/traces`
-- `/evolution/proposals`
 
 The explicit request/review path currently mapped is:
 
@@ -86,6 +87,7 @@ The explicit request/review path currently mapped is:
 - `/chief-of-staff/reviews/evaluation`
 - `/chief-of-staff/reviews/governance`
 - `/chief-of-staff/reviews/new-agent-proposals`
+- `/evolution/proposals`
 - `/governance/evaluate`
 
 The current local aliases are useful packaging boundaries:

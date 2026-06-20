@@ -1003,6 +1003,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             response = await fetcher(target.url, { method: "POST" });
             """,
             """
+            const target = resolveNapoleonEvolutionProposalSubmissionOperation(endpoint);
+            response = await fetcher(target.url, { method: "POST" });
+            """,
+            """
             const target = resolveNapoleonNewAgentProposalReviewOperation(endpoint);
             response = await fetcher(target.url, { method: "POST" });
             """,
@@ -1020,6 +1024,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'response = await fetcher("https://napoleon.example/chief-of-staff/reviews/evolution-proposals", { method: "POST" });',
             'response = await fetcher(endpoint + "/chief-of-staff/reviews/evolution-proposals", { method: "POST" });',
             'response = await fetcher(`${endpoint}/chief-of-staff/reviews/evolution-proposals`, { method: "POST" });',
+            'response = await fetcher("https://napoleon.example/evolution/proposals", { method: "POST" });',
+            'response = await fetcher(endpoint + "/evolution/proposals", { method: "POST" });',
+            'response = await fetcher(`${endpoint}/evolution/proposals`, { method: "POST" });',
             'response = await fetcher("https://napoleon.example/chief-of-staff/reviews/new-agent-proposals", { method: "POST" });',
             'response = await fetcher(endpoint + "/chief-of-staff/reviews/new-agent-proposals", { method: "POST" });',
             'response = await fetcher(`${endpoint}/chief-of-staff/reviews/new-agent-proposals`, { method: "POST" });',

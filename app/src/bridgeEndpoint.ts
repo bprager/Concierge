@@ -1,5 +1,6 @@
 import {
   buildEvaluationReviewBridgeTarget,
+  buildEvolutionProposalSubmissionBridgeTarget,
   buildEvolutionProposalReviewBridgeTarget,
   buildGovernanceEvaluationBridgeTarget,
   buildGovernanceReviewBridgeTarget,
@@ -9,6 +10,7 @@ import {
   type BridgeOperationId,
   type ChiefOfStaffRequestBridgeTarget,
   type EvaluationReviewBridgeTarget,
+  type EvolutionProposalSubmissionBridgeTarget,
   type EvolutionProposalReviewBridgeTarget,
   type GovernanceEvaluationBridgeTarget,
   type GovernanceReviewBridgeTarget,
@@ -39,6 +41,12 @@ export function resolveNapoleonEvolutionProposalReviewOperation(
   configuredEndpoint: string,
 ): EvolutionProposalReviewBridgeTarget {
   return buildEvolutionProposalReviewBridgeTarget(configuredEndpoint);
+}
+
+export function resolveNapoleonEvolutionProposalSubmissionOperation(
+  configuredEndpoint: string,
+): EvolutionProposalSubmissionBridgeTarget {
+  return buildEvolutionProposalSubmissionBridgeTarget(configuredEndpoint);
 }
 
 export function resolveNapoleonEvaluationReviewOperation(configuredEndpoint: string): EvaluationReviewBridgeTarget {

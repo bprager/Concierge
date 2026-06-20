@@ -15,6 +15,7 @@ export type NapoleonReviewOperationId =
   | "chief_of_staff_request"
   | "evaluation_review"
   | "evolution_proposal_review"
+  | "evolution_proposal_submission"
   | "governance_evaluation"
   | "governance_review"
   | "new_agent_proposal_review";
@@ -51,11 +52,12 @@ export interface BridgeOperationSummary {
 
 interface NapoleonReviewOperation {
   id: NapoleonReviewOperationId;
-  path: `/chief-of-staff/${string}` | `/governance/${string}`;
+  path: `/chief-of-staff/${string}` | `/evolution/${string}` | `/governance/${string}`;
   requestKind:
     | "chief_of_staff_request_handoff"
     | "evaluation_review_handoff"
     | "evolution_proposal_review_handoff"
+    | "evolution_proposal_submission_handoff"
     | "governance_evaluation_handoff"
     | "governance_review_handoff"
     | "new_agent_proposal_review_handoff";
@@ -121,6 +123,25 @@ export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [
     id: "governance_review",
     path: "/chief-of-staff/reviews/governance",
     requestKind: "governance_review_handoff",
+    transport: "http_post",
+    responseRequired: [
+      "text",
+      "governanceDecision",
+      "traceEnvelope",
+      "auditEnvelope",
+      "appliedLocally",
+      "memoryWritePerformed",
+      "approvalCaptured",
+      "agentDispatchPerformed",
+      "externalSendPerformed",
+    ],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+  {
+    id: "evolution_proposal_submission",
+    path: "/evolution/proposals",
+    requestKind: "evolution_proposal_submission_handoff",
     transport: "http_post",
     responseRequired: [
       "text",
@@ -276,6 +297,24 @@ export function buildEvolutionProposalReviewBridgeTarget(configuredEndpoint: str
     path: "/chief-of-staff/reviews/evolution-proposals",
     requestKind: "evolution_proposal_review_handoff",
     operationId: "evolution_proposal_review",
+  };
+}
+
+export interface EvolutionProposalSubmissionBridgeTarget {
+  url: string;
+  path: "/evolution/proposals";
+  requestKind: "evolution_proposal_submission_handoff";
+  operationId: "evolution_proposal_submission";
+}
+
+export function buildEvolutionProposalSubmissionBridgeTarget(
+  configuredEndpoint: string,
+): EvolutionProposalSubmissionBridgeTarget {
+  return {
+    url: buildNapoleonReviewUrl(configuredEndpoint, "evolution_proposal_submission"),
+    path: "/evolution/proposals",
+    requestKind: "evolution_proposal_submission_handoff",
+    operationId: "evolution_proposal_submission",
   };
 }
 
