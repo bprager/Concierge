@@ -13,6 +13,7 @@ import {
   buildNewAgentProposalReviewBridgeTarget,
   buildNapoleonBridgeUrl,
   buildNapoleonReviewUrl,
+  buildObservabilityTraceBridgeTarget,
   describeBridgeOperationSummary,
   describeTaxonomyReviewBridgeSummary,
   getBridgeOperation,
@@ -149,6 +150,8 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   assert.equal(getNapoleonReviewOperation("evolution_proposal_submission").path, "/evolution/proposals");
   assert.equal(getNapoleonReviewOperation("governance_review").requestKind, "governance_review_handoff");
   assert.equal(getNapoleonReviewOperation("governance_review").path, "/chief-of-staff/reviews/governance");
+  assert.equal(getNapoleonReviewOperation("observability_trace").requestKind, "observability_trace_handoff");
+  assert.equal(getNapoleonReviewOperation("observability_trace").path, "/observability/traces");
   assert.equal(
     getNapoleonReviewOperation("new_agent_proposal_review").requestKind,
     "new_agent_proposal_review_handoff",
@@ -159,7 +162,7 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   );
   assert.deepEqual(
     NAPOLEON_REVIEW_OPERATIONS.map((operation) => operation.governedBridgeOnly),
-    [true, true, true, true, true, true, true],
+    [true, true, true, true, true, true, true, true],
   );
 });
 
@@ -307,6 +310,14 @@ test("Napoleon review URL builder resolves explicit governance review paths", ()
     "https://napoleon.example/chief-of-staff/reviews/governance",
   );
   assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example", "observability_trace"),
+    "https://napoleon.example/observability/traces",
+  );
+  assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example/observability/traces?debug=1", "observability_trace"),
+    "https://napoleon.example/observability/traces",
+  );
+  assert.equal(
     buildNapoleonReviewUrl("https://napoleon.example", "new_agent_proposal_review"),
     "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals",
   );
@@ -433,6 +444,21 @@ test("evolution proposal submission target maps Napoleon endpoints to the explic
     path: "/evolution/proposals",
     requestKind: "evolution_proposal_submission_handoff",
     operationId: "evolution_proposal_submission",
+  });
+});
+
+test("observability trace target maps Napoleon endpoints to the explicit trace evidence contract path", () => {
+  assert.deepEqual(buildObservabilityTraceBridgeTarget("https://napoleon.example"), {
+    url: "https://napoleon.example/observability/traces",
+    path: "/observability/traces",
+    requestKind: "observability_trace_handoff",
+    operationId: "observability_trace",
+  });
+  assert.deepEqual(buildObservabilityTraceBridgeTarget("https://napoleon.example/observability/traces?debug=1"), {
+    url: "https://napoleon.example/observability/traces",
+    path: "/observability/traces",
+    requestKind: "observability_trace_handoff",
+    operationId: "observability_trace",
   });
 });
 

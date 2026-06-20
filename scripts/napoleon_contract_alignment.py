@@ -40,6 +40,7 @@ SUPPORTED_REVIEW_RUNTIME_PATHS = {
     "/chief-of-staff/reviews/new-agent-proposals",
     "/evolution/proposals",
     "/governance/evaluate",
+    "/observability/traces",
 }
 
 NAPOLEON_DISCOVERY_CONTRACT_PATHS = {

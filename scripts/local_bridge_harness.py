@@ -230,6 +230,9 @@ class HarnessHandler(BaseHTTPRequestHandler):
         if self.path == "/governance/evaluate":
             self.handle_review(payload, "governance_evaluation_handoff", applied_locally=False)
             return
+        if self.path == "/observability/traces":
+            self.handle_review(payload, "observability_trace_handoff", applied_locally=False)
+            return
         self.write_json(404, {"error": "not_found"})
 
     def handle_turn(self, payload: dict[str, Any]) -> None:

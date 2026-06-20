@@ -198,6 +198,15 @@ class LocalBridgeHarnessTest(unittest.TestCase):
                     "governanceRequest": {"request_id": "gov_trace_eval"},
                 },
             )
+            observability_trace = self.post_json(
+                f"{base_url}/observability/traces",
+                {
+                    "requestKind": "observability_trace_handoff",
+                    "traceEnvelope": {"trace_id": "trace_observability", "request_id": "obs_trace_request"},
+                    "auditEnvelope": {},
+                    "observabilityEnvelope": {"trace_id": "trace_observability"},
+                },
+            )
 
             self.assertEqual(steering["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(memory["governanceDecision"]["outcome"], "requires_review")
@@ -205,6 +214,7 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             self.assertEqual(new_agent["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(evolution_submission["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(governance_evaluation["governanceDecision"]["outcome"], "requires_review")
+            self.assertEqual(observability_trace["governanceDecision"]["outcome"], "requires_review")
             self.assertFalse(steering["appliedLocally"])
             self.assertFalse(steering["memoryWritePerformed"])
             self.assertFalse(steering["approvalCaptured"])
@@ -230,6 +240,11 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             self.assertFalse(governance_evaluation["approvalCaptured"])
             self.assertFalse(governance_evaluation["agentDispatchPerformed"])
             self.assertFalse(governance_evaluation["externalSendPerformed"])
+            self.assertFalse(observability_trace["appliedLocally"])
+            self.assertFalse(observability_trace["memoryWritePerformed"])
+            self.assertFalse(observability_trace["approvalCaptured"])
+            self.assertFalse(observability_trace["agentDispatchPerformed"])
+            self.assertFalse(observability_trace["externalSendPerformed"])
             self.assertFalse(memory["memoryWritePerformed"])
             self.assertFalse(memory["approvalCaptured"])
             self.assertFalse(memory["agentDispatchPerformed"])

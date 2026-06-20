@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a named Napoleon `/observability/traces` mapping for evidence-only observability trace handoffs without trace append authority, audit authority, task routing, approval capture, memory writes, agent dispatch, external sends, or local application.
 - Added a named Napoleon `/evolution/proposals` mapping for proposal-only evolution proposal submission handoffs without local application, registry updates, trace appends, task routing, approval capture, memory writes, agent dispatch, or external sends.
 - Added a named Napoleon `/governance/evaluate` mapping for governed governance evaluation handoffs without approval capture or side effects.
 - Added a named Napoleon `/chief-of-staff/requests` request-path mapping for governed Chief of Staff request handoffs without task routing, registry mutation, or trace append side effects.

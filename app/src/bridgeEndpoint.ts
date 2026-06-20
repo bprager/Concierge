@@ -7,6 +7,7 @@ import {
   buildChiefOfStaffRequestBridgeTarget,
   buildNewAgentProposalReviewBridgeTarget,
   buildNapoleonBridgeUrl,
+  buildObservabilityTraceBridgeTarget,
   type BridgeOperationId,
   type ChiefOfStaffRequestBridgeTarget,
   type EvaluationReviewBridgeTarget,
@@ -15,6 +16,7 @@ import {
   type GovernanceEvaluationBridgeTarget,
   type GovernanceReviewBridgeTarget,
   type NewAgentProposalReviewBridgeTarget,
+  type ObservabilityTraceBridgeTarget,
 } from "./bridgeOperations.js";
 
 export function resolveNapoleonBridgeOperation(configuredEndpoint: string, operationId: BridgeOperationId): string {
@@ -57,4 +59,10 @@ export function resolveNapoleonNewAgentProposalReviewOperation(
   configuredEndpoint: string,
 ): NewAgentProposalReviewBridgeTarget {
   return buildNewAgentProposalReviewBridgeTarget(configuredEndpoint);
+}
+
+export function resolveNapoleonObservabilityTraceOperation(
+  configuredEndpoint: string,
+): ObservabilityTraceBridgeTarget {
+  return buildObservabilityTraceBridgeTarget(configuredEndpoint);
 }

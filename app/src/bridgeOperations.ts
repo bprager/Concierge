@@ -18,7 +18,8 @@ export type NapoleonReviewOperationId =
   | "evolution_proposal_submission"
   | "governance_evaluation"
   | "governance_review"
-  | "new_agent_proposal_review";
+  | "new_agent_proposal_review"
+  | "observability_trace";
 
 export interface BridgeOperation {
   id: BridgeOperationId;
@@ -52,7 +53,7 @@ export interface BridgeOperationSummary {
 
 interface NapoleonReviewOperation {
   id: NapoleonReviewOperationId;
-  path: `/chief-of-staff/${string}` | `/evolution/${string}` | `/governance/${string}`;
+  path: `/chief-of-staff/${string}` | `/evolution/${string}` | `/governance/${string}` | `/observability/${string}`;
   requestKind:
     | "chief_of_staff_request_handoff"
     | "evaluation_review_handoff"
@@ -60,7 +61,8 @@ interface NapoleonReviewOperation {
     | "evolution_proposal_submission_handoff"
     | "governance_evaluation_handoff"
     | "governance_review_handoff"
-    | "new_agent_proposal_review_handoff";
+    | "new_agent_proposal_review_handoff"
+    | "observability_trace_handoff";
   transport: "http_post";
   responseRequired: readonly string[];
   governedBridgeOnly: true;
@@ -182,6 +184,24 @@ export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [
     transport: "http_post",
     responseRequired: [
       "text",
+      "governanceDecision",
+      "traceEnvelope",
+      "auditEnvelope",
+      "appliedLocally",
+      "memoryWritePerformed",
+      "approvalCaptured",
+      "agentDispatchPerformed",
+      "externalSendPerformed",
+    ],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+  {
+    id: "observability_trace",
+    path: "/observability/traces",
+    requestKind: "observability_trace_handoff",
+    transport: "http_post",
+    responseRequired: [
       "governanceDecision",
       "traceEnvelope",
       "auditEnvelope",
@@ -389,6 +409,22 @@ export function buildGovernanceEvaluationBridgeTarget(configuredEndpoint: string
     path: "/governance/evaluate",
     requestKind: "governance_evaluation_handoff",
     operationId: "governance_evaluation",
+  };
+}
+
+export interface ObservabilityTraceBridgeTarget {
+  url: string;
+  path: "/observability/traces";
+  requestKind: "observability_trace_handoff";
+  operationId: "observability_trace";
+}
+
+export function buildObservabilityTraceBridgeTarget(configuredEndpoint: string): ObservabilityTraceBridgeTarget {
+  return {
+    url: buildNapoleonReviewUrl(configuredEndpoint, "observability_trace"),
+    path: "/observability/traces",
+    requestKind: "observability_trace_handoff",
+    operationId: "observability_trace",
   };
 }
 
