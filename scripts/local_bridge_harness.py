@@ -215,6 +215,9 @@ class HarnessHandler(BaseHTTPRequestHandler):
         if self.path == "/v1/concierge/evaluate":
             self.handle_evaluate(payload)
             return
+        if self.path == "/chief-of-staff/reviews/evaluation":
+            self.handle_evaluate(payload, expected_request_kind="evaluation_review_handoff")
+            return
         self.write_json(404, {"error": "not_found"})
 
     def handle_turn(self, payload: dict[str, Any]) -> None:
@@ -235,8 +238,8 @@ class HarnessHandler(BaseHTTPRequestHandler):
             return
         self.write_json(200, build_review_response(payload, expected_request_kind, applied_locally, memory_review))
 
-    def handle_evaluate(self, payload: dict[str, Any]) -> None:
-        if payload.get("requestKind") != "evaluator_prompt":
+    def handle_evaluate(self, payload: dict[str, Any], expected_request_kind: str = "evaluator_prompt") -> None:
+        if payload.get("requestKind") != expected_request_kind:
             self.write_json(400, {"error": "invalid_request_kind"})
             return
         self.write_json(200, {"text": evaluator_text(str(payload.get("case_id", "")), str(payload.get("prompt", "")))})

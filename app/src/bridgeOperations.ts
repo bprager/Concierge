@@ -11,7 +11,7 @@ export type BridgeOperationId =
   | "memory_proposal_review"
   | "evaluate";
 
-export type NapoleonReviewOperationId = "evolution_proposal_review" | "governance_review";
+export type NapoleonReviewOperationId = "evaluation_review" | "evolution_proposal_review" | "governance_review";
 
 export interface BridgeOperation {
   id: BridgeOperationId;
@@ -46,7 +46,7 @@ export interface BridgeOperationSummary {
 interface NapoleonReviewOperation {
   id: NapoleonReviewOperationId;
   path: `/chief-of-staff/${string}`;
-  requestKind: "evolution_proposal_review_handoff" | "governance_review_handoff";
+  requestKind: "evaluation_review_handoff" | "evolution_proposal_review_handoff" | "governance_review_handoff";
   transport: "http_post";
   responseRequired: readonly string[];
   governedBridgeOnly: true;
@@ -58,6 +58,15 @@ export { GENERATED_BRIDGE_CONTRACT_SOURCE };
 export const BRIDGE_OPERATIONS: BridgeOperation[] = [...GENERATED_BRIDGE_OPERATIONS];
 
 export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [
+  {
+    id: "evaluation_review",
+    path: "/chief-of-staff/reviews/evaluation",
+    requestKind: "evaluation_review_handoff",
+    transport: "http_post",
+    responseRequired: ["text"],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
   {
     id: "evolution_proposal_review",
     path: "/chief-of-staff/reviews/evolution-proposals",
@@ -159,6 +168,30 @@ export interface EvolutionProposalReviewBridgeTarget {
   path: "/v1/concierge/chief-of-staff/steering" | "/chief-of-staff/reviews/evolution-proposals";
   requestKind: "chief_of_staff_steering_handoff" | "evolution_proposal_review_handoff";
   operationId: "chief_of_staff_steering" | "evolution_proposal_review";
+}
+
+export interface EvaluationReviewBridgeTarget {
+  url: string;
+  path: "/v1/concierge/evaluate" | "/chief-of-staff/reviews/evaluation";
+  requestKind: "evaluator_prompt" | "evaluation_review_handoff";
+  operationId: "evaluate" | "evaluation_review";
+}
+
+export function buildEvaluationReviewBridgeTarget(configuredEndpoint: string): EvaluationReviewBridgeTarget {
+  if (isGeneratedConciergeEndpoint(configuredEndpoint)) {
+    return {
+      url: buildNapoleonBridgeUrl(configuredEndpoint, "evaluate"),
+      path: "/v1/concierge/evaluate",
+      requestKind: "evaluator_prompt",
+      operationId: "evaluate",
+    };
+  }
+  return {
+    url: buildNapoleonReviewUrl(configuredEndpoint, "evaluation_review"),
+    path: "/chief-of-staff/reviews/evaluation",
+    requestKind: "evaluation_review_handoff",
+    operationId: "evaluation_review",
+  };
 }
 
 export function buildEvolutionProposalReviewBridgeTarget(configuredEndpoint: string): EvolutionProposalReviewBridgeTarget {

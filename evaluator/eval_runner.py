@@ -18,6 +18,8 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parent
+GENERATED_EVALUATOR_PATH = "/v1/concierge/evaluate"
+NAPOLEON_EVALUATION_REVIEW_PATH = "/chief-of-staff/reviews/evaluation"
 
 
 def load_yaml(path: Path) -> Dict[str, Any]:
@@ -116,16 +118,62 @@ Prompt length: {len(prompt)}
 """
 
 
+def strip_evaluator_endpoint_path(endpoint: str) -> str:
+    value = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    for path in [GENERATED_EVALUATOR_PATH, NAPOLEON_EVALUATION_REVIEW_PATH]:
+        if value.endswith(path):
+            return value[: -len(path)].rstrip("/")
+    return value
+
+
+def is_generated_concierge_endpoint(endpoint: str) -> bool:
+    value = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    if "/v1/concierge" in value or value.endswith("/concierge"):
+        return True
+    return value.startswith("http://127.0.0.1:8787") or value.startswith("http://localhost:8787")
+
+
+def resolve_evaluation_review_target(endpoint: str) -> Dict[str, str]:
+    base = strip_evaluator_endpoint_path(endpoint)
+    if is_generated_concierge_endpoint(endpoint):
+        return {
+            "url": f"{base}{GENERATED_EVALUATOR_PATH}",
+            "path": GENERATED_EVALUATOR_PATH,
+            "requestKind": "evaluator_prompt",
+            "operationId": "evaluate",
+        }
+    return {
+        "url": f"{base}{NAPOLEON_EVALUATION_REVIEW_PATH}",
+        "path": NAPOLEON_EVALUATION_REVIEW_PATH,
+        "requestKind": "evaluation_review_handoff",
+        "operationId": "evaluation_review",
+    }
+
+
 def call_http(endpoint: str, case_id: str, prompt: str, token: str | None = None) -> str:
     import requests
 
+    target = resolve_evaluation_review_target(endpoint)
     headers = {"Content-Type": "application/json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
     response = requests.post(
-        endpoint,
+        target["url"],
         headers=headers,
-        json={"requestKind": "evaluator_prompt", "case_id": case_id, "prompt": prompt},
+        json={
+            "requestKind": target["requestKind"],
+            "bridgeTargetPath": target["path"],
+            "bridgeTargetOperation": target["operationId"],
+            "case_id": case_id,
+            "prompt": prompt,
+            "boundary": {
+                "proposalOnly": True,
+                "approvalCaptured": False,
+                "memoryWriteAllowed": False,
+                "agentDispatchAllowed": False,
+                "externalSendAllowed": False,
+            },
+        },
         timeout=120,
     )
     response.raise_for_status()

@@ -182,6 +182,22 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             self.assertIn("Bridge delegation provenance", response["text"])
             self.assertIn("Case: HARNESS-001", response["text"])
 
+    def test_harness_supports_explicit_evaluation_review_request_kind(self):
+        with local_bridge_harness.running_harness() as base_url:
+            response = self.post_json(
+                f"{base_url}/chief-of-staff/reviews/evaluation",
+                {
+                    "requestKind": "evaluation_review_handoff",
+                    "bridgeTargetPath": "/chief-of-staff/reviews/evaluation",
+                    "bridgeTargetOperation": "evaluation_review",
+                    "case_id": "EVAL-REVIEW-001",
+                    "prompt": "Check explicit evaluation review.",
+                },
+            )
+
+            self.assertIn("Bridge delegation provenance", response["text"])
+            self.assertIn("Case: EVAL-REVIEW-001", response["text"])
+
     def test_harness_can_drive_full_http_evaluator_run(self):
         with local_bridge_harness.running_harness() as base_url:
             with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:

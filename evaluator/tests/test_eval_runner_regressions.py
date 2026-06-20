@@ -1,5 +1,7 @@
 import json
+import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
 
@@ -63,6 +65,65 @@ class EvaluatorRegressionTest(unittest.TestCase):
                 "scenario_count_decreased",
             ],
         )
+
+    def test_resolves_generated_and_explicit_evaluation_review_targets(self):
+        self.assertEqual(
+            eval_runner.resolve_evaluation_review_target("http://127.0.0.1:8787"),
+            {
+                "url": "http://127.0.0.1:8787/v1/concierge/evaluate",
+                "path": "/v1/concierge/evaluate",
+                "requestKind": "evaluator_prompt",
+                "operationId": "evaluate",
+            },
+        )
+        self.assertEqual(
+            eval_runner.resolve_evaluation_review_target("https://napoleon.example"),
+            {
+                "url": "https://napoleon.example/chief-of-staff/reviews/evaluation",
+                "path": "/chief-of-staff/reviews/evaluation",
+                "requestKind": "evaluation_review_handoff",
+                "operationId": "evaluation_review",
+            },
+        )
+        self.assertEqual(
+            eval_runner.resolve_evaluation_review_target(
+                "https://napoleon.example/chief-of-staff/reviews/evaluation?debug=1"
+            )["url"],
+            "https://napoleon.example/chief-of-staff/reviews/evaluation",
+        )
+
+    def test_http_eval_posts_named_explicit_evaluation_review_packet(self):
+        calls = []
+
+        class Response:
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {"text": "review accepted"}
+
+        def post(url, headers, json, timeout):
+            calls.append({"url": url, "headers": headers, "json": json, "timeout": timeout})
+            return Response()
+
+        previous = sys.modules.get("requests")
+        sys.modules["requests"] = types.SimpleNamespace(post=post)
+        try:
+            text = eval_runner.call_http("https://napoleon.example", "CASE-1", "Prompt", "token_eval")
+        finally:
+            if previous is None:
+                del sys.modules["requests"]
+            else:
+                sys.modules["requests"] = previous
+
+        self.assertEqual(text, "review accepted")
+        self.assertEqual(calls[0]["url"], "https://napoleon.example/chief-of-staff/reviews/evaluation")
+        self.assertEqual(calls[0]["headers"]["Authorization"], "Bearer token_eval")
+        self.assertEqual(calls[0]["json"]["requestKind"], "evaluation_review_handoff")
+        self.assertEqual(calls[0]["json"]["bridgeTargetPath"], "/chief-of-staff/reviews/evaluation")
+        self.assertEqual(calls[0]["json"]["bridgeTargetOperation"], "evaluation_review")
+        self.assertEqual(calls[0]["json"]["boundary"]["proposalOnly"], True)
+        self.assertEqual(calls[0]["json"]["boundary"]["approvalCaptured"], False)
 
 
 if __name__ == "__main__":

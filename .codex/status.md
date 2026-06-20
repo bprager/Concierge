@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a named Napoleon `/chief-of-staff/reviews/evaluation` review-path mapping for evaluator HTTP mode while preserving generated Concierge endpoint and local harness compatibility.
 - Added a named Napoleon `/chief-of-staff/reviews/evolution-proposals` review-path mapping for governed Chief of Staff steering and taxonomy evolution review handoffs while preserving generated Concierge endpoint and local harness compatibility.
 - Added a named Napoleon `/chief-of-staff/reviews/governance` review-path mapping for governed governance review handoffs while preserving generated Concierge endpoint and local harness compatibility.
 - Added contract-alignment report classification for supported advisory harness paths, local Concierge handoff aliases, Napoleon review/evolution paths that still need explicit runtime mapping, and review paths without a current local alias.

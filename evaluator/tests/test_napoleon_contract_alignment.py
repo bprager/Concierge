@@ -196,11 +196,16 @@ paths:
         )
         self.assertEqual(
             report["supportedReviewRuntimePaths"],
-            ["/chief-of-staff/reviews/evolution-proposals", "/chief-of-staff/reviews/governance"],
+            [
+                "/chief-of-staff/reviews/evaluation",
+                "/chief-of-staff/reviews/evolution-proposals",
+                "/chief-of-staff/reviews/governance",
+            ],
         )
         self.assertIn("/chief-of-staff/reviews/evolution-proposals", report["napoleonReviewContractPaths"])
         self.assertIn("/evolution/proposals", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertIn("/observability/traces", report["napoleonReviewPathsNeedingRuntimeMapping"])
+        self.assertNotIn("/chief-of-staff/reviews/evaluation", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/chief-of-staff/reviews/evolution-proposals", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/chief-of-staff/reviews/governance", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertIn("/chief-of-staff/requests", report["napoleonReviewPathsWithoutLocalAlias"])
