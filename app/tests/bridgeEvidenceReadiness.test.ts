@@ -179,6 +179,34 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
   }
 });
 
+test("exports missing runtime source as unproven bridge readiness proof", () => {
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+    ...validEvidence,
+    status: "success",
+    provenanceVerified: true,
+  });
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: state,
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    runtimeValidation: { source: string; caveat: string; promotionGate: string };
+  };
+
+  assert.equal(proof.runtimeValidation.source, "unavailable");
+  assert.equal(proof.runtimeValidation.promotionGate, "blocked_until_real_runtime_evidence_passes");
+  assert.ok(proof.runtimeValidation.caveat.includes("Real Napoleon runtime validation has not been proven"));
+});
+
 test("exports sanitized advisory capability discovery state in readiness proof", () => {
   const descriptorConnection = buildDescriptorConnectionState({
     endpointConfigured: true,
@@ -314,6 +342,7 @@ test("compares sanitized bridge readiness proofs and reports meaningful changed 
       reason: "auth_failure",
       blockedEffects: ["memory_write", "approval_capture", "external_send"],
     }),
+    runtimeValidationSource: "real_runtime",
     generatedAt: "2026-06-13T00:05:00.000Z",
   });
 

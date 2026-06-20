@@ -10,7 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
-- Hardened live bridge, live voice, and composer preflight readiness so missing runtime-validation source is treated as unproven and promotion-blocked instead of as real Napoleon runtime evidence.
+- Hardened live bridge, live voice, composer preflight readiness, and sanitized readiness proof exports so missing runtime-validation source is treated as unproven and promotion-blocked instead of as real Napoleon runtime evidence.
 - Added explicit advisory `/cos` endpoint-form rows and required-proof rows to the governed route panel for descriptor discovery, advisory capability discovery, and text turns, including visible `/cos/trace/{trace_id}` proof requirements for text turns while keeping endpoint hosts, tokens, and authority claims out of the view.
 - Added explicit Napoleon advisory harness `/cos` base endpoint support for live text sends, normalizing `/cos`, `/cos/descriptor`, and `/cos/capabilities` to `/cos/text-turn` while preserving descriptor preflight, trace proof, and non-authority boundaries.
 - Added a sanitized live-runtime `preflight.json` report for missing endpoint configuration so `make live-runtime-validation` leaves local, non-authorizing diagnostic evidence without endpoint hosts, tokens, prompts, request bodies, response bodies, approval capture, memory writes, agent dispatch, external sends, or local application.

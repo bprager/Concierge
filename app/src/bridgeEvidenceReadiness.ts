@@ -89,7 +89,10 @@ function isAcceptedAdvisoryHarnessAlias(record: BridgeContractEvidence): boolean
 }
 
 function promotionGateForProof(input: BridgeReadinessProofInput): string {
-  const source = input.runtimeValidationSource ?? "real_runtime";
+  const source = input.runtimeValidationSource;
+  if (source === undefined) {
+    return "blocked_until_real_runtime_evidence_passes";
+  }
   if (source === "local_harness" || source === "local_simulation") {
     return "blocked_until_real_runtime_evidence_passes";
   }
@@ -228,14 +231,16 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         proposalOnly: true,
       },
       runtimeValidation: {
-        source: input.runtimeValidationSource ?? "real_runtime",
+        source: input.runtimeValidationSource ?? "unavailable",
         promotionGate: promotionGateForProof(input),
         caveat:
           input.runtimeValidationSource === "local_harness"
             ? "Local harness validation is not real Napoleon runtime validation."
             : input.runtimeValidationSource === "local_simulation"
               ? "Local simulation is not real Napoleon runtime validation."
-              : "Real Napoleon runtime validation source.",
+              : input.runtimeValidationSource === "real_runtime"
+                ? "Real Napoleon runtime validation source."
+                : "Real Napoleon runtime validation has not been proven.",
       },
       boundary: {
         approvalCaptured: false,
