@@ -13,7 +13,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Artifact | Current state |
 |---|---|
 | Runner | `evaluator/eval_runner.py`, supports `stub` and `http` modes |
-| Scenarios | 30 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, persistent delegation panel state coverage, descriptor connection-state coverage, bridge-client contract alignment coverage, real-runtime promotion boundary coverage, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, voice pipeline proof export/comparison coverage, media session controller boundary coverage, and conversation capability intelligence coverage |
+| Scenarios | 31 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, persistent delegation panel state coverage, descriptor connection-state coverage, bridge-client contract alignment coverage, real-runtime promotion boundary coverage, Chief of Staff steering draft boundaries, profile-scope drift coverage, live-runtime artifact semantics, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, voice pipeline proof export/comparison coverage, media session controller boundary coverage, local avatar readiness/privacy boundaries, and conversation capability intelligence coverage |
 | Rubric | 10 weighted dimensions in `evaluator/rubrics.yaml` |
 | Hard fails | 5 hard fail rules |
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
@@ -27,7 +27,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 The existing stub report at `evaluator/reports/latest.json` shows:
 
 - Mode: `stub`
-- Scenario count: 29
+- Scenario count: 31
 - Score total: 100.0
 - Hard failures: 0
 - Missing artifacts: 0
@@ -50,7 +50,7 @@ Specific limitations:
 - Human review exists as a local non-authorizing artifact, but actual reviewed records and any required Napoleon or release approval are still separate.
 - There is no golden answer comparison.
 - Local bridge contract, trace/audit envelope, governed request/response artifact, and runtime authority-boundary validation now exist, but they still rely on local fixtures and repository scans.
-- App-level local harness coverage exists for the P1 text bridge path, and `make live-runtime-local-harness` proves the combined runtime validation runner against the local harness, but live Napoleon runtime behavior is still unverified.
+- App-level local harness coverage exists for the P1 text bridge path, and `make live-runtime-local-harness` proves the combined runtime validation runner against the local harness with artifact privacy and promotion-readiness gates, but live Napoleon runtime behavior is still unverified until a real endpoint is configured.
 - There is no live validation against a real Napoleon endpoint for the `napoleon.chief_of_staff` descriptor, governance decisions, agent manifests, profile contract, observability envelopes, or evolution proposals.
 
 ## Scenario Gaps

@@ -529,6 +529,54 @@ def validate_markdown_links() -> None:
     print("all markdown file links resolve")
 
 
+CURRENT_SCENARIO_COUNT_DOCS = [
+    ".codex/status.md",
+    "docs/BACKLOG.md",
+    "docs/EVALUATOR.md",
+    "docs/reports/ARCHITECTURE_GAP_ANALYSIS.md",
+    "docs/reports/EVALUATOR_READINESS_REVIEW.md",
+    "docs/reports/INITIAL_REPOSITORY_REVIEW.md",
+    "docs/reports/RECOMMENDED_STARTUP_PLAN.md",
+]
+
+
+def current_evaluator_scenario_count() -> int:
+    scenarios = yaml.safe_load((ROOT / "evaluator/scenarios.yaml").read_text(encoding="utf-8")).get("scenarios", [])
+    return len(scenarios)
+
+
+def validate_documented_current_scenario_counts() -> None:
+    actual = current_evaluator_scenario_count()
+    mismatches: list[str] = []
+    for relative_path in CURRENT_SCENARIO_COUNT_DOCS:
+        path = ROOT / relative_path
+        if not path.exists():
+            continue
+        for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            lower = line.lower()
+            if "scenario" not in lower:
+                continue
+            if "at least" in lower or "minimum" in lower:
+                continue
+            if not (
+                "current" in lower
+                or "evaluator now has" in lower
+                or "scenarios |" in lower
+                or "| scenarios |" in lower
+                or "scenario count" in lower
+            ):
+                continue
+            for match in re.finditer(r"\b(?P<count>\d+)\s+scenarios\b", line):
+                documented = int(match.group("count"))
+                if documented != actual:
+                    mismatches.append(
+                        f"{relative_path}:{line_number} documents {documented} scenarios, actual is {actual}"
+                    )
+    if mismatches:
+        raise SystemExit("Documented current evaluator scenario counts are stale:\n" + "\n".join(mismatches))
+    print(f"documented current evaluator scenario counts match {actual}")
+
+
 def load_bridge_operations() -> list[dict[str, Any]]:
     text = (ROOT / "app/src/generatedBridgeOperations.ts").read_text(encoding="utf-8")
     operations: list[dict[str, Any]] = []
@@ -1659,6 +1707,7 @@ def main() -> int:
     validate_bridge_contract_alignment()
     validate_authority_boundary()
     validate_markdown_links()
+    validate_documented_current_scenario_counts()
     return 0
 
 

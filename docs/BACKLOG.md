@@ -21,6 +21,7 @@ Every story should include:
 | EV-005 | Add hard fail taxonomy | P0 | Missing memory policy, unsafe authority, no contract, no observability can fail run | eval_hard_fail_detected |
 | EV-006 | Add GitHub Actions periodic run | P1 | Weekly scheduled run creates JSON report artifact | eval_ci_run_started |
 | EV-007 | Add regression comparison | P1 | Current run can compare score, hard fails, missing artifacts, and scenario count against a supplied previous report; a clean report can be accepted as the tracked local baseline; regression comparison emits regressions and fails the run on detected regression | eval_regression_detected |
+| EV-008 | Keep evaluator coverage evidence synchronized | P1 | Repository validation checks documented current evaluator scenario counts in canonical docs, reports, and handoff status against `evaluator/scenarios.yaml`, so readiness evidence cannot drift from the actual suite size | schema_validation_completed |
 | EV-008 | Add human review template | P1 | `make eval-human-review` creates a local review record where a reviewer can approve, reject, or request revision while preserving that the record is not Napoleon approval, not release approval by itself, and not authority to apply changes | eval_review_recorded |
 | EV-009 | Add evaluator report dashboard placeholder | P2 | `make eval-summary` generates a local Markdown evaluator summary with run status, gate counts, dimension scores, case summary, recommendations, and non-authority boundary without copying raw prompt or response text | eval_report_rendered |
 
