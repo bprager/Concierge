@@ -32,6 +32,8 @@ export interface BridgeOperationSummary {
   sideEffects: string;
   requiredResponseFields: readonly string[];
   requiredResponseSummary: string;
+  acceptedEndpointForms?: readonly string[];
+  acceptedEndpointSummary?: string;
 }
 
 interface NapoleonReviewOperation {
@@ -565,6 +567,21 @@ const BRIDGE_OPERATION_TRANSPORT_LABELS: Record<BridgeOperation["transport"], Br
   http_post: "HTTP POST",
 };
 
+const ADVISORY_HARNESS_ENDPOINT_FORMS: Partial<Record<BridgeOperationId, readonly string[]>> = {
+  chief_of_staff_capabilities: ["/cos", "/cos/descriptor", "/cos/capabilities", "/cos/text-turn"],
+  chief_of_staff_descriptor: ["/cos", "/cos/descriptor", "/cos/capabilities", "/cos/text-turn"],
+  text_turn: ["/cos", "/cos/descriptor", "/cos/capabilities", "/cos/text-turn"],
+};
+
+const ADVISORY_HARNESS_ENDPOINT_SUMMARIES: Partial<Record<BridgeOperationId, string>> = {
+  chief_of_staff_capabilities:
+    "Accepted explicit advisory forms: /cos, /cos/descriptor, /cos/capabilities, /cos/text-turn; capability discovery resolves to /cos/capabilities after descriptor preflight.",
+  chief_of_staff_descriptor:
+    "Accepted explicit advisory forms: /cos, /cos/descriptor, /cos/capabilities, /cos/text-turn; descriptor discovery resolves to /cos/descriptor.",
+  text_turn:
+    "Accepted explicit advisory forms: /cos, /cos/descriptor, /cos/capabilities, /cos/text-turn; live sends normalize to /cos/text-turn and require matching /cos/trace/{trace_id} proof.",
+};
+
 export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOperationSummary {
   const operation = getBridgeOperation(id);
   return {
@@ -575,10 +592,15 @@ export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOpe
     requestKind: operation.requestKind,
     transport: BRIDGE_OPERATION_TRANSPORT_LABELS[operation.transport],
     boundary: "Governed Napoleon bridge only",
-    tokenHandling: "Bearer token is sent only in the Authorization header",
+    tokenHandling:
+      ADVISORY_HARNESS_ENDPOINT_FORMS[operation.id] !== undefined
+        ? "Bearer token is sent only in the Authorization header for generated routes or X-Napoleon-Auth for explicit /cos advisory routes"
+        : "Bearer token is sent only in the Authorization header",
     sideEffects: "No memory write, approval capture, agent dispatch, or external send is performed by Concierge",
     requiredResponseFields: operation.responseRequired,
     requiredResponseSummary: operation.responseRequired.join(", "),
+    acceptedEndpointForms: ADVISORY_HARNESS_ENDPOINT_FORMS[operation.id],
+    acceptedEndpointSummary: ADVISORY_HARNESS_ENDPOINT_SUMMARIES[operation.id],
   };
 }
 

@@ -630,10 +630,23 @@ test("describes governed bridge operation routes without endpoint hosts or secre
   assert.equal(summary.requestKind, "text_turn");
   assert.equal(summary.transport, "HTTP POST");
   assert.equal(summary.boundary, "Governed Napoleon bridge only");
-  assert.equal(summary.tokenHandling, "Bearer token is sent only in the Authorization header");
+  assert.equal(
+    summary.tokenHandling,
+    "Bearer token is sent only in the Authorization header for generated routes or X-Napoleon-Auth for explicit /cos advisory routes",
+  );
   assert.equal(summary.sideEffects, "No memory write, approval capture, agent dispatch, or external send is performed by Concierge");
   assert.deepEqual(summary.requiredResponseFields, ["text", "governanceDecision", "traceEnvelope", "auditEnvelope"]);
   assert.equal(summary.requiredResponseSummary, "text, governanceDecision, traceEnvelope, auditEnvelope");
+  assert.deepEqual(summary.acceptedEndpointForms, [
+    "/cos",
+    "/cos/descriptor",
+    "/cos/capabilities",
+    "/cos/text-turn",
+  ]);
+  assert.equal(
+    summary.acceptedEndpointSummary,
+    "Accepted explicit advisory forms: /cos, /cos/descriptor, /cos/capabilities, /cos/text-turn; live sends normalize to /cos/text-turn and require matching /cos/trace/{trace_id} proof.",
+  );
   assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
   assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 
