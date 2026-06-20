@@ -2,11 +2,13 @@ import {
   buildEvaluationReviewBridgeTarget,
   buildEvolutionProposalReviewBridgeTarget,
   buildGovernanceReviewBridgeTarget,
+  buildNewAgentProposalReviewBridgeTarget,
   buildNapoleonBridgeUrl,
   type BridgeOperationId,
   type EvaluationReviewBridgeTarget,
   type EvolutionProposalReviewBridgeTarget,
   type GovernanceReviewBridgeTarget,
+  type NewAgentProposalReviewBridgeTarget,
 } from "./bridgeOperations.js";
 
 export function resolveNapoleonBridgeOperation(configuredEndpoint: string, operationId: BridgeOperationId): string {
@@ -25,4 +27,10 @@ export function resolveNapoleonEvolutionProposalReviewOperation(
 
 export function resolveNapoleonEvaluationReviewOperation(configuredEndpoint: string): EvaluationReviewBridgeTarget {
   return buildEvaluationReviewBridgeTarget(configuredEndpoint);
+}
+
+export function resolveNapoleonNewAgentProposalReviewOperation(
+  configuredEndpoint: string,
+): NewAgentProposalReviewBridgeTarget {
+  return buildNewAgentProposalReviewBridgeTarget(configuredEndpoint);
 }

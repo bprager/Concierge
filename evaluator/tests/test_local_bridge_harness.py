@@ -159,14 +159,29 @@ class LocalBridgeHarnessTest(unittest.TestCase):
                     "memoryProposal": {"proposalId": "memory_harness"},
                 },
             )
+            new_agent = self.post_json(
+                f"{base_url}/chief-of-staff/reviews/new-agent-proposals",
+                {
+                    "requestKind": "new_agent_proposal_review_handoff",
+                    "traceEnvelope": {"trace_id": "trace_new_agent", "request_id": "cos_trace_new_agent"},
+                    "auditEnvelope": {},
+                    "agentProposal": {"agentId": "proposed_agent_harness"},
+                },
+            )
 
             self.assertEqual(steering["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(memory["governanceDecision"]["outcome"], "requires_review")
+            self.assertEqual(new_agent["governanceDecision"]["outcome"], "requires_review")
             self.assertFalse(steering["appliedLocally"])
             self.assertFalse(steering["memoryWritePerformed"])
             self.assertFalse(steering["approvalCaptured"])
             self.assertFalse(steering["agentDispatchPerformed"])
             self.assertFalse(steering["externalSendPerformed"])
+            self.assertFalse(new_agent["appliedLocally"])
+            self.assertFalse(new_agent["memoryWritePerformed"])
+            self.assertFalse(new_agent["approvalCaptured"])
+            self.assertFalse(new_agent["agentDispatchPerformed"])
+            self.assertFalse(new_agent["externalSendPerformed"])
             self.assertFalse(memory["memoryWritePerformed"])
             self.assertFalse(memory["approvalCaptured"])
             self.assertFalse(memory["agentDispatchPerformed"])

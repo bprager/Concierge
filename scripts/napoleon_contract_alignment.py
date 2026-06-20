@@ -36,6 +36,7 @@ SUPPORTED_REVIEW_RUNTIME_PATHS = {
     "/chief-of-staff/reviews/evaluation",
     "/chief-of-staff/reviews/evolution-proposals",
     "/chief-of-staff/reviews/governance",
+    "/chief-of-staff/reviews/new-agent-proposals",
 }
 
 NAPOLEON_DISCOVERY_CONTRACT_PATHS = {

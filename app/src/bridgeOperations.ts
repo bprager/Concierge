@@ -11,7 +11,11 @@ export type BridgeOperationId =
   | "memory_proposal_review"
   | "evaluate";
 
-export type NapoleonReviewOperationId = "evaluation_review" | "evolution_proposal_review" | "governance_review";
+export type NapoleonReviewOperationId =
+  | "evaluation_review"
+  | "evolution_proposal_review"
+  | "governance_review"
+  | "new_agent_proposal_review";
 
 export interface BridgeOperation {
   id: BridgeOperationId;
@@ -46,7 +50,11 @@ export interface BridgeOperationSummary {
 interface NapoleonReviewOperation {
   id: NapoleonReviewOperationId;
   path: `/chief-of-staff/${string}`;
-  requestKind: "evaluation_review_handoff" | "evolution_proposal_review_handoff" | "governance_review_handoff";
+  requestKind:
+    | "evaluation_review_handoff"
+    | "evolution_proposal_review_handoff"
+    | "governance_review_handoff"
+    | "new_agent_proposal_review_handoff";
   transport: "http_post";
   responseRequired: readonly string[];
   governedBridgeOnly: true;
@@ -90,6 +98,25 @@ export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [
     id: "governance_review",
     path: "/chief-of-staff/reviews/governance",
     requestKind: "governance_review_handoff",
+    transport: "http_post",
+    responseRequired: [
+      "text",
+      "governanceDecision",
+      "traceEnvelope",
+      "auditEnvelope",
+      "appliedLocally",
+      "memoryWritePerformed",
+      "approvalCaptured",
+      "agentDispatchPerformed",
+      "externalSendPerformed",
+    ],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+  {
+    id: "new_agent_proposal_review",
+    path: "/chief-of-staff/reviews/new-agent-proposals",
+    requestKind: "new_agent_proposal_review_handoff",
     transport: "http_post",
     responseRequired: [
       "text",
@@ -232,6 +259,24 @@ export function buildGovernanceReviewBridgeTarget(configuredEndpoint: string): G
     path: "/chief-of-staff/reviews/governance",
     requestKind: "governance_review_handoff",
     operationId: "governance_review",
+  };
+}
+
+export interface NewAgentProposalReviewBridgeTarget {
+  url: string;
+  path: "/chief-of-staff/reviews/new-agent-proposals";
+  requestKind: "new_agent_proposal_review_handoff";
+  operationId: "new_agent_proposal_review";
+}
+
+export function buildNewAgentProposalReviewBridgeTarget(
+  configuredEndpoint: string,
+): NewAgentProposalReviewBridgeTarget {
+  return {
+    url: buildNapoleonReviewUrl(configuredEndpoint, "new_agent_proposal_review"),
+    path: "/chief-of-staff/reviews/new-agent-proposals",
+    requestKind: "new_agent_proposal_review_handoff",
+    operationId: "new_agent_proposal_review",
   };
 }
 

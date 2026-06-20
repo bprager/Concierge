@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a named Napoleon `/chief-of-staff/reviews/new-agent-proposals` review-path mapping for proposal-only new-agent review handoffs without registry activation or agent dispatch.
 - Added a named Napoleon `/chief-of-staff/reviews/evaluation` review-path mapping for evaluator HTTP mode while preserving generated Concierge endpoint and local harness compatibility.
 - Added a named Napoleon `/chief-of-staff/reviews/evolution-proposals` review-path mapping for governed Chief of Staff steering and taxonomy evolution review handoffs while preserving generated Concierge endpoint and local harness compatibility.
 - Added a named Napoleon `/chief-of-staff/reviews/governance` review-path mapping for governed governance review handoffs while preserving generated Concierge endpoint and local harness compatibility.

@@ -7,6 +7,7 @@ import {
   buildEvaluationReviewBridgeTarget,
   buildEvolutionProposalReviewBridgeTarget,
   buildGovernanceReviewBridgeTarget,
+  buildNewAgentProposalReviewBridgeTarget,
   buildNapoleonBridgeUrl,
   buildNapoleonReviewUrl,
   describeBridgeOperationSummary,
@@ -133,9 +134,17 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   );
   assert.equal(getNapoleonReviewOperation("governance_review").requestKind, "governance_review_handoff");
   assert.equal(getNapoleonReviewOperation("governance_review").path, "/chief-of-staff/reviews/governance");
+  assert.equal(
+    getNapoleonReviewOperation("new_agent_proposal_review").requestKind,
+    "new_agent_proposal_review_handoff",
+  );
+  assert.equal(
+    getNapoleonReviewOperation("new_agent_proposal_review").path,
+    "/chief-of-staff/reviews/new-agent-proposals",
+  );
   assert.deepEqual(
     NAPOLEON_REVIEW_OPERATIONS.map((operation) => operation.governedBridgeOnly),
-    [true, true, true],
+    [true, true, true, true],
   );
 });
 
@@ -258,6 +267,17 @@ test("Napoleon review URL builder resolves explicit governance review paths", ()
     ),
     "https://napoleon.example/chief-of-staff/reviews/governance",
   );
+  assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example", "new_agent_proposal_review"),
+    "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals",
+  );
+  assert.equal(
+    buildNapoleonReviewUrl(
+      "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals?debug=1",
+      "new_agent_proposal_review",
+    ),
+    "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals",
+  );
 });
 
 test("evaluation review target keeps generated Concierge endpoints compatible", () => {
@@ -369,6 +389,26 @@ test("governance review target maps Napoleon root endpoints to the explicit revi
     requestKind: "governance_review_handoff",
     operationId: "governance_review",
   });
+});
+
+test("new agent proposal review target maps Napoleon endpoints to the explicit review contract path", () => {
+  assert.deepEqual(buildNewAgentProposalReviewBridgeTarget("https://napoleon.example"), {
+    url: "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals",
+    path: "/chief-of-staff/reviews/new-agent-proposals",
+    requestKind: "new_agent_proposal_review_handoff",
+    operationId: "new_agent_proposal_review",
+  });
+  assert.deepEqual(
+    buildNewAgentProposalReviewBridgeTarget(
+      "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals?debug=1",
+    ),
+    {
+      url: "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals",
+      path: "/chief-of-staff/reviews/new-agent-proposals",
+      requestKind: "new_agent_proposal_review_handoff",
+      operationId: "new_agent_proposal_review",
+    },
+  );
 });
 
 test("describes governed bridge operation routes without endpoint hosts or secrets", () => {
