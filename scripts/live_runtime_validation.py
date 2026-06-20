@@ -291,8 +291,73 @@ def eval_counts(path: Path) -> dict[str, Any]:
     }
 
 
+def render_promotion_review(summary: dict[str, Any]) -> str:
+    runtime = summary["runtimeValidation"]
+    bridge = summary["bridgeEvidence"]
+    evaluator = summary["httpEvaluator"]
+    artifact_privacy = summary["artifactPrivacy"]
+    boundary = summary["promotionBoundary"]
+    locally_safe = (
+        runtime["source"] == "real_runtime"
+        and bridge["status"] == "passed"
+        and evaluator["status"] == "passed"
+        and artifact_privacy["status"] == "passed"
+    )
+    checkbox = lambda checked, text: f"- [{'x' if checked else ' '}] {text}"
+    return "\n".join([
+        "# Live Runtime Promotion Review Record",
+        "",
+        "## Review Boundary",
+        "",
+        BOUNDARY,
+        "",
+        "## Runtime Validation",
+        "",
+        f"- Source: `{runtime['source']}`",
+        f"- Caveat: {runtime['caveat']}",
+        f"- Bridge evidence status: `{bridge['status']}`",
+        f"- Bridge evidence records: `{bridge['record_count']}`",
+        f"- Last operation ID: `{bridge['lastOperationId']}`",
+        f"- Last request kind: `{bridge['lastRequestKind']}`",
+        f"- Last transport: `{bridge['lastTransport']}`",
+        f"- Last target path: `{bridge['lastTargetPath']}`",
+        f"- Trace envelope observed: `{str(bridge['traceEnvelopeObserved']).lower()}`",
+        f"- Trace envelope matched: `{str(bridge['traceEnvelopeMatched']).lower()}`",
+        f"- HTTP evaluator status: `{evaluator['status']}`",
+        f"- HTTP evaluator run ID: `{evaluator['run_id']}`",
+        f"- HTTP evaluator score: `{evaluator['score_total']}`",
+        f"- Hard failure count: `{evaluator['hard_fail_count']}`",
+        f"- Missing artifact count: `{evaluator['missing_artifact_count']}`",
+        f"- Regression count: `{evaluator['regression_count']}`",
+        f"- Artifact privacy audit: `{artifact_privacy['status']}`",
+        "",
+        "## Required Checklist",
+        "",
+        checkbox(bridge["status"] == "passed", "Descriptor discovery and bridge evidence capture passed."),
+        checkbox(evaluator["status"] == "passed", "Evaluator HTTP mode passed."),
+        checkbox(artifact_privacy["status"] == "passed", "Artifact privacy audit passed."),
+        checkbox(runtime["source"] == "real_runtime", "Evidence source is real Napoleon runtime, not local harness or simulation."),
+        checkbox(not boundary["approvalCaptured"], "No approval was captured by Concierge."),
+        checkbox(not boundary["memoryWritePerformed"], "No memory write was performed by Concierge."),
+        checkbox(not boundary["agentDispatchPerformed"], "No agent dispatch was performed by Concierge."),
+        checkbox(not boundary["externalSendPerformed"], "No external send was performed by Concierge."),
+        checkbox(not boundary["appliedLocally"], "No local application or self-evolution change was applied."),
+        "",
+        "## Promotion Result",
+        "",
+        f"- Locally safe to consider for promotion: `{str(locally_safe).lower()}`",
+        "- Promotion remains blocked until this record is reviewed by a human and any required Napoleon or release process approves it.",
+        "",
+    ])
+
+
+def write_promotion_review(path: Path, summary: dict[str, Any]) -> None:
+    path.write_text(render_promotion_review(summary), encoding="utf-8")
+
+
 def write_summary(
     out_path: Path,
+    promotion_review_path: Path,
     bridge_exit_code: int,
     eval_exit_code: int | None,
     evidence_path: Path,
@@ -329,6 +394,12 @@ def write_summary(
             "appliedLocally": False,
         },
     }
+    write_promotion_review(promotion_review_path, summary)
+    summary["promotionReview"] = {
+        "status": "drafted",
+        "path": str(promotion_review_path),
+        "boundary": "Local review draft only; not Napoleon approval and not release approval by itself.",
+    }
     out_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
     return summary
 
@@ -363,6 +434,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     evidence_path = out_dir / "bridge_evidence.json"
     eval_report_path = out_dir / "eval_http.json"
     summary_path = out_dir / "summary.json"
+    promotion_review_path = out_dir / "promotion_review.md"
 
     bridge_exit_code, bridge_stdout, bridge_stderr = run_bridge_capture(
         bridge_endpoint,
@@ -395,6 +467,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
 
     summary = write_summary(
         summary_path,
+        promotion_review_path,
         bridge_exit_code,
         eval_exit_code,
         evidence_path,
