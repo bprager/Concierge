@@ -156,6 +156,8 @@ Media Session Controller state is rendered from local privacy settings, micropho
 
 The readiness panel and sanitized readiness proof export include a promotion gate separate from the runtime-validation source. Local harness or local simulation evidence remains promotion-blocked until real Napoleon runtime evidence capture and comparison pass, and same-session proof comparison reports promotion-gate changes from sanitized metadata only. Advisory capability discovery state is included in readiness proof exports as metadata-only state, count, capability IDs, authority tiers, blocked effects, and false runtime-authority/proposal-only boundary fields. Descriptor discovery, endpoint changes, and bearer-token changes clear rendered readiness proof export and comparison state so local evidence reflects the current connection state.
 
+Combined live-runtime validation summaries also include a machine-readable `promotionReadiness` gate with blocking reasons. This gate is local review evidence only; it does not grant Napoleon approval, release approval, memory writes, agent dispatch, external sends, approval capture, or permission to apply self-evolution changes.
+
 The standalone `make eval-http-local-harness` report is also labeled with `runtimeValidation.source=local_harness` and a caveat that it validates local evaluator transport only, not real Napoleon runtime behavior.
 
 Standalone bridge evidence capture accepts `NAPOLEON_BRIDGE_ENDPOINT` as the governed bridge base URL or a known Concierge bridge operation URL and falls back to `NAPOLEON_EVAL_ENDPOINT` for evaluator-oriented setups; both paths still omit endpoint hosts and bearer tokens from retained evidence.

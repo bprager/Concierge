@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Added a sanitized live-runtime promotion review draft to the combined validation runner so bridge evidence, evaluator status, artifact privacy, and non-authority boundaries are retained without endpoint hosts, tokens, prompts, or response text.
+- Added a machine-readable live-runtime promotion readiness gate with blocking reasons so local harness or simulation evidence cannot be mistaken for locally promotion-ready real Napoleon evidence.
 - Hardened bridge contract alignment so TypeScript bridge operation IDs and request-kind typing are derived from the generated OpenAPI registry instead of a duplicate hand-written union.
 - Added a provenance-source row to the Napoleon delegation panel so returned selected-agent delegation is visibly distinct from metadata-only discovery and target-capability-only responses.
 - Added visible Napoleon metadata discovery in the text UI connection area, showing returned agent manifests and active profile metadata as non-authorizing state after descriptor-gated advisory capability discovery.

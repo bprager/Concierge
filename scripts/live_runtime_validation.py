@@ -291,18 +291,35 @@ def eval_counts(path: Path) -> dict[str, Any]:
     }
 
 
+def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
+    runtime = summary["runtimeValidation"]
+    bridge = summary["bridgeEvidence"]
+    evaluator = summary["httpEvaluator"]
+    artifact_privacy = summary["artifactPrivacy"]
+    checks = [
+        (runtime["source"] == "real_runtime", "Evidence source is not real Napoleon runtime."),
+        (bridge["status"] == "passed", "Descriptor discovery and bridge evidence capture did not pass."),
+        (evaluator["status"] == "passed", "Evaluator HTTP mode did not pass."),
+        (artifact_privacy["status"] == "passed", "Artifact privacy audit did not pass."),
+    ]
+    blocking_reasons = [reason for passed, reason in checks if not passed]
+    locally_safe = not blocking_reasons
+    return {
+        "locallySafeToConsider": locally_safe,
+        "gate": "ready_for_human_review" if locally_safe else "blocked_until_real_runtime_evidence_passes",
+        "blockingReasons": blocking_reasons,
+        "boundary": "Readiness is local evidence only; human review and any required Napoleon or release approval are still required.",
+    }
+
+
 def render_promotion_review(summary: dict[str, Any]) -> str:
     runtime = summary["runtimeValidation"]
     bridge = summary["bridgeEvidence"]
     evaluator = summary["httpEvaluator"]
     artifact_privacy = summary["artifactPrivacy"]
     boundary = summary["promotionBoundary"]
-    locally_safe = (
-        runtime["source"] == "real_runtime"
-        and bridge["status"] == "passed"
-        and evaluator["status"] == "passed"
-        and artifact_privacy["status"] == "passed"
-    )
+    readiness = summary["promotionReadiness"]
+    blocking_reasons = readiness["blockingReasons"] or ["none"]
     checkbox = lambda checked, text: f"- [{'x' if checked else ' '}] {text}"
     return "\n".join([
         "# Live Runtime Promotion Review Record",
@@ -345,7 +362,9 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         "",
         "## Promotion Result",
         "",
-        f"- Locally safe to consider for promotion: `{str(locally_safe).lower()}`",
+        f"- Locally safe to consider for promotion: `{str(readiness['locallySafeToConsider']).lower()}`",
+        f"- Promotion gate: `{readiness['gate']}`",
+        f"- Blocking reasons: {' '.join(blocking_reasons)}",
         "- Promotion remains blocked until this record is reviewed by a human and any required Napoleon or release process approves it.",
         "",
     ])
@@ -394,6 +413,7 @@ def write_summary(
             "appliedLocally": False,
         },
     }
+    summary["promotionReadiness"] = promotion_readiness(summary)
     write_promotion_review(promotion_review_path, summary)
     summary["promotionReview"] = {
         "status": "drafted",
