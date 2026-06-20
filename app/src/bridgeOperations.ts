@@ -3,13 +3,10 @@ import {
   GENERATED_BRIDGE_OPERATIONS,
 } from "./generatedBridgeOperations.js";
 
-export type BridgeOperationId =
-  | "text_turn"
-  | "chief_of_staff_capabilities"
-  | "chief_of_staff_descriptor"
-  | "chief_of_staff_steering"
-  | "memory_proposal_review"
-  | "evaluate";
+type GeneratedBridgeOperation = (typeof GENERATED_BRIDGE_OPERATIONS)[number];
+
+export type BridgeOperationId = GeneratedBridgeOperation["id"];
+export type BridgeOperation = GeneratedBridgeOperation;
 
 export type NapoleonReviewOperationId =
   | "chief_of_staff_request"
@@ -22,22 +19,6 @@ export type NapoleonReviewOperationId =
   | "observability_trace";
 
 export type NapoleonDiscoveryOperationId = "agent_manifest_list" | "agent_manifest" | "profile";
-
-export interface BridgeOperation {
-  id: BridgeOperationId;
-  path: `/v1/concierge/${string}`;
-  requestKind:
-    | "text_turn"
-    | "chief_of_staff_capabilities"
-    | "chief_of_staff_descriptor"
-    | "chief_of_staff_steering_handoff"
-    | "memory_proposal_review_handoff"
-    | "evaluator_prompt";
-  transport: "http_get" | "http_post";
-  responseRequired: readonly string[];
-  governedBridgeOnly: true;
-  tokenPlacement: "authorization_header_only";
-}
 
 export interface BridgeOperationSummary {
   id: BridgeOperationId | NapoleonReviewOperationId | "chief_of_staff_taxonomy_review";

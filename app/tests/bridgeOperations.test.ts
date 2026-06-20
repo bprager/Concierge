@@ -42,6 +42,10 @@ function openApiPaths(): string[] {
   return matches.map((match) => match[1]).sort();
 }
 
+function bridgeOperationsSource(): string {
+  return readFileSync("src/bridgeOperations.ts", "utf8");
+}
+
 function openApiTransports(): Record<string, string> {
   const yaml = readFileSync("../api/napoleon_bridge.openapi.yaml", "utf8");
   const transports: Record<string, string> = {};
@@ -87,6 +91,14 @@ test("bridge operation registry matches canonical OpenAPI concierge paths", () =
 
   assert.equal(GENERATED_BRIDGE_CONTRACT_SOURCE, "api/napoleon_bridge.openapi.yaml");
   assert.deepEqual(registryPaths, openApiPaths());
+});
+
+test("bridge operation TypeScript IDs are derived from generated OpenAPI operations", () => {
+  const source = bridgeOperationsSource();
+
+  assert.match(source, /type\s+GeneratedBridgeOperation\s*=/);
+  assert.match(source, /export\s+type\s+BridgeOperationId\s*=\s*GeneratedBridgeOperation\["id"\]/);
+  assert.doesNotMatch(source, /export\s+type\s+BridgeOperationId\s*=\s*\|/);
 });
 
 test("OpenAPI descriptor connection enums match runtime fail-closed states", () => {

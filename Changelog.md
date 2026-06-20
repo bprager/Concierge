@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened bridge contract alignment so TypeScript bridge operation IDs and request-kind typing are derived from the generated OpenAPI registry instead of a duplicate hand-written union.
 - Added a provenance-source row to the Napoleon delegation panel so returned selected-agent delegation is visibly distinct from metadata-only discovery and target-capability-only responses.
 - Added visible Napoleon metadata discovery in the text UI connection area, showing returned agent manifests and active profile metadata as non-authorizing state after descriptor-gated advisory capability discovery.
 - Added named Napoleon `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}` metadata discovery mappings without agent dispatch, registry updates, memory writes, approval capture, external sends, or runtime authority.

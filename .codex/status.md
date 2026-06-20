@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Derived runtime bridge operation IDs and request-kind typing from the generated OpenAPI bridge operation registry so TypeScript can no longer carry a stale duplicate operation union beside the canonical contract.
 - Added a provenance-source row to Napoleon delegation presentation so returned bridge delegation, target-capability-only responses, and absent selected-agent provenance stay visibly distinct.
 - Added visible Napoleon metadata discovery in the connection area after advisory capability discovery, showing returned agent manifests and active profile metadata while keeping all dispatch, registry, memory, approval, external-send, and runtime authority paths blocked.
 - Added named Napoleon `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}` metadata discovery mappings plus local harness and validation coverage, while keeping agent dispatch, registry updates, memory writes, approval capture, external sends, and runtime authority blocked.
