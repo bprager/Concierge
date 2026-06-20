@@ -1463,12 +1463,15 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       endpoint: endpoint.trim() || null,
       authToken: authToken.trim() || null,
       descriptorReady: descriptorConnection.canAttemptLiveBridge,
+      profileId: mapProfileToNapoleonMode(profile),
     });
     setChiefOfStaffCapabilities(result);
     emitEvent(result.state === "ready" ? "chief_of_staff_capabilities_discovered" : "chief_of_staff_capabilities_blocked", {
       traceId: newTraceId(),
       conversationId,
       capabilityCount: result.capabilities.length,
+      agentCount: result.agents.length,
+      profileMetadataReturned: Boolean(result.profileMetadata),
       serviceId: result.serviceId ?? "not_returned",
       runtimeAuthority: result.runtimeAuthority,
       blockedEffects: result.blockedEffects,
@@ -4061,6 +4064,29 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             ))}
           </dl>
         ) : null}
+      </section>
+
+      <section className={`contract-status ${chiefOfStaffCapabilities?.state ?? "blocked"}`}>
+        <div>
+          <strong>Napoleon metadata discovery</strong>
+          <span>
+            {chiefOfStaffCapabilities?.state === "ready"
+              ? "Agent and profile metadata discovered through named governed bridge targets."
+              : "Not fetched. Metadata discovery is descriptor-gated and explicit."}
+          </span>
+        </div>
+        <div>
+          <strong>Agent manifests</strong>
+          <span>{chiefOfStaffCapabilities?.agents.length ? chiefOfStaffCapabilities.agents.map((agent) => agent.displayName).join(", ") : "not returned"}</span>
+        </div>
+        <div>
+          <strong>Profile metadata</strong>
+          <span>{chiefOfStaffCapabilities?.profileMetadata?.profileId ?? "not returned"}</span>
+        </div>
+        <div>
+          <strong>Boundary</strong>
+          <span>metadata only; no agent dispatch, registry update, memory write, approval capture, or external send.</span>
+        </div>
       </section>
 
       <section className="bridge-operations">

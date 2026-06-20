@@ -10,6 +10,40 @@ function harnessJsonResponse(status: number, payload: unknown) {
   };
 }
 
+function agentMetadataPayload() {
+  return {
+    agents: [
+      {
+        agentId: "passive_brain",
+        displayName: "Passive Brain",
+        description: "Surfaces relevant Napoleon context.",
+        allowedEffects: ["prepare_advisory_response"],
+        blockedEffects: ["memory_write", "agent_dispatch"],
+        runtimeAuthority: false,
+        agentDispatchPerformed: false,
+      },
+    ],
+    runtimeAuthority: false,
+    agentDispatchPerformed: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    externalSendPerformed: false,
+    blockedEffects: ["memory_write", "agent_dispatch"],
+  };
+}
+
+function profileMetadataPayload(profileId = "adult_owner") {
+  return {
+    profileId,
+    label: profileId === "child_protected_user" ? "Child protected" : "Adult owner",
+    retentionMode: profileId === "child_protected_user" ? "minimal_derived_signals_only" : "derived_signals_only",
+    runtimeAuthority: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    blockedEffects: ["memory_write", "approval_capture"],
+  };
+}
+
 function installDom() {
   const dom = new JSDOM("<!doctype html><html><body></body></html>", {
     url: "http://127.0.0.1:5173/",
@@ -70,6 +104,12 @@ test("exports and compares Napoleon proof through rendered app controls", async 
         runtimeAuthority: false,
         blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
       });
+    }
+    if (url === "http://127.0.0.1:8787/agents") {
+      return harnessJsonResponse(200, agentMetadataPayload());
+    }
+    if (url === "http://127.0.0.1:8787/profiles/adult_owner") {
+      return harnessJsonResponse(200, profileMetadataPayload("adult_owner"));
     }
 
     assert.equal(url, "http://127.0.0.1:8787/v1/concierge/turn");
@@ -521,21 +561,27 @@ test("clears bridge readiness proof when advisory capabilities are discovered", 
         signature: { valid: true },
       });
     }
-    assert.equal(url, "http://127.0.0.1:8787/v1/concierge/chief-of-staff/capabilities");
-    return harnessJsonResponse(200, {
-      serviceId: "napoleon.chief_of_staff",
-      capabilities: [
-        {
-          id: "napoleon.capability.answer",
-          label: "Answer with governance",
-          description: "Prepare advisory answers through Napoleon.",
-          authorityTier: "prepare_only",
-          proposalOnly: true,
-        },
-      ],
-      runtimeAuthority: false,
-      blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
-    });
+    if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/capabilities") {
+      return harnessJsonResponse(200, {
+        serviceId: "napoleon.chief_of_staff",
+        capabilities: [
+          {
+            id: "napoleon.capability.answer",
+            label: "Answer with governance",
+            description: "Prepare advisory answers through Napoleon.",
+            authorityTier: "prepare_only",
+            proposalOnly: true,
+          },
+        ],
+        runtimeAuthority: false,
+        blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
+      });
+    }
+    if (url === "http://127.0.0.1:8787/agents") {
+      return harnessJsonResponse(200, agentMetadataPayload());
+    }
+    assert.equal(url, "http://127.0.0.1:8787/profiles/adult_owner");
+    return harnessJsonResponse(200, profileMetadataPayload("adult_owner"));
   }) as typeof fetch;
 
   try {
@@ -651,6 +697,83 @@ test("clears captured bridge evidence readiness when endpoint changes", async ()
     assert.ok(within(readinessPanel).getAllByText("Not run in this UI session").length >= 2);
     assert.ok(within(readinessPanel).getByText("Evidence comparison"));
     assert.equal(within(readinessPanel).queryByText("Passed in local validation"), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
+test("renders Napoleon agent and profile metadata discovery as non-authorizing connection state", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+      return harnessJsonResponse(200, {
+        descriptor: {
+          schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+          serviceId: "napoleon.chief_of_staff",
+          runtimeAuthority: false,
+          commandExecution: false,
+          cachePolicy: "fail_closed_to_review_required",
+          blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
+        },
+        checksum: { expected: "sha256:metadata", actual: "sha256:metadata" },
+        signature: { valid: true },
+      });
+    }
+    if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/capabilities") {
+      return harnessJsonResponse(200, {
+        serviceId: "napoleon.chief_of_staff",
+        capabilities: [
+          {
+            id: "napoleon.capability.answer",
+            label: "Answer with governance",
+            description: "Prepare advisory answers through Napoleon.",
+            authorityTier: "prepare_only",
+            proposalOnly: true,
+          },
+        ],
+        runtimeAuthority: false,
+        blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
+      });
+    }
+    if (url === "http://127.0.0.1:8787/agents") {
+      return harnessJsonResponse(200, agentMetadataPayload());
+    }
+    if (url === "http://127.0.0.1:8787/profiles/adult_owner") {
+      return harnessJsonResponse(200, profileMetadataPayload("adult_owner"));
+    }
+    throw new Error(`Unexpected fetch: ${url}`);
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    await user.click(view.getByRole("button", { name: "Discover advisory capabilities" }));
+    await view.findByText("Advisory Chief of Staff capabilities discovered. This is not Napoleon approval.");
+
+    const metadataPanel = view.getByText("Napoleon metadata discovery").closest("section") as HTMLElement;
+    assert.ok(metadataPanel);
+    assert.ok(within(metadataPanel).getByText("Agent manifests"));
+    assert.ok(within(metadataPanel).getByText("Passive Brain"));
+    assert.ok(within(metadataPanel).getByText("Profile metadata"));
+    assert.ok(within(metadataPanel).getByText("adult_owner"));
+    assert.ok(within(metadataPanel).getByText("metadata only; no agent dispatch, registry update, memory write, approval capture, or external send."));
+    assert.deepEqual(requestedUrls, [
+      "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor",
+      "http://127.0.0.1:8787/v1/concierge/chief-of-staff/capabilities",
+      "http://127.0.0.1:8787/agents",
+      "http://127.0.0.1:8787/profiles/adult_owner",
+    ]);
   } finally {
     cleanup();
     dom.window.close();

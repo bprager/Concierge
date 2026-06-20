@@ -25,16 +25,57 @@ test("capability discovery fails closed before fetch when descriptor is not read
 });
 
 test("capability discovery fetches advisory capabilities with header-only auth", async () => {
-  let targetUrl: string | undefined;
-  let headers: Record<string, string> | undefined;
+  const requestedUrls: string[] = [];
+  let capabilityHeaders: Record<string, string> | undefined;
 
   const result = await discoverChiefOfStaffCapabilities({
     endpoint: "https://napoleon.example/concierge/v1/concierge/turn?debug=true",
     authToken: "token_capabilities",
     descriptorReady: true,
+    profileId: "adult_owner",
     fetch: async (url: string, init?: { headers?: Record<string, string> }) => {
-      targetUrl = url;
-      headers = init?.headers;
+      requestedUrls.push(url);
+      if (url.endsWith("/v1/concierge/chief-of-staff/capabilities")) {
+        capabilityHeaders = init?.headers;
+      }
+      if (url === "https://napoleon.example/concierge/agents") {
+        return {
+          ok: true,
+          json: async () => ({
+            agents: [
+              {
+                agentId: "passive_brain",
+                displayName: "Passive Brain",
+                description: "Surfaces relevant context.",
+                allowedEffects: ["prepare_advisory_response"],
+                blockedEffects: ["memory_write", "agent_dispatch"],
+                runtimeAuthority: false,
+                agentDispatchPerformed: false,
+              },
+            ],
+            runtimeAuthority: false,
+            agentDispatchPerformed: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            externalSendPerformed: false,
+            blockedEffects: ["memory_write", "agent_dispatch"],
+          }),
+        };
+      }
+      if (url === "https://napoleon.example/concierge/profiles/adult_owner") {
+        return {
+          ok: true,
+          json: async () => ({
+            profileId: "adult_owner",
+            label: "Adult owner",
+            retentionMode: "derived_signals_only",
+            runtimeAuthority: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            blockedEffects: ["memory_write", "approval_capture"],
+          }),
+        };
+      }
       return {
         ok: true,
         json: async () => ({
@@ -55,9 +96,13 @@ test("capability discovery fetches advisory capabilities with header-only auth",
     },
   });
 
-  assert.equal(targetUrl, "https://napoleon.example/concierge/v1/concierge/chief-of-staff/capabilities");
-  assert.equal(headers?.Authorization, "Bearer token_capabilities");
-  assert.equal(JSON.stringify(headers).includes("token_capabilities"), true);
+  assert.deepEqual(requestedUrls, [
+    "https://napoleon.example/concierge/v1/concierge/chief-of-staff/capabilities",
+    "https://napoleon.example/concierge/agents",
+    "https://napoleon.example/concierge/profiles/adult_owner",
+  ]);
+  assert.equal(capabilityHeaders?.Authorization, "Bearer token_capabilities");
+  assert.equal(JSON.stringify(capabilityHeaders).includes("token_capabilities"), true);
   assert.equal(result.state, "ready");
   assert.equal(result.serviceId, "napoleon.chief_of_staff");
   assert.equal(result.capabilities[0]?.id, "napoleon.capability.answer");
@@ -68,6 +113,11 @@ test("capability discovery fetches advisory capabilities with header-only auth",
   assert.equal(result.memoryWritePerformed, false);
   assert.equal(result.agentDispatchPerformed, false);
   assert.equal(result.externalSendPerformed, false);
+  assert.equal(result.agents[0]?.agentId, "passive_brain");
+  assert.equal(result.agents[0]?.agentDispatchPerformed, false);
+  assert.equal(result.profileMetadata?.profileId, "adult_owner");
+  assert.equal(result.profileMetadata?.memoryWritePerformed, false);
+  assert.equal(result.profileMetadata?.approvalCaptured, false);
 });
 
 test("capability discovery uses explicit cos capabilities endpoint and X-Napoleon-Auth", async () => {

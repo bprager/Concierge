@@ -1,4 +1,8 @@
-import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
+import {
+  resolveNapoleonAgentManifestListOperation,
+  resolveNapoleonBridgeOperation,
+  resolveNapoleonProfileOperation,
+} from "./bridgeEndpoint.js";
 
 type CapabilityFetch = (url: string, init?: { method?: string; headers?: Record<string, string> }) => Promise<{
   ok: boolean;
@@ -14,10 +18,31 @@ export interface ChiefOfStaffCapability {
   proposalOnly: boolean;
 }
 
+export interface NapoleonAgentMetadata {
+  agentId: string;
+  displayName: string;
+  description: string;
+  allowedEffects: string[];
+  blockedEffects: string[];
+  runtimeAuthority: false;
+  agentDispatchPerformed: false;
+}
+
+export interface NapoleonProfileMetadata {
+  profileId: string;
+  label: string;
+  retentionMode: string;
+  runtimeAuthority: false;
+  memoryWritePerformed: false;
+  approvalCaptured: false;
+  blockedEffects: string[];
+}
+
 export interface ChiefOfStaffCapabilityDiscoveryInput {
   endpoint: string | null;
   authToken?: string | null;
   descriptorReady: boolean;
+  profileId?: string | null;
   fetch?: CapabilityFetch;
 }
 
@@ -26,6 +51,8 @@ export interface ChiefOfStaffCapabilityDiscoveryResult {
   message: string;
   serviceId: string | null;
   capabilities: ChiefOfStaffCapability[];
+  agents: NapoleonAgentMetadata[];
+  profileMetadata: NapoleonProfileMetadata | null;
   runtimeAuthority: false;
   blockedEffects: string[];
   approvalCaptured: false;
@@ -42,6 +69,8 @@ function blocked(message: string, blockedEffects = DEFAULT_BLOCKED_EFFECTS): Chi
     message,
     serviceId: null,
     capabilities: [],
+    agents: [],
+    profileMetadata: null,
     runtimeAuthority: false,
     blockedEffects,
     approvalCaptured: false,
@@ -102,6 +131,89 @@ function parseCapabilities(value: unknown): ChiefOfStaffCapability[] | null {
   return capabilities;
 }
 
+function parseAgents(value: unknown): NapoleonAgentMetadata[] | null {
+  if (!Array.isArray(value)) return null;
+  const agents: NapoleonAgentMetadata[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== "object") return null;
+    const record = item as Record<string, unknown>;
+    const agentId = stringValue(record.agentId) ?? stringValue(record.agent_id);
+    const displayName = stringValue(record.displayName) ?? stringValue(record.display_name);
+    const description = stringValue(record.description);
+    const allowedEffects = stringArrayValue(record.allowedEffects) ?? stringArrayValue(record.allowed_effects);
+    const blockedEffects = stringArrayValue(record.blockedEffects) ?? stringArrayValue(record.blocked_effects);
+    const runtimeAuthority = booleanValue(record.runtimeAuthority) ?? booleanValue(record.runtime_authority);
+    const agentDispatchPerformed =
+      booleanValue(record.agentDispatchPerformed) ?? booleanValue(record.agent_dispatch_performed);
+    if (
+      !agentId ||
+      !displayName ||
+      !description ||
+      !allowedEffects ||
+      !blockedEffects ||
+      runtimeAuthority !== false ||
+      agentDispatchPerformed !== false
+    ) {
+      return null;
+    }
+    agents.push({
+      agentId,
+      displayName,
+      description,
+      allowedEffects,
+      blockedEffects,
+      runtimeAuthority: false,
+      agentDispatchPerformed: false,
+    });
+  }
+  return agents;
+}
+
+function parseProfileMetadata(value: unknown): NapoleonProfileMetadata | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const profileId = stringValue(record.profileId) ?? stringValue(record.profile_id);
+  const label = stringValue(record.label);
+  const retentionMode = stringValue(record.retentionMode) ?? stringValue(record.retention_mode);
+  const runtimeAuthority = booleanValue(record.runtimeAuthority) ?? booleanValue(record.runtime_authority);
+  const memoryWritePerformed = booleanValue(record.memoryWritePerformed) ?? booleanValue(record.memory_write_performed);
+  const approvalCaptured = booleanValue(record.approvalCaptured) ?? booleanValue(record.approval_captured);
+  const blockedEffects = stringArrayValue(record.blockedEffects) ?? stringArrayValue(record.blocked_effects);
+  if (
+    !profileId ||
+    !label ||
+    !retentionMode ||
+    runtimeAuthority !== false ||
+    memoryWritePerformed !== false ||
+    approvalCaptured !== false ||
+    !blockedEffects
+  ) {
+    return null;
+  }
+  return {
+    profileId,
+    label,
+    retentionMode,
+    runtimeAuthority: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    blockedEffects,
+  };
+}
+
+async function fetchJson(
+  fetcher: CapabilityFetch,
+  target: string,
+  authToken?: string | null,
+): Promise<unknown | null> {
+  const response = await fetcher(target, {
+    method: "GET",
+    headers: generatedHeaders(authToken),
+  });
+  if (!response.ok) return null;
+  return response.json();
+}
+
 export async function discoverChiefOfStaffCapabilities(
   input: ChiefOfStaffCapabilityDiscoveryInput,
 ): Promise<ChiefOfStaffCapabilityDiscoveryResult> {
@@ -139,11 +251,51 @@ export async function discoverChiefOfStaffCapabilities(
   if (serviceId !== "napoleon.chief_of_staff" || runtimeAuthority !== false || !blockedEffects || !capabilities) {
     return blocked("Capability discovery blocked: response contract mismatch.");
   }
+
+  let agents: NapoleonAgentMetadata[] = [];
+  let profileMetadata: NapoleonProfileMetadata | null = null;
+  if (input.profileId) {
+    try {
+      const agentsPayload = await fetchJson(
+        fetcher,
+        resolveNapoleonAgentManifestListOperation(input.endpoint).url,
+        input.authToken,
+      );
+      if (!agentsPayload || typeof agentsPayload !== "object") {
+        return blocked("Capability discovery blocked: agent metadata response contract mismatch.");
+      }
+      const agentsRecord = agentsPayload as Record<string, unknown>;
+      const agentRuntimeAuthority =
+        booleanValue(agentsRecord.runtimeAuthority) ?? booleanValue(agentsRecord.runtime_authority);
+      const agentDispatchPerformed =
+        booleanValue(agentsRecord.agentDispatchPerformed) ?? booleanValue(agentsRecord.agent_dispatch_performed);
+      const parsedAgents = parseAgents(agentsRecord.agents);
+      if (agentRuntimeAuthority !== false || agentDispatchPerformed !== false || !parsedAgents) {
+        return blocked("Capability discovery blocked: agent metadata response contract mismatch.");
+      }
+      agents = parsedAgents;
+
+      const profilePayload = await fetchJson(
+        fetcher,
+        resolveNapoleonProfileOperation(input.endpoint, input.profileId).url,
+        input.authToken,
+      );
+      profileMetadata = parseProfileMetadata(profilePayload);
+      if (!profileMetadata) {
+        return blocked("Capability discovery blocked: profile metadata response contract mismatch.");
+      }
+    } catch {
+      return blocked("Capability discovery blocked: Napoleon metadata endpoint could not be reached.");
+    }
+  }
+
   return {
     state: "ready",
     message: "Advisory Chief of Staff capabilities discovered. This is not Napoleon approval.",
     serviceId,
     capabilities,
+    agents,
+    profileMetadata,
     runtimeAuthority: false,
     blockedEffects,
     approvalCaptured: false,

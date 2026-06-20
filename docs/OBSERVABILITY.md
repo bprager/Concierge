@@ -63,8 +63,8 @@ Every user turn has:
 | response_generated | UI | conversation_id, turn_id, profile, profile_mode, response_type, governance_outcome, decision_id, audit_id |
 | response_failed | UI | conversation_id, turn_id, profile, profile_mode, error, bridge_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome |
 | bridge_request_failed | bridge | trace_id, request_id, reason, status, profile_mode, descriptor_failure_reason, blocked_effects |
-| chief_of_staff_capabilities_discovered | bridge | conversation_id, capability_count, service_id, runtime_authority, blocked_effects, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
-| chief_of_staff_capabilities_blocked | bridge | conversation_id, capability_count, service_id, runtime_authority, blocked_effects, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
+| chief_of_staff_capabilities_discovered | bridge | conversation_id, capability_count, agent_count, profile_metadata_returned, service_id, runtime_authority, blocked_effects, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
+| chief_of_staff_capabilities_blocked | bridge | conversation_id, capability_count, agent_count, profile_metadata_returned, service_id, runtime_authority, blocked_effects, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | mic_permission_requested | voice | conversation_id, microphone_setting_enabled, local_only, capture_started, raw_audio_stored, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | mic_permission_result | voice | conversation_id, result, capture_started, raw_audio_stored, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | camera_permission_requested | avatar | conversation_id, camera_setting_enabled, local_only, capture_started, raw_video_stored, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
