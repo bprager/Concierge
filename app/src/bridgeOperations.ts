@@ -15,6 +15,7 @@ export type NapoleonReviewOperationId =
   | "chief_of_staff_request"
   | "evaluation_review"
   | "evolution_proposal_review"
+  | "governance_evaluation"
   | "governance_review"
   | "new_agent_proposal_review";
 
@@ -50,11 +51,12 @@ export interface BridgeOperationSummary {
 
 interface NapoleonReviewOperation {
   id: NapoleonReviewOperationId;
-  path: `/chief-of-staff/${string}`;
+  path: `/chief-of-staff/${string}` | `/governance/${string}`;
   requestKind:
     | "chief_of_staff_request_handoff"
     | "evaluation_review_handoff"
     | "evolution_proposal_review_handoff"
+    | "governance_evaluation_handoff"
     | "governance_review_handoff"
     | "new_agent_proposal_review_handoff";
   transport: "http_post";
@@ -122,6 +124,24 @@ export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [
     transport: "http_post",
     responseRequired: [
       "text",
+      "governanceDecision",
+      "traceEnvelope",
+      "auditEnvelope",
+      "appliedLocally",
+      "memoryWritePerformed",
+      "approvalCaptured",
+      "agentDispatchPerformed",
+      "externalSendPerformed",
+    ],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+  {
+    id: "governance_evaluation",
+    path: "/governance/evaluate",
+    requestKind: "governance_evaluation_handoff",
+    transport: "http_post",
+    responseRequired: [
       "governanceDecision",
       "traceEnvelope",
       "auditEnvelope",
@@ -314,6 +334,22 @@ export function buildChiefOfStaffRequestBridgeTarget(configuredEndpoint: string)
     path: "/chief-of-staff/requests",
     requestKind: "chief_of_staff_request_handoff",
     operationId: "chief_of_staff_request",
+  };
+}
+
+export interface GovernanceEvaluationBridgeTarget {
+  url: string;
+  path: "/governance/evaluate";
+  requestKind: "governance_evaluation_handoff";
+  operationId: "governance_evaluation";
+}
+
+export function buildGovernanceEvaluationBridgeTarget(configuredEndpoint: string): GovernanceEvaluationBridgeTarget {
+  return {
+    url: buildNapoleonReviewUrl(configuredEndpoint, "governance_evaluation"),
+    path: "/governance/evaluate",
+    requestKind: "governance_evaluation_handoff",
+    operationId: "governance_evaluation",
   };
 }
 

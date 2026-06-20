@@ -426,10 +426,13 @@ BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
     r"['\"]https?://"
     r"|['\"][^'\"]*/v1/"
     r"|['\"][^'\"]*/chief-of-staff/"
+    r"|['\"][^'\"]*/governance/"
     r"|`[^`]*\$\{[^`]*\}[^`]*/v1/"
     r"|`[^`]*\$\{[^`]*\}[^`]*/chief-of-staff/"
+    r"|`[^`]*\$\{[^`]*\}[^`]*/governance/"
     r"|\w+\s*\+\s*['\"][^'\"]*/v1/"
     r"|\w+\s*\+\s*['\"][^'\"]*/chief-of-staff/"
+    r"|\w+\s*\+\s*['\"][^'\"]*/governance/"
     r")"
 )
 

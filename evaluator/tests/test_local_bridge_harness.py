@@ -177,11 +177,21 @@ class LocalBridgeHarnessTest(unittest.TestCase):
                     "agentProposal": {"agentId": "proposed_agent_harness"},
                 },
             )
+            governance_evaluation = self.post_json(
+                f"{base_url}/governance/evaluate",
+                {
+                    "requestKind": "governance_evaluation_handoff",
+                    "traceEnvelope": {"trace_id": "trace_governance_eval", "request_id": "gov_trace_eval"},
+                    "auditEnvelope": {},
+                    "governanceRequest": {"request_id": "gov_trace_eval"},
+                },
+            )
 
             self.assertEqual(steering["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(memory["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(chief_request["governanceDecision"]["outcome"], "requires_review")
             self.assertEqual(new_agent["governanceDecision"]["outcome"], "requires_review")
+            self.assertEqual(governance_evaluation["governanceDecision"]["outcome"], "requires_review")
             self.assertFalse(steering["appliedLocally"])
             self.assertFalse(steering["memoryWritePerformed"])
             self.assertFalse(steering["approvalCaptured"])
@@ -197,6 +207,11 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             self.assertFalse(new_agent["approvalCaptured"])
             self.assertFalse(new_agent["agentDispatchPerformed"])
             self.assertFalse(new_agent["externalSendPerformed"])
+            self.assertFalse(governance_evaluation["appliedLocally"])
+            self.assertFalse(governance_evaluation["memoryWritePerformed"])
+            self.assertFalse(governance_evaluation["approvalCaptured"])
+            self.assertFalse(governance_evaluation["agentDispatchPerformed"])
+            self.assertFalse(governance_evaluation["externalSendPerformed"])
             self.assertFalse(memory["memoryWritePerformed"])
             self.assertFalse(memory["approvalCaptured"])
             self.assertFalse(memory["agentDispatchPerformed"])

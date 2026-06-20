@@ -7,6 +7,7 @@ import {
   buildChiefOfStaffRequestBridgeTarget,
   buildEvaluationReviewBridgeTarget,
   buildEvolutionProposalReviewBridgeTarget,
+  buildGovernanceEvaluationBridgeTarget,
   buildGovernanceReviewBridgeTarget,
   buildNewAgentProposalReviewBridgeTarget,
   buildNapoleonBridgeUrl,
@@ -128,6 +129,11 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   assert.equal(getNapoleonReviewOperation("evaluation_review").requestKind, "evaluation_review_handoff");
   assert.equal(getNapoleonReviewOperation("evaluation_review").path, "/chief-of-staff/reviews/evaluation");
   assert.equal(
+    getNapoleonReviewOperation("governance_evaluation").requestKind,
+    "governance_evaluation_handoff",
+  );
+  assert.equal(getNapoleonReviewOperation("governance_evaluation").path, "/governance/evaluate");
+  assert.equal(
     getNapoleonReviewOperation("evolution_proposal_review").requestKind,
     "evolution_proposal_review_handoff",
   );
@@ -147,7 +153,7 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   );
   assert.deepEqual(
     NAPOLEON_REVIEW_OPERATIONS.map((operation) => operation.governedBridgeOnly),
-    [true, true, true, true, true],
+    [true, true, true, true, true, true],
   );
 });
 
@@ -249,6 +255,14 @@ test("Napoleon review URL builder resolves explicit governance review paths", ()
     "https://napoleon.example/chief-of-staff/requests",
   );
   assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example", "governance_evaluation"),
+    "https://napoleon.example/governance/evaluate",
+  );
+  assert.equal(
+    buildNapoleonReviewUrl("https://napoleon.example/governance/evaluate?debug=1", "governance_evaluation"),
+    "https://napoleon.example/governance/evaluate",
+  );
+  assert.equal(
     buildNapoleonReviewUrl("https://napoleon.example", "evaluation_review"),
     "https://napoleon.example/chief-of-staff/reviews/evaluation",
   );
@@ -289,6 +303,21 @@ test("Napoleon review URL builder resolves explicit governance review paths", ()
     ),
     "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals",
   );
+});
+
+test("governance evaluation target maps Napoleon endpoints to the explicit evaluation contract path", () => {
+  assert.deepEqual(buildGovernanceEvaluationBridgeTarget("https://napoleon.example"), {
+    url: "https://napoleon.example/governance/evaluate",
+    path: "/governance/evaluate",
+    requestKind: "governance_evaluation_handoff",
+    operationId: "governance_evaluation",
+  });
+  assert.deepEqual(buildGovernanceEvaluationBridgeTarget("https://napoleon.example/governance/evaluate?debug=1"), {
+    url: "https://napoleon.example/governance/evaluate",
+    path: "/governance/evaluate",
+    requestKind: "governance_evaluation_handoff",
+    operationId: "governance_evaluation",
+  });
 });
 
 test("Chief of Staff request target maps Napoleon endpoints to the explicit request contract path", () => {

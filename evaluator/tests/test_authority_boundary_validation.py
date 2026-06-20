@@ -991,6 +991,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             response = await fetcher(target.url, { method: "POST" });
             """,
             """
+            const target = resolveNapoleonGovernanceEvaluationOperation(endpoint);
+            response = await fetcher(target.url, { method: "POST" });
+            """,
+            """
             const target = resolveNapoleonChiefOfStaffRequestOperation(endpoint);
             response = await fetcher(target.url, { method: "POST" });
             """,
@@ -1019,6 +1023,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'response = await fetcher("https://napoleon.example/chief-of-staff/reviews/new-agent-proposals", { method: "POST" });',
             'response = await fetcher(endpoint + "/chief-of-staff/reviews/new-agent-proposals", { method: "POST" });',
             'response = await fetcher(`${endpoint}/chief-of-staff/reviews/new-agent-proposals`, { method: "POST" });',
+            'response = await fetcher("https://napoleon.example/governance/evaluate", { method: "POST" });',
+            'response = await fetcher(endpoint + "/governance/evaluate", { method: "POST" });',
+            'response = await fetcher(`${endpoint}/governance/evaluate`, { method: "POST" });',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/governanceReviewSubmission.ts", source)

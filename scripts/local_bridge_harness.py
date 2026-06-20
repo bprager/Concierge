@@ -224,6 +224,9 @@ class HarnessHandler(BaseHTTPRequestHandler):
         if self.path == "/chief-of-staff/reviews/new-agent-proposals":
             self.handle_review(payload, "new_agent_proposal_review_handoff", applied_locally=False)
             return
+        if self.path == "/governance/evaluate":
+            self.handle_review(payload, "governance_evaluation_handoff", applied_locally=False)
+            return
         self.write_json(404, {"error": "not_found"})
 
     def handle_turn(self, payload: dict[str, Any]) -> None:
