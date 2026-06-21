@@ -385,6 +385,58 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+const ATTRIBUTION_STOP_WORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "are",
+  "as",
+  "for",
+  "found",
+  "in",
+  "is",
+  "of",
+  "on",
+  "or",
+  "that",
+  "the",
+  "this",
+  "to",
+  "was",
+  "were",
+  "with",
+]);
+
+function normalizeAttributionText(value: string): string {
+  return attributionTokens(value).join(" ");
+}
+
+function attributionTokens(value: string): string[] {
+  return value
+    .toLocaleLowerCase()
+    .match(/[a-z0-9]+/g)
+    ?.filter((token) => token.length > 2 && !ATTRIBUTION_STOP_WORDS.has(token)) ?? [];
+}
+
+function extractSelectedAgentFindingClaim(text: string, displayName: string): string | null {
+  const pattern = new RegExp(`\\b${escapeRegExp(displayName)}\\s+found\\b([^.!?]*)`, "i");
+  const match = text.match(pattern);
+  if (!match) return null;
+  const claim = match[1]?.trim();
+  return claim ? claim : null;
+}
+
+function contributionMatchesFindingClaim(contributionSummary: string, claim: string): boolean {
+  const normalizedContribution = normalizeAttributionText(contributionSummary);
+  const normalizedClaim = normalizeAttributionText(claim);
+  if (!normalizedContribution || !normalizedClaim) return false;
+  if (normalizedContribution.includes(normalizedClaim) || normalizedClaim.includes(normalizedContribution)) return true;
+
+  const contributionTokens = new Set(attributionTokens(contributionSummary));
+  const sharedTokenCount = attributionTokens(claim).filter((token) => contributionTokens.has(token)).length;
+  return sharedTokenCount >= 2;
+}
+
 function hasUnprovenSelectedAgentAttribution(text: string | undefined, delegation: NapoleonDelegation | undefined): boolean {
   if (!text) return false;
   const protectedAgentNames = ["Passive Brain"];
@@ -393,10 +445,10 @@ function hasUnprovenSelectedAgentAttribution(text: string | undefined, delegatio
     ...(delegation?.selectedAgents.map((agent) => agent.displayName) ?? []),
   ];
   return [...new Set(displayNames)].some((displayName) => {
-    const claimsFinding = new RegExp(`\\b${escapeRegExp(displayName)}\\s+found\\b`, "i").test(text);
-    if (!claimsFinding) return false;
+    const findingClaim = extractSelectedAgentFindingClaim(text, displayName);
+    if (!findingClaim) return false;
     const agent = delegation?.selectedAgents.find((candidate) => candidate.displayName === displayName);
-    return !agent?.contributionSummary;
+    return !agent?.contributionSummary || !contributionMatchesFindingClaim(agent.contributionSummary, findingClaim);
   });
 }
 

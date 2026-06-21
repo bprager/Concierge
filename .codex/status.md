@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-06-20
+Last updated: 2026-06-21
 
 ## Current Project State
 
@@ -10,7 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
-- Hardened live bridge response validation so returned selected-agent "found" claims require that same selected agent to include returned contribution proof, keeping Concierge from amplifying unproven agent findings.
+- Hardened live bridge response validation so returned selected-agent "found" claims require that same selected agent to include matching returned contribution proof, keeping Concierge from amplifying unproven or mismatched agent findings.
 - Added sanitized endpoint-resolution provenance to live-runtime preflight reports so explicit bridge/evaluator configuration and evaluator-derived bridge bases are auditable without storing endpoint hosts or tokens.
 - Hardened repository validation so bracketed `postMessage`, share, service-worker registration, sendBeacon, and push subscription aliases are blocked when invoked through `.call(...)` or `.apply(...)`, closing more browser data-transfer paths around the governed bridge.
 - Hardened repository validation so bracketed cross-context channel, notification, payment, file-picker, and file-reader APIs are blocked when invoked through `.call(...)` or `.apply(...)`, closing additional browser side-channel aliases around the governed bridge.
