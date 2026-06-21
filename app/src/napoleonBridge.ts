@@ -388,7 +388,11 @@ function escapeRegExp(value: string): string {
 function hasUnprovenSelectedAgentAttribution(text: string | undefined, delegation: NapoleonDelegation | undefined): boolean {
   if (!text) return false;
   const protectedAgentNames = ["Passive Brain"];
-  return protectedAgentNames.some((displayName) => {
+  const displayNames = [
+    ...protectedAgentNames,
+    ...(delegation?.selectedAgents.map((agent) => agent.displayName) ?? []),
+  ];
+  return [...new Set(displayNames)].some((displayName) => {
     const claimsFinding = new RegExp(`\\b${escapeRegExp(displayName)}\\s+found\\b`, "i").test(text);
     if (!claimsFinding) return false;
     const agent = delegation?.selectedAgents.find((candidate) => candidate.displayName === displayName);

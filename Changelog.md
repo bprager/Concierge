@@ -10,6 +10,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 - Added explicit advisory `/cos` endpoint-form and required-proof rows to the governed route panel for descriptor discovery, capability discovery, and text turns, including `/cos/trace/{trace_id}` proof wording for text sends without exposing endpoint hosts or tokens.
 - Added `/cos` base endpoint support for explicit Napoleon advisory harness text sends, normalizing `/cos`, `/cos/descriptor`, and `/cos/capabilities` to `/cos/text-turn` without changing authority boundaries.
+- Hardened live bridge response validation so any selected agent named in a returned "found" claim must include returned contribution proof, not only the built-in Passive Brain attribution guard.
 - Added a sanitized live-runtime promotion review draft to the combined validation runner so bridge evidence, evaluator status, artifact privacy, and non-authority boundaries are retained without endpoint hosts, tokens, prompts, or response text.
 - Added a machine-readable live-runtime promotion readiness gate with blocking reasons so local harness or simulation evidence cannot be mistaken for locally promotion-ready real Napoleon evidence.
 - Added sanitized endpoint-resolution provenance to live-runtime preflight reports so explicit bridge/evaluator endpoints can be distinguished from derived endpoints without storing hosts or tokens.

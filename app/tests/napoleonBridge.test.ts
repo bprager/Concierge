@@ -596,6 +596,81 @@ test("live bridge fails closed when advisory harness text invents Napoleon recom
   );
 });
 
+test("live bridge fails closed when returned selected-agent finding lacks contribution proof", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_agent_finding_without_proof",
+          conversationId: "conv_agent_finding_without_proof",
+          turnId: "turn_agent_finding_without_proof",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Summarize the governed bridge status",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Research Analyst found bridge rollout context.",
+              profileMode: "adult_owner",
+              governanceDecision: {
+                decision_id: "decision_agent_finding_without_proof",
+                request_id: "cos_turn_agent_finding_without_proof",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["memory_write", "external_send"],
+                trace_id: "trace_agent_finding_without_proof",
+                audit_id: "audit_agent_finding_without_proof",
+              },
+              traceEnvelope: {
+                trace_id: "trace_agent_finding_without_proof",
+                parent_trace_id: "conv_agent_finding_without_proof",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_agent_finding_without_proof",
+                decision_id: "decision_agent_finding_without_proof",
+                timestamp: "2026-06-11T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_agent_finding_without_proof",
+                trace_id: "trace_agent_finding_without_proof",
+                decision_id: "decision_agent_finding_without_proof",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_agent_finding_without_proof"],
+              },
+              delegation: {
+                selectedAgents: [
+                  {
+                    agentId: "napoleon.research_analyst",
+                    displayName: "Research Analyst",
+                    selectionReason: "Bridge rollout context may be relevant.",
+                  },
+                ],
+                allowedEffects: ["prepare_advisory_response"],
+                blockedEffects: ["memory_write", "external_send"],
+                governanceState: "requires_review",
+                traceId: "trace_agent_finding_without_proof",
+                auditId: "audit_agent_finding_without_proof",
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
 test("live bridge fails closed when advisory harness text claims side effects were performed", async () => {
   const events: TelemetryPayload[] = [];
   const evidence: unknown[] = [];
