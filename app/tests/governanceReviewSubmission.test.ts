@@ -26,6 +26,19 @@ const readyDescriptorConnection = {
   signatureValid: true,
 };
 
+const textTurnOnlyRuntimeDescriptorConnection = {
+  endpointConfigured: true,
+  descriptor: {
+    schemaVersion: "napoleon/concierge/runtime-descriptor/v1",
+    serviceId: "napoleon.chief_of_staff" as const,
+    runtimeAuthority: false as const,
+    commandExecution: false as const,
+    cachePolicy: "runtime_descriptor_live_response" as const,
+    blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+    supportedHandoffs: ["text_turn" as const],
+  },
+};
+
 function buildReview(profile: "adult_owner" | "child_protected" = "adult_owner") {
   const contract = buildTextTurnContract({
     message: "Please prepare this for review before sending it outside this chat",
@@ -126,6 +139,41 @@ test("governance review submission preserves descriptor discovery auth failure b
 
   assert.equal(fetchCalled, false);
   assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "auth_failure");
+});
+
+test("governance review submission fails closed before fetch when descriptor lacks governance review route", async () => {
+  const review = buildReview();
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitGovernanceReviewForNapoleonReview(review, {
+        conversationId: "conv_governance",
+        traceId: "trace_submit_missing_governance_route",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: textTurnOnlyRuntimeDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "descriptor_invalid" &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(governanceReviewBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "governance_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "descriptor_mismatch");
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "descriptor_invalid");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, governanceReviewBlockedEffects);
 });
 
 test("governance review submission rejects an adult review when child protected is active before fetch", async () => {

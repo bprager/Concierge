@@ -5,6 +5,7 @@ import type { CapabilityArchitectureArea, ConversationCapabilitySignal, Recommen
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
   buildDescriptorConnectionState,
+  descriptorSupportsGovernedHandoff,
   mapProfileToNapoleonMode,
   type AuditEnvelope,
   type ChiefOfStaffRequest,
@@ -718,6 +719,17 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
       undefined,
       TAXONOMY_REVIEW_BLOCKED_EFFECTS,
       descriptorConnection.failClosedReason,
+    );
+  }
+  if (!descriptorSupportsGovernedHandoff(descriptorConnection, "taxonomy_review")) {
+    failTaxonomyReviewClosed(
+      dependencies,
+      "descriptor_mismatch",
+      requestId,
+      profileMode,
+      undefined,
+      TAXONOMY_REVIEW_BLOCKED_EFFECTS,
+      "descriptor_invalid",
     );
   }
 

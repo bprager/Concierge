@@ -4,6 +4,7 @@ import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
   buildDescriptorConnectionState,
+  descriptorSupportsGovernedHandoff,
   mapProfileToNapoleonMode,
   type AuditEnvelope,
   type ChiefOfStaffRequest,
@@ -286,6 +287,20 @@ export async function submitGovernanceReviewForNapoleonReview(
       undefined,
       GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
       descriptorConnection.failClosedReason,
+    );
+  }
+  if (!descriptorSupportsGovernedHandoff(descriptorConnection, "governance_review")) {
+    failGovernanceReviewClosed(
+      dependencies,
+      "descriptor_mismatch",
+      dependencies.traceId,
+      requestId,
+      review.decisionId,
+      review.auditId,
+      review.profile,
+      undefined,
+      GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
+      "descriptor_invalid",
     );
   }
 

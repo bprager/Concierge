@@ -21,6 +21,19 @@ import {
 } from "../src/capabilityTaxonomy.js";
 import { defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
 
+const textTurnOnlyRuntimeDescriptorConnection = {
+  endpointConfigured: true,
+  descriptor: {
+    schemaVersion: "napoleon/concierge/runtime-descriptor/v1",
+    serviceId: "napoleon.chief_of_staff" as const,
+    runtimeAuthority: false as const,
+    commandExecution: false as const,
+    cachePolicy: "runtime_descriptor_live_response" as const,
+    blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+    supportedHandoffs: ["text_turn" as const],
+  },
+};
+
 function addWorkingSignal(
   ledger: ReturnType<typeof createCapabilityLedger>,
   options: { traceId: string; topic: string; intent?: string; capability: string; architecture?: "text_ui" | "memory_review" },
@@ -513,6 +526,53 @@ test("taxonomy review handoff rejects an adult draft when child protected is act
   assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
   assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
   assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
+});
+
+test("taxonomy review handoff fails closed before fetch when descriptor lacks taxonomy review route", async () => {
+  const ledger = createCapabilityLedger();
+  addWorkingSignal(ledger, { traceId: "trace_taxonomy_route_1", topic: "deploy", capability: "release_summary" });
+  addWorkingSignal(ledger, { traceId: "trace_taxonomy_route_2", topic: "deployment", capability: "release_summary" });
+  const draft = draftChiefOfStaffTaxonomyReview(ledger.listRecent(), createCapabilityTaxonomy(), {
+    conversationId: "conv_taxonomy_missing_route",
+    traceId: "trace_taxonomy_missing_route_draft",
+  });
+  let fetchCalled = false;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffTaxonomyReviewDraft(draft, {
+        conversationId: "conv_taxonomy_missing_route",
+        traceId: "trace_taxonomy_missing_route_submit",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: textTurnOnlyRuntimeDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "descriptor_invalid" &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(["memory_write", "agent_dispatch", "external_send", "approval_capture", "runtime_authority"]),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "capability_taxonomy_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "descriptor_mismatch");
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "descriptor_invalid");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
+    "memory_write",
+    "agent_dispatch",
+    "external_send",
+    "approval_capture",
+    "runtime_authority",
+  ]);
 });
 
 test("taxonomy review handoff rejects a child draft when adult owner is active before fetch", async () => {

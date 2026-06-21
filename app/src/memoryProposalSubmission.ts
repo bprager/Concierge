@@ -5,6 +5,7 @@ import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage }
 import {
   buildDescriptorConnectionState,
   defaultChiefOfStaffDescriptor,
+  descriptorSupportsGovernedHandoff,
   mapProfileToNapoleonMode,
   type AuditEnvelope,
   type ChiefOfStaffRequest,
@@ -269,6 +270,19 @@ export async function submitMemoryProposalForReview(
       undefined,
       blockedEffects,
       descriptorConnection.failClosedReason,
+    );
+  }
+  if (!descriptorSupportsGovernedHandoff(descriptorConnection, "memory_proposal_review")) {
+    failMemoryProposalClosed(
+      dependencies,
+      "descriptor_mismatch",
+      dependencies.traceId,
+      requestId,
+      memoryProposal.proposalId,
+      profileMode,
+      undefined,
+      blockedEffects,
+      "descriptor_invalid",
     );
   }
 
