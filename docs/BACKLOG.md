@@ -297,7 +297,7 @@ Acceptance criteria:
 - Concierge only attributes recommendations or agent findings when the bridge response includes that provenance.
 - Successful text responses that claim Napoleon recommendations, such as "Napoleon recommends...", must include matching recommendation provenance with the recommended contribution and response trace/audit references or fail closed as a contract mismatch.
 - Adapted explicit `/cos/text-turn` advisory responses follow the same attribution boundary and fail closed when their answer text claims a Napoleon recommendation or selected-agent finding without matching returned provenance.
-- Returned recommendation provenance must also match the response trace and audit envelopes before Concierge can keep or display it, even when the response text does not explicitly claim "Napoleon recommends...".
+- Returned recommendation provenance must also match the accepted response text plus the response trace and audit envelopes before Concierge can keep or display it, even when the response text does not explicitly claim "Napoleon recommends...".
 - Successful text responses that claim selected-agent findings, such as "Passive Brain found...", must include matching selected-agent contribution provenance or fail closed as a contract mismatch.
 - Successful text responses that imply blocked side effects happened, including shorthand external-send claims such as "sent it", must fail closed as contract mismatches even when explicit side-effect boundary fields are false.
 - Governed review handoff responses that imply blocked side effects happened, including local proposal application claims, must fail closed as contract mismatches even when explicit side-effect boundary fields are false.

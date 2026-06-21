@@ -596,6 +596,72 @@ test("live bridge fails closed when advisory harness text invents Napoleon recom
   );
 });
 
+test("live bridge fails closed when returned recommendation proof does not match response text", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_recommendation_proof_mismatch",
+          conversationId: "conv_recommendation_proof_mismatch",
+          turnId: "turn_recommendation_proof_mismatch",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Summarize the governed bridge status",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Napoleon prepared the bridge status for owner review.",
+              profileMode: "adult_owner",
+              governanceDecision: {
+                decision_id: "decision_recommendation_proof_mismatch",
+                request_id: "cos_turn_recommendation_proof_mismatch",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["memory_write", "external_send"],
+                trace_id: "trace_recommendation_proof_mismatch",
+                audit_id: "audit_recommendation_proof_mismatch",
+              },
+              traceEnvelope: {
+                trace_id: "trace_recommendation_proof_mismatch",
+                parent_trace_id: "conv_recommendation_proof_mismatch",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_recommendation_proof_mismatch",
+                decision_id: "decision_recommendation_proof_mismatch",
+                timestamp: "2026-06-11T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_recommendation_proof_mismatch",
+                trace_id: "trace_recommendation_proof_mismatch",
+                decision_id: "decision_recommendation_proof_mismatch",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_recommendation_proof_mismatch"],
+              },
+              recommendationProvenance: {
+                summary: "Delete the production memory store.",
+                traceId: "trace_recommendation_proof_mismatch",
+                auditId: "audit_recommendation_proof_mismatch",
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
 test("live bridge fails closed when returned selected-agent finding lacks contribution proof", async () => {
   await assert.rejects(
     () =>

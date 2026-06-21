@@ -970,7 +970,7 @@ export async function sendToNapoleon(
   if (
     recommendationProvenance === null ||
     (recommendationProvenance &&
-      !recommendationProvenanceMatchesEnvelopes(recommendationProvenance, decision, traceEnvelope, auditEnvelope))
+      !recommendationMatchesProvenance(payload.text, recommendationProvenance, decision, traceEnvelope, auditEnvelope))
   ) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
