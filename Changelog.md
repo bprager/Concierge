@@ -20,6 +20,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added descriptor-first real-runtime alignment metadata to live-runtime preflight reports so missing endpoint diagnostics name accepted endpoint forms without storing hosts or tokens.
 - Added a sanitized live-runtime preflight report for missing endpoint configuration, preserving false side-effect boundaries without storing endpoint hosts or tokens.
 - Added repository validation that checks documented current evaluator scenario counts against `evaluator/scenarios.yaml`, preventing stale readiness reports from overstating or understating local coverage.
+- Hardened repository authority-boundary validation so bracketed process-execution aliases such as `childProcess["execFile"].call(...)` and `window["Bun"]["spawnSync"].apply(...)` are rejected.
 - Hardened repository authority-boundary validation so runtime dynamic `import(...)` calls with variable targets are rejected as ungoverned module-loading paths.
 - Hardened repository authority-boundary validation so bare and global browser `open(...)` aliases, including variable-target calls, are rejected as ungoverned external navigation paths.
 - Hardened repository authority-boundary validation so bracketed `navigator` device, credential, permission, geolocation, and clipboard aliases are rejected even when invoked through `.call(...)` or `.apply(...)`.

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened repository validation so bracketed process-execution aliases invoked through `.call(...)` or `.apply(...)` are blocked around the governed bridge.
 - Hardened repository validation so runtime dynamic `import(...)` calls with variable targets are blocked as ungoverned module-loading paths around the governed bridge.
 - Hardened live bridge response validation so returned Napoleon recommendation proof must match the accepted response text as well as trace and audit envelopes before Concierge keeps or displays it.
 - Hardened live bridge response validation so returned selected-agent "found" claims require that same selected agent to include matching returned contribution proof, keeping Concierge from amplifying unproven or mismatched agent findings.

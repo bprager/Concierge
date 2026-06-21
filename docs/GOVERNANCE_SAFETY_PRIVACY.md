@@ -27,7 +27,7 @@ It may not directly:
 - Act for a child without guardian-appropriate approval
 - Bypass Napoleon governance
 
-Repository validation scans Concierge runtime source for direct process execution, memory or graph access, agent or tool dispatch, ungoverned network calls, runtime dynamic module loading, and external navigation paths including browser `open(...)` aliases with literal or variable targets. The scan is a guardrail, not authority: it catches local implementation drift while Napoleon remains the only authority layer.
+Repository validation scans Concierge runtime source for direct process execution including bracketed `.call(...)` and `.apply(...)` aliases, memory or graph access, agent or tool dispatch, ungoverned network calls, runtime dynamic module loading, and external navigation paths including browser `open(...)` aliases with literal or variable targets. The scan is a guardrail, not authority: it catches local implementation drift while Napoleon remains the only authority layer.
 
 ## 2. Confirmation tiers
 
