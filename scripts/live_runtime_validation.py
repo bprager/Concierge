@@ -387,6 +387,41 @@ def eval_counts(path: Path) -> dict[str, Any]:
     }
 
 
+def eval_target_summary(path: Path) -> dict[str, Any]:
+    defaults = {
+        "targetPath": None,
+        "targetRequestKind": None,
+        "targetOperationId": None,
+        "endpointHostRetained": False,
+        "tokenRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        "approvalCaptured": False,
+        "memoryWritePerformed": False,
+        "agentDispatchPerformed": False,
+        "externalSendPerformed": False,
+    }
+    if not path.exists():
+        return defaults
+    report = load_json(path)
+    target = report.get("evaluationTarget") if isinstance(report, dict) else None
+    if not isinstance(target, dict):
+        return defaults
+    return {
+        "targetPath": target.get("path"),
+        "targetRequestKind": target.get("requestKind"),
+        "targetOperationId": target.get("operationId"),
+        "endpointHostRetained": target.get("endpointHostRetained") is True,
+        "tokenRetained": target.get("tokenRetained") is True,
+        "requestBodyRetained": target.get("requestBodyRetained") is True,
+        "responseBodyRetained": target.get("responseBodyRetained") is True,
+        "approvalCaptured": target.get("approvalCaptured") is True,
+        "memoryWritePerformed": target.get("memoryWritePerformed") is True,
+        "agentDispatchPerformed": target.get("agentDispatchPerformed") is True,
+        "externalSendPerformed": target.get("externalSendPerformed") is True,
+    }
+
+
 def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
     runtime = summary["runtimeValidation"]
     bridge = summary["bridgeEvidence"]
@@ -439,6 +474,9 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- HTTP evaluator status: `{evaluator['status']}`",
         f"- HTTP evaluator run ID: `{evaluator['run_id']}`",
         f"- HTTP evaluator score: `{evaluator['score_total']}`",
+        f"- HTTP evaluator target path: `{evaluator['targetPath']}`",
+        f"- HTTP evaluator request kind: `{evaluator['targetRequestKind']}`",
+        f"- HTTP evaluator operation ID: `{evaluator['targetOperationId']}`",
         f"- Hard failure count: `{evaluator['hard_fail_count']}`",
         f"- Missing artifact count: `{evaluator['missing_artifact_count']}`",
         f"- Regression count: `{evaluator['regression_count']}`",
@@ -499,6 +537,7 @@ def write_summary(
             "path": str(eval_report_path),
             "sanitized": eval_report_path.exists(),
             **eval_counts(eval_report_path),
+            **eval_target_summary(eval_report_path),
         },
         "artifactPrivacy": artifact_privacy,
         "promotionBoundary": {
