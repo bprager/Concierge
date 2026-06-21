@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added sanitized endpoint-resolution provenance to live-runtime preflight reports so explicit bridge/evaluator configuration and evaluator-derived bridge bases are auditable without storing endpoint hosts or tokens.
 - Hardened repository validation so bracketed `postMessage`, share, service-worker registration, sendBeacon, and push subscription aliases are blocked when invoked through `.call(...)` or `.apply(...)`, closing more browser data-transfer paths around the governed bridge.
 - Hardened repository validation so bracketed cross-context channel, notification, payment, file-picker, and file-reader APIs are blocked when invoked through `.call(...)` or `.apply(...)`, closing additional browser side-channel aliases around the governed bridge.
 - Hardened repository validation so bracketed `navigator` device, credential, permission, geolocation, and clipboard APIs are still blocked when invoked through `.call(...)` or `.apply(...)`, preventing those local-device and data-transfer side channels from bypassing visible Concierge controls.

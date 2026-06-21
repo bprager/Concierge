@@ -99,25 +99,63 @@ def endpoint_from_env(env: dict[str, str], key: str) -> str | None:
     return value.strip() if value and value.strip() else None
 
 
+def resolve_endpoint_configuration(
+    bridge_endpoint: str | None,
+    eval_endpoint: str | None,
+    env: dict[str, str],
+) -> dict[str, Any]:
+    bridge_arg = bridge_endpoint.strip() if bridge_endpoint and bridge_endpoint.strip() else None
+    eval_arg = eval_endpoint.strip() if eval_endpoint and eval_endpoint.strip() else None
+    bridge_env = endpoint_from_env(env, "NAPOLEON_BRIDGE_ENDPOINT")
+    eval_env = endpoint_from_env(env, "NAPOLEON_EVAL_ENDPOINT")
+
+    bridge = bridge_arg or bridge_env
+    evaluator = eval_arg or eval_env
+    bridge_resolution = "argument" if bridge_arg else "env:NAPOLEON_BRIDGE_ENDPOINT" if bridge_env else "missing"
+    evaluator_resolution = "argument" if eval_arg else "env:NAPOLEON_EVAL_ENDPOINT" if eval_env else "missing"
+
+    if bridge is None and evaluator is not None:
+        bridge = strip_known_path(evaluator)
+        bridge_resolution = "derived_from_evaluator_endpoint"
+    if evaluator is None and bridge is not None:
+        evaluator = derive_eval_endpoint(bridge)
+        evaluator_resolution = "derived_from_bridge_endpoint"
+
+    return {
+        "bridgeEndpoint": bridge,
+        "evalEndpoint": evaluator,
+        "resolution": {
+            "bridgeEndpointResolution": bridge_resolution,
+            "evaluatorEndpointResolution": evaluator_resolution,
+            "bridgeEndpointExplicitlyConfigured": bridge_resolution in {"argument", "env:NAPOLEON_BRIDGE_ENDPOINT"},
+            "evaluatorEndpointExplicitlyConfigured": evaluator_resolution in {"argument", "env:NAPOLEON_EVAL_ENDPOINT"},
+        },
+    }
+
+
 def resolve_endpoints(
     bridge_endpoint: str | None,
     eval_endpoint: str | None,
     env: dict[str, str],
 ) -> tuple[str | None, str | None]:
-    bridge = bridge_endpoint.strip() if bridge_endpoint and bridge_endpoint.strip() else endpoint_from_env(env, "NAPOLEON_BRIDGE_ENDPOINT")
-    evaluator = eval_endpoint.strip() if eval_endpoint and eval_endpoint.strip() else endpoint_from_env(env, "NAPOLEON_EVAL_ENDPOINT")
-
-    if bridge is None and evaluator is not None:
-        bridge = strip_known_path(evaluator)
-    if evaluator is None and bridge is not None:
-        evaluator = derive_eval_endpoint(bridge)
-    return bridge, evaluator
+    config = resolve_endpoint_configuration(bridge_endpoint, eval_endpoint, env)
+    return config["bridgeEndpoint"], config["evalEndpoint"]
 
 
-def live_runtime_preflight(bridge_endpoint: str | None, eval_endpoint: str | None) -> dict[str, Any]:
+def live_runtime_preflight(
+    bridge_endpoint: str | None,
+    eval_endpoint: str | None,
+    endpoint_resolution: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     bridge_configured = bridge_endpoint is not None
     eval_configured = eval_endpoint is not None
     missing_configuration = [] if bridge_configured else ["NAPOLEON_BRIDGE_ENDPOINT"]
+    resolution = endpoint_resolution or {
+        "bridgeEndpointResolution": "configured" if bridge_configured else "missing",
+        "evaluatorEndpointResolution": "configured" if eval_configured else "missing",
+        "bridgeEndpointExplicitlyConfigured": bridge_configured,
+        "evaluatorEndpointExplicitlyConfigured": eval_configured,
+    }
     return {
         "status": "ready_to_attempt" if bridge_configured else "blocked",
         "reason": "ready" if bridge_configured else "missing_bridge_endpoint",
@@ -138,6 +176,7 @@ def live_runtime_preflight(bridge_endpoint: str | None, eval_endpoint: str | Non
             "localHarnessSubstituteAllowed": False,
             "nextValidationCommand": "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make live-runtime-validation",
             "boundary": "A local harness or simulation can test shape only; it cannot prove real Napoleon runtime readiness.",
+            **resolution,
         },
         "endpointHostStored": False,
         "tokenStored": False,
@@ -150,8 +189,13 @@ def live_runtime_preflight(bridge_endpoint: str | None, eval_endpoint: str | Non
     }
 
 
-def write_preflight(path: Path, bridge_endpoint: str | None, eval_endpoint: str | None) -> dict[str, Any]:
-    preflight = live_runtime_preflight(bridge_endpoint, eval_endpoint)
+def write_preflight(
+    path: Path,
+    bridge_endpoint: str | None,
+    eval_endpoint: str | None,
+    endpoint_resolution: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    preflight = live_runtime_preflight(bridge_endpoint, eval_endpoint, endpoint_resolution)
     path.write_text(json.dumps(preflight, indent=2) + "\n", encoding="utf-8")
     return preflight
 
@@ -492,11 +536,14 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
 
     active_env = os.environ if env is None else env
     auth_token = args.auth_token or endpoint_from_env(active_env, "NAPOLEON_EVAL_TOKEN")
-    bridge_endpoint, eval_endpoint = resolve_endpoints(args.bridge_endpoint, args.eval_endpoint, active_env)
+    endpoint_config = resolve_endpoint_configuration(args.bridge_endpoint, args.eval_endpoint, active_env)
+    bridge_endpoint = endpoint_config["bridgeEndpoint"]
+    eval_endpoint = endpoint_config["evalEndpoint"]
+    endpoint_resolution = endpoint_config["resolution"]
     if bridge_endpoint is None:
         out_dir = Path(args.out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
-        write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint)
+        write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint, endpoint_resolution)
         print(
             "live runtime validation requires --bridge-endpoint, NAPOLEON_BRIDGE_ENDPOINT, "
             "or NAPOLEON_EVAL_ENDPOINT",
@@ -506,7 +553,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint)
+    write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint, endpoint_resolution)
     evidence_path = out_dir / "bridge_evidence.json"
     eval_report_path = out_dir / "eval_http.json"
     summary_path = out_dir / "summary.json"

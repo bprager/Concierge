@@ -115,6 +115,27 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(bridge, "http://127.0.0.1:8787")
         self.assertEqual(evaluator, "http://127.0.0.1:8787/v1/concierge/evaluate")
 
+    def test_endpoint_resolution_records_source_without_retaining_endpoint_values(self):
+        config = live_runtime_validation.resolve_endpoint_configuration(
+            None,
+            None,
+            {"NAPOLEON_EVAL_ENDPOINT": "http://127.0.0.1:8787/v1/concierge/evaluate"},
+        )
+        preflight = live_runtime_validation.live_runtime_preflight(
+            config["bridgeEndpoint"],
+            config["evalEndpoint"],
+            config["resolution"],
+        )
+
+        self.assertEqual(config["bridgeEndpoint"], "http://127.0.0.1:8787")
+        self.assertEqual(config["evalEndpoint"], "http://127.0.0.1:8787/v1/concierge/evaluate")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeEndpointResolution"], "derived_from_evaluator_endpoint")
+        self.assertEqual(preflight["runtimeAlignment"]["evaluatorEndpointResolution"], "env:NAPOLEON_EVAL_ENDPOINT")
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeEndpointExplicitlyConfigured"])
+        self.assertTrue(preflight["runtimeAlignment"]["evaluatorEndpointExplicitlyConfigured"])
+        self.assertNotIn("127.0.0.1", json.dumps(preflight))
+        self.assertNotIn("8787", json.dumps(preflight))
+
     def test_derives_eval_endpoint_from_bridge_base(self):
         bridge, evaluator = live_runtime_validation.resolve_endpoints(
             "http://127.0.0.1:8787/v1/concierge/turn",
