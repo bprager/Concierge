@@ -438,6 +438,9 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added `make live-runtime-validation` and `make live-runtime-local-harness` so descriptor discovery, sanitized bridge evidence capture/comparison, evaluator HTTP mode, and non-authorizing runtime summaries can be run together once a real Napoleon runtime endpoint exists.
 - Fixed `make live-runtime-validation` so `NAPOLEON_BRIDGE_ENDPOINT` alone is enough to run the full live-runtime validation path, with `/v1/concierge/evaluate` derived from the bridge base URL when `NAPOLEON_EVAL_ENDPOINT` is not set.
 - Fixed standalone bridge evidence capture so `NAPOLEON_BRIDGE_ENDPOINT` may be a base URL or known Concierge bridge operation URL without duplicating descriptor or text-turn paths.
+- Aligned standalone bridge evidence capture with the real Napoleon `/cos` runtime: generated base URLs can fall back to `/cos/descriptor` when generated descriptor routes are absent, authority-safe live runtime descriptors without file-manifest cache policy are accepted, and `/cos/text-turn` capture now sends `napoleon/concierge/text-turn/v1` with `governance_review` and `advisory_prepare_only`.
+- Ran `NAPOLEON_BRIDGE_ENDPOINT=http://127.0.0.1:18765 make live-runtime-validation` through an SSH tunnel to `bernd@mimir` serving Napoleon's `/cos` bridge; sanitized real-runtime bridge evidence passed with `/cos/text-turn`, `allow_prepare_only`, selected agent `agent.reviewed.napoleon_runtime_harness`, blocked effects, and matching `/cos/trace/{trace_id}` proof, while HTTP evaluator mode failed because that runtime exposes no evaluator route.
+- Hardened combined live-runtime validation so HTTP evaluator failures after successful bridge capture write a sanitized summary and promotion review with `http_evaluator_failed`, without retaining endpoint values or exception text.
 - Fixed combined live-runtime validation so known Concierge bridge operation URLs derive `/v1/concierge/evaluate` from the bridge base instead of duplicating descriptor, steering, memory proposal, or turn paths.
 - Fixed Text Concierge bridge URL resolution so known operation URLs pasted into the endpoint setting are normalized through the generated bridge operation registry before descriptor, text-turn, steering, memory proposal, or evaluator paths are resolved.
 - Added `runtimeValidation.source` and caveat fields to live-runtime validation summaries so local harness and simulation artifacts remain distinct from real Napoleon runtime validation evidence.
@@ -463,7 +466,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Next 3 To 5 Priorities
 
-1. Run combined live-runtime validation against a configured real Napoleon `/cos/descriptor` and `/cos/text-turn` endpoint, or get Napoleon to expose `/v1/concierge/...`, before treating `/cos` adaptation as production live readiness.
+1. Get Napoleon to expose an evaluator HTTP route compatible with `make eval-http`, or provide `NAPOLEON_EVAL_ENDPOINT`; real `/cos/descriptor` and `/cos/text-turn` bridge evidence now passes, but promotion remains blocked until evaluator HTTP mode also passes.
 2. Run `make napoleon-contract-alignment` against each new Napoleon integration OpenAPI snapshot before changing bridge paths.
 3. Run `make live-runtime-validation` against a real Napoleon runtime endpoint once the bridge paths and response shapes are aligned.
 4. Validate governance review, memory proposal, steering, and taxonomy handoffs against a real Napoleon runtime once the descriptor exposes live transport URLs and credentials.

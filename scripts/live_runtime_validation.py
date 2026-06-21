@@ -475,6 +475,7 @@ def write_summary(
     promotion_review_path: Path,
     bridge_exit_code: int,
     eval_exit_code: int | None,
+    eval_failure_reason: str | None,
     evidence_path: Path,
     eval_report_path: Path,
     runtime_validation_source: str,
@@ -494,6 +495,7 @@ def write_summary(
         },
         "httpEvaluator": {
             "status": "passed" if eval_exit_code == 0 else "failed" if eval_exit_code is not None else "not_run",
+            "failureReason": eval_failure_reason or "none",
             "path": str(eval_report_path),
             "sanitized": eval_report_path.exists(),
             **eval_counts(eval_report_path),
@@ -571,9 +573,18 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         print(bridge_stderr, end="", file=sys.stderr)
 
     eval_exit_code: int | None = None
+    eval_failure_reason: str | None = None
     if bridge_exit_code == 0 and eval_endpoint is not None:
-        eval_exit_code = run_http_eval(eval_endpoint, eval_report_path, auth_token)
-        sanitize_eval_report(eval_report_path)
+        try:
+            eval_exit_code = run_http_eval(eval_endpoint, eval_report_path, auth_token)
+            sanitize_eval_report(eval_report_path)
+        except Exception as exc:
+            eval_exit_code = 1
+            eval_failure_reason = "http_evaluator_failed"
+            print(
+                f"HTTP evaluator mode failed with {exc.__class__.__name__}; summary will record sanitized failure.",
+                file=sys.stderr,
+            )
 
     sensitive_values = {
         value
@@ -593,6 +604,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         promotion_review_path,
         bridge_exit_code,
         eval_exit_code,
+        eval_failure_reason,
         evidence_path,
         eval_report_path,
         args.runtime_validation_source,

@@ -10,6 +10,8 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 - Added explicit advisory `/cos` endpoint-form and required-proof rows to the governed route panel for descriptor discovery, capability discovery, and text turns, including `/cos/trace/{trace_id}` proof wording for text sends without exposing endpoint hosts or tokens.
 - Added `/cos` base endpoint support for explicit Napoleon advisory harness text sends, normalizing `/cos`, `/cos/descriptor`, and `/cos/capabilities` to `/cos/text-turn` without changing authority boundaries.
+- Added real Napoleon `/cos` runtime bridge evidence alignment so base URLs can fall back to `/cos/descriptor`, live runtime descriptors without file-manifest cache policy are accepted only when authority-safe, and `/cos/text-turn` captures use the current text-turn contract.
+- Hardened live-runtime validation so missing or failing evaluator HTTP routes are reported as sanitized summary failures after bridge capture instead of leaking endpoint details through tracebacks.
 - Hardened live bridge side-effect claim detection so returned text that says a prepared result was approved or authorized fails closed even when explicit side-effect fields are false.
 - Hardened live bridge side-effect claim detection so returned text that says a prepared result was scheduled or booked fails closed even when explicit side-effect fields are false.
 - Hardened live bridge side-effect claim detection so returned text that says a prepared result was submitted fails closed even when explicit side-effect fields are false.

@@ -163,7 +163,9 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertEqual(harness.last_post_path, "/cos/text-turn")
         self.assertEqual(harness.last_auth_header, "token_cos_capture")
         self.assertEqual(harness.last_turn_payload["profile_mode"], "adult_owner")
-        self.assertEqual(harness.last_turn_payload["requested_capability"], "napoleon.chief_of_staff")
+        self.assertEqual(harness.last_turn_payload["contract_version"], "napoleon/concierge/text-turn/v1")
+        self.assertEqual(harness.last_turn_payload["requested_capability"], "governance_review")
+        self.assertEqual(harness.last_turn_payload["authority_tier"], "advisory_prepare_only")
         self.assertEqual(records[0]["targetPath"], "/cos/text-turn")
         self.assertEqual(records[0]["requestKind"], "text_turn")
         self.assertEqual(records[0]["runtimeValidationSource"], "local_harness")
@@ -174,6 +176,63 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertEqual(bridge_evidence_compare.compare_bridge_evidence_records(records), [])
         self.assertFalse("token_cos_capture" in json.dumps(records))
         self.assertFalse(harness.base_url in json.dumps(records))
+
+    def test_capture_runner_falls_back_to_cos_descriptor_for_runtime_base_url(self):
+        with RecordingCosHarness(descriptor_ready=True) as harness:
+            with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    exit_code = bridge_evidence_capture.main(
+                        [
+                            "--endpoint",
+                            harness.base_url,
+                            "--out",
+                            handle.name,
+                            "--runtime-validation-source",
+                            "local_harness",
+                        ]
+                    )
+                handle.seek(0)
+                records = json.load(handle)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(
+            harness.get_paths,
+            [
+                "/v1/concierge/chief-of-staff/descriptor",
+                "/cos/descriptor",
+                "/cos/trace/trace_bridge_evidence_capture",
+            ],
+        )
+        self.assertEqual(harness.last_post_path, "/cos/text-turn")
+        self.assertEqual(records[0]["targetPath"], "/cos/text-turn")
+
+    def test_descriptor_preflight_accepts_live_runtime_descriptor_shape_without_file_cache_policy(self):
+        preflight = bridge_evidence_capture.descriptor_connection_from_response(
+            200,
+            {
+                "schema_version": "napoleon/concierge/runtime-descriptor/v1",
+                "service_id": "napoleon.chief_of_staff",
+                "runtime_authority": False,
+                "command_execution": False,
+                "endpoints": {
+                    "descriptor": "GET /cos/descriptor",
+                    "text_turn": "POST /cos/text-turn",
+                    "trace": "GET /cos/trace/{trace_id}",
+                },
+                "supported_authority_tiers": ["advisory_prepare_only"],
+                "blocked_effects": [
+                    "runtime_authority",
+                    "memory_write",
+                    "approval_capture",
+                    "agent_dispatch",
+                    "external_send",
+                ],
+            },
+        )
+
+        self.assertTrue(preflight["descriptorConnection"]["canAttemptLiveBridge"])
+        self.assertEqual(preflight["descriptorConnection"]["state"], "ready")
+        self.assertEqual(preflight["descriptorStatus"]["cachePolicy"], "runtime_descriptor_live_response")
 
     def test_capture_runner_fails_closed_when_descriptor_discovery_is_invalid(self):
         with RecordingBridgeHarness(descriptor_ready=False) as harness:

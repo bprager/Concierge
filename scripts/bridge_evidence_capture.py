@@ -131,9 +131,24 @@ def descriptor_connection_from_response(status_code: int, payload: dict[str, Any
     runtime_authority = descriptor.get("runtimeAuthority") if "runtimeAuthority" in descriptor else descriptor.get("runtime_authority")
     command_execution = descriptor.get("commandExecution") if "commandExecution" in descriptor else descriptor.get("command_execution")
     service_id = descriptor.get("serviceId") or descriptor.get("service_id")
+    endpoints = descriptor.get("endpoints") if isinstance(descriptor.get("endpoints"), dict) else {}
+    supported_authority_tiers = (
+        descriptor.get("supportedAuthorityTiers")
+        if isinstance(descriptor.get("supportedAuthorityTiers"), list)
+        else descriptor.get("supported_authority_tiers")
+        if isinstance(descriptor.get("supported_authority_tiers"), list)
+        else []
+    )
+    live_runtime_descriptor = (
+        descriptor.get("schema_version") == "napoleon/concierge/runtime-descriptor/v1"
+        and endpoints.get("descriptor") == "GET /cos/descriptor"
+        and endpoints.get("text_turn") == "POST /cos/text-turn"
+        and set(str(tier) for tier in supported_authority_tiers).issubset({"advisory_prepare_only"})
+    )
     fail_closed_cache = (
         descriptor.get("cachePolicy") == "fail_closed_to_review_required"
         or cache_policy.get("stale_descriptor_action") == "fail_closed_to_review_required"
+        or live_runtime_descriptor
     )
     checksum_state = (
         "matched"
@@ -161,7 +176,9 @@ def descriptor_connection_from_response(status_code: int, payload: dict[str, Any
             "runtimeAuthority": runtime_authority is True,
             "cachePolicy": (
                 "fail_closed_to_review_required" if fail_closed_cache else str(descriptor.get("cachePolicy") or "")
-            ),
+            )
+            if not live_runtime_descriptor
+            else "runtime_descriptor_live_response",
             "blockedEffects": [str(effect) for effect in blocked_effects],
         },
         "descriptorConnection": {
@@ -254,11 +271,11 @@ def cos_request_payload(message: str, descriptor_preflight: dict[str, Any]) -> d
     return {
         "request_id": payload["chiefOfStaffRequest"]["request_id"],
         "profile_mode": "adult_owner",
-        "contract_version": "napoleon/concierge/runtime-bridge-schema/v1",
-        "requested_capability": "napoleon.chief_of_staff",
+        "contract_version": "napoleon/concierge/text-turn/v1",
+        "requested_capability": "governance_review",
         "user_text": message,
-        "requested_effects": ["prepare_advisory_response"],
-        "authority_tier": "advisory_review",
+        "requested_effects": [],
+        "authority_tier": "advisory_prepare_only",
         "approval_requirement": "chief_of_staff_review",
         "blocked_effects": payload["blockedEffects"],
         "source_evidence": payload["sourceEvidence"],
@@ -426,6 +443,17 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     cos_mode = is_cos_endpoint(endpoint)
     descriptor_status, descriptor_payload = get_json(descriptor_url(endpoint), args.auth_token, cos_mode)
     descriptor_preflight = descriptor_connection_from_response(descriptor_status, descriptor_payload)
+    if not descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"] and not cos_mode and descriptor_status == 404:
+        cos_descriptor_status, cos_descriptor_payload = get_json(
+            bridge_url(endpoint, "/cos/descriptor"),
+            args.auth_token,
+            True,
+        )
+        cos_descriptor_preflight = descriptor_connection_from_response(cos_descriptor_status, cos_descriptor_payload)
+        if cos_descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"]:
+            cos_mode = True
+            descriptor_payload = cos_descriptor_payload
+            descriptor_preflight = cos_descriptor_preflight
     if not descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"]:
         print("descriptor preflight failed; bridge evidence capture did not send text turn", file=sys.stderr)
         return 1
@@ -436,7 +464,8 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         return 1
 
     payload = cos_request_payload(args.message, descriptor_preflight) if cos_mode else request_payload(args.message, descriptor_preflight)
-    status_code, response_payload = post_json(text_turn_url(endpoint), payload, args.auth_token, cos_mode)
+    target_url = bridge_url(endpoint, "/cos/text-turn") if cos_mode else text_turn_url(endpoint)
+    status_code, response_payload = post_json(target_url, payload, args.auth_token, cos_mode)
     trace_status_code: int | None = None
     trace_payload: dict[str, Any] | None = None
     if cos_mode and 200 <= status_code < 300:

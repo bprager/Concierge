@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from evaluator.tests.test_bridge_evidence_capture import RecordingCosHarness
 from scripts import live_runtime_validation, local_bridge_harness
@@ -182,6 +183,43 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertIn("not real Napoleon runtime validation", summary["runtimeValidation"]["caveat"])
         self.assertNotIn(base_url, json.dumps(summary))
         self.assertIn("http_evaluator_status", stdout.getvalue())
+
+    def test_records_http_evaluator_failure_without_traceback_or_endpoint_retention(self):
+        with local_bridge_harness.running_harness() as base_url:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with mock.patch.object(
+                    live_runtime_validation,
+                    "run_http_eval",
+                    side_effect=RuntimeError(f"failed against {base_url}/v1/concierge/evaluate"),
+                ):
+                    with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                        exit_code = live_runtime_validation.main(
+                            [
+                                "--bridge-endpoint",
+                                base_url,
+                                "--out-dir",
+                                tmpdir,
+                                "--runtime-validation-source",
+                                "local_harness",
+                            ]
+                        )
+
+                summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+                review = (Path(tmpdir) / "promotion_review.md").read_text(encoding="utf-8")
+
+        summary_json = json.dumps(summary)
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(summary["bridgeEvidence"]["status"], "passed")
+        self.assertEqual(summary["httpEvaluator"]["status"], "failed")
+        self.assertEqual(summary["httpEvaluator"]["failureReason"], "http_evaluator_failed")
+        self.assertEqual(summary["artifactPrivacy"]["status"], "passed")
+        self.assertFalse(summary["promotionReadiness"]["locallySafeToConsider"])
+        self.assertIn("HTTP evaluator mode failed", stderr.getvalue())
+        self.assertNotIn(base_url, summary_json)
+        self.assertNotIn(base_url, review)
+        self.assertNotIn(base_url, stderr.getvalue())
 
     def test_fails_closed_when_local_harness_is_mislabeled_as_real_runtime(self):
         with local_bridge_harness.running_harness() as base_url:
