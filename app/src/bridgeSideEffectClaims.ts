@@ -12,6 +12,7 @@ export function hasForbiddenSideEffectTextClaim(text: unknown): boolean {
     /\b(dispatched|called|ran|invoked)\s+(?:an?\s+)?agent\b/i,
     /\b(applied|implemented)\s+(?:the\s+)?(?:change|proposal|plan|it)\s+locally\b/i,
     /\b(saved|stored|committed)\s+(?:it|this|that|the\s+(?:plan|proposal|summary|message|draft|response))\b/i,
+    /\b(scheduled|booked)\s+(?:it|this|that|the\s+(?:meeting|appointment|event|calendar\s+event|call))\b/i,
     /\b(sent|emailed|posted|published|shared|delivered|submitted)\b.{0,80}\b(externally|outside|email|message|deployment summary)\b/i,
     /\b(sent|emailed|posted|published|shared|delivered|submitted)\s+(?:it|this|that|the\s+(?:plan|proposal|summary|message|draft|response))\b/i,
   ].some((pattern) => pattern.test(assertedText));
