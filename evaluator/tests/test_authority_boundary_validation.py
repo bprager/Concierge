@@ -575,6 +575,7 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'import remoteModule from "https://api.example.test/hidden-module.js";',
             'await import("https://api.example.test/hidden-module.js");',
             'await import("data:text/javascript,fetch(`https://api.example.test/send`)");',
+            "await import(remoteModuleUrl);",
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
