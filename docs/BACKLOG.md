@@ -336,7 +336,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by bridge failure, contract mismatch, live text response side-effect-claim, bridge response authority provenance, dedicated bridge fixture delegation, and dedicated delegation-panel empty/target-capability state scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, timeout, rendered proof export interaction, local harness text proof/delegation/export comparison, steering, and memory response-side side-effect claims, sanitized bridge evidence capture, bridge evidence comparison, combined live-runtime validation runner coverage against the local harness, and repository validation for direct authority-boundary bypass attempts.
+- Covered by bridge failure, contract mismatch, live text response side-effect-claim, bridge response authority provenance, dedicated bridge fixture delegation, and dedicated delegation-panel empty/target-capability state scenarios, plus app-level reusable fixtures for delegated success, auth failure, contract mismatch, timeout, rendered proof export interaction, local harness text proof/delegation/export comparison, steering, and memory response-side side-effect claims, sanitized bridge evidence capture, bridge evidence comparison, combined live-runtime validation runner coverage against the local harness, and repository validation for direct authority-boundary bypass attempts including browser `open(...)` external navigation aliases.
 
 ## Milestone P2: Voice Concierge
 

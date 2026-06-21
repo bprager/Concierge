@@ -315,6 +315,21 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_global_browser_open_side_channels(self):
+        for source in [
+            'open("https://api.example.test/export", "_blank");',
+            'globalThis.open("https://api.example.test/export", "_blank");',
+            'globalThis.open.call(globalThis, "https://api.example.test/export", "_blank");',
+            'window["open"].call(window, "https://api.example.test/export", "_blank");',
+            'globalThis["open"]("mailto:team@example.test?body=secret");',
+            'globalThis["open"].apply(globalThis, ["https://api.example.test/export", "_blank"]);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_global_navigator_bracket_side_channels(self):
         for source in [
             'await globalThis["navigator"]["share"]({ text: "send this outside Concierge" });',
