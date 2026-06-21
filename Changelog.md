@@ -15,6 +15,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened governed handoff readiness and memory review, governance review, Chief of Staff steering, and taxonomy review submission helpers so a real runtime descriptor that only advertises `/cos/text-turn` cannot enable or receive review handoffs.
 - Added descriptor-advertised governed handoff routes to sanitized bridge readiness proof exports and comparisons, so text-only Napoleon runtime evidence explains why review handoffs stay blocked.
 - Classified explicit Napoleon review and metadata discovery runtime mappings in the contract-alignment report so mapped paths are not mislabeled as unmapped local aliases.
+- Added sanitized evaluation-target metadata to HTTP evaluator reports so live evaluator evidence records the governed path, request kind, operation ID, and false side-effect/retention flags without endpoint hosts or tokens.
 - Hardened live-runtime validation so missing or failing evaluator HTTP routes are reported as sanitized summary failures after bridge capture instead of leaking endpoint details through tracebacks.
 - Hardened live bridge side-effect claim detection so returned text that says a prepared result was approved or authorized fails closed even when explicit side-effect fields are false.
 - Hardened live bridge side-effect claim detection so returned text that says a prepared result was scheduled or booked fails closed even when explicit side-effect fields are false.

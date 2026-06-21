@@ -85,6 +85,58 @@
         "type": "string"
       }
     },
+    "evaluationTarget": {
+      "type": "object",
+      "required": [
+        "path",
+        "requestKind",
+        "operationId",
+        "endpointHostRetained",
+        "tokenRetained",
+        "approvalCaptured",
+        "memoryWritePerformed",
+        "agentDispatchPerformed",
+        "externalSendPerformed"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "requestKind": {
+          "type": "string"
+        },
+        "operationId": {
+          "type": "string"
+        },
+        "endpointHostRetained": {
+          "type": "boolean"
+        },
+        "tokenRetained": {
+          "type": "boolean"
+        },
+        "requestBodyRetained": {
+          "type": "boolean"
+        },
+        "responseBodyRetained": {
+          "type": "boolean"
+        },
+        "approvalCaptured": {
+          "type": "boolean"
+        },
+        "memoryWritePerformed": {
+          "type": "boolean"
+        },
+        "agentDispatchPerformed": {
+          "type": "boolean"
+        },
+        "externalSendPerformed": {
+          "type": "boolean"
+        },
+        "authorityBoundary": {
+          "type": "string"
+        }
+      }
+    },
     "cases": {
       "type": "array",
       "items": {

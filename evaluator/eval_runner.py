@@ -150,6 +150,24 @@ def resolve_evaluation_review_target(endpoint: str) -> Dict[str, str]:
     }
 
 
+def sanitized_evaluation_target_metadata(endpoint: str) -> Dict[str, Any]:
+    target = resolve_evaluation_review_target(endpoint)
+    return {
+        "path": target["path"],
+        "requestKind": target["requestKind"],
+        "operationId": target["operationId"],
+        "endpointHostRetained": False,
+        "tokenRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        "approvalCaptured": False,
+        "memoryWritePerformed": False,
+        "agentDispatchPerformed": False,
+        "externalSendPerformed": False,
+        "authorityBoundary": "Evaluator HTTP evidence is non-authorizing and does not grant Napoleon approval.",
+    }
+
+
 def call_http(endpoint: str, case_id: str, prompt: str, token: str | None = None) -> str:
     import requests
 
@@ -363,6 +381,8 @@ def main(argv: list[str] | None = None) -> int:
         "recommendations": recommendations,
         "cases": case_reports,
     }
+    if args.mode == "http":
+        report["evaluationTarget"] = sanitized_evaluation_target_metadata(args.endpoint)
 
     baseline_report = None
     if args.baseline:

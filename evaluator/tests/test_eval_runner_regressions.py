@@ -125,6 +125,40 @@ class EvaluatorRegressionTest(unittest.TestCase):
         self.assertEqual(calls[0]["json"]["boundary"]["proposalOnly"], True)
         self.assertEqual(calls[0]["json"]["boundary"]["approvalCaptured"], False)
 
+    def test_http_report_records_sanitized_evaluation_target_metadata(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out = Path(tmpdir) / "latest.json"
+
+            previous = eval_runner.call_http
+            eval_runner.call_http = lambda endpoint, case_id, prompt, token=None: eval_runner.call_stub(case_id, prompt)
+            try:
+                exit_code = eval_runner.main([
+                    "--mode",
+                    "http",
+                    "--endpoint",
+                    "https://napoleon.example/chief-of-staff/reviews/evaluation?debug=1",
+                    "--token",
+                    "token_eval",
+                    "--out",
+                    str(out),
+                ])
+            finally:
+                eval_runner.call_http = previous
+
+            self.assertEqual(exit_code, 0)
+            report = json.loads(out.read_text(encoding="utf-8"))
+            self.assertEqual(report["evaluationTarget"]["path"], "/chief-of-staff/reviews/evaluation")
+            self.assertEqual(report["evaluationTarget"]["requestKind"], "evaluation_review_handoff")
+            self.assertEqual(report["evaluationTarget"]["operationId"], "evaluation_review")
+            self.assertEqual(report["evaluationTarget"]["endpointHostRetained"], False)
+            self.assertEqual(report["evaluationTarget"]["tokenRetained"], False)
+            self.assertEqual(report["evaluationTarget"]["approvalCaptured"], False)
+            self.assertEqual(report["evaluationTarget"]["memoryWritePerformed"], False)
+            self.assertEqual(report["evaluationTarget"]["agentDispatchPerformed"], False)
+            self.assertEqual(report["evaluationTarget"]["externalSendPerformed"], False)
+            self.assertNotIn("napoleon.example", json.dumps(report))
+            self.assertNotIn("token_eval", json.dumps(report))
+
 
 if __name__ == "__main__":
     unittest.main()
