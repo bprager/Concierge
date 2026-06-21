@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened live-runtime artifact privacy audits so retained bridge or evaluator artifacts fail validation if endpoint/token/body retention or forbidden side-effect boundary flags are true.
 - Hardened repository validation so bracketed process-execution aliases invoked through `.call(...)` or `.apply(...)` are blocked around the governed bridge.
 - Hardened repository validation so runtime dynamic `import(...)` calls with variable targets are blocked as ungoverned module-loading paths around the governed bridge.
 - Hardened live bridge response validation so returned Napoleon recommendation proof must match the accepted response text as well as trace and audit envelopes before Concierge keeps or displays it.

@@ -355,6 +355,40 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertTrue(any("forbidden artifact field request_body" in violation for violation in violations))
         self.assertTrue(any("forbidden artifact field bearer_token" in violation for violation in violations))
 
+    def test_artifact_privacy_audit_rejects_true_retention_or_side_effect_flags(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            artifact = Path(tmpdir) / "artifact.json"
+            artifact.write_text(
+                json.dumps({
+                    "evaluationTarget": {
+                        "targetPath": "/v1/concierge/evaluate",
+                        "endpointHostRetained": True,
+                        "tokenRetained": False,
+                        "request_body_retained": True,
+                        "responseBodyRetained": False,
+                        "approvalCaptured": True,
+                        "memory_write_performed": True,
+                        "agentDispatchPerformed": False,
+                        "external_send_performed": True,
+                    },
+                }),
+                encoding="utf-8",
+            )
+
+            audit = live_runtime_validation.audit_artifact_privacy([artifact], set())
+
+        self.assertEqual(audit["status"], "failed")
+        self.assertEqual(audit["checked_count"], 1)
+        self.assertEqual(audit["violation_count"], 5)
+        violations = audit["artifacts"][0]["violations"]
+        self.assertTrue(any("forbidden true artifact boundary flag endpointHostRetained" in violation for violation in violations))
+        self.assertTrue(any("forbidden true artifact boundary flag request_body_retained" in violation for violation in violations))
+        self.assertTrue(any("forbidden true artifact boundary flag approvalCaptured" in violation for violation in violations))
+        self.assertTrue(any("forbidden true artifact boundary flag memory_write_performed" in violation for violation in violations))
+        self.assertTrue(any("forbidden true artifact boundary flag external_send_performed" in violation for violation in violations))
+        self.assertNotIn("tokenRetained: forbidden", json.dumps(audit))
+        self.assertNotIn("agentDispatchPerformed: forbidden", json.dumps(audit))
+
 
 if __name__ == "__main__":
     unittest.main()

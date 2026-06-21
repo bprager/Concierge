@@ -72,6 +72,19 @@ def normalized_artifact_field_name(field: str) -> str:
 
 
 FORBIDDEN_ARTIFACT_FIELD_KEYS = {normalized_artifact_field_name(field) for field in FORBIDDEN_ARTIFACT_FIELDS}
+FORBIDDEN_TRUE_ARTIFACT_FLAGS = {
+    "agentDispatchPerformed",
+    "approvalCaptured",
+    "endpointHostRetained",
+    "externalSendPerformed",
+    "memoryWritePerformed",
+    "requestBodyRetained",
+    "responseBodyRetained",
+    "tokenRetained",
+}
+FORBIDDEN_TRUE_ARTIFACT_FLAG_KEYS = {
+    normalized_artifact_field_name(field) for field in FORBIDDEN_TRUE_ARTIFACT_FLAGS
+}
 
 
 def runtime_validation_caveat(source: str) -> str:
@@ -280,6 +293,11 @@ def artifact_privacy_violations(value: Any, sensitive_values: set[str], path: st
             key_path = f"{path}.{key}"
             if normalized_artifact_field_name(key) in FORBIDDEN_ARTIFACT_FIELD_KEYS:
                 violations.append(f"{key_path}: forbidden artifact field {key}")
+            if (
+                normalized_artifact_field_name(key) in FORBIDDEN_TRUE_ARTIFACT_FLAG_KEYS
+                and nested is True
+            ):
+                violations.append(f"{key_path}: forbidden true artifact boundary flag {key}")
             violations.extend(artifact_privacy_violations(nested, sensitive_values, key_path))
     elif isinstance(value, list):
         for index, nested in enumerate(value):
