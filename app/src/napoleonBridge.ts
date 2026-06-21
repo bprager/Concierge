@@ -2,6 +2,7 @@ import type { NapoleonDelegation, NapoleonRecommendationProvenance, NapoleonRequ
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import { getBridgeOperation, type BridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
+import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
   buildDescriptorConnectionState,
@@ -506,21 +507,7 @@ function hasForbiddenTextTurnSideEffectClaim(payload: Partial<NapoleonResponse> 
     return true;
   }
 
-  const text =
-    typeof payload.text === "string"
-      ? payload.text
-          .split(/[.!?;\n]+/)
-          .filter((sentence) => !/\b(did not|didn't|does not|has not|have not|not|no)\b/i.test(sentence))
-          .join(". ")
-      : "";
-  return [
-    /\b(wrote|written|saved|stored|committed)\s+(?:to\s+)?memory\b/i,
-    /\b(captured|recorded)\s+approval\b/i,
-    /\b(dispatched|called|ran|invoked)\s+(?:an?\s+)?agent\b/i,
-    /\b(applied|implemented)\s+(?:the\s+)?(?:change|proposal|plan|it)\s+locally\b/i,
-    /\b(sent|emailed|posted|published|shared|delivered)\b.{0,80}\b(externally|outside|email|message|deployment summary)\b/i,
-    /\b(sent|emailed|posted|published|shared|delivered)\s+(?:it|this|that|the\s+(?:plan|proposal|summary|message|draft|response))\b/i,
-  ].some((pattern) => pattern.test(text));
+  return hasForbiddenSideEffectTextClaim(payload.text);
 }
 
 function mapAdvisoryHarnessAuthorityTier(value: unknown): GovernanceDecision["authority_tier"] {
