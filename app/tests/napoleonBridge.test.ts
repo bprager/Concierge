@@ -381,8 +381,10 @@ test("live bridge adapts Napoleon advisory harness text-turn responses without s
     "https://napoleon.example/cos/text-turn",
     "https://napoleon.example/cos/trace/trace_cos_runtime",
   ]);
-  assert.equal(posted?.contract_version, "napoleon/concierge/runtime-bridge-schema/v1");
-  assert.equal(posted?.requested_capability, "napoleon.chief_of_staff");
+  assert.equal(posted?.contract_version, "napoleon/concierge/text-turn/v1");
+  assert.equal(posted?.requested_capability, "governance_review");
+  assert.deepEqual(posted?.requested_effects, []);
+  assert.equal(posted?.authority_tier, "advisory_prepare_only");
   assert.equal(posted?.user_text, "Summarize the governed bridge status");
   assert.equal(headers?.["X-Napoleon-Auth"], "token_cos_runtime");
   assert.equal(headers?.Authorization, undefined);

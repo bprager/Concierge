@@ -13,7 +13,7 @@ export interface ChiefOfStaffDescriptor {
   serviceId: "napoleon.chief_of_staff";
   runtimeAuthority: false;
   commandExecution: false;
-  cachePolicy: "fail_closed_to_review_required";
+  cachePolicy: "fail_closed_to_review_required" | "runtime_descriptor_live_response";
   blockedEffects: string[];
 }
 
@@ -265,7 +265,8 @@ export function validateChiefOfStaffDescriptor(descriptor: ChiefOfStaffDescripto
     descriptor.serviceId === "napoleon.chief_of_staff" &&
     descriptor.runtimeAuthority === false &&
     descriptor.commandExecution === false &&
-    descriptor.cachePolicy === "fail_closed_to_review_required" &&
+    (descriptor.cachePolicy === "fail_closed_to_review_required" ||
+      descriptor.cachePolicy === "runtime_descriptor_live_response") &&
     descriptor.blockedEffects.includes("runtime_authority") &&
     descriptor.blockedEffects.includes("memory_write");
 

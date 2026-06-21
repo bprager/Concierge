@@ -83,12 +83,37 @@ function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null {
   const serviceId = stringValue(candidate.serviceId) ?? stringValue(candidate.service_id);
   const runtimeAuthority = booleanValue(candidate.runtimeAuthority) ?? booleanValue(candidate.runtime_authority);
   const commandExecution = booleanValue(candidate.commandExecution) ?? booleanValue(candidate.command_execution);
+  const endpoints = candidate.endpoints && typeof candidate.endpoints === "object"
+    ? candidate.endpoints as Record<string, unknown>
+    : {};
+  const supportedAuthorityTiers =
+    stringArrayValue(candidate.supportedAuthorityTiers) ?? stringArrayValue(candidate.supported_authority_tiers);
   const cachePolicyValue =
     typeof candidate.cache_policy === "object" && candidate.cache_policy
       ? (candidate.cache_policy as Record<string, unknown>).stale_descriptor_action
       : candidate.cachePolicy;
   const cachePolicy = stringValue(cachePolicyValue);
   const blockedEffects = stringArrayValue(candidate.blockedEffects) ?? stringArrayValue(candidate.blocked_effects);
+  const liveRuntimeDescriptor =
+    schemaVersion === "napoleon/concierge/runtime-descriptor/v1" &&
+    serviceId === "napoleon.chief_of_staff" &&
+    runtimeAuthority === false &&
+    commandExecution === false &&
+    endpoints.descriptor === "GET /cos/descriptor" &&
+    endpoints.text_turn === "POST /cos/text-turn" &&
+    supportedAuthorityTiers !== undefined &&
+    supportedAuthorityTiers.every((tier) => tier === "advisory_prepare_only") &&
+    blockedEffects !== undefined;
+  if (liveRuntimeDescriptor) {
+    return {
+      schemaVersion,
+      serviceId,
+      runtimeAuthority,
+      commandExecution,
+      cachePolicy: "runtime_descriptor_live_response",
+      blockedEffects,
+    };
+  }
   if (
     schemaVersion &&
     serviceId === "napoleon.chief_of_staff" &&
@@ -107,6 +132,18 @@ function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null {
     };
   }
   return null;
+}
+
+async function fetchDescriptorFrom(
+  fetcher: DescriptorFetch,
+  url: string,
+  authToken: string | null,
+  cosMode: boolean,
+): Promise<Awaited<ReturnType<DescriptorFetch>>> {
+  return fetcher(url, {
+    method: "GET",
+    headers: cosMode ? buildCosDescriptorHeaders(authToken) : buildDescriptorHeaders(authToken),
+  });
 }
 
 function buildInputFromPayload(endpointConfigured: boolean, payload: unknown, discoveredAt: string): DescriptorConnectionInput {
@@ -153,14 +190,14 @@ export async function discoverNapoleonDescriptor(
 
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   const cosDescriptorEndpoint = resolveCosDescriptorEndpoint(endpoint);
+  const authToken = getConfiguredAuthToken(dependencies);
   let response: Awaited<ReturnType<DescriptorFetch>>;
   try {
-    response = await fetcher(cosDescriptorEndpoint ?? resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_descriptor"), {
-      method: "GET",
-      headers: cosDescriptorEndpoint
-        ? buildCosDescriptorHeaders(getConfiguredAuthToken(dependencies))
-        : buildDescriptorHeaders(getConfiguredAuthToken(dependencies)),
-    });
+    const generatedDescriptorEndpoint = resolveNapoleonBridgeOperation(endpoint, "chief_of_staff_descriptor");
+    response = await fetchDescriptorFrom(fetcher, cosDescriptorEndpoint ?? generatedDescriptorEndpoint, authToken, Boolean(cosDescriptorEndpoint));
+    if (!cosDescriptorEndpoint && response.status === 404) {
+      response = await fetchDescriptorFrom(fetcher, `${normalizeEndpoint(endpoint)}/cos/descriptor`, authToken, true);
+    }
   } catch (error) {
     const input = failureInput(true, error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure");
     return { input, connection: buildDescriptorConnectionState(input), source: "live" };

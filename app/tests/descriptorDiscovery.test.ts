@@ -100,6 +100,57 @@ test("descriptor discovery fetches explicit cos descriptor path with harness aut
   assert.equal(result.input.discoveredAt, "2026-06-17T14:40:00.000Z");
 });
 
+test("descriptor discovery falls back from runtime base URL to cos descriptor", async () => {
+  const requestedUrls: string[] = [];
+  const headers: Record<string, string | undefined>[] = [];
+
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "http://127.0.0.1:8765",
+    getAuthToken: () => "token_cos_descriptor",
+    now: () => "2026-06-21T15:30:00.000Z",
+    fetch: async (url, init) => {
+      requestedUrls.push(url);
+      headers.push(init?.headers ?? {});
+      if (url.endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return {
+          ok: false,
+          status: 404,
+          json: async () => ({}),
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          schema_version: "napoleon/concierge/runtime-descriptor/v1",
+          service_id: "napoleon.chief_of_staff",
+          runtime_authority: false,
+          command_execution: false,
+          endpoints: {
+            descriptor: "GET /cos/descriptor",
+            text_turn: "POST /cos/text-turn",
+            trace: "GET /cos/trace/{trace_id}",
+          },
+          supported_authority_tiers: ["advisory_prepare_only"],
+          blocked_effects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+        }),
+      };
+    },
+  });
+
+  assert.deepEqual(requestedUrls, [
+    "http://127.0.0.1:8765/v1/concierge/chief-of-staff/descriptor",
+    "http://127.0.0.1:8765/cos/descriptor",
+  ]);
+  assert.equal(headers[0]?.Authorization, "Bearer token_cos_descriptor");
+  assert.equal(headers[1]?.["X-Napoleon-Auth"], "token_cos_descriptor");
+  assert.equal(headers[1]?.Authorization, undefined);
+  assert.equal(result.connection.state, "ready");
+  assert.equal(result.connection.canAttemptLiveBridge, true);
+  assert.equal(result.connection.descriptorStatus?.cachePolicy, "runtime_descriptor_live_response");
+  assert.equal(result.input.maxAgeSeconds, 300);
+});
+
 test("descriptor discovery fails closed for cos descriptors that grant runtime authority", async () => {
   const result = await discoverNapoleonDescriptor({
     getEndpoint: () => "http://127.0.0.1:8765/cos/descriptor",
