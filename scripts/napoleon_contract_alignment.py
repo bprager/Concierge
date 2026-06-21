@@ -116,10 +116,18 @@ def local_handoff_aliases(concierge_paths: set[str], napoleon_paths: set[str]) -
         matched_napoleon_paths = [path for path in alias["napoleonContractPaths"] if path in napoleon_paths]
         if not matched_napoleon_paths:
             continue
+        matched_path_set = set(matched_napoleon_paths)
+        if matched_path_set <= SUPPORTED_DISCOVERY_RUNTIME_PATHS:
+            runtime_mapping_status = "explicit_metadata_discovery_paths_supported"
+        elif matched_path_set <= SUPPORTED_REVIEW_RUNTIME_PATHS:
+            runtime_mapping_status = "explicit_napoleon_runtime_paths_supported"
+        else:
+            runtime_mapping_status = alias["runtimeMappingStatus"]
         aliases.append(
             {
                 **alias,
                 "napoleonContractPaths": matched_napoleon_paths,
+                "runtimeMappingStatus": runtime_mapping_status,
                 "sideEffectsPerformed": False,
                 "approvalCaptured": False,
                 "memoryWritePerformed": False,

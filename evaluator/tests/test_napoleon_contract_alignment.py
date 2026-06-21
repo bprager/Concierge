@@ -232,9 +232,20 @@ paths:
             for alias in report["conciergeLocalHandoffAliases"]
             if alias["localOperation"] == "chief_of_staff_steering"
         )
-        self.assertEqual(steering_alias["runtimeMappingStatus"], "local_alias_not_explicit_napoleon_runtime_path")
+        self.assertEqual(steering_alias["runtimeMappingStatus"], "explicit_napoleon_runtime_paths_supported")
         self.assertIn("/chief-of-staff/reviews/governance", steering_alias["napoleonContractPaths"])
         self.assertFalse(steering_alias["sideEffectsPerformed"])
+        evaluator_alias = next(
+            alias for alias in report["conciergeLocalHandoffAliases"] if alias["localOperation"] == "evaluate"
+        )
+        self.assertEqual(evaluator_alias["runtimeMappingStatus"], "explicit_napoleon_runtime_paths_supported")
+        capability_alias = next(
+            alias
+            for alias in report["conciergeLocalHandoffAliases"]
+            if alias["localOperation"] == "chief_of_staff_capabilities"
+        )
+        self.assertEqual(capability_alias["runtimeMappingStatus"], "explicit_metadata_discovery_paths_supported")
+        self.assertFalse(capability_alias["agentDispatchPerformed"])
 
 
 if __name__ == "__main__":
