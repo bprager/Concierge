@@ -1751,6 +1751,68 @@ test("live bridge fails closed when text response implies proposal submission de
   );
 });
 
+test("live bridge fails closed when text response implies approval despite false side-effect fields", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_text_implied_approval_claim",
+          conversationId: "conv_text_implied_approval_claim",
+          turnId: "turn_text_implied_approval_claim",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Prepare the bridge approval packet",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Napoleon prepared the bridge approval packet and approved it.",
+              governanceDecision: {
+                decision_id: "decision_text_implied_approval_claim",
+                request_id: "cos_turn_text_implied_approval_claim",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "Approval requires owner review.",
+                blocked_effects: ["approval_capture", "external_send", "memory_write", "agent_dispatch"],
+                trace_id: "trace_text_implied_approval_claim",
+                audit_id: "audit_text_implied_approval_claim",
+              },
+              traceEnvelope: {
+                trace_id: "trace_text_implied_approval_claim",
+                parent_trace_id: "conv_text_implied_approval_claim",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_text_implied_approval_claim",
+                decision_id: "decision_text_implied_approval_claim",
+                timestamp: "2026-06-13T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_text_implied_approval_claim",
+                trace_id: "trace_text_implied_approval_claim",
+                decision_id: "decision_text_implied_approval_claim",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_text_implied_approval_claim"],
+              },
+              memoryWritePerformed: false,
+              approvalCaptured: false,
+              externalSendPerformed: false,
+              agentDispatchPerformed: false,
+              appliedLocally: false,
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error && error.name === "NapoleonBridgeError" && error.message.includes("contract_mismatch"),
+  );
+});
+
 test("live bridge fails closed when text response implies calendar scheduling despite false side-effect fields", async () => {
   await assert.rejects(
     () =>

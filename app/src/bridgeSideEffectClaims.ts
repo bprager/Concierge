@@ -9,6 +9,7 @@ export function hasForbiddenSideEffectTextClaim(text: unknown): boolean {
   return [
     /\b(wrote|written|saved|stored|committed)\s+(?:to\s+)?memory\b/i,
     /\b(captured|recorded)\s+approval\b/i,
+    /\b(approved|authorized)\s+(?:it|this|that|the\s+(?:plan|proposal|request|change|action|approval\s+packet))\b/i,
     /\b(dispatched|called|ran|invoked)\s+(?:an?\s+)?agent\b/i,
     /\b(applied|implemented)\s+(?:the\s+)?(?:change|proposal|plan|it)\s+locally\b/i,
     /\b(saved|stored|committed)\s+(?:it|this|that|the\s+(?:plan|proposal|summary|message|draft|response))\b/i,
