@@ -260,6 +260,37 @@ test("exports sanitized advisory capability discovery state in readiness proof",
   assert.equal(exported.includes("token"), false);
 });
 
+test("exports descriptor-advertised governed handoff routes in readiness proof", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: {
+      schemaVersion: "napoleon/concierge/runtime-descriptor/v1",
+      serviceId: "napoleon.chief_of_staff",
+      runtimeAuthority: false,
+      commandExecution: false,
+      cachePolicy: "runtime_descriptor_live_response",
+      blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+      supportedHandoffs: ["text_turn"],
+    },
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    runtimeValidationSource: "real_runtime",
+    generatedAt: "2026-06-21T00:00:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    descriptor: {
+      supportedHandoffs: string[];
+    };
+  };
+
+  assert.deepEqual(proof.descriptor.supportedHandoffs, ["text_turn"]);
+  assert.equal(exported.includes("https://"), false);
+  assert.equal(exported.includes("token"), false);
+});
+
 test("redacts unsafe bridge evidence values before exporting readiness proof", () => {
   const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
     ...validEvidence,
