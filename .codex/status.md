@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Aligned combined live-runtime evaluator endpoint derivation with the named Napoleon evaluation review route, so explicit `/cos` endpoints and non-generated Napoleon bases derive `/chief-of-staff/reviews/evaluation` while local/generated endpoints keep `/v1/concierge/evaluate`.
 - Hardened live-runtime artifact privacy audits so retained bridge or evaluator artifacts fail validation if endpoint/token/body retention or forbidden side-effect boundary flags are true.
 - Hardened repository validation so bracketed process-execution aliases invoked through `.call(...)` or `.apply(...)` are blocked around the governed bridge.
 - Hardened repository validation so runtime dynamic `import(...)` calls with variable targets are blocked as ungoverned module-loading paths around the governed bridge.
@@ -437,7 +438,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added `make eval-human-review` for local evaluator promotion records with reviewer decision fields, baseline evidence, hard-fail/missing-artifact/regression counts, and explicit non-authority boundaries.
 - Added `make eval-summary` for local evaluator Markdown summaries with run status, gate counts, dimension scores, case summary, recommendations, and explicit non-authority boundaries.
 - Added `make live-runtime-validation` and `make live-runtime-local-harness` so descriptor discovery, sanitized bridge evidence capture/comparison, evaluator HTTP mode, and non-authorizing runtime summaries can be run together once a real Napoleon runtime endpoint exists.
-- Fixed `make live-runtime-validation` so `NAPOLEON_BRIDGE_ENDPOINT` alone is enough to run the full live-runtime validation path, with `/v1/concierge/evaluate` derived from the bridge base URL when `NAPOLEON_EVAL_ENDPOINT` is not set.
+- Fixed `make live-runtime-validation` so `NAPOLEON_BRIDGE_ENDPOINT` alone is enough to run the full live-runtime validation path, deriving `/v1/concierge/evaluate` for generated/local endpoints or `/chief-of-staff/reviews/evaluation` for explicit Napoleon endpoints when `NAPOLEON_EVAL_ENDPOINT` is not set.
 - Fixed standalone bridge evidence capture so `NAPOLEON_BRIDGE_ENDPOINT` may be a base URL or known Concierge bridge operation URL without duplicating descriptor or text-turn paths.
 - Aligned standalone bridge evidence capture with the real Napoleon `/cos` runtime: generated base URLs can fall back to `/cos/descriptor` when generated descriptor routes are absent, authority-safe live runtime descriptors without file-manifest cache policy are accepted, and `/cos/text-turn` capture now sends `napoleon/concierge/text-turn/v1` with `governance_review` and `advisory_prepare_only`.
 - Aligned the desktop app's live descriptor discovery and `/cos/text-turn` send path with the real Napoleon runtime: generated base URLs can retry `/cos/descriptor` after a generated descriptor 404, live runtime descriptors are accepted only when authority-safe, and `/cos/text-turn` now sends `napoleon/concierge/text-turn/v1` with `governance_review` and `advisory_prepare_only`.

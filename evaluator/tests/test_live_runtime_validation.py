@@ -128,6 +128,16 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(bridge, "http://127.0.0.1:8787")
         self.assertEqual(evaluator, "http://127.0.0.1:8787/v1/concierge/evaluate")
 
+    def test_derives_bridge_base_from_napoleon_evaluation_review_endpoint(self):
+        bridge, evaluator = live_runtime_validation.resolve_endpoints(
+            None,
+            "https://napoleon.example/chief-of-staff/reviews/evaluation?debug=1",
+            {},
+        )
+
+        self.assertEqual(bridge, "https://napoleon.example")
+        self.assertEqual(evaluator, "https://napoleon.example/chief-of-staff/reviews/evaluation?debug=1")
+
     def test_endpoint_resolution_records_source_without_retaining_endpoint_values(self):
         config = live_runtime_validation.resolve_endpoint_configuration(
             None,
@@ -174,6 +184,28 @@ class LiveRuntimeValidationTest(unittest.TestCase):
 
                 self.assertEqual(bridge, f"http://127.0.0.1:8787{path}")
                 self.assertEqual(evaluator, "http://127.0.0.1:8787/v1/concierge/evaluate")
+
+    def test_derives_napoleon_evaluation_review_from_explicit_cos_endpoint(self):
+        for path in ["/cos", "/cos/descriptor", "/cos/capabilities", "/cos/text-turn"]:
+            with self.subTest(path=path):
+                bridge, evaluator = live_runtime_validation.resolve_endpoints(
+                    f"https://napoleon.example{path}",
+                    None,
+                    {},
+                )
+
+                self.assertEqual(bridge, f"https://napoleon.example{path}")
+                self.assertEqual(evaluator, "https://napoleon.example/chief-of-staff/reviews/evaluation")
+
+    def test_derives_napoleon_evaluation_review_from_napoleon_base_endpoint(self):
+        bridge, evaluator = live_runtime_validation.resolve_endpoints(
+            "https://napoleon.example",
+            None,
+            {},
+        )
+
+        self.assertEqual(bridge, "https://napoleon.example")
+        self.assertEqual(evaluator, "https://napoleon.example/chief-of-staff/reviews/evaluation")
 
     def test_runs_from_bridge_endpoint_environment_without_eval_endpoint(self):
         with local_bridge_harness.running_harness() as base_url:

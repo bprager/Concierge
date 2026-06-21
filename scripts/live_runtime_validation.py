@@ -26,6 +26,7 @@ from scripts import bridge_evidence_capture
 
 DEFAULT_OUT_DIR = Path("/tmp/concierge-live-runtime-validation")
 EVALUATOR_PATH = "/v1/concierge/evaluate"
+NAPOLEON_EVALUATION_REVIEW_PATH = "/chief-of-staff/reviews/evaluation"
 KNOWN_BRIDGE_PATHS = bridge_evidence_capture.KNOWN_BRIDGE_PATHS
 
 BOUNDARY = (
@@ -96,15 +97,39 @@ def runtime_validation_caveat(source: str) -> str:
 
 
 def strip_known_path(endpoint: str) -> str:
-    value = endpoint.strip().rstrip("/")
-    for path in KNOWN_BRIDGE_PATHS:
+    value = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    for path in [*KNOWN_BRIDGE_PATHS, "/cos", NAPOLEON_EVALUATION_REVIEW_PATH]:
         if value.endswith(path):
             return value[: -len(path)].rstrip("/")
     return value
 
 
+def is_cos_endpoint(endpoint: str) -> bool:
+    value = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    return (
+        value.endswith("/cos")
+        or value.endswith("/cos/descriptor")
+        or value.endswith("/cos/capabilities")
+        or value.endswith("/cos/text-turn")
+    )
+
+
+def is_generated_concierge_endpoint(endpoint: str) -> bool:
+    value = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    if is_cos_endpoint(value):
+        return False
+    return (
+        "/v1/concierge" in value
+        or value.endswith("/concierge")
+        or value.startswith("http://127.0.0.1:")
+        or value.startswith("http://localhost:")
+    )
+
+
 def derive_eval_endpoint(bridge_endpoint: str) -> str:
-    return f"{strip_known_path(bridge_endpoint)}{EVALUATOR_PATH}"
+    if is_generated_concierge_endpoint(bridge_endpoint):
+        return f"{strip_known_path(bridge_endpoint)}{EVALUATOR_PATH}"
+    return f"{strip_known_path(bridge_endpoint)}{NAPOLEON_EVALUATION_REVIEW_PATH}"
 
 
 def endpoint_from_env(env: dict[str, str], key: str) -> str | None:
@@ -582,7 +607,13 @@ def write_summary(
 def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bridge-endpoint", help="Napoleon base URL or known Concierge bridge operation URL")
-    parser.add_argument("--eval-endpoint", help="Napoleon evaluator endpoint; defaults to bridge base + /v1/concierge/evaluate")
+    parser.add_argument(
+        "--eval-endpoint",
+        help=(
+            "Napoleon evaluator endpoint; defaults to /v1/concierge/evaluate for generated/local endpoints "
+            "or /chief-of-staff/reviews/evaluation for explicit Napoleon endpoints"
+        ),
+    )
     parser.add_argument("--auth-token", default=None, help="Optional bearer token; never written to validation artifacts")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help="Directory for sanitized validation artifacts")
     parser.add_argument(
