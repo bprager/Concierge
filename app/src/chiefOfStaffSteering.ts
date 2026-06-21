@@ -13,6 +13,7 @@ import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage }
 import {
   buildDescriptorConnectionState,
   defaultChiefOfStaffDescriptor,
+  descriptorSupportsGovernedHandoff,
   mapProfileToNapoleonMode,
   type AuditEnvelope,
   type ChiefOfStaffRequest,
@@ -408,6 +409,18 @@ export async function submitChiefOfStaffSteeringDraft(
       undefined,
       blockedEffects,
       descriptorConnection.failClosedReason,
+    );
+  }
+  if (!descriptorSupportsGovernedHandoff(descriptorConnection, "evolution_proposal_review")) {
+    failSteeringClosed(
+      dependencies,
+      "descriptor_mismatch",
+      dependencies.traceId,
+      requestId,
+      profileMode,
+      undefined,
+      blockedEffects,
+      "descriptor_invalid",
     );
   }
 

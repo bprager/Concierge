@@ -6,6 +6,7 @@ import {
   type DescriptorFailClosedReason,
   type DescriptorConnectionInput,
   type DescriptorConnectionState,
+  type GovernedHandoffCapability,
 } from "./contractBridge.js";
 
 type DescriptorFetch = (url: string, init?: { method?: string; headers?: Record<string, string> }) => Promise<{
@@ -76,6 +77,17 @@ function stringArrayValue(value: unknown): string[] | undefined {
   return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : undefined;
 }
 
+function supportedHandoffsFromRuntimeEndpoints(endpoints: Record<string, unknown>): GovernedHandoffCapability[] {
+  const supported: GovernedHandoffCapability[] = [];
+  if (endpoints.text_turn === "POST /cos/text-turn") supported.push("text_turn");
+  if (typeof endpoints.memory_proposal_review === "string") supported.push("memory_proposal_review");
+  if (typeof endpoints.chief_of_staff_steering === "string") supported.push("chief_of_staff_steering");
+  if (typeof endpoints.governance_review === "string") supported.push("governance_review");
+  if (typeof endpoints.evolution_proposal_review === "string") supported.push("evolution_proposal_review");
+  if (typeof endpoints.taxonomy_review === "string") supported.push("taxonomy_review");
+  return supported;
+}
+
 function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null {
   if (!value || typeof value !== "object") return null;
   const candidate = value as Partial<ChiefOfStaffDescriptor> & Record<string, unknown>;
@@ -112,6 +124,7 @@ function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null {
       commandExecution,
       cachePolicy: "runtime_descriptor_live_response",
       blockedEffects,
+      supportedHandoffs: supportedHandoffsFromRuntimeEndpoints(endpoints),
     };
   }
   if (

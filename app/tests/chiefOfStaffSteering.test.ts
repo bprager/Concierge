@@ -10,6 +10,7 @@ import {
   submitChiefOfStaffSteeringDraft,
 } from "../src/chiefOfStaffSteering.js";
 import { defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
+import type { TelemetryPayload } from "../src/telemetry.js";
 
 const steeringBlockedEffects = [
   "memory_write",
@@ -25,6 +26,19 @@ const readyDescriptorConnection = {
   expectedChecksum: "sha256:local-static",
   actualChecksum: "sha256:local-static",
   signatureValid: true,
+};
+
+const textTurnOnlyRuntimeDescriptorConnection = {
+  endpointConfigured: true,
+  descriptor: {
+    schemaVersion: "napoleon/concierge/runtime-descriptor/v1",
+    serviceId: "napoleon.chief_of_staff" as const,
+    runtimeAuthority: false as const,
+    commandExecution: false as const,
+    cachePolicy: "runtime_descriptor_live_response" as const,
+    blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+    supportedHandoffs: ["text_turn" as const],
+  },
 };
 
 test("drafts proposal-only Chief of Staff steering from capability signals", () => {
@@ -466,6 +480,63 @@ test("steering handoff fails closed before fetch when descriptor discovery has n
 
   assert.equal(fetchCalled, false);
   assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "no_descriptor");
+});
+
+test("steering handoff fails closed before fetch when descriptor lacks evolution review route", async () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_missing_steering_route",
+      conversationId: "conv_missing_steering_route",
+      turnId: "turn_missing_steering_route",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "napoleon integration",
+      intentLabel: "submit_evolution_proposal",
+      capabilityLabel: "evolution_review_handoff",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.89,
+      evidenceRefs: ["trace:trace_missing_steering_route"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "create_evolution_proposal",
+    }),
+  );
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_steering",
+    endpointConfigured: true,
+  });
+  let fetchCalled = false;
+  const events: TelemetryPayload[] = [];
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffSteeringDraft(draft, {
+        conversationId: "conv_steering",
+        traceId: "trace_submit_no_steering_route",
+        getEndpoint: () => "http://127.0.0.1:8765",
+        descriptorConnection: textTurnOnlyRuntimeDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "descriptor_invalid" &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(steeringBlockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.reason, "descriptor_mismatch");
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "descriptor_invalid");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, steeringBlockedEffects);
 });
 
 test("steering handoff preserves descriptor discovery auth failure before fetch", async () => {

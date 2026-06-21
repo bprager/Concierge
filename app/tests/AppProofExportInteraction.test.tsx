@@ -3076,7 +3076,7 @@ test("enables an existing steering draft after governed endpoint readiness becom
     await view.findByText("Chief of Staff steering draft");
     assert.ok(
       view.getAllByText(
-        "Chief of Staff steering is blocked until the review draft, endpoint, descriptor preflight, and Rehearsal Mode state are ready.",
+        "Chief of Staff steering is blocked until the review draft, endpoint, descriptor preflight, governed handoff route, and Rehearsal Mode state are ready.",
       ).length > 0,
     );
     assert.equal(
@@ -4024,7 +4024,7 @@ test("blocks taxonomy review handoff visibly when no Napoleon endpoint is config
     const heading = await view.findByText("Chief of Staff taxonomy review readiness");
     const readiness = heading.closest("section") as HTMLElement;
     assert.ok(readiness);
-    assert.ok(within(readiness).getByText(/blocked until the review draft, endpoint, descriptor preflight, and Rehearsal Mode state are ready/));
+    assert.ok(within(readiness).getByText(/blocked until the review draft, endpoint, descriptor preflight, governed handoff route, and Rehearsal Mode state are ready/));
     assert.ok(within(readiness).getByText("Endpoint configured"));
     assert.ok(within(readiness).getByText(/blocked: No Napoleon endpoint is configured/));
     assert.ok(within(readiness).getByText("Descriptor preflight"));

@@ -960,6 +960,37 @@ test("describes governed handoff readiness with endpoint and descriptor blockers
   assert.ok(ready.items.every((item: { status: string }) => item.status === "ready"));
 });
 
+test("describes governed handoff readiness as blocked when descriptor lacks required handoff route", () => {
+  const view = describeGovernedHandoffReadiness({
+    label: "Chief of Staff steering",
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: {
+        schemaVersion: "napoleon/concierge/runtime-descriptor/v1",
+        serviceId: "napoleon.chief_of_staff",
+        runtimeAuthority: false,
+        commandExecution: false,
+        cachePolicy: "runtime_descriptor_live_response",
+        blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+        supportedHandoffs: ["text_turn"],
+      },
+    }),
+    draftReady: true,
+    requiredHandoff: "evolution_proposal_review",
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canSubmit, false);
+  assert.ok(
+    view.items.some(
+      (item: { label: string; status: string; detail: string }) =>
+        item.label === "Governed handoff route" &&
+        item.status === "blocked" &&
+        item.detail.includes("not advertised"),
+    ),
+  );
+});
+
 test("describes bridge failure with blocked effects visible", () => {
   const error = new NapoleonBridgeError("governance_denied", "trace_blocked", "request_blocked", 200, [
     "external_send",

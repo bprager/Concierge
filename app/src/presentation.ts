@@ -1,12 +1,14 @@
 import type {
   DescriptorConnectionState,
   DescriptorFailClosedReason,
+  GovernedHandoffCapability,
   GovernanceOutcome,
   GovernanceReviewState,
   MemoryProposalReviewState,
   NapoleonProfileMode,
   RehearsalPreview,
 } from "./contractBridge.js";
+import { descriptorSupportsGovernedHandoff } from "./contractBridge.js";
 import type { ConciergeMessage, NapoleonDelegation, NapoleonResponse } from "./types.js";
 import { NapoleonBridgeError } from "./napoleonBridge.js";
 
@@ -225,6 +227,7 @@ export interface GovernedHandoffReadinessInput {
   descriptorConnection: DescriptorConnectionState;
   draftReady: boolean;
   rehearsalMode?: boolean;
+  requiredHandoff?: GovernedHandoffCapability;
 }
 
 export interface GovernedHandoffReadinessView {
@@ -782,7 +785,10 @@ export function describeGovernedHandoffReadiness(
         descriptor.signatureState !== "invalid"
       : descriptor.canAttemptLiveBridge;
   const rehearsalReady = !input.rehearsalMode;
-  const canSubmit = input.draftReady && endpointReady && descriptorReady && rehearsalReady;
+  const handoffRouteReady = input.requiredHandoff
+    ? descriptorSupportsGovernedHandoff(descriptor, input.requiredHandoff)
+    : true;
+  const canSubmit = input.draftReady && endpointReady && descriptorReady && handoffRouteReady && rehearsalReady;
   const items: LiveSendPreflightItem[] = [
     {
       label: "Review draft",
@@ -801,6 +807,17 @@ export function describeGovernedHandoffReadiness(
         ? "Descriptor discovery and integrity checks allow a governed bridge attempt."
         : descriptor.message,
     },
+    ...(input.requiredHandoff
+      ? [
+          {
+            label: "Governed handoff route",
+            status: handoffRouteReady ? "ready" as const : "blocked" as const,
+            detail: handoffRouteReady
+              ? `Napoleon descriptor advertises ${input.requiredHandoff}.`
+              : `Napoleon descriptor has not advertised ${input.requiredHandoff}.`,
+          },
+        ]
+      : []),
     {
       label: "Rehearsal Mode",
       status: rehearsalReady ? "ready" : "blocked",
@@ -816,7 +833,7 @@ export function describeGovernedHandoffReadiness(
     canSubmit,
     summary: canSubmit
       ? `${input.label} can be submitted through the governed bridge for Napoleon review.`
-      : `${input.label} is blocked until the review draft, endpoint, descriptor preflight, and Rehearsal Mode state are ready.`,
+      : `${input.label} is blocked until the review draft, endpoint, descriptor preflight, governed handoff route, and Rehearsal Mode state are ready.`,
     caveat:
       "This handoff readiness check is not Napoleon approval, does not apply changes, does not write memory, does not dispatch agents, and does not send externally.",
     blockedEffects,

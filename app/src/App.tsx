@@ -506,6 +506,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     descriptorConnection,
     draftReady: Boolean(lastMemoryReviewState && lastMemoryReviewState.status !== "dismissed_locally"),
     rehearsalMode,
+    requiredHandoff: "memory_proposal_review",
   });
   const governanceReviewHandoffReadiness = describeGovernedHandoffReadiness({
     label: "Governance review",
@@ -516,18 +517,21 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         lastGovernanceReviewState.status !== "not_required",
     ),
     rehearsalMode,
+    requiredHandoff: "governance_review",
   });
   const steeringHandoffReadiness = describeGovernedHandoffReadiness({
     label: "Chief of Staff steering",
     descriptorConnection,
     draftReady: Boolean(steeringDraft),
     rehearsalMode,
+    requiredHandoff: "evolution_proposal_review",
   });
   const taxonomyHandoffReadiness = describeGovernedHandoffReadiness({
     label: "Chief of Staff taxonomy review",
     descriptorConnection,
     draftReady: Boolean(taxonomyReviewDraft),
     rehearsalMode,
+    requiredHandoff: "taxonomy_review",
   });
   const latestInteractionTraceId = findLatestInteractionTraceId(browserStorage());
 

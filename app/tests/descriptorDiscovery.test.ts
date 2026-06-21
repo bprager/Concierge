@@ -148,6 +148,7 @@ test("descriptor discovery falls back from runtime base URL to cos descriptor", 
   assert.equal(result.connection.state, "ready");
   assert.equal(result.connection.canAttemptLiveBridge, true);
   assert.equal(result.connection.descriptorStatus?.cachePolicy, "runtime_descriptor_live_response");
+  assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, ["text_turn"]);
   assert.equal(result.input.maxAgeSeconds, 300);
 });
 

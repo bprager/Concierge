@@ -7,6 +7,13 @@ export type AuthorityTier =
   | "prepare_only"
   | "approval_required"
   | "prohibited";
+export type GovernedHandoffCapability =
+  | "text_turn"
+  | "memory_proposal_review"
+  | "chief_of_staff_steering"
+  | "governance_review"
+  | "evolution_proposal_review"
+  | "taxonomy_review";
 
 export interface ChiefOfStaffDescriptor {
   schemaVersion: string;
@@ -15,6 +22,7 @@ export interface ChiefOfStaffDescriptor {
   commandExecution: false;
   cachePolicy: "fail_closed_to_review_required" | "runtime_descriptor_live_response";
   blockedEffects: string[];
+  supportedHandoffs?: GovernedHandoffCapability[];
 }
 
 export interface DescriptorStatus {
@@ -23,6 +31,7 @@ export interface DescriptorStatus {
   runtimeAuthority: boolean;
   cachePolicy: string;
   blockedEffects: string[];
+  supportedHandoffs: GovernedHandoffCapability[];
   message: string;
 }
 
@@ -247,6 +256,15 @@ const DEFAULT_BLOCKED_EFFECTS = [
 
 const MEMORY_TRIGGER_PATTERN = /\b(remember|prefer|preference|call me|nickname|my name is|i like|i usually)\b/i;
 
+const DEFAULT_SUPPORTED_HANDOFFS: GovernedHandoffCapability[] = [
+  "text_turn",
+  "memory_proposal_review",
+  "chief_of_staff_steering",
+  "governance_review",
+  "evolution_proposal_review",
+  "taxonomy_review",
+];
+
 export const defaultChiefOfStaffDescriptor: ChiefOfStaffDescriptor = {
   schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
   serviceId: "napoleon.chief_of_staff",
@@ -254,6 +272,7 @@ export const defaultChiefOfStaffDescriptor: ChiefOfStaffDescriptor = {
   commandExecution: false,
   cachePolicy: "fail_closed_to_review_required",
   blockedEffects: DEFAULT_BLOCKED_EFFECTS,
+  supportedHandoffs: DEFAULT_SUPPORTED_HANDOFFS,
 };
 
 export function mapProfileToNapoleonMode(profile: LocalProfile): NapoleonProfileMode {
@@ -276,10 +295,18 @@ export function validateChiefOfStaffDescriptor(descriptor: ChiefOfStaffDescripto
     runtimeAuthority: descriptor.runtimeAuthority,
     cachePolicy: descriptor.cachePolicy,
     blockedEffects: descriptor.blockedEffects,
+    supportedHandoffs: descriptor.supportedHandoffs ?? DEFAULT_SUPPORTED_HANDOFFS,
     message: ready
       ? "Chief of Staff contract descriptor is valid and contract-only."
       : "Chief of Staff descriptor is invalid or grants authority.",
   };
+}
+
+export function descriptorSupportsGovernedHandoff(
+  connection: DescriptorConnectionState,
+  capability: GovernedHandoffCapability,
+): boolean {
+  return Boolean(connection.canAttemptLiveBridge && connection.descriptorStatus?.supportedHandoffs.includes(capability));
 }
 
 export function buildDescriptorConnectionState(input: DescriptorConnectionInput): DescriptorConnectionState {
