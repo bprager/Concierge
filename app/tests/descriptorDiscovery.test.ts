@@ -216,6 +216,30 @@ test("descriptor discovery reports malformed descriptor as missing descriptor", 
   assert.equal(result.connection.canAttemptLiveBridge, false);
 });
 
+test("descriptor discovery fails closed for unknown advertised handoff routes", async () => {
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "https://napoleon.example/concierge",
+    fetch: async () => ({
+      ok: true,
+      json: async () => ({
+        descriptor: {
+          schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+          serviceId: "napoleon.chief_of_staff",
+          runtimeAuthority: false,
+          commandExecution: false,
+          cachePolicy: "fail_closed_to_review_required",
+          blockedEffects: ["runtime_authority", "memory_write"],
+          supportedHandoffs: ["text_turn", "shell_exec"],
+        },
+      }),
+    }),
+  });
+
+  assert.equal(result.connection.state, "descriptor_mismatch");
+  assert.equal(result.connection.failClosedReason, "descriptor_invalid");
+  assert.equal(result.connection.canAttemptLiveBridge, false);
+});
+
 test("descriptor discovery treats unreadable descriptor JSON as fail-closed HTTP state", async () => {
   const result = await discoverNapoleonDescriptor({
     getEndpoint: () => "https://napoleon.example/concierge",

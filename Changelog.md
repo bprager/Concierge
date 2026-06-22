@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened descriptor discovery so explicit `supportedHandoffs` / `supported_handoffs` lists fail closed when they contain unknown governed handoff names instead of silently dropping the unknown route.
 - Added bridge readiness proof export telemetry for whether the live descriptor advertises `text_turn`, so missing text-turn routes are auditable without exposing endpoints or descriptor bodies.
 - Preserved explicit `supportedHandoffs` / `supported_handoffs` from live descriptor discovery, so descriptors that omit `text_turn` remain visibly blocked instead of falling back to Concierge's built-in route defaults.
 - Added a descriptor-advertised `text_turn` route check to sanitized bridge readiness proof promotion gates, so exported local evidence stays promotion-blocked when a valid descriptor omits text turns.

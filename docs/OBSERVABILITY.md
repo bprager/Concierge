@@ -196,6 +196,8 @@ When descriptor discovery has not completed or the descriptor discovery cache is
 
 Descriptor discovery failures preserve `auth_failure`, `bridge_timeout`, and `http_failure` as local connection states and emit `descriptor_discovery_failed` rather than `descriptor_discovery_completed`. If a user attempts a governed text turn, memory proposal handoff, Chief of Staff steering handoff, or taxonomy review handoff after one of those failures, the preflight failure event carries the same reason before any request fetch is attempted.
 
+Explicit descriptor `supportedHandoffs` / `supported_handoffs` lists are treated as contract claims. Unknown governed handoff names make descriptor discovery fail closed as an invalid descriptor instead of being dropped from telemetry or readiness proof state.
+
 ## 5. Metrics
 
 ### Product metrics

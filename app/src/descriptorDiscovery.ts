@@ -28,6 +28,8 @@ export interface DescriptorDiscoveryResult {
   source: "none" | "live";
 }
 
+const INVALID_DESCRIPTOR = Symbol("invalid_descriptor");
+
 function getConfiguredEndpoint(dependencies: DescriptorDiscoveryDependencies): string | null {
   if (dependencies.getEndpoint) return dependencies.getEndpoint();
   return readConfiguredEndpointFromStorage();
@@ -86,12 +88,20 @@ const GOVERNED_HANDOFF_CAPABILITIES = new Set<GovernedHandoffCapability>([
   "taxonomy_review",
 ]);
 
-function supportedHandoffsValue(value: unknown): GovernedHandoffCapability[] | undefined {
+function hasOwnRecordValue(record: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(record, key);
+}
+
+function supportedHandoffsValue(value: unknown): GovernedHandoffCapability[] | null | undefined {
+  if (value === undefined) return undefined;
   const values = stringArrayValue(value);
-  if (!values) return undefined;
-  return values.filter((item): item is GovernedHandoffCapability =>
-    GOVERNED_HANDOFF_CAPABILITIES.has(item as GovernedHandoffCapability),
-  );
+  if (!values) return null;
+  const governedHandoffs: GovernedHandoffCapability[] = [];
+  for (const item of values) {
+    if (!GOVERNED_HANDOFF_CAPABILITIES.has(item as GovernedHandoffCapability)) return null;
+    governedHandoffs.push(item as GovernedHandoffCapability);
+  }
+  return governedHandoffs;
 }
 
 function supportedHandoffsFromRuntimeEndpoints(endpoints: Record<string, unknown>): GovernedHandoffCapability[] {
@@ -105,7 +115,7 @@ function supportedHandoffsFromRuntimeEndpoints(endpoints: Record<string, unknown
   return supported;
 }
 
-function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null {
+function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null | typeof INVALID_DESCRIPTOR {
   if (!value || typeof value !== "object") return null;
   const candidate = value as Partial<ChiefOfStaffDescriptor> & Record<string, unknown>;
   const schemaVersion = stringValue(candidate.schemaVersion) ?? stringValue(candidate.schema_version);
@@ -123,8 +133,10 @@ function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null {
       : candidate.cachePolicy;
   const cachePolicy = stringValue(cachePolicyValue);
   const blockedEffects = stringArrayValue(candidate.blockedEffects) ?? stringArrayValue(candidate.blocked_effects);
-  const supportedHandoffs =
-    supportedHandoffsValue(candidate.supportedHandoffs) ?? supportedHandoffsValue(candidate.supported_handoffs);
+  const supportedHandoffs = hasOwnRecordValue(candidate, "supportedHandoffs")
+    ? supportedHandoffsValue(candidate.supportedHandoffs)
+    : supportedHandoffsValue(candidate.supported_handoffs);
+  if (supportedHandoffs === null) return INVALID_DESCRIPTOR;
   const liveRuntimeDescriptor =
     schemaVersion === "napoleon/concierge/runtime-descriptor/v1" &&
     serviceId === "napoleon.chief_of_staff" &&
@@ -188,9 +200,11 @@ function buildInputFromPayload(endpointConfigured: boolean, payload: unknown, di
   const signature = record.signature && typeof record.signature === "object" ? record.signature as Record<string, unknown> : {};
   const cache = record.cache && typeof record.cache === "object" ? record.cache as Record<string, unknown> : {};
   const cachePolicy = record.cache_policy && typeof record.cache_policy === "object" ? record.cache_policy as Record<string, unknown> : {};
+  const descriptor = parseDescriptor(record.descriptor ?? record);
   return {
     endpointConfigured,
-    descriptor: parseDescriptor(record.descriptor ?? record),
+    descriptor: descriptor === INVALID_DESCRIPTOR ? null : descriptor,
+    failClosedReason: descriptor === INVALID_DESCRIPTOR ? "descriptor_invalid" : undefined,
     expectedChecksum: stringValue(record.expectedChecksum) ?? stringValue(checksum.expected),
     actualChecksum: stringValue(record.actualChecksum) ?? stringValue(checksum.actual),
     signatureValid: booleanValue(record.signatureValid) ?? booleanValue(signature.valid),

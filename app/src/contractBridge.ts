@@ -337,6 +337,17 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
   }
 
   if (!descriptorStatus) {
+    if (input.failClosedReason === "descriptor_invalid") {
+      return {
+        state: "descriptor_mismatch",
+        descriptorStatus: null,
+        checksumState,
+        signatureState,
+        canAttemptLiveBridge: false,
+        failClosedReason: "descriptor_invalid",
+        message: "Chief of Staff descriptor is invalid or grants authority.",
+      };
+    }
     if (
       input.failClosedReason === "auth_failure" ||
       input.failClosedReason === "bridge_timeout" ||
