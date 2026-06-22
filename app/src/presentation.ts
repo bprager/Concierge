@@ -502,6 +502,7 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
     descriptor.failClosedReason === "descriptor_signature_or_checksum_mismatch" ||
     descriptor.failClosedReason === "descriptor_invalid" ||
     descriptor.failClosedReason === "descriptor_stale";
+  const textTurnRouteReady = descriptorSupportsGovernedHandoff(descriptor, "text_turn");
   const items: LiveSendPreflightItem[] = [
     {
       label: "Text ready",
@@ -537,6 +538,15 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
           : descriptor.failClosedReason === "descriptor_invalid"
             ? descriptor.message
           : `Checksum ${descriptor.checksumState}; signature ${descriptor.signatureState}.`,
+    },
+    {
+      label: "Text-turn route",
+      status: textTurnRouteReady ? "ready" : "blocked",
+      detail: textTurnRouteReady
+        ? "Napoleon descriptor advertises text_turn."
+        : descriptor.canAttemptLiveBridge
+          ? "Napoleon descriptor has not advertised text_turn."
+          : "Descriptor preflight must pass before the text-turn route can be checked.",
     },
     {
       label: "Governance send gate",

@@ -106,6 +106,59 @@ test("live bridge fails closed before fetch when descriptor discovery has not co
   assert.equal((evidence[0] as { descriptorFailureReason?: string }).descriptorFailureReason, "no_descriptor");
 });
 
+test("live bridge fails closed before fetch when descriptor lacks text-turn route", async () => {
+  let fetchCalled = false;
+  const events: TelemetryPayload[] = [];
+  const evidence: unknown[] = [];
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_missing_text_turn_route",
+          conversationId: "conv_missing_text_turn_route",
+          turnId: "turn_missing_text_turn_route",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: {
+            endpointConfigured: true,
+            descriptor: {
+              schemaVersion: "napoleon/concierge/runtime-descriptor/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "runtime_descriptor_live_response",
+              blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+              supportedHandoffs: ["evolution_proposal_review"],
+            },
+            expectedChecksum: "sha256:contract",
+            actualChecksum: "sha256:contract",
+            signatureValid: true,
+          },
+          emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
+          fetch: async () => {
+            fetchCalled = true;
+            return { ok: true, json: async () => ({}) };
+          },
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "descriptor_invalid",
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "descriptor_invalid");
+  assert.equal((evidence[0] as { descriptorFailureReason?: string }).descriptorFailureReason, "descriptor_invalid");
+});
+
 test("live bridge preserves descriptor discovery auth failure before fetch", async () => {
   let fetchCalled = false;
 

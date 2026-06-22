@@ -7,6 +7,7 @@ import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage }
 import {
   buildDescriptorConnectionState,
   buildTextTurnContract,
+  descriptorSupportsGovernedHandoff,
   type DescriptorConnectionInput,
   type DescriptorFailClosedReason,
   type AuditEnvelope,
@@ -715,6 +716,18 @@ export async function sendToNapoleon(
     failClosed(
       dependencies,
       descriptorFailClosedReasonToBridgeFailure(descriptorConnection.failClosedReason),
+      request.traceId,
+      contract.chiefOfStaffRequest.request_id,
+      undefined,
+      evidenceContext,
+    );
+  }
+
+  if (!descriptorSupportsGovernedHandoff(descriptorConnection, "text_turn")) {
+    evidenceContext.descriptorFailureReason = "descriptor_invalid";
+    failClosed(
+      dependencies,
+      "descriptor_mismatch",
       request.traceId,
       contract.chiefOfStaffRequest.request_id,
       undefined,

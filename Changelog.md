@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a descriptor-advertised `text_turn` route check to live text-send preflight and the bridge send path, so a valid descriptor that omits text turns blocks before any request fetch.
 - Clarified the empty Napoleon delegation panel so it keeps the normal panel heading before bridge provenance is returned, with each provenance field marked as not returned instead of presenting the panel as unavailable.
 - Added a visible composer warning for blocked direct live sends so the first failed preflight reason is shown beside the Send controls before the guarded submit path is attempted.
 - Added visible transport, token-handling, and side-effect summaries to governed Napoleon route entries so named review/evidence targets show how they are contacted and what remains blocked.

@@ -922,6 +922,43 @@ test("describes missing runtime source as unproven in live send preflight", () =
   );
 });
 
+test("describes missing text-turn route as blocked in live send preflight", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: {
+        schemaVersion: "napoleon/concierge/runtime-descriptor/v1",
+        serviceId: "napoleon.chief_of_staff",
+        runtimeAuthority: false,
+        commandExecution: false,
+        cachePolicy: "runtime_descriptor_live_response",
+        blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+        supportedHandoffs: ["evolution_proposal_review"],
+      },
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canAttemptLiveSend, false);
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Text-turn route" &&
+        item.status === "blocked" &&
+        item.detail.includes("not advertised"),
+    ),
+  );
+});
+
 test("describes governed handoff readiness with endpoint and descriptor blockers", () => {
   const blocked = describeGovernedHandoffReadiness({
     label: "Chief of Staff taxonomy review",
