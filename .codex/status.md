@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added sanitized bridge target metadata to live-runtime `preflight.json`, so derived descriptor, capability, text-turn, and trace-proof targets plus false retention/side-effect flags are visible before network attempts without retaining endpoint hosts or tokens.
 - Added sanitized evaluator target metadata to live-runtime `preflight.json`, so derived evaluator path, request kind, operation ID, and false retention/side-effect flags are visible before any network attempt without retaining endpoint hosts or tokens.
 - Aligned combined live-runtime evaluator endpoint derivation with the named Napoleon evaluation review route, so explicit `/cos` endpoints and non-generated Napoleon bases derive `/chief-of-staff/reviews/evaluation` while local/generated endpoints keep `/v1/concierge/evaluate`.
 - Hardened live-runtime artifact privacy audits so retained bridge or evaluator artifacts fail validation if endpoint/token/body retention or forbidden side-effect boundary flags are true.

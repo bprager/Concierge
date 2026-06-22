@@ -176,6 +176,65 @@ def evaluator_target_metadata(eval_endpoint: str | None) -> dict[str, Any]:
     }
 
 
+def bridge_target_metadata(bridge_endpoint: str | None) -> dict[str, Any]:
+    if bridge_endpoint is None:
+        return {
+            "bridgeDescriptorTargetPath": None,
+            "bridgeDescriptorTargetOperationId": None,
+            "bridgeCapabilityTargetPath": None,
+            "bridgeCapabilityTargetOperationId": None,
+            "bridgeTextTurnTargetPath": None,
+            "bridgeTextTurnTargetOperationId": None,
+            "bridgeTraceEvidenceTargetPath": None,
+            "bridgeTraceEvidenceRequired": False,
+            "bridgeEndpointHostRetained": False,
+            "bridgeTokenRetained": False,
+            "bridgeRequestBodyRetained": False,
+            "bridgeResponseBodyRetained": False,
+            "bridgeApprovalCaptured": False,
+            "bridgeMemoryWritePerformed": False,
+            "bridgeAgentDispatchPerformed": False,
+            "bridgeExternalSendPerformed": False,
+        }
+    if is_cos_endpoint(bridge_endpoint):
+        return {
+            "bridgeDescriptorTargetPath": "/cos/descriptor",
+            "bridgeDescriptorTargetOperationId": "chief_of_staff_descriptor",
+            "bridgeCapabilityTargetPath": "/cos/capabilities",
+            "bridgeCapabilityTargetOperationId": "chief_of_staff_capabilities",
+            "bridgeTextTurnTargetPath": "/cos/text-turn",
+            "bridgeTextTurnTargetOperationId": "text_turn",
+            "bridgeTraceEvidenceTargetPath": "/cos/trace/{trace_id}",
+            "bridgeTraceEvidenceRequired": True,
+            "bridgeEndpointHostRetained": False,
+            "bridgeTokenRetained": False,
+            "bridgeRequestBodyRetained": False,
+            "bridgeResponseBodyRetained": False,
+            "bridgeApprovalCaptured": False,
+            "bridgeMemoryWritePerformed": False,
+            "bridgeAgentDispatchPerformed": False,
+            "bridgeExternalSendPerformed": False,
+        }
+    return {
+        "bridgeDescriptorTargetPath": "/v1/concierge/chief-of-staff/descriptor",
+        "bridgeDescriptorTargetOperationId": "chief_of_staff_descriptor",
+        "bridgeCapabilityTargetPath": "/v1/concierge/chief-of-staff/capabilities",
+        "bridgeCapabilityTargetOperationId": "chief_of_staff_capabilities",
+        "bridgeTextTurnTargetPath": "/v1/concierge/turn",
+        "bridgeTextTurnTargetOperationId": "turn",
+        "bridgeTraceEvidenceTargetPath": None,
+        "bridgeTraceEvidenceRequired": False,
+        "bridgeEndpointHostRetained": False,
+        "bridgeTokenRetained": False,
+        "bridgeRequestBodyRetained": False,
+        "bridgeResponseBodyRetained": False,
+        "bridgeApprovalCaptured": False,
+        "bridgeMemoryWritePerformed": False,
+        "bridgeAgentDispatchPerformed": False,
+        "bridgeExternalSendPerformed": False,
+    }
+
+
 def endpoint_from_env(env: dict[str, str], key: str) -> str | None:
     value = env.get(key)
     return value.strip() if value and value.strip() else None
@@ -251,14 +310,11 @@ def live_runtime_preflight(
             "requiredEvaluatorEndpointEnv": "NAPOLEON_EVAL_ENDPOINT",
             "acceptedBridgeEndpointForms": ACCEPTED_BRIDGE_ENDPOINT_FORMS,
             "descriptorDiscoveryRequired": True,
-            "descriptorFirstEndpoint": "/cos/descriptor",
-            "capabilityDiscoveryEndpoint": "/cos/capabilities",
-            "textTurnEndpoint": "/cos/text-turn",
-            "traceEvidenceEndpoint": "/cos/trace/{trace_id}",
             "localHarnessSubstituteAllowed": False,
             "nextValidationCommand": "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make live-runtime-validation",
             "boundary": "A local harness or simulation can test shape only; it cannot prove real Napoleon runtime readiness.",
             **resolution,
+            **bridge_target_metadata(bridge_endpoint),
             **evaluator_target_metadata(eval_endpoint),
         },
         "endpointHostStored": False,

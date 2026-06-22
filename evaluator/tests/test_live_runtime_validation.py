@@ -159,12 +159,21 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(preflight["runtimeAlignment"]["evaluatorTargetOperationId"], "evaluate")
         self.assertFalse(preflight["runtimeAlignment"]["evaluatorEndpointHostRetained"])
         self.assertFalse(preflight["runtimeAlignment"]["evaluatorTokenRetained"])
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeDescriptorTargetPath"], "/v1/concierge/chief-of-staff/descriptor")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeDescriptorTargetOperationId"], "chief_of_staff_descriptor")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeCapabilityTargetPath"], "/v1/concierge/chief-of-staff/capabilities")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeTextTurnTargetPath"], "/v1/concierge/turn")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeTextTurnTargetOperationId"], "turn")
+        self.assertIsNone(preflight["runtimeAlignment"]["bridgeTraceEvidenceTargetPath"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeTraceEvidenceRequired"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeEndpointHostRetained"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeTokenRetained"])
         self.assertFalse(preflight["runtimeAlignment"]["bridgeEndpointExplicitlyConfigured"])
         self.assertTrue(preflight["runtimeAlignment"]["evaluatorEndpointExplicitlyConfigured"])
         self.assertNotIn("127.0.0.1", json.dumps(preflight))
         self.assertNotIn("8787", json.dumps(preflight))
 
-    def test_preflight_records_sanitized_napoleon_evaluation_review_target(self):
+    def test_preflight_records_sanitized_napoleon_cos_bridge_and_evaluation_targets(self):
         config = live_runtime_validation.resolve_endpoint_configuration(
             "https://napoleon.example/cos/text-turn",
             None,
@@ -189,6 +198,22 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertFalse(preflight["runtimeAlignment"]["evaluatorMemoryWritePerformed"])
         self.assertFalse(preflight["runtimeAlignment"]["evaluatorAgentDispatchPerformed"])
         self.assertFalse(preflight["runtimeAlignment"]["evaluatorExternalSendPerformed"])
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeDescriptorTargetPath"], "/cos/descriptor")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeDescriptorTargetOperationId"], "chief_of_staff_descriptor")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeCapabilityTargetPath"], "/cos/capabilities")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeCapabilityTargetOperationId"], "chief_of_staff_capabilities")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeTextTurnTargetPath"], "/cos/text-turn")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeTextTurnTargetOperationId"], "text_turn")
+        self.assertEqual(preflight["runtimeAlignment"]["bridgeTraceEvidenceTargetPath"], "/cos/trace/{trace_id}")
+        self.assertTrue(preflight["runtimeAlignment"]["bridgeTraceEvidenceRequired"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeEndpointHostRetained"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeTokenRetained"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeRequestBodyRetained"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeResponseBodyRetained"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeApprovalCaptured"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeMemoryWritePerformed"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeAgentDispatchPerformed"])
+        self.assertFalse(preflight["runtimeAlignment"]["bridgeExternalSendPerformed"])
         self.assertNotIn("napoleon.example", json.dumps(preflight))
 
     def test_derives_eval_endpoint_from_bridge_base(self):
@@ -333,12 +358,15 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             self.assertIn("/cos/text-turn", preflight["runtimeAlignment"]["acceptedBridgeEndpointForms"])
             self.assertFalse(preflight["runtimeAlignment"]["localHarnessSubstituteAllowed"])
             self.assertTrue(preflight["runtimeAlignment"]["descriptorDiscoveryRequired"])
-            self.assertEqual(preflight["runtimeAlignment"]["descriptorFirstEndpoint"], "/cos/descriptor")
-            self.assertEqual(preflight["runtimeAlignment"]["textTurnEndpoint"], "/cos/text-turn")
             self.assertEqual(
                 preflight["runtimeAlignment"]["nextValidationCommand"],
                 "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make live-runtime-validation",
             )
+            self.assertIsNone(preflight["runtimeAlignment"]["bridgeDescriptorTargetPath"])
+            self.assertIsNone(preflight["runtimeAlignment"]["bridgeTextTurnTargetPath"])
+            self.assertFalse(preflight["runtimeAlignment"]["bridgeTraceEvidenceRequired"])
+            self.assertFalse(preflight["runtimeAlignment"]["bridgeEndpointHostRetained"])
+            self.assertFalse(preflight["runtimeAlignment"]["bridgeTokenRetained"])
             self.assertIsNone(preflight["runtimeAlignment"]["evaluatorTargetPath"])
             self.assertFalse(preflight["runtimeAlignment"]["evaluatorEndpointHostRetained"])
             self.assertFalse(preflight["runtimeAlignment"]["evaluatorTokenRetained"])
