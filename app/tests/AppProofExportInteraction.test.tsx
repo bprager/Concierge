@@ -2598,6 +2598,67 @@ test("imports sanitized evaluator validation artifact into readiness and preflig
   }
 });
 
+test("imports sanitized evaluator validation artifact from a selected local file", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+    const artifactFileInput = view.getByLabelText("Evaluator validation artifact file") as HTMLInputElement;
+    const summaryFile = new File(
+      [
+        JSON.stringify({
+          runtimeValidation: {
+            source: "real_runtime",
+          },
+          httpEvaluator: {
+            status: "passed",
+            failureReason: "none",
+            targetPath: "/chief-of-staff/reviews/evaluation",
+            targetRequestKind: "evaluation_review_handoff",
+            targetOperationId: "evaluation_review",
+            endpointHostRetained: false,
+            tokenRetained: false,
+            requestBodyRetained: false,
+            responseBodyRetained: false,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          },
+        }),
+      ],
+      "summary.json",
+      { type: "application/json" },
+    );
+
+    await user.upload(artifactFileInput, summaryFile);
+
+    await waitFor(() => assert.ok(view.getByText("Evaluator HTTP validation passed.")));
+    assert.ok(view.getByText("Selected file: summary.json"));
+
+    const artifactInput = view.getByLabelText("Evaluator validation artifact") as HTMLTextAreaElement;
+    assert.ok(artifactInput.value.includes('"httpEvaluator"'));
+
+    const readiness = view.getByText("Live bridge readiness").closest("section") as HTMLElement | null;
+    assert.ok(readiness);
+    assert.ok(within(readiness).getByText("passed"));
+    assert.ok(within(readiness).getByText("/chief-of-staff/reviews/evaluation"));
+
+    await user.click(view.getByText("Export readiness proof"));
+    const readinessExport = view.getByLabelText("Exported bridge readiness proof");
+    assert.ok(readinessExport.textContent?.includes('"status": "passed"'));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("blocks rendered live send before fetch when endpoint changes without live descriptor discovery", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

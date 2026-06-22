@@ -398,6 +398,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     useState<BridgeReadinessProofComparison | null>(null);
   const [evaluatorValidationArtifactInput, setEvaluatorValidationArtifactInput] = useState("");
   const [evaluatorValidationImport, setEvaluatorValidationImport] = useState<EvaluatorValidationImport | null>(null);
+  const [evaluatorValidationFileName, setEvaluatorValidationFileName] = useState<string | null>(null);
   const [voicePipelineProofJson, setVoicePipelineProofJson] = useState<string | null>(null);
   const [voicePipelineProofComparison, setVoicePipelineProofComparison] =
     useState<GovernedVoicePipelineProofComparison | null>(null);
@@ -629,6 +630,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setBridgeEvidenceReadiness(buildBridgeEvidenceReadinessState());
     setEvaluatorValidationArtifactInput("");
     setEvaluatorValidationImport(null);
+    setEvaluatorValidationFileName(null);
   }
 
   function clearVoicePipelineProof() {
@@ -2340,17 +2342,15 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     });
   }
 
-  function importEvaluatorValidationArtifact() {
+  function recordEvaluatorValidationImport(importResult: EvaluatorValidationImport, importSource: "paste" | "file") {
     const traceId = newTraceId();
-    const importResult = parseEvaluatorValidationArtifact(evaluatorValidationArtifactInput, {
-      expectedTargetPath: isLocalHarnessEndpoint(endpoint) ? "/v1/concierge/evaluate" : "/chief-of-staff/reviews/evaluation",
-    });
     setEvaluatorValidationImport(importResult);
     clearBridgeReadinessProof();
     emitEvent("evaluator_validation_artifact_imported", {
       traceId,
       conversationId,
       status: importResult.status,
+      importSource,
       evaluatorHttpStatus: importResult.validation.status,
       evaluatorFailureReason: importResult.validation.failureReason ?? "none",
       evaluatorTargetPath: importResult.validation.targetPath ?? "unavailable",
@@ -2360,6 +2360,42 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       agentDispatchPerformed: false,
       externalSendPerformed: false,
     });
+  }
+
+  function parseEvaluatorValidationArtifactForCurrentEndpoint(artifactJson: string): EvaluatorValidationImport {
+    return parseEvaluatorValidationArtifact(artifactJson, {
+      expectedTargetPath: isLocalHarnessEndpoint(endpoint) ? "/v1/concierge/evaluate" : "/chief-of-staff/reviews/evaluation",
+    });
+  }
+
+  function importEvaluatorValidationArtifact() {
+    setEvaluatorValidationFileName(null);
+    recordEvaluatorValidationImport(parseEvaluatorValidationArtifactForCurrentEndpoint(evaluatorValidationArtifactInput), "paste");
+  }
+
+  async function importEvaluatorValidationArtifactFile(file: File | undefined) {
+    if (!file) return;
+    setEvaluatorValidationFileName(file.name);
+    try {
+      const artifactJson = await file.text();
+      setEvaluatorValidationArtifactInput(artifactJson);
+      recordEvaluatorValidationImport(parseEvaluatorValidationArtifactForCurrentEndpoint(artifactJson), "file");
+    } catch {
+      recordEvaluatorValidationImport(
+        {
+          status: "rejected",
+          summary: "Evaluator validation artifact file could not be read.",
+          validation: {
+            status: "failed",
+            failureReason: "Evaluator validation artifact file could not be read.",
+            targetPath: "unavailable",
+            requestKind: "unavailable",
+            operationId: "unavailable",
+          },
+        },
+        "file",
+      );
+    }
   }
 
   function exportVoicePipelineProof() {
@@ -4315,6 +4351,19 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           ) : null}
         </dl>
         <div className="evaluator-import">
+          <label>
+            <span>Evaluator validation artifact file</span>
+            <input
+              aria-label="Evaluator validation artifact file"
+              type="file"
+              accept="application/json,.json"
+              onChange={(event) => {
+                void importEvaluatorValidationArtifactFile(event.target.files?.[0]);
+                event.target.value = "";
+              }}
+            />
+          </label>
+          {evaluatorValidationFileName ? <span>Selected file: {evaluatorValidationFileName}</span> : null}
           <label>
             <span>Evaluator validation artifact</span>
             <textarea
