@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a sanitized accepted readiness proof import to the live bridge readiness panel, accepting only successful real-runtime, promotion-ready, side-effect-free proof JSON as local review metadata while rejecting unsafe, local-only, incomplete, or side-effect-claiming proofs.
 - Added a visible last real-runtime proof row to the live bridge readiness panel, showing only proven real Napoleon runtime evidence as successful while local harness, local simulation, missing, failed, or incomplete evidence stays marked not proven.
 - Added a human-readable readiness proof source summary to the live bridge readiness panel, showing generated Napoleon review/evidence target count and local-only export boundaries before reviewers open the JSON proof.
 - Added generated-source provenance for named Napoleon review/evidence targets to sanitized bridge readiness proof exports, so exported local evidence now shows the canonical contract metadata source while preserving false side-effect boundaries and excluding endpoint hosts, tokens, prompts, request bodies, and response bodies.

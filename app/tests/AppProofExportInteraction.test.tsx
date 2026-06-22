@@ -2684,6 +2684,60 @@ test("imports sanitized evaluator validation artifact from a selected local file
   }
 });
 
+test("imports an accepted real-runtime readiness proof as sanitized local metadata", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+    const acceptedProofInput = view.getByLabelText("Accepted readiness proof");
+    fireEvent.change(acceptedProofInput, {
+      target: {
+        value: JSON.stringify({
+          kind: "concierge_bridge_readiness_proof",
+          version: 1,
+          evidence: {
+            captureState: "passed",
+            comparisonState: "passed",
+            lastEvidenceStatus: "success",
+            lastOperationId: "text_turn",
+            lastTargetPath: "/v1/concierge/turn",
+          },
+          runtimeValidation: {
+            source: "real_runtime",
+            promotionGate: "real_runtime_evidence_available",
+          },
+          boundary: {
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            localApplicationPerformed: false,
+            proposalOnly: true,
+          },
+        }),
+      },
+    });
+
+    await user.click(view.getByText("Import accepted readiness proof"));
+
+    await waitFor(() => assert.ok(view.getByText("Accepted real-runtime readiness proof imported.")));
+    const readiness = view.getByText("Live bridge readiness").closest("section") as HTMLElement | null;
+    assert.ok(readiness);
+    assert.ok(within(readiness).getByText("Accepted real-runtime proof"));
+    assert.ok(within(readiness).getByText("success: text_turn at /v1/concierge/turn"));
+    assert.ok(within(readiness).getByText("Sanitized local metadata only; not Napoleon approval."));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("blocks rendered live send before fetch when endpoint changes without live descriptor discovery", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

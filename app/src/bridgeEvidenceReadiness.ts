@@ -69,6 +69,17 @@ export interface BridgeReadinessProofComparison {
   changes: BridgeReadinessProofChange[];
 }
 
+export interface AcceptedBridgeReadinessProofImport {
+  status: "accepted" | "rejected";
+  summary: string;
+  lastRealRuntimeProof?: {
+    operationId: string;
+    targetPath: string;
+    status: "success";
+    promotionGate: string;
+  };
+}
+
 const FORBIDDEN_EVIDENCE_KEYS = new Set([
   "authToken",
   "authorization",
@@ -457,5 +468,58 @@ export function compareBridgeReadinessProofs(
       evidence.comparisonState ?? "unavailable",
     )}.`,
     changes,
+  };
+}
+
+export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridgeReadinessProofImport {
+  const proof = parseBridgeReadinessProof(json);
+  if (!proof) {
+    return {
+      status: "rejected",
+      summary: "Accepted readiness proof import rejected because the JSON is invalid or contains unsafe raw data.",
+    };
+  }
+
+  const evidence = nestedRecord(proof, "evidence");
+  const runtimeValidation = nestedRecord(proof, "runtimeValidation");
+  const boundary = nestedRecord(proof, "boundary");
+  const sideEffectKeys = [
+    "approvalCaptured",
+    "memoryWritePerformed",
+    "agentDispatchPerformed",
+    "externalSendPerformed",
+    "localApplicationPerformed",
+  ];
+  const sideEffectClaimed = sideEffectKeys.some((key) => boundary[key] === true);
+
+  if (sideEffectClaimed) {
+    return {
+      status: "rejected",
+      summary: "Accepted readiness proof import rejected because it claims a forbidden side effect.",
+    };
+  }
+
+  if (
+    runtimeValidation.source !== "real_runtime" ||
+    runtimeValidation.promotionGate !== "real_runtime_evidence_available" ||
+    evidence.captureState !== "passed" ||
+    evidence.comparisonState !== "passed" ||
+    evidence.lastEvidenceStatus !== "success"
+  ) {
+    return {
+      status: "rejected",
+      summary: "Accepted readiness proof import rejected because it is not a successful real-runtime proof.",
+    };
+  }
+
+  return {
+    status: "accepted",
+    summary: "Accepted real-runtime readiness proof imported.",
+    lastRealRuntimeProof: {
+      operationId: proofField(proof, ["evidence", "lastOperationId"]),
+      targetPath: proofField(proof, ["evidence", "lastTargetPath"]),
+      status: "success",
+      promotionGate: proofField(proof, ["runtimeValidation", "promotionGate"]),
+    },
   };
 }

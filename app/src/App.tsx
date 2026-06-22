@@ -46,6 +46,8 @@ import {
   buildBridgeEvidenceReadinessState,
   compareBridgeReadinessProofs,
   exportBridgeReadinessProofJson,
+  importAcceptedBridgeReadinessProof,
+  type AcceptedBridgeReadinessProofImport,
   type BridgeReadinessProofComparison,
   updateBridgeEvidenceReadinessState,
 } from "./bridgeEvidenceReadiness.js";
@@ -396,6 +398,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
   const [bridgeReadinessProofComparison, setBridgeReadinessProofComparison] =
     useState<BridgeReadinessProofComparison | null>(null);
+  const [acceptedReadinessProofInput, setAcceptedReadinessProofInput] = useState("");
+  const [acceptedReadinessProofImport, setAcceptedReadinessProofImport] =
+    useState<AcceptedBridgeReadinessProofImport | null>(null);
   const [evaluatorValidationArtifactInput, setEvaluatorValidationArtifactInput] = useState("");
   const [evaluatorValidationImport, setEvaluatorValidationImport] = useState<EvaluatorValidationImport | null>(null);
   const [evaluatorValidationFileName, setEvaluatorValidationFileName] = useState<string | null>(null);
@@ -2371,6 +2376,25 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   function importEvaluatorValidationArtifact() {
     setEvaluatorValidationFileName(null);
     recordEvaluatorValidationImport(parseEvaluatorValidationArtifactForCurrentEndpoint(evaluatorValidationArtifactInput), "paste");
+  }
+
+  function importAcceptedReadinessProof() {
+    const traceId = newTraceId();
+    const importResult = importAcceptedBridgeReadinessProof(acceptedReadinessProofInput);
+    setAcceptedReadinessProofImport(importResult);
+    emitEvent("accepted_readiness_proof_imported", {
+      traceId,
+      conversationId,
+      status: importResult.status,
+      lastEvidenceStatus: importResult.lastRealRuntimeProof?.status ?? "unavailable",
+      lastOperationId: importResult.lastRealRuntimeProof?.operationId ?? "unavailable",
+      lastTargetPath: importResult.lastRealRuntimeProof?.targetPath ?? "unavailable",
+      promotionGate: importResult.lastRealRuntimeProof?.promotionGate ?? "unavailable",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+    });
   }
 
   async function importEvaluatorValidationArtifactFile(file: File | undefined) {
@@ -4411,6 +4435,34 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             </div>
           ) : null}
         </dl>
+        <div className="evaluator-import">
+          <label>
+            <span>Accepted readiness proof</span>
+            <textarea
+              aria-label="Accepted readiness proof"
+              value={acceptedReadinessProofInput}
+              onChange={(event) => setAcceptedReadinessProofInput(event.target.value)}
+              placeholder="Paste a sanitized bridge readiness proof JSON accepted for local review"
+            />
+          </label>
+          <button className="secondary" onClick={importAcceptedReadinessProof}>
+            Import accepted readiness proof
+          </button>
+          {acceptedReadinessProofImport ? (
+            <div className={`proof-comparison ${acceptedReadinessProofImport.status}`}>
+              <strong>Accepted real-runtime proof</strong>
+              <span>{acceptedReadinessProofImport.summary}</span>
+              {acceptedReadinessProofImport.lastRealRuntimeProof ? (
+                <span>
+                  {acceptedReadinessProofImport.lastRealRuntimeProof.status}:{" "}
+                  {acceptedReadinessProofImport.lastRealRuntimeProof.operationId} at{" "}
+                  {acceptedReadinessProofImport.lastRealRuntimeProof.targetPath}
+                </span>
+              ) : null}
+              <span>Sanitized local metadata only; not Napoleon approval.</span>
+            </div>
+          ) : null}
+        </div>
         <div className="evaluator-import">
           <label>
             <span>Evaluator validation artifact file</span>

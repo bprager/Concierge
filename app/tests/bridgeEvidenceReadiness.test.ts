@@ -4,6 +4,7 @@ import {
   buildBridgeEvidenceReadinessState,
   compareBridgeReadinessProofs,
   exportBridgeReadinessProofJson,
+  importAcceptedBridgeReadinessProof,
   updateBridgeEvidenceReadinessState,
 } from "../src/bridgeEvidenceReadiness.js";
 import { buildDescriptorConnectionState, defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
@@ -747,4 +748,94 @@ test("rejects bridge readiness proof comparison input containing endpoint or sec
   assert.equal(currentComparison.status, "invalid_current");
   assert.equal(JSON.stringify(previousComparison).includes("127.0.0.1"), false);
   assert.equal(JSON.stringify(currentComparison).includes("local-secret-token"), false);
+});
+
+test("imports only accepted real-runtime readiness proof metadata", () => {
+  const accepted = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      kind: "concierge_bridge_readiness_proof",
+      version: 1,
+      evidence: {
+        captureState: "passed",
+        comparisonState: "passed",
+        lastEvidenceStatus: "success",
+        lastOperationId: "text_turn",
+        lastTargetPath: "/v1/concierge/turn",
+      },
+      runtimeValidation: {
+        source: "real_runtime",
+        promotionGate: "real_runtime_evidence_available",
+      },
+      boundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        localApplicationPerformed: false,
+      },
+    }),
+  );
+
+  assert.equal(accepted.status, "accepted");
+  assert.equal(accepted.summary, "Accepted real-runtime readiness proof imported.");
+  assert.deepEqual(accepted.lastRealRuntimeProof, {
+    operationId: "text_turn",
+    targetPath: "/v1/concierge/turn",
+    status: "success",
+    promotionGate: "real_runtime_evidence_available",
+  });
+});
+
+test("rejects unsafe or non-real-runtime accepted readiness proof imports", () => {
+  const localHarness = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      kind: "concierge_bridge_readiness_proof",
+      evidence: {
+        captureState: "passed",
+        comparisonState: "passed",
+        lastEvidenceStatus: "success",
+        lastOperationId: "text_turn",
+        lastTargetPath: "/v1/concierge/turn",
+      },
+      runtimeValidation: {
+        source: "local_harness",
+        promotionGate: "blocked_until_real_runtime_evidence_passes",
+      },
+      boundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        localApplicationPerformed: false,
+      },
+    }),
+  );
+  const unsafe = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      kind: "concierge_bridge_readiness_proof",
+      evidence: {
+        captureState: "passed",
+        comparisonState: "passed",
+        lastEvidenceStatus: "success",
+        lastOperationId: "text_turn",
+        lastTargetPath: "http://127.0.0.1:8787/v1/concierge/turn",
+      },
+      runtimeValidation: {
+        source: "real_runtime",
+        promotionGate: "real_runtime_evidence_available",
+      },
+      boundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        localApplicationPerformed: false,
+      },
+    }),
+  );
+
+  assert.equal(localHarness.status, "rejected");
+  assert.ok(localHarness.summary.includes("not a successful real-runtime proof"));
+  assert.equal(unsafe.status, "rejected");
+  assert.ok(unsafe.summary.includes("invalid or contains unsafe raw data"));
 });
