@@ -2252,6 +2252,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       descriptorState: descriptorConnection.state,
       checksumState: descriptorConnection.checksumState,
       signatureState: descriptorConnection.signatureState,
+      descriptorTextTurnRouteAdvertised: Boolean(
+        descriptorConnection.canAttemptLiveBridge &&
+          descriptorConnection.descriptorStatus?.supportedHandoffs.includes("text_turn"),
+      ),
       evidenceCaptureState: bridgeEvidenceReadiness.captureState,
       evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
       runtimeValidationSource: runtimeValidationSource ?? "unavailable",

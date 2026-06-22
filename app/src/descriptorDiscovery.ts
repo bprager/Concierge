@@ -77,6 +77,23 @@ function stringArrayValue(value: unknown): string[] | undefined {
   return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : undefined;
 }
 
+const GOVERNED_HANDOFF_CAPABILITIES = new Set<GovernedHandoffCapability>([
+  "text_turn",
+  "memory_proposal_review",
+  "chief_of_staff_steering",
+  "governance_review",
+  "evolution_proposal_review",
+  "taxonomy_review",
+]);
+
+function supportedHandoffsValue(value: unknown): GovernedHandoffCapability[] | undefined {
+  const values = stringArrayValue(value);
+  if (!values) return undefined;
+  return values.filter((item): item is GovernedHandoffCapability =>
+    GOVERNED_HANDOFF_CAPABILITIES.has(item as GovernedHandoffCapability),
+  );
+}
+
 function supportedHandoffsFromRuntimeEndpoints(endpoints: Record<string, unknown>): GovernedHandoffCapability[] {
   const supported: GovernedHandoffCapability[] = [];
   if (endpoints.text_turn === "POST /cos/text-turn") supported.push("text_turn");
@@ -106,6 +123,8 @@ function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null {
       : candidate.cachePolicy;
   const cachePolicy = stringValue(cachePolicyValue);
   const blockedEffects = stringArrayValue(candidate.blockedEffects) ?? stringArrayValue(candidate.blocked_effects);
+  const supportedHandoffs =
+    supportedHandoffsValue(candidate.supportedHandoffs) ?? supportedHandoffsValue(candidate.supported_handoffs);
   const liveRuntimeDescriptor =
     schemaVersion === "napoleon/concierge/runtime-descriptor/v1" &&
     serviceId === "napoleon.chief_of_staff" &&
@@ -142,6 +161,7 @@ function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null {
       commandExecution: commandExecution as false,
       cachePolicy,
       blockedEffects,
+      supportedHandoffs,
     };
   }
   return null;

@@ -10,6 +10,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Preserved explicit live descriptor handoff lists from `supportedHandoffs` / `supported_handoffs`, so a discovered descriptor that omits `text_turn` stays blocked instead of inheriting Concierge's built-in default handoff list.
+- Added `descriptorTextTurnRouteAdvertised` to bridge readiness proof export telemetry, so exported proof audit events show whether text turns were descriptor-advertised without retaining endpoint hosts or raw descriptor bodies.
 - Added a descriptor-advertised text-turn route gate to sanitized bridge readiness proof promotion gates, so exported local evidence cannot report real-runtime readiness when a valid descriptor omits `text_turn`.
 - Added a descriptor-advertised text-turn route gate to the live bridge readiness panel, so a valid descriptor that omits `text_turn` no longer appears send-ready even when descriptor integrity and evidence checks pass.
 - Added a descriptor-advertised text-turn route gate to live-send preflight and the bridge send path, so a valid descriptor that omits `text_turn` blocks visibly before any request fetch.
