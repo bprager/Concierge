@@ -4335,6 +4335,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                 <span>Transport: {operation.transport}</span>
                 <span>Token handling: {operation.tokenHandling}</span>
                 <span>{operation.boundary}</span>
+                {operation.sourceSummary ? <span>Source: {operation.sourceSummary}</span> : null}
                 <span>Side effects: {operation.sideEffects}</span>
                 <span>Required response fields: {operation.requiredResponseSummary}</span>
                 {operation.acceptedEndpointForms ? (

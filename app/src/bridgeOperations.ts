@@ -29,6 +29,7 @@ export interface BridgeOperationSummary {
   acceptedEndpointForms?: readonly string[];
   acceptedEndpointSummary?: string;
   requiredProofSummary?: string;
+  sourceSummary?: string;
 }
 
 type NapoleonReviewOperation = GeneratedNapoleonReviewOperation;
@@ -474,6 +475,7 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
       "No local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
     requiredResponseFields: operation.responseRequired,
     requiredResponseSummary: operation.responseRequired.join(", "),
+    sourceSummary: "Generated from api/napoleon_bridge.openapi.yaml review/evidence metadata",
   };
 }
 

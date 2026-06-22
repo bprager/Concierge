@@ -21,6 +21,7 @@ import {
   buildObservabilityTraceBridgeTarget,
   buildProfileBridgeTarget,
   describeBridgeOperationSummary,
+  describeNapoleonReviewOperationSummary,
   describeTaxonomyReviewBridgeSummary,
   getBridgeOperation,
   getNapoleonDiscoveryOperation,
@@ -720,4 +721,16 @@ test("describes all core governed operation routes for the UI", () => {
     "agentDispatchPerformed",
     "externalSendPerformed",
   ]);
+});
+
+test("describes named Napoleon review targets with generated metadata source", () => {
+  const summary = describeNapoleonReviewOperationSummary("observability_trace");
+
+  assert.equal(summary.label, "Observability trace handoff");
+  assert.equal(summary.path, "/observability/traces");
+  assert.equal(summary.requestKind, "observability_trace_handoff");
+  assert.equal(summary.sourceSummary, "Generated from api/napoleon_bridge.openapi.yaml review/evidence metadata");
+  assert.equal(summary.requiredResponseSummary.includes("traceEnvelope"), true);
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 });

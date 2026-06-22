@@ -2257,6 +2257,10 @@ test("shows named Napoleon governed targets in governed routes", async () => {
     assert.ok(routes.getByText("New agent proposal review"));
     assert.ok(routes.getByText("/chief-of-staff/reviews/new-agent-proposals"));
     assert.ok(routes.getByText("new_agent_proposal_review_handoff"));
+    assert.equal(
+      routes.getAllByText("Source: Generated from api/napoleon_bridge.openapi.yaml review/evidence metadata").length,
+      8,
+    );
     assert.ok(
       routes.getAllByText(
         "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
