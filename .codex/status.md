@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened combined live-runtime validation so descriptor-gated capability discovery failures now return a failing command exit code even when bridge capture and evaluator HTTP mode pass; promotion remains blocked on the same condition.
 - Aligned combined live-runtime capability discovery with real Napoleon `/cos` base endpoints: when generated capability discovery returns 404, validation falls back to `/cos/capabilities` and accepts advisory-only snake-case capability manifests as sanitized metadata without retaining endpoint hosts, tokens, or response bodies.
 - Re-ran `NAPOLEON_BRIDGE_ENDPOINT=http://127.0.0.1:18765 make live-runtime-validation` through an SSH tunnel to `bernd@mimir`; real-runtime bridge evidence passed for `/cos/text-turn`, matching `/cos/trace/{trace_id}` proof, and descriptor-gated `/cos/capabilities` discovery passed with six advisory-only capabilities, while promotion remains blocked only because HTTP evaluator mode failed.
 - Hardened descriptor discovery so explicit `supportedHandoffs` / `supported_handoffs` lists containing unknown route names fail closed as invalid descriptors instead of being silently filtered into a partially ready state.

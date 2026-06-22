@@ -189,6 +189,64 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertFalse(evidence["agentDispatchPerformed"])
         self.assertFalse(evidence["externalSendPerformed"])
 
+    def test_main_fails_when_capability_discovery_fails_even_if_http_eval_passes(self):
+        with local_bridge_harness.running_harness() as base_url:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                capability_path = Path(tmpdir) / "capability_discovery.json"
+
+                def write_failed_capability_discovery(*args):
+                    capability_path.write_text(
+                        json.dumps({
+                            "kind": "chief_of_staff_capability_discovery_evidence",
+                            "status": "failed",
+                            "failureReason": "unsafe_capability_claim",
+                            "targetPath": "/v1/concierge/chief-of-staff/capabilities",
+                            "operationId": "chief_of_staff_capabilities",
+                            "requestKind": "chief_of_staff_capabilities",
+                            "runtimeValidationSource": "local_harness",
+                            "capabilityCount": 0,
+                            "capabilityIds": [],
+                            "authorityTierCounts": {},
+                            "runtimeAuthority": False,
+                            "blockedEffects": [],
+                            "endpointHostRetained": False,
+                            "tokenRetained": False,
+                            "responseBodyRetained": False,
+                            "approvalCaptured": False,
+                            "memoryWritePerformed": False,
+                            "agentDispatchPerformed": False,
+                            "externalSendPerformed": False,
+                        }),
+                        encoding="utf-8",
+                    )
+                    return 1, "unsafe_capability_claim"
+
+                stdout = io.StringIO()
+                with mock.patch.object(
+                    live_runtime_validation,
+                    "run_capability_discovery",
+                    side_effect=write_failed_capability_discovery,
+                ):
+                    with contextlib.redirect_stdout(stdout):
+                        exit_code = live_runtime_validation.main([
+                            "--bridge-endpoint", base_url,
+                            "--out-dir", tmpdir,
+                            "--runtime-validation-source", "local_harness",
+                        ])
+
+                summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(summary["bridgeEvidence"]["status"], "passed")
+        self.assertEqual(summary["capabilityDiscovery"]["status"], "failed")
+        self.assertEqual(summary["capabilityDiscovery"]["failureReason"], "unsafe_capability_claim")
+        self.assertEqual(summary["httpEvaluator"]["status"], "passed")
+        self.assertEqual(summary["artifactPrivacy"]["status"], "passed")
+        self.assertIn(
+            "Descriptor-gated capability discovery did not pass.",
+            summary["promotionReadiness"]["blockingReasons"],
+        )
+
     def test_derives_bridge_base_from_eval_endpoint(self):
         bridge, evaluator = live_runtime_validation.resolve_endpoints(
             None,

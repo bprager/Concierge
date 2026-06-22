@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened live-runtime validation so descriptor-gated capability discovery failures return a failing command exit code even when bridge capture and evaluator HTTP mode pass.
 - Aligned live-runtime capability discovery with real Napoleon `/cos` base endpoints by falling back from generated capability discovery to `/cos/capabilities` after a 404 and accepting advisory-only snake-case capability manifests as sanitized metadata.
 - Hardened descriptor discovery so explicit `supportedHandoffs` / `supported_handoffs` lists fail closed when they contain unknown governed handoff names instead of silently dropping the unknown route.
 - Added bridge readiness proof export telemetry for whether the live descriptor advertises `text_turn`, so missing text-turn routes are auditable without exposing endpoints or descriptor bodies.

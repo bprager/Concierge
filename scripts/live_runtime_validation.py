@@ -1108,6 +1108,8 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
 
     if bridge_exit_code != 0:
         return bridge_exit_code
+    if capability_exit_code not in (None, 0):
+        return capability_exit_code
     if eval_exit_code not in (None, 0):
         return eval_exit_code
     if summary["artifactPrivacy"]["status"] != "passed":
