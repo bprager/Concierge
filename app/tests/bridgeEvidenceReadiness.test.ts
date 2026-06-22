@@ -489,6 +489,53 @@ test("exports descriptor-advertised governed handoff routes in readiness proof",
   assert.equal(exported.includes("token"), false);
 });
 
+test("exports generated Napoleon review target source metadata in readiness proof", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    runtimeValidationSource: "local_harness",
+    generatedAt: "2026-06-22T00:00:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    governedNapoleonTargets: {
+      source: string;
+      targets: Array<{
+        operationId: string;
+        path: string;
+        requestKind: string;
+        transport: string;
+        source: string;
+        localSideEffectsPerformed: boolean;
+      }>;
+    };
+  };
+
+  assert.equal(proof.governedNapoleonTargets.source, "api/napoleon_bridge.openapi.yaml#x-concierge-napoleon-review-operations");
+  assert.ok(proof.governedNapoleonTargets.targets.length >= 8);
+  assert.ok(
+    proof.governedNapoleonTargets.targets.some(
+      (target) =>
+        target.operationId === "observability_trace" &&
+        target.path === "/observability/traces" &&
+        target.requestKind === "observability_trace_handoff" &&
+        target.transport === "http_post" &&
+        target.source === "api/napoleon_bridge.openapi.yaml#x-concierge-napoleon-review-operations" &&
+        target.localSideEffectsPerformed === false,
+    ),
+  );
+  assert.equal(exported.includes("https://"), false);
+  assert.equal(exported.includes("127.0.0.1"), false);
+  assert.equal(exported.includes("token"), false);
+});
+
 test("redacts unsafe bridge evidence values before exporting readiness proof", () => {
   const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
     ...validEvidence,

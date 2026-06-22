@@ -1,4 +1,4 @@
-import { getBridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
+import { NAPOLEON_REVIEW_OPERATIONS, getBridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
 import { descriptorSupportsGovernedHandoff, type DescriptorConnectionState } from "./contractBridge.js";
 import type { BridgeContractEvidence } from "./napoleonBridge.js";
 import type { LiveBridgeEvidenceState } from "./presentation.js";
@@ -103,6 +103,9 @@ const FORBIDDEN_EVIDENCE_VALUE_PATTERNS = [
   /\bbearer\b/i,
   /\bauthorization\b/i,
 ];
+
+const GENERATED_NAPOLEON_REVIEW_SOURCE =
+  "api/napoleon_bridge.openapi.yaml#x-concierge-napoleon-review-operations";
 
 function isAcceptedAdvisoryHarnessAlias(record: BridgeContractEvidence): boolean {
   return (
@@ -296,6 +299,24 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         approvalCaptured: false,
         externalSendPerformed: false,
       },
+      governedNapoleonTargets: {
+        source: GENERATED_NAPOLEON_REVIEW_SOURCE,
+        targets: NAPOLEON_REVIEW_OPERATIONS.map((operation) => ({
+          operationId: operation.id,
+          path: operation.path,
+          requestKind: operation.requestKind,
+          transport: operation.transport,
+          source: GENERATED_NAPOLEON_REVIEW_SOURCE,
+          localSideEffectsPerformed: false,
+          approvalCaptured: false,
+          memoryWritePerformed: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+          registryUpdatePerformed: false,
+          traceAppendPerformed: false,
+          routingPerformed: false,
+        })),
+      },
       runtimeValidation: {
         source: input.runtimeValidationSource ?? "unavailable",
         promotionGate: promotionGateForProof(input),
@@ -408,6 +429,7 @@ export function compareBridgeReadinessProofs(
     { label: "Napoleon metadata agent IDs", path: ["napoleonMetadata", "agentIds"] },
     { label: "Napoleon metadata profile ID", path: ["napoleonMetadata", "profileId"] },
     { label: "Napoleon metadata blocked effects", path: ["napoleonMetadata", "blockedEffects"] },
+    { label: "Generated target source", path: ["governedNapoleonTargets", "source"] },
     { label: "Runtime validation source", path: ["runtimeValidation", "source"] },
     { label: "Promotion gate", path: ["runtimeValidation", "promotionGate"] },
     { label: "Evaluator HTTP status", path: ["runtimeValidation", "evaluator", "status"] },

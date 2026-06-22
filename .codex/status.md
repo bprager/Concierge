@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added generated-source provenance for named Napoleon review/evidence targets to sanitized bridge readiness proof exports, so exported local evidence now shows the canonical contract metadata source while preserving false side-effect boundaries and excluding endpoint hosts, tokens, prompts, request bodies, and response bodies.
 - Added visible generated-source markers to named Napoleon governed route entries so review/evidence handoff targets show they come from canonical bridge contract metadata without changing authority.
 - Generated named Napoleon review, governance, evolution, Chief of Staff request, and observability handoff metadata from the canonical bridge contract so the app route registry no longer duplicates those definitions by hand.
 - Added local next-step hints to governed handoff readiness panels for memory proposal, governance review, Chief of Staff steering, and taxonomy review submissions so blocked review packets explain the next local fix without changing authority.
