@@ -226,6 +226,7 @@ export interface LiveVoiceReadinessInput {
   evidenceCaptureState?: LiveBridgeEvidenceState;
   evidenceComparisonState?: LiveBridgeEvidenceState;
   runtimeValidationSource?: LiveBridgeReadinessInput["runtimeValidationSource"];
+  acceptedRealRuntimeProof?: LiveSendPreflightInput["acceptedRealRuntimeProof"];
   rehearsalMode: boolean;
 }
 
@@ -632,6 +633,8 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
   const runtimeValidationSource = input.runtimeValidationSource;
   const realRuntimeReady =
     runtimeValidationSource === "real_runtime" && evidenceCapture === "passed" && evidenceComparison === "passed";
+  const acceptedRealRuntimeProof = input.acceptedRealRuntimeProof;
+  const runtimeProofReady = realRuntimeReady || Boolean(acceptedRealRuntimeProof);
   const descriptorReady = input.descriptorConnection.canAttemptLiveBridge;
   const childProtected = input.profileMode === "child_protected_user";
   const blockedEffects = [
@@ -680,10 +683,12 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
       },
       {
         label: "Runtime proof",
-        status: realRuntimeReady ? "ready" : "blocked",
-        detail: realRuntimeReady
-          ? "Real Napoleon runtime evidence has passed for the bridge."
-          : "Real Napoleon runtime proof is not available for live voice.",
+        status: runtimeProofReady ? "ready" : "blocked",
+        detail: acceptedRealRuntimeProof
+          ? `Accepted real-runtime proof: ${acceptedRealRuntimeProof.status}: ${acceptedRealRuntimeProof.operationId} at ${acceptedRealRuntimeProof.targetPath}.`
+          : realRuntimeReady
+            ? "Real Napoleon runtime evidence has passed for the bridge."
+            : "Real Napoleon runtime proof is not available for live voice.",
       },
       {
         label: "Rehearsal Mode",

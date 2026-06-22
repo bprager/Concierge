@@ -658,6 +658,42 @@ test("describes missing real runtime proof as a live voice blocker", () => {
   assert.ok(view.items.some((item: { label: string; detail: string }) => item.label === "Runtime proof" && item.detail.includes("not available")));
 });
 
+test("describes accepted real runtime proof in live voice readiness without starting voice", () => {
+  const view = describeLiveVoiceReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    microphoneEnabled: true,
+    microphonePermissionStatus: "granted",
+    evidenceCaptureState: "not_run",
+    evidenceComparisonState: "not_run",
+    runtimeValidationSource: "local_harness",
+    rehearsalMode: false,
+    acceptedRealRuntimeProof: {
+      status: "success",
+      operationId: "text_turn",
+      targetPath: "/v1/concierge/turn",
+      promotionGate: "real_runtime_evidence_available",
+    },
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canStartLiveVoice, false);
+  assert.ok(
+    view.items.some(
+      (item: { label: string; status: string; detail: string }) =>
+        item.label === "Runtime proof" &&
+        item.status === "ready" &&
+        item.detail === "Accepted real-runtime proof: success: text_turn at /v1/concierge/turn.",
+    ),
+  );
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Voice pipeline" && item.status === "blocked"));
+});
+
 test("describes missing runtime source as a live voice blocker", () => {
   const view = describeLiveVoiceReadiness({
     descriptorConnection: buildDescriptorConnectionState({

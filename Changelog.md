@@ -116,6 +116,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened Chief of Staff taxonomy review handoff so stale taxonomy review drafts scoped to a different active profile fail closed before any governed endpoint call.
 - Hardened profile changes so visible bridge failure banners clear with returned Napoleon proof, delegation, and governed handoff state instead of lingering across user scopes.
 - Hardened live voice readiness so missing real-runtime proof is a blocker and child-protected readiness visibly blocks guardian approval capture.
+- Added accepted real-runtime proof visibility to live voice readiness so a sanitized prior proof can satisfy the proof row while voice capture and playback remain blocked until the governed voice pipeline exists.
 - Added OpenAPI-required response fields to the visible governed Napoleon route registry so contract-mismatch expectations are shown without exposing endpoint hosts or tokens.
 - Added returned target capability to successful Napoleon delegation details so the text UI shows both the handling capability and selected agents when Napoleon provides both.
 - Added browser CORS preflight support to the local Napoleon-compatible harness so the rendered Text Concierge shell can validate the local endpoint preset without treating it as real runtime authority.

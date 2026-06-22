@@ -2737,6 +2737,12 @@ test("imports an accepted real-runtime readiness proof as sanitized local metada
     assert.ok(preflight);
     assert.ok(within(preflight).getByText("Accepted real-runtime proof"));
     assert.ok(within(preflight).getByText("success: text_turn at /v1/concierge/turn"));
+
+    const voiceReadiness = within(view.getByLabelText("Voice readiness"));
+    assert.ok(voiceReadiness.getByText("Live voice readiness"));
+    assert.ok(voiceReadiness.getByText("Runtime proof: ready"));
+    assert.ok(voiceReadiness.getByText("Accepted real-runtime proof: success: text_turn at /v1/concierge/turn."));
+    assert.ok(voiceReadiness.getByText("Voice pipeline: blocked"));
   } finally {
     cleanup();
     dom.window.close();

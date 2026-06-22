@@ -2711,6 +2711,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,
     evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
     runtimeValidationSource,
+    acceptedRealRuntimeProof: acceptedReadinessProofImport?.lastRealRuntimeProof,
     rehearsalMode,
   });
   const governedVoicePipelinePlan = buildGovernedVoicePipelinePlan({ profileMode: mapProfileToNapoleonMode(profile) });
