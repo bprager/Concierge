@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a descriptor-advertised `text_turn` route check to sanitized bridge readiness proof promotion gates, so exported local evidence stays promotion-blocked when a valid descriptor omits text turns.
 - Added a descriptor-advertised `text_turn` route check to the live bridge readiness panel, so a valid descriptor that omits text turns is shown as blocked before the user can mistake the connection for send-ready.
 - Added a descriptor-advertised `text_turn` route check to live text-send preflight and the bridge send path, so a valid descriptor that omits text turns blocks before any request fetch.
 - Clarified the empty Napoleon delegation panel so it keeps the normal panel heading before bridge provenance is returned, with each provenance field marked as not returned instead of presenting the panel as unavailable.

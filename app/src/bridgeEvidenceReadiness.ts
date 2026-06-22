@@ -1,5 +1,5 @@
 import { getBridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
-import type { DescriptorConnectionState } from "./contractBridge.js";
+import { descriptorSupportsGovernedHandoff, type DescriptorConnectionState } from "./contractBridge.js";
 import type { BridgeContractEvidence } from "./napoleonBridge.js";
 import type { LiveBridgeEvidenceState } from "./presentation.js";
 
@@ -114,10 +114,28 @@ function promotionGateForProof(input: BridgeReadinessProofInput): string {
   if (source === "local_harness" || source === "local_simulation") {
     return "blocked_until_real_runtime_evidence_passes";
   }
+  if (!descriptorSupportsGovernedHandoff(input.descriptorConnection, "text_turn")) {
+    return "blocked_until_text_turn_route_advertised";
+  }
   if (input.readiness.captureState !== "passed" || input.readiness.comparisonState !== "passed") {
     return "blocked_until_evidence_capture_and_comparison_pass";
   }
   return "real_runtime_evidence_available";
+}
+
+function runtimeValidationCaveat(input: BridgeReadinessProofInput): string {
+  if (input.runtimeValidationSource === "local_harness") {
+    return "Local harness validation is not real Napoleon runtime validation.";
+  }
+  if (input.runtimeValidationSource === "local_simulation") {
+    return "Local simulation is not real Napoleon runtime validation.";
+  }
+  if (input.runtimeValidationSource === "real_runtime") {
+    return descriptorSupportsGovernedHandoff(input.descriptorConnection, "text_turn")
+      ? "Real Napoleon runtime validation source."
+      : "Real Napoleon runtime validation source, but the descriptor has not advertised text_turn.";
+  }
+  return "Real Napoleon runtime validation has not been proven.";
 }
 
 export function buildBridgeEvidenceReadinessState(): BridgeEvidenceReadinessState {
@@ -270,14 +288,7 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
       runtimeValidation: {
         source: input.runtimeValidationSource ?? "unavailable",
         promotionGate: promotionGateForProof(input),
-        caveat:
-          input.runtimeValidationSource === "local_harness"
-            ? "Local harness validation is not real Napoleon runtime validation."
-            : input.runtimeValidationSource === "local_simulation"
-              ? "Local simulation is not real Napoleon runtime validation."
-              : input.runtimeValidationSource === "real_runtime"
-                ? "Real Napoleon runtime validation source."
-                : "Real Napoleon runtime validation has not been proven.",
+        caveat: runtimeValidationCaveat(input),
       },
       boundary: {
         approvalCaptured: false,

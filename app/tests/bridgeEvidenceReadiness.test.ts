@@ -207,6 +207,40 @@ test("exports missing runtime source as unproven bridge readiness proof", () => 
   assert.ok(proof.runtimeValidation.caveat.includes("Real Napoleon runtime validation has not been proven"));
 });
 
+test("keeps readiness proof promotion blocked when descriptor lacks text-turn route", () => {
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+    ...validEvidence,
+    status: "success",
+    provenanceVerified: true,
+  });
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: {
+      ...defaultChiefOfStaffDescriptor,
+      supportedHandoffs: ["memory_proposal_review"],
+    },
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: state,
+    runtimeValidationSource: "real_runtime",
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    descriptor: { supportedHandoffs: string[] };
+    runtimeValidation: { source: string; caveat: string; promotionGate: string };
+  };
+
+  assert.deepEqual(proof.descriptor.supportedHandoffs, ["memory_proposal_review"]);
+  assert.equal(proof.runtimeValidation.source, "real_runtime");
+  assert.equal(proof.runtimeValidation.promotionGate, "blocked_until_text_turn_route_advertised");
+  assert.ok(proof.runtimeValidation.caveat.includes("text_turn"));
+});
+
 test("exports sanitized advisory capability discovery state in readiness proof", () => {
   const descriptorConnection = buildDescriptorConnectionState({
     endpointConfigured: true,

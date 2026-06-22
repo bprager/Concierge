@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a descriptor-advertised text-turn route gate to sanitized bridge readiness proof promotion gates, so exported local evidence cannot report real-runtime readiness when a valid descriptor omits `text_turn`.
 - Added a descriptor-advertised text-turn route gate to the live bridge readiness panel, so a valid descriptor that omits `text_turn` no longer appears send-ready even when descriptor integrity and evidence checks pass.
 - Added a descriptor-advertised text-turn route gate to live-send preflight and the bridge send path, so a valid descriptor that omits `text_turn` blocks visibly before any request fetch.
 - Clarified the empty Napoleon delegation panel so it stays under the normal delegation heading before returned provenance exists, with target capability, provenance source, selected agents, why selected, effects, governance, trace, and audit fields marked as not returned.
