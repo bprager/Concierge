@@ -29,6 +29,10 @@ export interface BridgeReadinessProofInput {
     runtimeAuthority: false;
     blockedEffects: string[];
     proposalOnly: true;
+    responseApprovalCaptured?: boolean;
+    responseMemoryWritePerformed?: boolean;
+    responseAgentDispatchPerformed?: boolean;
+    responseExternalSendPerformed?: boolean;
   };
 }
 
@@ -230,6 +234,10 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         runtimeAuthority: false,
         blockedEffects: sanitizeReadinessProofList(input.advisoryCapabilities?.blockedEffects ?? []),
         proposalOnly: true,
+        responseApprovalCaptured: input.advisoryCapabilities?.responseApprovalCaptured === true,
+        responseMemoryWritePerformed: input.advisoryCapabilities?.responseMemoryWritePerformed === true,
+        responseAgentDispatchPerformed: input.advisoryCapabilities?.responseAgentDispatchPerformed === true,
+        responseExternalSendPerformed: input.advisoryCapabilities?.responseExternalSendPerformed === true,
       },
       runtimeValidation: {
         source: input.runtimeValidationSource ?? "unavailable",

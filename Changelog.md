@@ -8,7 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
-- Hardened descriptor-gated Chief of Staff capability discovery so response-side claims of approval capture, memory writes, agent dispatch, or external sends fail closed while Concierge's local side-effect flags remain false, with those remote claims visible in app state, telemetry, and the capabilities panel.
+- Hardened descriptor-gated Chief of Staff capability discovery so response-side claims of approval capture, memory writes, agent dispatch, or external sends fail closed while Concierge's local side-effect flags remain false, with those remote claims visible in app state, telemetry, the capabilities panel, and sanitized readiness proof exports.
 - Added sanitized descriptor-gated capability discovery evidence to combined live-runtime validation summaries and promotion review drafts, blocking promotion readiness when capability discovery fails.
 - Added explicit advisory `/cos` endpoint-form and required-proof rows to the governed route panel for descriptor discovery, capability discovery, and text turns, including `/cos/trace/{trace_id}` proof wording for text sends without exposing endpoint hosts or tokens.
 - Added `/cos` base endpoint support for explicit Napoleon advisory harness text sends, normalizing `/cos`, `/cos/descriptor`, and `/cos/capabilities` to `/cos/text-turn` without changing authority boundaries.

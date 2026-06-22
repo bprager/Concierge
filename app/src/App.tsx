@@ -2180,6 +2180,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             runtimeAuthority: false,
             blockedEffects: chiefOfStaffCapabilities.blockedEffects,
             proposalOnly: true,
+            responseApprovalCaptured: chiefOfStaffCapabilities.responseApprovalCaptured,
+            responseMemoryWritePerformed: chiefOfStaffCapabilities.responseMemoryWritePerformed,
+            responseAgentDispatchPerformed: chiefOfStaffCapabilities.responseAgentDispatchPerformed,
+            responseExternalSendPerformed: chiefOfStaffCapabilities.responseExternalSendPerformed,
           }
         : {
             state: "not_fetched",
@@ -2190,6 +2194,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             runtimeAuthority: false,
             blockedEffects: [],
             proposalOnly: true,
+            responseApprovalCaptured: false,
+            responseMemoryWritePerformed: false,
+            responseAgentDispatchPerformed: false,
+            responseExternalSendPerformed: false,
           },
     });
     const bridgeReadinessProof = JSON.parse(json) as { runtimeValidation?: { promotionGate?: string } };

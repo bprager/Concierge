@@ -230,6 +230,10 @@ test("exports sanitized advisory capability discovery state in readiness proof",
       runtimeAuthority: false,
       blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
       proposalOnly: true,
+      responseApprovalCaptured: true,
+      responseMemoryWritePerformed: true,
+      responseAgentDispatchPerformed: false,
+      responseExternalSendPerformed: true,
     },
   });
   const proof = JSON.parse(exported) as {
@@ -242,6 +246,10 @@ test("exports sanitized advisory capability discovery state in readiness proof",
       runtimeAuthority: boolean;
       blockedEffects: string[];
       proposalOnly: boolean;
+      responseApprovalCaptured: boolean;
+      responseMemoryWritePerformed: boolean;
+      responseAgentDispatchPerformed: boolean;
+      responseExternalSendPerformed: boolean;
     };
   };
 
@@ -255,6 +263,10 @@ test("exports sanitized advisory capability discovery state in readiness proof",
   assert.deepEqual(proof.advisoryCapabilities.authorityTiers, ["prepare_only", "proposal_only"]);
   assert.equal(proof.advisoryCapabilities.runtimeAuthority, false);
   assert.equal(proof.advisoryCapabilities.proposalOnly, true);
+  assert.equal(proof.advisoryCapabilities.responseApprovalCaptured, true);
+  assert.equal(proof.advisoryCapabilities.responseMemoryWritePerformed, true);
+  assert.equal(proof.advisoryCapabilities.responseAgentDispatchPerformed, false);
+  assert.equal(proof.advisoryCapabilities.responseExternalSendPerformed, true);
   assert.ok(proof.advisoryCapabilities.blockedEffects.includes("external_send"));
   assert.equal(exported.includes("127.0.0.1"), false);
   assert.equal(exported.includes("token"), false);
