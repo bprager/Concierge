@@ -132,6 +132,50 @@ def derive_eval_endpoint(bridge_endpoint: str) -> str:
     return f"{strip_known_path(bridge_endpoint)}{NAPOLEON_EVALUATION_REVIEW_PATH}"
 
 
+def evaluator_target_metadata(eval_endpoint: str | None) -> dict[str, Any]:
+    if eval_endpoint is None:
+        return {
+            "evaluatorTargetPath": None,
+            "evaluatorTargetRequestKind": None,
+            "evaluatorTargetOperationId": None,
+            "evaluatorEndpointHostRetained": False,
+            "evaluatorTokenRetained": False,
+            "evaluatorRequestBodyRetained": False,
+            "evaluatorResponseBodyRetained": False,
+            "evaluatorApprovalCaptured": False,
+            "evaluatorMemoryWritePerformed": False,
+            "evaluatorAgentDispatchPerformed": False,
+            "evaluatorExternalSendPerformed": False,
+        }
+    if is_generated_concierge_endpoint(eval_endpoint):
+        return {
+            "evaluatorTargetPath": EVALUATOR_PATH,
+            "evaluatorTargetRequestKind": "evaluator_prompt",
+            "evaluatorTargetOperationId": "evaluate",
+            "evaluatorEndpointHostRetained": False,
+            "evaluatorTokenRetained": False,
+            "evaluatorRequestBodyRetained": False,
+            "evaluatorResponseBodyRetained": False,
+            "evaluatorApprovalCaptured": False,
+            "evaluatorMemoryWritePerformed": False,
+            "evaluatorAgentDispatchPerformed": False,
+            "evaluatorExternalSendPerformed": False,
+        }
+    return {
+        "evaluatorTargetPath": NAPOLEON_EVALUATION_REVIEW_PATH,
+        "evaluatorTargetRequestKind": "evaluation_review_handoff",
+        "evaluatorTargetOperationId": "evaluation_review",
+        "evaluatorEndpointHostRetained": False,
+        "evaluatorTokenRetained": False,
+        "evaluatorRequestBodyRetained": False,
+        "evaluatorResponseBodyRetained": False,
+        "evaluatorApprovalCaptured": False,
+        "evaluatorMemoryWritePerformed": False,
+        "evaluatorAgentDispatchPerformed": False,
+        "evaluatorExternalSendPerformed": False,
+    }
+
+
 def endpoint_from_env(env: dict[str, str], key: str) -> str | None:
     value = env.get(key)
     return value.strip() if value and value.strip() else None
@@ -215,6 +259,7 @@ def live_runtime_preflight(
             "nextValidationCommand": "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make live-runtime-validation",
             "boundary": "A local harness or simulation can test shape only; it cannot prove real Napoleon runtime readiness.",
             **resolution,
+            **evaluator_target_metadata(eval_endpoint),
         },
         "endpointHostStored": False,
         "tokenStored": False,

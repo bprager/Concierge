@@ -154,10 +154,42 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(config["evalEndpoint"], "http://127.0.0.1:8787/v1/concierge/evaluate")
         self.assertEqual(preflight["runtimeAlignment"]["bridgeEndpointResolution"], "derived_from_evaluator_endpoint")
         self.assertEqual(preflight["runtimeAlignment"]["evaluatorEndpointResolution"], "env:NAPOLEON_EVAL_ENDPOINT")
+        self.assertEqual(preflight["runtimeAlignment"]["evaluatorTargetPath"], "/v1/concierge/evaluate")
+        self.assertEqual(preflight["runtimeAlignment"]["evaluatorTargetRequestKind"], "evaluator_prompt")
+        self.assertEqual(preflight["runtimeAlignment"]["evaluatorTargetOperationId"], "evaluate")
+        self.assertFalse(preflight["runtimeAlignment"]["evaluatorEndpointHostRetained"])
+        self.assertFalse(preflight["runtimeAlignment"]["evaluatorTokenRetained"])
         self.assertFalse(preflight["runtimeAlignment"]["bridgeEndpointExplicitlyConfigured"])
         self.assertTrue(preflight["runtimeAlignment"]["evaluatorEndpointExplicitlyConfigured"])
         self.assertNotIn("127.0.0.1", json.dumps(preflight))
         self.assertNotIn("8787", json.dumps(preflight))
+
+    def test_preflight_records_sanitized_napoleon_evaluation_review_target(self):
+        config = live_runtime_validation.resolve_endpoint_configuration(
+            "https://napoleon.example/cos/text-turn",
+            None,
+            {},
+        )
+        preflight = live_runtime_validation.live_runtime_preflight(
+            config["bridgeEndpoint"],
+            config["evalEndpoint"],
+            config["resolution"],
+        )
+
+        self.assertEqual(config["evalEndpoint"], "https://napoleon.example/chief-of-staff/reviews/evaluation")
+        self.assertEqual(preflight["runtimeAlignment"]["evaluatorEndpointResolution"], "derived_from_bridge_endpoint")
+        self.assertEqual(preflight["runtimeAlignment"]["evaluatorTargetPath"], "/chief-of-staff/reviews/evaluation")
+        self.assertEqual(preflight["runtimeAlignment"]["evaluatorTargetRequestKind"], "evaluation_review_handoff")
+        self.assertEqual(preflight["runtimeAlignment"]["evaluatorTargetOperationId"], "evaluation_review")
+        self.assertFalse(preflight["runtimeAlignment"]["evaluatorEndpointHostRetained"])
+        self.assertFalse(preflight["runtimeAlignment"]["evaluatorTokenRetained"])
+        self.assertFalse(preflight["runtimeAlignment"]["evaluatorRequestBodyRetained"])
+        self.assertFalse(preflight["runtimeAlignment"]["evaluatorResponseBodyRetained"])
+        self.assertFalse(preflight["runtimeAlignment"]["evaluatorApprovalCaptured"])
+        self.assertFalse(preflight["runtimeAlignment"]["evaluatorMemoryWritePerformed"])
+        self.assertFalse(preflight["runtimeAlignment"]["evaluatorAgentDispatchPerformed"])
+        self.assertFalse(preflight["runtimeAlignment"]["evaluatorExternalSendPerformed"])
+        self.assertNotIn("napoleon.example", json.dumps(preflight))
 
     def test_derives_eval_endpoint_from_bridge_base(self):
         bridge, evaluator = live_runtime_validation.resolve_endpoints(
@@ -307,6 +339,9 @@ class LiveRuntimeValidationTest(unittest.TestCase):
                 preflight["runtimeAlignment"]["nextValidationCommand"],
                 "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make live-runtime-validation",
             )
+            self.assertIsNone(preflight["runtimeAlignment"]["evaluatorTargetPath"])
+            self.assertFalse(preflight["runtimeAlignment"]["evaluatorEndpointHostRetained"])
+            self.assertFalse(preflight["runtimeAlignment"]["evaluatorTokenRetained"])
             self.assertFalse(preflight["endpointHostStored"])
             self.assertFalse(preflight["tokenStored"])
             self.assertFalse(preflight["approvalCaptured"])

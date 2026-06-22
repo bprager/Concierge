@@ -17,6 +17,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Classified explicit Napoleon review and metadata discovery runtime mappings in the contract-alignment report so mapped paths are not mislabeled as unmapped local aliases.
 - Added sanitized evaluation-target metadata to HTTP evaluator reports so live evaluator evidence records the governed path, request kind, operation ID, and false side-effect/retention flags without endpoint hosts or tokens.
 - Added sanitized evaluator target metadata to combined live-runtime summaries and promotion review drafts so evaluator route evidence survives report sanitization without endpoint hosts or tokens.
+- Added sanitized evaluator target metadata to live-runtime preflight reports so derived evaluator path, request kind, operation ID, and false retention/side-effect flags are visible before network attempts.
 - Aligned combined live-runtime evaluator endpoint derivation so explicit Napoleon `/cos` endpoints and non-generated Napoleon bases derive `/chief-of-staff/reviews/evaluation`, while generated/local endpoints keep `/v1/concierge/evaluate`.
 - Hardened live-runtime artifact privacy audits so retained evaluator or bridge artifacts fail if endpoint/token/body retention or forbidden side-effect boundary flags are true.
 - Hardened live-runtime validation so missing or failing evaluator HTTP routes are reported as sanitized summary failures after bridge capture instead of leaking endpoint details through tracebacks.
