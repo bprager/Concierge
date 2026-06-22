@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Grouped the Text Concierge live bridge readiness panel into operator-facing sections for the Napoleon descriptor, governed text-turn route, evaluator HTTP validation, last live evidence, promotion gate, and authority boundary.
 - Added a sanitized evaluator validation artifact importer to the Text Concierge readiness panel, so pasted or selected local live-runtime summary files can update evaluator HTTP status, target metadata, composer preflight, readiness proof exports, and telemetry without retaining endpoints, tokens, request bodies, or response bodies.
 - Added evaluator HTTP status to the composer live-send preflight so missing or failed evaluator HTTP mode remains visible as a promotion warning before a governed bridge attempt.
 - Added sanitized evaluator HTTP blocker metadata to Text Concierge readiness proof exports, proof comparisons, and the live bridge readiness panel, so a missing Napoleon evaluator route remains visible as a promotion blocker after bridge evidence passes.

@@ -2652,6 +2652,29 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     evaluatorFailureReason: evaluatorValidationImport?.validation.failureReason,
     evaluatorTargetPath: evaluatorValidationImport?.validation.targetPath,
   });
+  const liveBridgeReadinessDetail = (label: string) =>
+    liveBridgeReadiness.details.find((detail) => detail.label === label)?.value ?? "unavailable";
+  const liveBridgeReadinessGroups = [
+    {
+      label: "Napoleon bridge descriptor",
+      value: `${liveBridgeReadinessDetail("Descriptor")}; checksum ${liveBridgeReadinessDetail(
+        "Checksum",
+      )}; signature ${liveBridgeReadinessDetail("Signature")}`,
+    },
+    { label: "Governed text-turn route", value: liveBridgeReadinessDetail("Text-turn route") },
+    {
+      label: "Evaluator HTTP validation",
+      value: `${liveBridgeReadinessDetail("Evaluator HTTP")}; target ${liveBridgeReadinessDetail("Evaluator target")}`,
+    },
+    {
+      label: "Last live evidence",
+      value: `${liveBridgeReadinessDetail("Evidence capture")}; ${liveBridgeReadinessDetail(
+        "Evidence comparison",
+      )}; last send ${liveBridgeReadinessDetail("Last live send")}`,
+    },
+    { label: "Promotion gate", value: `gate state: ${liveBridgeReadinessDetail("Promotion gate")}` },
+    { label: "Authority boundary", value: `blocked effects: ${liveBridgeReadiness.blockedEffects.join(", ")}` },
+  ];
   const liveVoiceReadiness = describeLiveVoiceReadiness({
     descriptorConnection,
     profileMode: mapProfileToNapoleonMode(profile),
@@ -4333,9 +4356,17 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           <span>{liveBridgeReadiness.caveat}</span>
         </div>
         <dl>
+          {liveBridgeReadinessGroups.map((group) => (
+            <div key={group.label}>
+              <dt>{group.label}</dt>
+              <dd>{group.value}</dd>
+            </div>
+          ))}
+        </dl>
+        <dl>
           {liveBridgeReadiness.details.map((detail) => (
             <div key={detail.label}>
-              <dt>{detail.label}</dt>
+              <dt>{detail.label === "Promotion gate" ? "Promotion gate detail" : detail.label}</dt>
               <dd>{detail.value}</dd>
             </div>
           ))}

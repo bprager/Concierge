@@ -186,7 +186,12 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     const readinessPanel = screen.getByText("Live bridge readiness").closest("section") as HTMLElement;
     assert.ok(readinessPanel);
     assert.ok(within(readinessPanel).getByText("Local harness only; not real Napoleon runtime validation"));
+    assert.ok(within(readinessPanel).getByText("Napoleon bridge descriptor"));
+    assert.ok(within(readinessPanel).getByText("Governed text-turn route"));
+    assert.ok(within(readinessPanel).getByText("Evaluator HTTP validation"));
+    assert.ok(within(readinessPanel).getByText("Last live evidence"));
     assert.ok(within(readinessPanel).getByText("Promotion gate"));
+    assert.ok(within(readinessPanel).getByText("Authority boundary"));
     assert.ok(within(readinessPanel).getByText("blocked until real Napoleon runtime evidence passes"));
     await user.click(screen.getByRole("button", { name: "Discover advisory capabilities" }));
     await screen.findByText("Advisory Chief of Staff capabilities discovered. This is not Napoleon approval.");
