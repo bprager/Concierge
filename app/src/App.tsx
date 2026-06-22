@@ -1499,6 +1499,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       memoryWritePerformed: result.memoryWritePerformed,
       agentDispatchPerformed: result.agentDispatchPerformed,
       externalSendPerformed: result.externalSendPerformed,
+      responseApprovalCaptured: result.responseApprovalCaptured,
+      responseMemoryWritePerformed: result.responseMemoryWritePerformed,
+      responseAgentDispatchPerformed: result.responseAgentDispatchPerformed,
+      responseExternalSendPerformed: result.responseExternalSendPerformed,
     });
     refreshTelemetryBufferStatus();
   }
@@ -4070,6 +4074,24 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         <div>
           <strong>Blocked effects</strong>
           <span>{(chiefOfStaffCapabilities?.blockedEffects ?? ["memory_write", "approval_capture", "agent_dispatch", "external_send"]).join(", ")}</span>
+        </div>
+        <div>
+          <strong>Response side-effect claims</strong>
+          <span>
+            {chiefOfStaffCapabilities?.responseApprovalCaptured ||
+            chiefOfStaffCapabilities?.responseMemoryWritePerformed ||
+            chiefOfStaffCapabilities?.responseAgentDispatchPerformed ||
+            chiefOfStaffCapabilities?.responseExternalSendPerformed
+              ? [
+                  chiefOfStaffCapabilities.responseApprovalCaptured ? "approval_capture" : null,
+                  chiefOfStaffCapabilities.responseMemoryWritePerformed ? "memory_write" : null,
+                  chiefOfStaffCapabilities.responseAgentDispatchPerformed ? "agent_dispatch" : null,
+                  chiefOfStaffCapabilities.responseExternalSendPerformed ? "external_send" : null,
+                ]
+                  .filter(Boolean)
+                  .join(", ")
+              : "none"}
+          </span>
         </div>
         {chiefOfStaffCapabilities?.capabilities.length ? (
           <dl>

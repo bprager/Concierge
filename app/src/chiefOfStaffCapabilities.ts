@@ -59,11 +59,32 @@ export interface ChiefOfStaffCapabilityDiscoveryResult {
   memoryWritePerformed: false;
   agentDispatchPerformed: false;
   externalSendPerformed: false;
+  responseApprovalCaptured: boolean;
+  responseMemoryWritePerformed: boolean;
+  responseAgentDispatchPerformed: boolean;
+  responseExternalSendPerformed: boolean;
+}
+
+interface ResponseSideEffectClaims {
+  responseApprovalCaptured: boolean;
+  responseMemoryWritePerformed: boolean;
+  responseAgentDispatchPerformed: boolean;
+  responseExternalSendPerformed: boolean;
 }
 
 const DEFAULT_BLOCKED_EFFECTS = ["memory_write", "approval_capture", "agent_dispatch", "external_send"];
+const NO_RESPONSE_SIDE_EFFECT_CLAIMS: ResponseSideEffectClaims = {
+  responseApprovalCaptured: false,
+  responseMemoryWritePerformed: false,
+  responseAgentDispatchPerformed: false,
+  responseExternalSendPerformed: false,
+};
 
-function blocked(message: string, blockedEffects = DEFAULT_BLOCKED_EFFECTS): ChiefOfStaffCapabilityDiscoveryResult {
+function blocked(
+  message: string,
+  blockedEffects = DEFAULT_BLOCKED_EFFECTS,
+  responseSideEffectClaims: ResponseSideEffectClaims = NO_RESPONSE_SIDE_EFFECT_CLAIMS,
+): ChiefOfStaffCapabilityDiscoveryResult {
   return {
     state: "blocked",
     message,
@@ -77,6 +98,7 @@ function blocked(message: string, blockedEffects = DEFAULT_BLOCKED_EFFECTS): Chi
     memoryWritePerformed: false,
     agentDispatchPerformed: false,
     externalSendPerformed: false,
+    ...responseSideEffectClaims,
   };
 }
 
@@ -114,16 +136,25 @@ function stringArrayValue(value: unknown): string[] | null {
   return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : null;
 }
 
-function sideEffectBoundaryClear(record: Record<string, unknown>): boolean {
+function responseSideEffectClaims(record: Record<string, unknown>): ResponseSideEffectClaims {
   const approvalCaptured = booleanValue(record.approvalCaptured) ?? booleanValue(record.approval_captured);
   const memoryWritePerformed = booleanValue(record.memoryWritePerformed) ?? booleanValue(record.memory_write_performed);
   const agentDispatchPerformed = booleanValue(record.agentDispatchPerformed) ?? booleanValue(record.agent_dispatch_performed);
   const externalSendPerformed = booleanValue(record.externalSendPerformed) ?? booleanValue(record.external_send_performed);
+  return {
+    responseApprovalCaptured: approvalCaptured === true,
+    responseMemoryWritePerformed: memoryWritePerformed === true,
+    responseAgentDispatchPerformed: agentDispatchPerformed === true,
+    responseExternalSendPerformed: externalSendPerformed === true,
+  };
+}
+
+function sideEffectBoundaryClear(claims: ResponseSideEffectClaims): boolean {
   return (
-    approvalCaptured !== true &&
-    memoryWritePerformed !== true &&
-    agentDispatchPerformed !== true &&
-    externalSendPerformed !== true
+    !claims.responseApprovalCaptured &&
+    !claims.responseMemoryWritePerformed &&
+    !claims.responseAgentDispatchPerformed &&
+    !claims.responseExternalSendPerformed
   );
 }
 
@@ -261,10 +292,13 @@ export async function discoverChiefOfStaffCapabilities(
   const runtimeAuthority = booleanValue(record.runtimeAuthority) ?? booleanValue(record.runtime_authority);
   const blockedEffects = stringArrayValue(record.blockedEffects) ?? stringArrayValue(record.blocked_effects);
   const capabilities = parseCapabilities(record.capabilities);
+  const sideEffectClaims = responseSideEffectClaims(record);
+  if (!sideEffectBoundaryClear(sideEffectClaims)) {
+    return blocked("Capability discovery blocked: response side-effect claims were returned.", blockedEffects ?? DEFAULT_BLOCKED_EFFECTS, sideEffectClaims);
+  }
   if (
     serviceId !== "napoleon.chief_of_staff" ||
     runtimeAuthority !== false ||
-    !sideEffectBoundaryClear(record) ||
     !blockedEffects ||
     !capabilities
   ) {
@@ -321,5 +355,6 @@ export async function discoverChiefOfStaffCapabilities(
     memoryWritePerformed: false,
     agentDispatchPerformed: false,
     externalSendPerformed: false,
+    ...NO_RESPONSE_SIDE_EFFECT_CLAIMS,
   };
 }

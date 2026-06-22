@@ -198,6 +198,11 @@ test("capability discovery rejects responses that claim side effects", async () 
 
   assert.equal(result.state, "blocked");
   assert.equal(result.capabilities.length, 0);
+  assert.match(result.message, /side-effect claims/);
+  assert.equal(result.responseApprovalCaptured, true);
+  assert.equal(result.responseMemoryWritePerformed, true);
+  assert.equal(result.responseAgentDispatchPerformed, true);
+  assert.equal(result.responseExternalSendPerformed, true);
   assert.equal(result.approvalCaptured, false);
   assert.equal(result.memoryWritePerformed, false);
   assert.equal(result.agentDispatchPerformed, false);
