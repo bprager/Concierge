@@ -1,22 +1,16 @@
 import {
   GENERATED_BRIDGE_CONTRACT_SOURCE,
   GENERATED_BRIDGE_OPERATIONS,
+  GENERATED_NAPOLEON_REVIEW_OPERATIONS,
 } from "./generatedBridgeOperations.js";
 
 type GeneratedBridgeOperation = (typeof GENERATED_BRIDGE_OPERATIONS)[number];
+type GeneratedNapoleonReviewOperation = (typeof GENERATED_NAPOLEON_REVIEW_OPERATIONS)[number];
 
 export type BridgeOperationId = GeneratedBridgeOperation["id"];
 export type BridgeOperation = GeneratedBridgeOperation;
 
-export type NapoleonReviewOperationId =
-  | "chief_of_staff_request"
-  | "evaluation_review"
-  | "evolution_proposal_review"
-  | "evolution_proposal_submission"
-  | "governance_evaluation"
-  | "governance_review"
-  | "new_agent_proposal_review"
-  | "observability_trace";
+export type NapoleonReviewOperationId = GeneratedNapoleonReviewOperation["id"];
 
 export type NapoleonDiscoveryOperationId = "agent_manifest_list" | "agent_manifest" | "profile";
 
@@ -37,23 +31,7 @@ export interface BridgeOperationSummary {
   requiredProofSummary?: string;
 }
 
-interface NapoleonReviewOperation {
-  id: NapoleonReviewOperationId;
-  path: `/chief-of-staff/${string}` | `/evolution/${string}` | `/governance/${string}` | `/observability/${string}`;
-  requestKind:
-    | "chief_of_staff_request_handoff"
-    | "evaluation_review_handoff"
-    | "evolution_proposal_review_handoff"
-    | "evolution_proposal_submission_handoff"
-    | "governance_evaluation_handoff"
-    | "governance_review_handoff"
-    | "new_agent_proposal_review_handoff"
-    | "observability_trace_handoff";
-  transport: "http_post";
-  responseRequired: readonly string[];
-  governedBridgeOnly: true;
-  tokenPlacement: "authorization_header_only";
-}
+type NapoleonReviewOperation = GeneratedNapoleonReviewOperation;
 
 interface NapoleonDiscoveryOperation {
   id: NapoleonDiscoveryOperationId;
@@ -65,152 +43,11 @@ interface NapoleonDiscoveryOperation {
   tokenPlacement: "authorization_header_only";
 }
 
-export { GENERATED_BRIDGE_CONTRACT_SOURCE };
+export { GENERATED_BRIDGE_CONTRACT_SOURCE, GENERATED_NAPOLEON_REVIEW_OPERATIONS };
 
 export const BRIDGE_OPERATIONS: BridgeOperation[] = [...GENERATED_BRIDGE_OPERATIONS];
 
-export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [
-  {
-    id: "chief_of_staff_request",
-    path: "/chief-of-staff/requests",
-    requestKind: "chief_of_staff_request_handoff",
-    transport: "http_post",
-    responseRequired: [
-      "text",
-      "governanceDecision",
-      "traceEnvelope",
-      "auditEnvelope",
-      "appliedLocally",
-      "memoryWritePerformed",
-      "approvalCaptured",
-      "agentDispatchPerformed",
-      "externalSendPerformed",
-    ],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "evaluation_review",
-    path: "/chief-of-staff/reviews/evaluation",
-    requestKind: "evaluation_review_handoff",
-    transport: "http_post",
-    responseRequired: ["text"],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "evolution_proposal_review",
-    path: "/chief-of-staff/reviews/evolution-proposals",
-    requestKind: "evolution_proposal_review_handoff",
-    transport: "http_post",
-    responseRequired: [
-      "text",
-      "governanceDecision",
-      "traceEnvelope",
-      "auditEnvelope",
-      "appliedLocally",
-      "memoryWritePerformed",
-      "approvalCaptured",
-      "agentDispatchPerformed",
-      "externalSendPerformed",
-    ],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "governance_review",
-    path: "/chief-of-staff/reviews/governance",
-    requestKind: "governance_review_handoff",
-    transport: "http_post",
-    responseRequired: [
-      "text",
-      "governanceDecision",
-      "traceEnvelope",
-      "auditEnvelope",
-      "appliedLocally",
-      "memoryWritePerformed",
-      "approvalCaptured",
-      "agentDispatchPerformed",
-      "externalSendPerformed",
-    ],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "evolution_proposal_submission",
-    path: "/evolution/proposals",
-    requestKind: "evolution_proposal_submission_handoff",
-    transport: "http_post",
-    responseRequired: [
-      "text",
-      "governanceDecision",
-      "traceEnvelope",
-      "auditEnvelope",
-      "appliedLocally",
-      "memoryWritePerformed",
-      "approvalCaptured",
-      "agentDispatchPerformed",
-      "externalSendPerformed",
-    ],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "governance_evaluation",
-    path: "/governance/evaluate",
-    requestKind: "governance_evaluation_handoff",
-    transport: "http_post",
-    responseRequired: [
-      "governanceDecision",
-      "traceEnvelope",
-      "auditEnvelope",
-      "appliedLocally",
-      "memoryWritePerformed",
-      "approvalCaptured",
-      "agentDispatchPerformed",
-      "externalSendPerformed",
-    ],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "new_agent_proposal_review",
-    path: "/chief-of-staff/reviews/new-agent-proposals",
-    requestKind: "new_agent_proposal_review_handoff",
-    transport: "http_post",
-    responseRequired: [
-      "text",
-      "governanceDecision",
-      "traceEnvelope",
-      "auditEnvelope",
-      "appliedLocally",
-      "memoryWritePerformed",
-      "approvalCaptured",
-      "agentDispatchPerformed",
-      "externalSendPerformed",
-    ],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "observability_trace",
-    path: "/observability/traces",
-    requestKind: "observability_trace_handoff",
-    transport: "http_post",
-    responseRequired: [
-      "governanceDecision",
-      "traceEnvelope",
-      "auditEnvelope",
-      "appliedLocally",
-      "memoryWritePerformed",
-      "approvalCaptured",
-      "agentDispatchPerformed",
-      "externalSendPerformed",
-    ],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-];
+export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [...GENERATED_NAPOLEON_REVIEW_OPERATIONS];
 
 export const NAPOLEON_DISCOVERY_OPERATIONS: NapoleonDiscoveryOperation[] = [
   {

@@ -3,6 +3,101 @@ info:
   title: Napoleon Bridge API
   version: 0.1.0
   description: Local Concierge bridge contract aligned with Napoleon Chief of Staff contract-only integration surfaces. The app accepts a Napoleon base URL and resolves operation-specific paths below.
+x-concierge-napoleon-review-operations:
+  - id: chief_of_staff_request
+    path: /chief-of-staff/requests
+    requestKind: chief_of_staff_request_handoff
+    responseRequired:
+      - text
+      - governanceDecision
+      - traceEnvelope
+      - auditEnvelope
+      - appliedLocally
+      - memoryWritePerformed
+      - approvalCaptured
+      - agentDispatchPerformed
+      - externalSendPerformed
+  - id: evaluation_review
+    path: /chief-of-staff/reviews/evaluation
+    requestKind: evaluation_review_handoff
+    responseRequired:
+      - text
+  - id: evolution_proposal_review
+    path: /chief-of-staff/reviews/evolution-proposals
+    requestKind: evolution_proposal_review_handoff
+    responseRequired:
+      - text
+      - governanceDecision
+      - traceEnvelope
+      - auditEnvelope
+      - appliedLocally
+      - memoryWritePerformed
+      - approvalCaptured
+      - agentDispatchPerformed
+      - externalSendPerformed
+  - id: governance_review
+    path: /chief-of-staff/reviews/governance
+    requestKind: governance_review_handoff
+    responseRequired:
+      - text
+      - governanceDecision
+      - traceEnvelope
+      - auditEnvelope
+      - appliedLocally
+      - memoryWritePerformed
+      - approvalCaptured
+      - agentDispatchPerformed
+      - externalSendPerformed
+  - id: evolution_proposal_submission
+    path: /evolution/proposals
+    requestKind: evolution_proposal_submission_handoff
+    responseRequired:
+      - text
+      - governanceDecision
+      - traceEnvelope
+      - auditEnvelope
+      - appliedLocally
+      - memoryWritePerformed
+      - approvalCaptured
+      - agentDispatchPerformed
+      - externalSendPerformed
+  - id: governance_evaluation
+    path: /governance/evaluate
+    requestKind: governance_evaluation_handoff
+    responseRequired:
+      - governanceDecision
+      - traceEnvelope
+      - auditEnvelope
+      - appliedLocally
+      - memoryWritePerformed
+      - approvalCaptured
+      - agentDispatchPerformed
+      - externalSendPerformed
+  - id: new_agent_proposal_review
+    path: /chief-of-staff/reviews/new-agent-proposals
+    requestKind: new_agent_proposal_review_handoff
+    responseRequired:
+      - text
+      - governanceDecision
+      - traceEnvelope
+      - auditEnvelope
+      - appliedLocally
+      - memoryWritePerformed
+      - approvalCaptured
+      - agentDispatchPerformed
+      - externalSendPerformed
+  - id: observability_trace
+    path: /observability/traces
+    requestKind: observability_trace_handoff
+    responseRequired:
+      - governanceDecision
+      - traceEnvelope
+      - auditEnvelope
+      - appliedLocally
+      - memoryWritePerformed
+      - approvalCaptured
+      - agentDispatchPerformed
+      - externalSendPerformed
 components:
   securitySchemes:
     NapoleonBearer:

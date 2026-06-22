@@ -644,10 +644,17 @@ def validate_documented_current_scenario_counts() -> None:
     print(f"documented current evaluator scenario counts match {actual}")
 
 
-def load_bridge_operations() -> list[dict[str, Any]]:
+def load_generated_operation_section(section_name: str) -> list[dict[str, Any]]:
     text = (ROOT / "app/src/generatedBridgeOperations.ts").read_text(encoding="utf-8")
+    section = re.search(
+        rf"export const {section_name} = \[(?P<body>.*?)\n\] as const;",
+        text,
+        re.DOTALL,
+    )
+    if not section:
+        raise SystemExit(f"No generated operation section found: {section_name}")
     operations: list[dict[str, Any]] = []
-    for match in re.finditer(r"\{\s*id:\s*\"([^\"]+)\"(?P<body>.*?)\n\s*\}", text, re.DOTALL):
+    for match in re.finditer(r"\{\s*id:\s*\"([^\"]+)\"(?P<body>.*?)\n\s*\}", section.group("body"), re.DOTALL):
         body = match.group("body")
         operation = {"id": match.group(1)}
         for key in ["path", "requestKind", "transport", "tokenPlacement"]:
@@ -662,8 +669,16 @@ def load_bridge_operations() -> list[dict[str, Any]]:
             operation["governedBridgeOnly"] = governed.group(1) == "true"
         operations.append(operation)
     if not operations:
-        raise SystemExit("No bridge operations found in app/src/generatedBridgeOperations.ts")
+        raise SystemExit(f"No operations found in generated section: {section_name}")
     return operations
+
+
+def load_bridge_operations() -> list[dict[str, Any]]:
+    return load_generated_operation_section("GENERATED_BRIDGE_OPERATIONS")
+
+
+def load_generated_napoleon_review_operations() -> list[dict[str, Any]]:
+    return load_generated_operation_section("GENERATED_NAPOLEON_REVIEW_OPERATIONS")
 
 
 def validate_generated_bridge_operations() -> None:
@@ -687,6 +702,14 @@ def load_openapi() -> dict[str, Any]:
 def load_openapi_concierge_paths() -> list[str]:
     openapi = load_openapi()
     return sorted(path for path in openapi.get("paths", {}) if path.startswith("/v1/concierge/"))
+
+
+def load_openapi_napoleon_review_operations() -> list[dict[str, Any]]:
+    openapi = load_openapi()
+    operations = openapi.get("x-concierge-napoleon-review-operations", [])
+    if not isinstance(operations, list):
+        raise SystemExit("OpenAPI x-concierge-napoleon-review-operations must be a list")
+    return sorted(operations, key=lambda operation: operation.get("id", ""))
 
 
 def load_openapi_concierge_transports() -> dict[str, str]:
@@ -1713,6 +1736,7 @@ def validate_authority_boundary() -> None:
 def validate_bridge_contract_alignment() -> None:
     validate_generated_bridge_operations()
     operations = load_bridge_operations()
+    review_operations = load_generated_napoleon_review_operations()
     openapi_paths = load_openapi_concierge_paths()
     registry_paths = sorted(operation.get("path") for operation in operations)
     if registry_paths != openapi_paths:
@@ -1720,6 +1744,35 @@ def validate_bridge_contract_alignment() -> None:
             "Bridge operation paths do not match OpenAPI paths:\n"
             f"registry={registry_paths}\nopenapi={openapi_paths}"
         )
+    openapi_review_operations = load_openapi_napoleon_review_operations()
+    generated_review_projection = [
+        {
+            "id": operation.get("id"),
+            "path": operation.get("path"),
+            "requestKind": operation.get("requestKind"),
+            "responseRequired": operation.get("responseRequired", []),
+        }
+        for operation in sorted(review_operations, key=lambda operation: operation.get("id", ""))
+    ]
+    openapi_review_projection = [
+        {
+            "id": operation.get("id"),
+            "path": operation.get("path"),
+            "requestKind": operation.get("requestKind"),
+            "responseRequired": operation.get("responseRequired", []),
+        }
+        for operation in openapi_review_operations
+    ]
+    if generated_review_projection != openapi_review_projection:
+        raise SystemExit(
+            "Generated Napoleon review operation metadata does not match OpenAPI extension:\n"
+            f"generated={generated_review_projection}\nopenapi={openapi_review_projection}"
+        )
+    for operation in review_operations:
+        if operation.get("governedBridgeOnly") is not True:
+            raise SystemExit(f"Napoleon review operation is not governed-only: {operation['id']}")
+        if operation.get("tokenPlacement") != "authorization_header_only":
+            raise SystemExit(f"Napoleon review operation token placement is not header-only: {operation['id']}")
 
     request_kinds = load_openapi_request_kinds()
     transports = load_openapi_concierge_transports()

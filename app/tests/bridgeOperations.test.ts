@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   BRIDGE_OPERATIONS,
   GENERATED_BRIDGE_CONTRACT_SOURCE,
+  GENERATED_NAPOLEON_REVIEW_OPERATIONS,
   NAPOLEON_DISCOVERY_OPERATIONS,
   NAPOLEON_REVIEW_OPERATIONS,
   buildAgentManifestBridgeTarget,
@@ -99,6 +100,21 @@ test("bridge operation TypeScript IDs are derived from generated OpenAPI operati
   assert.match(source, /type\s+GeneratedBridgeOperation\s*=/);
   assert.match(source, /export\s+type\s+BridgeOperationId\s*=\s*GeneratedBridgeOperation\["id"\]/);
   assert.doesNotMatch(source, /export\s+type\s+BridgeOperationId\s*=\s*\|/);
+});
+
+test("named Napoleon review operations are generated from canonical contract metadata", () => {
+  assert.deepEqual(
+    GENERATED_NAPOLEON_REVIEW_OPERATIONS.map((operation) => [
+      operation.id,
+      operation.path,
+      operation.requestKind,
+    ]),
+    NAPOLEON_REVIEW_OPERATIONS.map((operation) => [
+      operation.id,
+      operation.path,
+      operation.requestKind,
+    ]),
+  );
 });
 
 test("OpenAPI descriptor connection enums match runtime fail-closed states", () => {

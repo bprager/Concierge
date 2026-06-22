@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added generated contract metadata for named Napoleon review, governance, evolution, Chief of Staff request, and observability handoff targets so the app registry no longer duplicates those path definitions by hand.
 - Added action-oriented next-step guidance to governed handoff readiness panels for memory proposal, governance review, Chief of Staff steering, and taxonomy review submissions without changing review authority.
 - Added action-oriented next-step guidance to the composer-side live-send preflight so the main blocker or warning explains the next local fix without changing send authority.
 - Added a composer-side live-send preflight blocker summary so the main endpoint, descriptor, route, governance, text, rehearsal, runtime, or evaluator blocker is visible before a send attempt.
