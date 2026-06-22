@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added visible transport, token-handling, and side-effect summaries to governed Napoleon route entries so the route panel shows how each named target is contacted and which authority effects remain blocked.
 - Added named Napoleon review, governance, evolution, Chief of Staff request, new-agent proposal review, and observability trace targets to the governed route panel with review-only or evidence-only boundaries and no endpoint hosts, tokens, approval, routing, memory-write, registry-update, trace-append, agent-dispatch, external-send, or local-application authority.
 - Added visible post-preview advisory-send blocking reasons when a rehearsal preview is stale, Rehearsal Mode is still active, governance blocks the preview, or descriptor preflight is not ready, while keeping live sends blocked unless an unchanged preview can go through the governed bridge.
 - Hardened repository validation so mixed bracket/dot `.call(...)` and `.apply(...)` aliases for peer transports, WebAssembly, object URLs, history mutation, clipboard, permission, geolocation, device, and notification APIs are blocked around the governed bridge.

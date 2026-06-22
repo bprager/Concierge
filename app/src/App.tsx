@@ -4214,7 +4214,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               <dd>
                 <span>{operation.path}</span>
                 <span>{operation.requestKind}</span>
+                <span>Transport: {operation.transport}</span>
+                <span>Token handling: {operation.tokenHandling}</span>
                 <span>{operation.boundary}</span>
+                <span>Side effects: {operation.sideEffects}</span>
                 <span>Required response fields: {operation.requiredResponseSummary}</span>
                 {operation.acceptedEndpointForms ? (
                   <span>Accepted endpoint forms: {operation.acceptedEndpointForms.join(", ")}</span>

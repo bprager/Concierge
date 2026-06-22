@@ -2188,6 +2188,36 @@ test("shows named Napoleon governed targets in governed routes", async () => {
   }
 });
 
+test("shows transport token and side-effect boundaries for named Napoleon routes", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App />);
+    const routesPanel = view.getByText("Governed Napoleon routes").closest("section") as HTMLElement;
+    assert.ok(routesPanel);
+    const routes = within(routesPanel);
+
+    const chiefOfStaffRequest = routes.getByText("Chief of Staff request handoff").closest("div") as HTMLElement;
+    assert.ok(chiefOfStaffRequest);
+    const requestRoute = within(chiefOfStaffRequest);
+
+    assert.ok(requestRoute.getByText("Transport: HTTP POST"));
+    assert.ok(requestRoute.getByText("Token handling: Bearer token is sent only in the Authorization header"));
+    assert.ok(
+      requestRoute.getByText(
+        "Side effects: No local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
+      ),
+    );
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows fail-closed transcript metadata when Napoleon returns no-go", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
