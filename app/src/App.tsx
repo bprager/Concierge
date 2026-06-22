@@ -5081,6 +5081,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <strong>{liveSendPreflight.heading}</strong>
             <span>{liveSendPreflight.summary}</span>
             <span>{liveSendPreflight.blockerSummary}</span>
+            <span>{liveSendPreflight.nextStepSummary}</span>
             <span>{liveSendPreflight.caveat}</span>
           </div>
           <dl>

@@ -2486,6 +2486,7 @@ test("blocks rendered live send before fetch when no Napoleon endpoint is config
     assert.ok(preflight);
     assert.ok(preflight.classList.contains("blocked"));
     assert.ok(within(preflight).getByText("Main preflight blocker: configure a Napoleon endpoint."));
+    assert.ok(within(preflight).getByText("Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery."));
     assert.ok(within(preflight).getByText("Endpoint configured"));
     assert.ok(within(preflight).getByText("No Napoleon endpoint is configured."));
 

@@ -204,6 +204,7 @@ export interface LiveSendPreflightView {
   summary: string;
   caveat: string;
   blockerSummary: string;
+  nextStepSummary: string;
   items: LiveSendPreflightItem[];
 }
 
@@ -426,6 +427,44 @@ function describePreflightBlockerSummary(items: LiveSendPreflightItem[]): string
     return `Main preflight warning: ${warning.label.toLowerCase()} needs review.`;
   }
   return "No live-send blockers detected from current local preflight.";
+}
+
+function describePreflightNextStepSummary(items: LiveSendPreflightItem[]): string {
+  const blockedPriority = [
+    "Endpoint configured",
+    "Descriptor discovered",
+    "Descriptor integrity",
+    "Text-turn route",
+    "Governance send gate",
+    "Text ready",
+    "Allowed effects",
+  ];
+  const warningPriority = ["Rehearsal Mode", "Evidence capture", "Evidence comparison", "Runtime validation", "Evaluator HTTP", "Promotion gate"];
+  const blocked = blockedPriority
+    .map((label) => items.find((item) => item.label === label && item.status === "blocked"))
+    .find((item): item is LiveSendPreflightItem => item !== undefined);
+  if (blocked) {
+    if (blocked.label === "Endpoint configured") return "Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery.";
+    if (blocked.label === "Descriptor discovered") return "Next step: run descriptor discovery for the configured Napoleon endpoint.";
+    if (blocked.label === "Descriptor integrity") return "Next step: refresh descriptor discovery or align the expected descriptor checksum/signature.";
+    if (blocked.label === "Text-turn route") return "Next step: use a Napoleon descriptor that advertises the governed text_turn route.";
+    if (blocked.label === "Governance send gate") return "Next step: revise the request until local governance allows an advisory bridge send.";
+    if (blocked.label === "Text ready") return "Next step: enter the text request before attempting the governed bridge send.";
+    return `Next step: resolve ${blocked.label.toLowerCase()} before attempting the governed bridge send.`;
+  }
+
+  const warning = warningPriority
+    .map((label) => items.find((item) => item.label === label && item.status === "warning"))
+    .find((item): item is LiveSendPreflightItem => item !== undefined);
+  if (warning) {
+    if (warning.label === "Rehearsal Mode") return "Next step: turn Rehearsal Mode off only when you want a separate governed bridge attempt.";
+    if (warning.label === "Runtime validation") return "Next step: capture and compare real Napoleon runtime evidence before treating this as promotion-ready.";
+    if (warning.label === "Evaluator HTTP") return "Next step: run evaluator HTTP validation against the configured Napoleon endpoint.";
+    if (warning.label === "Promotion gate") return "Next step: complete the remaining runtime and evaluator evidence before promotion.";
+    return `Next step: review ${warning.label.toLowerCase()} before treating the bridge as promotion-ready.`;
+  }
+
+  return "Next step: send through the governed Napoleon bridge when you are ready.";
 }
 
 export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): LiveBridgeReadinessView {
@@ -794,6 +833,7 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
     caveat:
       "This checklist is not Napoleon approval, does not write memory, does not dispatch agents, does not capture approval, and does not send externally by itself.",
     blockerSummary: describePreflightBlockerSummary(items),
+    nextStepSummary: describePreflightNextStepSummary(items),
     items,
   };
 }
