@@ -37,7 +37,11 @@ import {
 import { buildAvatarPrivacyDashboard } from "./avatarPrivacyDashboard.js";
 import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
 import { answerCapabilityQuestion } from "./capabilityLedger.js";
-import { describeBridgeOperationSummary, describeTaxonomyReviewBridgeSummary } from "./bridgeOperations.js";
+import {
+  describeBridgeOperationSummary,
+  describeNapoleonReviewOperationSummary,
+  describeTaxonomyReviewBridgeSummary,
+} from "./bridgeOperations.js";
 import {
   buildBridgeEvidenceReadinessState,
   compareBridgeReadinessProofs,
@@ -2595,6 +2599,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     describeBridgeOperationSummary("memory_proposal_review"),
     describeBridgeOperationSummary("chief_of_staff_steering"),
     describeTaxonomyReviewBridgeSummary(),
+    describeNapoleonReviewOperationSummary("chief_of_staff_request"),
+    describeNapoleonReviewOperationSummary("evaluation_review"),
+    describeNapoleonReviewOperationSummary("evolution_proposal_review"),
+    describeNapoleonReviewOperationSummary("evolution_proposal_submission"),
+    describeNapoleonReviewOperationSummary("governance_evaluation"),
+    describeNapoleonReviewOperationSummary("governance_review"),
+    describeNapoleonReviewOperationSummary("new_agent_proposal_review"),
+    describeNapoleonReviewOperationSummary("observability_trace"),
   ];
   const microphonePermissionLabel =
     microphonePermissionStatus === "not_requested"

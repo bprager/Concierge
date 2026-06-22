@@ -22,10 +22,10 @@ export type NapoleonDiscoveryOperationId = "agent_manifest_list" | "agent_manife
 
 export interface BridgeOperationSummary {
   id: BridgeOperationId | NapoleonReviewOperationId | "chief_of_staff_taxonomy_review";
-  operationId: BridgeOperationId;
+  operationId: BridgeOperationId | NapoleonReviewOperationId;
   label: string;
   path: string;
-  requestKind: BridgeOperation["requestKind"];
+  requestKind: BridgeOperation["requestKind"] | NapoleonReviewOperation["requestKind"];
   transport: "HTTP GET" | "HTTP POST";
   boundary: string;
   tokenHandling: string;
@@ -568,6 +568,17 @@ const BRIDGE_OPERATION_TRANSPORT_LABELS: Record<BridgeOperation["transport"], Br
   http_post: "HTTP POST",
 };
 
+const NAPOLEON_REVIEW_OPERATION_LABELS: Record<NapoleonReviewOperationId, string> = {
+  chief_of_staff_request: "Chief of Staff request handoff",
+  evaluation_review: "Evaluation review handoff",
+  evolution_proposal_review: "Evolution proposal review",
+  evolution_proposal_submission: "Evolution proposal submission",
+  governance_evaluation: "Governance evaluation handoff",
+  governance_review: "Governance review handoff",
+  new_agent_proposal_review: "New agent proposal review",
+  observability_trace: "Observability trace handoff",
+};
+
 const ADVISORY_HARNESS_ENDPOINT_FORMS: Partial<Record<BridgeOperationId, readonly string[]>> = {
   chief_of_staff_capabilities: ["/cos", "/cos/descriptor", "/cos/capabilities", "/cos/text-turn"],
   chief_of_staff_descriptor: ["/cos", "/cos/descriptor", "/cos/capabilities", "/cos/text-turn"],
@@ -607,6 +618,25 @@ export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOpe
     acceptedEndpointForms: ADVISORY_HARNESS_ENDPOINT_FORMS[operation.id],
     acceptedEndpointSummary: ADVISORY_HARNESS_ENDPOINT_SUMMARIES[operation.id],
     requiredProofSummary: BRIDGE_OPERATION_REQUIRED_PROOF_SUMMARIES[operation.id],
+  };
+}
+
+export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperationId): BridgeOperationSummary {
+  const operation = getNapoleonReviewOperation(id);
+  return {
+    id: operation.id,
+    operationId: operation.id,
+    label: NAPOLEON_REVIEW_OPERATION_LABELS[operation.id],
+    path: operation.path,
+    requestKind: operation.requestKind,
+    transport: BRIDGE_OPERATION_TRANSPORT_LABELS[operation.transport],
+    boundary:
+      "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
+    tokenHandling: "Bearer token is sent only in the Authorization header",
+    sideEffects:
+      "No local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
+    requiredResponseFields: operation.responseRequired,
+    requiredResponseSummary: operation.responseRequired.join(", "),
   };
 }
 

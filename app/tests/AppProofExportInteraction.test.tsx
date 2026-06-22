@@ -2149,6 +2149,45 @@ test("shows explicit advisory endpoint forms and trace proof in governed routes"
   }
 });
 
+test("shows named Napoleon governed targets in governed routes", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App />);
+    const routesPanel = view.getByText("Governed Napoleon routes").closest("section") as HTMLElement;
+    assert.ok(routesPanel);
+    const routes = within(routesPanel);
+
+    assert.ok(routes.getByText("Chief of Staff request handoff"));
+    assert.ok(routes.getByText("/chief-of-staff/requests"));
+    assert.ok(routes.getByText("chief_of_staff_request_handoff"));
+    assert.ok(routes.getByText("Governance evaluation handoff"));
+    assert.ok(routes.getByText("/governance/evaluate"));
+    assert.ok(routes.getByText("governance_evaluation_handoff"));
+    assert.ok(routes.getByText("Evolution proposal submission"));
+    assert.ok(routes.getByText("/evolution/proposals"));
+    assert.ok(routes.getByText("evolution_proposal_submission_handoff"));
+    assert.ok(routes.getByText("Observability trace handoff"));
+    assert.ok(routes.getByText("/observability/traces"));
+    assert.ok(routes.getByText("observability_trace_handoff"));
+    assert.ok(routes.getByText("New agent proposal review"));
+    assert.ok(routes.getByText("/chief-of-staff/reviews/new-agent-proposals"));
+    assert.ok(routes.getByText("new_agent_proposal_review_handoff"));
+    assert.ok(
+      routes.getAllByText(
+        "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
+      ).length >= 5,
+    );
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows fail-closed transcript metadata when Napoleon returns no-go", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

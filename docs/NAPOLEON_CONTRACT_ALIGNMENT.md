@@ -84,6 +84,8 @@ Concierge currently packages local governance review, Chief of Staff steering, t
 
 There are currently no known Napoleon review, governance, observability, or evolution handoff surfaces that still need explicit runtime mapping.
 
+Text Concierge's governed route panel displays the named Napoleon review, governance, evolution, Chief of Staff request, new-agent proposal review, and observability trace targets as review-only or evidence-only handoffs. The panel keeps endpoint hosts and tokens out of view and does not treat any listed target as local approval, routing, memory-write, registry-update, trace-append, agent-dispatch, external-send, or local-application authority.
+
 The explicit request/review path currently mapped is:
 
 - `/chief-of-staff/requests`
