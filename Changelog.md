@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a visible composer warning for blocked direct live sends so the first failed preflight reason is shown beside the Send controls before the guarded submit path is attempted.
 - Added visible transport, token-handling, and side-effect summaries to governed Napoleon route entries so named review/evidence targets show how they are contacted and what remains blocked.
 - Added named Napoleon review and evidence targets to the governed route panel, including Chief of Staff request, evaluation review, evolution proposal submission and review, governance evaluation and review, new-agent proposal review, and observability trace handoff boundaries.
 - Added visible post-preview advisory-send blocking reasons when a rehearsal preview is stale, Rehearsal Mode is still active, governance blocks the preview, or descriptor preflight is not ready.

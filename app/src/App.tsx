@@ -2592,6 +2592,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
     runtimeValidationSource,
   });
+  const directSendPreflightBlocker = !rehearsalMode && !localGovernanceBlocksDirectSend
+    ? liveSendPreflight.items.find((item) => item.status === "blocked")
+    : undefined;
   const governedOperationSummaries = [
     describeBridgeOperationSummary("chief_of_staff_descriptor"),
     describeBridgeOperationSummary("chief_of_staff_capabilities"),
@@ -4922,6 +4925,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           <button disabled={!rehearsalMode && localGovernanceBlocksDirectSend} onClick={rehearsalMode ? rehearse : () => submit()}>
             {rehearsalMode ? "Rehearse" : "Send"}
           </button>
+          {!rehearsalMode && directSendPreflightBlocker ? (
+            <span className="warning">Direct send blocked by preflight: {directSendPreflightBlocker.detail}</span>
+          ) : null}
           {pendingRehearsal ? (
             <>
               <button className="secondary" disabled={!canSendRehearsal} onClick={() => submit(pendingRehearsal)}>

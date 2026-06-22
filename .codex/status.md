@@ -235,6 +235,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Added descriptor auth failure, timeout, and HTTP failure visibility to the composer live-send preflight descriptor-discovery row so those states are blocked explicitly instead of only affecting the aggregate summary.
 - Added local governance outcome visibility to the composer live-send preflight governance gate so blocked requests show decisions such as `no_go` before any send attempt.
 - Added rendered direct-send blocking for local `no_go` governance so the main Send button is disabled before any live bridge attempt while descriptor and endpoint blockers still produce visible fail-closed messages when clicked.
+- Added a direct-send action warning that repeats the first blocked preflight reason beside Send when the blocker is not already covered by the disabled local-governance send state.
 - Added blocked-effect visibility to the composer live-send preflight so memory writes, approval capture, agent dispatch, and external sends remain visible before governed bridge attempts.
 - Added allowed-effect visibility to the composer live-send preflight so `prepare_advisory_response` is visible separately from blocked effects before governed bridge attempts.
 - Tightened the allowed-effect preflight row so local `no_go` governance shows allowed effects as `none`.

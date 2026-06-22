@@ -2433,6 +2433,39 @@ test("blocks rendered live send before fetch when no Napoleon endpoint is config
   }
 });
 
+test("shows direct send preflight warning before blocked live send attempts", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "" } });
+
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Draft a bridge readiness summary" } });
+    await waitFor(() => assert.equal(composer.value, "Draft a bridge readiness summary"));
+
+    const preflight = view.getByText("Live send preflight").closest(".send-preflight") as HTMLElement | null;
+    assert.ok(preflight);
+    assert.ok(within(preflight).getByText("No Napoleon endpoint is configured."));
+    assert.ok(view.getByText("Direct send blocked by preflight: No Napoleon endpoint is configured."));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("blocks rendered live send before fetch when endpoint changes without live descriptor discovery", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
