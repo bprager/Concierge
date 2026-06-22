@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a visible last real-runtime proof row to the live bridge readiness panel so operators can distinguish proven Napoleon runtime evidence from local harness or simulation evidence before opening proof JSON.
 - Added a human-readable readiness proof source summary to the live bridge readiness panel so reviewers can see generated Napoleon target provenance before opening the proof JSON.
 - Added generated-source provenance for named Napoleon review/evidence targets to sanitized bridge readiness proof exports so local evidence files show which handoff targets came from the canonical bridge contract metadata.
 - Added visible generated-source metadata to named Napoleon governed route entries so review/evidence handoff targets show they come from the canonical bridge contract metadata.

@@ -423,6 +423,9 @@ test("describes live bridge readiness as ready only when descriptor and evidence
     evidenceComparisonState: "passed",
     runtimeValidationSource: "real_runtime",
     evaluatorValidationStatus: "passed",
+    lastEvidenceStatus: "success",
+    lastEvidenceOperationId: "text_turn",
+    lastEvidenceTargetPath: "/v1/concierge/turn",
   });
 
   assert.equal(view.status, "ready");
@@ -432,6 +435,11 @@ test("describes live bridge readiness as ready only when descriptor and evidence
   assert.ok(view.details.some((detail) => detail.label === "Checksum" && detail.value === "matched"));
   assert.ok(view.details.some((detail) => detail.label === "Evidence comparison" && detail.value.includes("Passed")));
   assert.ok(view.details.some((detail) => detail.label === "Runtime validation" && detail.value === "Real Napoleon runtime"));
+  assert.ok(
+    view.details.some(
+      (detail) => detail.label === "Last real-runtime proof" && detail.value === "success: text_turn at /v1/concierge/turn",
+    ),
+  );
   assert.ok(view.details.some((detail) => detail.label === "Promotion gate" && detail.value === "real runtime evidence available"));
   assert.deepEqual(view.promotionBlockers, []);
   assert.ok(view.caveat.includes("does not grant memory writes"));

@@ -159,6 +159,8 @@ export interface LiveBridgeReadinessInput {
   evidenceCaptureState?: LiveBridgeEvidenceState;
   evidenceComparisonState?: LiveBridgeEvidenceState;
   lastEvidenceStatus?: "success" | "fail_closed";
+  lastEvidenceOperationId?: string;
+  lastEvidenceTargetPath?: string;
   lastFailureReason?: string;
   runtimeValidationSource?: "real_runtime" | "local_harness" | "local_simulation";
   evaluatorValidationStatus?: "not_run" | "passed" | "failed";
@@ -309,6 +311,23 @@ function describeRuntimeValidationSource(source: LiveBridgeReadinessInput["runti
   if (source === "local_simulation") return "Local simulation only; not real Napoleon runtime validation";
   if (source === undefined) return "Runtime validation source unavailable";
   return "Real Napoleon runtime";
+}
+
+function describeLastRealRuntimeProof(input: {
+  runtimeValidationSource?: LiveBridgeReadinessInput["runtimeValidationSource"];
+  evidenceCapture: LiveBridgeEvidenceState;
+  evidenceComparison: LiveBridgeEvidenceState;
+  lastEvidenceStatus?: LiveBridgeReadinessInput["lastEvidenceStatus"];
+  lastEvidenceOperationId?: string;
+  lastEvidenceTargetPath?: string;
+}): string {
+  if (input.runtimeValidationSource !== "real_runtime") return "not proven";
+  if (input.evidenceCapture !== "passed" || input.evidenceComparison !== "passed") return "not proven";
+  if (input.lastEvidenceStatus !== "success") return "not proven";
+
+  const operation = input.lastEvidenceOperationId?.trim() || "unknown operation";
+  const targetPath = input.lastEvidenceTargetPath?.trim() || "unknown target";
+  return `success: ${operation} at ${targetPath}`;
 }
 
 function describePromotionGate(
@@ -584,6 +603,17 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
             : input.lastEvidenceStatus === "fail_closed"
               ? `fail-closed${input.lastFailureReason ? `: ${input.lastFailureReason}` : ""}`
               : "not run",
+      },
+      {
+        label: "Last real-runtime proof",
+        value: describeLastRealRuntimeProof({
+          runtimeValidationSource,
+          evidenceCapture,
+          evidenceComparison,
+          lastEvidenceStatus: input.lastEvidenceStatus,
+          lastEvidenceOperationId: input.lastEvidenceOperationId,
+          lastEvidenceTargetPath: input.lastEvidenceTargetPath,
+        }),
       },
       { label: "Live send", value: canSendLive ? "governed bridge allowed" : "blocked" },
     ],

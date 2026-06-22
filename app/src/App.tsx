@@ -2646,6 +2646,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,
     evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
     lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus,
+    lastEvidenceOperationId: bridgeEvidenceReadiness.lastOperationId,
+    lastEvidenceTargetPath: bridgeEvidenceReadiness.lastTargetPath,
     lastFailureReason: bridgeEvidenceReadiness.lastFailureReason,
     runtimeValidationSource,
     evaluatorValidationStatus: evaluatorValidationImport?.validation.status,
@@ -2670,7 +2672,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       label: "Last live evidence",
       value: `${liveBridgeReadinessDetail("Evidence capture")}; ${liveBridgeReadinessDetail(
         "Evidence comparison",
-      )}; last send ${liveBridgeReadinessDetail("Last live send")}`,
+      )}; last send ${liveBridgeReadinessDetail("Last live send")}; real proof ${liveBridgeReadinessDetail(
+        "Last real-runtime proof",
+      )}`,
     },
     { label: "Promotion gate", value: `gate state: ${liveBridgeReadinessDetail("Promotion gate")}` },
     { label: "Authority boundary", value: `blocked effects: ${liveBridgeReadiness.blockedEffects.join(", ")}` },
