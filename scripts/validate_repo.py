@@ -218,6 +218,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:RTCPeerConnection|webkitRTCPeerConnection|WebTransport)\s*\("),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"](?:RTCPeerConnection|webkitRTCPeerConnection|WebTransport)['\"]\s*\]\s*\("),
     re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:RTCPeerConnection|webkitRTCPeerConnection|WebTransport)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
         r"\b(?:navigator|window\.navigator)\.(?:usb|serial|hid|bluetooth|credentials)\."
         r"(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\s*\("
     ),
@@ -242,6 +245,12 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\s*\[\s*['\"](?:requestDevice|requestPort|get|create|store|preventSilentAccess)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
+        r"\.\s*(?:usb|serial|hid|bluetooth|credentials)\s*"
+        r"\.\s*(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\s*"
+        r"\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"]permissions['\"]\s*\]"
         r"\s*\[\s*['\"]query['\"]\s*\]\s*\("
@@ -250,6 +259,10 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"]permissions['\"]\s*\]"
         r"\s*\[\s*['\"]query['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
+        r"\.\s*permissions\s*\.\s*query\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
@@ -261,9 +274,16 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\s*\[\s*['\"]geolocation['\"]\s*\]"
         r"\s*\[\s*['\"](?:getCurrentPosition|watchPosition)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
     ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
+        r"\.\s*geolocation\s*\.\s*(?:getCurrentPosition|watchPosition)\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\bNotification\.requestPermission\s*\("),
     re.compile(r"\bNotification\.requestPermission\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\[\s*['\"]requestPermission['\"]\s*\]\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\.\s*requestPermission\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\[\s*['\"]requestPermission['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\bpushManager\.subscribe\s*\("),
     re.compile(r"\b\w+(?:\.\w+)*\.pushManager\.subscribe\.(?:call|apply)\s*\("),
@@ -326,6 +346,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\.\s*(?:read|readText|write|writeText)\s*\("),
     re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*clipboard\s*\.\s*(?:read|readText|write|writeText)\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("
     ),
     re.compile(
@@ -355,11 +378,17 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bWebAssembly\.(?:compile|compileStreaming|instantiate|instantiateStreaming)\s*\("),
     re.compile(r"\bnew\s+WebAssembly\.(?:Module|Instance)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:compile|compileStreaming|instantiate|instantiateStreaming)['\"]\s*\]\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:compile|compileStreaming|instantiate|instantiateStreaming)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:Module|Instance)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\b(?:indexedDB|window\.indexedDB)\.(?:open|deleteDatabase)\s*\("),
     re.compile(r"\b(?:indexedDB|window\.indexedDB)\.(?:open|deleteDatabase)\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]indexedDB['\"]\s*\]\s*\[\s*['\"](?:open|deleteDatabase)['\"]\s*\]\s*\("),
@@ -377,6 +406,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\[\s*['\"](?:pushState|replaceState)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\[\s*['\"](?:pushState|replaceState)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\.\s*(?:pushState|replaceState)\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\.\s*(?:pushState|replaceState)\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\b(?:globalThis|window)\.name\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]name['\"]\s*\]\s*="),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"](?:BroadcastChannel|MessageChannel)['\"]\s*\]\s*\("),

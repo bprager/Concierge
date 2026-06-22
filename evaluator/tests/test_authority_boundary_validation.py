@@ -675,6 +675,25 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_mixed_bracket_dot_call_apply_side_channels(self):
+        for source in [
+            'window["RTCPeerConnection"].call(window, { iceServers: [] });',
+            'globalThis["WebTransport"].apply(globalThis, ["https://api.example.test/session"]);',
+            'window["WebAssembly"]["instantiate"].call(window.WebAssembly, bytes, imports);',
+            'globalThis["URL"]["createObjectURL"].call(globalThis.URL, blob);',
+            'window["history"].pushState.call(window.history, { proof }, "", "/review");',
+            'window["navigator"].clipboard.writeText.call(window.navigator.clipboard, secretProofJson);',
+            'window["navigator"].permissions.query.call(window.navigator.permissions, opts);',
+            'window["navigator"].geolocation.getCurrentPosition.call(window.navigator.geolocation, cb);',
+            'window["navigator"].usb.requestDevice.call(window.navigator.usb, opts);',
+            'window["Notification"].requestPermission.call(window.Notification);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_clipboard_side_channels(self):
         for source in [
             "await navigator.clipboard.writeText(secretProofJson);",

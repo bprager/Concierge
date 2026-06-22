@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened repository validation so mixed bracket/dot `.call(...)` and `.apply(...)` aliases for peer transports, WebAssembly, object URLs, history mutation, clipboard, permission, geolocation, device, and notification APIs are blocked around the governed bridge.
 - Hardened descriptor-gated Chief of Staff capability discovery so app discovery and live-runtime evidence fail closed when a response claims approval capture, memory writes, agent dispatch, or external sends, while keeping Concierge's own local side-effect flags false and showing those remote claims as metadata-only app, telemetry, and readiness proof fields.
 - Added sanitized Napoleon agent/profile metadata discovery state to bridge readiness proof exports and comparisons, carrying only agent count/IDs, profile ID, blocked effects, and false registry-update, dispatch, memory, approval, and external-send fields.
 - Added sanitized descriptor-gated capability discovery evidence to combined live-runtime validation, including capability count/IDs, authority tiers, blocked effects, false retention/side-effect flags, artifact privacy coverage, and promotion-readiness blocking when capability discovery fails.
