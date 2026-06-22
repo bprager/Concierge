@@ -4363,6 +4363,19 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             </div>
           ))}
         </dl>
+        <div className="proof-comparison warning">
+          <strong>Promotion blockers</strong>
+          {liveBridgeReadiness.promotionBlockers.length > 0 ? (
+            <ul>
+              {liveBridgeReadiness.promotionBlockers.map((blocker) => (
+                <li key={blocker}>{blocker}</li>
+              ))}
+            </ul>
+          ) : (
+            <span>No promotion blockers detected from current local evidence.</span>
+          )}
+          <span>Local summary only; not Napoleon approval.</span>
+        </div>
         <dl>
           {liveBridgeReadiness.details.map((detail) => (
             <div key={detail.label}>

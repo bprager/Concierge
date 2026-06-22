@@ -403,6 +403,11 @@ test("describes live bridge readiness as blocked when no endpoint is configured"
   assert.ok(view.caveat.includes("not Napoleon approval"));
   assert.ok(view.blockedEffects.includes("memory_write"));
   assert.ok(view.details.some((detail) => detail.label === "Evidence capture" && detail.value.includes("Not run")));
+  assert.deepEqual(view.promotionBlockers.slice(0, 3), [
+    "Configure a Napoleon endpoint.",
+    "Run real Napoleon bridge evidence capture and comparison.",
+    "Pass evaluator HTTP mode against Napoleon.",
+  ]);
 });
 
 test("describes live bridge readiness as ready only when descriptor and evidence checks pass", () => {
@@ -428,6 +433,7 @@ test("describes live bridge readiness as ready only when descriptor and evidence
   assert.ok(view.details.some((detail) => detail.label === "Evidence comparison" && detail.value.includes("Passed")));
   assert.ok(view.details.some((detail) => detail.label === "Runtime validation" && detail.value === "Real Napoleon runtime"));
   assert.ok(view.details.some((detail) => detail.label === "Promotion gate" && detail.value === "real runtime evidence available"));
+  assert.deepEqual(view.promotionBlockers, []);
   assert.ok(view.caveat.includes("does not grant memory writes"));
 });
 

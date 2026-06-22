@@ -192,6 +192,9 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(readinessPanel).getByText("Last live evidence"));
     assert.ok(within(readinessPanel).getByText("Promotion gate"));
     assert.ok(within(readinessPanel).getByText("Authority boundary"));
+    assert.ok(within(readinessPanel).getByText("Promotion blockers"));
+    assert.ok(within(readinessPanel).getByText("Run real Napoleon bridge evidence capture and comparison."));
+    assert.ok(within(readinessPanel).getByText("Pass evaluator HTTP mode against Napoleon."));
     assert.ok(within(readinessPanel).getByText("blocked until real Napoleon runtime evidence passes"));
     await user.click(screen.getByRole("button", { name: "Discover advisory capabilities" }));
     await screen.findByText("Advisory Chief of Staff capabilities discovered. This is not Napoleon approval.");

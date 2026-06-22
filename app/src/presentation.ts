@@ -172,6 +172,7 @@ export interface LiveBridgeReadinessView {
   canSendLive: boolean;
   summary: string;
   caveat: string;
+  promotionBlockers: string[];
   blockedEffects: string[];
   details: Array<{ label: string; value: string }>;
 }
@@ -325,6 +326,70 @@ function describePromotionGate(
   return "real runtime evidence available";
 }
 
+function describePromotionBlockers(input: {
+  descriptor: DescriptorConnectionState;
+  textTurnRouteReady: boolean;
+  evidenceCapture: LiveBridgeEvidenceState;
+  evidenceComparison: LiveBridgeEvidenceState;
+  runtimeValidationSource?: LiveBridgeReadinessInput["runtimeValidationSource"];
+  evaluatorValidationStatus: NonNullable<LiveBridgeReadinessInput["evaluatorValidationStatus"]>;
+  lastEvidenceStatus?: LiveBridgeReadinessInput["lastEvidenceStatus"];
+  lastFailureReason?: string;
+}): string[] {
+  const blockers: string[] = [];
+  const descriptor = input.descriptor;
+
+  if (!descriptor.canAttemptLiveBridge) {
+    if (descriptor.failClosedReason === "no_endpoint") {
+      blockers.push("Configure a Napoleon endpoint.");
+    } else if (descriptor.failClosedReason === "auth_failure") {
+      blockers.push("Fix Napoleon descriptor authentication.");
+    } else if (descriptor.failClosedReason === "bridge_timeout") {
+      blockers.push("Restore Napoleon descriptor response before retrying.");
+    } else if (descriptor.failClosedReason === "http_failure") {
+      blockers.push("Fix Napoleon descriptor HTTP discovery.");
+    } else if (descriptor.failClosedReason === "descriptor_signature_or_checksum_mismatch") {
+      blockers.push("Resolve the descriptor signature or checksum mismatch.");
+    } else if (descriptor.failClosedReason === "descriptor_stale") {
+      blockers.push("Refresh the stale Napoleon descriptor.");
+    } else if (descriptor.failClosedReason === "no_descriptor") {
+      blockers.push("Discover a Napoleon Chief of Staff descriptor.");
+    } else {
+      blockers.push("Replace the invalid Napoleon descriptor with an authority-safe descriptor.");
+    }
+  }
+
+  if (descriptor.canAttemptLiveBridge && !input.textTurnRouteReady) {
+    blockers.push("Use a descriptor that advertises the governed text-turn route.");
+  }
+
+  if (input.evidenceCapture === "failed" || input.evidenceComparison === "failed") {
+    blockers.push("Fix failed bridge evidence capture or comparison.");
+  } else if (
+    input.evidenceCapture !== "passed" ||
+    input.evidenceComparison !== "passed" ||
+    input.runtimeValidationSource === undefined ||
+    input.runtimeValidationSource === "local_harness" ||
+    input.runtimeValidationSource === "local_simulation"
+  ) {
+    blockers.push("Run real Napoleon bridge evidence capture and comparison.");
+  }
+
+  if (input.evaluatorValidationStatus === "failed" || input.evaluatorValidationStatus === "not_run") {
+    blockers.push("Pass evaluator HTTP mode against Napoleon.");
+  }
+
+  if (input.lastEvidenceStatus === "fail_closed") {
+    blockers.push(
+      input.lastFailureReason
+        ? `Resolve the last fail-closed live send: ${input.lastFailureReason}.`
+        : "Resolve the last fail-closed live send.",
+    );
+  }
+
+  return blockers;
+}
+
 export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): LiveBridgeReadinessView {
   const descriptor = input.descriptorConnection;
   const blockedEffects = descriptor.descriptorStatus?.blockedEffects ?? [
@@ -403,6 +468,16 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
     summary,
     caveat:
       "This readiness check is not Napoleon approval, does not grant memory writes, does not dispatch agents, and does not allow external sends. No text turn should proceed when descriptor integrity or contract checks fail.",
+    promotionBlockers: describePromotionBlockers({
+      descriptor,
+      textTurnRouteReady,
+      evidenceCapture,
+      evidenceComparison,
+      runtimeValidationSource,
+      evaluatorValidationStatus,
+      lastEvidenceStatus: input.lastEvidenceStatus,
+      lastFailureReason: input.lastFailureReason,
+    }),
     blockedEffects,
     details: [
       { label: "Descriptor", value: descriptor.state },
