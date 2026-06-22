@@ -12,6 +12,7 @@ import re
 import sys
 from pathlib import Path
 from typing import Any
+from urllib import error, request
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -371,6 +372,136 @@ def run_http_eval(eval_endpoint: str, out_path: Path, auth_token: str | None) ->
     return run_evaluator(args)
 
 
+def capability_discovery_url(endpoint: str) -> str:
+    base = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    if is_cos_endpoint(endpoint):
+        return f"{strip_known_path(base)}/cos/capabilities"
+    return f"{strip_known_path(base)}/v1/concierge/chief-of-staff/capabilities"
+
+
+def capability_target_path(endpoint: str) -> str:
+    return "/cos/capabilities" if is_cos_endpoint(endpoint) else "/v1/concierge/chief-of-staff/capabilities"
+
+
+def capability_discovery_headers(auth_token: str | None, cos_mode: bool) -> dict[str, str]:
+    if not auth_token:
+        return {}
+    return {"X-Napoleon-Auth": auth_token} if cos_mode else {"Authorization": f"Bearer {auth_token}"}
+
+
+def load_remote_json(url: str, headers: dict[str, str]) -> tuple[int, Any]:
+    req = request.Request(url, headers=headers, method="GET")
+    try:
+        with request.urlopen(req, timeout=10) as response:
+            return response.status, json.loads(response.read().decode("utf-8"))
+    except error.HTTPError as exc:
+        body = exc.read().decode("utf-8")
+        payload = json.loads(body) if body else {}
+        return exc.code, payload
+
+
+def sanitized_capability_discovery_evidence(
+    status_code: int,
+    payload: Any,
+    endpoint: str,
+    runtime_validation_source: str,
+) -> dict[str, Any]:
+    capabilities = payload.get("capabilities") if isinstance(payload, dict) and isinstance(payload.get("capabilities"), list) else []
+    safe_capabilities = [capability for capability in capabilities if isinstance(capability, dict)]
+    capability_ids = sorted(
+        str(capability.get("id"))
+        for capability in safe_capabilities
+        if isinstance(capability.get("id"), str) and capability.get("id")
+    )
+    authority_tier_counts: dict[str, int] = {}
+    for capability in safe_capabilities:
+        tier = capability.get("authorityTier") or capability.get("authority_tier")
+        if isinstance(tier, str) and tier:
+            authority_tier_counts[tier] = authority_tier_counts.get(tier, 0) + 1
+    blocked_effects = []
+    if isinstance(payload, dict):
+        raw_blocked_effects = payload.get("blockedEffects") if isinstance(payload.get("blockedEffects"), list) else payload.get("blocked_effects")
+        if isinstance(raw_blocked_effects, list):
+            blocked_effects = sorted(str(effect) for effect in raw_blocked_effects if isinstance(effect, str) and effect)
+    runtime_authority = payload.get("runtimeAuthority") if isinstance(payload, dict) else None
+    if runtime_authority is None and isinstance(payload, dict):
+        runtime_authority = payload.get("runtime_authority")
+    passed = (
+        status_code == 200
+        and bool(safe_capabilities)
+        and runtime_authority is False
+        and all(capability.get("proposalOnly") is True or capability.get("proposal_only") is True for capability in safe_capabilities)
+    )
+    return {
+        "kind": "chief_of_staff_capability_discovery_evidence",
+        "status": "passed" if passed else "failed",
+        "httpStatus": status_code,
+        "targetPath": capability_target_path(endpoint),
+        "operationId": "chief_of_staff_capabilities",
+        "requestKind": "chief_of_staff_capabilities",
+        "runtimeValidationSource": runtime_validation_source,
+        "capabilityCount": len(safe_capabilities),
+        "capabilityIds": capability_ids,
+        "authorityTierCounts": authority_tier_counts,
+        "runtimeAuthority": runtime_authority is True,
+        "blockedEffects": blocked_effects,
+        "endpointHostRetained": False,
+        "tokenRetained": False,
+        "responseBodyRetained": False,
+        "approvalCaptured": False,
+        "memoryWritePerformed": False,
+        "agentDispatchPerformed": False,
+        "externalSendPerformed": False,
+        "boundary": "Capability discovery evidence is sanitized metadata only and is not approval, dispatch, memory write, or external send authority.",
+    }
+
+
+def run_capability_discovery(
+    bridge_endpoint: str,
+    out_path: Path,
+    auth_token: str | None,
+    runtime_validation_source: str,
+) -> tuple[int, str | None]:
+    try:
+        status_code, payload = load_remote_json(
+            capability_discovery_url(bridge_endpoint),
+            capability_discovery_headers(auth_token, is_cos_endpoint(bridge_endpoint)),
+        )
+        evidence = sanitized_capability_discovery_evidence(
+            status_code,
+            payload,
+            bridge_endpoint,
+            runtime_validation_source,
+        )
+        out_path.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+        return (0 if evidence["status"] == "passed" else 1), None
+    except Exception as exc:
+        evidence = {
+            "kind": "chief_of_staff_capability_discovery_evidence",
+            "status": "failed",
+            "failureReason": exc.__class__.__name__,
+            "targetPath": capability_target_path(bridge_endpoint),
+            "operationId": "chief_of_staff_capabilities",
+            "requestKind": "chief_of_staff_capabilities",
+            "runtimeValidationSource": runtime_validation_source,
+            "capabilityCount": 0,
+            "capabilityIds": [],
+            "authorityTierCounts": {},
+            "runtimeAuthority": False,
+            "blockedEffects": [],
+            "endpointHostRetained": False,
+            "tokenRetained": False,
+            "responseBodyRetained": False,
+            "approvalCaptured": False,
+            "memoryWritePerformed": False,
+            "agentDispatchPerformed": False,
+            "externalSendPerformed": False,
+            "boundary": "Capability discovery failed closed without retaining endpoint hosts, tokens, or response bodies.",
+        }
+        out_path.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+        return 1, exc.__class__.__name__
+
+
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -566,14 +697,64 @@ def eval_target_summary(path: Path) -> dict[str, Any]:
     }
 
 
+def capability_discovery_summary(path: Path, exit_code: int | None, failure_reason: str | None) -> dict[str, Any]:
+    defaults = {
+        "status": "not_run",
+        "failureReason": failure_reason or "none",
+        "path": str(path),
+        "targetPath": None,
+        "operationId": None,
+        "requestKind": None,
+        "capabilityCount": 0,
+        "capabilityIds": [],
+        "authorityTierCounts": {},
+        "runtimeAuthority": False,
+        "blockedEffects": [],
+        "endpointHostRetained": False,
+        "tokenRetained": False,
+        "responseBodyRetained": False,
+        "approvalCaptured": False,
+        "memoryWritePerformed": False,
+        "agentDispatchPerformed": False,
+        "externalSendPerformed": False,
+    }
+    if exit_code is None or not path.exists():
+        return defaults
+    payload = load_json(path)
+    if not isinstance(payload, dict):
+        return {**defaults, "status": "failed", "failureReason": failure_reason or "invalid_capability_artifact"}
+    return {
+        "status": "passed" if exit_code == 0 and payload.get("status") == "passed" else "failed",
+        "failureReason": failure_reason or str(payload.get("failureReason") or "none"),
+        "path": str(path),
+        "targetPath": payload.get("targetPath"),
+        "operationId": payload.get("operationId"),
+        "requestKind": payload.get("requestKind"),
+        "capabilityCount": payload.get("capabilityCount", 0),
+        "capabilityIds": payload.get("capabilityIds", []),
+        "authorityTierCounts": payload.get("authorityTierCounts", {}),
+        "runtimeAuthority": payload.get("runtimeAuthority") is True,
+        "blockedEffects": payload.get("blockedEffects", []),
+        "endpointHostRetained": payload.get("endpointHostRetained") is True,
+        "tokenRetained": payload.get("tokenRetained") is True,
+        "responseBodyRetained": payload.get("responseBodyRetained") is True,
+        "approvalCaptured": payload.get("approvalCaptured") is True,
+        "memoryWritePerformed": payload.get("memoryWritePerformed") is True,
+        "agentDispatchPerformed": payload.get("agentDispatchPerformed") is True,
+        "externalSendPerformed": payload.get("externalSendPerformed") is True,
+    }
+
+
 def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
     runtime = summary["runtimeValidation"]
     bridge = summary["bridgeEvidence"]
+    capabilities = summary["capabilityDiscovery"]
     evaluator = summary["httpEvaluator"]
     artifact_privacy = summary["artifactPrivacy"]
     checks = [
         (runtime["source"] == "real_runtime", "Evidence source is not real Napoleon runtime."),
         (bridge["status"] == "passed", "Descriptor discovery and bridge evidence capture did not pass."),
+        (capabilities["status"] == "passed", "Descriptor-gated capability discovery did not pass."),
         (evaluator["status"] == "passed", "Evaluator HTTP mode did not pass."),
         (artifact_privacy["status"] == "passed", "Artifact privacy audit did not pass."),
     ]
@@ -590,6 +771,7 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
 def render_promotion_review(summary: dict[str, Any]) -> str:
     runtime = summary["runtimeValidation"]
     bridge = summary["bridgeEvidence"]
+    capabilities = summary["capabilityDiscovery"]
     evaluator = summary["httpEvaluator"]
     artifact_privacy = summary["artifactPrivacy"]
     boundary = summary["promotionBoundary"]
@@ -615,6 +797,9 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- Last target path: `{bridge['lastTargetPath']}`",
         f"- Trace envelope observed: `{str(bridge['traceEnvelopeObserved']).lower()}`",
         f"- Trace envelope matched: `{str(bridge['traceEnvelopeMatched']).lower()}`",
+        f"- Capability discovery status: `{capabilities['status']}`",
+        f"- Capability discovery target path: `{capabilities['targetPath']}`",
+        f"- Capability discovery count: `{capabilities['capabilityCount']}`",
         f"- HTTP evaluator status: `{evaluator['status']}`",
         f"- HTTP evaluator run ID: `{evaluator['run_id']}`",
         f"- HTTP evaluator score: `{evaluator['score_total']}`",
@@ -629,6 +814,7 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         "## Required Checklist",
         "",
         checkbox(bridge["status"] == "passed", "Descriptor discovery and bridge evidence capture passed."),
+        checkbox(capabilities["status"] == "passed", "Descriptor-gated capability discovery passed."),
         checkbox(evaluator["status"] == "passed", "Evaluator HTTP mode passed."),
         checkbox(artifact_privacy["status"] == "passed", "Artifact privacy audit passed."),
         checkbox(runtime["source"] == "real_runtime", "Evidence source is real Napoleon runtime, not local harness or simulation."),
@@ -659,6 +845,9 @@ def write_summary(
     eval_exit_code: int | None,
     eval_failure_reason: str | None,
     evidence_path: Path,
+    capability_exit_code: int | None,
+    capability_failure_reason: str | None,
+    capability_path: Path,
     eval_report_path: Path,
     runtime_validation_source: str,
     artifact_privacy: dict[str, Any],
@@ -675,6 +864,11 @@ def write_summary(
             "path": str(evidence_path),
             **bridge_evidence_operation_summary(evidence_path),
         },
+        "capabilityDiscovery": capability_discovery_summary(
+            capability_path,
+            capability_exit_code,
+            capability_failure_reason,
+        ),
         "httpEvaluator": {
             "status": "passed" if eval_exit_code == 0 else "failed" if eval_exit_code is not None else "not_run",
             "failureReason": eval_failure_reason or "none",
@@ -746,6 +940,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     out_dir.mkdir(parents=True, exist_ok=True)
     write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint, endpoint_resolution)
     evidence_path = out_dir / "bridge_evidence.json"
+    capability_path = out_dir / "capability_discovery.json"
     eval_report_path = out_dir / "eval_http.json"
     summary_path = out_dir / "summary.json"
     promotion_review_path = out_dir / "promotion_review.md"
@@ -760,6 +955,21 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         print(bridge_stdout, end="")
     if bridge_stderr:
         print(bridge_stderr, end="", file=sys.stderr)
+
+    capability_exit_code: int | None = None
+    capability_failure_reason: str | None = None
+    if bridge_exit_code == 0:
+        capability_exit_code, capability_failure_reason = run_capability_discovery(
+            bridge_endpoint,
+            capability_path,
+            auth_token,
+            args.runtime_validation_source,
+        )
+        if capability_exit_code != 0:
+            print(
+                "Capability discovery failed closed; summary will record sanitized capability failure.",
+                file=sys.stderr,
+            )
 
     eval_exit_code: int | None = None
     eval_failure_reason: str | None = None
@@ -786,7 +996,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         ]
         if value
     }
-    artifact_privacy = audit_artifact_privacy([evidence_path, eval_report_path], sensitive_values)
+    artifact_privacy = audit_artifact_privacy([evidence_path, capability_path, eval_report_path], sensitive_values)
 
     summary = write_summary(
         summary_path,
@@ -795,6 +1005,9 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         eval_exit_code,
         eval_failure_reason,
         evidence_path,
+        capability_exit_code,
+        capability_failure_reason,
+        capability_path,
         eval_report_path,
         args.runtime_validation_source,
         artifact_privacy,
