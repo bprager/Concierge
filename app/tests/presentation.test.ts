@@ -583,6 +583,7 @@ test("describes live bridge readiness as blocked when descriptor lacks text-turn
     evidenceCaptureState: "passed",
     evidenceComparisonState: "passed",
     runtimeValidationSource: "real_runtime",
+    evaluatorValidationStatus: "passed",
   });
 
   assert.equal(view.status, "blocked");
@@ -921,6 +922,7 @@ test("describes live send preflight as ready only for governed bridge attempt", 
     evidenceCaptureState: "passed",
     evidenceComparisonState: "passed",
     runtimeValidationSource: "real_runtime",
+    evaluatorValidationStatus: "passed",
   });
 
   assert.equal(view.status, "ready");
@@ -929,6 +931,43 @@ test("describes live send preflight as ready only for governed bridge attempt", 
   assert.ok(view.items.every((item: { status: string }) => item.status === "ready"));
   assert.ok(view.caveat.includes("does not write memory"));
   assert.ok(view.caveat.includes("does not dispatch agents"));
+});
+
+test("describes missing evaluator HTTP as a promotion warning in live send preflight", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canAttemptLiveSend, true);
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Evaluator HTTP" &&
+        item.status === "warning" &&
+        item.detail === "not run",
+    ),
+  );
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Promotion gate" &&
+        item.status === "warning" &&
+        item.detail.includes("blocked until evaluator HTTP mode passes"),
+    ),
+  );
 });
 
 test("describes rehearsal mode as not directly live-send attemptable", () => {

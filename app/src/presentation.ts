@@ -185,6 +185,9 @@ export interface LiveSendPreflightInput {
   evidenceCaptureState?: LiveBridgeEvidenceState;
   evidenceComparisonState?: LiveBridgeEvidenceState;
   runtimeValidationSource?: LiveBridgeReadinessInput["runtimeValidationSource"];
+  evaluatorValidationStatus?: LiveBridgeReadinessInput["evaluatorValidationStatus"];
+  evaluatorFailureReason?: string;
+  evaluatorTargetPath?: string;
 }
 
 export interface LiveSendPreflightItem {
@@ -524,6 +527,12 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
   const evidenceCaptureReady = evidenceCapture === undefined || evidenceCapture === "passed";
   const evidenceComparisonReady = evidenceComparison === undefined || evidenceComparison === "passed";
   const realRuntimeReady = runtimeValidationSource === "real_runtime";
+  const evaluatorValidationStatus = input.evaluatorValidationStatus ?? "not_run";
+  const evaluatorPromotionBlocked =
+    realRuntimeReady &&
+    evidenceCaptureReady &&
+    evidenceComparisonReady &&
+    (evaluatorValidationStatus === "failed" || evaluatorValidationStatus === "not_run");
   const descriptorDiscoveryBlocked =
     descriptor.failClosedReason === "no_descriptor" ||
     descriptor.failClosedReason === "descriptor_stale" ||
@@ -630,9 +639,30 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
         : describeRuntimeValidationSource(runtimeValidationSource),
   });
   items.push({
+    label: "Evaluator HTTP",
+    status: evaluatorPromotionBlocked ? "warning" : evaluatorValidationStatus === "passed" ? "ready" : "warning",
+    detail:
+      evaluatorValidationStatus === "failed"
+        ? `failed${input.evaluatorFailureReason ? `: ${input.evaluatorFailureReason}` : ""}`
+        : evaluatorValidationStatus === "passed"
+          ? "passed"
+          : "not run",
+  });
+  if (input.evaluatorTargetPath !== undefined) {
+    items.push({
+      label: "Evaluator target",
+      status: evaluatorPromotionBlocked ? "warning" : "ready",
+      detail: input.evaluatorTargetPath,
+    });
+  }
+  items.push({
     label: "Promotion gate",
-    status: realRuntimeReady && evidenceCaptureReady && evidenceComparisonReady ? "ready" : "warning",
-    detail: describePromotionGate(runtimeValidationSource, !evidenceCaptureReady || !evidenceComparisonReady),
+    status: realRuntimeReady && evidenceCaptureReady && evidenceComparisonReady && !evaluatorPromotionBlocked ? "ready" : "warning",
+    detail: describePromotionGate(
+      runtimeValidationSource,
+      !evidenceCaptureReady || !evidenceComparisonReady,
+      evaluatorValidationStatus,
+    ),
   });
   const hasBlocked = items.some((item) => item.status === "blocked") || !descriptor.canAttemptLiveBridge;
   const hasWarning = items.some((item) => item.status === "warning");
