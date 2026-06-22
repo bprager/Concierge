@@ -71,6 +71,10 @@ import {
   discoverChiefOfStaffCapabilities,
   type ChiefOfStaffCapabilityDiscoveryResult,
 } from "./chiefOfStaffCapabilities.js";
+import {
+  parseEvaluatorValidationArtifact,
+  type EvaluatorValidationImport,
+} from "./evaluatorValidationArtifact.js";
 import { buildLearningSignalTelemetryAttributes } from "./learningSignal.js";
 import {
   buildDescriptorConnectionState,
@@ -392,6 +396,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
   const [bridgeReadinessProofComparison, setBridgeReadinessProofComparison] =
     useState<BridgeReadinessProofComparison | null>(null);
+  const [evaluatorValidationArtifactInput, setEvaluatorValidationArtifactInput] = useState("");
+  const [evaluatorValidationImport, setEvaluatorValidationImport] = useState<EvaluatorValidationImport | null>(null);
   const [voicePipelineProofJson, setVoicePipelineProofJson] = useState<string | null>(null);
   const [voicePipelineProofComparison, setVoicePipelineProofComparison] =
     useState<GovernedVoicePipelineProofComparison | null>(null);
@@ -621,6 +627,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function clearBridgeEvidenceReadiness() {
     setBridgeEvidenceReadiness(buildBridgeEvidenceReadinessState());
+    setEvaluatorValidationArtifactInput("");
+    setEvaluatorValidationImport(null);
   }
 
   function clearVoicePipelineProof() {
@@ -2163,12 +2171,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function exportBridgeReadinessProof() {
     const traceId = newTraceId();
-    const runtimeValidationSource = deriveRuntimeValidationSource({
+    const derivedRuntimeValidationSource = deriveRuntimeValidationSource({
       endpoint,
       descriptorMode,
       evidenceCaptureState: bridgeEvidenceReadiness.captureState,
       evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
     });
+    const runtimeValidationSource = derivedRuntimeValidationSource ?? evaluatorValidationImport?.runtimeValidationSource;
     const metadataBlockedEffects = chiefOfStaffCapabilities
       ? Array.from(
           new Set([
@@ -2183,6 +2192,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       descriptorConnection,
       readiness: bridgeEvidenceReadiness,
       runtimeValidationSource,
+      evaluatorValidation: evaluatorValidationImport?.validation,
       advisoryCapabilities: chiefOfStaffCapabilities
         ? {
             state: chiefOfStaffCapabilities.state,
@@ -2272,6 +2282,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       evaluatorHttpStatus: bridgeReadinessProof.runtimeValidation?.evaluator?.status ?? "not_run",
       evaluatorFailureReason: bridgeReadinessProof.runtimeValidation?.evaluator?.failureReason ?? "none",
       evaluatorTargetPath: bridgeReadinessProof.runtimeValidation?.evaluator?.targetPath ?? "unavailable",
+      evaluatorImportStatus: evaluatorValidationImport?.status ?? "not_imported",
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
       lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus ?? "not_run",
@@ -2322,6 +2333,28 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       recommendationProvenanceReturned: recommendationProof !== "unavailable" && recommendationProof !== "not returned",
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+    });
+  }
+
+  function importEvaluatorValidationArtifact() {
+    const traceId = newTraceId();
+    const importResult = parseEvaluatorValidationArtifact(evaluatorValidationArtifactInput, {
+      expectedTargetPath: isLocalHarnessEndpoint(endpoint) ? "/v1/concierge/evaluate" : "/chief-of-staff/reviews/evaluation",
+    });
+    setEvaluatorValidationImport(importResult);
+    clearBridgeReadinessProof();
+    emitEvent("evaluator_validation_artifact_imported", {
+      traceId,
+      conversationId,
+      status: importResult.status,
+      evaluatorHttpStatus: importResult.validation.status,
+      evaluatorFailureReason: importResult.validation.failureReason ?? "none",
+      evaluatorTargetPath: importResult.validation.targetPath ?? "unavailable",
+      runtimeValidationSource: importResult.runtimeValidationSource ?? "unavailable",
       approvalCaptured: false,
       memoryWritePerformed: false,
       agentDispatchPerformed: false,
@@ -2565,12 +2598,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     taxonomyCounts[dimension].map((row) => ({ ...row, value: `${dimension}:${row.label}` })),
   );
   const selectedTaxonomyRow = taxonomyRows.find((row) => row.value === selectedTaxonomyLabel);
-  const runtimeValidationSource = deriveRuntimeValidationSource({
+  const derivedRuntimeValidationSource = deriveRuntimeValidationSource({
     endpoint,
     descriptorMode,
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,
     evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
   });
+  const runtimeValidationSource = derivedRuntimeValidationSource ?? evaluatorValidationImport?.runtimeValidationSource;
   const liveBridgeReadiness = describeLiveBridgeReadiness({
     descriptorConnection,
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,
@@ -2578,6 +2612,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus,
     lastFailureReason: bridgeEvidenceReadiness.lastFailureReason,
     runtimeValidationSource,
+    evaluatorValidationStatus: evaluatorValidationImport?.validation.status,
+    evaluatorFailureReason: evaluatorValidationImport?.validation.failureReason,
+    evaluatorTargetPath: evaluatorValidationImport?.validation.targetPath,
   });
   const liveVoiceReadiness = describeLiveVoiceReadiness({
     descriptorConnection,
@@ -2607,6 +2644,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     evidenceCaptureState: bridgeEvidenceReadiness.captureState,
     evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
     runtimeValidationSource,
+    evaluatorValidationStatus: evaluatorValidationImport?.validation.status,
+    evaluatorFailureReason: evaluatorValidationImport?.validation.failureReason,
+    evaluatorTargetPath: evaluatorValidationImport?.validation.targetPath,
   });
   const directSendPreflightBlocker = !rehearsalMode && !localGovernanceBlocksDirectSend
     ? liveSendPreflight.items.find((item) => item.status === "blocked")
@@ -4274,6 +4314,31 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             </div>
           ) : null}
         </dl>
+        <div className="evaluator-import">
+          <label>
+            <span>Evaluator validation artifact</span>
+            <textarea
+              aria-label="Evaluator validation artifact"
+              value={evaluatorValidationArtifactInput}
+              onChange={(event) => setEvaluatorValidationArtifactInput(event.target.value)}
+              placeholder="Paste sanitized live-runtime validation summary JSON"
+            />
+          </label>
+          <button className="secondary" onClick={importEvaluatorValidationArtifact}>
+            Import evaluator validation
+          </button>
+          {evaluatorValidationImport ? (
+            <div className={`proof-comparison ${evaluatorValidationImport.status}`}>
+              <strong>Evaluator validation import</strong>
+              <span>{evaluatorValidationImport.summary}</span>
+              <span>
+                Status: {evaluatorValidationImport.validation.status}; target:{" "}
+                {evaluatorValidationImport.validation.targetPath ?? "unavailable"}
+              </span>
+              <span>Sanitized local evidence only; not Napoleon approval.</span>
+            </div>
+          ) : null}
+        </div>
         <button className="secondary" onClick={exportBridgeReadinessProof}>
           Export readiness proof
         </button>
