@@ -2242,7 +2242,16 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             externalSendPerformed: false,
           },
     });
-    const bridgeReadinessProof = JSON.parse(json) as { runtimeValidation?: { promotionGate?: string } };
+    const bridgeReadinessProof = JSON.parse(json) as {
+      runtimeValidation?: {
+        promotionGate?: string;
+        evaluator?: {
+          status?: string;
+          failureReason?: string;
+          targetPath?: string;
+        };
+      };
+    };
     const comparison = compareBridgeReadinessProofs(bridgeReadinessProofJson, json);
     setBridgeReadinessProofJson(json);
     setBridgeReadinessProofComparison(comparison);
@@ -2260,6 +2269,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
       runtimeValidationSource: runtimeValidationSource ?? "unavailable",
       promotionGate: bridgeReadinessProof.runtimeValidation?.promotionGate ?? "unavailable",
+      evaluatorHttpStatus: bridgeReadinessProof.runtimeValidation?.evaluator?.status ?? "not_run",
+      evaluatorFailureReason: bridgeReadinessProof.runtimeValidation?.evaluator?.failureReason ?? "none",
+      evaluatorTargetPath: bridgeReadinessProof.runtimeValidation?.evaluator?.targetPath ?? "unavailable",
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
       lastEvidenceStatus: bridgeEvidenceReadiness.lastEvidenceStatus ?? "not_run",

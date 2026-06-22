@@ -19,6 +19,13 @@ export interface BridgeReadinessProofInput {
   descriptorConnection: DescriptorConnectionState;
   readiness: BridgeEvidenceReadinessState;
   runtimeValidationSource?: "real_runtime" | "local_harness" | "local_simulation";
+  evaluatorValidation?: {
+    status: "not_run" | "passed" | "failed";
+    failureReason?: string;
+    targetPath?: string;
+    requestKind?: string;
+    operationId?: string;
+  };
   generatedAt?: string;
   advisoryCapabilities?: {
     state: "not_fetched" | "blocked" | "ready";
@@ -119,6 +126,10 @@ function promotionGateForProof(input: BridgeReadinessProofInput): string {
   }
   if (input.readiness.captureState !== "passed" || input.readiness.comparisonState !== "passed") {
     return "blocked_until_evidence_capture_and_comparison_pass";
+  }
+  const evaluatorStatus = input.evaluatorValidation?.status ?? "not_run";
+  if (evaluatorStatus === "failed" || evaluatorStatus === "not_run") {
+    return "blocked_until_evaluator_http_passes";
   }
   return "real_runtime_evidence_available";
 }
@@ -289,6 +300,21 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         source: input.runtimeValidationSource ?? "unavailable",
         promotionGate: promotionGateForProof(input),
         caveat: runtimeValidationCaveat(input),
+        evaluator: {
+          status: input.evaluatorValidation?.status ?? "not_run",
+          failureReason: sanitizeReadinessProofString(input.evaluatorValidation?.failureReason) ?? "none",
+          targetPath: sanitizeReadinessProofString(input.evaluatorValidation?.targetPath) ?? "unavailable",
+          requestKind: sanitizeReadinessProofString(input.evaluatorValidation?.requestKind) ?? "unavailable",
+          operationId: sanitizeReadinessProofString(input.evaluatorValidation?.operationId) ?? "unavailable",
+          connectionValueStored: false,
+          credentialValueStored: false,
+          requestPayloadStored: false,
+          responsePayloadStored: false,
+          approvalCaptured: false,
+          memoryWritePerformed: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+        },
       },
       boundary: {
         approvalCaptured: false,
@@ -384,6 +410,9 @@ export function compareBridgeReadinessProofs(
     { label: "Napoleon metadata blocked effects", path: ["napoleonMetadata", "blockedEffects"] },
     { label: "Runtime validation source", path: ["runtimeValidation", "source"] },
     { label: "Promotion gate", path: ["runtimeValidation", "promotionGate"] },
+    { label: "Evaluator HTTP status", path: ["runtimeValidation", "evaluator", "status"] },
+    { label: "Evaluator HTTP failure reason", path: ["runtimeValidation", "evaluator", "failureReason"] },
+    { label: "Evaluator HTTP target path", path: ["runtimeValidation", "evaluator", "targetPath"] },
   ];
 
   const changes = comparedFields.flatMap(({ label, path }) => {

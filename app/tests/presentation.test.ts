@@ -417,6 +417,7 @@ test("describes live bridge readiness as ready only when descriptor and evidence
     evidenceCaptureState: "passed",
     evidenceComparisonState: "passed",
     runtimeValidationSource: "real_runtime",
+    evaluatorValidationStatus: "passed",
   });
 
   assert.equal(view.status, "ready");
@@ -463,6 +464,37 @@ test("describes local harness bridge readiness as validation warning only", () =
   );
 });
 
+test("describes missing evaluator HTTP as a real-runtime promotion blocker", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canSendLive, true);
+  assert.ok(view.summary.includes("evaluator HTTP mode has not passed"));
+  assert.ok(
+    view.details.some(
+      (detail) => detail.label === "Evaluator HTTP" && detail.value === "not run",
+    ),
+  );
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Promotion gate" &&
+        detail.value === "blocked until evaluator HTTP mode passes",
+    ),
+  );
+});
+
 test("describes missing runtime source as unproven bridge readiness", () => {
   const view = describeLiveBridgeReadiness({
     descriptorConnection: buildDescriptorConnectionState({
@@ -489,6 +521,49 @@ test("describes missing runtime source as unproven bridge readiness", () => {
       (detail) =>
         detail.label === "Promotion gate" &&
         detail.value === "blocked until real Napoleon runtime evidence passes",
+    ),
+  );
+});
+
+test("describes missing evaluator route as a real-runtime promotion blocker", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+    evaluatorValidationStatus: "failed",
+    evaluatorFailureReason: "http_evaluator_route_not_found",
+    evaluatorTargetPath: "/chief-of-staff/reviews/evaluation",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canSendLive, true);
+  assert.ok(view.summary.includes("evaluator route is not available"));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Evaluator HTTP" &&
+        detail.value === "failed: http_evaluator_route_not_found",
+    ),
+  );
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Evaluator target" &&
+        detail.value === "/chief-of-staff/reviews/evaluation",
+    ),
+  );
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Promotion gate" &&
+        detail.value === "blocked until evaluator HTTP mode passes",
     ),
   );
 });

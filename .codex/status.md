@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added sanitized evaluator HTTP blocker metadata to Text Concierge readiness proof exports, proof comparisons, and the live bridge readiness panel, so a missing Napoleon evaluator route stays visible as a promotion blocker without retaining endpoint hosts, tokens, request bodies, or response bodies.
 - Added sanitized evaluator-route failure evidence to combined live-runtime validation: a missing `/chief-of-staff/reviews/evaluation` route now records `http_evaluator_route_not_found` plus target path/request kind/operation ID without retaining endpoint hosts, tokens, exception text, request bodies, or response bodies.
 - Re-ran `NAPOLEON_BRIDGE_ENDPOINT=http://127.0.0.1:18765/cos/text-turn make live-runtime-validation` through an SSH tunnel to `bernd@mimir`; real-runtime bridge evidence, trace proof, capability discovery, and artifact privacy passed, while promotion remains blocked because Napoleon's evaluator review route is not currently exposed.
 - Hardened combined live-runtime validation so descriptor-gated capability discovery failures now return a failing command exit code even when bridge capture and evaluator HTTP mode pass; promotion remains blocked on the same condition.

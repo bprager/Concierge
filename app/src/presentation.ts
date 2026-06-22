@@ -161,6 +161,9 @@ export interface LiveBridgeReadinessInput {
   lastEvidenceStatus?: "success" | "fail_closed";
   lastFailureReason?: string;
   runtimeValidationSource?: "real_runtime" | "local_harness" | "local_simulation";
+  evaluatorValidationStatus?: "not_run" | "passed" | "failed";
+  evaluatorFailureReason?: string;
+  evaluatorTargetPath?: string;
 }
 
 export interface LiveBridgeReadinessView {
@@ -301,7 +304,11 @@ function describeRuntimeValidationSource(source: LiveBridgeReadinessInput["runti
   return "Real Napoleon runtime";
 }
 
-function describePromotionGate(source: LiveBridgeReadinessInput["runtimeValidationSource"], evidencePending: boolean): string {
+function describePromotionGate(
+  source: LiveBridgeReadinessInput["runtimeValidationSource"],
+  evidencePending: boolean,
+  evaluatorValidationStatus?: LiveBridgeReadinessInput["evaluatorValidationStatus"],
+): string {
   if (source === undefined) {
     return "blocked until real Napoleon runtime evidence passes";
   }
@@ -309,6 +316,9 @@ function describePromotionGate(source: LiveBridgeReadinessInput["runtimeValidati
     return "blocked until real Napoleon runtime evidence passes";
   }
   if (evidencePending) return "blocked until evidence capture and comparison pass";
+  if (evaluatorValidationStatus === "failed" || evaluatorValidationStatus === "not_run") {
+    return "blocked until evaluator HTTP mode passes";
+  }
   return "real runtime evidence available";
 }
 
@@ -332,12 +342,15 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
     descriptor.signatureState === "invalid";
   const evidenceFailed = evidenceCapture === "failed" || evidenceComparison === "failed";
   const evidencePending = evidenceCapture !== "passed" || evidenceComparison !== "passed";
+  const evaluatorValidationStatus = input.evaluatorValidationStatus ?? "not_run";
+  const evaluatorNotPassed = evaluatorValidationStatus === "failed" || evaluatorValidationStatus === "not_run";
+  const evaluatorPromotionBlocked = runtimeValidationSource === "real_runtime" && !evidencePending && evaluatorNotPassed;
   const lastSendFailedClosed = input.lastEvidenceStatus === "fail_closed";
   const textTurnRouteReady = descriptorSupportsGovernedHandoff(descriptor, "text_turn");
   const canSendLive = descriptor.canAttemptLiveBridge && textTurnRouteReady && !evidenceFailed;
   const status: LiveBridgeReadinessView["status"] = !canSendLive
     ? "blocked"
-    : evidencePending || lastSendFailedClosed || localOnlyValidation || runtimeValidationMissing
+    : evidencePending || evaluatorPromotionBlocked || lastSendFailedClosed || localOnlyValidation || runtimeValidationMissing
       ? "warning"
       : "ready";
 
@@ -364,6 +377,11 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
     summary = "Napoleon descriptor does not advertise text_turn, so Concierge is blocked from live text sends.";
   } else if (lastSendFailedClosed) {
     summary = `Last Napoleon live text turn failed closed${input.lastFailureReason ? `: ${input.lastFailureReason}` : ""}. Concierge remains prepare-only for blocked effects.`;
+  } else if (evaluatorPromotionBlocked) {
+    summary =
+      input.evaluatorFailureReason === "http_evaluator_route_not_found"
+        ? "Real Napoleon text bridge evidence passes, but the evaluator route is not available for promotion evidence."
+        : "Real Napoleon text bridge evidence passes, but evaluator HTTP mode has not passed for promotion evidence.";
   } else if (localOnlyValidation && !evidencePending) {
     summary =
       "Local harness or simulation checks pass, but real Napoleon runtime validation has not been proven in this UI session.";
@@ -391,7 +409,17 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
       { label: "Evidence capture", value: describeEvidenceState(evidenceCapture) },
       { label: "Evidence comparison", value: describeEvidenceState(evidenceComparison) },
       { label: "Runtime validation", value: describeRuntimeValidationSource(runtimeValidationSource) },
-      { label: "Promotion gate", value: describePromotionGate(runtimeValidationSource, evidencePending) },
+      {
+        label: "Evaluator HTTP",
+        value:
+          evaluatorValidationStatus === "failed"
+            ? `failed${input.evaluatorFailureReason ? `: ${input.evaluatorFailureReason}` : ""}`
+            : evaluatorValidationStatus === "passed"
+              ? "passed"
+              : "not run",
+      },
+      { label: "Evaluator target", value: input.evaluatorTargetPath ?? "not returned" },
+      { label: "Promotion gate", value: describePromotionGate(runtimeValidationSource, evidencePending, evaluatorValidationStatus) },
       {
         label: "Last live send",
         value:

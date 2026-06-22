@@ -231,6 +231,9 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     };
     const readinessEvent = telemetryBuffer.events?.find((event) => event.event === "bridge_readiness_proof_exported");
     assert.equal(readinessEvent?.attributes.promotionGate, "blocked_until_real_runtime_evidence_passes");
+    assert.equal(readinessEvent?.attributes.evaluatorHttpStatus, "not_run");
+    assert.equal(readinessEvent?.attributes.evaluatorFailureReason, "none");
+    assert.equal(readinessEvent?.attributes.evaluatorTargetPath, "unavailable");
     assert.equal(readinessEvent?.attributes.agentDispatchPerformed, false);
     assert.equal(JSON.stringify(readinessEvent).includes("127.0.0.1"), false);
     const rehearsalCheckbox = screen.getByLabelText("Rehearsal Mode");

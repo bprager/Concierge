@@ -207,6 +207,95 @@ test("exports missing runtime source as unproven bridge readiness proof", () => 
   assert.ok(proof.runtimeValidation.caveat.includes("Real Napoleon runtime validation has not been proven"));
 });
 
+test("exports sanitized missing evaluator route as a promotion blocker", () => {
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+    ...validEvidence,
+    status: "success",
+    provenanceVerified: true,
+  });
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: state,
+    runtimeValidationSource: "real_runtime",
+    evaluatorValidation: {
+      status: "failed",
+      failureReason: "http_evaluator_route_not_found",
+      targetPath: "/chief-of-staff/reviews/evaluation",
+      requestKind: "evaluation_review_handoff",
+      operationId: "evaluation_review",
+    },
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    runtimeValidation: {
+      promotionGate: string;
+      evaluator: {
+        status: string;
+        failureReason: string;
+        targetPath: string;
+        requestKind: string;
+        operationId: string;
+        connectionValueStored: boolean;
+        credentialValueStored: boolean;
+        requestPayloadStored: boolean;
+        responsePayloadStored: boolean;
+      };
+    };
+  };
+
+  assert.equal(proof.runtimeValidation.promotionGate, "blocked_until_evaluator_http_passes");
+  assert.equal(proof.runtimeValidation.evaluator.status, "failed");
+  assert.equal(proof.runtimeValidation.evaluator.failureReason, "http_evaluator_route_not_found");
+  assert.equal(proof.runtimeValidation.evaluator.targetPath, "/chief-of-staff/reviews/evaluation");
+  assert.equal(proof.runtimeValidation.evaluator.requestKind, "evaluation_review_handoff");
+  assert.equal(proof.runtimeValidation.evaluator.operationId, "evaluation_review");
+  assert.equal(proof.runtimeValidation.evaluator.connectionValueStored, false);
+  assert.equal(proof.runtimeValidation.evaluator.credentialValueStored, false);
+  assert.equal(proof.runtimeValidation.evaluator.requestPayloadStored, false);
+  assert.equal(proof.runtimeValidation.evaluator.responsePayloadStored, false);
+  assert.equal(exported.includes("127.0.0.1"), false);
+  assert.equal(exported.includes("token"), false);
+});
+
+test("keeps readiness proof promotion blocked until evaluator HTTP passes", () => {
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+    ...validEvidence,
+    status: "success",
+    provenanceVerified: true,
+  });
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: state,
+    runtimeValidationSource: "real_runtime",
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    runtimeValidation: {
+      promotionGate: string;
+      evaluator: { status: string };
+    };
+  };
+
+  assert.equal(proof.runtimeValidation.evaluator.status, "not_run");
+  assert.equal(proof.runtimeValidation.promotionGate, "blocked_until_evaluator_http_passes");
+});
+
 test("keeps readiness proof promotion blocked when descriptor lacks text-turn route", () => {
   const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
     ...validEvidence,

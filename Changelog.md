@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added sanitized evaluator HTTP blocker metadata to Text Concierge readiness proof exports, proof comparisons, and the live bridge readiness panel, so a missing Napoleon evaluator route remains visible as a promotion blocker after bridge evidence passes.
 - Added sanitized missing-evaluator-route evidence to live-runtime validation, preserving the attempted evaluator target path, request kind, and operation ID when the derived Napoleon review route returns 404.
 - Hardened live-runtime validation so descriptor-gated capability discovery failures return a failing command exit code even when bridge capture and evaluator HTTP mode pass.
 - Aligned live-runtime capability discovery with real Napoleon `/cos` base endpoints by falling back from generated capability discovery to `/cos/capabilities` after a 404 and accepting advisory-only snake-case capability manifests as sanitized metadata.
