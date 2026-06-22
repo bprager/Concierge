@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a human-readable readiness proof source summary to the live bridge readiness panel so reviewers can see generated Napoleon target provenance before opening the proof JSON.
 - Added generated-source provenance for named Napoleon review/evidence targets to sanitized bridge readiness proof exports so local evidence files show which handoff targets came from the canonical bridge contract metadata.
 - Added visible generated-source metadata to named Napoleon governed route entries so review/evidence handoff targets show they come from the canonical bridge contract metadata.
 - Added generated contract metadata for named Napoleon review, governance, evolution, Chief of Staff request, and observability handoff targets so the app registry no longer duplicates those path definitions by hand.

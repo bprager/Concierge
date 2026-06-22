@@ -196,6 +196,17 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(readinessPanel).getByText("Run real Napoleon bridge evidence capture and comparison."));
     assert.ok(within(readinessPanel).getByText("Pass evaluator HTTP mode against Napoleon."));
     assert.ok(within(readinessPanel).getByText("blocked until real Napoleon runtime evidence passes"));
+    assert.ok(within(readinessPanel).getByText("Readiness proof source"));
+    assert.ok(
+      within(readinessPanel).getByText(
+        "Readiness proof exports include 8 named Napoleon review/evidence targets generated from api/napoleon_bridge.openapi.yaml review/evidence metadata.",
+      ),
+    );
+    assert.ok(
+      within(readinessPanel).getByText(
+        "Local contract metadata only; no endpoint host, token, prompt, request body, response body, approval, memory write, agent dispatch, external send, or local application is included.",
+      ),
+    );
     await user.click(screen.getByRole("button", { name: "Discover advisory capabilities" }));
     await screen.findByText("Advisory Chief of Staff capabilities discovered. This is not Napoleon approval.");
     await user.click(screen.getByRole("button", { name: "Export readiness proof" }));

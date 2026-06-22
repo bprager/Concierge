@@ -2726,6 +2726,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     describeNapoleonReviewOperationSummary("new_agent_proposal_review"),
     describeNapoleonReviewOperationSummary("observability_trace"),
   ];
+  const generatedNapoleonTargetCount = governedOperationSummaries.filter((operation) => operation.sourceSummary).length;
   const microphonePermissionLabel =
     microphonePermissionStatus === "not_requested"
       ? "Permission not requested"
@@ -4376,6 +4377,17 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <span>No promotion blockers detected from current local evidence.</span>
           )}
           <span>Local summary only; not Napoleon approval.</span>
+        </div>
+        <div className="proof-comparison warning">
+          <strong>Readiness proof source</strong>
+          <span>
+            Readiness proof exports include {generatedNapoleonTargetCount} named Napoleon review/evidence targets generated
+            from api/napoleon_bridge.openapi.yaml review/evidence metadata.
+          </span>
+          <span>
+            Local contract metadata only; no endpoint host, token, prompt, request body, response body, approval, memory
+            write, agent dispatch, external send, or local application is included.
+          </span>
         </div>
         <dl>
           {liveBridgeReadiness.details.map((detail) => (
