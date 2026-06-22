@@ -2166,6 +2166,16 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       evidenceCaptureState: bridgeEvidenceReadiness.captureState,
       evidenceComparisonState: bridgeEvidenceReadiness.comparisonState,
     });
+    const metadataBlockedEffects = chiefOfStaffCapabilities
+      ? Array.from(
+          new Set([
+            "registry_update",
+            ...chiefOfStaffCapabilities.blockedEffects,
+            ...chiefOfStaffCapabilities.agents.flatMap((agent) => agent.blockedEffects),
+            ...(chiefOfStaffCapabilities.profileMetadata?.blockedEffects ?? []),
+          ]),
+        )
+      : [];
     const json = exportBridgeReadinessProofJson({
       descriptorConnection,
       readiness: bridgeEvidenceReadiness,
@@ -2198,6 +2208,35 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             responseMemoryWritePerformed: false,
             responseAgentDispatchPerformed: false,
             responseExternalSendPerformed: false,
+          },
+      napoleonMetadata: chiefOfStaffCapabilities
+        ? {
+            state: chiefOfStaffCapabilities.state,
+            agentCount: chiefOfStaffCapabilities.agents.length,
+            agentIds: chiefOfStaffCapabilities.agents.map((agent) => agent.agentId),
+            profileId: chiefOfStaffCapabilities.profileMetadata?.profileId ?? null,
+            profileMetadataReturned: Boolean(chiefOfStaffCapabilities.profileMetadata),
+            runtimeAuthority: false,
+            blockedEffects: metadataBlockedEffects,
+            registryUpdatePerformed: false,
+            agentDispatchPerformed: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            externalSendPerformed: false,
+          }
+        : {
+            state: "not_fetched",
+            agentCount: 0,
+            agentIds: [],
+            profileId: null,
+            profileMetadataReturned: false,
+            runtimeAuthority: false,
+            blockedEffects: [],
+            registryUpdatePerformed: false,
+            agentDispatchPerformed: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            externalSendPerformed: false,
           },
     });
     const bridgeReadinessProof = JSON.parse(json) as { runtimeValidation?: { promotionGate?: string } };

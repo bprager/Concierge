@@ -11,6 +11,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Recently Completed
 
 - Hardened descriptor-gated Chief of Staff capability discovery so app discovery and live-runtime evidence fail closed when a response claims approval capture, memory writes, agent dispatch, or external sends, while keeping Concierge's own local side-effect flags false and showing those remote claims as metadata-only app, telemetry, and readiness proof fields.
+- Added sanitized Napoleon agent/profile metadata discovery state to bridge readiness proof exports and comparisons, carrying only agent count/IDs, profile ID, blocked effects, and false registry-update, dispatch, memory, approval, and external-send fields.
 - Added sanitized descriptor-gated capability discovery evidence to combined live-runtime validation, including capability count/IDs, authority tiers, blocked effects, false retention/side-effect flags, artifact privacy coverage, and promotion-readiness blocking when capability discovery fails.
 - Added sanitized bridge target metadata to live-runtime `preflight.json`, so derived descriptor, capability, text-turn, and trace-proof targets plus false retention/side-effect flags are visible before network attempts without retaining endpoint hosts or tokens.
 - Added sanitized evaluator target metadata to live-runtime `preflight.json`, so derived evaluator path, request kind, operation ID, and false retention/side-effect flags are visible before any network attempt without retaining endpoint hosts or tokens.

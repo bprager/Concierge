@@ -34,6 +34,20 @@ export interface BridgeReadinessProofInput {
     responseAgentDispatchPerformed?: boolean;
     responseExternalSendPerformed?: boolean;
   };
+  napoleonMetadata?: {
+    state: "not_fetched" | "blocked" | "ready";
+    agentCount: number;
+    agentIds: string[];
+    profileId?: string | null;
+    profileMetadataReturned: boolean;
+    runtimeAuthority: false;
+    blockedEffects: string[];
+    registryUpdatePerformed: false;
+    agentDispatchPerformed: false;
+    memoryWritePerformed: false;
+    approvalCaptured: false;
+    externalSendPerformed: false;
+  };
 }
 
 export interface BridgeReadinessProofChange {
@@ -239,6 +253,20 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         responseAgentDispatchPerformed: input.advisoryCapabilities?.responseAgentDispatchPerformed === true,
         responseExternalSendPerformed: input.advisoryCapabilities?.responseExternalSendPerformed === true,
       },
+      napoleonMetadata: {
+        state: input.napoleonMetadata?.state ?? "not_fetched",
+        agentCount: input.napoleonMetadata?.agentCount ?? 0,
+        agentIds: sanitizeReadinessProofList(input.napoleonMetadata?.agentIds ?? []),
+        profileId: sanitizeReadinessProofString(input.napoleonMetadata?.profileId ?? undefined),
+        profileMetadataReturned: input.napoleonMetadata?.profileMetadataReturned === true,
+        runtimeAuthority: false,
+        blockedEffects: sanitizeReadinessProofList(input.napoleonMetadata?.blockedEffects ?? []),
+        registryUpdatePerformed: false,
+        agentDispatchPerformed: false,
+        memoryWritePerformed: false,
+        approvalCaptured: false,
+        externalSendPerformed: false,
+      },
       runtimeValidation: {
         source: input.runtimeValidationSource ?? "unavailable",
         promotionGate: promotionGateForProof(input),
@@ -339,6 +367,10 @@ export function compareBridgeReadinessProofs(
     { label: "Last operation path", path: ["evidence", "lastTargetPath"] },
     { label: "Last failure reason", path: ["evidence", "lastFailureReason"] },
     { label: "Evidence blocked effects", path: ["evidence", "blockedEffects"] },
+    { label: "Napoleon metadata state", path: ["napoleonMetadata", "state"] },
+    { label: "Napoleon metadata agent IDs", path: ["napoleonMetadata", "agentIds"] },
+    { label: "Napoleon metadata profile ID", path: ["napoleonMetadata", "profileId"] },
+    { label: "Napoleon metadata blocked effects", path: ["napoleonMetadata", "blockedEffects"] },
     { label: "Runtime validation source", path: ["runtimeValidation", "source"] },
     { label: "Promotion gate", path: ["runtimeValidation", "promotionGate"] },
   ];

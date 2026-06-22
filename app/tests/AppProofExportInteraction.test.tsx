@@ -198,6 +198,33 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(readinessExport.textContent?.includes('"capabilityCount": 1'));
     assert.ok(readinessExport.textContent?.includes('"napoleon.capability.answer"'));
     assert.ok(readinessExport.textContent?.includes('"runtimeAuthority": false'));
+    const readinessProof = JSON.parse(readinessExport.textContent ?? "{}") as {
+      napoleonMetadata?: {
+        state?: string;
+        agentCount?: number;
+        agentIds?: string[];
+        profileId?: string;
+        profileMetadataReturned?: boolean;
+        registryUpdatePerformed?: boolean;
+        agentDispatchPerformed?: boolean;
+        memoryWritePerformed?: boolean;
+        approvalCaptured?: boolean;
+        externalSendPerformed?: boolean;
+        blockedEffects?: string[];
+      };
+    };
+    assert.equal(readinessProof.napoleonMetadata?.state, "ready");
+    assert.equal(readinessProof.napoleonMetadata?.agentCount, 1);
+    assert.deepEqual(readinessProof.napoleonMetadata?.agentIds, ["passive_brain"]);
+    assert.equal(readinessProof.napoleonMetadata?.profileId, "adult_owner");
+    assert.equal(readinessProof.napoleonMetadata?.profileMetadataReturned, true);
+    assert.equal(readinessProof.napoleonMetadata?.registryUpdatePerformed, false);
+    assert.equal(readinessProof.napoleonMetadata?.agentDispatchPerformed, false);
+    assert.equal(readinessProof.napoleonMetadata?.memoryWritePerformed, false);
+    assert.equal(readinessProof.napoleonMetadata?.approvalCaptured, false);
+    assert.equal(readinessProof.napoleonMetadata?.externalSendPerformed, false);
+    assert.ok(readinessProof.napoleonMetadata?.blockedEffects?.includes("registry_update"));
+    assert.ok(!readinessExport.textContent?.includes("Surfaces relevant Napoleon context"));
     assert.ok(!readinessExport.textContent?.includes("127.0.0.1"));
     const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;

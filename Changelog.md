@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added sanitized Napoleon agent/profile metadata discovery state to bridge readiness proof exports and comparisons, including agent count/IDs, profile ID, blocked effects, and false registry/dispatch/memory/approval/external-send flags without raw manifests, endpoint hosts, or tokens.
 - Hardened descriptor-gated Chief of Staff capability discovery so response-side claims of approval capture, memory writes, agent dispatch, or external sends fail closed while Concierge's local side-effect flags remain false, with those remote claims visible in app state, telemetry, the capabilities panel, and sanitized readiness proof exports.
 - Added sanitized descriptor-gated capability discovery evidence to combined live-runtime validation summaries and promotion review drafts, blocking promotion readiness when capability discovery fails.
 - Added explicit advisory `/cos` endpoint-form and required-proof rows to the governed route panel for descriptor discovery, capability discovery, and text turns, including `/cos/trace/{trace_id}` proof wording for text sends without exposing endpoint hosts or tokens.

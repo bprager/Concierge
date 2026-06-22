@@ -272,6 +272,69 @@ test("exports sanitized advisory capability discovery state in readiness proof",
   assert.equal(exported.includes("token"), false);
 });
 
+test("exports sanitized Napoleon metadata discovery state in readiness proof", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    runtimeValidationSource: "local_harness",
+    generatedAt: "2026-06-22T00:00:00.000Z",
+    napoleonMetadata: {
+      state: "ready",
+      agentCount: 2,
+      agentIds: ["napoleon.passive_brain", "napoleon.scheduler"],
+      profileId: "adult_owner",
+      profileMetadataReturned: true,
+      runtimeAuthority: false,
+      blockedEffects: ["agent_dispatch", "registry_update", "memory_write", "approval_capture", "external_send"],
+      registryUpdatePerformed: false,
+      agentDispatchPerformed: false,
+      memoryWritePerformed: false,
+      approvalCaptured: false,
+      externalSendPerformed: false,
+    },
+  });
+  const proof = JSON.parse(exported) as {
+    napoleonMetadata: {
+      state: string;
+      agentCount: number;
+      agentIds: string[];
+      profileId: string;
+      profileMetadataReturned: boolean;
+      runtimeAuthority: boolean;
+      blockedEffects: string[];
+      registryUpdatePerformed: boolean;
+      agentDispatchPerformed: boolean;
+      memoryWritePerformed: boolean;
+      approvalCaptured: boolean;
+      externalSendPerformed: boolean;
+    };
+  };
+
+  assert.equal(proof.napoleonMetadata.state, "ready");
+  assert.equal(proof.napoleonMetadata.agentCount, 2);
+  assert.deepEqual(proof.napoleonMetadata.agentIds, ["napoleon.passive_brain", "napoleon.scheduler"]);
+  assert.equal(proof.napoleonMetadata.profileId, "adult_owner");
+  assert.equal(proof.napoleonMetadata.profileMetadataReturned, true);
+  assert.equal(proof.napoleonMetadata.runtimeAuthority, false);
+  assert.equal(proof.napoleonMetadata.registryUpdatePerformed, false);
+  assert.equal(proof.napoleonMetadata.agentDispatchPerformed, false);
+  assert.equal(proof.napoleonMetadata.memoryWritePerformed, false);
+  assert.equal(proof.napoleonMetadata.approvalCaptured, false);
+  assert.equal(proof.napoleonMetadata.externalSendPerformed, false);
+  assert.ok(proof.napoleonMetadata.blockedEffects.includes("registry_update"));
+  assert.equal(exported.includes("Surfaces relevant context"), false);
+  assert.equal(exported.includes("https://"), false);
+  assert.equal(exported.includes("token"), false);
+});
+
 test("exports descriptor-advertised governed handoff routes in readiness proof", () => {
   const descriptorConnection = buildDescriptorConnectionState({
     endpointConfigured: true,
