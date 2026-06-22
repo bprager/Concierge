@@ -383,6 +383,31 @@ def capability_target_path(endpoint: str) -> str:
     return "/cos/capabilities" if is_cos_endpoint(endpoint) else "/v1/concierge/chief-of-staff/capabilities"
 
 
+def capability_discovery_candidates(endpoint: str) -> list[dict[str, Any]]:
+    base = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    stripped_base = strip_known_path(base)
+    if is_cos_endpoint(endpoint):
+        return [
+            {
+                "url": f"{stripped_base}/cos/capabilities",
+                "targetPath": "/cos/capabilities",
+                "cosMode": True,
+            }
+        ]
+    return [
+        {
+            "url": f"{stripped_base}/v1/concierge/chief-of-staff/capabilities",
+            "targetPath": "/v1/concierge/chief-of-staff/capabilities",
+            "cosMode": False,
+        },
+        {
+            "url": f"{stripped_base}/cos/capabilities",
+            "targetPath": "/cos/capabilities",
+            "cosMode": True,
+        },
+    ]
+
+
 def capability_discovery_headers(auth_token: str | None, cos_mode: bool) -> dict[str, str]:
     if not auth_token:
         return {}
@@ -405,17 +430,21 @@ def sanitized_capability_discovery_evidence(
     payload: Any,
     endpoint: str,
     runtime_validation_source: str,
+    target_path: str | None = None,
 ) -> dict[str, Any]:
     capabilities = payload.get("capabilities") if isinstance(payload, dict) and isinstance(payload.get("capabilities"), list) else []
     safe_capabilities = [capability for capability in capabilities if isinstance(capability, dict)]
     capability_ids = sorted(
-        str(capability.get("id"))
+        str(capability.get("id") or capability.get("capability_id"))
         for capability in safe_capabilities
-        if isinstance(capability.get("id"), str) and capability.get("id")
+        if isinstance(capability.get("id") or capability.get("capability_id"), str)
+        and (capability.get("id") or capability.get("capability_id"))
     )
     authority_tier_counts: dict[str, int] = {}
     for capability in safe_capabilities:
         tier = capability.get("authorityTier") or capability.get("authority_tier")
+        if tier is None and isinstance(payload, dict):
+            tier = payload.get("authorityTier") or payload.get("authority_tier")
         if isinstance(tier, str) and tier:
             authority_tier_counts[tier] = authority_tier_counts.get(tier, 0) + 1
     blocked_effects = []
@@ -423,6 +452,17 @@ def sanitized_capability_discovery_evidence(
         raw_blocked_effects = payload.get("blockedEffects") if isinstance(payload.get("blockedEffects"), list) else payload.get("blocked_effects")
         if isinstance(raw_blocked_effects, list):
             blocked_effects = sorted(str(effect) for effect in raw_blocked_effects if isinstance(effect, str) and effect)
+    if not blocked_effects:
+        nested_blocked_effects = set()
+        for capability in safe_capabilities:
+            raw_blocked_effects = (
+                capability.get("blockedEffects")
+                if isinstance(capability.get("blockedEffects"), list)
+                else capability.get("blocked_effects")
+            )
+            if isinstance(raw_blocked_effects, list):
+                nested_blocked_effects.update(str(effect) for effect in raw_blocked_effects if isinstance(effect, str) and effect)
+        blocked_effects = sorted(nested_blocked_effects)
     runtime_authority = payload.get("runtimeAuthority") if isinstance(payload, dict) else None
     if runtime_authority is None and isinstance(payload, dict):
         runtime_authority = payload.get("runtime_authority")
@@ -441,11 +481,21 @@ def sanitized_capability_discovery_evidence(
         response_external_send_performed = (
             payload.get("externalSendPerformed") is True or payload.get("external_send_performed") is True
         )
+    manifest_prepare_only = (
+        isinstance(payload, dict)
+        and (payload.get("status") == "advisory_prepare_only" or payload.get("authority_tier") == "advisory_prepare_only")
+    )
+    capabilities_are_proposal_only = all(
+        capability.get("proposalOnly") is True
+        or capability.get("proposal_only") is True
+        or (manifest_prepare_only and capability.get("runtime_authority") is False)
+        for capability in safe_capabilities
+    )
     passed = (
         status_code == 200
         and bool(safe_capabilities)
         and runtime_authority is False
-        and all(capability.get("proposalOnly") is True or capability.get("proposal_only") is True for capability in safe_capabilities)
+        and capabilities_are_proposal_only
         and not response_approval_captured
         and not response_memory_write_performed
         and not response_agent_dispatch_performed
@@ -455,7 +505,7 @@ def sanitized_capability_discovery_evidence(
         "kind": "chief_of_staff_capability_discovery_evidence",
         "status": "passed" if passed else "failed",
         "httpStatus": status_code,
-        "targetPath": capability_target_path(endpoint),
+        "targetPath": target_path or capability_target_path(endpoint),
         "operationId": "chief_of_staff_capabilities",
         "requestKind": "chief_of_staff_capabilities",
         "runtimeValidationSource": runtime_validation_source,
@@ -486,15 +536,23 @@ def run_capability_discovery(
     runtime_validation_source: str,
 ) -> tuple[int, str | None]:
     try:
-        status_code, payload = load_remote_json(
-            capability_discovery_url(bridge_endpoint),
-            capability_discovery_headers(auth_token, is_cos_endpoint(bridge_endpoint)),
-        )
+        selected_target_path = capability_target_path(bridge_endpoint)
+        status_code = 0
+        payload: Any = {}
+        for candidate in capability_discovery_candidates(bridge_endpoint):
+            selected_target_path = str(candidate["targetPath"])
+            status_code, payload = load_remote_json(
+                str(candidate["url"]),
+                capability_discovery_headers(auth_token, bool(candidate["cosMode"])),
+            )
+            if status_code != 404:
+                break
         evidence = sanitized_capability_discovery_evidence(
             status_code,
             payload,
             bridge_endpoint,
             runtime_validation_source,
+            selected_target_path,
         )
         out_path.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
         return (0 if evidence["status"] == "passed" else 1), None

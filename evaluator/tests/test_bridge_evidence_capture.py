@@ -307,6 +307,36 @@ class RecordingCosHarness:
                     )
                     return
                 parent.last_get_path = self.path
+                if self.path == "/cos/capabilities":
+                    self.write_json(
+                        200,
+                        {
+                            "schema_version": "napoleon/concierge/capability-manifest/v1",
+                            "status": "advisory_prepare_only",
+                            "authority_tier": "advisory_prepare_only",
+                            "capabilities": [
+                                {
+                                    "capability_id": "napoleon.capability.governed_text_turn",
+                                    "name": "Governed text turn",
+                                    "summary": "Prepare a governed advisory text response.",
+                                    "runtime_authority": False,
+                                    "blocked_effects": [
+                                        "memory_write",
+                                        "approval_capture",
+                                        "agent_dispatch",
+                                        "external_send",
+                                    ],
+                                },
+                            ],
+                            "runtime_authority": False,
+                            "command_execution": False,
+                            "memory_write": False,
+                            "external_send": False,
+                            "approval_captured": False,
+                            "task_dispatch": False,
+                        },
+                    )
+                    return
                 if self.path != "/cos/descriptor":
                     self.write_json(404, {"error": "not_found"})
                     return

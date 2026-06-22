@@ -10,6 +10,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Aligned combined live-runtime capability discovery with real Napoleon `/cos` base endpoints: when generated capability discovery returns 404, validation falls back to `/cos/capabilities` and accepts advisory-only snake-case capability manifests as sanitized metadata without retaining endpoint hosts, tokens, or response bodies.
+- Re-ran `NAPOLEON_BRIDGE_ENDPOINT=http://127.0.0.1:18765 make live-runtime-validation` through an SSH tunnel to `bernd@mimir`; real-runtime bridge evidence passed for `/cos/text-turn`, matching `/cos/trace/{trace_id}` proof, and descriptor-gated `/cos/capabilities` discovery passed with six advisory-only capabilities, while promotion remains blocked only because HTTP evaluator mode failed.
 - Hardened descriptor discovery so explicit `supportedHandoffs` / `supported_handoffs` lists containing unknown route names fail closed as invalid descriptors instead of being silently filtered into a partially ready state.
 - Preserved explicit live descriptor handoff lists from `supportedHandoffs` / `supported_handoffs`, so a discovered descriptor that omits `text_turn` stays blocked instead of inheriting Concierge's built-in default handoff list.
 - Added `descriptorTextTurnRouteAdvertised` to bridge readiness proof export telemetry, so exported proof audit events show whether text turns were descriptor-advertised without retaining endpoint hosts or raw descriptor bodies.
@@ -491,7 +493,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Next 3 To 5 Priorities
 
-1. Get Napoleon to expose an evaluator HTTP route compatible with `make eval-http`, or provide `NAPOLEON_EVAL_ENDPOINT`; real `/cos/descriptor` and `/cos/text-turn` bridge evidence now passes, but promotion remains blocked until evaluator HTTP mode also passes.
+1. Get Napoleon to expose an evaluator HTTP route compatible with `make eval-http`, or provide `NAPOLEON_EVAL_ENDPOINT`; real `/cos/descriptor`, `/cos/text-turn`, `/cos/trace/{trace_id}`, and `/cos/capabilities` evidence now passes, but promotion remains blocked until evaluator HTTP mode also passes.
 2. Run `make napoleon-contract-alignment` against each new Napoleon integration OpenAPI snapshot before changing bridge paths.
 3. Run `make live-runtime-validation` against a real Napoleon runtime endpoint once the bridge paths and response shapes are aligned.
 4. Validate governance review, memory proposal, steering, and taxonomy handoffs against a real Napoleon runtime once the descriptor exposes live transport URLs and credentials.
