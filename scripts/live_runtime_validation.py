@@ -119,6 +119,8 @@ def is_generated_concierge_endpoint(endpoint: str) -> bool:
     value = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
     if is_cos_endpoint(value):
         return False
+    if value.endswith(NAPOLEON_EVALUATION_REVIEW_PATH):
+        return False
     return (
         "/v1/concierge" in value
         or value.endswith("/concierge")
@@ -370,6 +372,51 @@ def run_http_eval(eval_endpoint: str, out_path: Path, auth_token: str | None) ->
     if auth_token:
         args.extend(["--token", auth_token])
     return run_evaluator(args)
+
+
+def classify_http_eval_failure(exc: Exception) -> str:
+    status_code = getattr(getattr(exc, "response", None), "status_code", None)
+    if status_code == 404:
+        return "http_evaluator_route_not_found"
+    if status_code == 401 or status_code == 403:
+        return "http_evaluator_auth_failed"
+    if status_code is not None:
+        return "http_evaluator_failed"
+    return "http_evaluator_failed"
+
+
+def write_sanitized_evaluator_failure_report(path: Path, eval_endpoint: str, failure_reason: str) -> None:
+    target = evaluator_target_metadata(eval_endpoint)
+    path.write_text(
+        json.dumps(
+            {
+                "status": "failed",
+                "run_id": "not_run",
+                "failureReason": failure_reason,
+                "evaluationTarget": {
+                    "path": target["evaluatorTargetPath"],
+                    "requestKind": target["evaluatorTargetRequestKind"],
+                    "operationId": target["evaluatorTargetOperationId"],
+                    "endpointHostRetained": False,
+                    "tokenRetained": False,
+                    "requestBodyRetained": False,
+                    "responseBodyRetained": False,
+                    "approvalCaptured": False,
+                    "memoryWritePerformed": False,
+                    "agentDispatchPerformed": False,
+                    "externalSendPerformed": False,
+                    "authorityBoundary": "Evaluator HTTP failure evidence is sanitized and non-authorizing.",
+                },
+                "live_runtime_sanitization": {
+                    "responseExcerptsRemoved": 0,
+                    "boundary": "Live runtime validation report omits endpoint values, tokens, request bodies, and response bodies.",
+                },
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
 
 def capability_discovery_url(endpoint: str) -> str:
@@ -1064,9 +1111,10 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
             sanitize_eval_report(eval_report_path)
         except Exception as exc:
             eval_exit_code = 1
-            eval_failure_reason = "http_evaluator_failed"
+            eval_failure_reason = classify_http_eval_failure(exc)
+            write_sanitized_evaluator_failure_report(eval_report_path, eval_endpoint, eval_failure_reason)
             print(
-                f"HTTP evaluator mode failed with {exc.__class__.__name__}; summary will record sanitized failure.",
+                f"HTTP evaluator mode failed with {eval_failure_reason}; summary will record sanitized failure.",
                 file=sys.stderr,
             )
 

@@ -128,6 +128,8 @@ def strip_evaluator_endpoint_path(endpoint: str) -> str:
 
 def is_generated_concierge_endpoint(endpoint: str) -> bool:
     value = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
+    if value.endswith(NAPOLEON_EVALUATION_REVIEW_PATH):
+        return False
     if "/v1/concierge" in value or value.endswith("/concierge"):
         return True
     return value.startswith("http://127.0.0.1:8787") or value.startswith("http://localhost:8787")

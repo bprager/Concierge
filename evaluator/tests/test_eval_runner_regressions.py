@@ -91,6 +91,17 @@ class EvaluatorRegressionTest(unittest.TestCase):
             )["url"],
             "https://napoleon.example/chief-of-staff/reviews/evaluation",
         )
+        self.assertEqual(
+            eval_runner.resolve_evaluation_review_target(
+                "http://127.0.0.1:8787/chief-of-staff/reviews/evaluation"
+            ),
+            {
+                "url": "http://127.0.0.1:8787/chief-of-staff/reviews/evaluation",
+                "path": "/chief-of-staff/reviews/evaluation",
+                "requestKind": "evaluation_review_handoff",
+                "operationId": "evaluation_review",
+            },
+        )
 
     def test_http_eval_posts_named_explicit_evaluation_review_packet(self):
         calls = []

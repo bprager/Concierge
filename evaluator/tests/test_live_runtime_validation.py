@@ -247,6 +247,57 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             summary["promotionReadiness"]["blockingReasons"],
         )
 
+    def test_main_records_sanitized_missing_evaluator_route_metadata(self):
+        class MissingRouteResponse:
+            status_code = 404
+
+        class MissingRouteError(Exception):
+            response = MissingRouteResponse()
+
+        with RecordingCosHarness(descriptor_ready=True) as cos_harness:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                stdout = io.StringIO()
+                stderr = io.StringIO()
+                with mock.patch.object(
+                    live_runtime_validation,
+                    "run_http_eval",
+                    side_effect=MissingRouteError("not found at http://127.0.0.1:9999/secret"),
+                ):
+                    with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                        exit_code = live_runtime_validation.main([
+                            "--bridge-endpoint", f"{cos_harness.base_url}/cos/text-turn",
+                            "--out-dir", tmpdir,
+                            "--auth-token", "token_missing_eval",
+                            "--runtime-validation-source", "real_runtime",
+                        ])
+
+                summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+                report = json.loads((Path(tmpdir) / "eval_http.json").read_text(encoding="utf-8"))
+                review = (Path(tmpdir) / "promotion_review.md").read_text(encoding="utf-8")
+
+        summary_json = json.dumps(summary)
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(summary["bridgeEvidence"]["status"], "passed")
+        self.assertEqual(summary["capabilityDiscovery"]["status"], "passed")
+        self.assertEqual(summary["httpEvaluator"]["status"], "failed")
+        self.assertEqual(summary["httpEvaluator"]["failureReason"], "http_evaluator_route_not_found")
+        self.assertTrue(summary["httpEvaluator"]["sanitized"])
+        self.assertEqual(summary["httpEvaluator"]["targetPath"], "/chief-of-staff/reviews/evaluation")
+        self.assertEqual(summary["httpEvaluator"]["targetRequestKind"], "evaluation_review_handoff")
+        self.assertEqual(summary["httpEvaluator"]["targetOperationId"], "evaluation_review")
+        self.assertFalse(summary["httpEvaluator"]["endpointHostRetained"])
+        self.assertFalse(summary["httpEvaluator"]["tokenRetained"])
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["failureReason"], "http_evaluator_route_not_found")
+        self.assertEqual(report["evaluationTarget"]["path"], "/chief-of-staff/reviews/evaluation")
+        self.assertNotIn(cos_harness.base_url, summary_json)
+        self.assertNotIn("token_missing_eval", summary_json)
+        self.assertNotIn("127.0.0.1", json.dumps(report))
+        self.assertNotIn("secret", json.dumps(report))
+        self.assertIn("- HTTP evaluator target path: `/chief-of-staff/reviews/evaluation`", review)
+        self.assertIn("Evaluator HTTP mode did not pass.", summary["promotionReadiness"]["blockingReasons"])
+        self.assertIn("http_evaluator_route_not_found", stderr.getvalue())
+
     def test_derives_bridge_base_from_eval_endpoint(self):
         bridge, evaluator = live_runtime_validation.resolve_endpoints(
             None,
