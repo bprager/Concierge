@@ -4540,6 +4540,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <div>
               <strong>{steeringHandoffReadiness.heading}</strong>
               <span>{steeringHandoffReadiness.summary}</span>
+              <span>{steeringHandoffReadiness.nextStepSummary}</span>
               <span>{steeringHandoffReadiness.caveat}</span>
             </div>
             <dl>
@@ -4685,6 +4686,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <div>
               <strong>{taxonomyHandoffReadiness.heading}</strong>
               <span>{taxonomyHandoffReadiness.summary}</span>
+              <span>{taxonomyHandoffReadiness.nextStepSummary}</span>
               <span>{taxonomyHandoffReadiness.caveat}</span>
             </div>
             <dl>
@@ -4871,6 +4873,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <div>
               <strong>{governanceReviewHandoffReadiness.heading}</strong>
               <span>{governanceReviewHandoffReadiness.summary}</span>
+              <span>{governanceReviewHandoffReadiness.nextStepSummary}</span>
               <span>{governanceReviewHandoffReadiness.caveat}</span>
             </div>
             <dl>
@@ -4928,6 +4931,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <div>
               <strong>{memoryHandoffReadiness.heading}</strong>
               <span>{memoryHandoffReadiness.summary}</span>
+              <span>{memoryHandoffReadiness.nextStepSummary}</span>
               <span>{memoryHandoffReadiness.caveat}</span>
             </div>
             <dl>

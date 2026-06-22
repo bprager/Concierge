@@ -4416,6 +4416,7 @@ test("blocks taxonomy review handoff visibly when no Napoleon endpoint is config
     const readiness = heading.closest("section") as HTMLElement;
     assert.ok(readiness);
     assert.ok(within(readiness).getByText(/blocked until the review draft, endpoint, descriptor preflight, governed handoff route, and Rehearsal Mode state are ready/));
+    assert.ok(within(readiness).getByText("Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery."));
     assert.ok(within(readiness).getByText("Endpoint configured"));
     assert.ok(within(readiness).getByText(/blocked: No Napoleon endpoint is configured/));
     assert.ok(within(readiness).getByText("Descriptor preflight"));

@@ -1121,6 +1121,7 @@ test("describes governed handoff readiness with endpoint and descriptor blockers
   assert.equal(blocked.canSubmit, false);
   assert.ok(blocked.summary.includes("blocked"));
   assert.ok(blocked.caveat.includes("not Napoleon approval"));
+  assert.equal(blocked.nextStepSummary, "Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery.");
   assert.ok(blocked.items.some((item: { label: string; status: string }) => item.label === "Endpoint configured" && item.status === "blocked"));
   assert.ok(blocked.items.some((item: { label: string; status: string }) => item.label === "Descriptor preflight" && item.status === "ready"));
   assert.ok(blocked.items.some((item: { label: string; status: string }) => item.label === "Review draft" && item.status === "ready"));
@@ -1143,6 +1144,7 @@ test("describes governed handoff readiness with endpoint and descriptor blockers
   assert.equal(ready.status, "ready");
   assert.equal(ready.canSubmit, true);
   assert.ok(ready.summary.includes("can be submitted through the governed bridge"));
+  assert.equal(ready.nextStepSummary, "Next step: submit this proposal-only packet through the governed Napoleon bridge when ready.");
   assert.ok(ready.items.every((item: { status: string }) => item.status === "ready"));
 });
 

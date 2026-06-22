@@ -244,6 +244,7 @@ export interface GovernedHandoffReadinessView {
   status: "ready" | "blocked";
   canSubmit: boolean;
   summary: string;
+  nextStepSummary: string;
   caveat: string;
   blockedEffects: string[];
   items: LiveSendPreflightItem[];
@@ -1052,6 +1053,20 @@ export function describeGovernedHandoffReadiness(
         : "Rehearsal Mode is active; keep this review local until rehearsal is turned off.",
     },
   ];
+  const blockedItem = items.find((item) => item.status === "blocked");
+  const nextStepSummary = blockedItem
+    ? blockedItem.label === "Review draft"
+      ? "Next step: create the proposal-only review draft before attempting handoff."
+      : blockedItem.label === "Endpoint configured"
+        ? "Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery."
+        : blockedItem.label === "Descriptor preflight"
+          ? "Next step: refresh descriptor discovery and resolve any descriptor integrity or transport failure."
+          : blockedItem.label === "Governed handoff route"
+            ? `Next step: use a Napoleon descriptor that advertises ${input.requiredHandoff ?? "the required governed handoff route"}.`
+            : blockedItem.label === "Rehearsal Mode"
+              ? "Next step: turn Rehearsal Mode off only when you want a separate governed handoff attempt."
+              : `Next step: resolve ${blockedItem.label.toLowerCase()} before attempting the governed handoff.`
+    : "Next step: submit this proposal-only packet through the governed Napoleon bridge when ready.";
 
   return {
     heading: `${input.label} readiness`,
@@ -1060,6 +1075,7 @@ export function describeGovernedHandoffReadiness(
     summary: canSubmit
       ? `${input.label} can be submitted through the governed bridge for Napoleon review.`
       : `${input.label} is blocked until the review draft, endpoint, descriptor preflight, governed handoff route, and Rehearsal Mode state are ready.`,
+    nextStepSummary,
     caveat:
       "This handoff readiness check is not Napoleon approval, does not apply changes, does not write memory, does not dispatch agents, and does not send externally.",
     blockedEffects,
