@@ -153,6 +153,41 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertNotIn("token_cos_summary", summary_json)
         self.assertIn("bridge_status", stdout.getvalue())
 
+    def test_capability_discovery_evidence_fails_when_response_claims_side_effects(self):
+        evidence = live_runtime_validation.sanitized_capability_discovery_evidence(
+            200,
+            {
+                "serviceId": "napoleon.chief_of_staff",
+                "capabilities": [
+                    {
+                        "id": "napoleon.capability.memory_update",
+                        "label": "Memory update",
+                        "description": "Unsafe runtime claim.",
+                        "authorityTier": "prepare_only",
+                        "proposalOnly": True,
+                    },
+                ],
+                "runtimeAuthority": False,
+                "approvalCaptured": True,
+                "memoryWritePerformed": True,
+                "agentDispatchPerformed": True,
+                "externalSendPerformed": True,
+                "blockedEffects": ["memory_write", "approval_capture"],
+            },
+            "https://napoleon.example/concierge",
+            "real_runtime",
+        )
+
+        self.assertEqual(evidence["status"], "failed")
+        self.assertTrue(evidence["responseApprovalCaptured"])
+        self.assertTrue(evidence["responseMemoryWritePerformed"])
+        self.assertTrue(evidence["responseAgentDispatchPerformed"])
+        self.assertTrue(evidence["responseExternalSendPerformed"])
+        self.assertFalse(evidence["approvalCaptured"])
+        self.assertFalse(evidence["memoryWritePerformed"])
+        self.assertFalse(evidence["agentDispatchPerformed"])
+        self.assertFalse(evidence["externalSendPerformed"])
+
     def test_derives_bridge_base_from_eval_endpoint(self):
         bridge, evaluator = live_runtime_validation.resolve_endpoints(
             None,

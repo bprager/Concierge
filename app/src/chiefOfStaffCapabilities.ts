@@ -114,6 +114,19 @@ function stringArrayValue(value: unknown): string[] | null {
   return Array.isArray(value) && value.every((item) => typeof item === "string") ? value : null;
 }
 
+function sideEffectBoundaryClear(record: Record<string, unknown>): boolean {
+  const approvalCaptured = booleanValue(record.approvalCaptured) ?? booleanValue(record.approval_captured);
+  const memoryWritePerformed = booleanValue(record.memoryWritePerformed) ?? booleanValue(record.memory_write_performed);
+  const agentDispatchPerformed = booleanValue(record.agentDispatchPerformed) ?? booleanValue(record.agent_dispatch_performed);
+  const externalSendPerformed = booleanValue(record.externalSendPerformed) ?? booleanValue(record.external_send_performed);
+  return (
+    approvalCaptured !== true &&
+    memoryWritePerformed !== true &&
+    agentDispatchPerformed !== true &&
+    externalSendPerformed !== true
+  );
+}
+
 function parseCapabilities(value: unknown): ChiefOfStaffCapability[] | null {
   if (!Array.isArray(value)) return null;
   const capabilities: ChiefOfStaffCapability[] = [];
@@ -248,7 +261,13 @@ export async function discoverChiefOfStaffCapabilities(
   const runtimeAuthority = booleanValue(record.runtimeAuthority) ?? booleanValue(record.runtime_authority);
   const blockedEffects = stringArrayValue(record.blockedEffects) ?? stringArrayValue(record.blocked_effects);
   const capabilities = parseCapabilities(record.capabilities);
-  if (serviceId !== "napoleon.chief_of_staff" || runtimeAuthority !== false || !blockedEffects || !capabilities) {
+  if (
+    serviceId !== "napoleon.chief_of_staff" ||
+    runtimeAuthority !== false ||
+    !sideEffectBoundaryClear(record) ||
+    !blockedEffects ||
+    !capabilities
+  ) {
     return blocked("Capability discovery blocked: response contract mismatch.");
   }
 

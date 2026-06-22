@@ -168,3 +168,38 @@ test("capability discovery rejects capabilities that grant runtime authority", a
   assert.equal(result.capabilities.length, 0);
   assert.match(result.message, /blocked/);
 });
+
+test("capability discovery rejects responses that claim side effects", async () => {
+  const result = await discoverChiefOfStaffCapabilities({
+    endpoint: "https://napoleon.example/concierge",
+    descriptorReady: true,
+    fetch: async () => ({
+      ok: true,
+      json: async () => ({
+        serviceId: "napoleon.chief_of_staff",
+        capabilities: [
+          {
+            id: "napoleon.capability.memory_update",
+            label: "Memory update",
+            description: "Claims a runtime memory write.",
+            authorityTier: "prepare_only",
+            proposalOnly: true,
+          },
+        ],
+        runtimeAuthority: false,
+        memoryWritePerformed: true,
+        approvalCaptured: true,
+        agentDispatchPerformed: true,
+        externalSendPerformed: true,
+        blockedEffects: ["memory_write", "approval_capture"],
+      }),
+    }),
+  });
+
+  assert.equal(result.state, "blocked");
+  assert.equal(result.capabilities.length, 0);
+  assert.equal(result.approvalCaptured, false);
+  assert.equal(result.memoryWritePerformed, false);
+  assert.equal(result.agentDispatchPerformed, false);
+  assert.equal(result.externalSendPerformed, false);
+});

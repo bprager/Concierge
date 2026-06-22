@@ -426,11 +426,30 @@ def sanitized_capability_discovery_evidence(
     runtime_authority = payload.get("runtimeAuthority") if isinstance(payload, dict) else None
     if runtime_authority is None and isinstance(payload, dict):
         runtime_authority = payload.get("runtime_authority")
+    response_approval_captured = False
+    response_memory_write_performed = False
+    response_agent_dispatch_performed = False
+    response_external_send_performed = False
+    if isinstance(payload, dict):
+        response_approval_captured = payload.get("approvalCaptured") is True or payload.get("approval_captured") is True
+        response_memory_write_performed = (
+            payload.get("memoryWritePerformed") is True or payload.get("memory_write_performed") is True
+        )
+        response_agent_dispatch_performed = (
+            payload.get("agentDispatchPerformed") is True or payload.get("agent_dispatch_performed") is True
+        )
+        response_external_send_performed = (
+            payload.get("externalSendPerformed") is True or payload.get("external_send_performed") is True
+        )
     passed = (
         status_code == 200
         and bool(safe_capabilities)
         and runtime_authority is False
         and all(capability.get("proposalOnly") is True or capability.get("proposal_only") is True for capability in safe_capabilities)
+        and not response_approval_captured
+        and not response_memory_write_performed
+        and not response_agent_dispatch_performed
+        and not response_external_send_performed
     )
     return {
         "kind": "chief_of_staff_capability_discovery_evidence",
@@ -444,6 +463,10 @@ def sanitized_capability_discovery_evidence(
         "capabilityIds": capability_ids,
         "authorityTierCounts": authority_tier_counts,
         "runtimeAuthority": runtime_authority is True,
+        "responseApprovalCaptured": response_approval_captured,
+        "responseMemoryWritePerformed": response_memory_write_performed,
+        "responseAgentDispatchPerformed": response_agent_dispatch_performed,
+        "responseExternalSendPerformed": response_external_send_performed,
         "blockedEffects": blocked_effects,
         "endpointHostRetained": False,
         "tokenRetained": False,
@@ -709,6 +732,10 @@ def capability_discovery_summary(path: Path, exit_code: int | None, failure_reas
         "capabilityIds": [],
         "authorityTierCounts": {},
         "runtimeAuthority": False,
+        "responseApprovalCaptured": False,
+        "responseMemoryWritePerformed": False,
+        "responseAgentDispatchPerformed": False,
+        "responseExternalSendPerformed": False,
         "blockedEffects": [],
         "endpointHostRetained": False,
         "tokenRetained": False,
