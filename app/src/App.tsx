@@ -2734,6 +2734,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     evaluatorValidationStatus: evaluatorValidationImport?.validation.status,
     evaluatorFailureReason: evaluatorValidationImport?.validation.failureReason,
     evaluatorTargetPath: evaluatorValidationImport?.validation.targetPath,
+    acceptedRealRuntimeProof: acceptedReadinessProofImport?.lastRealRuntimeProof,
   });
   const directSendPreflightBlocker = !rehearsalMode && !localGovernanceBlocksDirectSend
     ? liveSendPreflight.items.find((item) => item.status === "blocked")

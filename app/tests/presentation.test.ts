@@ -1078,6 +1078,40 @@ test("describes missing runtime source as unproven in live send preflight", () =
   );
 });
 
+test("describes accepted real-runtime proof in live send preflight", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+    evaluatorValidationStatus: "passed",
+    acceptedRealRuntimeProof: {
+      status: "success",
+      operationId: "text_turn",
+      targetPath: "/v1/concierge/turn",
+      promotionGate: "real_runtime_evidence_available",
+    },
+  });
+
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Accepted real-runtime proof" &&
+        item.status === "ready" &&
+        item.detail === "success: text_turn at /v1/concierge/turn",
+    ),
+  );
+});
+
 test("describes missing text-turn route as blocked in live send preflight", () => {
   const view = describeLiveSendPreflight({
     descriptorConnection: buildDescriptorConnectionState({

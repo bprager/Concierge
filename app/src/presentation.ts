@@ -191,6 +191,12 @@ export interface LiveSendPreflightInput {
   evaluatorValidationStatus?: LiveBridgeReadinessInput["evaluatorValidationStatus"];
   evaluatorFailureReason?: string;
   evaluatorTargetPath?: string;
+  acceptedRealRuntimeProof?: {
+    status: "success";
+    operationId: string;
+    targetPath: string;
+    promotionGate: string;
+  };
 }
 
 export interface LiveSendPreflightItem {
@@ -838,6 +844,13 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
       detail: input.evaluatorTargetPath,
     });
   }
+  items.push({
+    label: "Accepted real-runtime proof",
+    status: "ready",
+    detail: input.acceptedRealRuntimeProof
+      ? `${input.acceptedRealRuntimeProof.status}: ${input.acceptedRealRuntimeProof.operationId} at ${input.acceptedRealRuntimeProof.targetPath}`
+      : "No accepted real-runtime readiness proof imported for this local review session.",
+  });
   items.push({
     label: "Promotion gate",
     status: realRuntimeReady && evidenceCaptureReady && evidenceComparisonReady && !evaluatorPromotionBlocked ? "ready" : "warning",

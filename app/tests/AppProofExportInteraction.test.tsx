@@ -2732,6 +2732,11 @@ test("imports an accepted real-runtime readiness proof as sanitized local metada
     assert.ok(within(readiness).getByText("Accepted real-runtime proof"));
     assert.ok(within(readiness).getByText("success: text_turn at /v1/concierge/turn"));
     assert.ok(within(readiness).getByText("Sanitized local metadata only; not Napoleon approval."));
+
+    const preflight = view.getByText("Live send preflight").closest(".send-preflight") as HTMLElement | null;
+    assert.ok(preflight);
+    assert.ok(within(preflight).getByText("Accepted real-runtime proof"));
+    assert.ok(within(preflight).getByText("success: text_turn at /v1/concierge/turn"));
   } finally {
     cleanup();
     dom.window.close();
