@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added visible post-preview advisory-send blocking reasons when a rehearsal preview is stale, Rehearsal Mode is still active, governance blocks the preview, or descriptor preflight is not ready, while keeping live sends blocked unless an unchanged preview can go through the governed bridge.
 - Hardened repository validation so mixed bracket/dot `.call(...)` and `.apply(...)` aliases for peer transports, WebAssembly, object URLs, history mutation, clipboard, permission, geolocation, device, and notification APIs are blocked around the governed bridge.
 - Hardened descriptor-gated Chief of Staff capability discovery so app discovery and live-runtime evidence fail closed when a response claims approval capture, memory writes, agent dispatch, or external sends, while keeping Concierge's own local side-effect flags false and showing those remote claims as metadata-only app, telemetry, and readiness proof fields.
 - Added sanitized Napoleon agent/profile metadata discovery state to bridge readiness proof exports and comparisons, carrying only agent count/IDs, profile ID, blocked effects, and false registry-update, dispatch, memory, approval, and external-send fields.

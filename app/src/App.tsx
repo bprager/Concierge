@@ -1538,7 +1538,6 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function updateInput(value: string) {
     setInput(value);
-    setPendingRehearsal(null);
   }
 
   function rehearse() {
@@ -2530,6 +2529,17 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       pendingRehearsal.preview.governanceReview.canSendAdvisory &&
       descriptorConnection.canAttemptLiveBridge,
   );
+  const rehearsalSendBlockReason = pendingRehearsal
+    ? rehearsalMode
+      ? "Rehearsal Mode is still active. Turn it off before sending the preview through the governed bridge."
+      : input.trim() !== pendingRehearsal.content
+        ? "Preview no longer matches the current request. Create a new rehearsal preview before sending."
+        : !pendingRehearsal.preview.governanceReview.canSendAdvisory
+          ? "The rehearsed governance decision blocks this advisory request."
+          : !descriptorConnection.canAttemptLiveBridge
+            ? "Descriptor preflight is not ready for a governed bridge send."
+            : null
+    : null;
   const taxonomyCounts = getTaxonomyLabelCounts(capabilityLedger.listRecent(), capabilityTaxonomy);
   const taxonomyRows = (Object.keys(taxonomyCounts) as TaxonomyDimension[]).flatMap((dimension) =>
     taxonomyCounts[dimension].map((row) => ({ ...row, value: `${dimension}:${row.label}` })),
@@ -4898,9 +4908,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             {rehearsalMode ? "Rehearse" : "Send"}
           </button>
           {pendingRehearsal ? (
-            <button className="secondary" disabled={!canSendRehearsal} onClick={() => submit(pendingRehearsal)}>
-              Send advisory request
-            </button>
+            <>
+              <button className="secondary" disabled={!canSendRehearsal} onClick={() => submit(pendingRehearsal)}>
+                Send advisory request
+              </button>
+              {rehearsalSendBlockReason ? <span className="warning">{rehearsalSendBlockReason}</span> : null}
+            </>
           ) : null}
         </div>
       </section>
