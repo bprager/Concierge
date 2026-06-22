@@ -493,6 +493,30 @@ test("describes missing runtime source as unproven bridge readiness", () => {
   );
 });
 
+test("describes live bridge readiness as blocked when descriptor lacks text-turn route", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: {
+        ...defaultChiefOfStaffDescriptor,
+        supportedHandoffs: ["memory_proposal_review"],
+      },
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canSendLive, false);
+  assert.ok(view.summary.includes("does not advertise text_turn"));
+  assert.ok(view.details.some((detail) => detail.label === "Text-turn route" && detail.value === "blocked"));
+  assert.ok(view.details.some((detail) => detail.label === "Live send" && detail.value === "blocked"));
+});
+
 test("describes live voice readiness as blocked until the governed voice pipeline exists", () => {
   const view = describeLiveVoiceReadiness({
     descriptorConnection: buildDescriptorConnectionState({

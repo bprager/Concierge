@@ -333,7 +333,8 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
   const evidenceFailed = evidenceCapture === "failed" || evidenceComparison === "failed";
   const evidencePending = evidenceCapture !== "passed" || evidenceComparison !== "passed";
   const lastSendFailedClosed = input.lastEvidenceStatus === "fail_closed";
-  const canSendLive = descriptor.canAttemptLiveBridge && !evidenceFailed;
+  const textTurnRouteReady = descriptorSupportsGovernedHandoff(descriptor, "text_turn");
+  const canSendLive = descriptor.canAttemptLiveBridge && textTurnRouteReady && !evidenceFailed;
   const status: LiveBridgeReadinessView["status"] = !canSendLive
     ? "blocked"
     : evidencePending || lastSendFailedClosed || localOnlyValidation || runtimeValidationMissing
@@ -359,6 +360,8 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
     }
   } else if (evidenceFailed) {
     summary = "Local bridge evidence validation failed; Concierge should stay in rehearsal or review mode.";
+  } else if (!textTurnRouteReady) {
+    summary = "Napoleon descriptor does not advertise text_turn, so Concierge is blocked from live text sends.";
   } else if (lastSendFailedClosed) {
     summary = `Last Napoleon live text turn failed closed${input.lastFailureReason ? `: ${input.lastFailureReason}` : ""}. Concierge remains prepare-only for blocked effects.`;
   } else if (localOnlyValidation && !evidencePending) {
@@ -384,6 +387,7 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
       { label: "Descriptor", value: descriptor.state },
       { label: "Checksum", value: descriptor.checksumState },
       { label: "Signature", value: descriptor.signatureState },
+      { label: "Text-turn route", value: textTurnRouteReady ? "advertised" : "blocked" },
       { label: "Evidence capture", value: describeEvidenceState(evidenceCapture) },
       { label: "Evidence comparison", value: describeEvidenceState(evidenceComparison) },
       { label: "Runtime validation", value: describeRuntimeValidationSource(runtimeValidationSource) },
