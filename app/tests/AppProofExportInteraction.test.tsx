@@ -2485,6 +2485,7 @@ test("blocks rendered live send before fetch when no Napoleon endpoint is config
     const preflight = view.getByText("Live send preflight").closest("div")?.parentElement as HTMLElement | null;
     assert.ok(preflight);
     assert.ok(preflight.classList.contains("blocked"));
+    assert.ok(within(preflight).getByText("Main preflight blocker: configure a Napoleon endpoint."));
     assert.ok(within(preflight).getByText("Endpoint configured"));
     assert.ok(within(preflight).getByText("No Napoleon endpoint is configured."));
 

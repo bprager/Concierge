@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a composer-side live-send preflight blocker summary so the main endpoint, descriptor, route, governance, text, rehearsal, runtime, or evaluator blocker is visible before a send attempt.
 - Added a plain-English promotion blocker summary to the Text Concierge live bridge readiness panel, ranking the current endpoint, descriptor, runtime evidence, evaluator HTTP, and last fail-closed blockers without changing authority behavior.
 - Grouped the Text Concierge live bridge readiness panel into operator-facing sections for the Napoleon descriptor, governed text-turn route, evaluator HTTP validation, last live evidence, promotion gate, and authority boundary.
 - Added a sanitized evaluator validation artifact importer to the Text Concierge readiness panel, so pasted or selected local live-runtime summary files can update evaluator HTTP status, target metadata, composer preflight, readiness proof exports, and telemetry without retaining endpoints, tokens, request bodies, or response bodies.

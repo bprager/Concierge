@@ -822,6 +822,7 @@ test("describes live send preflight blockers without granting authority", () => 
   assert.equal(view.canAttemptLiveSend, false);
   assert.ok(view.summary.includes("blocked"));
   assert.ok(view.caveat.includes("not Napoleon approval"));
+  assert.equal(view.blockerSummary, "Main preflight blocker: configure a Napoleon endpoint.");
   assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Text ready" && item.status === "blocked"));
   assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Endpoint configured" && item.status === "blocked"));
   assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Descriptor discovered" && item.status === "ready"));
@@ -934,6 +935,7 @@ test("describes live send preflight as ready only for governed bridge attempt", 
   assert.equal(view.status, "ready");
   assert.equal(view.canAttemptLiveSend, true);
   assert.ok(view.summary.includes("governed bridge attempt"));
+  assert.equal(view.blockerSummary, "No live-send blockers detected from current local preflight.");
   assert.ok(view.items.every((item: { status: string }) => item.status === "ready"));
   assert.ok(view.caveat.includes("does not write memory"));
   assert.ok(view.caveat.includes("does not dispatch agents"));

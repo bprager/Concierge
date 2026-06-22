@@ -203,6 +203,7 @@ export interface LiveSendPreflightView {
   canAttemptLiveSend: boolean;
   summary: string;
   caveat: string;
+  blockerSummary: string;
   items: LiveSendPreflightItem[];
 }
 
@@ -388,6 +389,43 @@ function describePromotionBlockers(input: {
   }
 
   return blockers;
+}
+
+function describePreflightBlockerSummary(items: LiveSendPreflightItem[]): string {
+  const blockedPriority = [
+    "Endpoint configured",
+    "Descriptor discovered",
+    "Descriptor integrity",
+    "Text-turn route",
+    "Governance send gate",
+    "Text ready",
+    "Allowed effects",
+  ];
+  const warningPriority = ["Rehearsal Mode", "Evidence capture", "Evidence comparison", "Runtime validation", "Evaluator HTTP", "Promotion gate"];
+  const blocked = blockedPriority
+    .map((label) => items.find((item) => item.label === label && item.status === "blocked"))
+    .find((item): item is LiveSendPreflightItem => item !== undefined);
+  if (blocked) {
+    if (blocked.label === "Endpoint configured") return "Main preflight blocker: configure a Napoleon endpoint.";
+    if (blocked.label === "Descriptor discovered") return "Main preflight blocker: discover a current Napoleon descriptor.";
+    if (blocked.label === "Descriptor integrity") return "Main preflight blocker: fix descriptor integrity before sending.";
+    if (blocked.label === "Text-turn route") return "Main preflight blocker: use a descriptor that advertises text_turn.";
+    if (blocked.label === "Governance send gate") return "Main preflight blocker: local governance does not allow this send.";
+    if (blocked.label === "Text ready") return "Main preflight blocker: enter text before sending.";
+    return `Main preflight blocker: ${blocked.label.toLowerCase()} is blocked.`;
+  }
+
+  const warning = warningPriority
+    .map((label) => items.find((item) => item.label === label && item.status === "warning"))
+    .find((item): item is LiveSendPreflightItem => item !== undefined);
+  if (warning) {
+    if (warning.label === "Rehearsal Mode") return "Main preflight warning: Rehearsal Mode is active.";
+    if (warning.label === "Runtime validation") return "Main preflight warning: real Napoleon runtime evidence is not proven.";
+    if (warning.label === "Evaluator HTTP") return "Main preflight warning: evaluator HTTP mode has not passed.";
+    if (warning.label === "Promotion gate") return "Main preflight warning: promotion evidence is incomplete.";
+    return `Main preflight warning: ${warning.label.toLowerCase()} needs review.`;
+  }
+  return "No live-send blockers detected from current local preflight.";
 }
 
 export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): LiveBridgeReadinessView {
@@ -755,6 +793,7 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
         : "Live send is blocked until required preflight items pass.",
     caveat:
       "This checklist is not Napoleon approval, does not write memory, does not dispatch agents, does not capture approval, and does not send externally by itself.",
+    blockerSummary: describePreflightBlockerSummary(items),
     items,
   };
 }
