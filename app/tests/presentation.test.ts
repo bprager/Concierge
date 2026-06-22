@@ -187,7 +187,8 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
 
   const empty = describeDelegation(undefined);
 
-  assert.equal(empty.heading, "Napoleon delegation unavailable");
+  assert.equal(empty.heading, "Napoleon delegation");
+  assert.ok(empty.body.includes("No Napoleon delegation provenance was returned"));
   assert.ok(!empty.body.includes("Napoleon recommends"));
   assert.ok(!empty.body.includes("Passive Brain found"));
   assert.ok(empty.details.some((detail) => detail.label === "Target capability" && detail.value === "not returned"));

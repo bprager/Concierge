@@ -584,10 +584,10 @@ test("shows Napoleon delegation panel before bridge provenance is returned", asy
     const view = render(<App />);
     const delegationPanel = within(view.getByLabelText("Napoleon delegation"));
 
-    await delegationPanel.findByText("Napoleon delegation unavailable");
+    await delegationPanel.findByText("Napoleon delegation");
     assert.ok(
       delegationPanel.getByText(
-        "No Napoleon delegation provenance was included with this response, so Concierge will not attribute the answer to a capability or agent.",
+        "No Napoleon delegation provenance was returned, so Concierge will not attribute the answer to a capability or agent.",
       ),
     );
     assert.ok(delegationPanel.getByText("Target capability"));
