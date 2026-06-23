@@ -46,6 +46,7 @@ GOVERNED_NETWORK_SOURCE_ALLOWLIST = {
     "app/src/governanceReviewSubmission.ts",
     "app/src/memoryProposalSubmission.ts",
     "app/src/napoleonBridge.ts",
+    "app/src/observabilityTraceHandoff.ts",
 }
 
 BOUNDED_BROWSER_STORAGE_SOURCE_ALLOWLIST = {

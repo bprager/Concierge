@@ -14,7 +14,8 @@ export type GovernedHandoffCapability =
   | "chief_of_staff_steering"
   | "governance_review"
   | "evolution_proposal_review"
-  | "taxonomy_review";
+  | "taxonomy_review"
+  | "observability_trace";
 
 export interface ChiefOfStaffDescriptor {
   schemaVersion: string;
@@ -265,6 +266,7 @@ const DEFAULT_SUPPORTED_HANDOFFS: GovernedHandoffCapability[] = [
   "governance_review",
   "evolution_proposal_review",
   "taxonomy_review",
+  "observability_trace",
 ];
 
 export const defaultChiefOfStaffDescriptor: ChiefOfStaffDescriptor = {

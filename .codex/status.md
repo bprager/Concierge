@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a governed observability trace handoff packet and sender for sanitized local trace evidence, gated by descriptor-advertised `observability_trace` support and fail-closed response checks for trace append, audit authority, task routing, approval, memory write, agent dispatch, external send, and local application claims.
 - Added Text Concierge import, readiness, preflight, proof export, comparison, and telemetry support for sanitized evaluator handoff required-action guidance, so live validation can tell Napoleon maintainers where to advertise `evaluation_review`; the latest `mimir` validation still had `/cos/descriptor`, `/cos/text-turn`, `/cos/trace/{trace_id}`, and `/cos/capabilities` passing while promotion remained blocked on that descriptor advertisement.
 - Added local harness regression coverage for the Napoleon base-URL `make eval-http` flow, proving evaluator HTTP mode resolves to `/chief-of-staff/reviews/evaluation` with sanitized target metadata and no retained endpoint, token, request body, response body, approval, memory write, agent dispatch, or external send state.
 - Added local capability-intelligence signals for advisory Chief of Staff capability discovery readiness, so Napoleon capability metadata readiness and blocked side-effect claims contribute metadata-only evidence without retaining raw manifests, profile bodies, endpoints, credentials, or bridge payloads.

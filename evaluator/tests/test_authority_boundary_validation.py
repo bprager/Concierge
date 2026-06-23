@@ -1183,6 +1183,26 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertEqual(violations, [])
 
+    def test_scanner_allows_observability_trace_handoff_named_target(self):
+        violations = validate_repo.scan_ungoverned_network_text(
+            "app/src/observabilityTraceHandoff.ts",
+            """
+            const target = buildObservabilityTraceBridgeTarget(endpoint);
+            const response = await fetcher(target.url, { method: "POST" });
+            """,
+        )
+
+        self.assertEqual(violations, [])
+
+    def test_scanner_rejects_observability_trace_handoff_free_form_target(self):
+        violations = validate_repo.scan_ungoverned_network_text(
+            "app/src/observabilityTraceHandoff.ts",
+            'const response = await fetcher(endpoint + "/observability/traces", { method: "POST" });',
+        )
+
+        self.assertTrue(violations)
+        self.assertIn("bridge module network call must use named generated operation or Napoleon review resolution", violations[0])
+
 
 if __name__ == "__main__":
     unittest.main()

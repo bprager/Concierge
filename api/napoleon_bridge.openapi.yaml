@@ -342,6 +342,7 @@ paths:
                             - governance_review
                             - evolution_proposal_review
                             - taxonomy_review
+                            - observability_trace
                       supported_handoffs:
                         type: array
                         description: Snake-case equivalent of supportedHandoffs for /cos descriptor compatibility.
@@ -355,6 +356,7 @@ paths:
                             - governance_review
                             - evolution_proposal_review
                             - taxonomy_review
+                            - observability_trace
                       governanceState:
                         type: string
                       traceId:
