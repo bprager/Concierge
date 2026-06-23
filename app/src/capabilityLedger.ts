@@ -1601,6 +1601,52 @@ function mediaSessionReadinessDetails(attributes: Record<string, unknown>): stri
     .filter((detail): detail is string => Boolean(detail));
 }
 
+function descriptorDiscoveryReadinessStatus(
+  eventName: string,
+  attributes: Record<string, unknown>,
+): {
+  capabilityStatus: CapabilityStatus;
+  outcomeSignal: CapabilityOutcomeSignal;
+  suggestedNextStep: SuggestedNextStep;
+  confidence: number;
+} {
+  const ready =
+    eventName === "descriptor_discovery_completed" &&
+    stringAttr(attributes, "state", "unknown") === "ready" &&
+    attributes.canAttemptLiveBridge === true &&
+    stringAttr(attributes, "failClosedReason", "none") === "none";
+
+  if (ready) {
+    return {
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      suggestedNextStep: "no_action",
+      confidence: 0.8,
+    };
+  }
+
+  return {
+    capabilityStatus: "blocked",
+    outcomeSignal: eventName === "descriptor_discovery_failed" ? "bridge_failed" : "blocked",
+    suggestedNextStep: "needs_human_review",
+    confidence: 0.88,
+  };
+}
+
+function descriptorDiscoveryDetails(attributes: Record<string, unknown>): string[] {
+  const state = stringAttr(attributes, "state", "unknown");
+  const checksumState = stringAttr(attributes, "checksumState", "unknown");
+  const signatureState = stringAttr(attributes, "signatureState", "unknown");
+  const failClosedReason = stringAttr(attributes, "failClosedReason", "none");
+  return [
+    `descriptor state ${state}`,
+    `checksum ${checksumState}`,
+    `signature ${signatureState}`,
+    attributes.canAttemptLiveBridge === true ? "live bridge attempt allowed" : "live bridge attempt blocked",
+    failClosedReason === "none" ? "fail closed reason none" : `fail closed reason ${failClosedReason}`,
+  ];
+}
+
 export function deriveCapabilitySignalFromEvent(
   eventName: string,
   attributes: Record<string, unknown>,
@@ -1718,6 +1764,22 @@ export function deriveCapabilitySignalFromEvent(
       confidence: 0.84,
       architectureArea: "memory_review",
       suggestedNextStep: eventName.includes("acknowledged") ? "create_evolution_proposal" : "no_action",
+    });
+  }
+
+  if (eventName === "descriptor_discovery_completed" || eventName === "descriptor_discovery_failed") {
+    const readiness = descriptorDiscoveryReadinessStatus(eventName, attributes);
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "napoleon_connection",
+      intentLabel: "discover_descriptor",
+      capabilityLabel: "descriptor_discovery",
+      capabilityStatus: readiness.capabilityStatus,
+      outcomeSignal: readiness.outcomeSignal,
+      confidence: readiness.confidence,
+      architectureArea: "bridge",
+      suggestedNextStep: readiness.suggestedNextStep,
+      details: descriptorDiscoveryDetails(attributes),
     });
   }
 

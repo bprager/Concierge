@@ -291,6 +291,8 @@ export function emitCapabilitySignal(
     "memory_proposal_review_created",
     "memory_proposal_acknowledged_locally",
     "memory_proposal_dismissed_locally",
+    "descriptor_discovery_completed",
+    "descriptor_discovery_failed",
     "response_failed",
     "response_generated",
     "avatar_state_changed",

@@ -197,6 +197,7 @@ User value: The user can tell whether a response came from Napoleon, which capab
 Acceptance criteria:
 
 - Live sends fail closed when no endpoint is configured, descriptor validation fails, descriptor discovery is stale, auth fails, the response contract is invalid, local governance is `no_go`, Napoleon returns `deny` or `no_go`, or the bridge times out.
+- Descriptor discovery completion and failure create metadata-only capability-intelligence signals for Napoleon connection readiness without retaining endpoint hosts, credentials, descriptor bodies, request bodies, response bodies, approval, memory writes, agent dispatch, or external sends.
 - Optional bridge tokens are sent only as request headers: `Authorization` for generated `/v1/concierge/...` bridge requests and `X-Napoleon-Auth` for explicit `/cos/descriptor`, `/cos/capabilities`, and `/cos/text-turn` advisory harness requests. They are not included in request bodies, telemetry, memory proposals, or capability exports.
 - Configured Napoleon base URLs or known Concierge bridge operation URLs resolve to canonical bridge paths for text turns, descriptor discovery, Chief of Staff steering handoff, memory proposal review, and evaluator requests.
 - Real Napoleon `/cos` base URLs can be used by the desktop app and validated through descriptor fallback, current text-turn request shape, sanitized bridge evidence, and `/cos/trace/{trace_id}` proof; if the runtime lacks an evaluator route, live-runtime validation must record a sanitized evaluator failure and keep promotion blocked.

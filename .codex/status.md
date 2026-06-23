@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local capability-intelligence signals for Napoleon descriptor discovery readiness, so connection health and fail-closed descriptor blockers contribute metadata-only evidence without retaining endpoints, credentials, descriptor bodies, or bridge payloads.
 - Added local capability-intelligence signals for child avatar policy dry runs, so stricter child avatar readiness contributes metadata-only evidence without retaining raw video, starting capture or animation, treating guardian review as approval, or contacting Napoleon.
 - Added local capability-intelligence signals for voice response shaping and child voice policy dry runs, so spoken-response readiness contributes metadata-only evidence without retaining spoken text, starting capture/playback, or contacting Napoleon.
 - Added local capability-intelligence signals for barge-in rehearsal, with a separate child-safe label for child protected mode, so interruption-handling readiness contributes metadata-only evidence without retaining interrupted output, starting capture/playback, or contacting Napoleon.

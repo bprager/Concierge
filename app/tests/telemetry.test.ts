@@ -49,6 +49,59 @@ test("telemetry capability signals preserve child protected minimization", () =>
   assert.equal(JSON.stringify(signal).includes("do not store this child text"), false);
 });
 
+test("telemetry emits descriptor discovery capability signals without endpoint details", () => {
+  const readySignal = emitCapabilitySignal("descriptor_discovery_completed", {
+    traceId: "trace_descriptor_ready",
+    conversationId: "conv_descriptor_ready",
+    state: "ready",
+    checksumState: "matched",
+    signatureState: "valid",
+    canAttemptLiveBridge: true,
+    failClosedReason: "none",
+    endpoint: "https://napoleon.example.test/cos/descriptor",
+    bearerToken: "secret-token",
+  });
+  const failedSignal = emitCapabilitySignal("descriptor_discovery_failed", {
+    traceId: "trace_descriptor_failed",
+    conversationId: "conv_descriptor_failed",
+    state: "blocked",
+    checksumState: "unavailable",
+    signatureState: "unavailable",
+    canAttemptLiveBridge: false,
+    failClosedReason: "auth_failure",
+    error: "401 from https://napoleon.example.test with secret-token",
+  });
+
+  assert.ok(readySignal);
+  assert.ok(failedSignal);
+  if (!readySignal || !failedSignal) throw new Error("expected descriptor discovery capability signals");
+  assert.equal(readySignal.topicLabel, "napoleon_connection");
+  assert.equal(readySignal.intentLabel, "discover_descriptor");
+  assert.equal(readySignal.capabilityLabel, "descriptor_discovery");
+  assert.equal(readySignal.capabilityStatus, "working");
+  assert.equal(readySignal.outcomeSignal, "rehearsed");
+  assert.equal(readySignal.architectureArea, "bridge");
+  assert.deepEqual(readySignal.details, [
+    "descriptor state ready",
+    "checksum matched",
+    "signature valid",
+    "live bridge attempt allowed",
+    "fail closed reason none",
+  ]);
+  assert.equal(failedSignal.capabilityStatus, "blocked");
+  assert.equal(failedSignal.outcomeSignal, "bridge_failed");
+  assert.equal(failedSignal.suggestedNextStep, "needs_human_review");
+  assert.deepEqual(failedSignal.details, [
+    "descriptor state blocked",
+    "checksum unavailable",
+    "signature unavailable",
+    "live bridge attempt blocked",
+    "fail closed reason auth_failure",
+  ]);
+  assert.equal(JSON.stringify([readySignal, failedSignal]).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify([readySignal, failedSignal]).includes("secret-token"), false);
+});
+
 test("telemetry emits voice capability signal for local STT completion", () => {
   const signal = emitCapabilitySignal("stt_completed", {
     traceId: "trace_stt_signal",
