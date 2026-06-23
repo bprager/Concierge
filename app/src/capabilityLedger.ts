@@ -1106,6 +1106,14 @@ function stringAttr(attributes: Record<string, unknown>, key: string, fallback: 
   return typeof value === "string" && value.trim() ? value : fallback;
 }
 
+function profileScopedVoiceCapability(
+  profileMode: NapoleonProfileMode,
+  adultCapability: string,
+  childCapability: string,
+): string {
+  return profileMode === "child_protected_user" ? childCapability : adultCapability;
+}
+
 export function deriveCapabilitySignalFromEvent(
   eventName: string,
   attributes: Record<string, unknown>,
@@ -1245,7 +1253,11 @@ export function deriveCapabilitySignalFromEvent(
       channel: "voice",
       topicLabel: "voice",
       intentLabel: "transcribe_local_sample",
-      capabilityLabel: "speech_transcription_sample",
+      capabilityLabel: profileScopedVoiceCapability(
+        profileMode,
+        "speech_transcription_sample",
+        "child_safe_speech_transcription_sample",
+      ),
       capabilityStatus: "working",
       outcomeSignal: "rehearsed",
       confidence: 0.76,
@@ -1260,7 +1272,11 @@ export function deriveCapabilitySignalFromEvent(
       channel: "voice",
       topicLabel: "voice",
       intentLabel: "prepare_local_speech",
-      capabilityLabel: "speech_synthesis_sample",
+      capabilityLabel: profileScopedVoiceCapability(
+        profileMode,
+        "speech_synthesis_sample",
+        "child_safe_speech_synthesis_sample",
+      ),
       capabilityStatus: "working",
       outcomeSignal: "rehearsed",
       confidence: 0.74,
@@ -1275,7 +1291,7 @@ export function deriveCapabilitySignalFromEvent(
       channel: "voice",
       topicLabel: "voice",
       intentLabel: "rehearse_local_voice_turn",
-      capabilityLabel: "voice_turn_rehearsal",
+      capabilityLabel: profileScopedVoiceCapability(profileMode, "voice_turn_rehearsal", "child_safe_voice_turn_rehearsal"),
       capabilityStatus: "working",
       outcomeSignal: "rehearsed",
       confidence: 0.8,

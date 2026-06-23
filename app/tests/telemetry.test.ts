@@ -125,6 +125,53 @@ test("telemetry emits voice capability signal for local voice turn rehearsal", (
   assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
 });
 
+test("telemetry emits child-protected voice capability signals with separate labels", () => {
+  const speechSignal = emitCapabilitySignal("stt_completed", {
+    traceId: "trace_child_stt_signal",
+    conversationId: "conv_child_voice_signal",
+    profile: "child_protected",
+    localSampleOnly: true,
+    captureStarted: false,
+    rawAudioStored: false,
+    rawAudio: "must not be retained",
+  });
+  const synthesisSignal = emitCapabilitySignal("tts_completed", {
+    traceId: "trace_child_tts_signal",
+    conversationId: "conv_child_voice_signal",
+    profile: "child_protected",
+    localSampleOnly: true,
+    audioPlaybackStarted: false,
+    rawAudioStored: false,
+    rawAudio: "must not be retained",
+  });
+  const voiceTurnSignal = emitCapabilitySignal("voice_turn_rehearsed", {
+    traceId: "trace_child_voice_turn_signal",
+    conversationId: "conv_child_voice_signal",
+    profile: "child_protected",
+    localRehearsalOnly: true,
+    liveNapoleonContacted: false,
+    microphoneCaptureStarted: false,
+    audioPlaybackStarted: false,
+    rawAudioStored: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(speechSignal);
+  assert.ok(synthesisSignal);
+  assert.ok(voiceTurnSignal);
+  if (!speechSignal || !synthesisSignal || !voiceTurnSignal) throw new Error("expected child voice capability signals");
+  assert.equal(speechSignal.profileMode, "child_protected_user");
+  assert.equal(synthesisSignal.profileMode, "child_protected_user");
+  assert.equal(voiceTurnSignal.profileMode, "child_protected_user");
+  assert.equal(speechSignal.privacyClass, "child_sensitive");
+  assert.equal(synthesisSignal.privacyClass, "child_sensitive");
+  assert.equal(voiceTurnSignal.privacyClass, "child_sensitive");
+  assert.equal(speechSignal.capabilityLabel, "child_safe_speech_transcription_sample");
+  assert.equal(synthesisSignal.capabilityLabel, "child_safe_speech_synthesis_sample");
+  assert.equal(voiceTurnSignal.capabilityLabel, "child_safe_voice_turn_rehearsal");
+  assert.equal(JSON.stringify([speechSignal, synthesisSignal, voiceTurnSignal]).includes("must not be retained"), false);
+});
+
 test("untracked telemetry events do not create capability signals", () => {
   const signal = emitCapabilitySignal("settings_changed", {
     traceId: "trace_settings",

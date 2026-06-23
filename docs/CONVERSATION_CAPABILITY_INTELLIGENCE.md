@@ -62,7 +62,7 @@ Persistent local storage:
 - Clear control: removes the persisted snapshot, clears the in-memory ledger, and clears derived Chief of Staff steering and taxonomy review drafts, review responses, and failure states so obsolete local evidence cannot be handed off.
 - Export control: renders local JSON for derived metadata only, includes retention settings and trend caveats, and states that export does not grant permission to share externally; export and clear telemetry explicitly records no approval capture, memory write, agent dispatch, or external send. Switching the active profile clears the already-rendered export output so a local metadata view from one profile is not left visible under another profile.
 - Child protected records remain distinguishable through `profile_mode` and `privacy_class: child_sensitive`, without retaining raw child content.
-- Local STT sample completion, TTS sample completion, and full voice-turn rehearsal can create `voice` capability signals as working rehearsal evidence. They are metadata-only and do not retain raw audio, start capture or playback, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
+- Local STT sample completion, TTS sample completion, and full voice-turn rehearsal can create `voice` capability signals as working rehearsal evidence. Child-protected voice preparation uses separate `child_safe_*` capability labels and `child_sensitive` privacy class so it is not aggregated as ordinary adult-owner voice readiness. These signals are metadata-only and do not retain raw audio, start capture or playback, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 
 Local taxonomy storage:
 
