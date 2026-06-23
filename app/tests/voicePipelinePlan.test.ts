@@ -61,6 +61,12 @@ test("exports a sanitized governed voice pipeline proof without raw prompt endpo
   const json = exportGovernedVoicePipelineProofJson(plan, {
     generatedAt: "2026-06-16T00:00:00.000Z",
     conversationId: "conv_voice_pipeline",
+    acceptedRealRuntimeProof: {
+      status: "success",
+      operationId: "text_turn",
+      targetPath: "/v1/concierge/turn",
+      promotionGate: "real_runtime_evidence_available",
+    },
   });
   const proof = JSON.parse(json) as {
     kind: string;
@@ -74,6 +80,13 @@ test("exports a sanitized governed voice pipeline proof without raw prompt endpo
       canStartLiveVoice: boolean;
       stages: Array<{ id: string; status: string }>;
       blockedEffects: string[];
+      acceptedRealRuntimeProof?: {
+        status: string;
+        operationId: string;
+        targetPath: string;
+        promotionGate: string;
+        localContextOnly: boolean;
+      };
     };
     boundary: {
       microphoneCaptureStarted: boolean;
@@ -101,6 +114,13 @@ test("exports a sanitized governed voice pipeline proof without raw prompt endpo
   );
   assert.ok(proof.voicePipeline.stages.every((stage) => stage.status === "blocked"));
   assert.ok(proof.voicePipeline.blockedEffects.includes("microphone_capture"));
+  assert.deepEqual(proof.voicePipeline.acceptedRealRuntimeProof, {
+    status: "success",
+    operationId: "text_turn",
+    targetPath: "/v1/concierge/turn",
+    promotionGate: "real_runtime_evidence_available",
+    localContextOnly: true,
+  });
   assert.equal(proof.boundary.microphoneCaptureStarted, false);
   assert.equal(proof.boundary.audioPlaybackStarted, false);
   assert.equal(proof.boundary.rawAudioStored, false);
@@ -149,6 +169,36 @@ test("compares sanitized governed voice pipeline proofs without raw prompt endpo
         !`${change.previous} ${change.current}`.includes("token"),
     ),
   );
+});
+
+test("compares accepted real-runtime proof context in governed voice pipeline proofs", () => {
+  const plan = buildGovernedVoicePipelinePlan({ profileMode: "adult_owner" });
+  const previous = exportGovernedVoicePipelineProofJson(plan, {
+    generatedAt: "2026-06-16T00:00:00.000Z",
+    conversationId: "conv_voice_pipeline",
+  });
+  const current = exportGovernedVoicePipelineProofJson(plan, {
+    generatedAt: "2026-06-16T00:05:00.000Z",
+    conversationId: "conv_voice_pipeline",
+    acceptedRealRuntimeProof: {
+      status: "success",
+      operationId: "text_turn",
+      targetPath: "/v1/concierge/turn",
+      promotionGate: "real_runtime_evidence_available",
+    },
+  });
+
+  const comparison = compareGovernedVoicePipelineProofs(previous, current);
+
+  assert.equal(comparison.status, "changed");
+  assert.ok(
+    comparison.changes.some(
+      (change: { label: string; current: string }) =>
+        change.label === "Accepted real-runtime proof" &&
+        change.current === "success:text_turn:/v1/concierge/turn:real_runtime_evidence_available",
+    ),
+  );
+  assert.ok(comparison.changes.every((change: { current: string }) => !change.current.includes("endpoint")));
 });
 
 test("rejects missing or unsafe previous governed voice pipeline proof comparison input", () => {

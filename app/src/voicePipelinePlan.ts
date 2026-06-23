@@ -44,6 +44,12 @@ export interface GovernedVoicePipelinePlanInput {
 export interface GovernedVoicePipelineProofInput {
   generatedAt?: string;
   conversationId: string;
+  acceptedRealRuntimeProof?: {
+    status: "success";
+    operationId: string;
+    targetPath: string;
+    promotionGate: string;
+  };
 }
 
 export interface GovernedVoicePipelineProofChange {
@@ -194,6 +200,15 @@ export function exportGovernedVoicePipelineProofJson(
           authorityBoundary: stage.authorityBoundary,
         })),
         blockedEffects: plan.blockedEffects,
+        acceptedRealRuntimeProof: input.acceptedRealRuntimeProof
+          ? {
+              status: input.acceptedRealRuntimeProof.status,
+              operationId: input.acceptedRealRuntimeProof.operationId,
+              targetPath: input.acceptedRealRuntimeProof.targetPath,
+              promotionGate: input.acceptedRealRuntimeProof.promotionGate,
+              localContextOnly: true,
+            }
+          : undefined,
       },
       boundary: {
         microphoneCaptureStarted: plan.microphoneCaptureStarted,
@@ -287,6 +302,13 @@ function parseVoicePipelineProof(json: string): null | {
     authorityBoundary?: string;
     stages?: Array<{ id?: string; status?: string }>;
     blockedEffects?: string[];
+    acceptedRealRuntimeProof?: {
+      status?: string;
+      operationId?: string;
+      targetPath?: string;
+      promotionGate?: string;
+      localContextOnly?: boolean;
+    };
   };
   boundary?: Record<string, boolean>;
 } {
@@ -303,6 +325,13 @@ function parseVoicePipelineProof(json: string): null | {
         authorityBoundary?: string;
         stages?: Array<{ id?: string; status?: string }>;
         blockedEffects?: string[];
+        acceptedRealRuntimeProof?: {
+          status?: string;
+          operationId?: string;
+          targetPath?: string;
+          promotionGate?: string;
+          localContextOnly?: boolean;
+        };
       };
       boundary?: Record<string, boolean>;
     };
@@ -349,6 +378,11 @@ export function compareGovernedVoicePipelineProofs(
       current.voicePipeline?.stages?.map((stage) => `${stage.id}:${stage.status}`),
     ],
     ["Blocked effects", previous.voicePipeline?.blockedEffects, current.voicePipeline?.blockedEffects],
+    [
+      "Accepted real-runtime proof",
+      formatAcceptedRealRuntimeProof(previous.voicePipeline?.acceptedRealRuntimeProof),
+      formatAcceptedRealRuntimeProof(current.voicePipeline?.acceptedRealRuntimeProof),
+    ],
   ];
 
   const changes = fields.flatMap(([label, previousValue, currentValue]) => {
@@ -370,4 +404,19 @@ export function compareGovernedVoicePipelineProofs(
     summary: `Voice pipeline proof metadata changed in ${changes.length} field(s).`,
     changes,
   };
+}
+
+function formatAcceptedRealRuntimeProof(
+  proof:
+    | {
+        status?: string;
+        operationId?: string;
+        targetPath?: string;
+        promotionGate?: string;
+        localContextOnly?: boolean;
+      }
+    | undefined,
+): string {
+  if (!proof || proof.localContextOnly !== true) return "not imported";
+  return `${proof.status ?? "unknown"}:${proof.operationId ?? "unknown"}:${proof.targetPath ?? "unknown"}:${proof.promotionGate ?? "unknown"}`;
 }

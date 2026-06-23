@@ -369,6 +369,8 @@ artifacts:
       - "blocked effects"
       - "profile mode"
       - "child/guardian-review state"
+      - "accepted proof context"
+      - "local context only"
       - "explicit false side-effect flags"
       - "not Napoleon approval"
       - "not live runtime evidence"

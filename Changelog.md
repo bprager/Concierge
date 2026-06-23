@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added sanitized accepted real-runtime proof context to governed voice pipeline proof exports and comparisons so prior local review evidence can travel with the voice proof without granting live voice authority.
 - Added a sanitized accepted readiness proof import to the live bridge readiness panel so reviewers can paste a prior successful real-runtime proof and see local accepted-proof metadata without granting approval or side effects.
 - Added accepted real-runtime proof visibility to the composer-side live-send preflight so prior accepted runtime proof is visible before governed send attempts without becoming approval or a blocker.
 - Added a visible last real-runtime proof row to the live bridge readiness panel so operators can distinguish proven Napoleon runtime evidence from local harness or simulation evidence before opening proof JSON.

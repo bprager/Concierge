@@ -2743,6 +2743,14 @@ test("imports an accepted real-runtime readiness proof as sanitized local metada
     assert.ok(voiceReadiness.getByText("Runtime proof: ready"));
     assert.ok(voiceReadiness.getByText("Accepted real-runtime proof: success: text_turn at /v1/concierge/turn."));
     assert.ok(voiceReadiness.getByText("Voice pipeline: blocked"));
+
+    await user.click(voiceReadiness.getByText("Export voice pipeline proof"));
+    const exportedVoiceProof = voiceReadiness.getByLabelText("Exported voice pipeline proof");
+    assert.ok(exportedVoiceProof.textContent?.includes('"acceptedRealRuntimeProof"'));
+    assert.ok(exportedVoiceProof.textContent?.includes('"localContextOnly": true'));
+    assert.ok(exportedVoiceProof.textContent?.includes('"targetPath": "/v1/concierge/turn"'));
+    assert.ok(exportedVoiceProof.textContent?.includes('"canStartLiveVoice": false'));
+    assert.ok(!exportedVoiceProof.textContent?.includes("endpoint"));
   } finally {
     cleanup();
     dom.window.close();

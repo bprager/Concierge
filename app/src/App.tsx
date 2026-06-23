@@ -2426,6 +2426,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const traceId = newTraceId();
     const json = exportGovernedVoicePipelineProofJson(governedVoicePipelinePlan, {
       conversationId,
+      acceptedRealRuntimeProof: acceptedReadinessProofImport?.lastRealRuntimeProof,
     });
     const comparison = compareGovernedVoicePipelineProofs(voicePipelineProofJson, json);
     setVoicePipelineProofJson(json);
@@ -2438,6 +2439,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       canStartLiveVoice: governedVoicePipelinePlan.canStartLiveVoice,
       stageCount: governedVoicePipelinePlan.stages.length,
       blockedEffects: governedVoicePipelinePlan.blockedEffects,
+      acceptedRealRuntimeProofImported: Boolean(acceptedReadinessProofImport?.lastRealRuntimeProof),
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
       microphoneCaptureStarted: governedVoicePipelinePlan.microphoneCaptureStarted,

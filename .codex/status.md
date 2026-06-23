@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added sanitized accepted real-runtime proof context to governed voice pipeline proof exports and comparisons, keeping the metadata local-context-only while live voice capture, playback, Napoleon contact, approval, memory writes, agent dispatch, and external sends remain blocked.
 - Added accepted real-runtime proof visibility to live voice readiness, letting sanitized prior proof metadata satisfy the visible proof row while keeping live voice capture, playback, Napoleon contact, approval, memory writes, agent dispatch, and external sends blocked until the governed voice pipeline exists.
 - Added accepted real-runtime proof visibility to the composer-side live-send preflight, showing sanitized prior proof status/path metadata before governed send attempts while keeping the proof informational only, not approval and not a blocker.
 - Added a sanitized accepted readiness proof import to the live bridge readiness panel, accepting only successful real-runtime, promotion-ready, side-effect-free proof JSON as local review metadata while rejecting unsafe, local-only, incomplete, or side-effect-claiming proofs.
