@@ -29,6 +29,7 @@ DEFAULT_OUT_DIR = Path("/tmp/concierge-live-runtime-validation")
 EVALUATOR_PATH = "/v1/concierge/evaluate"
 NAPOLEON_EVALUATION_REVIEW_PATH = "/chief-of-staff/reviews/evaluation"
 KNOWN_BRIDGE_PATHS = bridge_evidence_capture.KNOWN_BRIDGE_PATHS
+EVALUATION_REVIEW_HANDOFF_NAMES = {"evaluation_review", "evaluation_reviews"}
 
 BOUNDARY = (
     "Live runtime validation is evidence only. It is not Napoleon approval, "
@@ -185,6 +186,75 @@ def evaluator_target_metadata(eval_endpoint: str | None) -> dict[str, Any]:
         "evaluatorAgentDispatchPerformed": False,
         "evaluatorExternalSendPerformed": False,
     }
+
+
+def descriptor_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    descriptor = payload.get("descriptor") if isinstance(payload.get("descriptor"), dict) else payload
+    return descriptor if isinstance(descriptor, dict) else {}
+
+
+def descriptor_advertises_evaluation_handoff(payload: dict[str, Any]) -> tuple[bool, str]:
+    descriptor = descriptor_payload(payload)
+    raw_handoffs = (
+        descriptor.get("supportedHandoffs")
+        if isinstance(descriptor.get("supportedHandoffs"), list)
+        else descriptor.get("supported_handoffs")
+        if isinstance(descriptor.get("supported_handoffs"), list)
+        else []
+    )
+    handoffs = {str(handoff) for handoff in raw_handoffs if isinstance(handoff, str)}
+    if handoffs.intersection(EVALUATION_REVIEW_HANDOFF_NAMES):
+        return True, "supported_handoffs"
+
+    endpoints = descriptor.get("endpoints") if isinstance(descriptor.get("endpoints"), dict) else {}
+    for key, value in endpoints.items():
+        key_text = str(key)
+        value_text = str(value)
+        if key_text in EVALUATION_REVIEW_HANDOFF_NAMES:
+            return True, "descriptor_endpoints"
+        if NAPOLEON_EVALUATION_REVIEW_PATH in value_text:
+            return True, "descriptor_endpoints"
+    return False, "not_advertised"
+
+
+def descriptor_evaluation_handoff_status(bridge_endpoint: str, auth_token: str | None) -> dict[str, Any]:
+    try:
+        cos_mode = is_cos_endpoint(bridge_endpoint)
+        status_code, payload = bridge_evidence_capture.get_json(
+            bridge_evidence_capture.descriptor_url(bridge_endpoint),
+            auth_token,
+            cos_mode,
+        )
+        descriptor_preflight = bridge_evidence_capture.descriptor_connection_from_response(status_code, payload)
+        if (
+            not descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"]
+            and not cos_mode
+            and status_code == 404
+        ):
+            status_code, payload = bridge_evidence_capture.get_json(
+                bridge_evidence_capture.bridge_url(bridge_endpoint, "/cos/descriptor"),
+                auth_token,
+                True,
+            )
+            descriptor_preflight = bridge_evidence_capture.descriptor_connection_from_response(status_code, payload)
+        if not descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"]:
+            return {
+                "descriptorHandoffAdvertised": False,
+                "descriptorHandoffSource": "descriptor_not_ready",
+                "descriptorHandoffFailureReason": "descriptor_preflight_failed",
+            }
+        advertised, source = descriptor_advertises_evaluation_handoff(payload)
+        return {
+            "descriptorHandoffAdvertised": advertised,
+            "descriptorHandoffSource": source,
+            "descriptorHandoffFailureReason": "none" if advertised else "evaluation_handoff_not_advertised",
+        }
+    except Exception as exc:
+        return {
+            "descriptorHandoffAdvertised": False,
+            "descriptorHandoffSource": "descriptor_check_failed",
+            "descriptorHandoffFailureReason": exc.__class__.__name__,
+        }
 
 
 def bridge_target_metadata(bridge_endpoint: str | None) -> dict[str, Any]:
@@ -400,8 +470,14 @@ def classify_http_eval_failure(exc: Exception) -> str:
     return "http_evaluator_failed"
 
 
-def write_sanitized_evaluator_failure_report(path: Path, eval_endpoint: str, failure_reason: str) -> None:
+def write_sanitized_evaluator_failure_report(
+    path: Path,
+    eval_endpoint: str,
+    failure_reason: str,
+    descriptor_handoff: dict[str, Any] | None = None,
+) -> None:
     target = evaluator_target_metadata(eval_endpoint)
+    handoff = descriptor_handoff or {}
     path.write_text(
         json.dumps(
             {
@@ -420,6 +496,9 @@ def write_sanitized_evaluator_failure_report(path: Path, eval_endpoint: str, fai
                     "memoryWritePerformed": False,
                     "agentDispatchPerformed": False,
                     "externalSendPerformed": False,
+                    "descriptorHandoffAdvertised": handoff.get("descriptorHandoffAdvertised"),
+                    "descriptorHandoffSource": handoff.get("descriptorHandoffSource"),
+                    "descriptorHandoffFailureReason": handoff.get("descriptorHandoffFailureReason", "none"),
                     "authorityBoundary": "Evaluator HTTP failure evidence is sanitized and non-authorizing.",
                 },
                 "live_runtime_sanitization": {
@@ -818,6 +897,9 @@ def eval_target_summary(path: Path) -> dict[str, Any]:
         "memoryWritePerformed": False,
         "agentDispatchPerformed": False,
         "externalSendPerformed": False,
+        "descriptorHandoffAdvertised": None,
+        "descriptorHandoffSource": None,
+        "descriptorHandoffFailureReason": "none",
     }
     if not path.exists():
         return defaults
@@ -837,6 +919,9 @@ def eval_target_summary(path: Path) -> dict[str, Any]:
         "memoryWritePerformed": target.get("memoryWritePerformed") is True,
         "agentDispatchPerformed": target.get("agentDispatchPerformed") is True,
         "externalSendPerformed": target.get("externalSendPerformed") is True,
+        "descriptorHandoffAdvertised": target.get("descriptorHandoffAdvertised"),
+        "descriptorHandoffSource": target.get("descriptorHandoffSource"),
+        "descriptorHandoffFailureReason": target.get("descriptorHandoffFailureReason") or "none",
     }
 
 
@@ -1122,18 +1207,45 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
 
     eval_exit_code: int | None = None
     eval_failure_reason: str | None = None
+    descriptor_handoff_status: dict[str, Any] | None = None
     if bridge_exit_code == 0 and eval_endpoint is not None:
-        try:
-            eval_exit_code = run_http_eval(eval_endpoint, eval_report_path, auth_token)
-            sanitize_eval_report(eval_report_path)
-        except Exception as exc:
+        should_check_descriptor_handoff = (
+            is_cos_endpoint(bridge_endpoint)
+            and endpoint_resolution.get("evaluatorEndpointResolution") == "derived_from_bridge_endpoint"
+        )
+        if should_check_descriptor_handoff:
+            descriptor_handoff_status = descriptor_evaluation_handoff_status(bridge_endpoint, auth_token)
+        if descriptor_handoff_status and not descriptor_handoff_status["descriptorHandoffAdvertised"]:
             eval_exit_code = 1
-            eval_failure_reason = classify_http_eval_failure(exc)
-            write_sanitized_evaluator_failure_report(eval_report_path, eval_endpoint, eval_failure_reason)
+            eval_failure_reason = "http_evaluator_handoff_not_advertised"
+            write_sanitized_evaluator_failure_report(
+                eval_report_path,
+                eval_endpoint,
+                eval_failure_reason,
+                descriptor_handoff_status,
+            )
             print(
-                f"HTTP evaluator mode failed with {eval_failure_reason}; summary will record sanitized failure.",
+                "HTTP evaluator mode blocked because the descriptor does not advertise an evaluation review handoff; "
+                "summary will record sanitized failure.",
                 file=sys.stderr,
             )
+        else:
+            try:
+                eval_exit_code = run_http_eval(eval_endpoint, eval_report_path, auth_token)
+                sanitize_eval_report(eval_report_path)
+            except Exception as exc:
+                eval_exit_code = 1
+                eval_failure_reason = classify_http_eval_failure(exc)
+                write_sanitized_evaluator_failure_report(
+                    eval_report_path,
+                    eval_endpoint,
+                    eval_failure_reason,
+                    descriptor_handoff_status,
+                )
+                print(
+                    f"HTTP evaluator mode failed with {eval_failure_reason}; summary will record sanitized failure.",
+                    file=sys.stderr,
+                )
 
     sensitive_values = {
         value

@@ -282,8 +282,9 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
 
 
 class RecordingCosHarness:
-    def __init__(self, descriptor_ready: bool):
+    def __init__(self, descriptor_ready: bool, supported_handoffs: list[str] | None = None):
         self.descriptor_ready = descriptor_ready
+        self.supported_handoffs = supported_handoffs
         self.get_count = 0
         self.get_paths = []
         self.post_count = 0
@@ -356,29 +357,35 @@ class RecordingCosHarness:
                 if self.path != "/cos/descriptor":
                     self.write_json(404, {"error": "not_found"})
                     return
-                self.write_json(
-                    200,
-                    {
-                        "schema_version": "napoleon/concierge/chief-of-staff-service/v1",
-                        "service_id": "napoleon.chief_of_staff" if parent.descriptor_ready else "bad.service",
-                        "runtime_authority": False,
-                        "command_execution": False,
-                        "cache_policy": {
-                            "ttl_seconds": 300,
-                            "stale_descriptor_action": "fail_closed_to_review_required",
-                        },
-                        "security": {
-                            "descriptor_signature": "pending_future_implementation",
-                            "checksum": "pending_future_implementation",
-                        },
-                        "blocked_effects": [
-                            "runtime_authority",
-                            "memory_write",
-                            "agent_dispatch",
-                            "external_send",
-                        ],
+                descriptor_payload = {
+                    "schema_version": "napoleon/concierge/chief-of-staff-service/v1",
+                    "service_id": "napoleon.chief_of_staff" if parent.descriptor_ready else "bad.service",
+                    "runtime_authority": False,
+                    "command_execution": False,
+                    "cache_policy": {
+                        "ttl_seconds": 300,
+                        "stale_descriptor_action": "fail_closed_to_review_required",
                     },
-                )
+                    "security": {
+                        "descriptor_signature": "pending_future_implementation",
+                        "checksum": "pending_future_implementation",
+                    },
+                    "blocked_effects": [
+                        "runtime_authority",
+                        "memory_write",
+                        "agent_dispatch",
+                        "external_send",
+                    ],
+                }
+                if parent.supported_handoffs is not None:
+                    descriptor_payload["supported_handoffs"] = parent.supported_handoffs
+                    descriptor_payload["endpoints"] = {
+                        "descriptor": "GET /cos/descriptor",
+                        "text_turn": "POST /cos/text-turn",
+                    }
+                    if "evaluation_review" in parent.supported_handoffs:
+                        descriptor_payload["endpoints"]["evaluation_review"] = "POST /chief-of-staff/reviews/evaluation"
+                self.write_json(200, descriptor_payload)
 
             def do_POST(self):
                 parent.post_count += 1
