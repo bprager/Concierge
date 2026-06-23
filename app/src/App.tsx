@@ -198,6 +198,13 @@ function storedBoolean(key: string, fallback: boolean): boolean {
 }
 
 type RuntimeValidationSource = "real_runtime" | "local_harness" | "local_simulation";
+type ChiefOfStaffSteeringDraft = ReturnType<typeof draftChiefOfStaffSteering>;
+type SteeringRecommendationType = ChiefOfStaffSteeringDraft["recommendation"]["recommendationType"];
+
+type SteeringSubmissionView = {
+  result: ChiefOfStaffSteeringSubmissionResult;
+  recommendationType: SteeringRecommendationType;
+};
 
 function deriveRuntimeValidationSource(input: {
   endpoint: string;
@@ -288,6 +295,12 @@ function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapa
 
 function describeSteeringRecommendationType(draft: ReturnType<typeof draftChiefOfStaffSteering>): string {
   return draft.recommendation.recommendationType === "guided_readiness_repair"
+    ? "guided readiness repair"
+    : "scored capability recommendation";
+}
+
+function describeSteeringRecommendationTypeValue(recommendationType: SteeringRecommendationType): string {
+  return recommendationType === "guided_readiness_repair"
     ? "guided readiness repair"
     : "scored capability recommendation";
 }
@@ -431,9 +444,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [memorySubmissionFailure, setMemorySubmissionFailure] = useState<string | null>(null);
   const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
-  const [steeringDraft, setSteeringDraft] = useState<ReturnType<typeof draftChiefOfStaffSteering> | null>(null);
+  const [steeringDraft, setSteeringDraft] = useState<ChiefOfStaffSteeringDraft | null>(null);
   const [steeringDraftExportJson, setSteeringDraftExportJson] = useState<string | null>(null);
-  const [steeringSubmission, setSteeringSubmission] = useState<ChiefOfStaffSteeringSubmissionResult | null>(null);
+  const [steeringSubmission, setSteeringSubmission] = useState<SteeringSubmissionView | null>(null);
   const [steeringFailure, setSteeringFailure] = useState<string | null>(null);
   const [capabilityTaxonomy, setCapabilityTaxonomy] = useState(() => loadCapabilityTaxonomyFromStorage(browserStorage()));
   const [selectedTaxonomyLabel, setSelectedTaxonomyLabel] = useState("");
@@ -2562,7 +2575,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         rehearsalMode,
         descriptorConnection: currentDescriptorInput(),
       });
-      setSteeringSubmission(result);
+      setSteeringSubmission({
+        result,
+        recommendationType: steeringDraft.recommendation.recommendationType,
+      });
       setSteeringFailure(null);
       refreshCapabilityLedgerStatus();
     } catch (error) {
@@ -2917,6 +2933,28 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
     return (
       <dl>
+        {responseView.rows.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
+
+  function renderSteeringReviewResponse(submission: SteeringSubmissionView) {
+    const responseView = describeGovernedReviewResponse(
+      submission.result,
+      "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
+    );
+
+    return (
+      <dl>
+        <div>
+          <dt>Reviewed recommendation type</dt>
+          <dd>{describeSteeringRecommendationTypeValue(submission.recommendationType)}</dd>
+        </div>
         {responseView.rows.map((row) => (
           <div key={row.label}>
             <dt>{row.label}</dt>
@@ -4681,10 +4719,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           </button>
           {steeringFailure ? <p className="warning">{steeringFailure}</p> : null}
           {steeringSubmission
-            ? renderGovernedReviewResponse(
-                steeringSubmission,
-                "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
-              )
+            ? renderSteeringReviewResponse(steeringSubmission)
             : null}
         </section>
       ) : null}
