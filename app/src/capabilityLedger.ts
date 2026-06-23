@@ -1376,6 +1376,63 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "gaze_target_updated") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "avatar",
+      topicLabel: "avatar",
+      intentLabel: "simulate_local_avatar_gaze",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "avatar_gaze_simulation",
+        "child_safe_avatar_gaze_simulation",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.72,
+      architectureArea: "avatar",
+      suggestedNextStep: "no_action",
+    });
+  }
+
+  if (eventName === "camera_state_estimated") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "avatar",
+      topicLabel: "avatar",
+      intentLabel: "sample_local_avatar_face_pose",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "avatar_face_pose_sample",
+        "child_safe_avatar_face_pose_sample",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.7,
+      architectureArea: "avatar",
+      suggestedNextStep: "no_action",
+    });
+  }
+
+  if (eventName === "affect_signal_fused") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "avatar",
+      topicLabel: "avatar",
+      intentLabel: "sample_local_avatar_affect_uncertainty",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "avatar_affect_uncertainty_sample",
+        "child_safe_avatar_affect_uncertainty_sample",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.68,
+      architectureArea: "avatar",
+      suggestedNextStep: "no_action",
+    });
+  }
+
   return buildCapabilitySignal({
     ...base,
     topicLabel: "unknown",

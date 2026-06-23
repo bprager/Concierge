@@ -285,6 +285,111 @@ test("telemetry emits child-protected avatar capability signals with separate la
   assert.equal(JSON.stringify([stateSignal, expressionSignal, modelSignal, rendererSignal]).includes("must not be retained"), false);
 });
 
+test("telemetry emits avatar capability signals for local avatar perception dry runs", () => {
+  const gazeSignal = emitCapabilitySignal("gaze_target_updated", {
+    traceId: "trace_avatar_gaze_signal",
+    conversationId: "conv_avatar_perception_signal",
+    profile: "adult_owner",
+    localMetadataOnly: true,
+    cameraCaptureStarted: false,
+    faceDetectionStarted: false,
+    gazeTrackingStarted: false,
+    rawVideo: "must not be retained",
+  });
+  const facePoseSignal = emitCapabilitySignal("camera_state_estimated", {
+    traceId: "trace_avatar_face_pose_signal",
+    conversationId: "conv_avatar_perception_signal",
+    profile: "adult_owner",
+    localMetadataOnly: true,
+    cameraCaptureStarted: false,
+    faceDetectionStarted: false,
+    rawVideoStored: false,
+    rawVideo: "must not be retained",
+  });
+  const affectSignal = emitCapabilitySignal("affect_signal_fused", {
+    traceId: "trace_avatar_affect_signal",
+    conversationId: "conv_avatar_perception_signal",
+    profile: "adult_owner",
+    localMetadataOnly: true,
+    emotionClaimedAsFact: false,
+    cameraCaptureStarted: false,
+    microphoneCaptureStarted: false,
+    rawVideoStored: false,
+    rawAudioStored: false,
+    rawVideo: "must not be retained",
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(gazeSignal);
+  assert.ok(facePoseSignal);
+  assert.ok(affectSignal);
+  if (!gazeSignal || !facePoseSignal || !affectSignal) {
+    throw new Error("expected avatar perception capability signals");
+  }
+  assert.equal(gazeSignal.channel, "avatar");
+  assert.equal(gazeSignal.topicLabel, "avatar");
+  assert.equal(gazeSignal.capabilityLabel, "avatar_gaze_simulation");
+  assert.equal(facePoseSignal.capabilityLabel, "avatar_face_pose_sample");
+  assert.equal(affectSignal.capabilityLabel, "avatar_affect_uncertainty_sample");
+  assert.equal(affectSignal.intentLabel, "sample_local_avatar_affect_uncertainty");
+  assert.equal(affectSignal.architectureArea, "avatar");
+  assert.equal(affectSignal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify([gazeSignal, facePoseSignal, affectSignal]).includes("must not be retained"), false);
+});
+
+test("telemetry emits child-protected avatar perception signals with separate labels", () => {
+  const gazeSignal = emitCapabilitySignal("gaze_target_updated", {
+    traceId: "trace_child_avatar_gaze_signal",
+    conversationId: "conv_child_avatar_perception_signal",
+    profile: "child_protected",
+    localMetadataOnly: true,
+    cameraCaptureStarted: false,
+    faceDetectionStarted: false,
+    gazeTrackingStarted: false,
+    rawVideo: "must not be retained",
+  });
+  const facePoseSignal = emitCapabilitySignal("camera_state_estimated", {
+    traceId: "trace_child_avatar_face_pose_signal",
+    conversationId: "conv_child_avatar_perception_signal",
+    profile: "child_protected",
+    localMetadataOnly: true,
+    cameraCaptureStarted: false,
+    faceDetectionStarted: false,
+    rawVideoStored: false,
+    rawVideo: "must not be retained",
+  });
+  const affectSignal = emitCapabilitySignal("affect_signal_fused", {
+    traceId: "trace_child_avatar_affect_signal",
+    conversationId: "conv_child_avatar_perception_signal",
+    profile: "child_protected",
+    localMetadataOnly: true,
+    emotionClaimedAsFact: false,
+    cameraCaptureStarted: false,
+    microphoneCaptureStarted: false,
+    rawVideoStored: false,
+    rawAudioStored: false,
+    rawVideo: "must not be retained",
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(gazeSignal);
+  assert.ok(facePoseSignal);
+  assert.ok(affectSignal);
+  if (!gazeSignal || !facePoseSignal || !affectSignal) {
+    throw new Error("expected child avatar perception capability signals");
+  }
+  assert.equal(gazeSignal.profileMode, "child_protected_user");
+  assert.equal(facePoseSignal.profileMode, "child_protected_user");
+  assert.equal(affectSignal.profileMode, "child_protected_user");
+  assert.equal(gazeSignal.privacyClass, "child_sensitive");
+  assert.equal(facePoseSignal.privacyClass, "child_sensitive");
+  assert.equal(affectSignal.privacyClass, "child_sensitive");
+  assert.equal(gazeSignal.capabilityLabel, "child_safe_avatar_gaze_simulation");
+  assert.equal(facePoseSignal.capabilityLabel, "child_safe_avatar_face_pose_sample");
+  assert.equal(affectSignal.capabilityLabel, "child_safe_avatar_affect_uncertainty_sample");
+  assert.equal(JSON.stringify([gazeSignal, facePoseSignal, affectSignal]).includes("must not be retained"), false);
+});
+
 test("untracked telemetry events do not create capability signals", () => {
   const signal = emitCapabilitySignal("settings_changed", {
     traceId: "trace_settings",
