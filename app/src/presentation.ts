@@ -901,6 +901,8 @@ export function describeDelegation(
   targetCapability?: string,
   fallback?: DelegationFallbackProvenance,
 ): DelegationView {
+  const authorityBoundary =
+    "Returned bridge provenance only; not approval, memory, dispatch, external send, or local application.";
   const safeTargetCapability = sanitizeVisibleProvenanceValue(targetCapability);
   const targetCapabilityDisplay = safeTargetCapability === "redacted" ? "redacted metadata" : safeTargetCapability;
   if (!delegation || delegation.selectedAgents.length === 0) {
@@ -925,6 +927,7 @@ export function describeDelegation(
           { label: "Governance state", value: safeGovernanceState },
           { label: "Trace", value: safeTraceId },
           { label: "Audit", value: safeAuditId },
+          { label: "Authority boundary", value: authorityBoundary },
           {
             label: "Proof alignment",
             value: hasVisibleTargetCapability
@@ -948,6 +951,7 @@ export function describeDelegation(
         { label: "Governance state", value: "not returned" },
         { label: "Trace", value: "not returned" },
         { label: "Audit", value: "not returned" },
+        { label: "Authority boundary", value: "not returned" },
         { label: "Proof alignment", value: "not returned" },
       ],
     };
@@ -974,8 +978,9 @@ export function describeDelegation(
     .map((agent) => {
       const displayName = sanitizeVisibleProvenanceValue(agent.displayName, "");
       const summary = sanitizeVisibleProvenanceValue(agent.contributionSummary, "");
-      return displayName && displayName !== "redacted" && summary && summary !== "redacted"
-        ? `${displayName} found ${summary}.`
+      const normalizedSummary = summary.replace(/^found\b\s*/i, "");
+      return displayName && displayName !== "redacted" && normalizedSummary && normalizedSummary !== "redacted"
+        ? `${displayName} found ${normalizedSummary}.`
         : "";
     })
     .filter(Boolean)
@@ -994,6 +999,7 @@ export function describeDelegation(
       { label: "Governance state", value: sanitizeVisibleProvenanceValue(delegation.governanceState) },
       { label: "Trace", value: sanitizeVisibleProvenanceValue(delegation.traceId) },
       { label: "Audit", value: sanitizeVisibleProvenanceValue(delegation.auditId) },
+      { label: "Authority boundary", value: authorityBoundary },
       {
         label: "Proof alignment",
         value: "same returned trace/audit as Napoleon response proof; not imported readiness proof",

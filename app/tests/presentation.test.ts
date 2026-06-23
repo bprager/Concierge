@@ -179,11 +179,18 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   );
 
   assert.equal(view.heading, "Napoleon delegation");
-  assert.ok(view.body.includes("Passive Brain found Found the previous deployment risk note."));
+  assert.ok(view.body.includes("Passive Brain found the previous deployment risk note."));
   assert.ok(view.details.some((detail) => detail.label === "Target capability" && detail.value === "napoleon.chief_of_staff"));
   assert.ok(view.details.some((detail) => detail.label === "Selected agents" && detail.value.includes("Passive Brain")));
   assert.ok(view.details.some((detail) => detail.label === "Why selected" && detail.value.includes("Relevant deployment history")));
   assert.ok(view.details.some((detail) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Authority boundary" &&
+        detail.value === "Returned bridge provenance only; not approval, memory, dispatch, external send, or local application.",
+    ),
+  );
   assert.ok(
     view.details.some(
       (detail) =>
@@ -206,7 +213,32 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.ok(empty.details.some((detail) => detail.label === "Governance state" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Trace" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Audit" && detail.value === "not returned"));
+  assert.ok(empty.details.some((detail) => detail.label === "Authority boundary" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Proof alignment" && detail.value === "not returned"));
+});
+
+test("omits empty selected-agent contribution after normalizing returned wording", () => {
+  const view = describeDelegation(
+    {
+      selectedAgents: [
+        {
+          agentId: "napoleon.passive_brain",
+          displayName: "Passive Brain",
+          selectionReason: "Relevant deployment history was found.",
+          contributionSummary: "found",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["external_send", "memory_write"],
+      governanceState: "requires_review",
+      traceId: "trace_delegate",
+      auditId: "audit_delegate",
+    },
+    "napoleon.chief_of_staff",
+  );
+
+  assert.equal(view.body, "Napoleon provided delegation provenance for this response.");
+  assert.ok(!view.body.includes("found ."));
 });
 
 test("redacts unsafe returned provenance from visible Napoleon delegation and proof views", () => {
