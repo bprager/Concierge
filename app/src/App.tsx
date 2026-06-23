@@ -3054,7 +3054,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     lastNapoleonPresentation.proof,
     lastNapoleonTurnFailure,
   );
-  const napoleonTurnTimeline = describeNapoleonTurnTimeline(lastNapoleonPresentation.proof, lastNapoleonTurnFailure);
+  const napoleonTurnTimeline = describeNapoleonTurnTimeline(
+    lastNapoleonPresentation.proof,
+    lastNapoleonTurnFailure,
+    liveSendPreflight,
+  );
 
   function renderGovernedReviewResponse(result: GovernedReviewResponseView, localEffects: string) {
     const responseView = describeGovernedReviewResponse(result, localEffects);

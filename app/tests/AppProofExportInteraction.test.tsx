@@ -194,6 +194,8 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(emptyTurnTimeline).getByText("Turn comparison"));
     assert.ok(within(emptyTurnTimeline).getByText("Why blocked"));
     assert.ok(within(emptyTurnTimeline).getByText("Send through the governed bridge after descriptor and preflight readiness pass."));
+    assert.ok(within(emptyTurnTimeline).getByText("Retry preflight"));
+    assert.ok(within(emptyTurnTimeline).getByText("Main preflight blocker: configure a Napoleon endpoint. Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery."));
 
     await user.click(screen.getByRole("button", { name: "Use local harness" }));
     await waitFor(() =>
@@ -307,6 +309,8 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(turnTimeline).getByText("Prior accepted handler"));
     assert.ok(within(turnTimeline).getAllByText("Passive Brain").length >= 1);
     assert.ok(within(turnTimeline).getByText("Continue from the latest accepted returned proof, or inspect preflight before sending again."));
+    assert.ok(within(turnTimeline).getByText("Retry preflight"));
+    assert.ok(within(turnTimeline).getByText("Main preflight blocker: enter text before sending. Next step: enter the text request before attempting the governed bridge send."));
     const napoleonReply = screen.getByText(
       "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
     ).closest("article") as HTMLElement;

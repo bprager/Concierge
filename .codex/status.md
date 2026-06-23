@@ -12,6 +12,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 - Added a compact Latest Napoleon turn summary and local Napoleon turn timeline beside the composer, showing returned handler, governance, trace, blocked effects, and authority boundary from the last successful proof alongside the latest fail-closed bridge attempt while keeping empty states explicitly not returned.
 - Added display-only turn comparison rows to the Napoleon turn timeline so blocked attempts show why they stopped, prior accepted handler/governance/trace state, current blocked effects, and the local next step without granting approval or exposing raw bridge data.
+- Added current live-send preflight retry guidance to the Napoleon turn timeline so the same local view names the likely preflight blocker or warning before another governed send attempt.
 - Added a sanitized current-proof review summary to Napoleon response proof comparisons, showing current handler, governance, trace, blocked effects, and boundary without exposing raw response content.
 - Added first-class visible `Handled by` provenance rows to Napoleon delegation and last-successful-proof panels, tied only to returned bridge capability or selected-agent metadata.
 - Added visible runtime-contract alignment status to the governed Napoleon routes panel, showing mapped runtime compatibility separately from exact path mismatch without implying approval or runtime validation.

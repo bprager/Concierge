@@ -488,6 +488,13 @@ test("describes Napoleon turn timeline as empty before proof or failure returns"
         detail.value === "Send through the governed bridge after descriptor and preflight readiness pass.",
     ),
   );
+  assert.ok(
+    view.comparison.some(
+      (detail) =>
+        detail.label === "Retry preflight" &&
+        detail.value === "Live-send preflight has not been evaluated for this local view.",
+    ),
+  );
 });
 
 test("describes Napoleon turn timeline from latest proof and fail-closed metadata", () => {
@@ -527,7 +534,13 @@ test("describes Napoleon turn timeline from latest proof and fail-closed metadat
       "external_send",
     ]),
   );
-  const view = describeNapoleonTurnTimeline(proof, failure);
+  const preflight = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({ endpointConfigured: false }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+  });
+  const view = describeNapoleonTurnTimeline(proof, failure, preflight);
 
   assert.equal(view.status, "has_entries");
   assert.ok(view.summary.includes("latest accepted Napoleon response"));
@@ -567,6 +580,14 @@ test("describes Napoleon turn timeline from latest proof and fail-closed metadat
       (detail) =>
         detail.label === "Next step" &&
         detail.value === "Align the bridge contract or descriptor before attempting another live turn.",
+    ),
+  );
+  assert.ok(
+    view.comparison.some(
+      (detail) =>
+        detail.label === "Retry preflight" &&
+        detail.value ===
+          "Main preflight blocker: configure a Napoleon endpoint. Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery.",
     ),
   );
 });

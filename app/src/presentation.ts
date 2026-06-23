@@ -1343,6 +1343,7 @@ export function describeLastNapoleonTurnSummary(
 export function describeNapoleonTurnTimeline(
   proof: NapoleonResponseProofView | null | undefined,
   failure?: LastNapoleonTurnFailureInput | null,
+  preflight?: LiveSendPreflightView | null,
 ): NapoleonTurnTimelineView {
   const successful = describeLastNapoleonTurnSummary(proof, null);
   const blocked = failure
@@ -1388,6 +1389,12 @@ export function describeNapoleonTurnTimeline(
           value: timelineDetailValue(blocked, "Blocked effects"),
         },
         {
+          label: "Retry preflight",
+          value: preflight
+            ? `${preflight.blockerSummary} ${preflight.nextStepSummary}`
+            : "Live-send preflight has not been evaluated for this local view.",
+        },
+        {
           label: "Next step",
           value: timelineDetailValue(blocked, "Next step"),
         },
@@ -1406,6 +1413,12 @@ export function describeNapoleonTurnTimeline(
           value: proof
             ? "Continue from the latest accepted returned proof, or inspect preflight before sending again."
             : "Send through the governed bridge after descriptor and preflight readiness pass.",
+        },
+        {
+          label: "Retry preflight",
+          value: preflight
+            ? `${preflight.blockerSummary} ${preflight.nextStepSummary}`
+            : "Live-send preflight has not been evaluated for this local view.",
         },
       ];
 
