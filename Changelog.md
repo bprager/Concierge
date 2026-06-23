@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened live bridge response provenance so unreturned title-case selected-agent recommendation claims such as "Research Analyst recommended..." fail closed unless matching selected-agent contribution proof is returned.
 - Hardened live bridge response provenance so unreturned title-case agent-style confirmation or verification claims such as "Research Analyst confirmed..." fail closed unless matching selected-agent contribution proof is returned.
 - Hardened live bridge response provenance so unreturned title-case agent-style report claims such as "Research Analyst reported..." fail closed unless matching selected-agent contribution proof is returned.
 - Hardened live bridge response side-effect validation so purchase/payment claims such as "bought it" fail closed even when explicit side-effect fields are false.

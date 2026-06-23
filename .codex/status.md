@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened live bridge response provenance so title-case selected-agent recommendation claims such as "Research Analyst recommended..." fail closed unless Napoleon returns matching selected-agent contribution proof.
 - Hardened live bridge response provenance so title-case agent-style confirmation or verification claims such as "Research Analyst confirmed..." fail closed unless Napoleon returns matching selected-agent contribution proof.
 - Hardened live bridge response provenance so title-case agent-style report claims such as "Research Analyst reported..." fail closed unless Napoleon returns matching selected-agent contribution proof.
 - Hardened live bridge response side-effect validation so purchase/payment wording such as "bought it" fails closed as a contract mismatch even when explicit side-effect fields are false.
