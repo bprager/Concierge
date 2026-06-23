@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildMediaSessionSurface, buildMediaSessionSummary } from "../src/mediaSession.js";
+import {
+  buildMediaSessionReadinessTelemetryAttributes,
+  buildMediaSessionSurface,
+  buildMediaSessionSummary,
+} from "../src/mediaSession.js";
 
 test("marks adult microphone as permission needed before OS permission is granted", () => {
   const surface = buildMediaSessionSurface({
@@ -80,4 +84,37 @@ test("summarizes microphone camera and playback surfaces together", () => {
   assert.equal(summary.camera.status, "blocked");
   assert.equal(summary.playback.status, "stopped");
   assert.equal(summary.authorityBoundary.includes("not Napoleon approval"), true);
+});
+
+test("builds metadata-only media session readiness telemetry attributes", () => {
+  const summary = buildMediaSessionSummary({
+    profileMode: "adult_owner",
+    microphoneEnabled: true,
+    microphonePermissionStatus: "granted",
+    cameraEnabled: false,
+    cameraPermissionStatus: "not_requested",
+    mediaApiAvailable: true,
+  });
+
+  const attributes = buildMediaSessionReadinessTelemetryAttributes(summary, {
+    traceId: "trace_media_session_summary",
+    conversationId: "conv_media_session_summary",
+  });
+
+  assert.equal(attributes.traceId, "trace_media_session_summary");
+  assert.equal(attributes.conversationId, "conv_media_session_summary");
+  assert.equal(attributes.localSessionOnly, true);
+  assert.equal(attributes.microphoneStatus, "stopped");
+  assert.equal(attributes.cameraStatus, "blocked");
+  assert.equal(attributes.playbackStatus, "stopped");
+  assert.equal(attributes.microphoneCaptureStarted, false);
+  assert.equal(attributes.cameraCaptureStarted, false);
+  assert.equal(attributes.audioPlaybackStarted, false);
+  assert.equal(attributes.rawAudioStored, false);
+  assert.equal(attributes.rawVideoStored, false);
+  assert.equal(attributes.liveNapoleonContacted, false);
+  assert.equal(attributes.approvalCaptured, false);
+  assert.equal(attributes.memoryWritePerformed, false);
+  assert.equal(attributes.agentDispatchPerformed, false);
+  assert.equal(attributes.externalSendPerformed, false);
 });

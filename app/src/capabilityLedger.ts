@@ -1134,6 +1134,32 @@ function permissionReadinessStatus(result: string): {
   };
 }
 
+function mediaSessionReadinessStatus(attributes: Record<string, unknown>): {
+  capabilityStatus: CapabilityStatus;
+  outcomeSignal: CapabilityOutcomeSignal;
+  suggestedNextStep: SuggestedNextStep;
+} {
+  const statuses = [
+    stringAttr(attributes, "microphoneStatus", "unknown"),
+    stringAttr(attributes, "cameraStatus", "unknown"),
+    stringAttr(attributes, "playbackStatus", "unknown"),
+  ];
+  const ready = statuses.every((status) => status === "stopped" || status === "available" || status === "active_preview");
+  if (ready) {
+    return {
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      suggestedNextStep: "no_action",
+    };
+  }
+
+  return {
+    capabilityStatus: "blocked",
+    outcomeSignal: "blocked",
+    suggestedNextStep: "needs_human_review",
+  };
+}
+
 export function deriveCapabilitySignalFromEvent(
   eventName: string,
   attributes: Record<string, unknown>,
@@ -1412,6 +1438,26 @@ export function deriveCapabilitySignalFromEvent(
       capabilityStatus: readiness.capabilityStatus,
       outcomeSignal: readiness.outcomeSignal,
       confidence: 0.78,
+      architectureArea: "settings_privacy",
+      suggestedNextStep: readiness.suggestedNextStep,
+    });
+  }
+
+  if (eventName === "media_session_readiness_summarized") {
+    const readiness = mediaSessionReadinessStatus(attributes);
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "media_session",
+      intentLabel: "summarize_local_media_session_readiness",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "media_session_readiness_summary",
+        "child_safe_media_session_readiness_summary",
+      ),
+      capabilityStatus: readiness.capabilityStatus,
+      outcomeSignal: readiness.outcomeSignal,
+      confidence: 0.76,
       architectureArea: "settings_privacy",
       suggestedNextStep: readiness.suggestedNextStep,
     });

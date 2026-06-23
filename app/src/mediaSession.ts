@@ -63,6 +63,11 @@ export interface MediaSessionSummary {
   authorityBoundary: string;
 }
 
+export interface MediaSessionReadinessTelemetryIds {
+  traceId: string;
+  conversationId: string;
+}
+
 export function buildMediaSessionSurface(input: MediaSessionSurfaceInput): MediaSessionSurfaceState {
   const childProtected = input.profileMode === "child_protected";
   const status = resolveSurfaceStatus(input, childProtected);
@@ -126,6 +131,44 @@ export function buildMediaSessionSummary(input: MediaSessionSummaryInput): Media
     playback,
     authorityBoundary:
       "Media session summary is local preflight only; it is not Napoleon approval, guardian approval, live voice, live avatar capture, memory, agent dispatch, or external send permission.",
+  };
+}
+
+export function buildMediaSessionReadinessTelemetryAttributes(
+  summary: MediaSessionSummary,
+  ids: MediaSessionReadinessTelemetryIds,
+): Record<string, unknown> {
+  return {
+    traceId: ids.traceId,
+    conversationId: ids.conversationId,
+    profile: summary.profileMode,
+    localSessionOnly: summary.localSessionOnly,
+    childProtected: summary.childProtected,
+    microphoneStatus: summary.microphone.status,
+    microphonePermissionStatus: summary.microphone.permissionStatus,
+    microphonePreferenceEnabled: summary.microphone.localPreferenceEnabled,
+    cameraStatus: summary.camera.status,
+    cameraPermissionStatus: summary.camera.permissionStatus,
+    cameraPreferenceEnabled: summary.camera.localPreferenceEnabled,
+    playbackStatus: summary.playback.status,
+    microphoneCaptureStarted: false,
+    cameraCaptureStarted: false,
+    audioPlaybackStarted: false,
+    rawAudioStored: false,
+    rawVideoStored: false,
+    liveNapoleonContacted: false,
+    approvalCaptured: false,
+    guardianApprovalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    blockedEffects: Array.from(
+      new Set([
+        ...summary.microphone.blockedEffects,
+        ...summary.camera.blockedEffects,
+        ...summary.playback.blockedEffects,
+      ]),
+    ),
   };
 }
 

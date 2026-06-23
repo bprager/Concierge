@@ -305,6 +305,7 @@ export function emitCapabilitySignal(
     "voice_segment_detected",
     "mic_permission_result",
     "camera_permission_result",
+    "media_session_readiness_summarized",
   ]);
 
   const isWakeWordReadinessEvent = event === "privacy_setting_changed" && attributes.setting === "wake_word";

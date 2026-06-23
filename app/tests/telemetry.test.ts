@@ -434,6 +434,105 @@ test("telemetry emits child-protected permission readiness signals with separate
   assert.equal(JSON.stringify([microphoneSignal, cameraSignal]).includes("must not be retained"), false);
 });
 
+test("telemetry emits working capability signal for combined media session readiness", () => {
+  const signal = emitCapabilitySignal("media_session_readiness_summarized", {
+    traceId: "trace_media_session_ready_signal",
+    conversationId: "conv_media_session_ready_signal",
+    profile: "adult_owner",
+    localSessionOnly: true,
+    microphoneStatus: "stopped",
+    cameraStatus: "stopped",
+    playbackStatus: "stopped",
+    microphoneCaptureStarted: false,
+    cameraCaptureStarted: false,
+    audioPlaybackStarted: false,
+    rawAudioStored: false,
+    rawVideoStored: false,
+    liveNapoleonContacted: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    rawAudio: "must not be retained",
+    rawVideo: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected combined media session capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.topicLabel, "media_session");
+  assert.equal(signal.intentLabel, "summarize_local_media_session_readiness");
+  assert.equal(signal.capabilityLabel, "media_session_readiness_summary");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "settings_privacy");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
+test("telemetry emits blocked capability signal for combined media session readiness blockers", () => {
+  const signal = emitCapabilitySignal("media_session_readiness_summarized", {
+    traceId: "trace_media_session_blocked_signal",
+    conversationId: "conv_media_session_blocked_signal",
+    profile: "adult_owner",
+    localSessionOnly: true,
+    microphoneStatus: "permission_needed",
+    cameraStatus: "blocked",
+    playbackStatus: "stopped",
+    microphoneCaptureStarted: false,
+    cameraCaptureStarted: false,
+    audioPlaybackStarted: false,
+    rawAudioStored: false,
+    rawVideoStored: false,
+    liveNapoleonContacted: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected blocked media session capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.capabilityLabel, "media_session_readiness_summary");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "needs_human_review");
+});
+
+test("telemetry emits child-protected media session readiness signal with separate label", () => {
+  const signal = emitCapabilitySignal("media_session_readiness_summarized", {
+    traceId: "trace_child_media_session_signal",
+    conversationId: "conv_child_media_session_signal",
+    profile: "child_protected",
+    localSessionOnly: true,
+    microphoneStatus: "blocked",
+    cameraStatus: "blocked",
+    playbackStatus: "blocked",
+    childProtected: true,
+    guardianApprovalCaptured: false,
+    microphoneCaptureStarted: false,
+    cameraCaptureStarted: false,
+    audioPlaybackStarted: false,
+    rawAudioStored: false,
+    rawVideoStored: false,
+    liveNapoleonContacted: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected child media session capability signal");
+  assert.equal(signal.profileMode, "child_protected_user");
+  assert.equal(signal.privacyClass, "child_sensitive");
+  assert.equal(signal.capabilityLabel, "child_safe_media_session_readiness_summary");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+});
+
 test("telemetry emits avatar capability signals for local avatar preparation", () => {
   const stateSignal = emitCapabilitySignal("avatar_state_changed", {
     traceId: "trace_avatar_state_signal",

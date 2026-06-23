@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   buildLocalNeutralAvatarState,
   localAvatarExpressionSample,
@@ -102,7 +102,11 @@ import {
   submitMemoryProposalForReview,
   type MemoryProposalSubmissionResult,
 } from "./memoryProposalSubmission.js";
-import { buildMediaSessionSummary, type LocalMediaPermissionStatus } from "./mediaSession.js";
+import {
+  buildMediaSessionReadinessTelemetryAttributes,
+  buildMediaSessionSummary,
+  type LocalMediaPermissionStatus,
+} from "./mediaSession.js";
 import { NapoleonBridgeError, sendToNapoleon } from "./napoleonBridge.js";
 import {
   buildSuccessfulNapoleonResponsePresentation,
@@ -322,6 +326,7 @@ interface AppProps {
 }
 
 export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
+  const mediaSessionReadinessInitialized = useRef(false);
   const [messages, setMessages] = useState<ConciergeMessage[]>([
     {
       role: "assistant",
@@ -2804,6 +2809,20 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     cameraPermissionStatus,
     mediaApiAvailable: true,
   });
+  useEffect(() => {
+    if (!mediaSessionReadinessInitialized.current) {
+      mediaSessionReadinessInitialized.current = true;
+      return;
+    }
+    emitEvent(
+      "media_session_readiness_summarized",
+      buildMediaSessionReadinessTelemetryAttributes(mediaSessionSummary, {
+        traceId: newTraceId(),
+        conversationId,
+      }),
+    );
+    refreshTelemetryBufferStatus();
+  }, [conversationId, profile, microphoneEnabled, microphonePermissionStatus, cameraEnabled, cameraPermissionStatus]);
   const wakeWordReadiness = buildLocalWakeWordReadiness({
     enabled: wakeWordEnabled,
     profileMode: profile,

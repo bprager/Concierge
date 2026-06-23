@@ -859,6 +859,7 @@ Acceptance criteria:
 - Microphone, camera, and playback states remain local preflight only and do not start capture, playback, raw media storage, Napoleon contact, memory writes, approval capture, guardian approval capture, agent dispatch, or external sends.
 - Child protected mode keeps microphone, camera, and playback blocked behind visible guardian-review wording even when local preferences are enabled.
 - Permission request/result telemetry remains metadata-only and explicit about false side effects.
+- Combined Media Session Controller readiness changes emit metadata-only capability-intelligence signals after the initial render so voice/avatar readiness blockers can be explained across microphone, camera, playback, and profile mode without starting capture, playback, raw media storage, Napoleon contact, approval capture, memory writes, agent dispatch, or external sends.
 
 Privacy and safety impact:
 
@@ -866,7 +867,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by pure media-session tests and rendered app interaction tests for adult and child-protected local media state without capture, playback, storage, Napoleon contact, approval, guardian approval, dispatch, or external sends.
+- Covered by pure media-session tests, telemetry capability-signal tests, and rendered app interaction tests for adult and child-protected local media state without capture, playback, storage, Napoleon contact, approval, guardian approval, dispatch, or external sends.
 
 ## Milestone P4: Controlled self-evolution
 
