@@ -163,6 +163,7 @@ Acceptance criteria:
 - Governed Chief of Staff steering request packets carry a stable `recommendationType` enum so Napoleon review can distinguish guided readiness repairs from scored capability recommendations without parsing rationale text.
 - Chief of Staff steering send started, completed, and failed telemetry includes only the stable recommendation type enum, without emitting rationale, evidence, endpoint, token, or raw content fields.
 - Capability-intelligence answers can summarize common Chief of Staff steering recommendation types from local enum-only send telemetry without exposing rationale, evidence, endpoint, token, or raw content fields.
+- Rendered Text Concierge coverage verifies steering recommendation type answers stay enum-only, do not contact Napoleon, and do not render rationale, evidence, endpoint, token, or raw content fields.
 - Returned Chief of Staff steering review panels show the reviewed recommendation type alongside Napoleon's decision, trace, audit, blocked effects, and false local side-effect state, so the reviewed packet category remains visible after submission.
 - Chief of Staff steering submission fails closed before request fetch when a stale draft's affected profile does not match the active profile, so profile-scoped evolution evidence cannot be submitted across contexts.
 - Recommendations are proposal-only and do not implement features, grant approval, write memory, dispatch agents, or send externally.

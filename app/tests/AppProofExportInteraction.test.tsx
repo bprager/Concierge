@@ -664,6 +664,72 @@ test("records child profile scope when answering local capability intelligence q
   }
 });
 
+test("renders steering recommendation type answers without leaking telemetry content", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }, { clearCapabilityLedger }, telemetry] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/capabilityLedger.js"),
+    import("../src/telemetry.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  let fetchCalls = 0;
+
+  try {
+    console.info = () => {};
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    telemetry.emitEvent("capability_recommendation_send_started", {
+      traceId: "trace_ui_guided",
+      conversationId: "conv_ui_steering_types",
+      profile: "adult_owner",
+      recommendationType: "guided_readiness_repair",
+      rationale: "do not render this rationale",
+      endpoint: "https://private.example.test/concierge",
+      token: "token_ui_secret",
+    });
+    telemetry.emitEvent("capability_recommendation_send_completed", {
+      traceId: "trace_ui_scored",
+      conversationId: "conv_ui_steering_types",
+      profile: "adult_owner",
+      recommendationType: "scored_capability_recommendation",
+      evidence: ["trace_missing_bridge"],
+      rawContent: "raw proposal body",
+    });
+
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What steering recommendation types are most common?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await view.findByText(/Chief of Staff steering recommendation types/);
+    const answerText = view.container.textContent ?? "";
+    assert.ok(answerText.includes("guided_readiness_repair"));
+    assert.ok(answerText.includes("scored_capability_recommendation"));
+    assert.ok(answerText.includes("enum-only"));
+    assert.equal(answerText.includes("do not render this rationale"), false);
+    assert.equal(answerText.includes("private.example.test"), false);
+    assert.equal(answerText.includes("token_ui_secret"), false);
+    assert.equal(answerText.includes("trace_missing_bridge"), false);
+    assert.equal(answerText.includes("raw proposal body"), false);
+    await waitFor(() => assert.equal(fetchCalls, 0));
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows Napoleon delegation panel before bridge provenance is returned", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([
