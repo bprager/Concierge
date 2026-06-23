@@ -1031,6 +1031,10 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
       { label: "Why selected", value: selectionReasons || "not returned" },
       { label: "Napoleon recommendation", value: recommendation || "not returned" },
       {
+        label: "Recommendation proof alignment",
+        value: recommendation ? "same returned trace/audit as Napoleon response proof" : "not returned",
+      },
+      {
         label: "Capability or agents",
         value: agentLabels || targetCapability || "No selected-agent provenance returned",
       },

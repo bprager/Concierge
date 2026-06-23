@@ -139,6 +139,8 @@ Sanitized Napoleon response proof exports preserve selected-agent names, selecti
 
 The visible Napoleon delegation panel includes proof-alignment metadata for returned delegation, target-capability-only responses, and empty states. This is display metadata only: it clarifies whether selected-agent delegation came from the same returned trace/audit as the Napoleon response proof, and it must not turn imported readiness proof into selected-agent provenance.
 
+The visible last successful Napoleon proof panel includes recommendation proof-alignment metadata. This is display metadata only: returned recommendation provenance is shown as sharing the same returned response trace/audit as the proof, while missing recommendation provenance is shown as not returned.
+
 Governed memory proposal, governance review, Chief of Staff steering, and taxonomy review failure events and visible failure messages carry the active profile mode alongside fail-closed reason, returned decision/audit/governance references when available, and blocked-effect metadata. This keeps child-protected, guest, collaborator, or owner scope visible and preserves Napoleon-supplied denial context when a governed handoff is blocked before or after contacting Napoleon.
 
 Governance review handoff target selection is named and local-only. Generated Concierge-compatible endpoints and the local harness resolve to `/v1/concierge/chief-of-staff/steering`; Napoleon root or explicit review endpoints resolve to `/chief-of-staff/reviews/governance`. The request records only the target path and operation name in the packet, not endpoint hosts or bearer tokens, and the response still fails closed unless governance, trace, audit, and false side-effect fields match.

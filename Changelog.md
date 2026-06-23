@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a recommendation proof-alignment row to the last successful Napoleon proof panel so returned Napoleon recommendations show they share the response trace/audit and missing recommendation proof remains explicit.
 - Added a proof-alignment row to the Napoleon delegation panel so returned selected-agent delegation, target-capability-only responses, and empty states stay distinct from imported readiness proof.
 - Added sanitized accepted real-runtime proof context to governed voice pipeline proof exports and comparisons so prior local review evidence can travel with the voice proof without granting live voice authority.
 - Added a sanitized accepted readiness proof import to the live bridge readiness panel so reviewers can paste a prior successful real-runtime proof and see local accepted-proof metadata without granting approval or side effects.

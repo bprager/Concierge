@@ -116,6 +116,13 @@ test("successful Napoleon response presentation includes returned delegation and
   assert.ok(
     state.proof?.details.some(
       (detail: { label: string; value: string }) =>
+        detail.label === "Recommendation proof alignment" &&
+        detail.value === "same returned trace/audit as Napoleon response proof",
+    ),
+  );
+  assert.ok(
+    state.proof?.details.some(
+      (detail: { label: string; value: string }) =>
         detail.label === "Blocked effects" && detail.value.includes("memory_write"),
     ),
   );
@@ -199,6 +206,12 @@ test("successful Napoleon response proof includes returned target capability wit
     state.proof?.details.some(
       (detail: { label: string; value: string }) =>
         detail.label === "Capability or agents" && detail.value === "napoleon.chief_of_staff",
+    ),
+  );
+  assert.ok(
+    state.proof?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Recommendation proof alignment" && detail.value === "not returned",
     ),
   );
 
