@@ -114,6 +114,14 @@ export interface NapoleonResponseProofView {
   details: Array<{ label: string; value: string }>;
 }
 
+export interface LastNapoleonTurnSummaryView {
+  heading: string;
+  status: "available" | "not_available";
+  summary: string;
+  caveat: string;
+  details: Array<{ label: string; value: string }>;
+}
+
 export interface NapoleonResponsePresentationLabels {
   targetCapabilityLabel?: string;
 }
@@ -1181,6 +1189,50 @@ export function describeNapoleonResponseProof(
           response.delegation?.blockedEffects || response.governanceDecision.blocked_effects,
         ),
       },
+    ],
+  };
+}
+
+function proofDetailValue(proof: NapoleonResponseProofView, label: string, fallback = "not returned"): string {
+  return proof.details.find((detail) => detail.label === label)?.value || fallback;
+}
+
+export function describeLastNapoleonTurnSummary(
+  proof: NapoleonResponseProofView | null | undefined,
+): LastNapoleonTurnSummaryView {
+  const caveat =
+    "Local returned-provenance summary only; not approval, memory permission, agent dispatch, external send, or local application.";
+
+  if (!proof) {
+    return {
+      heading: "Latest Napoleon turn",
+      status: "not_available",
+      summary: "No successful Napoleon turn has returned proof in this session.",
+      caveat,
+      details: [
+        { label: "Handled by", value: "not returned" },
+        { label: "Governance", value: "not returned" },
+        { label: "Trace", value: "not returned" },
+        { label: "Blocked effects", value: "not returned" },
+        { label: "Boundary", value: "not returned" },
+      ],
+    };
+  }
+
+  const handledBy = proofDetailValue(proof, "Handled by");
+  const governance = proofDetailValue(proof, "Governance");
+
+  return {
+    heading: "Latest Napoleon turn",
+    status: "available",
+    summary: `Handled by ${handledBy}; governance ${governance}.`,
+    caveat,
+    details: [
+      { label: "Handled by", value: handledBy },
+      { label: "Governance", value: governance },
+      { label: "Trace", value: proofDetailValue(proof, "Trace") },
+      { label: "Blocked effects", value: proofDetailValue(proof, "Blocked effects") },
+      { label: "Boundary", value: proofDetailValue(proof, "Attribution boundary") },
     ],
   };
 }

@@ -598,6 +598,56 @@ article dd {
   gap: 8px;
 }
 
+.latest-napoleon-turn {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.latest-napoleon-turn.available {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.latest-napoleon-turn > div {
+  display: grid;
+  gap: 4px;
+}
+
+.latest-napoleon-turn span {
+  font-size: 0.86rem;
+}
+
+.latest-napoleon-turn dl {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.86rem;
+}
+
+.latest-napoleon-turn dl div {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) 1fr;
+  gap: 8px;
+}
+
+.latest-napoleon-turn dt {
+  color: #374151;
+  font-weight: 650;
+}
+
+.latest-napoleon-turn.available dt {
+  color: #3730a3;
+}
+
+.latest-napoleon-turn dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .send-preflight {
   display: grid;
   gap: 8px;

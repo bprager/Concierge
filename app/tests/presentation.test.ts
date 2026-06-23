@@ -17,6 +17,7 @@ import {
   describeGovernedReviewResponse,
   describeGovernanceDecision,
   describeGovernanceReview,
+  describeLastNapoleonTurnSummary,
   describeLiveBridgeReadiness,
   describeLiveVoiceReadiness,
   describeLiveSendPreflight,
@@ -396,6 +397,64 @@ test("describes successful Napoleon response proof from returned provenance only
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Profile mode" && detail.value === "child_protected_user"));
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Trace" && detail.value === "trace_proof"));
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
+});
+
+test("describes latest Napoleon turn summary as unavailable before proof returns", () => {
+  const view = describeLastNapoleonTurnSummary(null);
+
+  assert.equal(view.heading, "Latest Napoleon turn");
+  assert.equal(view.status, "not_available");
+  assert.ok(view.summary.includes("No successful Napoleon turn"));
+  assert.ok(view.caveat.includes("not approval"));
+  assert.ok(view.details.some((detail) => detail.label === "Handled by" && detail.value === "not returned"));
+  assert.ok(view.details.some((detail) => detail.label === "Boundary" && detail.value === "not returned"));
+});
+
+test("describes latest Napoleon turn summary from sanitized proof metadata only", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the deployment risk",
+    profile: "adult_owner",
+    conversationId: "conv_latest_turn",
+    turnId: "turn_latest_turn",
+    traceId: "trace_latest_turn",
+  });
+  const proof = describeNapoleonResponseProof({
+    text: "Passive Brain found the previous deployment risk note.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: false,
+    delegation: {
+      selectedAgents: [
+        {
+          agentId: "napoleon.passive_brain",
+          displayName: "Passive Brain",
+          selectionReason: "Relevant deployment history was found.",
+          contributionSummary: "Found the previous deployment risk note.",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["memory_write", "external_send"],
+      governanceState: "allow_prepare_only",
+      traceId: "trace_latest_turn",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+  const view = describeLastNapoleonTurnSummary(proof);
+
+  assert.equal(view.status, "available");
+  assert.equal(view.summary, "Handled by Passive Brain; governance allow_prepare_only.");
+  assert.ok(view.caveat.includes("not approval"));
+  assert.ok(view.details.some((detail) => detail.label === "Handled by" && detail.value === "Passive Brain"));
+  assert.ok(view.details.some((detail) => detail.label === "Governance" && detail.value === "allow_prepare_only"));
+  assert.ok(view.details.some((detail) => detail.label === "Trace" && detail.value === "trace_latest_turn"));
+  assert.ok(view.details.some((detail) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
+  assert.ok(
+    view.details.some(
+      (detail) => detail.label === "Boundary" && detail.value === "Returned bridge provenance only; not local authority.",
+    ),
+  );
 });
 
 test("describes transcript metadata with returned target capability provenance", () => {

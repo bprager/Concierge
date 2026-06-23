@@ -135,6 +135,7 @@ import {
   describeGovernedReviewResponse,
   describeGovernanceDecision,
   describeGovernanceReview,
+  describeLastNapoleonTurnSummary,
   describeLiveBridgeReadiness,
   describeLiveVoiceReadiness,
   describeLiveSendPreflight,
@@ -3041,6 +3042,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     rawMediaStorageEnabled,
   });
   const napoleonDelegationView = lastNapoleonPresentation.delegation ?? describeDelegation(undefined);
+  const latestNapoleonTurnSummary = describeLastNapoleonTurnSummary(lastNapoleonPresentation.proof);
 
   function renderGovernedReviewResponse(result: GovernedReviewResponseView, localEffects: string) {
     const responseView = describeGovernedReviewResponse(result, localEffects);
@@ -5514,6 +5516,21 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           onChange={(e) => updateInput(e.target.value)}
           placeholder="Ask Napoleon through Concierge..."
         />
+        <section className={`latest-napoleon-turn ${latestNapoleonTurnSummary.status}`} aria-label="Latest Napoleon turn">
+          <div>
+            <strong>{latestNapoleonTurnSummary.heading}</strong>
+            <span>{latestNapoleonTurnSummary.summary}</span>
+            <span>{latestNapoleonTurnSummary.caveat}</span>
+          </div>
+          <dl>
+            {latestNapoleonTurnSummary.details.map((detail) => (
+              <div key={detail.label}>
+                <dt>{detail.label}</dt>
+                <dd>{detail.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
         <div className={`send-preflight ${liveSendPreflight.status}`}>
           <div>
             <strong>{liveSendPreflight.heading}</strong>

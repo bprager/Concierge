@@ -180,6 +180,10 @@ test("exports and compares Napoleon proof through rendered app controls", async 
   try {
     render(<App />);
 
+    const emptyLatestTurnPanel = screen.getByLabelText("Latest Napoleon turn");
+    assert.ok(within(emptyLatestTurnPanel).getByText("No successful Napoleon turn has returned proof in this session."));
+    assert.ok(within(emptyLatestTurnPanel).getAllByText("not returned").length >= 5);
+
     await user.click(screen.getByRole("button", { name: "Use local harness" }));
     await waitFor(() =>
       assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
@@ -265,6 +269,19 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     await user.click(screen.getByRole("button", { name: "Send" }));
 
     await screen.findByText("Last successful Napoleon proof");
+    const latestTurnPanel = screen.getByLabelText("Latest Napoleon turn");
+    assert.ok(within(latestTurnPanel).getByText("Handled by Passive Brain; governance requires_review."));
+    assert.ok(within(latestTurnPanel).getByText("Local returned-provenance summary only; not approval, memory permission, agent dispatch, external send, or local application."));
+    assert.ok(within(latestTurnPanel).getByText("Handled by"));
+    assert.ok(within(latestTurnPanel).getByText("Passive Brain"));
+    assert.ok(within(latestTurnPanel).getByText("Governance"));
+    assert.ok(within(latestTurnPanel).getByText("requires_review"));
+    assert.ok(within(latestTurnPanel).getByText("Trace"));
+    assert.ok(within(latestTurnPanel).getByText(lastTextTurnTraceId));
+    assert.ok(within(latestTurnPanel).getByText("Blocked effects"));
+    assert.ok(within(latestTurnPanel).getByText("memory_write, approval_capture, external_send, agent_dispatch"));
+    assert.ok(within(latestTurnPanel).getByText("Boundary"));
+    assert.ok(within(latestTurnPanel).getByText("Returned bridge provenance only; not local authority."));
     const napoleonReply = screen.getByText(
       "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
     ).closest("article") as HTMLElement;
