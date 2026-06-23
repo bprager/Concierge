@@ -71,7 +71,8 @@ test("exports and compares Napoleon proof through rendered app controls", async 
   ]);
   const user = userEventModule.default.setup();
   const requestedUrls: string[] = [];
-  let lastTextTurnBody: { turnId?: string } | null = null;
+  let lastTextTurnBody: { traceId?: string; turnId?: string } | null = null;
+  let lastTextTurnTraceId = "";
   globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
     requestedUrls.push(url);
@@ -120,6 +121,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
       chiefOfStaffRequest: { request_id: string };
     };
     lastTextTurnBody = body;
+    lastTextTurnTraceId = body.traceId;
     return harnessJsonResponse(200, {
       text: "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
       profileMode: body.profileMode,
@@ -280,6 +282,41 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(napoleonProofPanel).getByText("Napoleon recommendation"));
     assert.ok(within(napoleonProofPanel).getByText("keeping this as a governed review draft"));
     assert.ok(within(napoleonProofPanel).getByText("Returned bridge provenance only; not local authority."));
+    const delegationPanel = screen.getByLabelText("Napoleon delegation");
+    assert.ok(within(delegationPanel).getByText("Napoleon delegation"));
+    assert.ok(within(delegationPanel).getByText("Passive Brain found bridge context."));
+    assert.ok(within(delegationPanel).getByText("Target capability"));
+    assert.ok(within(delegationPanel).getByText("napoleon.chief_of_staff"));
+    assert.ok(within(delegationPanel).getByText("Provenance source"));
+    assert.ok(within(delegationPanel).getByText("returned bridge delegation; not local metadata discovery"));
+    assert.ok(within(delegationPanel).getByText("Selected agents"));
+    assert.ok(
+      within(delegationPanel).getByText(
+        "Passive Brain (passive_brain): Prior bridge context is relevant; deployment context was requested.",
+      ),
+    );
+    assert.ok(within(delegationPanel).getByText("Why selected"));
+    assert.ok(
+      within(delegationPanel).getByText(
+        "Passive Brain: Prior bridge context is relevant; deployment context was requested.",
+      ),
+    );
+    assert.ok(within(delegationPanel).getByText("Allowed effects"));
+    assert.ok(within(delegationPanel).getByText("prepare_advisory_response"));
+    assert.ok(within(delegationPanel).getByText("Blocked effects"));
+    assert.ok(within(delegationPanel).getByText("memory_write, approval_capture, external_send, agent_dispatch"));
+    assert.ok(within(delegationPanel).getByText("Governance state"));
+    assert.ok(within(delegationPanel).getByText("requires_review"));
+    assert.ok(within(delegationPanel).getByText("Trace"));
+    assert.ok(within(delegationPanel).getByText(lastTextTurnTraceId));
+    assert.ok(within(delegationPanel).getByText("Audit"));
+    assert.ok(within(delegationPanel).getByText(`audit_${lastTextTurnTraceId}`));
+    assert.ok(within(delegationPanel).getByText("Proof alignment"));
+    assert.ok(
+      within(delegationPanel).getByText(
+        "same returned trace/audit as Napoleon response proof; not imported readiness proof",
+      ),
+    );
     const textTurnTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };
