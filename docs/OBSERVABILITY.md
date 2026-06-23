@@ -105,9 +105,9 @@ Every user turn has:
 | capability_taxonomy_labels_merged | capability_intelligence | conversation_id, dimension, source_label, target_label, storage, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | capability_taxonomy_label_marked | capability_intelligence | conversation_id, dimension, source_label, marker, value, storage, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | capability_taxonomy_reset | capability_intelligence | conversation_id, storage, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
-| memory_proposal_send_started | governance_ux | conversation_id, request_id, proposal_id, profile_mode |
-| memory_proposal_send_completed | governance_ux | conversation_id, request_id, proposal_id, decision_id, audit_id, outcome, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
-| memory_proposal_send_failed | governance_ux | conversation_id, request_id, proposal_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome |
+| memory_proposal_send_started | governance_ux | conversation_id, request_id, proposal_id, profile_mode, bridge_target_path, bridge_target_operation, bridge_target_request_kind |
+| memory_proposal_send_completed | governance_ux | conversation_id, request_id, proposal_id, decision_id, audit_id, outcome, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed, bridge_target_path, bridge_target_operation, bridge_target_request_kind |
+| memory_proposal_send_failed | governance_ux | conversation_id, request_id, proposal_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome, bridge_target_path, bridge_target_operation, bridge_target_request_kind |
 | governance_review_send_started | governance_ux | conversation_id, request_id, decision_id, audit_id, profile_mode |
 | governance_review_send_completed | governance_ux | conversation_id, request_id, decision_id, audit_id, outcome, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed, applied_locally |
 | governance_review_send_failed | governance_ux | conversation_id, request_id, decision_id, audit_id, governance_outcome, profile_mode, reason, descriptor_failure_reason, status, blocked_effects |

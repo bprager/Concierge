@@ -1,4 +1,5 @@
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
+import { getBridgeOperation } from "./bridgeOperations.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
@@ -50,6 +51,12 @@ export interface MemoryProposalSubmissionResult {
   approvalCaptured: false;
   agentDispatchPerformed: false;
   externalSendPerformed: false;
+}
+
+interface MemoryProposalTargetMetadata {
+  bridgeTargetPath: string;
+  bridgeTargetOperation: string;
+  bridgeTargetRequestKind: string;
 }
 
 const MEMORY_PROPOSAL_BOUNDARY = {
@@ -178,6 +185,7 @@ function failMemoryProposalClosed(
   blockedEffects: string[] = [],
   descriptorFailureReason?: DescriptorFailClosedReason,
   governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
+  targetMetadata?: MemoryProposalTargetMetadata,
 ): never {
   const attributes: Record<string, unknown> = {
     traceId,
@@ -193,6 +201,11 @@ function failMemoryProposalClosed(
   if (governanceReferences?.decisionId) attributes.decisionId = governanceReferences.decisionId;
   if (governanceReferences?.auditId) attributes.auditId = governanceReferences.auditId;
   if (governanceReferences?.governanceOutcome) attributes.governanceOutcome = governanceReferences.governanceOutcome;
+  if (targetMetadata) {
+    attributes.bridgeTargetPath = targetMetadata.bridgeTargetPath;
+    attributes.bridgeTargetOperation = targetMetadata.bridgeTargetOperation;
+    attributes.bridgeTargetRequestKind = targetMetadata.bridgeTargetRequestKind;
+  }
   emitMemoryProposalEvent(dependencies, "memory_proposal_send_failed", attributes);
   throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, {
     profileMode,
@@ -329,12 +342,19 @@ export async function submitMemoryProposalForReview(
       : "napoleon_review_before_memory_write",
     evidence_links: evidenceLinks,
   };
+  const targetOperation = getBridgeOperation("memory_proposal_review");
+  const targetMetadata: MemoryProposalTargetMetadata = {
+    bridgeTargetPath: targetOperation.path,
+    bridgeTargetOperation: targetOperation.id,
+    bridgeTargetRequestKind: targetOperation.requestKind,
+  };
   emitMemoryProposalEvent(dependencies, "memory_proposal_send_started", {
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,
     requestId,
     proposalId: memoryProposal.proposalId,
     profileMode,
+    ...targetMetadata,
   });
 
   const targetEndpoint = resolveNapoleonBridgeOperation(endpoint, "memory_proposal_review");
@@ -369,6 +389,9 @@ export async function submitMemoryProposalForReview(
       profileMode,
       undefined,
       blockedEffects,
+      undefined,
+      undefined,
+      targetMetadata,
     );
   }
 
@@ -383,6 +406,9 @@ export async function submitMemoryProposalForReview(
       profileMode,
       response.status,
       blockedEffects,
+      undefined,
+      undefined,
+      targetMetadata,
     );
   }
 
@@ -399,6 +425,9 @@ export async function submitMemoryProposalForReview(
       profileMode,
       undefined,
       blockedEffects,
+      undefined,
+      undefined,
+      targetMetadata,
     );
   }
   if (
@@ -418,6 +447,9 @@ export async function submitMemoryProposalForReview(
       profileMode,
       undefined,
       blockedEffects,
+      undefined,
+      undefined,
+      targetMetadata,
     );
   }
 
@@ -437,6 +469,7 @@ export async function submitMemoryProposalForReview(
         auditId: payload.auditEnvelope.audit_id,
         governanceOutcome: payload.governanceDecision.outcome,
       },
+      targetMetadata,
     );
   }
 
@@ -452,6 +485,7 @@ export async function submitMemoryProposalForReview(
     approvalCaptured: false,
     agentDispatchPerformed: false,
     externalSendPerformed: false,
+    ...targetMetadata,
   });
 
   return {

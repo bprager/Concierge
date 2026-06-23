@@ -434,6 +434,10 @@ test("memory proposal submission fails closed when Napoleon denies review", asyn
   assert.equal(events.at(-1)?.attributes.decisionId, "decision_memory_denied");
   assert.equal(events.at(-1)?.attributes.auditId, "audit_memory_denied");
   assert.equal(events.at(-1)?.attributes.governanceOutcome, "deny");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/v1/concierge/memory-proposals");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "memory_proposal_review");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetRequestKind, "memory_proposal_review_handoff");
+  assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("napoleon.example"), false);
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
     "memory_write",
     "approval_capture",
