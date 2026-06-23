@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear when Napoleon connection or descriptor context changes.
 - Added rendered memory proposal and governance review coverage proving Rehearsal Mode clears returned live review results, decision, and audit evidence before returning to local-only preview mode.
 - Added rendered Chief of Staff steering coverage proving Rehearsal Mode clears returned live review results, decision, and audit evidence before returning to local-only preview mode.
 - Added rendered live-send coverage proving a later Napoleon `no_go` response clears prior successful proof and delegation provenance, keeps the blocked response fail-closed, and does not render rejected response text.
