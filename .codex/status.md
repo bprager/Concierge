@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local capability-intelligence signals for barge-in rehearsal, with a separate child-safe label for child protected mode, so interruption-handling readiness contributes metadata-only evidence without retaining interrupted output, starting capture/playback, or contacting Napoleon.
 - Hardened repository authority-boundary validation for browser storage aliases, so bracketed and call/apply `localStorage`/`sessionStorage` access cannot create hidden prompt, proof, token, or response caches outside approved bounded metadata stores.
 - Added a compact Latest Napoleon turn summary and local Napoleon turn timeline beside the composer, showing returned handler, governance, trace, blocked effects, and authority boundary from the last successful proof alongside the latest fail-closed bridge attempt while keeping empty states explicitly not returned.
 - Added display-only turn comparison rows to the Napoleon turn timeline so blocked attempts show why they stopped, prior accepted handler/governance/trace state, current blocked effects, and the local next step without granting approval or exposing raw bridge data.

@@ -1802,6 +1802,29 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "barge_in_rehearsed") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "voice",
+      intentLabel: "rehearse_local_barge_in",
+      capabilityLabel: profileScopedCapability(profileMode, "barge_in_rehearsal", "child_safe_barge_in_rehearsal"),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.78,
+      architectureArea: "voice",
+      suggestedNextStep: "no_action",
+      details: [
+        attributes.bargeInDetected === true ? "barge-in detected" : "barge-in not detected",
+        attributes.nextTurnPrepared === true ? "next turn prepared" : "next turn not prepared",
+        attributes.audioPlaybackStarted === false ? "no audio playback started" : "audio playback started",
+        attributes.microphoneCaptureStarted === false ? "no microphone capture started" : "microphone capture started",
+        attributes.rawAudioStored === false ? "no raw audio stored" : "raw audio storage reported",
+        attributes.liveNapoleonContacted === false ? "no live Napoleon contact" : "live Napoleon contact reported",
+      ],
+    });
+  }
+
   if (eventName === "privacy_setting_changed" && attributes.setting === "wake_word") {
     return buildCapabilitySignal({
       ...base,

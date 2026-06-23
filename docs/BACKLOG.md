@@ -494,6 +494,7 @@ Acceptance criteria:
 - The text boundary states that Napoleon was not contacted and no delegated agent response exists.
 - Running the dry run does not request microphone permission, start microphone capture, start audio playback, write memory, capture approval, dispatch agents, contact Napoleon, or send externally.
 - `voice_turn_rehearsed` includes local-rehearsal marker, VAD segment count, STT model, TTS voice, VAD/STT/Napoleon/TTS/total local sample timing metadata, live-Napoleon-contact false, capture/playback/storage false, and explicit false side-effect flags.
+- `barge_in_rehearsed` creates a metadata-only `voice` capability signal for local interruption-handling readiness, with a separate `child_safe_barge_in_rehearsal` label under child-protected mode.
 - All blocked effects are visible in the UI.
 - Child protected mode must not treat local voice rehearsal as guardian approval, recording permission, external speech permission, or Napoleon approval.
 

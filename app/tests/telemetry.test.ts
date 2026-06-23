@@ -125,6 +125,49 @@ test("telemetry emits voice capability signal for local voice turn rehearsal", (
   assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
 });
 
+test("telemetry emits voice capability signal for local barge-in rehearsal", () => {
+  const signal = emitCapabilitySignal("barge_in_rehearsed", {
+    traceId: "trace_barge_in_signal",
+    conversationId: "conv_barge_in_signal",
+    profile: "adult_owner",
+    localRehearsalOnly: true,
+    bargeInDetected: true,
+    interruptedOutput: "local-neutral",
+    interruptAtMs: 420,
+    nextTurnPrepared: true,
+    liveNapoleonContacted: false,
+    microphoneCaptureStarted: false,
+    audioPlaybackStarted: false,
+    rawAudioStored: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.topicLabel, "voice");
+  assert.equal(signal.intentLabel, "rehearse_local_barge_in");
+  assert.equal(signal.capabilityLabel, "barge_in_rehearsal");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "voice");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.deepEqual(signal.details, [
+    "barge-in detected",
+    "next turn prepared",
+    "no audio playback started",
+    "no microphone capture started",
+    "no raw audio stored",
+    "no live napoleon contact",
+  ]);
+  assert.equal(JSON.stringify(signal).includes("local-neutral"), false);
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
 test("telemetry emits child-protected voice capability signals with separate labels", () => {
   const speechSignal = emitCapabilitySignal("stt_completed", {
     traceId: "trace_child_stt_signal",
@@ -155,21 +198,48 @@ test("telemetry emits child-protected voice capability signals with separate lab
     rawAudioStored: false,
     rawAudio: "must not be retained",
   });
+  const bargeInSignal = emitCapabilitySignal("barge_in_rehearsed", {
+    traceId: "trace_child_barge_in_signal",
+    conversationId: "conv_child_voice_signal",
+    profile: "child_protected",
+    localRehearsalOnly: true,
+    bargeInDetected: true,
+    nextTurnPrepared: true,
+    liveNapoleonContacted: false,
+    microphoneCaptureStarted: false,
+    audioPlaybackStarted: false,
+    rawAudioStored: false,
+    approvalCaptured: false,
+    guardianApprovalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    rawAudio: "must not be retained",
+  });
 
   assert.ok(speechSignal);
   assert.ok(synthesisSignal);
   assert.ok(voiceTurnSignal);
-  if (!speechSignal || !synthesisSignal || !voiceTurnSignal) throw new Error("expected child voice capability signals");
+  assert.ok(bargeInSignal);
+  if (!speechSignal || !synthesisSignal || !voiceTurnSignal || !bargeInSignal) {
+    throw new Error("expected child voice capability signals");
+  }
   assert.equal(speechSignal.profileMode, "child_protected_user");
   assert.equal(synthesisSignal.profileMode, "child_protected_user");
   assert.equal(voiceTurnSignal.profileMode, "child_protected_user");
+  assert.equal(bargeInSignal.profileMode, "child_protected_user");
   assert.equal(speechSignal.privacyClass, "child_sensitive");
   assert.equal(synthesisSignal.privacyClass, "child_sensitive");
   assert.equal(voiceTurnSignal.privacyClass, "child_sensitive");
+  assert.equal(bargeInSignal.privacyClass, "child_sensitive");
   assert.equal(speechSignal.capabilityLabel, "child_safe_speech_transcription_sample");
   assert.equal(synthesisSignal.capabilityLabel, "child_safe_speech_synthesis_sample");
   assert.equal(voiceTurnSignal.capabilityLabel, "child_safe_voice_turn_rehearsal");
-  assert.equal(JSON.stringify([speechSignal, synthesisSignal, voiceTurnSignal]).includes("must not be retained"), false);
+  assert.equal(bargeInSignal.capabilityLabel, "child_safe_barge_in_rehearsal");
+  assert.equal(
+    JSON.stringify([speechSignal, synthesisSignal, voiceTurnSignal, bargeInSignal]).includes("must not be retained"),
+    false,
+  );
 });
 
 test("telemetry emits voice capability signal for local wake-word readiness", () => {
