@@ -1338,6 +1338,25 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "voice_segment_detected") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "voice",
+      intentLabel: "detect_local_voice_activity_sample",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "voice_activity_detection_sample",
+        "child_safe_voice_activity_detection_sample",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.74,
+      architectureArea: "voice",
+      suggestedNextStep: "no_action",
+    });
+  }
+
   if (eventName === "avatar_state_changed") {
     return buildCapabilitySignal({
       ...base,

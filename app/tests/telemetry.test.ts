@@ -274,6 +274,67 @@ test("telemetry emits child-protected wake-word capability signals with separate
   assert.equal(JSON.stringify([readinessSignal, sampleSignal]).includes("must not be retained"), false);
 });
 
+test("telemetry emits voice capability signal for local voice activity sample", () => {
+  const signal = emitCapabilitySignal("voice_segment_detected", {
+    traceId: "trace_voice_segment_signal",
+    conversationId: "conv_voice_segment_signal",
+    profile: "adult_owner",
+    startMs: 40,
+    endMs: 160,
+    peakRms: 0.09,
+    frameCount: 3,
+    localSampleOnly: true,
+    captureStarted: false,
+    rawAudioStored: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected local voice activity capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.topicLabel, "voice");
+  assert.equal(signal.intentLabel, "detect_local_voice_activity_sample");
+  assert.equal(signal.capabilityLabel, "voice_activity_detection_sample");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "voice");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
+test("telemetry emits child-protected voice activity signal with separate label", () => {
+  const signal = emitCapabilitySignal("voice_segment_detected", {
+    traceId: "trace_child_voice_segment_signal",
+    conversationId: "conv_child_voice_segment_signal",
+    profile: "child_protected",
+    startMs: 40,
+    endMs: 160,
+    peakRms: 0.09,
+    frameCount: 3,
+    localSampleOnly: true,
+    captureStarted: false,
+    rawAudioStored: false,
+    approvalCaptured: false,
+    guardianApprovalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected child local voice activity capability signal");
+  assert.equal(signal.profileMode, "child_protected_user");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.privacyClass, "child_sensitive");
+  assert.equal(signal.capabilityLabel, "child_safe_voice_activity_detection_sample");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
 test("telemetry emits avatar capability signals for local avatar preparation", () => {
   const stateSignal = emitCapabilitySignal("avatar_state_changed", {
     traceId: "trace_avatar_state_signal",

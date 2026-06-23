@@ -302,6 +302,7 @@ export function emitCapabilitySignal(
     "tts_completed",
     "voice_turn_rehearsed",
     "wake_word_sample_detected",
+    "voice_segment_detected",
   ]);
 
   const isWakeWordReadinessEvent = event === "privacy_setting_changed" && attributes.setting === "wake_word";
