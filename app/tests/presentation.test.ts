@@ -263,6 +263,8 @@ test("redacts unsafe returned provenance from visible Napoleon delegation and pr
   assert.equal(visibleText.includes("127.0.0.1"), false);
   assert.equal(visibleText.includes("local-secret-token"), false);
   assert.equal(visibleText.includes("bearer"), false);
+  assert.equal(delegationView.body.includes("found redacted"), false);
+  assert.equal(delegationView.body, "Napoleon provided delegation provenance for this response.");
   assert.ok(delegationView.details.some((detail) => detail.label === "Target capability" && detail.value === "redacted"));
   assert.ok(proofView.details.some((detail) => detail.label === "Napoleon recommendation" && detail.value === "redacted"));
   assert.ok(proofView.details.some((detail) => detail.label === "Decision" && detail.value === "redacted"));

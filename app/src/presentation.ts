@@ -960,12 +960,14 @@ export function describeDelegation(
     .join("; ");
   const contribution = delegation.selectedAgents
     .filter((agent) => agent.contributionSummary)
-    .map(
-      (agent) =>
-        `${sanitizeVisibleProvenanceValue(agent.displayName)} found ${sanitizeVisibleProvenanceValue(
-          agent.contributionSummary,
-        )}.`,
-    )
+    .map((agent) => {
+      const displayName = sanitizeVisibleProvenanceValue(agent.displayName, "");
+      const summary = sanitizeVisibleProvenanceValue(agent.contributionSummary, "");
+      return displayName && displayName !== "redacted" && summary && summary !== "redacted"
+        ? `${displayName} found ${summary}.`
+        : "";
+    })
+    .filter(Boolean)
     .join(" ");
 
   return {
