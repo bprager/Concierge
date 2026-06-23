@@ -1300,6 +1300,44 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "privacy_setting_changed" && attributes.setting === "wake_word") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "voice",
+      intentLabel: "prepare_local_wake_word_readiness",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "wake_word_readiness_option",
+        "child_safe_wake_word_readiness_option",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.72,
+      architectureArea: "voice",
+      suggestedNextStep: "no_action",
+    });
+  }
+
+  if (eventName === "wake_word_sample_detected") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "voice",
+      intentLabel: "run_local_wake_word_sample",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "wake_word_detection_sample",
+        "child_safe_wake_word_detection_sample",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.74,
+      architectureArea: "voice",
+      suggestedNextStep: "no_action",
+    });
+  }
+
   if (eventName === "avatar_state_changed") {
     return buildCapabilitySignal({
       ...base,

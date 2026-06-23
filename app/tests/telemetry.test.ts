@@ -172,6 +172,108 @@ test("telemetry emits child-protected voice capability signals with separate lab
   assert.equal(JSON.stringify([speechSignal, synthesisSignal, voiceTurnSignal]).includes("must not be retained"), false);
 });
 
+test("telemetry emits voice capability signal for local wake-word readiness", () => {
+  const signal = emitCapabilitySignal("privacy_setting_changed", {
+    traceId: "trace_wake_word_readiness_signal",
+    conversationId: "conv_wake_word_readiness_signal",
+    profile: "adult_owner",
+    setting: "wake_word",
+    enabled: true,
+    localOnly: true,
+    listeningStarted: false,
+    microphoneCaptureStarted: false,
+    rawAudioStored: false,
+    liveNapoleonContacted: false,
+    agentDispatchPerformed: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected wake-word readiness capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.topicLabel, "voice");
+  assert.equal(signal.intentLabel, "prepare_local_wake_word_readiness");
+  assert.equal(signal.capabilityLabel, "wake_word_readiness_option");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "voice");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
+test("telemetry emits voice capability signal for local wake-word sample detection", () => {
+  const signal = emitCapabilitySignal("wake_word_sample_detected", {
+    traceId: "trace_wake_word_sample_signal",
+    conversationId: "conv_wake_word_sample_signal",
+    profile: "adult_owner",
+    localSampleOnly: true,
+    enabled: true,
+    detected: true,
+    listeningStarted: false,
+    microphoneCaptureStarted: false,
+    rawAudioStored: false,
+    liveNapoleonContacted: false,
+    agentDispatchPerformed: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected wake-word sample capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.topicLabel, "voice");
+  assert.equal(signal.intentLabel, "run_local_wake_word_sample");
+  assert.equal(signal.capabilityLabel, "wake_word_detection_sample");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "voice");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
+test("telemetry emits child-protected wake-word capability signals with separate labels", () => {
+  const readinessSignal = emitCapabilitySignal("privacy_setting_changed", {
+    traceId: "trace_child_wake_word_readiness_signal",
+    conversationId: "conv_child_wake_word_signal",
+    profile: "child_protected",
+    setting: "wake_word",
+    enabled: true,
+    localOnly: true,
+    listeningStarted: false,
+    microphoneCaptureStarted: false,
+    rawAudioStored: false,
+    liveNapoleonContacted: false,
+    agentDispatchPerformed: false,
+    guardianApprovalCaptured: false,
+    rawAudio: "must not be retained",
+  });
+  const sampleSignal = emitCapabilitySignal("wake_word_sample_detected", {
+    traceId: "trace_child_wake_word_sample_signal",
+    conversationId: "conv_child_wake_word_signal",
+    profile: "child_protected",
+    localSampleOnly: true,
+    enabled: true,
+    detected: true,
+    listeningStarted: false,
+    microphoneCaptureStarted: false,
+    rawAudioStored: false,
+    liveNapoleonContacted: false,
+    agentDispatchPerformed: false,
+    guardianApprovalCaptured: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(readinessSignal);
+  assert.ok(sampleSignal);
+  if (!readinessSignal || !sampleSignal) throw new Error("expected child wake-word capability signals");
+  assert.equal(readinessSignal.profileMode, "child_protected_user");
+  assert.equal(sampleSignal.profileMode, "child_protected_user");
+  assert.equal(readinessSignal.privacyClass, "child_sensitive");
+  assert.equal(sampleSignal.privacyClass, "child_sensitive");
+  assert.equal(readinessSignal.capabilityLabel, "child_safe_wake_word_readiness_option");
+  assert.equal(sampleSignal.capabilityLabel, "child_safe_wake_word_detection_sample");
+  assert.equal(JSON.stringify([readinessSignal, sampleSignal]).includes("must not be retained"), false);
+});
+
 test("telemetry emits avatar capability signals for local avatar preparation", () => {
   const stateSignal = emitCapabilitySignal("avatar_state_changed", {
     traceId: "trace_avatar_state_signal",

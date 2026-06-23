@@ -301,9 +301,12 @@ export function emitCapabilitySignal(
     "stt_completed",
     "tts_completed",
     "voice_turn_rehearsed",
+    "wake_word_sample_detected",
   ]);
 
-  if (!trackableEvents.has(event)) return null;
+  const isWakeWordReadinessEvent = event === "privacy_setting_changed" && attributes.setting === "wake_word";
+
+  if (!trackableEvents.has(event) && !isWakeWordReadinessEvent) return null;
 
   const signal = deriveCapabilitySignalFromEvent(event, attributes);
   appendCapabilitySignal(capabilityLedger, signal);
