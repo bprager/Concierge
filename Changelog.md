@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added specific live-runtime promotion blockers for evaluator review failures, so descriptor-unadvertised evaluation review handoffs, missing evaluator routes, and evaluator auth failures show actionable readiness reasons instead of only a generic HTTP evaluator failure.
 - Added evaluator harness coverage for the Napoleon base-URL `make eval-http` flow, proving it resolves to `/chief-of-staff/reviews/evaluation` with sanitized target metadata and no retained endpoint, token, request body, response body, approval, memory write, agent dispatch, or external send state.
 - Added local capability-intelligence signals for advisory Chief of Staff capability discovery readiness, so Napoleon capability metadata readiness and blocked side-effect claims appear in local capability summaries without retaining raw manifests, profile bodies, endpoints, credentials, or bridge payloads.
 - Added local capability-intelligence signals for Napoleon descriptor discovery readiness, so connection health and fail-closed descriptor blockers appear in local capability summaries without retaining endpoints, credentials, descriptor bodies, or bridge payloads.

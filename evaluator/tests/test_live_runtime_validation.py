@@ -295,7 +295,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertNotIn("127.0.0.1", json.dumps(report))
         self.assertNotIn("secret", json.dumps(report))
         self.assertIn("- HTTP evaluator target path: `/chief-of-staff/reviews/evaluation`", review)
-        self.assertIn("Evaluator HTTP mode did not pass.", summary["promotionReadiness"]["blockingReasons"])
+        self.assertIn("Napoleon evaluation review route was not found.", summary["promotionReadiness"]["blockingReasons"])
         self.assertIn("http_evaluator_route_not_found", stderr.getvalue())
 
     def test_main_blocks_derived_cos_evaluator_when_descriptor_does_not_advertise_handoff(self):
@@ -334,7 +334,10 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertNotIn(cos_harness.base_url, summary_json)
         self.assertNotIn("token_unadvertised_eval", summary_json)
         self.assertIn("descriptor does not advertise an evaluation review handoff", stderr.getvalue())
-        self.assertIn("Evaluator HTTP mode did not pass.", summary["promotionReadiness"]["blockingReasons"])
+        self.assertIn(
+            "Napoleon descriptor does not advertise the evaluation review handoff.",
+            summary["promotionReadiness"]["blockingReasons"],
+        )
 
     def test_main_accepts_required_for_evaluation_review_handoff_advertisement(self):
         class MissingRouteResponse:

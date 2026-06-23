@@ -988,11 +988,19 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
     capabilities = summary["capabilityDiscovery"]
     evaluator = summary["httpEvaluator"]
     artifact_privacy = summary["artifactPrivacy"]
+    evaluator_failure_reason = evaluator.get("failureReason")
+    evaluator_blocker = "Evaluator HTTP mode did not pass."
+    if evaluator_failure_reason == "http_evaluator_handoff_not_advertised":
+        evaluator_blocker = "Napoleon descriptor does not advertise the evaluation review handoff."
+    elif evaluator_failure_reason == "http_evaluator_route_not_found":
+        evaluator_blocker = "Napoleon evaluation review route was not found."
+    elif evaluator_failure_reason == "http_evaluator_auth_failed":
+        evaluator_blocker = "Napoleon evaluation review route rejected authentication."
     checks = [
         (runtime["source"] == "real_runtime", "Evidence source is not real Napoleon runtime."),
         (bridge["status"] == "passed", "Descriptor discovery and bridge evidence capture did not pass."),
         (capabilities["status"] == "passed", "Descriptor-gated capability discovery did not pass."),
-        (evaluator["status"] == "passed", "Evaluator HTTP mode did not pass."),
+        (evaluator["status"] == "passed", evaluator_blocker),
         (artifact_privacy["status"] == "passed", "Artifact privacy audit did not pass."),
     ]
     blocking_reasons = [reason for passed, reason in checks if not passed]
