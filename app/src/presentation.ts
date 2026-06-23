@@ -116,10 +116,19 @@ export interface NapoleonResponseProofView {
 
 export interface LastNapoleonTurnSummaryView {
   heading: string;
-  status: "available" | "not_available";
+  status: "available" | "blocked" | "not_available";
   summary: string;
   caveat: string;
   details: Array<{ label: string; value: string }>;
+}
+
+export interface LastNapoleonTurnFailureInput {
+  reason: string;
+  traceId?: string;
+  governanceOutcome?: string;
+  descriptorFailureReason?: DescriptorFailClosedReason;
+  blockedEffects?: string[];
+  nextStep?: string;
 }
 
 export interface NapoleonResponsePresentationLabels {
@@ -331,6 +340,49 @@ export function describeBridgeFailureTranscriptMessage(error: unknown): string {
   const profile = error.profileMode ? ` Profile ${visibleReferenceValue(error.profileMode)}.` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
   return `Napoleon bridge blocked: ${error.reason}.${profile}${decision}${audit}${governance}${descriptor}${blockedEffects} Concierge did not execute anything and remains in prepare-only mode.`;
+}
+
+function describeBridgeFailureNextStep(error: NapoleonBridgeError): string {
+  if (error.descriptorFailureReason === "no_endpoint") {
+    return "Configure a governed Napoleon endpoint, then refresh descriptor discovery.";
+  }
+  if (error.descriptorFailureReason === "no_descriptor") {
+    return "Refresh descriptor discovery before attempting a live Napoleon turn.";
+  }
+  if (error.descriptorFailureReason === "descriptor_signature_or_checksum_mismatch") {
+    return "Resolve the descriptor signature or checksum mismatch before sending again.";
+  }
+  if (error.descriptorFailureReason === "auth_failure" || error.reason === "auth_failure") {
+    return "Check the governed bridge credentials, then refresh descriptor discovery.";
+  }
+  if (error.descriptorFailureReason === "bridge_timeout" || error.reason === "bridge_timeout") {
+    return "Check Napoleon bridge availability, then retry through the governed endpoint.";
+  }
+  if (error.reason === "governance_denied" || error.reason === "governance_no_go") {
+    return "Revise the request or keep it local; Napoleon governance did not allow forwarding.";
+  }
+  if (error.reason === "contract_mismatch" || error.reason === "descriptor_mismatch") {
+    return "Align the bridge contract or descriptor before attempting another live turn.";
+  }
+  return "Review the fail-closed bridge details before attempting another governed Napoleon turn.";
+}
+
+export function describeLastNapoleonTurnFailure(error: unknown): LastNapoleonTurnFailureInput {
+  if (!(error instanceof NapoleonBridgeError)) {
+    return {
+      reason: "bridge_failed",
+      nextStep: "Review the local failure, then retry only through the governed Napoleon bridge.",
+    };
+  }
+
+  return {
+    reason: error.reason,
+    traceId: error.traceId,
+    governanceOutcome: error.governanceOutcome,
+    descriptorFailureReason: error.descriptorFailureReason,
+    blockedEffects: error.blockedEffects,
+    nextStep: describeBridgeFailureNextStep(error),
+  };
 }
 
 export function describeGovernedHandoffFailure(error: unknown, label: string, primaryEffect: string): string {
@@ -1199,9 +1251,36 @@ function proofDetailValue(proof: NapoleonResponseProofView, label: string, fallb
 
 export function describeLastNapoleonTurnSummary(
   proof: NapoleonResponseProofView | null | undefined,
+  failure?: LastNapoleonTurnFailureInput | null,
 ): LastNapoleonTurnSummaryView {
   const caveat =
     "Local returned-provenance summary only; not approval, memory permission, agent dispatch, external send, or local application.";
+
+  if (failure) {
+    const reason = sanitizeVisibleProvenanceValue(failure.reason);
+    const governance = sanitizeVisibleProvenanceValue(failure.governanceOutcome);
+    const descriptor = describeDescriptorFailureReason(failure.descriptorFailureReason) || "not returned";
+    const blockedEffects = sanitizeVisibleProvenanceList(failure.blockedEffects);
+    const trace = visibleReferenceValue(failure.traceId);
+    const nextStep = sanitizeVisibleProvenanceValue(failure.nextStep);
+
+    return {
+      heading: "Latest Napoleon turn",
+      status: "blocked",
+      summary: `Blocked by ${reason}; governance ${governance}.`,
+      caveat,
+      details: [
+        { label: "Handled by", value: "not accepted" },
+        { label: "Governance", value: governance },
+        { label: "Trace", value: trace },
+        { label: "Blocked effects", value: blockedEffects },
+        { label: "Boundary", value: "No Napoleon response was accepted; fail-closed local state only." },
+        { label: "Failure reason", value: reason },
+        { label: "Descriptor", value: descriptor },
+        { label: "Next step", value: nextStep },
+      ],
+    };
+  }
 
   if (!proof) {
     return {

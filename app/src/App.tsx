@@ -135,12 +135,14 @@ import {
   describeGovernedReviewResponse,
   describeGovernanceDecision,
   describeGovernanceReview,
+  describeLastNapoleonTurnFailure,
   describeLastNapoleonTurnSummary,
   describeLiveBridgeReadiness,
   describeLiveVoiceReadiness,
   describeLiveSendPreflight,
   describeMemoryProposalReview,
   describeNapoleonTranscriptMetadata,
+  type LastNapoleonTurnFailureInput,
   sanitizeVisibleProvenanceValue,
   summarizeRehearsalPreview,
 } from "./presentation.js";
@@ -431,6 +433,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
   const [napoleonProofComparison, setNapoleonProofComparison] = useState<NapoleonResponseProofComparison | null>(null);
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
+  const [lastNapoleonTurnFailure, setLastNapoleonTurnFailure] = useState<LastNapoleonTurnFailureInput | null>(null);
   const [bridgeEvidenceReadiness, setBridgeEvidenceReadiness] = useState(buildBridgeEvidenceReadinessState);
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
   const [bridgeReadinessProofComparison, setBridgeReadinessProofComparison] =
@@ -483,6 +486,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   function clearVisibleTurnBoundaryState() {
     setLastDecision(null);
     setLastBridgeFailure(null);
+    setLastNapoleonTurnFailure(null);
   }
 
   function clearChiefOfStaffCapabilities() {
@@ -548,6 +552,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response, { capabilityLabelsById }));
     setNapoleonProofExportJson(null);
     setNapoleonProofComparison(null);
+    setLastBridgeFailure(null);
+    setLastNapoleonTurnFailure(null);
   }
 
   function currentDescriptorInput(): DescriptorConnectionInput {
@@ -2068,6 +2074,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       });
       refreshCapabilityLedgerStatus();
       setLastBridgeFailure(describeBridgeFailure(error));
+      setLastNapoleonTurnFailure(describeLastNapoleonTurnFailure(error));
       clearNapoleonPresentation();
       clearGovernanceReviewHandoff();
       setMessages((m) => [
@@ -3042,7 +3049,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     rawMediaStorageEnabled,
   });
   const napoleonDelegationView = lastNapoleonPresentation.delegation ?? describeDelegation(undefined);
-  const latestNapoleonTurnSummary = describeLastNapoleonTurnSummary(lastNapoleonPresentation.proof);
+  const latestNapoleonTurnSummary = describeLastNapoleonTurnSummary(
+    lastNapoleonPresentation.proof,
+    lastNapoleonTurnFailure,
+  );
 
   function renderGovernedReviewResponse(result: GovernedReviewResponseView, localEffects: string) {
     const responseView = describeGovernedReviewResponse(result, localEffects);

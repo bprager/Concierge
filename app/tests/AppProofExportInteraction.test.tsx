@@ -4018,6 +4018,23 @@ test("shows active profile boundary when Napoleon response tries to drift profil
     assert.ok(within(blockedReply).getByText("No Napoleon response was accepted; fail-closed local state only."));
     assert.ok(within(blockedReply).getByText("Profile mode"));
     assert.ok(within(blockedReply).getByText("child_protected_user"));
+    const latestTurnPanel = view.getByLabelText("Latest Napoleon turn");
+    assert.ok(within(latestTurnPanel).getByText("Blocked by contract_mismatch; governance not returned."));
+    assert.ok(within(latestTurnPanel).getByText("not accepted"));
+    assert.ok(within(latestTurnPanel).getByText("Failure reason"));
+    assert.ok(within(latestTurnPanel).getByText("contract_mismatch"));
+    assert.ok(within(latestTurnPanel).getByText("Governance"));
+    assert.ok(within(latestTurnPanel).getAllByText("not returned").length >= 1);
+    assert.ok(within(latestTurnPanel).getByText("Blocked effects"));
+    assert.ok(
+      within(latestTurnPanel).getByText(
+        "runtime_authority, command_execution, task_routing, agent_dispatch, registry_runtime_activation, graph_write, memory_write, audit_append, event_publication, approval_capture, external_send, service_control, remediation",
+      ),
+    );
+    assert.ok(within(latestTurnPanel).getByText("Boundary"));
+    assert.ok(within(latestTurnPanel).getByText("No Napoleon response was accepted; fail-closed local state only."));
+    assert.ok(within(latestTurnPanel).getByText("Next step"));
+    assert.ok(within(latestTurnPanel).getByText("Align the bridge contract or descriptor before attempting another live turn."));
     const responseFailed = telemetryPayloads.find((payload) => payload.event === "response_failed");
     assert.ok(responseFailed);
     assert.equal(responseFailed.attributes.profile, "child_protected");

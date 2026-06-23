@@ -17,6 +17,7 @@ import {
   describeGovernedReviewResponse,
   describeGovernanceDecision,
   describeGovernanceReview,
+  describeLastNapoleonTurnFailure,
   describeLastNapoleonTurnSummary,
   describeLiveBridgeReadiness,
   describeLiveVoiceReadiness,
@@ -453,6 +454,64 @@ test("describes latest Napoleon turn summary from sanitized proof metadata only"
   assert.ok(
     view.details.some(
       (detail) => detail.label === "Boundary" && detail.value === "Returned bridge provenance only; not local authority.",
+    ),
+  );
+});
+
+test("describes latest Napoleon turn summary from fail-closed bridge metadata", () => {
+  const failure = describeLastNapoleonTurnFailure(
+    new NapoleonBridgeError("governance_no_go", "trace_no_go", "request_no_go", 200, [
+      "memory_write",
+      "external_send",
+    ], {
+      governanceOutcome: "no_go",
+    }),
+  );
+  const view = describeLastNapoleonTurnSummary(null, failure);
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.summary, "Blocked by governance_no_go; governance no_go.");
+  assert.ok(view.caveat.includes("not approval"));
+  assert.ok(view.details.some((detail) => detail.label === "Handled by" && detail.value === "not accepted"));
+  assert.ok(view.details.some((detail) => detail.label === "Governance" && detail.value === "no_go"));
+  assert.ok(view.details.some((detail) => detail.label === "Trace" && detail.value === "trace_no_go"));
+  assert.ok(view.details.some((detail) => detail.label === "Blocked effects" && detail.value === "memory_write, external_send"));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Boundary" && detail.value === "No Napoleon response was accepted; fail-closed local state only.",
+    ),
+  );
+  assert.ok(view.details.some((detail) => detail.label === "Failure reason" && detail.value === "governance_no_go"));
+  assert.ok(view.details.some((detail) => detail.label === "Next step" && detail.value.includes("Revise the request")));
+});
+
+test("redacts unsafe latest Napoleon turn failure metadata", () => {
+  const failure = describeLastNapoleonTurnFailure(
+    new NapoleonBridgeError(
+      "descriptor_mismatch",
+      "http://127.0.0.1:8787/trace",
+      "request_failure_summary",
+      undefined,
+      ["memory_write", "Bearer local-secret-token"],
+      {
+        descriptorFailureReason: "descriptor_signature_or_checksum_mismatch",
+        governanceOutcome: "https://127.0.0.1/governance",
+      },
+    ),
+  );
+  const view = describeLastNapoleonTurnSummary(null, failure);
+  const visibleText = JSON.stringify(view).toLocaleLowerCase();
+
+  assert.equal(visibleText.includes("127.0.0.1"), false);
+  assert.equal(visibleText.includes("local-secret-token"), false);
+  assert.equal(visibleText.includes("bearer"), false);
+  assert.equal(view.summary, "Blocked by descriptor_mismatch; governance redacted.");
+  assert.ok(view.details.some((detail) => detail.label === "Trace" && detail.value === "redacted metadata"));
+  assert.ok(view.details.some((detail) => detail.label === "Blocked effects" && detail.value === "memory_write, redacted"));
+  assert.ok(
+    view.details.some(
+      (detail) => detail.label === "Descriptor" && detail.value === "descriptor signature/checksum mismatch",
     ),
   );
 });
