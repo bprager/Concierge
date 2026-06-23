@@ -213,6 +213,7 @@ Acceptance criteria:
 - Evolution proposal submission handoffs can target Napoleon's explicit `/evolution/proposals` path through a named proposal submission alias, while still blocking local application, registry updates, trace appends, task routing, approval capture, memory writes, agent dispatch, and external sends.
 - Observability trace handoffs can target Napoleon's explicit `/observability/traces` path through a named trace evidence alias, while still blocking trace append authority, audit authority, task routing, approval capture, memory writes, agent dispatch, external sends, and local application.
 - Text Concierge's local telemetry buffer panel shows latest interaction trace handoff readiness and can send sanitized trace evidence only after endpoint, descriptor-advertised `observability_trace`, and Rehearsal Mode gates pass.
+- Returned observability trace handoff review results clear when the active user profile changes so adult-scope live review evidence cannot remain visible in child protected scope.
 - Returned observability trace handoff review results clear when descriptor rediscovery changes the descriptor context or enters fail-closed checksum mismatch state.
 - Returned observability trace handoff review results clear when the Napoleon endpoint or bridge token changes so stale live review evidence does not cross connection scopes.
 - Returned observability trace handoff review results clear when Rehearsal Mode is enabled so local-only preview state does not display stale live review evidence.
