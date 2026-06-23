@@ -1114,6 +1114,26 @@ function profileScopedCapability(
   return profileMode === "child_protected_user" ? childCapability : adultCapability;
 }
 
+function permissionReadinessStatus(result: string): {
+  capabilityStatus: CapabilityStatus;
+  outcomeSignal: CapabilityOutcomeSignal;
+  suggestedNextStep: SuggestedNextStep;
+} {
+  if (result === "granted") {
+    return {
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      suggestedNextStep: "no_action",
+    };
+  }
+
+  return {
+    capabilityStatus: "blocked",
+    outcomeSignal: "blocked",
+    suggestedNextStep: "needs_human_review",
+  };
+}
+
 export function deriveCapabilitySignalFromEvent(
   eventName: string,
   attributes: Record<string, unknown>,
@@ -1354,6 +1374,46 @@ export function deriveCapabilitySignalFromEvent(
       confidence: 0.74,
       architectureArea: "voice",
       suggestedNextStep: "no_action",
+    });
+  }
+
+  if (eventName === "mic_permission_result") {
+    const readiness = permissionReadinessStatus(stringAttr(attributes, "result", "unknown"));
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "voice",
+      intentLabel: "verify_microphone_permission_readiness",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "microphone_permission_readiness",
+        "child_safe_microphone_permission_readiness",
+      ),
+      capabilityStatus: readiness.capabilityStatus,
+      outcomeSignal: readiness.outcomeSignal,
+      confidence: 0.78,
+      architectureArea: "settings_privacy",
+      suggestedNextStep: readiness.suggestedNextStep,
+    });
+  }
+
+  if (eventName === "camera_permission_result") {
+    const readiness = permissionReadinessStatus(stringAttr(attributes, "result", "unknown"));
+    return buildCapabilitySignal({
+      ...base,
+      channel: "avatar",
+      topicLabel: "avatar",
+      intentLabel: "verify_camera_permission_readiness",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "camera_permission_readiness",
+        "child_safe_camera_permission_readiness",
+      ),
+      capabilityStatus: readiness.capabilityStatus,
+      outcomeSignal: readiness.outcomeSignal,
+      confidence: 0.78,
+      architectureArea: "settings_privacy",
+      suggestedNextStep: readiness.suggestedNextStep,
     });
   }
 

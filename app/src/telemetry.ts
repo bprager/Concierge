@@ -303,6 +303,8 @@ export function emitCapabilitySignal(
     "voice_turn_rehearsed",
     "wake_word_sample_detected",
     "voice_segment_detected",
+    "mic_permission_result",
+    "camera_permission_result",
   ]);
 
   const isWakeWordReadinessEvent = event === "privacy_setting_changed" && attributes.setting === "wake_word";

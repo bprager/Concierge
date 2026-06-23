@@ -335,6 +335,105 @@ test("telemetry emits child-protected voice activity signal with separate label"
   assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
 });
 
+test("telemetry emits voice capability signal for microphone permission readiness", () => {
+  const signal = emitCapabilitySignal("mic_permission_result", {
+    traceId: "trace_mic_permission_signal",
+    conversationId: "conv_mic_permission_signal",
+    profile: "adult_owner",
+    result: "granted",
+    captureStarted: false,
+    rawAudioStored: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected microphone permission capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.topicLabel, "voice");
+  assert.equal(signal.intentLabel, "verify_microphone_permission_readiness");
+  assert.equal(signal.capabilityLabel, "microphone_permission_readiness");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "settings_privacy");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
+test("telemetry emits blocked avatar capability signal for camera permission readiness", () => {
+  const signal = emitCapabilitySignal("camera_permission_result", {
+    traceId: "trace_camera_permission_signal",
+    conversationId: "conv_camera_permission_signal",
+    profile: "adult_owner",
+    result: "denied",
+    captureStarted: false,
+    rawVideoStored: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    rawVideo: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected camera permission capability signal");
+  assert.equal(signal.channel, "avatar");
+  assert.equal(signal.topicLabel, "avatar");
+  assert.equal(signal.intentLabel, "verify_camera_permission_readiness");
+  assert.equal(signal.capabilityLabel, "camera_permission_readiness");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.architectureArea, "settings_privacy");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.equal(signal.suggestedNextStep, "needs_human_review");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
+test("telemetry emits child-protected permission readiness signals with separate labels", () => {
+  const microphoneSignal = emitCapabilitySignal("mic_permission_result", {
+    traceId: "trace_child_mic_permission_signal",
+    conversationId: "conv_child_permission_signal",
+    profile: "child_protected",
+    result: "granted",
+    captureStarted: false,
+    rawAudioStored: false,
+    approvalCaptured: false,
+    guardianApprovalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    rawAudio: "must not be retained",
+  });
+  const cameraSignal = emitCapabilitySignal("camera_permission_result", {
+    traceId: "trace_child_camera_permission_signal",
+    conversationId: "conv_child_permission_signal",
+    profile: "child_protected",
+    result: "granted",
+    captureStarted: false,
+    rawVideoStored: false,
+    approvalCaptured: false,
+    guardianApprovalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    rawVideo: "must not be retained",
+  });
+
+  assert.ok(microphoneSignal);
+  assert.ok(cameraSignal);
+  if (!microphoneSignal || !cameraSignal) throw new Error("expected child permission capability signals");
+  assert.equal(microphoneSignal.profileMode, "child_protected_user");
+  assert.equal(microphoneSignal.privacyClass, "child_sensitive");
+  assert.equal(microphoneSignal.capabilityLabel, "child_safe_microphone_permission_readiness");
+  assert.equal(cameraSignal.profileMode, "child_protected_user");
+  assert.equal(cameraSignal.privacyClass, "child_sensitive");
+  assert.equal(cameraSignal.capabilityLabel, "child_safe_camera_permission_readiness");
+  assert.equal(JSON.stringify([microphoneSignal, cameraSignal]).includes("must not be retained"), false);
+});
+
 test("telemetry emits avatar capability signals for local avatar preparation", () => {
   const stateSignal = emitCapabilitySignal("avatar_state_changed", {
     traceId: "trace_avatar_state_signal",
@@ -678,8 +777,11 @@ test("telemetry off setting still allows microphone permission audit events", ()
       rawAudioStored: false,
     });
 
-    assert.equal(payloads.length, 1);
-    assert.equal((payloads[0][1] as { event: string }).event, "mic_permission_result");
+    assert.equal(payloads.length, 3);
+    assert.deepEqual(
+      payloads.map((payload) => (payload[1] as { event: string }).event),
+      ["mic_permission_result", "capability_ledger_persisted", "conversation_capability_signal"],
+    );
   } finally {
     console.info = previousInfo;
     if (previousWindow === undefined) {
@@ -720,8 +822,11 @@ test("telemetry off setting still allows camera permission audit events", () => 
       rawVideoStored: false,
     });
 
-    assert.equal(payloads.length, 1);
-    assert.equal((payloads[0][1] as { event: string }).event, "camera_permission_result");
+    assert.equal(payloads.length, 3);
+    assert.deepEqual(
+      payloads.map((payload) => (payload[1] as { event: string }).event),
+      ["camera_permission_result", "capability_ledger_persisted", "conversation_capability_signal"],
+    );
   } finally {
     console.info = previousInfo;
     if (previousWindow === undefined) {
