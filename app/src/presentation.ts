@@ -137,6 +137,11 @@ export function sanitizeVisibleProvenanceList(values: string[] | undefined, fall
   return values.map((value) => sanitizeVisibleProvenanceValue(value)).join(", ");
 }
 
+function visibleReferenceValue(value: string | undefined): string {
+  const sanitized = sanitizeVisibleProvenanceValue(value);
+  return sanitized === "redacted" ? "redacted metadata" : sanitized;
+}
+
 export function describeNapoleonTranscriptMetadata(
   response: NapoleonResponse,
 ): NonNullable<ConciergeMessage["metadata"]> {
@@ -267,12 +272,12 @@ export function describeBridgeFailure(error: unknown): string {
   const blockedEffects = error.blockedEffects.length
     ? ` Blocked effects: ${sanitizeVisibleProvenanceList(error.blockedEffects)}.`
     : "";
-  const requestId = sanitizeVisibleProvenanceValue(error.requestId);
-  const traceId = sanitizeVisibleProvenanceValue(error.traceId);
-  const decision = error.decisionId ? `, decision ${sanitizeVisibleProvenanceValue(error.decisionId)}` : "";
-  const audit = error.auditId ? `, audit ${sanitizeVisibleProvenanceValue(error.auditId)}` : "";
-  const governance = error.governanceOutcome ? `, governance ${sanitizeVisibleProvenanceValue(error.governanceOutcome)}` : "";
-  const profile = error.profileMode ? `, profile ${sanitizeVisibleProvenanceValue(error.profileMode)}` : "";
+  const requestId = visibleReferenceValue(error.requestId);
+  const traceId = visibleReferenceValue(error.traceId);
+  const decision = error.decisionId ? `, decision ${visibleReferenceValue(error.decisionId)}` : "";
+  const audit = error.auditId ? `, audit ${visibleReferenceValue(error.auditId)}` : "";
+  const governance = error.governanceOutcome ? `, governance ${visibleReferenceValue(error.governanceOutcome)}` : "";
+  const profile = error.profileMode ? `, profile ${visibleReferenceValue(error.profileMode)}` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
   return `Live Napoleon bridge blocked: ${error.reason}. Request ${requestId}, trace ${traceId}${profile}${decision}${audit}${governance}.${descriptor}${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
 }
@@ -285,10 +290,10 @@ export function describeBridgeFailureTranscriptMessage(error: unknown): string {
   const blockedEffects = error.blockedEffects.length
     ? ` Blocked effects: ${sanitizeVisibleProvenanceList(error.blockedEffects)}.`
     : "";
-  const decision = error.decisionId ? ` Decision ${sanitizeVisibleProvenanceValue(error.decisionId)}.` : "";
-  const audit = error.auditId ? ` Audit ${sanitizeVisibleProvenanceValue(error.auditId)}.` : "";
-  const governance = error.governanceOutcome ? ` Governance ${sanitizeVisibleProvenanceValue(error.governanceOutcome)}.` : "";
-  const profile = error.profileMode ? ` Profile ${sanitizeVisibleProvenanceValue(error.profileMode)}.` : "";
+  const decision = error.decisionId ? ` Decision ${visibleReferenceValue(error.decisionId)}.` : "";
+  const audit = error.auditId ? ` Audit ${visibleReferenceValue(error.auditId)}.` : "";
+  const governance = error.governanceOutcome ? ` Governance ${visibleReferenceValue(error.governanceOutcome)}.` : "";
+  const profile = error.profileMode ? ` Profile ${visibleReferenceValue(error.profileMode)}.` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
   return `Napoleon bridge blocked: ${error.reason}.${profile}${decision}${audit}${governance}${descriptor}${blockedEffects} Concierge did not execute anything and remains in prepare-only mode.`;
 }
@@ -301,12 +306,12 @@ export function describeGovernedHandoffFailure(error: unknown, label: string, pr
   const blockedEffects = error.blockedEffects.length
     ? ` Blocked effects: ${sanitizeVisibleProvenanceList(error.blockedEffects)}.`
     : "";
-  const requestId = sanitizeVisibleProvenanceValue(error.requestId);
-  const traceId = sanitizeVisibleProvenanceValue(error.traceId);
-  const profile = error.profileMode ? `, profile ${sanitizeVisibleProvenanceValue(error.profileMode)}` : "";
-  const decision = error.decisionId ? `, decision ${sanitizeVisibleProvenanceValue(error.decisionId)}` : "";
-  const audit = error.auditId ? `, audit ${sanitizeVisibleProvenanceValue(error.auditId)}` : "";
-  const governance = error.governanceOutcome ? `, governance ${sanitizeVisibleProvenanceValue(error.governanceOutcome)}` : "";
+  const requestId = visibleReferenceValue(error.requestId);
+  const traceId = visibleReferenceValue(error.traceId);
+  const profile = error.profileMode ? `, profile ${visibleReferenceValue(error.profileMode)}` : "";
+  const decision = error.decisionId ? `, decision ${visibleReferenceValue(error.decisionId)}` : "";
+  const audit = error.auditId ? `, audit ${visibleReferenceValue(error.auditId)}` : "";
+  const governance = error.governanceOutcome ? `, governance ${visibleReferenceValue(error.governanceOutcome)}` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
   return `${label} blocked: ${error.reason}. Request ${requestId}, trace ${traceId}${profile}${decision}${audit}${governance}.${descriptor}${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
 }
