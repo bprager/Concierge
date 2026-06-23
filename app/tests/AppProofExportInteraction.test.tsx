@@ -8824,6 +8824,182 @@ test("clears returned interaction trace handoff review when Rehearsal Mode is en
   }
 });
 
+for (const contextChange of [
+  {
+    name: "Napoleon endpoint",
+    decisionId: "decision_trace_handoff_endpoint_clear",
+    auditId: "audit_trace_handoff_endpoint_clear",
+    traceId: "trace_observability_endpoint_clear",
+    conversationId: "conv_observability_endpoint_clear",
+    turnId: "turn_observability_endpoint_clear",
+    change: async (
+      view: { getByLabelText: (text: string) => HTMLElement },
+      fireEvent: { change: (element: Window | Document | Node | Element, init?: {}) => boolean },
+    ) => {
+      fireEvent.change(view.getByLabelText("Napoleon endpoint"), {
+        target: { value: "https://napoleon.changed.example.test" },
+      });
+    },
+  },
+  {
+    name: "bridge token",
+    decisionId: "decision_trace_handoff_token_clear",
+    auditId: "audit_trace_handoff_token_clear",
+    traceId: "trace_observability_token_clear",
+    conversationId: "conv_observability_token_clear",
+    turnId: "turn_observability_token_clear",
+    change: async (
+      view: { getByLabelText: (text: string) => HTMLElement },
+      fireEvent: { change: (element: Window | Document | Node | Element, init?: {}) => boolean },
+    ) => {
+      fireEvent.change(view.getByLabelText("Bridge token"), { target: { value: "token-two" } });
+    },
+  },
+] as const) {
+  test(`clears returned interaction trace handoff review when ${contextChange.name} changes`, async () => {
+    const dom = installDom();
+    const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+      import("@testing-library/react"),
+      import("@testing-library/user-event"),
+      import("../src/App.js"),
+    ]);
+    const user = userEventModule.default.setup();
+    const originalFetch = globalThis.fetch;
+    const requestedUrls: string[] = [];
+
+    try {
+      localStorage.setItem(
+        "concierge_telemetry_buffer_v1",
+        JSON.stringify({
+          schemaVersion: "concierge.telemetry-buffer.v1",
+          maxEvents: 200,
+          events: [
+            {
+              ts: "2026-06-15T00:00:00.000Z",
+              event: "user_message_received",
+              attributes: {
+                traceId: contextChange.traceId,
+                conversationId: contextChange.conversationId,
+                turnId: contextChange.turnId,
+                channel: "text",
+                profile: "adult_owner",
+              },
+            },
+            {
+              ts: "2026-06-15T00:00:01.000Z",
+              event: "response_generated",
+              attributes: {
+                traceId: contextChange.traceId,
+                conversationId: contextChange.conversationId,
+                turnId: contextChange.turnId,
+                profile: "adult_owner",
+                profileMode: "adult_owner",
+                requestId: `cos_${contextChange.turnId}`,
+                decisionId: `decision_${contextChange.turnId}`,
+                auditId: `audit_${contextChange.turnId}`,
+                governanceOutcome: "requires_review",
+                blockedEffects: ["memory_write", "external_send"],
+              },
+            },
+          ],
+        }),
+      );
+
+      globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+        const url = String(input);
+        requestedUrls.push(url);
+        if (url === "https://napoleon.example.test/v1/concierge/chief-of-staff/descriptor") {
+          return harnessJsonResponse(200, {
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
+              supportedHandoffs: ["observability_trace"],
+            },
+            checksum: { expected: "sha256:trace", actual: "sha256:trace" },
+            signature: { valid: true },
+          });
+        }
+        assert.equal(url, "https://napoleon.example.test/observability/traces");
+        const body = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+        const traceHandoff = body.traceHandoff as {
+          requestId: string;
+          traceEvidence: { traceId: string };
+        };
+        return harnessJsonResponse(200, {
+          governanceDecision: {
+            decision_id: contextChange.decisionId,
+            request_id: traceHandoff.requestId,
+            outcome: "allow_prepare_only",
+            authority_tier: "advisory_review",
+            approval_requirement: "Napoleon observability review only.",
+            rationale: "Trace evidence received without append authority.",
+            blocked_effects: ["trace_append", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
+            trace_id: traceHandoff.traceEvidence.traceId,
+            audit_id: contextChange.auditId,
+          },
+          traceEnvelope: {
+            trace_id: traceHandoff.traceEvidence.traceId,
+            parent_trace_id: contextChange.conversationId,
+            actor_id: "napoleon.observability",
+            request_id: traceHandoff.requestId,
+            decision_id: contextChange.decisionId,
+            timestamp: "2026-06-23T12:00:00.000Z",
+          },
+          auditEnvelope: {
+            audit_id: contextChange.auditId,
+            trace_id: traceHandoff.traceEvidence.traceId,
+            decision_id: contextChange.decisionId,
+            actor_id: "napoleon.observability",
+            authority_tier: "advisory_review",
+            approval_requirement: "Napoleon observability review only.",
+            evidence_links: [`trace:${contextChange.traceId}`],
+          },
+          appliedLocally: false,
+          memoryWritePerformed: false,
+          approvalCaptured: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+        });
+      }) as typeof fetch;
+
+      const view = render(<App />);
+      fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "https://napoleon.example.test" } });
+      if (contextChange.name === "bridge token") {
+        fireEvent.change(view.getByLabelText("Bridge token"), { target: { value: "token-one" } });
+      }
+      await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+      const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+      if (rehearsalCheckbox.checked) {
+        await user.click(rehearsalCheckbox);
+      }
+      await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+
+      const buffer = within(view.getByLabelText("Local telemetry buffer"));
+      await user.click(buffer.getByRole("button", { name: "Send trace evidence" }));
+
+      await waitFor(() => assert.ok(buffer.getByText("Trace handoff reviewed")));
+      assert.ok(buffer.getByText(`Decision: ${contextChange.decisionId}`));
+      assert.ok(buffer.getByText(`Audit: ${contextChange.auditId}`));
+
+      await contextChange.change(view, fireEvent);
+
+      assert.equal(buffer.queryByText("Trace handoff reviewed"), null);
+      assert.equal(buffer.queryByText(`Decision: ${contextChange.decisionId}`), null);
+      assert.equal(buffer.queryByText(`Audit: ${contextChange.auditId}`), null);
+      assert.equal(buffer.getByRole("button", { name: "Send trace evidence" }).hasAttribute("disabled"), true);
+      assert.equal(requestedUrls.filter((url) => url === "https://napoleon.example.test/observability/traces").length, 1);
+    } finally {
+      globalThis.fetch = originalFetch;
+      cleanup();
+      dom.window.close();
+    }
+  });
+}
+
 test("clears telemetry and interaction trace exports when user profile changes", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, within }, { App }] = await Promise.all([

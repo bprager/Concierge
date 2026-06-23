@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered UI coverage proving returned observability trace handoff review results clear when the Napoleon endpoint or bridge token changes, keeping live review evidence scoped to the active connection.
 - Added rendered UI coverage proving returned observability trace handoff review results clear when Rehearsal Mode is enabled, keeping local-only preview mode free of stale live review evidence.
 - Added descriptor-discovery unit coverage and sample descriptor contract metadata for Napoleon-advertised `observability_trace` support, including explicit handoff lists, `required_for`, and plural endpoint-derived forms.
 - Added Text Concierge telemetry-panel controls for governed observability trace handoffs, including readiness, blocker details, review results, and descriptor parsing for advertised `observability_trace` support without weakening the evidence-only boundary.
