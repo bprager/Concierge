@@ -290,6 +290,11 @@ function proofComparisonValue(value: string): string {
   if (value === "redacted") return "redacted metadata";
   if (value === "unavailable") return "unavailable metadata";
   if (value === "none") return "not returned metadata";
+  if (value.includes(", ")) {
+    const parts = value.split(", ");
+    const mapped = parts.map((part) => proofComparisonValue(part));
+    if (mapped.some((part, index) => part !== parts[index])) return mapped.join(", ");
+  }
   return value;
 }
 

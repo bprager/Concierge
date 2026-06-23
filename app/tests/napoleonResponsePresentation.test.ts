@@ -595,6 +595,56 @@ test("labels redacted or unavailable Napoleon proof comparison values as metadat
   );
 });
 
+test("labels placeholder values inside Napoleon proof comparison lists as metadata state", () => {
+  const previous = JSON.parse(responseProofJson({ traceId: "trace_previous_placeholder_list" })) as {
+    responseProof: {
+      selectedAgents?: string[];
+      selectedAgentReasons?: string[];
+      blockedEffects?: string[];
+    };
+  };
+  const current = JSON.parse(responseProofJson({ traceId: "trace_current_placeholder_list" })) as {
+    responseProof: {
+      selectedAgents?: string[];
+      selectedAgentReasons?: string[];
+      blockedEffects?: string[];
+    };
+  };
+  previous.responseProof.selectedAgents = ["Passive Brain"];
+  previous.responseProof.selectedAgentReasons = ["Passive Brain: Relevant context was returned."];
+  previous.responseProof.blockedEffects = ["memory_write"];
+  current.responseProof.selectedAgents = ["redacted", "Passive Brain"];
+  current.responseProof.selectedAgentReasons = ["unavailable", "Passive Brain: Relevant context was returned."];
+  current.responseProof.blockedEffects = ["none", "memory_write"];
+
+  const comparison = compareNapoleonResponseProofs(JSON.stringify(previous), JSON.stringify(current));
+  const serialized = JSON.stringify(comparison).toLocaleLowerCase();
+
+  assert.equal(comparison.status, "changed");
+  assert.equal(serialized.includes("\"redacted"), false);
+  assert.equal(serialized.includes("\"unavailable"), false);
+  assert.equal(serialized.includes("\"none"), false);
+  assert.ok(
+    comparison.changes.some(
+      (change: { label: string; current: string }) =>
+        change.label === "Selected agents" && change.current === "Passive Brain, redacted metadata",
+    ),
+  );
+  assert.ok(
+    comparison.changes.some(
+      (change: { label: string; current: string }) =>
+        change.label === "Why selected" &&
+        change.current === "Passive Brain: Relevant context was returned., unavailable metadata",
+    ),
+  );
+  assert.ok(
+    comparison.changes.some(
+      (change: { label: string; current: string }) =>
+        change.label === "Blocked effects" && change.current === "memory_write, not returned metadata",
+    ),
+  );
+});
+
 test("rejects missing or unsafe previous Napoleon response proof comparison input", () => {
   const current = responseProofJson({ traceId: "trace_current" });
 

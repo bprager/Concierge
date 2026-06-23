@@ -143,7 +143,7 @@ The visible Napoleon delegation panel includes proof-alignment metadata for retu
 
 The visible last successful Napoleon proof panel includes recommendation proof-alignment metadata. This is display metadata only: returned recommendation provenance is shown as sharing the same returned response trace/audit as the proof, while missing recommendation provenance is shown as not returned. The visible governance, profile mode, decision, trace, and audit rows use the same unsafe returned-provenance redaction as delegation and recommendation rows.
 
-Napoleon response proof comparison labels redacted, unavailable, and empty proof fields as metadata states instead of returned capability, recommendation, agent, governance, trace, audit, or effect values; the comparison remains local display metadata only and does not create approval, audit evidence, or execution proof.
+Napoleon response proof comparison labels redacted, unavailable, and empty proof fields or list entries as metadata states instead of returned capability, recommendation, agent, governance, trace, audit, or effect values; the comparison remains local display metadata only and does not create approval, audit evidence, or execution proof.
 
 Governed memory proposal, governance review, Chief of Staff steering, and taxonomy review failure events and visible failure messages carry the active profile mode alongside fail-closed reason, returned decision/audit/governance references when available, and blocked-effect metadata. This keeps child-protected, guest, collaborator, or owner scope visible and preserves Napoleon-supplied denial context when a governed handoff is blocked before or after contacting Napoleon.
 
