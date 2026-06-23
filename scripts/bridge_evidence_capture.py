@@ -32,6 +32,7 @@ KNOWN_BRIDGE_PATHS = (
     "/cos/capabilities",
     "/cos/text-turn",
     "/cos/trace",
+    "/cos",
 )
 
 

@@ -41,6 +41,7 @@ ACCEPTED_BRIDGE_ENDPOINT_FORMS = [
     "/v1/concierge/chief-of-staff/descriptor",
     "/v1/concierge/chief-of-staff/steering",
     "/v1/concierge/memory-proposals",
+    "/cos",
     "/cos/descriptor",
     "/cos/capabilities",
     "/cos/text-turn",

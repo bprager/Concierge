@@ -177,6 +177,22 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertFalse("token_cos_capture" in json.dumps(records))
         self.assertFalse(harness.base_url in json.dumps(records))
 
+    def test_cos_base_endpoint_normalizes_to_single_cos_path_prefix(self):
+        endpoint = "http://127.0.0.1:8765/cos"
+
+        self.assertEqual(
+            bridge_evidence_capture.descriptor_url(endpoint),
+            "http://127.0.0.1:8765/cos/descriptor",
+        )
+        self.assertEqual(
+            bridge_evidence_capture.text_turn_url(endpoint),
+            "http://127.0.0.1:8765/cos/text-turn",
+        )
+        self.assertEqual(
+            bridge_evidence_capture.cos_trace_url(endpoint, "trace_example"),
+            "http://127.0.0.1:8765/cos/trace/trace_example",
+        )
+
     def test_capture_runner_falls_back_to_cos_descriptor_for_runtime_base_url(self):
         with RecordingCosHarness(descriptor_ready=True) as harness:
             with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:

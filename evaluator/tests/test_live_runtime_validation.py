@@ -534,6 +534,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             self.assertIn("NAPOLEON_BRIDGE_ENDPOINT", preflight["missingConfiguration"])
             self.assertEqual(preflight["runtimeAlignment"]["requiredBridgeEndpointEnv"], "NAPOLEON_BRIDGE_ENDPOINT")
             self.assertEqual(preflight["runtimeAlignment"]["requiredEvaluatorEndpointEnv"], "NAPOLEON_EVAL_ENDPOINT")
+            self.assertIn("/cos", preflight["runtimeAlignment"]["acceptedBridgeEndpointForms"])
             self.assertIn("/cos/descriptor", preflight["runtimeAlignment"]["acceptedBridgeEndpointForms"])
             self.assertIn("/cos/text-turn", preflight["runtimeAlignment"]["acceptedBridgeEndpointForms"])
             self.assertFalse(preflight["runtimeAlignment"]["localHarnessSubstituteAllowed"])
