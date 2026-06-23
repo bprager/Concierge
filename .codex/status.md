@@ -11,6 +11,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Recently Completed
 
 - Added local capability-intelligence signals for completed speech transcription, speech synthesis, and voice-turn rehearsal samples, with separate child-safe labels for child protected mode, so working voice preparation contributes metadata-only evidence to local capability summaries without retaining raw audio or contacting Napoleon.
+- Added local capability-intelligence signals for avatar state, expression, model-reference, and renderer-readiness dry runs, with separate child-safe labels for child protected mode, so working avatar preparation contributes metadata-only evidence to local capability summaries without retaining raw video or contacting Napoleon.
 - Added local `stt_started` telemetry for speech transcription samples so STT has start/completion events with local-only, no-capture, and false side-effect boundaries before live voice exists.
 - Added safe named bridge target metadata to live text bridge completion and post-route failure telemetry so text-turn path, operation, and request kind are visible without endpoint hosts or tokens.
 - Added safe named bridge target metadata to governed governance review telemetry so post-preflight submissions and failures show the governed path, operation, and request kind without endpoint hosts or tokens.

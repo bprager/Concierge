@@ -172,6 +172,119 @@ test("telemetry emits child-protected voice capability signals with separate lab
   assert.equal(JSON.stringify([speechSignal, synthesisSignal, voiceTurnSignal]).includes("must not be retained"), false);
 });
 
+test("telemetry emits avatar capability signals for local avatar preparation", () => {
+  const stateSignal = emitCapabilitySignal("avatar_state_changed", {
+    traceId: "trace_avatar_state_signal",
+    conversationId: "conv_avatar_signal",
+    profile: "adult_owner",
+    localDisplayOnly: true,
+    cameraCaptureStarted: false,
+    faceDetectionStarted: false,
+    rawVideo: "must not be retained",
+  });
+  const expressionSignal = emitCapabilitySignal("avatar_expression_set", {
+    traceId: "trace_avatar_expression_signal",
+    conversationId: "conv_avatar_signal",
+    profile: "adult_owner",
+    localMetadataOnly: true,
+    avatarAnimationStarted: false,
+    rawVideo: "must not be retained",
+  });
+  const modelSignal = emitCapabilitySignal("avatar_model_loaded", {
+    traceId: "trace_avatar_model_signal",
+    conversationId: "conv_avatar_signal",
+    profile: "adult_owner",
+    localReferenceOnly: true,
+    rendererStarted: false,
+    rawVideo: "must not be retained",
+  });
+  const rendererSignal = emitCapabilitySignal("avatar_renderer_readiness_prepared", {
+    traceId: "trace_avatar_renderer_signal",
+    conversationId: "conv_avatar_signal",
+    profile: "adult_owner",
+    localReadinessOnly: true,
+    rendererStarted: false,
+    renderLoopStarted: false,
+    rawVideo: "must not be retained",
+  });
+
+  assert.ok(stateSignal);
+  assert.ok(expressionSignal);
+  assert.ok(modelSignal);
+  assert.ok(rendererSignal);
+  if (!stateSignal || !expressionSignal || !modelSignal || !rendererSignal) {
+    throw new Error("expected avatar capability signals");
+  }
+  assert.equal(stateSignal.channel, "avatar");
+  assert.equal(stateSignal.topicLabel, "avatar");
+  assert.equal(stateSignal.intentLabel, "prepare_local_avatar_state");
+  assert.equal(stateSignal.capabilityLabel, "avatar_state_preview");
+  assert.equal(expressionSignal.capabilityLabel, "avatar_expression_mapping");
+  assert.equal(modelSignal.capabilityLabel, "avatar_model_reference");
+  assert.equal(rendererSignal.capabilityLabel, "avatar_renderer_readiness");
+  assert.equal(rendererSignal.architectureArea, "avatar");
+  assert.equal(rendererSignal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify([stateSignal, expressionSignal, modelSignal, rendererSignal]).includes("must not be retained"), false);
+});
+
+test("telemetry emits child-protected avatar capability signals with separate labels", () => {
+  const stateSignal = emitCapabilitySignal("avatar_state_changed", {
+    traceId: "trace_child_avatar_state_signal",
+    conversationId: "conv_child_avatar_signal",
+    profile: "child_protected",
+    localDisplayOnly: true,
+    cameraCaptureStarted: false,
+    faceDetectionStarted: false,
+    rawVideo: "must not be retained",
+  });
+  const expressionSignal = emitCapabilitySignal("avatar_expression_set", {
+    traceId: "trace_child_avatar_expression_signal",
+    conversationId: "conv_child_avatar_signal",
+    profile: "child_protected",
+    localMetadataOnly: true,
+    avatarAnimationStarted: false,
+    rawVideo: "must not be retained",
+  });
+  const modelSignal = emitCapabilitySignal("avatar_model_loaded", {
+    traceId: "trace_child_avatar_model_signal",
+    conversationId: "conv_child_avatar_signal",
+    profile: "child_protected",
+    localReferenceOnly: true,
+    rendererStarted: false,
+    rawVideo: "must not be retained",
+  });
+  const rendererSignal = emitCapabilitySignal("avatar_renderer_readiness_prepared", {
+    traceId: "trace_child_avatar_renderer_signal",
+    conversationId: "conv_child_avatar_signal",
+    profile: "child_protected",
+    localReadinessOnly: true,
+    rendererStarted: false,
+    renderLoopStarted: false,
+    rawVideo: "must not be retained",
+  });
+
+  assert.ok(stateSignal);
+  assert.ok(expressionSignal);
+  assert.ok(modelSignal);
+  assert.ok(rendererSignal);
+  if (!stateSignal || !expressionSignal || !modelSignal || !rendererSignal) {
+    throw new Error("expected child avatar capability signals");
+  }
+  assert.equal(stateSignal.profileMode, "child_protected_user");
+  assert.equal(expressionSignal.profileMode, "child_protected_user");
+  assert.equal(modelSignal.profileMode, "child_protected_user");
+  assert.equal(rendererSignal.profileMode, "child_protected_user");
+  assert.equal(stateSignal.privacyClass, "child_sensitive");
+  assert.equal(expressionSignal.privacyClass, "child_sensitive");
+  assert.equal(modelSignal.privacyClass, "child_sensitive");
+  assert.equal(rendererSignal.privacyClass, "child_sensitive");
+  assert.equal(stateSignal.capabilityLabel, "child_safe_avatar_state_preview");
+  assert.equal(expressionSignal.capabilityLabel, "child_safe_avatar_expression_mapping");
+  assert.equal(modelSignal.capabilityLabel, "child_safe_avatar_model_reference");
+  assert.equal(rendererSignal.capabilityLabel, "child_safe_avatar_renderer_readiness");
+  assert.equal(JSON.stringify([stateSignal, expressionSignal, modelSignal, rendererSignal]).includes("must not be retained"), false);
+});
+
 test("untracked telemetry events do not create capability signals", () => {
   const signal = emitCapabilitySignal("settings_changed", {
     traceId: "trace_settings",

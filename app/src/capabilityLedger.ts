@@ -1106,7 +1106,7 @@ function stringAttr(attributes: Record<string, unknown>, key: string, fallback: 
   return typeof value === "string" && value.trim() ? value : fallback;
 }
 
-function profileScopedVoiceCapability(
+function profileScopedCapability(
   profileMode: NapoleonProfileMode,
   adultCapability: string,
   childCapability: string,
@@ -1253,7 +1253,7 @@ export function deriveCapabilitySignalFromEvent(
       channel: "voice",
       topicLabel: "voice",
       intentLabel: "transcribe_local_sample",
-      capabilityLabel: profileScopedVoiceCapability(
+      capabilityLabel: profileScopedCapability(
         profileMode,
         "speech_transcription_sample",
         "child_safe_speech_transcription_sample",
@@ -1272,7 +1272,7 @@ export function deriveCapabilitySignalFromEvent(
       channel: "voice",
       topicLabel: "voice",
       intentLabel: "prepare_local_speech",
-      capabilityLabel: profileScopedVoiceCapability(
+      capabilityLabel: profileScopedCapability(
         profileMode,
         "speech_synthesis_sample",
         "child_safe_speech_synthesis_sample",
@@ -1291,11 +1291,87 @@ export function deriveCapabilitySignalFromEvent(
       channel: "voice",
       topicLabel: "voice",
       intentLabel: "rehearse_local_voice_turn",
-      capabilityLabel: profileScopedVoiceCapability(profileMode, "voice_turn_rehearsal", "child_safe_voice_turn_rehearsal"),
+      capabilityLabel: profileScopedCapability(profileMode, "voice_turn_rehearsal", "child_safe_voice_turn_rehearsal"),
       capabilityStatus: "working",
       outcomeSignal: "rehearsed",
       confidence: 0.8,
       architectureArea: "voice",
+      suggestedNextStep: "no_action",
+    });
+  }
+
+  if (eventName === "avatar_state_changed") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "avatar",
+      topicLabel: "avatar",
+      intentLabel: "prepare_local_avatar_state",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "avatar_state_preview",
+        "child_safe_avatar_state_preview",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.76,
+      architectureArea: "avatar",
+      suggestedNextStep: "no_action",
+    });
+  }
+
+  if (eventName === "avatar_expression_set") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "avatar",
+      topicLabel: "avatar",
+      intentLabel: "map_local_avatar_expression",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "avatar_expression_mapping",
+        "child_safe_avatar_expression_mapping",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.74,
+      architectureArea: "avatar",
+      suggestedNextStep: "no_action",
+    });
+  }
+
+  if (eventName === "avatar_model_loaded") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "avatar",
+      topicLabel: "avatar",
+      intentLabel: "load_local_avatar_model_reference",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "avatar_model_reference",
+        "child_safe_avatar_model_reference",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.72,
+      architectureArea: "avatar",
+      suggestedNextStep: "no_action",
+    });
+  }
+
+  if (eventName === "avatar_renderer_readiness_prepared") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "avatar",
+      topicLabel: "avatar",
+      intentLabel: "prepare_local_avatar_renderer",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "avatar_renderer_readiness",
+        "child_safe_avatar_renderer_readiness",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.72,
+      architectureArea: "avatar",
       suggestedNextStep: "no_action",
     });
   }
