@@ -8686,6 +8686,144 @@ test("keeps latest interaction trace handoff blocked until descriptor advertises
   }
 });
 
+test("clears returned interaction trace handoff review when Rehearsal Mode is enabled", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    localStorage.setItem(
+      "concierge_telemetry_buffer_v1",
+      JSON.stringify({
+        schemaVersion: "concierge.telemetry-buffer.v1",
+        maxEvents: 200,
+        events: [
+          {
+            ts: "2026-06-15T00:00:00.000Z",
+            event: "user_message_received",
+            attributes: {
+              traceId: "trace_observability_rehearsal_clear",
+              conversationId: "conv_observability_rehearsal_clear",
+              turnId: "turn_observability_rehearsal_clear",
+              channel: "text",
+              profile: "adult_owner",
+            },
+          },
+          {
+            ts: "2026-06-15T00:00:01.000Z",
+            event: "response_generated",
+            attributes: {
+              traceId: "trace_observability_rehearsal_clear",
+              conversationId: "conv_observability_rehearsal_clear",
+              turnId: "turn_observability_rehearsal_clear",
+              profile: "adult_owner",
+              profileMode: "adult_owner",
+              requestId: "cos_turn_observability_rehearsal_clear",
+              decisionId: "decision_observability_rehearsal_clear",
+              auditId: "audit_observability_rehearsal_clear",
+              governanceOutcome: "requires_review",
+              blockedEffects: ["memory_write", "external_send"],
+            },
+          },
+        ],
+      }),
+    );
+
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      if (url === "https://napoleon.example.test/v1/concierge/chief-of-staff/descriptor") {
+        return harnessJsonResponse(200, {
+          descriptor: {
+            schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+            serviceId: "napoleon.chief_of_staff",
+            runtimeAuthority: false,
+            commandExecution: false,
+            cachePolicy: "fail_closed_to_review_required",
+            blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
+            supportedHandoffs: ["observability_trace"],
+          },
+          checksum: { expected: "sha256:trace", actual: "sha256:trace" },
+          signature: { valid: true },
+        });
+      }
+      assert.equal(url, "https://napoleon.example.test/observability/traces");
+      const body = JSON.parse(String(init?.body ?? "{}")) as Record<string, unknown>;
+      const traceHandoff = body.traceHandoff as {
+        requestId: string;
+        traceEvidence: { traceId: string };
+      };
+      return harnessJsonResponse(200, {
+        governanceDecision: {
+          decision_id: "decision_trace_handoff_rehearsal_clear",
+          request_id: traceHandoff.requestId,
+          outcome: "allow_prepare_only",
+          authority_tier: "advisory_review",
+          approval_requirement: "Napoleon observability review only.",
+          rationale: "Trace evidence received without append authority.",
+          blocked_effects: ["trace_append", "memory_write", "approval_capture", "agent_dispatch", "external_send"],
+          trace_id: traceHandoff.traceEvidence.traceId,
+          audit_id: "audit_trace_handoff_rehearsal_clear",
+        },
+        traceEnvelope: {
+          trace_id: traceHandoff.traceEvidence.traceId,
+          parent_trace_id: "conv_observability_rehearsal_clear",
+          actor_id: "napoleon.observability",
+          request_id: traceHandoff.requestId,
+          decision_id: "decision_trace_handoff_rehearsal_clear",
+          timestamp: "2026-06-23T12:00:00.000Z",
+        },
+        auditEnvelope: {
+          audit_id: "audit_trace_handoff_rehearsal_clear",
+          trace_id: traceHandoff.traceEvidence.traceId,
+          decision_id: "decision_trace_handoff_rehearsal_clear",
+          actor_id: "napoleon.observability",
+          authority_tier: "advisory_review",
+          approval_requirement: "Napoleon observability review only.",
+          evidence_links: ["trace:trace_observability_rehearsal_clear"],
+        },
+        appliedLocally: false,
+        memoryWritePerformed: false,
+        approvalCaptured: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+      });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "https://napoleon.example.test" } });
+    await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+
+    const buffer = within(view.getByLabelText("Local telemetry buffer"));
+    await user.click(buffer.getByRole("button", { name: "Send trace evidence" }));
+
+    await waitFor(() => assert.ok(buffer.getByText("Trace handoff reviewed")));
+    assert.ok(buffer.getByText("Decision: decision_trace_handoff_rehearsal_clear"));
+    assert.ok(buffer.getByText("Audit: audit_trace_handoff_rehearsal_clear"));
+
+    await user.click(view.getByLabelText("Rehearsal Mode"));
+
+    assert.equal(buffer.queryByText("Trace handoff reviewed"), null);
+    assert.equal(buffer.queryByText("Decision: decision_trace_handoff_rehearsal_clear"), null);
+    assert.equal(buffer.queryByText("Audit: audit_trace_handoff_rehearsal_clear"), null);
+    assert.equal(buffer.getByRole("button", { name: "Send trace evidence" }).hasAttribute("disabled"), true);
+    assert.ok(buffer.getByText(/Rehearsal Mode is active; keep this review local/));
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears telemetry and interaction trace exports when user profile changes", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, within }, { App }] = await Promise.all([

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered UI coverage proving returned observability trace handoff review results clear when Rehearsal Mode is enabled, keeping local-only preview mode free of stale live review evidence.
 - Added descriptor-discovery unit coverage and sample descriptor contract metadata for Napoleon-advertised `observability_trace` support, including explicit handoff lists, `required_for`, and plural endpoint-derived forms.
 - Added Text Concierge telemetry-panel controls for governed observability trace handoffs, including readiness, blocker details, review results, and descriptor parsing for advertised `observability_trace` support without weakening the evidence-only boundary.
 - Added a governed observability trace handoff packet and sender for sanitized local trace evidence, gated by descriptor-advertised `observability_trace` support and fail-closed response checks for trace append, audit authority, task routing, approval, memory write, agent dispatch, external send, and local application claims.
