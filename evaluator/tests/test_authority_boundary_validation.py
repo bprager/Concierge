@@ -992,6 +992,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'delete window["sessionStorage"]["responseText"];',
             'globalThis["localStorage"]["setItem"]("token", bridgeToken);',
             'globalThis["localStorage"]["getItem"]("napoleon_auth_token");',
+            'window.localStorage.setItem.call(window.localStorage, "rawPrompt", rawPromptText);',
+            'window["localStorage"].setItem.call(window["localStorage"], "rawPrompt", rawPromptText);',
+            'localStorage["setItem"]("rawPrompt", rawPromptText);',
+            'localStorage["setItem"].call(localStorage, "rawPrompt", rawPromptText);',
             'window["sessionStorage"]["clear"]();',
         ]:
             with self.subTest(source=source):
@@ -1008,6 +1012,14 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'storage.setItem("concierge_raw_transcript_v1", rawTranscript);',
             'storage.getItem("concierge_raw_transcript_v1");',
             'storage.removeItem("napoleon_descriptor_token_cache");',
+            'window.localStorage.setItem.call(window.localStorage, "raw_prompt_cache", rawPromptText);',
+            'window["localStorage"].setItem.call(window["localStorage"], "raw_prompt_cache", rawPromptText);',
+            'localStorage["setItem"]("raw_prompt_cache", rawPromptText);',
+            'localStorage["setItem"].call(localStorage, "raw_prompt_cache", rawPromptText);',
+            "localStorage.clear();",
+            'window.localStorage.clear.call(window.localStorage);',
+            'window["localStorage"]["clear"]();',
+            'window["localStorage"]["clear"].call(window["localStorage"]);',
             """
             const RAW_PROMPT_CACHE_KEY = "raw_prompt_cache";
             storage.setItem(RAW_PROMPT_CACHE_KEY, rawPromptText);
@@ -1035,6 +1047,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'localStorage.getItem("concierge_camera_enabled");',
             'storage.setItem("concierge_telemetry_buffer_v1", JSON.stringify(next));',
             'storage.removeItem("concierge_capability_taxonomy_v1");',
+            'window.localStorage.setItem.call(window.localStorage, "napoleon_endpoint", value.trim());',
+            'window["localStorage"].setItem.call(window["localStorage"], "napoleon_endpoint", value.trim());',
+            'localStorage["setItem"]("concierge_camera_enabled", String(enabled));',
+            'localStorage["setItem"].call(localStorage, "concierge_camera_enabled", String(enabled));',
             """
             const TELEMETRY_BUFFER_STORAGE_KEY = "concierge_telemetry_buffer_v1";
             storage.setItem(TELEMETRY_BUFFER_STORAGE_KEY, JSON.stringify(next));

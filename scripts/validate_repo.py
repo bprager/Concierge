@@ -70,15 +70,89 @@ APPROVED_BROWSER_STORAGE_KEYS = {
     "napoleon_endpoint",
 }
 
-BOUNDED_BROWSER_STORAGE_KEY_PATTERN = re.compile(
-    r"\b(?:localStorage|sessionStorage|storage)\s*\.\s*(?:getItem|setItem|removeItem)\s*\(\s*['\"](?P<key>[^'\"]+)['\"]"
-)
+BOUNDED_BROWSER_STORAGE_KEY_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\.\s*(?:getItem|setItem|removeItem)\s*\(\s*['\"](?P<key>[^'\"]+)['\"]"
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\[\s*['\"](?:getItem|setItem|removeItem)['\"]\s*\]\s*\(\s*['\"](?P<key>[^'\"]+)['\"]"
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\.\s*(?:getItem|setItem|removeItem)\s*\.\s*(?:call|apply)\s*\("
+        r"\s*(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)\s*,\s*['\"](?P<key>[^'\"]+)['\"]"
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\[\s*['\"](?:getItem|setItem|removeItem)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+        r"\s*(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)\s*,\s*['\"](?P<key>[^'\"]+)['\"]"
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]"
+        r"\s*\[\s*['\"](?:getItem|setItem|removeItem)['\"]\s*\]\s*\(\s*['\"](?P<key>[^'\"]+)['\"]"
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]"
+        r"\s*\.\s*(?:getItem|setItem|removeItem)\s*\(\s*['\"](?P<key>[^'\"]+)['\"]"
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]"
+        r"\s*\[\s*['\"](?:getItem|setItem|removeItem)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+        r"\s*(?:globalThis|window)?\s*(?:\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]|\.?(?:localStorage|sessionStorage))\s*,\s*['\"](?P<key>[^'\"]+)['\"]"
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]"
+        r"\s*\.\s*(?:getItem|setItem|removeItem)\s*\.\s*(?:call|apply)\s*\("
+        r"\s*(?:globalThis|window)?\s*(?:\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]|\.?(?:localStorage|sessionStorage))\s*,\s*['\"](?P<key>[^'\"]+)['\"]"
+    ),
+]
 BOUNDED_BROWSER_STORAGE_KEY_CONSTANT_PATTERN = re.compile(
     r"\b(?:const|let|var)\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*['\"](?P<key>[^'\"]+)['\"]"
 )
-BOUNDED_BROWSER_STORAGE_VARIABLE_KEY_PATTERN = re.compile(
-    r"\b(?:localStorage|sessionStorage|storage)\s*\.\s*(?:getItem|setItem|removeItem)\s*\(\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
-)
+BOUNDED_BROWSER_STORAGE_VARIABLE_KEY_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\.\s*(?:getItem|setItem|removeItem)\s*\(\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\[\s*['\"](?:getItem|setItem|removeItem)['\"]\s*\]\s*\(\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\.\s*(?:getItem|setItem|removeItem)\s*\.\s*(?:call|apply)\s*\("
+        r"\s*(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)\s*,\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]"
+        r"\s*\[\s*['\"](?:getItem|setItem|removeItem)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+        r"\s*(?:globalThis|window)?\s*(?:\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]|\.?(?:localStorage|sessionStorage))\s*,\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    ),
+]
+BOUNDED_BROWSER_STORAGE_CLEAR_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\.\s*clear\s*\("
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\.\s*clear\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\[\s*['\"]clear['\"]\s*\]\s*\("
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|storage)"
+        r"\s*\[\s*['\"]clear['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]"
+        r"\s*(?:\.\s*clear|\[\s*['\"]clear['\"]\s*\])\s*(?:\.\s*(?:call|apply))?\s*\("
+    ),
+]
 
 AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     (
@@ -451,6 +525,12 @@ BROWSER_STORAGE_PERSISTENCE_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(
         r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\.(?:getItem|setItem|removeItem|clear)\.(?:call|apply)\s*\("
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\s*\[\s*['\"](?:getItem|setItem|removeItem|clear)['\"]\s*\]\s*\("
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage))\s*\[\s*['\"](?:getItem|setItem|removeItem|clear)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\[\s*['\"](?:getItem|setItem|removeItem|clear)['\"]\s*\]\s*\("
@@ -1465,15 +1545,22 @@ def scan_ungoverned_network_text(path: str, text: str) -> list[str]:
             if key_constant_match:
                 storage_key_constants[key_constant_match.group("name")] = key_constant_match.group("key")
         for line_number, line in enumerate(text.splitlines(), start=1):
-            key_match = BOUNDED_BROWSER_STORAGE_KEY_PATTERN.search(line)
-            if key_match and key_match.group("key") not in APPROVED_BROWSER_STORAGE_KEYS:
+            if any(clear_pattern.search(line) for clear_pattern in BOUNDED_BROWSER_STORAGE_CLEAR_PATTERNS):
                 storage_violations.append(f"{path}:{line_number}: unapproved browser storage key")
                 continue
-            variable_key_match = BOUNDED_BROWSER_STORAGE_VARIABLE_KEY_PATTERN.search(line)
-            if variable_key_match:
-                key = storage_key_constants.get(variable_key_match.group("name"))
-                if key is not None and key not in APPROVED_BROWSER_STORAGE_KEYS:
+            for key_pattern in BOUNDED_BROWSER_STORAGE_KEY_PATTERNS:
+                key_match = key_pattern.search(line)
+                if key_match and key_match.group("key") not in APPROVED_BROWSER_STORAGE_KEYS:
                     storage_violations.append(f"{path}:{line_number}: unapproved browser storage key")
+                    break
+            else:
+                for variable_key_pattern in BOUNDED_BROWSER_STORAGE_VARIABLE_KEY_PATTERNS:
+                    variable_key_match = variable_key_pattern.search(line)
+                    if variable_key_match:
+                        key = storage_key_constants.get(variable_key_match.group("name"))
+                        if key is not None and key not in APPROVED_BROWSER_STORAGE_KEYS:
+                            storage_violations.append(f"{path}:{line_number}: unapproved browser storage key")
+                        break
     else:
         for line_number, line in enumerate(text.splitlines(), start=1):
             for pattern in BROWSER_STORAGE_PERSISTENCE_PATTERNS:

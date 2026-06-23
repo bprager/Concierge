@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation for browser storage aliases, covering bracketed and call/apply `localStorage`/`sessionStorage` access so hidden prompt, proof, token, or response caches are blocked outside approved bounded metadata stores.
 - Added a compact Latest Napoleon turn summary and local turn timeline beside the composer, showing returned handler, governance, trace, blocked effects, and boundary from the last successful proof alongside the latest fail-closed bridge attempt without implying approval or side effects.
 - Added display-only turn comparison rows to the Napoleon turn timeline, explaining why the latest attempt was blocked, what prior handler/governance/trace state existed, and the local next step without exposing raw bridge data or granting authority.
 - Added current live-send preflight retry guidance to the Napoleon turn timeline, mapping blocked or warning state to the next local retry action without adding bridge calls or authority.
