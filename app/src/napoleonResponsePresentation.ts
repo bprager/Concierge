@@ -286,6 +286,13 @@ function proofField(proof: Record<string, unknown>, path: string[]): string {
   return String(current);
 }
 
+function proofComparisonValue(value: string): string {
+  if (value === "redacted") return "redacted metadata";
+  if (value === "unavailable") return "unavailable metadata";
+  if (value === "none") return "not returned metadata";
+  return value;
+}
+
 export function compareNapoleonResponseProofs(
   previousJson: string | null,
   currentJson: string,
@@ -335,7 +342,9 @@ export function compareNapoleonResponseProofs(
   const changes = comparedFields.flatMap(({ label, path }) => {
     const previous = proofField(previousProof, path);
     const current = proofField(currentProof, path);
-    return previous === current ? [] : [{ label, previous, current }];
+    return previous === current
+      ? []
+      : [{ label, previous: proofComparisonValue(previous), current: proofComparisonValue(current) }];
   });
 
   const responseProof = nestedRecord(currentProof, "responseProof");
@@ -345,11 +354,12 @@ export function compareNapoleonResponseProofs(
       ? "Napoleon response proof is unchanged from the previous export in this app session."
       : `Napoleon response proof changed in ${changes.length} sanitized field${changes.length === 1 ? "" : "s"}.`;
 
+  const governance = proofComparisonValue(String(responseProof.governance ?? "unavailable"));
+  const trace = proofComparisonValue(String(responseProof.traceId ?? "unavailable"));
+
   return {
     status,
-    summary: `${summary} Governance ${String(responseProof.governance ?? "unavailable")}; trace ${String(
-      responseProof.traceId ?? "unavailable",
-    )}.`,
+    summary: `${summary} Governance ${governance}; trace ${trace}.`,
     changes,
   };
 }

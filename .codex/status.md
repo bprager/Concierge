@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened Napoleon response proof comparisons so redacted, unavailable, and empty proof fields are labeled as metadata states instead of returned authority values.
 - Hardened the Napoleon delegation panel so redacted selected-agent names or contribution summaries are not rephrased into visible "found redacted" claims.
 - Hardened visible fail-closed bridge and governed handoff messages so unsafe returned request, trace, profile, decision, audit, governance, and blocked-effect values are redacted before display while safe failure labels remain visible.
 - Hardened the last successful Napoleon proof panel and sanitized proof export so unsafe returned governance, profile mode, decision, trace, and audit values are redacted before visible display or local proof JSON.

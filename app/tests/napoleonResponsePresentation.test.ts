@@ -547,6 +547,54 @@ test("compares Napoleon response proof recommendation provenance changes", () =>
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Napoleon recommendation"));
 });
 
+test("labels redacted or unavailable Napoleon proof comparison values as metadata state", () => {
+  const previous = JSON.parse(responseProofJson({ traceId: "trace_previous_redacted_comparison" })) as {
+    responseProof: {
+      recommendation?: string;
+      selectedAgents?: string[];
+      selectedAgentReasons?: string[];
+      traceId?: string;
+    };
+  };
+  const current = JSON.parse(responseProofJson({ traceId: "trace_current_redacted_comparison" })) as {
+    responseProof: {
+      recommendation?: string;
+      selectedAgents?: string[];
+      selectedAgentReasons?: string[];
+      traceId?: string;
+    };
+  };
+  previous.responseProof.recommendation = "unavailable";
+  previous.responseProof.selectedAgents = [];
+  previous.responseProof.selectedAgentReasons = [];
+  current.responseProof.recommendation = "redacted";
+  current.responseProof.selectedAgents = ["redacted"];
+  current.responseProof.selectedAgentReasons = ["redacted"];
+  current.responseProof.traceId = "unavailable";
+
+  const comparison = compareNapoleonResponseProofs(JSON.stringify(previous), JSON.stringify(current));
+  const serialized = JSON.stringify(comparison).toLocaleLowerCase();
+
+  assert.equal(comparison.status, "changed");
+  assert.equal(serialized.includes("\"redacted\""), false);
+  assert.equal(serialized.includes("\"unavailable\""), false);
+  assert.ok(comparison.summary.includes("trace unavailable metadata"));
+  assert.ok(
+    comparison.changes.some(
+      (change: { label: string; previous: string; current: string }) =>
+        change.label === "Napoleon recommendation" &&
+        change.previous === "unavailable metadata" &&
+        change.current === "redacted metadata",
+    ),
+  );
+  assert.ok(
+    comparison.changes.some(
+      (change: { label: string; current: string }) =>
+        change.label === "Selected agents" && change.current === "redacted metadata",
+    ),
+  );
+});
+
 test("rejects missing or unsafe previous Napoleon response proof comparison input", () => {
   const current = responseProofJson({ traceId: "trace_current" });
 
