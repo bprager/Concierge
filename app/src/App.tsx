@@ -2037,7 +2037,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         {
           role: "assistant",
           content: response.text,
-          metadata: describeNapoleonTranscriptMetadata(response),
+          metadata: describeNapoleonTranscriptMetadata(response, {
+            targetCapabilityLabel: response.targetAgent
+              ? chiefOfStaffCapabilities?.capabilities.find((capability) => capability.id === response.targetAgent)?.label
+              : undefined,
+          }),
         },
       ]);
     } catch (error) {
@@ -2408,6 +2412,15 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setNapoleonProofComparison(comparison);
     const proof = lastNapoleonPresentation.proof;
     const proofDetail = (label: string) => proof?.details.find((detail) => detail.label === label)?.value ?? "unavailable";
+    const proofJsonValue = (key: string) => {
+      try {
+        const parsed = JSON.parse(json) as { responseProof?: Record<string, unknown> };
+        const value = parsed.responseProof?.[key];
+        return typeof value === "string" ? value : "unavailable";
+      } catch {
+        return "unavailable";
+      }
+    };
     const proofArrayCount = (key: string) => {
       try {
         const parsed = JSON.parse(json) as { responseProof?: Record<string, unknown> };
@@ -2423,7 +2436,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       traceId,
       conversationId,
       status: proof?.status ?? "not_available",
-      handledBy: proofDetail("Capability or agents"),
+      handledBy: proofJsonValue("handledBy"),
       attributionBoundary: proof ? "Returned bridge provenance only; not local authority." : "unavailable",
       governance: proofDetail("Governance"),
       profileMode: proofDetail("Profile mode"),

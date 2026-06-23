@@ -118,6 +118,19 @@ export interface NapoleonResponsePresentationLabels {
   targetCapabilityLabel?: string;
 }
 
+function displayReturnedTargetCapability(
+  targetCapability: string | undefined,
+  label: string | undefined,
+  redactedDisplay = "redacted metadata",
+): string {
+  const safeTargetCapability = sanitizeVisibleProvenanceValue(targetCapability);
+  if (safeTargetCapability === "redacted") return redactedDisplay;
+  const safeTargetCapabilityLabel = sanitizeVisibleProvenanceValue(label, "");
+  return safeTargetCapabilityLabel && safeTargetCapabilityLabel !== "redacted" && safeTargetCapabilityLabel !== safeTargetCapability
+    ? `${safeTargetCapabilityLabel} (${safeTargetCapability})`
+    : safeTargetCapability;
+}
+
 const FORBIDDEN_VISIBLE_PROVENANCE_PATTERNS = [
   /\bhttps?:\/\//i,
   /\bwss?:\/\//i,
@@ -149,11 +162,14 @@ function visibleReferenceValue(value: string | undefined): string {
 
 export function describeNapoleonTranscriptMetadata(
   response: NapoleonResponse,
+  labels: NapoleonResponsePresentationLabels = {},
 ): NonNullable<ConciergeMessage["metadata"]> {
   return {
     source: "Napoleon governed bridge",
     attributionBoundary: "Returned bridge provenance only; not local authority.",
-    ...(response.targetAgent ? { targetCapability: sanitizeVisibleProvenanceValue(response.targetAgent) } : {}),
+    ...(response.targetAgent
+      ? { targetCapability: displayReturnedTargetCapability(response.targetAgent, labels.targetCapabilityLabel, "redacted") }
+      : {}),
     governanceOutcome: response.governanceDecision.outcome,
     decisionId: sanitizeVisibleProvenanceValue(response.governanceDecision.decision_id),
     auditId: sanitizeVisibleProvenanceValue(response.auditEnvelope.audit_id),
@@ -909,13 +925,7 @@ export function describeDelegation(
   const authorityBoundary =
     "Returned bridge provenance only; not approval, memory, dispatch, external send, or local application.";
   const safeTargetCapability = sanitizeVisibleProvenanceValue(targetCapability);
-  const safeTargetCapabilityLabel = sanitizeVisibleProvenanceValue(fallback?.targetCapabilityLabel, "");
-  const targetCapabilityDisplay =
-    safeTargetCapability === "redacted"
-      ? "redacted metadata"
-      : safeTargetCapabilityLabel && safeTargetCapabilityLabel !== "redacted" && safeTargetCapabilityLabel !== safeTargetCapability
-        ? `${safeTargetCapabilityLabel} (${safeTargetCapability})`
-        : safeTargetCapability;
+  const targetCapabilityDisplay = displayReturnedTargetCapability(targetCapability, fallback?.targetCapabilityLabel);
   if (!delegation || delegation.selectedAgents.length === 0) {
     if (targetCapability) {
       const safeBlockedEffects = sanitizeVisibleProvenanceList(fallback?.blockedEffects);
@@ -1039,11 +1049,7 @@ export function describeNapoleonResponseProof(
     ? sanitizeVisibleProvenanceValue(response.targetAgent, "")
     : "";
   const targetCapability = returnedTargetCapability === "redacted" ? "" : returnedTargetCapability;
-  const safeTargetCapabilityLabel = sanitizeVisibleProvenanceValue(labels.targetCapabilityLabel, "");
-  const targetCapabilityDisplay =
-    targetCapability && safeTargetCapabilityLabel && safeTargetCapabilityLabel !== "redacted" && safeTargetCapabilityLabel !== targetCapability
-      ? `${safeTargetCapabilityLabel} (${targetCapability})`
-      : targetCapability;
+  const targetCapabilityDisplay = targetCapability ? displayReturnedTargetCapability(targetCapability, labels.targetCapabilityLabel) : "";
   const returnedRecommendation = response.recommendationProvenance?.summary
     ? sanitizeVisibleProvenanceValue(response.recommendationProvenance.summary, "")
     : undefined;
