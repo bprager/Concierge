@@ -437,6 +437,17 @@ function extractSelectedAgentFindingClaim(text: string, displayName: string): st
   return claim ? claim : null;
 }
 
+function extractAgentStyleFindingClaims(text: string): Array<{ displayName: string; claim: string }> {
+  const pattern = /\b([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){1,4})\s+found\b([^.!?]*)/g;
+  const claims: Array<{ displayName: string; claim: string }> = [];
+  for (const match of text.matchAll(pattern)) {
+    const displayName = match[1]?.trim();
+    const claim = match[2]?.trim();
+    if (displayName && claim) claims.push({ displayName, claim });
+  }
+  return claims;
+}
+
 function contributionMatchesFindingClaim(contributionSummary: string, claim: string): boolean {
   const normalizedContribution = normalizeAttributionText(contributionSummary);
   const normalizedClaim = normalizeAttributionText(claim);
@@ -451,15 +462,17 @@ function contributionMatchesFindingClaim(contributionSummary: string, claim: str
 function hasUnprovenSelectedAgentAttribution(text: string | undefined, delegation: NapoleonDelegation | undefined): boolean {
   if (!text) return false;
   const protectedAgentNames = ["Passive Brain"];
-  const displayNames = [
-    ...protectedAgentNames,
-    ...(delegation?.selectedAgents.map((agent) => agent.displayName) ?? []),
+  const directClaims = [
+    ...protectedAgentNames
+      .map((displayName) => ({ displayName, claim: extractSelectedAgentFindingClaim(text, displayName) }))
+      .filter((item): item is { displayName: string; claim: string } => Boolean(item.claim)),
+    ...extractAgentStyleFindingClaims(text),
   ];
-  return [...new Set(displayNames)].some((displayName) => {
-    const findingClaim = extractSelectedAgentFindingClaim(text, displayName);
-    if (!findingClaim) return false;
+  const uniqueClaims = new Map<string, { displayName: string; claim: string }>();
+  for (const item of directClaims) uniqueClaims.set(`${item.displayName}\u0000${item.claim}`, item);
+  return [...uniqueClaims.values()].some(({ displayName, claim }) => {
     const agent = delegation?.selectedAgents.find((candidate) => candidate.displayName === displayName);
-    return !agent?.contributionSummary || !contributionMatchesFindingClaim(agent.contributionSummary, findingClaim);
+    return !agent?.contributionSummary || !contributionMatchesFindingClaim(agent.contributionSummary, claim);
   });
 }
 

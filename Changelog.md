@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened live bridge response provenance so title-case agent-style "found" claims fail closed unless matching selected-agent contribution proof is returned.
 - Added explicit authority-boundary rendering to Napoleon delegation details and normalized returned selected-agent contribution wording without inventing attribution.
 - Added direct import of successful live-runtime validation `summary.json` files as accepted real-runtime readiness proof metadata, requiring real runtime source, passed bridge/evaluator/privacy gates, promotion readiness, and no side effects.
 - Added governed capability review packet submission through the Chief of Staff evolution review bridge, with descriptor/Rehearsal Mode/profile gates, sanitized packet evidence, and no local side effects.

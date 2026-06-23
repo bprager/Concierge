@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened live bridge response provenance so title-case agent-style "found" claims such as "Research Analyst found..." fail closed unless Napoleon returns matching selected-agent contribution proof.
 - Added an explicit authority-boundary row to Napoleon delegation details and normalized returned selected-agent contribution wording so bridge-provided findings do not duplicate "found" or create empty attribution.
 - Added direct import of successful live-runtime validation `summary.json` files into the Text Concierge accepted readiness proof flow, accepting only real-runtime, bridge-passed, evaluator-passed, privacy-passed, promotion-ready, side-effect-free metadata as local review context rather than Napoleon approval.
 - Added governed capability review packet submission through the Chief of Staff evolution review bridge so exported capability evidence can be sent for Napoleon review only after descriptor, profile, and Rehearsal Mode gates pass, while remaining proposal-only with no local side effects.
