@@ -390,6 +390,58 @@ test("telemetry emits child-protected avatar perception signals with separate la
   assert.equal(JSON.stringify([gazeSignal, facePoseSignal, affectSignal]).includes("must not be retained"), false);
 });
 
+test("telemetry emits avatar capability signal for local lip-sync rehearsal", () => {
+  const signal = emitCapabilitySignal("lip_sync_completed", {
+    traceId: "trace_avatar_lip_sync_signal",
+    conversationId: "conv_avatar_lip_sync_signal",
+    profile: "adult_owner",
+    localMetadataOnly: true,
+    cueCount: 4,
+    audioPlaybackStarted: false,
+    microphoneCaptureStarted: false,
+    rawAudioStored: false,
+    avatarAnimationStarted: false,
+    liveNapoleonContacted: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected avatar lip-sync capability signal");
+  assert.equal(signal.channel, "avatar");
+  assert.equal(signal.topicLabel, "avatar");
+  assert.equal(signal.intentLabel, "rehearse_local_avatar_lip_sync");
+  assert.equal(signal.capabilityLabel, "avatar_lip_sync_rehearsal");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "avatar");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
+test("telemetry emits child-protected avatar lip-sync signal with separate label", () => {
+  const signal = emitCapabilitySignal("lip_sync_completed", {
+    traceId: "trace_child_avatar_lip_sync_signal",
+    conversationId: "conv_child_avatar_lip_sync_signal",
+    profile: "child_protected",
+    localMetadataOnly: true,
+    cueCount: 4,
+    audioPlaybackStarted: false,
+    microphoneCaptureStarted: false,
+    rawAudioStored: false,
+    avatarAnimationStarted: false,
+    liveNapoleonContacted: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected child avatar lip-sync capability signal");
+  assert.equal(signal.profileMode, "child_protected_user");
+  assert.equal(signal.channel, "avatar");
+  assert.equal(signal.privacyClass, "child_sensitive");
+  assert.equal(signal.capabilityLabel, "child_safe_avatar_lip_sync_rehearsal");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
 test("untracked telemetry events do not create capability signals", () => {
   const signal = emitCapabilitySignal("settings_changed", {
     traceId: "trace_settings",

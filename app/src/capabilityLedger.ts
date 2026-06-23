@@ -1433,6 +1433,25 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "lip_sync_completed") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "avatar",
+      topicLabel: "avatar",
+      intentLabel: "rehearse_local_avatar_lip_sync",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "avatar_lip_sync_rehearsal",
+        "child_safe_avatar_lip_sync_rehearsal",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.72,
+      architectureArea: "avatar",
+      suggestedNextStep: "no_action",
+    });
+  }
+
   return buildCapabilitySignal({
     ...base,
     topicLabel: "unknown",

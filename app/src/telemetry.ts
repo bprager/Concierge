@@ -297,6 +297,7 @@ export function emitCapabilitySignal(
     "gaze_target_updated",
     "camera_state_estimated",
     "affect_signal_fused",
+    "lip_sync_completed",
     "stt_completed",
     "tts_completed",
     "voice_turn_rehearsed",
