@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered UI coverage proving returned observability trace handoff review results clear when the local telemetry buffer is cleared or its retention limit changes, keeping live review evidence scoped to the visible browser-local buffer context.
 - Added rendered UI coverage proving returned observability trace handoff review results clear when the active user profile changes, including adult owner to child protected scope changes.
 - Added rendered UI coverage proving returned observability trace handoff review results clear when descriptor rediscovery changes the descriptor context, including fail-closed checksum mismatch state.
 - Added rendered UI coverage proving returned observability trace handoff review results clear when the Napoleon endpoint or bridge token changes, keeping live review evidence scoped to the active connection.
