@@ -141,6 +141,7 @@ import {
   describeLiveVoiceReadiness,
   describeLiveSendPreflight,
   describeMemoryProposalReview,
+  describeNapoleonTurnTimeline,
   describeNapoleonTranscriptMetadata,
   type LastNapoleonTurnFailureInput,
   sanitizeVisibleProvenanceValue,
@@ -3053,6 +3054,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     lastNapoleonPresentation.proof,
     lastNapoleonTurnFailure,
   );
+  const napoleonTurnTimeline = describeNapoleonTurnTimeline(lastNapoleonPresentation.proof, lastNapoleonTurnFailure);
 
   function renderGovernedReviewResponse(result: GovernedReviewResponseView, localEffects: string) {
     const responseView = describeGovernedReviewResponse(result, localEffects);
@@ -5540,6 +5542,29 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               </div>
             ))}
           </dl>
+        </section>
+        <section className={`napoleon-turn-timeline ${napoleonTurnTimeline.status}`} aria-label="Napoleon turn timeline">
+          <div>
+            <strong>{napoleonTurnTimeline.heading}</strong>
+            <span>{napoleonTurnTimeline.summary}</span>
+            <span>{napoleonTurnTimeline.caveat}</span>
+          </div>
+          <ol>
+            {napoleonTurnTimeline.entries.map((entry) => (
+              <li key={entry.label} className={entry.status}>
+                <strong>{entry.label}</strong>
+                <span>{entry.summary}</span>
+                <dl>
+                  {entry.details.map((detail) => (
+                    <div key={detail.label}>
+                      <dt>{detail.label}</dt>
+                      <dd>{detail.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </li>
+            ))}
+          </ol>
         </section>
         <div className={`send-preflight ${liveSendPreflight.status}`}>
           <div>

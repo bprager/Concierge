@@ -183,6 +183,11 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     const emptyLatestTurnPanel = screen.getByLabelText("Latest Napoleon turn");
     assert.ok(within(emptyLatestTurnPanel).getByText("No successful Napoleon turn has returned proof in this session."));
     assert.ok(within(emptyLatestTurnPanel).getAllByText("not returned").length >= 5);
+    const emptyTurnTimeline = screen.getByLabelText("Napoleon turn timeline");
+    assert.ok(within(emptyTurnTimeline).getByText("No accepted or fail-closed Napoleon turn state has been recorded in this session."));
+    assert.ok(within(emptyTurnTimeline).getByText("Latest successful response"));
+    assert.ok(within(emptyTurnTimeline).getByText("Latest blocked attempt"));
+    assert.ok(within(emptyTurnTimeline).getByText("No fail-closed Napoleon bridge attempt has been recorded in this session."));
 
     await user.click(screen.getByRole("button", { name: "Use local harness" }));
     await waitFor(() =>
@@ -282,6 +287,13 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(latestTurnPanel).getByText("memory_write, approval_capture, external_send, agent_dispatch"));
     assert.ok(within(latestTurnPanel).getByText("Boundary"));
     assert.ok(within(latestTurnPanel).getByText("Returned bridge provenance only; not local authority."));
+    const turnTimeline = screen.getByLabelText("Napoleon turn timeline");
+    assert.ok(within(turnTimeline).getByText("Compares the latest accepted Napoleon response with the latest fail-closed bridge attempt."));
+    assert.ok(within(turnTimeline).getByText("Latest successful response"));
+    assert.ok(within(turnTimeline).getByText("Handled by Passive Brain; governance requires_review."));
+    assert.ok(within(turnTimeline).getByText(lastTextTurnTraceId));
+    assert.ok(within(turnTimeline).getByText("Latest blocked attempt"));
+    assert.ok(within(turnTimeline).getByText("No fail-closed Napoleon bridge attempt has been recorded in this session."));
     const napoleonReply = screen.getByText(
       "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
     ).closest("article") as HTMLElement;
@@ -4035,6 +4047,12 @@ test("shows active profile boundary when Napoleon response tries to drift profil
     assert.ok(within(latestTurnPanel).getByText("No Napoleon response was accepted; fail-closed local state only."));
     assert.ok(within(latestTurnPanel).getByText("Next step"));
     assert.ok(within(latestTurnPanel).getByText("Align the bridge contract or descriptor before attempting another live turn."));
+    const turnTimeline = view.getByLabelText("Napoleon turn timeline");
+    assert.ok(within(turnTimeline).getByText("Latest successful response"));
+    assert.ok(within(turnTimeline).getByText("No successful Napoleon turn has returned proof in this session."));
+    assert.ok(within(turnTimeline).getByText("Latest blocked attempt"));
+    assert.ok(within(turnTimeline).getByText("Blocked by contract_mismatch; governance not returned."));
+    assert.ok(within(turnTimeline).getByText("Align the bridge contract or descriptor before attempting another live turn."));
     const responseFailed = telemetryPayloads.find((payload) => payload.event === "response_failed");
     assert.ok(responseFailed);
     assert.equal(responseFailed.attributes.profile, "child_protected");

@@ -23,6 +23,7 @@ import {
   describeLiveVoiceReadiness,
   describeLiveSendPreflight,
   describeMemoryProposalReview,
+  describeNapoleonTurnTimeline,
   describeNapoleonTranscriptMetadata,
   describeNapoleonResponseProof,
   summarizeRehearsalPreview,
@@ -456,6 +457,75 @@ test("describes latest Napoleon turn summary from sanitized proof metadata only"
       (detail) => detail.label === "Boundary" && detail.value === "Returned bridge provenance only; not local authority.",
     ),
   );
+});
+
+test("describes Napoleon turn timeline as empty before proof or failure returns", () => {
+  const view = describeNapoleonTurnTimeline(null);
+
+  assert.equal(view.heading, "Napoleon turn timeline");
+  assert.equal(view.status, "empty");
+  assert.ok(view.summary.includes("No accepted or fail-closed Napoleon turn state"));
+  assert.ok(view.caveat.includes("not approval"));
+  assert.equal(view.entries.length, 2);
+  assert.equal(view.entries[0].label, "Latest successful response");
+  assert.equal(view.entries[0].status, "not_available");
+  assert.ok(view.entries[0].summary.includes("No successful Napoleon turn"));
+  assert.equal(view.entries[1].label, "Latest blocked attempt");
+  assert.equal(view.entries[1].status, "not_available");
+  assert.ok(view.entries[1].summary.includes("No fail-closed Napoleon bridge attempt"));
+  assert.ok(view.entries[1].details.some((detail) => detail.label === "Failure reason" && detail.value === "not returned"));
+});
+
+test("describes Napoleon turn timeline from latest proof and fail-closed metadata", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the deployment risk",
+    profile: "adult_owner",
+    conversationId: "conv_turn_timeline",
+    turnId: "turn_turn_timeline",
+    traceId: "trace_turn_timeline",
+  });
+  const proof = describeNapoleonResponseProof({
+    text: "Passive Brain found the previous deployment risk note.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: false,
+    delegation: {
+      selectedAgents: [
+        {
+          agentId: "napoleon.passive_brain",
+          displayName: "Passive Brain",
+          selectionReason: "Relevant deployment history was found.",
+          contributionSummary: "Found the previous deployment risk note.",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["memory_write", "external_send"],
+      governanceState: "allow_prepare_only",
+      traceId: "trace_turn_timeline",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+  const failure = describeLastNapoleonTurnFailure(
+    new NapoleonBridgeError("contract_mismatch", "trace_blocked_timeline", "request_blocked_timeline", 200, [
+      "memory_write",
+      "external_send",
+    ]),
+  );
+  const view = describeNapoleonTurnTimeline(proof, failure);
+
+  assert.equal(view.status, "has_entries");
+  assert.ok(view.summary.includes("latest accepted Napoleon response"));
+  assert.equal(view.entries[0].label, "Latest successful response");
+  assert.equal(view.entries[0].status, "available");
+  assert.equal(view.entries[0].summary, "Handled by Passive Brain; governance allow_prepare_only.");
+  assert.ok(view.entries[0].details.some((detail) => detail.label === "Trace" && detail.value === "trace_turn_timeline"));
+  assert.equal(view.entries[1].label, "Latest blocked attempt");
+  assert.equal(view.entries[1].status, "blocked");
+  assert.equal(view.entries[1].summary, "Blocked by contract_mismatch; governance not returned.");
+  assert.ok(view.entries[1].details.some((detail) => detail.label === "Trace" && detail.value === "trace_blocked_timeline"));
+  assert.ok(view.entries[1].details.some((detail) => detail.label === "Failure reason" && detail.value === "contract_mismatch"));
 });
 
 test("describes latest Napoleon turn summary from fail-closed bridge metadata", () => {

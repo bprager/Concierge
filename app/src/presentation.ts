@@ -131,6 +131,21 @@ export interface LastNapoleonTurnFailureInput {
   nextStep?: string;
 }
 
+export interface NapoleonTurnTimelineEntryView {
+  label: string;
+  status: LastNapoleonTurnSummaryView["status"];
+  summary: string;
+  details: Array<{ label: string; value: string }>;
+}
+
+export interface NapoleonTurnTimelineView {
+  heading: string;
+  status: "empty" | "has_entries";
+  summary: string;
+  caveat: string;
+  entries: NapoleonTurnTimelineEntryView[];
+}
+
 export interface NapoleonResponsePresentationLabels {
   targetCapabilityLabel?: string;
 }
@@ -1312,6 +1327,57 @@ export function describeLastNapoleonTurnSummary(
       { label: "Trace", value: proofDetailValue(proof, "Trace") },
       { label: "Blocked effects", value: proofDetailValue(proof, "Blocked effects") },
       { label: "Boundary", value: proofDetailValue(proof, "Attribution boundary") },
+    ],
+  };
+}
+
+export function describeNapoleonTurnTimeline(
+  proof: NapoleonResponseProofView | null | undefined,
+  failure?: LastNapoleonTurnFailureInput | null,
+): NapoleonTurnTimelineView {
+  const successful = describeLastNapoleonTurnSummary(proof, null);
+  const blocked = failure
+    ? describeLastNapoleonTurnSummary(null, failure)
+    : {
+        heading: "Latest Napoleon turn",
+        status: "not_available" as const,
+        summary: "No fail-closed Napoleon bridge attempt has been recorded in this session.",
+        caveat:
+          "Local returned-provenance summary only; not approval, memory permission, agent dispatch, external send, or local application.",
+        details: [
+          { label: "Handled by", value: "not returned" },
+          { label: "Governance", value: "not returned" },
+          { label: "Trace", value: "not returned" },
+          { label: "Blocked effects", value: "not returned" },
+          { label: "Boundary", value: "not returned" },
+          { label: "Failure reason", value: "not returned" },
+          { label: "Descriptor", value: "not returned" },
+          { label: "Next step", value: "not returned" },
+        ],
+      };
+  const hasEntries = Boolean(proof || failure);
+
+  return {
+    heading: "Napoleon turn timeline",
+    status: hasEntries ? "has_entries" : "empty",
+    summary: hasEntries
+      ? "Compares the latest accepted Napoleon response with the latest fail-closed bridge attempt."
+      : "No accepted or fail-closed Napoleon turn state has been recorded in this session.",
+    caveat:
+      "Local display metadata only; not approval, memory permission, agent dispatch, external send, or local application.",
+    entries: [
+      {
+        label: "Latest successful response",
+        status: successful.status,
+        summary: successful.summary,
+        details: successful.details,
+      },
+      {
+        label: "Latest blocked attempt",
+        status: blocked.status,
+        summary: blocked.summary,
+        details: blocked.details,
+      },
     ],
   };
 }
