@@ -4865,6 +4865,108 @@ test("submits a taxonomy review draft through rendered governed controls", async
   }
 });
 
+test("clears returned taxonomy review results when profile context changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const body = init?.body ? JSON.parse(String(init.body)) : {};
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/steering")) {
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon accepted the taxonomy review packet for review.",
+            governanceDecision: {
+              decision_id: "decision_taxonomy_stale_result",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Taxonomy cleanup requires review before application.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: body.traceEnvelope.trace_id,
+              audit_id: "audit_taxonomy_stale_result",
+            },
+            traceEnvelope: {
+              trace_id: body.traceEnvelope.trace_id,
+              parent_trace_id: body.traceEnvelope.parent_trace_id,
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_taxonomy_stale_result",
+              timestamp: "2026-06-13T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_taxonomy_stale_result",
+              trace_id: body.traceEnvelope.trace_id,
+              decision_id: "decision_taxonomy_stale_result",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:taxonomy-stale-result"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    await user.click(view.getByRole("button", { name: "Draft taxonomy review" }));
+    await user.click(view.getByRole("button", { name: "Send taxonomy review to Napoleon review" }));
+
+    await view.findByText("Napoleon accepted the taxonomy review packet for review.");
+    assert.ok(view.getByText(/decision_taxonomy_stale_result/));
+    assert.ok(view.getByText(/audit_taxonomy_stale_result/));
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+
+    assert.equal(view.queryByText("Napoleon accepted the taxonomy review packet for review."), null);
+    assert.equal(view.queryByText(/decision_taxonomy_stale_result/), null);
+    assert.equal(view.queryByText(/audit_taxonomy_stale_result/), null);
+    assert.equal(view.queryByText("Chief of Staff taxonomy review draft"), null);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("exposes collaborator profile in rendered app controls", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render }, { App }] = await Promise.all([
