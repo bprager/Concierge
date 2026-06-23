@@ -112,6 +112,11 @@ import {
   type MemoryProposalSubmissionResult,
 } from "./memoryProposalSubmission.js";
 import {
+  buildObservabilityTraceHandoffPacket,
+  submitObservabilityTraceHandoff,
+  type ObservabilityTraceHandoffResult,
+} from "./observabilityTraceHandoff.js";
+import {
   buildMediaSessionReadinessTelemetryAttributes,
   buildMediaSessionSummary,
   type LocalMediaPermissionStatus,
@@ -486,6 +491,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [taxonomyReviewSubmission, setTaxonomyReviewSubmission] =
     useState<ChiefOfStaffTaxonomyReviewSubmissionResult | null>(null);
   const [taxonomyReviewFailure, setTaxonomyReviewFailure] = useState<string | null>(null);
+  const [observabilityTraceHandoffResult, setObservabilityTraceHandoffResult] =
+    useState<ObservabilityTraceHandoffResult | null>(null);
+  const [observabilityTraceHandoffFailure, setObservabilityTraceHandoffFailure] = useState<string | null>(null);
 
   function clearNapoleonPresentation() {
     setLastNapoleonPresentation(clearNapoleonResponsePresentation());
@@ -529,6 +537,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setTaxonomyReviewFailure(null);
     setCapabilityReviewPacketSubmission(null);
     setCapabilityReviewPacketFailure(null);
+    setObservabilityTraceHandoffResult(null);
+    setObservabilityTraceHandoffFailure(null);
   }
 
   function clearProfileScopedCapabilityDrafts() {
@@ -629,6 +639,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     requiredHandoff: "evolution_proposal_review",
   });
   const latestInteractionTraceId = findLatestInteractionTraceId(browserStorage());
+  const observabilityTraceHandoffReadiness = describeGovernedHandoffReadiness({
+    label: "Observability trace handoff",
+    descriptorConnection,
+    draftReady: Boolean(latestInteractionTraceId),
+    rehearsalMode,
+    requiredHandoff: "observability_trace",
+  });
 
   function refreshCapabilityLedgerStatus() {
     setCapabilitySignalCount(capabilityLedger.listRecent().length);
@@ -650,13 +667,68 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const latestTraceId = findLatestInteractionTraceId(browserStorage());
     if (!latestTraceId) return;
     setInteractionTraceExportJson(exportInteractionTraceJson(browserStorage(), latestTraceId));
+    setObservabilityTraceHandoffResult(null);
+    setObservabilityTraceHandoffFailure(null);
     refreshTelemetryBufferStatus();
+  }
+
+  async function submitLatestInteractionTraceHandoff() {
+    const latestTraceId = findLatestInteractionTraceId(browserStorage());
+    if (!latestTraceId) return;
+    const traceExportJson = exportInteractionTraceJson(browserStorage(), latestTraceId);
+    setInteractionTraceExportJson(traceExportJson);
+    const traceExport = JSON.parse(traceExportJson) as {
+      trace_id: string;
+      napoleon_references?: {
+        request_id?: string;
+        decision_id?: string;
+        audit_id?: string;
+        governance_outcome?: string;
+        bridge_failure_reason?: string;
+        blocked_effects?: string[];
+      };
+    };
+    const packet = buildObservabilityTraceHandoffPacket(
+      {
+        traceId: traceExport.trace_id,
+        requestId: traceExport.napoleon_references?.request_id,
+        decisionId: traceExport.napoleon_references?.decision_id,
+        auditId: traceExport.napoleon_references?.audit_id,
+        governanceOutcome: traceExport.napoleon_references?.governance_outcome,
+        failureReason: traceExport.napoleon_references?.bridge_failure_reason,
+        blockedEffects: traceExport.napoleon_references?.blocked_effects,
+        evidenceRefs: [`trace:${traceExport.trace_id}`],
+      },
+      profile,
+    );
+    try {
+      const result = await submitObservabilityTraceHandoff(packet, {
+        profile,
+        rehearsalMode,
+        descriptorConnection: currentDescriptorInput(),
+        getEndpoint: () => endpoint.trim() || null,
+        getAuthToken: () => authToken.trim() || null,
+      });
+      setObservabilityTraceHandoffResult(result);
+      setObservabilityTraceHandoffFailure(null);
+      refreshTelemetryBufferStatus();
+      refreshCapabilityLedgerStatus();
+    } catch (error) {
+      setObservabilityTraceHandoffFailure(
+        describeGovernedHandoffFailure(error, "Observability trace handoff", "append traces or create audit authority"),
+      );
+      setObservabilityTraceHandoffResult(null);
+      refreshTelemetryBufferStatus();
+      refreshCapabilityLedgerStatus();
+    }
   }
 
   function clearLocalTelemetryBuffer() {
     clearTelemetryBuffer(browserStorage());
     setTelemetryBufferExportJson(null);
     setInteractionTraceExportJson(null);
+    setObservabilityTraceHandoffResult(null);
+    setObservabilityTraceHandoffFailure(null);
     setTelemetryBufferCount(0);
     setTelemetryBufferLastEvent("none");
   }
@@ -668,6 +740,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setTelemetryBufferRetentionLimitState(buffer.maxEvents);
     setTelemetryBufferExportJson(null);
     setInteractionTraceExportJson(null);
+    setObservabilityTraceHandoffResult(null);
+    setObservabilityTraceHandoffFailure(null);
   }
 
   function taxonomySelection(value = selectedTaxonomyLabel): { dimension: TaxonomyDimension; label: string } | null {
@@ -3308,15 +3382,51 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           <strong>Export boundary</strong>
           <span>Export boundary: local metadata only; not Napoleon approval.</span>
         </div>
+        <div>
+          <strong>Trace handoff readiness</strong>
+          <span>Trace handoff: {observabilityTraceHandoffReadiness.summary}</span>
+          {observabilityTraceHandoffReadiness.items.map((item) => (
+            <span key={`trace-handoff-${item.label}`}>
+              {item.label}: {item.status} - {item.detail}
+            </span>
+          ))}
+          <span>{observabilityTraceHandoffReadiness.nextStepSummary}</span>
+          <span>Trace handoff boundary: evidence-only; no trace append, audit authority, approval, memory, agents, routing, external send, or local application.</span>
+        </div>
         <button className="secondary" onClick={exportLocalTelemetryBuffer}>
           Export telemetry buffer
         </button>
         <button className="secondary" disabled={!latestInteractionTraceId} onClick={exportLatestInteractionTrace}>
           Export latest trace
         </button>
+        <button
+          className="secondary"
+          disabled={!observabilityTraceHandoffReadiness.canSubmit}
+          onClick={() => void submitLatestInteractionTraceHandoff()}
+        >
+          Send trace evidence
+        </button>
         <button className="secondary" onClick={clearLocalTelemetryBuffer}>
           Clear telemetry buffer
         </button>
+        {observabilityTraceHandoffResult ? (
+          <div>
+            <strong>Trace handoff reviewed</strong>
+            <span>Outcome: {observabilityTraceHandoffResult.governanceDecision.outcome}</span>
+            <span>Decision: {observabilityTraceHandoffResult.governanceDecision.decision_id}</span>
+            <span>Audit: {observabilityTraceHandoffResult.governanceDecision.audit_id}</span>
+            <span>Trace append performed: {observabilityTraceHandoffResult.traceAppendPerformed ? "yes" : "no"}</span>
+            <span>Audit authority created: {observabilityTraceHandoffResult.auditAuthorityCreated ? "yes" : "no"}</span>
+            <span>Applied locally: {observabilityTraceHandoffResult.appliedLocally ? "yes" : "no"}</span>
+            <span>External send performed: {observabilityTraceHandoffResult.externalSendPerformed ? "yes" : "no"}</span>
+          </div>
+        ) : null}
+        {observabilityTraceHandoffFailure ? (
+          <div>
+            <strong>Trace handoff blocked</strong>
+            <span>{observabilityTraceHandoffFailure}</span>
+          </div>
+        ) : null}
         {telemetryBufferExportJson ? (
           <textarea
             className="proof-export"

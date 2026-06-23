@@ -87,6 +87,7 @@ const GOVERNED_HANDOFF_CAPABILITIES = new Set<GovernedHandoffCapability>([
   "governance_review",
   "evolution_proposal_review",
   "taxonomy_review",
+  "observability_trace",
 ]);
 
 function hasOwnRecordValue(record: Record<string, unknown>, key: string): boolean {
@@ -119,6 +120,7 @@ function supportedHandoffsFromRequiredFor(value: unknown): GovernedHandoffCapabi
     if (item === "memory_proposal_review") pushUniqueHandoff(supported, "memory_proposal_review");
     if (item === "chief_of_staff_steering") pushUniqueHandoff(supported, "chief_of_staff_steering");
     if (item === "taxonomy_review") pushUniqueHandoff(supported, "taxonomy_review");
+    if (item === "observability_trace") pushUniqueHandoff(supported, "observability_trace");
   }
   return supported;
 }
@@ -141,6 +143,9 @@ function supportedHandoffsFromRuntimeEndpoints(endpoints: Record<string, unknown
   }
   if (typeof endpoints.taxonomy_review === "string" || typeof endpoints.taxonomy_reviews === "string") {
     pushUniqueHandoff(supported, "taxonomy_review");
+  }
+  if (typeof endpoints.observability_trace === "string" || typeof endpoints.observability_traces === "string") {
+    pushUniqueHandoff(supported, "observability_trace");
   }
   return supported;
 }
