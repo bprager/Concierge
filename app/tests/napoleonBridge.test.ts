@@ -2552,77 +2552,123 @@ test("live bridge accepts Napoleon recommendation text when provenance matches r
   assert.equal(response.text, "Napoleon recommends preparing the bridge rollout plan for review.");
 });
 
-test("live bridge accepts selected-agent assessment text when delegation provenance matches response envelopes", async () => {
-  const response = await sendToNapoleon(
+test("live bridge accepts guarded selected-agent wording when delegation provenance matches response envelopes", async () => {
+  const cases = [
+    { slug: "found", text: "Research Analyst found the prior rollout note.", summary: "Found the prior rollout note." },
     {
-      traceId: "trace_proven_agent_assessment_text",
-      conversationId: "conv_proven_agent_assessment_text",
-      turnId: "turn_proven_agent_assessment_text",
-      profile: "adult_owner",
-      channel: "text",
-      message: "Review the bridge plan",
+      slug: "identified",
+      text: "Research Analyst identified the prior rollout note.",
+      summary: "Identified the prior rollout note.",
     },
     {
-      getEndpoint: () => "https://napoleon.example/concierge",
-      descriptorConnection: readyDescriptorConnection,
-      emit: () => undefined,
-      fetch: async () => ({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          text: "Research Analyst assessed the bridge plan as stale.",
-          profileMode: "adult_owner",
-          governanceDecision: {
-            decision_id: "decision_proven_agent_assessment_text",
-            request_id: "cos_turn_proven_agent_assessment_text",
-            outcome: "requires_review",
-            authority_tier: "prepare_only",
-            approval_requirement: "explicit_owner_approval",
-            rationale: "External effects require owner approval.",
-            blocked_effects: ["external_send"],
-            trace_id: "trace_proven_agent_assessment_text",
-            audit_id: "audit_proven_agent_assessment_text",
-          },
-          traceEnvelope: {
-            trace_id: "trace_proven_agent_assessment_text",
-            parent_trace_id: "conv_proven_agent_assessment_text",
-            actor_id: "napoleon.chief_of_staff",
-            request_id: "cos_turn_proven_agent_assessment_text",
-            decision_id: "decision_proven_agent_assessment_text",
-            timestamp: "2026-06-12T00:00:00.000Z",
-          },
-          auditEnvelope: {
-            audit_id: "audit_proven_agent_assessment_text",
-            trace_id: "trace_proven_agent_assessment_text",
-            decision_id: "decision_proven_agent_assessment_text",
-            actor_id: "napoleon.chief_of_staff",
-            authority_tier: "prepare_only",
-            approval_requirement: "explicit_owner_approval",
-            evidence_links: ["trace:trace_proven_agent_assessment_text"],
-          },
-          delegation: {
-            selectedAgents: [
-              {
-                agentId: "napoleon.research_analyst",
-                displayName: "Research Analyst",
-                selectionReason: "Bridge rollout evidence needed review.",
-                contributionSummary: "Assessed the bridge plan as stale.",
-              },
-            ],
-            allowedEffects: ["prepare_advisory_response"],
-            blockedEffects: ["external_send"],
-            governanceState: "requires_review",
-            traceId: "trace_proven_agent_assessment_text",
-            auditId: "audit_proven_agent_assessment_text",
-          },
-        }),
-      }),
+      slug: "reported",
+      text: "Research Analyst reported the prior rollout note.",
+      summary: "Reported the prior rollout note.",
     },
-  );
+    {
+      slug: "surfaced",
+      text: "Research Analyst surfaced the prior rollout note.",
+      summary: "Surfaced the prior rollout note.",
+    },
+    {
+      slug: "confirmed",
+      text: "Research Analyst confirmed the prior rollout note.",
+      summary: "Confirmed the prior rollout note.",
+    },
+    {
+      slug: "verified",
+      text: "Research Analyst verified the prior rollout note.",
+      summary: "Verified the prior rollout note.",
+    },
+    {
+      slug: "assessed",
+      text: "Research Analyst assessed the bridge plan as stale.",
+      summary: "Assessed the bridge plan as stale.",
+    },
+    {
+      slug: "concluded",
+      text: "Research Analyst concluded the rollout note is stale.",
+      summary: "Concluded the rollout note is stale.",
+    },
+    {
+      slug: "recommended",
+      text: "Research Analyst recommended the safer rollout note.",
+      summary: "Recommended the safer rollout note.",
+    },
+  ];
 
-  assert.equal(response.text, "Research Analyst assessed the bridge plan as stale.");
-  assert.equal(response.delegation?.selectedAgents[0]?.displayName, "Research Analyst");
-  assert.equal(response.delegation?.selectedAgents[0]?.contributionSummary, "Assessed the bridge plan as stale.");
+  for (const testCase of cases) {
+    const response = await sendToNapoleon(
+      {
+        traceId: `trace_proven_agent_${testCase.slug}_text`,
+        conversationId: `conv_proven_agent_${testCase.slug}_text`,
+        turnId: `turn_proven_agent_${testCase.slug}_text`,
+        profile: "adult_owner",
+        channel: "text",
+        message: "Review the bridge plan",
+      },
+      {
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: () => undefined,
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: testCase.text,
+            profileMode: "adult_owner",
+            governanceDecision: {
+              decision_id: `decision_proven_agent_${testCase.slug}_text`,
+              request_id: `cos_turn_proven_agent_${testCase.slug}_text`,
+              outcome: "requires_review",
+              authority_tier: "prepare_only",
+              approval_requirement: "explicit_owner_approval",
+              rationale: "External effects require owner approval.",
+              blocked_effects: ["external_send"],
+              trace_id: `trace_proven_agent_${testCase.slug}_text`,
+              audit_id: `audit_proven_agent_${testCase.slug}_text`,
+            },
+            traceEnvelope: {
+              trace_id: `trace_proven_agent_${testCase.slug}_text`,
+              parent_trace_id: `conv_proven_agent_${testCase.slug}_text`,
+              actor_id: "napoleon.chief_of_staff",
+              request_id: `cos_turn_proven_agent_${testCase.slug}_text`,
+              decision_id: `decision_proven_agent_${testCase.slug}_text`,
+              timestamp: "2026-06-12T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: `audit_proven_agent_${testCase.slug}_text`,
+              trace_id: `trace_proven_agent_${testCase.slug}_text`,
+              decision_id: `decision_proven_agent_${testCase.slug}_text`,
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "prepare_only",
+              approval_requirement: "explicit_owner_approval",
+              evidence_links: [`trace:trace_proven_agent_${testCase.slug}_text`],
+            },
+            delegation: {
+              selectedAgents: [
+                {
+                  agentId: "napoleon.research_analyst",
+                  displayName: "Research Analyst",
+                  selectionReason: "Bridge rollout evidence needed review.",
+                  contributionSummary: testCase.summary,
+                },
+              ],
+              allowedEffects: ["prepare_advisory_response"],
+              blockedEffects: ["external_send"],
+              governanceState: "requires_review",
+              traceId: `trace_proven_agent_${testCase.slug}_text`,
+              auditId: `audit_proven_agent_${testCase.slug}_text`,
+            },
+          }),
+        }),
+      },
+    );
+
+    assert.equal(response.text, testCase.text, testCase.slug);
+    assert.equal(response.delegation?.selectedAgents[0]?.displayName, "Research Analyst", testCase.slug);
+    assert.equal(response.delegation?.selectedAgents[0]?.contributionSummary, testCase.summary, testCase.slug);
+  }
 });
 
 test("live bridge fails closed when delegation provenance disagrees with trace or audit envelope", async () => {
