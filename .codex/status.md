@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened live bridge response side-effect validation so purchase/payment wording such as "bought it" fails closed as a contract mismatch even when explicit side-effect fields are false.
 - Hardened live bridge response side-effect validation so destructive "deleted it" wording fails closed as a contract mismatch even when explicit side-effect fields are false.
 - Hardened live bridge response side-effect validation so "forwarded it" external-send wording fails closed as a contract mismatch even when explicit side-effect fields are false.
 - Hardened live bridge response provenance so title-case agent-style "found" claims such as "Research Analyst found..." fail closed unless Napoleon returns matching selected-agent contribution proof.
