@@ -114,7 +114,7 @@ priority =
   - authority_expansion_risk
 ```
 
-Initial scoring implementation: recommended-next and easy-to-evolve answers use deterministic local risk/value components for user value, frequency, recent trend delta, failure severity, evaluator gap, implementation effort, governance risk, privacy risk, child safety risk, authority expansion risk, and final priority score. Score explanations are shown in Text Concierge answer rows. Correctly blocked unsafe requests are excluded from implementation recommendations. Child protected evidence remains minimized and raises caution instead of optimizing engagement.
+Initial scoring implementation: recommended-next and easy-to-evolve answers use deterministic local risk/value components for user value, frequency, recent trend delta, failure severity, evaluator gap, implementation effort, governance risk, privacy risk, child safety risk, authority expansion risk, and final priority score. Score explanations are shown in Text Concierge answer rows. Correctly blocked unsafe requests are excluded from implementation recommendations. Media Session Controller readiness blockers are the narrow blocked-state exception: recommended-next answers may suggest a proposal-only guided readiness repair flow from fixed local microphone, camera, and playback blocker details while still forbidding capture, playback, raw media storage, Napoleon contact, approval capture, memory writes, agent dispatch, and external sends. Child protected evidence remains minimized and raises caution instead of optimizing engagement.
 
 The score must be explainable. Concierge should show the top reasons and the strongest counterarguments. Scores are proposal-only heuristics, not approvals or automatic implementation decisions.
 

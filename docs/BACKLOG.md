@@ -151,6 +151,7 @@ Acceptance criteria:
 
 - Concierge can answer common, working-well, missing/blocked, easy-to-evolve, architecture-area, recommended-next, increasing, worsening, recent, weekly-change, and seasonal-change capability questions from local aggregate signals.
 - Easy-to-evolve and recommended-next answers use deterministic local ranking from count, confidence, capability status, architecture area, and suggested next step.
+- Recommended-next answers can propose a guided Media Session readiness repair flow from fixed local microphone, camera, and playback blocker details without treating ordinary correctly blocked unsafe requests as implementation recommendations.
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
 - Correctly blocked unsafe requests are classified separately from failed safe requests.
 - Capability ledger storage re-sanitizes appended labels and evidence references before any persistence, export, query answer, or Chief of Staff steering draft can reuse them.
@@ -861,6 +862,7 @@ Acceptance criteria:
 - Permission request/result telemetry remains metadata-only and explicit about false side effects.
 - Combined Media Session Controller readiness changes emit metadata-only capability-intelligence signals after the initial render so voice/avatar readiness blockers can be explained across microphone, camera, playback, and profile mode without starting capture, playback, raw media storage, Napoleon contact, approval capture, memory writes, agent dispatch, or external sends.
 - Capability Intelligence answers for missing/blocked and recommendation questions can display fixed local Media Session Controller blocker details, such as microphone permission needed, camera blocked, or playback ready, without retaining or exposing raw media, endpoint values, secrets, permission payloads, approval, memory writes, agent dispatch, or external sends.
+- Recommended-next answers can turn those fixed local blocker details into a proposal-only guided readiness repair recommendation without starting capture or playback, contacting Napoleon, capturing approval, writing memory, dispatching agents, or sending externally.
 
 Privacy and safety impact:
 

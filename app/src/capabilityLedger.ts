@@ -175,6 +175,7 @@ export interface CapabilityAnswerRow {
   score?: number;
   scoreComponents?: RecommendationScoreComponents;
   scoreExplanation?: string;
+  recommendation?: string;
   details?: string[];
   previousCount?: number;
   delta?: number;
@@ -614,7 +615,8 @@ function describeRows(rows: CapabilityAnswerRow[]): string {
   return rows
     .map((row) => {
       const details = row.details?.length ? `: ${row.details.join(", ")}` : "";
-      return `${row.label} (${row.count})${details}`;
+      const recommendation = row.recommendation ? `; ${row.recommendation}` : "";
+      return `${row.label} (${row.count})${details}${recommendation}`;
     })
     .join(", ");
 }
@@ -847,6 +849,13 @@ function recommendationExplanation(components: RecommendationScoreComponents): s
   return `value ${components.userValue}, evidence ${components.frequency}, trend +${components.recentTrendDelta}, severity ${components.failureSeverity}, evaluator gap ${components.evaluatorGap}, effort ${components.implementationEffort}, risk ${rounded(risks)}${childCaution}`;
 }
 
+function proposalRecommendationForGroup(group: RecommendationGroup): string | undefined {
+  if (!group.label.endsWith("media_session_readiness_summary")) return undefined;
+  const details = mergeDetails(group.signals);
+  if (details.length === 0) return undefined;
+  return `Add a guided Media Session readiness repair flow for ${details.join(", ")} while keeping capture, playback, raw media storage, Napoleon contact, approval capture, memory writes, agent dispatch, and external sends blocked until explicit consent and governed bridge readiness.`;
+}
+
 function scoredRecommendationRows(
   signals: ConversationCapabilitySignal[],
   windows: ReturnType<typeof trendWindows>,
@@ -915,6 +924,7 @@ function scoredRecommendationRows(
         score: finalPriorityScore,
         scoreComponents,
         scoreExplanation: recommendationExplanation(scoreComponents),
+        recommendation: proposalRecommendationForGroup(group),
         details: mergeDetails(group.signals),
       };
     })
@@ -1111,6 +1121,8 @@ export function answerCapabilityQuestion(
     const candidateSignals = signals.filter(
       (signal) =>
         signal.capabilityStatus === "missing" ||
+        (signal.capabilityStatus === "blocked" &&
+          signal.capabilityLabel.endsWith("media_session_readiness_summary")) ||
         (signal.capabilityStatus === "degraded" && signal.suggestedNextStep !== "needs_human_review"),
     );
     const rows = scoredRecommendationRows(candidateSignals, windows);

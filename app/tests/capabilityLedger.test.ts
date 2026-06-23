@@ -1132,6 +1132,50 @@ test("risk value scoring keeps correctly blocked unsafe requests out of implemen
   assert.equal(answer.rows.some((row) => row.label === "governance_review"), false);
 });
 
+test("recommended next answers turn media session blocker details into a proposal-only repair recommendation", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("media_session_readiness_summarized", {
+      traceId: "trace_media_repair",
+      conversationId: "conv_media_repair",
+      turnId: "turn_media_repair",
+      profile: "adult_owner",
+      microphoneStatus: "permission_needed",
+      cameraStatus: "blocked",
+      playbackStatus: "stopped",
+      rawVideo: "must not be retained",
+      endpoint: "https://private.example.test",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, undefined, {
+    now: "2026-06-11T12:00:00.000Z",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected recommendation answer");
+  assert.equal(answer.kind, "recommended_next_capabilities");
+  assert.equal(answer.rows[0].label, "media_session_readiness_summary");
+  assert.equal(answer.rows[0].status, "blocked");
+  assert.deepEqual(answer.rows[0].details, [
+    "microphone permission needed",
+    "camera blocked",
+    "playback ready",
+  ]);
+  assert.ok(answer.rows[0].recommendation?.includes("guided Media Session readiness repair"));
+  assert.ok(answer.rows[0].recommendation?.includes("microphone permission needed"));
+  assert.ok(answer.rows[0].recommendation?.includes("camera blocked"));
+  assert.ok(answer.summary.includes("guided Media Session readiness repair"));
+  assert.equal(JSON.stringify(answer).includes("private.example.test"), false);
+  assert.equal(JSON.stringify(answer).includes("must not be retained"), false);
+  assert.equal(answer.boundary.proposalOnly, true);
+  assert.equal(answer.boundary.approvalCaptured, false);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+});
+
 test("child protected evidence stays minimized and increases recommendation caution", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(ledger, testSignal("trace_child_score", {

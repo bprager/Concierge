@@ -277,7 +277,8 @@ function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapa
           const nextStep = row.suggestedNextStep ? `, next ${row.suggestedNextStep}` : "";
           const scoreContext = row.scoreExplanation ? `, ${row.scoreExplanation}` : "";
           const details = row.details?.length ? `, details ${row.details.join("; ")}` : "";
-          return `${row.label}: ${row.count}${status}${area}${confidence}${score}${nextStep}${scoreContext}${details}`;
+          const recommendation = row.recommendation ? `, recommendation ${row.recommendation}` : "";
+          return `${row.label}: ${row.count}${status}${area}${confidence}${score}${nextStep}${scoreContext}${details}${recommendation}`;
         })
         .join("\n")
     : "No local signals yet.";
