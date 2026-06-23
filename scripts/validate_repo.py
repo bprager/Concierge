@@ -1163,9 +1163,13 @@ def validate_proposal_only_request_boundary(data: object) -> None:
             require_equal(memory_proposal.get("profile"), "child_protected", "child memory proposal profile must stay child protected")
 
     recommendation = data.get("recommendation")
-    if data.get("profileMode") == "child_protected_user" and recommendation is not None:
+    if recommendation is not None:
         if not isinstance(recommendation, dict):
             raise SystemExit("recommendation must be an object")
+        recommendation_type = recommendation.get("recommendationType")
+        if recommendation_type not in {"guided_readiness_repair", "scored_capability_recommendation"}:
+            raise SystemExit("steering recommendation must include a stable recommendationType")
+    if data.get("profileMode") == "child_protected_user" and recommendation is not None:
         require_equal(
             recommendation.get("childSafetyCaution"),
             True,

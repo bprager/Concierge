@@ -47,6 +47,7 @@
     ]
   },
   "recommendation": {
+    "recommendationType": "scored_capability_recommendation",
     "capability": "capability_taxonomy_review",
     "summary": "Review local metadata-only taxonomy cleanup recommendations.",
     "evidenceCount": 2,

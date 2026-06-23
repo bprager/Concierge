@@ -78,6 +78,7 @@ test("drafts proposal-only Chief of Staff steering from capability signals", () 
   assert.equal(draft.boundary.memoryWriteAllowed, false);
   assert.equal(draft.boundary.agentDispatchAllowed, false);
   assert.equal(draft.boundary.externalSendAllowed, false);
+  assert.equal(draft.recommendation.recommendationType, "scored_capability_recommendation");
   assert.equal(draft.recommendation.capabilityLabel, "live_bridge_descriptor_discovery");
   assert.equal(draft.recommendation.architectureArea, "bridge");
   assert.ok(draft.evaluatorCaseCandidate.expectedBehavior.includes("fail closed"));
@@ -175,6 +176,7 @@ test("steering draft carries media session repair recommendation into proposal r
   });
 
   assert.equal(draft.recommendation.capabilityLabel, "media_session_readiness_summary");
+  assert.equal(draft.recommendation.recommendationType, "guided_readiness_repair");
   assert.equal(draft.recommendation.suggestedNextStep, "needs_human_review");
   assert.ok(draft.recommendation.rationale.includes("guided Media Session readiness repair"));
   assert.ok(draft.recommendation.rationale.includes("microphone permission needed"));
@@ -746,6 +748,7 @@ test("steering handoff posts evolution review packet without applying proposal l
 
   assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "evolution_proposal_review");
   assert.equal((posted?.chiefOfStaffRequest as { requested_authority_tier: string }).requested_authority_tier, "advisory_review");
+  assert.equal((posted?.recommendation as { recommendationType: string }).recommendationType, "scored_capability_recommendation");
   assert.equal((posted?.evolutionProposal as { proposal_id: string }).proposal_id, draft.evolutionProposal.proposal_id);
   const postedLearningSignals = (posted?.evolutionProposal as {
     learning_signals: Array<{

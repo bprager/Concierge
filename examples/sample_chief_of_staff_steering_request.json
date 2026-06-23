@@ -47,6 +47,7 @@
     ]
   },
   "recommendation": {
+    "recommendationType": "scored_capability_recommendation",
     "capability": "bridge_descriptor_readiness",
     "summary": "Improve descriptor readiness evidence before live Napoleon validation.",
     "evidenceCount": 3,

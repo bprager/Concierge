@@ -46,6 +46,7 @@ interface SteeringDraftOptions {
 }
 
 interface SteeringRecommendation {
+  recommendationType: "guided_readiness_repair" | "scored_capability_recommendation";
   capabilityLabel: string;
   architectureArea: CapabilityArchitectureArea;
   evidenceCount: number;
@@ -151,6 +152,16 @@ function supportsSteeringRecommendation(signal: ConversationCapabilitySignal, ro
   return signal.capabilityStatus === "degraded" && signal.suggestedNextStep !== "needs_human_review";
 }
 
+function recommendationTypeForSteeringDraft(
+  capabilityLabel: string,
+  supportingSignals: ConversationCapabilitySignal[],
+): SteeringRecommendation["recommendationType"] {
+  return capabilityLabel.endsWith("media_session_readiness_summary") &&
+    supportingSignals.some((signal) => signal.capabilityStatus === "blocked")
+    ? "guided_readiness_repair"
+    : "scored_capability_recommendation";
+}
+
 function normalizeSteeringProfileMode(profileMode: LocalProfile | NapoleonProfileMode | undefined): NapoleonProfileMode | undefined {
   if (!profileMode) return undefined;
   if (profileMode === "child_protected") return "child_protected_user";
@@ -194,6 +205,7 @@ export function draftChiefOfStaffSteering(
   const requestedAction = top?.recommendation ?? top?.suggestedNextStep ?? "needs_human_review";
 
   const recommendation: SteeringRecommendation = {
+    recommendationType: recommendationTypeForSteeringDraft(capabilityLabel, supportingSignals),
     capabilityLabel,
     architectureArea,
     evidenceCount: top?.count ?? 0,

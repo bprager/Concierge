@@ -3911,6 +3911,7 @@ test("exports a local Chief of Staff steering draft without sending or applying 
 
     const exportBlock = view.getByLabelText("Exported Chief of Staff steering draft");
     assert.ok(exportBlock.textContent?.includes('"kind": "concierge_chief_of_staff_steering_draft"'));
+    assert.ok(exportBlock.textContent?.includes('"recommendationType": "scored_capability_recommendation"'));
     assert.ok(exportBlock.textContent?.includes('"proposalOnly": true'));
     assert.ok(exportBlock.textContent?.includes('"approvalCaptured": false'));
     assert.ok(exportBlock.textContent?.includes('"agentDispatchAllowed": false'));

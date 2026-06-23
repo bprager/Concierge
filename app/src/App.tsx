@@ -287,7 +287,7 @@ function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapa
 }
 
 function describeSteeringRecommendationType(draft: ReturnType<typeof draftChiefOfStaffSteering>): string {
-  return draft.recommendation.rationale.includes("guided Media Session readiness repair")
+  return draft.recommendation.recommendationType === "guided_readiness_repair"
     ? "guided readiness repair"
     : "scored capability recommendation";
 }

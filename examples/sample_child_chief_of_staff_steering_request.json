@@ -50,6 +50,7 @@
     ]
   },
   "recommendation": {
+    "recommendationType": "scored_capability_recommendation",
     "capability": "child_safe_homework_steps",
     "summary": "Improve child-protected homework help with simpler local explanation steps.",
     "evidenceCount": 4,

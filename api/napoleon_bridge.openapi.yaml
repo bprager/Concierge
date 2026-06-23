@@ -545,6 +545,11 @@ paths:
                   required: [audit_id, trace_id, decision_id, actor_id, authority_tier, approval_requirement, evidence_links]
                 recommendation:
                   type: object
+                  required: [recommendationType]
+                  properties:
+                    recommendationType:
+                      type: string
+                      enum: [guided_readiness_repair, scored_capability_recommendation]
                 evaluatorCaseCandidate:
                   type: object
                 evolutionProposal:

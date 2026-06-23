@@ -50,6 +50,7 @@
     ]
   },
   "recommendation": {
+    "recommendationType": "scored_capability_recommendation",
     "capability": "capability_taxonomy_review",
     "summary": "Review child-scoped local metadata-only taxonomy cleanup recommendations.",
     "evidenceCount": 2,
