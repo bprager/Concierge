@@ -459,6 +459,10 @@ test("governance review submission fails closed when Napoleon denies review", as
   assert.equal(events.at(-1)?.event, "governance_review_send_failed");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, ["approval_capture", "external_send"]);
   assert.equal(events.at(-1)?.attributes.governanceOutcome, "deny");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/v1/concierge/chief-of-staff/steering");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "chief_of_staff_steering");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetRequestKind, "chief_of_staff_steering_handoff");
+  assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("napoleon.example"), false);
 });
 
 test("governance review submission rejects response claims that capture approval or apply effects", async () => {

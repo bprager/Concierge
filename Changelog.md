@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added safe named bridge target metadata to governed governance review telemetry so post-preflight submissions and failures show the governed path, operation, and request kind without endpoint hosts or tokens.
 - Added safe named bridge target metadata to governed memory proposal review telemetry so post-preflight submissions and failures show the governed path, operation, and request kind without endpoint hosts or tokens.
 - Added safe named bridge target metadata to Chief of Staff taxonomy review telemetry so post-preflight submissions and failures show the governed path, operation, and request kind without endpoint hosts or tokens.
 - Added safe named bridge target metadata to Chief of Staff steering send telemetry so post-preflight submissions and failures show the governed path, operation, and request kind without endpoint hosts or tokens.

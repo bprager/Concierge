@@ -52,6 +52,12 @@ export interface GovernanceReviewSubmissionResult {
   appliedLocally: false;
 }
 
+interface GovernanceReviewTargetMetadata {
+  bridgeTargetPath: string;
+  bridgeTargetOperation: string;
+  bridgeTargetRequestKind: string;
+}
+
 const GOVERNANCE_REVIEW_BOUNDARY = {
   proposalOnly: true,
   approvalCaptured: false,
@@ -187,6 +193,7 @@ function failGovernanceReviewClosed(
   status?: number,
   blockedEffects: string[] = GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
   descriptorFailureReason?: DescriptorFailClosedReason,
+  targetMetadata?: GovernanceReviewTargetMetadata,
 ): never {
   const profileMode = profile ? mapProfileToNapoleonMode(profile) : undefined;
   const governanceOutcome =
@@ -205,6 +212,11 @@ function failGovernanceReviewClosed(
     blockedEffects,
   };
   if (descriptorFailureReason) attributes.descriptorFailureReason = descriptorFailureReason;
+  if (targetMetadata) {
+    attributes.bridgeTargetPath = targetMetadata.bridgeTargetPath;
+    attributes.bridgeTargetOperation = targetMetadata.bridgeTargetOperation;
+    attributes.bridgeTargetRequestKind = targetMetadata.bridgeTargetRequestKind;
+  }
   emitGovernanceReviewEvent(dependencies, "governance_review_send_failed", attributes);
   throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, {
     decisionId,
@@ -346,6 +358,13 @@ export async function submitGovernanceReviewForNapoleonReview(
     evidence_links: evidenceLinks,
   };
 
+  const target = resolveNapoleonGovernanceReviewOperation(endpoint);
+  const targetMetadata: GovernanceReviewTargetMetadata = {
+    bridgeTargetPath: target.path,
+    bridgeTargetOperation: target.operationId,
+    bridgeTargetRequestKind: target.requestKind,
+  };
+
   emitGovernanceReviewEvent(dependencies, "governance_review_send_started", {
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,
@@ -354,9 +373,9 @@ export async function submitGovernanceReviewForNapoleonReview(
     auditId: review.auditId,
     profile: review.profile,
     profileMode,
+    ...targetMetadata,
   });
 
-  const target = resolveNapoleonGovernanceReviewOperation(endpoint);
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<GovernanceReviewFetch>>;
   try {
@@ -390,6 +409,10 @@ export async function submitGovernanceReviewForNapoleonReview(
       review.decisionId,
       review.auditId,
       review.profile,
+      undefined,
+      GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
+      undefined,
+      targetMetadata,
     );
   }
 
@@ -404,6 +427,9 @@ export async function submitGovernanceReviewForNapoleonReview(
       review.auditId,
       review.profile,
       response.status,
+      GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
+      undefined,
+      targetMetadata,
     );
   }
 
@@ -419,6 +445,10 @@ export async function submitGovernanceReviewForNapoleonReview(
       review.decisionId,
       review.auditId,
       review.profile,
+      undefined,
+      GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
+      undefined,
+      targetMetadata,
     );
   }
   if (
@@ -437,6 +467,10 @@ export async function submitGovernanceReviewForNapoleonReview(
       review.decisionId,
       review.auditId,
       review.profile,
+      undefined,
+      GOVERNANCE_REVIEW_BLOCKED_EFFECTS,
+      undefined,
+      targetMetadata,
     );
   }
 
@@ -451,6 +485,8 @@ export async function submitGovernanceReviewForNapoleonReview(
       review.profile,
       response.status,
       payload.governanceDecision.blocked_effects,
+      undefined,
+      targetMetadata,
     );
   }
 
@@ -467,6 +503,7 @@ export async function submitGovernanceReviewForNapoleonReview(
     agentDispatchPerformed: false,
     externalSendPerformed: false,
     appliedLocally: false,
+    ...targetMetadata,
   });
 
   return {
