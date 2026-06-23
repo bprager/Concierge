@@ -710,8 +710,8 @@ test("renders steering recommendation type answers without leaking telemetry con
     });
     await user.click(view.getByRole("button", { name: "Rehearse" }));
 
-    await view.findByText(/Chief of Staff steering recommendation types/);
-    const answerText = view.container.textContent ?? "";
+    const answer = await view.findByText(/Chief of Staff steering recommendation types/);
+    const answerText = answer.closest("article")?.textContent ?? "";
     assert.ok(answerText.includes("guided_readiness_repair"));
     assert.ok(answerText.includes("scored_capability_recommendation"));
     assert.ok(answerText.includes("enum-only"));
@@ -720,6 +720,67 @@ test("renders steering recommendation type answers without leaking telemetry con
     assert.equal(answerText.includes("token_ui_secret"), false);
     assert.equal(answerText.includes("trace_missing_bridge"), false);
     assert.equal(answerText.includes("raw proposal body"), false);
+    await waitFor(() => assert.equal(fetchCalls, 0));
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
+test("renders steering recommendation type answers within the active child profile scope", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }, { clearCapabilityLedger }, telemetry] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/capabilityLedger.js"),
+    import("../src/telemetry.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  let fetchCalls = 0;
+
+  try {
+    console.info = () => {};
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    telemetry.emitEvent("capability_recommendation_send_started", {
+      traceId: "trace_ui_adult_scored",
+      conversationId: "conv_ui_steering_profile",
+      profile: "adult_owner",
+      recommendationType: "scored_capability_recommendation",
+      rationale: "adult rationale must not render",
+    });
+    telemetry.emitEvent("capability_recommendation_send_failed", {
+      traceId: "trace_ui_child_guided",
+      conversationId: "conv_ui_steering_profile",
+      profile: "child_protected",
+      recommendationType: "guided_readiness_repair",
+      rationale: "child rationale must not render",
+    });
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What steering recommendation types are most common?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    const answer = await view.findByText(/Chief of Staff steering recommendation types/);
+    const answerText = answer.closest("article")?.textContent ?? "";
+    assert.ok(answerText.includes("Profile scope: child_protected_user"));
+    assert.ok(answerText.includes("guided_readiness_repair"));
+    assert.equal(answerText.includes("scored_capability_recommendation"), false);
+    assert.equal(answerText.includes("adult rationale must not render"), false);
+    assert.equal(answerText.includes("child rationale must not render"), false);
     await waitFor(() => assert.equal(fetchCalls, 0));
   } finally {
     globalThis.fetch = originalFetch;

@@ -273,7 +273,10 @@ export function buildBridgeFailureMessageMetadata(
   };
 }
 
-function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapabilityQuestion>>): string {
+function formatCapabilityAnswer(
+  answer: NonNullable<ReturnType<typeof answerCapabilityQuestion>>,
+  profileMode: NapoleonProfileMode,
+): string {
   const rows = answer.rows.length
     ? answer.rows
         .map((row) => {
@@ -290,7 +293,7 @@ function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapa
         .join("\n")
     : "No local signals yet.";
 
-  return `${answer.summary}\n\n${rows}\n\nEvidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
+  return `${answer.summary}\n\n${rows}\n\nProfile scope: ${profileMode}. Evidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
 }
 
 function describeSteeringRecommendationType(draft: ReturnType<typeof draftChiefOfStaffSteering>): string {
@@ -1603,8 +1606,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
+    const activeProfileMode = mapProfileToNapoleonMode(profile);
     const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
-      profileMode: mapProfileToNapoleonMode(profile),
+      profileMode: activeProfileMode,
     });
     if (capabilityAnswer) {
       emitEvent("capability_intelligence_answered", {
@@ -1612,14 +1616,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         conversationId,
         turnId,
         profile,
-        profileMode: mapProfileToNapoleonMode(profile),
+        profileMode: activeProfileMode,
         kind: capabilityAnswer.kind,
         evidenceCount: capabilityAnswer.evidenceCount,
       });
       setMessages((m) => [
         ...m,
         { role: "user", content },
-        { role: "assistant", content: formatCapabilityAnswer(capabilityAnswer) },
+        { role: "assistant", content: formatCapabilityAnswer(capabilityAnswer, activeProfileMode) },
       ]);
       setInput("");
       setPendingRehearsal(null);
@@ -1646,8 +1650,6 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const review = describeGovernanceReview(preview.governanceReview);
     const memoryReviewState = preview.memoryProposal;
     const memoryReview = memoryReviewState.status === "none" ? null : describeMemoryProposalReview(memoryReviewState);
-    const activeProfileMode = mapProfileToNapoleonMode(profile);
-
     emitEvent("rehearsal_preview_created", {
       traceId,
       conversationId,
@@ -1791,8 +1793,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (!rehearsal) {
       const traceId = newTraceId();
       const turnId = `turn_${Date.now().toString(16)}`;
+      const activeProfileMode = mapProfileToNapoleonMode(profile);
       const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
-        profileMode: mapProfileToNapoleonMode(profile),
+        profileMode: activeProfileMode,
       });
       if (capabilityAnswer) {
         emitEvent("capability_intelligence_answered", {
@@ -1800,14 +1803,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           conversationId,
           turnId,
           profile,
-          profileMode: mapProfileToNapoleonMode(profile),
+          profileMode: activeProfileMode,
           kind: capabilityAnswer.kind,
           evidenceCount: capabilityAnswer.evidenceCount,
         });
         setMessages((m) => [
           ...m,
           { role: "user", content },
-          { role: "assistant", content: formatCapabilityAnswer(capabilityAnswer) },
+          { role: "assistant", content: formatCapabilityAnswer(capabilityAnswer, activeProfileMode) },
         ]);
         setInput("");
         setPendingRehearsal(null);

@@ -164,6 +164,7 @@ Acceptance criteria:
 - Chief of Staff steering send started, completed, and failed telemetry includes only the stable recommendation type enum, without emitting rationale, evidence, endpoint, token, or raw content fields.
 - Capability-intelligence answers can summarize common Chief of Staff steering recommendation types from local enum-only send telemetry without exposing rationale, evidence, endpoint, token, or raw content fields.
 - Rendered Text Concierge coverage verifies steering recommendation type answers stay enum-only, do not contact Napoleon, and do not render rationale, evidence, endpoint, token, or raw content fields.
+- Local capability-intelligence answers visibly name the active profile scope, and rendered child-protected steering recommendation type coverage verifies adult-owner steering evidence is not mixed into child-protected answers.
 - Returned Chief of Staff steering review panels show the reviewed recommendation type alongside Napoleon's decision, trace, audit, blocked effects, and false local side-effect state, so the reviewed packet category remains visible after submission.
 - Chief of Staff steering submission fails closed before request fetch when a stale draft's affected profile does not match the active profile, so profile-scoped evolution evidence cannot be submitted across contexts.
 - Recommendations are proposal-only and do not implement features, grant approval, write memory, dispatch agents, or send externally.
@@ -324,6 +325,7 @@ Acceptance criteria:
 - Locally blocked Rehearsal Mode `no_go` previews must emit blocked-governance telemetry with active profile mode and blocked effects, without contacting Napoleon, so child-protected unsafe previews remain child-sensitive local signals.
 - Local capability-intelligence answer telemetry must include the active profile mode so child-protected local query answers stay profile-scoped without contacting Napoleon.
 - Local capability-intelligence answers and Chief of Staff steering drafts must filter source evidence to the active profile before aggregation or recommendation, so child-protected, guest, collaborator, and owner evidence is not mixed across contexts.
+- Rendered local capability-intelligence answers must show the active Napoleon profile mode so the user can see whether a summary is scoped to child-protected, guest, collaborator, or owner evidence.
 - Memory proposal handoff helpers must re-check the proposal profile against the active profile at submission time and fail closed before any request fetch on mismatch.
 - Chief of Staff steering handoff helpers must re-check the draft's affected profile against the active profile at submission time and fail closed before any request fetch on mismatch.
 - Governance review handoff helpers must re-check the review profile against the active profile at submission time and fail closed before any request fetch on mismatch.
