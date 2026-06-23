@@ -19,6 +19,16 @@
       "external_send",
       "service_control",
       "remediation"
+    ],
+    "supportedHandoffs": [
+      "text_turn",
+      "evaluation_review",
+      "memory_proposal_review",
+      "chief_of_staff_steering",
+      "governance_review",
+      "evolution_proposal_review",
+      "taxonomy_review",
+      "observability_trace"
     ]
   },
   "checksum": {

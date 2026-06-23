@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added descriptor-discovery coverage and sample contract metadata for Napoleon-advertised `observability_trace` handoffs, including explicit `supportedHandoffs`, `required_for`, and plural endpoint-derived forms.
 - Added Text Concierge telemetry-panel controls for governed observability trace handoffs, so the latest sanitized interaction trace can be sent to Napoleon review only when endpoint, descriptor-advertised `observability_trace`, and Rehearsal Mode gates pass.
 - Added a governed observability trace handoff packet and sender that submits sanitized local trace evidence to Napoleon's `/observability/traces` target only after descriptor advertisement, while rejecting trace-append, audit-authority, approval, memory, agent, routing, external-send, or local-application claims.
 - Added Text Concierge import, readiness, preflight, proof export, comparison, and telemetry support for sanitized evaluator handoff required-action guidance.

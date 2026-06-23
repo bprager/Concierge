@@ -171,9 +171,10 @@ test("descriptor discovery derives handoffs from Napoleon plural endpoint and re
           evaluation_reviews: "/chief-of-staff/reviews/evaluation",
           governance_reviews: "/chief-of-staff/reviews/governance",
           evolution_proposal_reviews: "/chief-of-staff/reviews/evolution-proposals",
+          observability_traces: "/observability/traces",
           trace: "GET /cos/trace/{trace_id}",
         },
-        required_for: ["evaluation_review", "governance_review", "evolution_proposal_review"],
+        required_for: ["evaluation_review", "governance_review", "evolution_proposal_review", "observability_trace"],
         supported_authority_tiers: ["advisory_prepare_only"],
         blocked_effects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
       }),
@@ -185,6 +186,7 @@ test("descriptor discovery derives handoffs from Napoleon plural endpoint and re
     "evaluation_review",
     "governance_review",
     "evolution_proposal_review",
+    "observability_trace",
     "text_turn",
   ]);
 });
@@ -217,7 +219,7 @@ test("descriptor discovery keeps explicit handoff lists authoritative over endpo
   assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, ["evaluation_review"]);
 });
 
-test("descriptor discovery accepts explicit evaluation review handoff claims", async () => {
+test("descriptor discovery accepts explicit evaluation and observability trace handoff claims", async () => {
   const result = await discoverNapoleonDescriptor({
     getEndpoint: () => "https://napoleon.example/concierge",
     fetch: async () => ({
@@ -230,7 +232,7 @@ test("descriptor discovery accepts explicit evaluation review handoff claims", a
           commandExecution: false,
           cachePolicy: "fail_closed_to_review_required",
           blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
-          supportedHandoffs: ["text_turn", "evaluation_review"],
+          supportedHandoffs: ["text_turn", "evaluation_review", "observability_trace"],
         },
       }),
     }),
@@ -238,7 +240,11 @@ test("descriptor discovery accepts explicit evaluation review handoff claims", a
 
   assert.equal(result.connection.state, "ready");
   assert.equal(result.connection.canAttemptLiveBridge, true);
-  assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, ["text_turn", "evaluation_review"]);
+  assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, [
+    "text_turn",
+    "evaluation_review",
+    "observability_trace",
+  ]);
 });
 
 test("descriptor discovery fails closed for cos descriptors that grant runtime authority", async () => {

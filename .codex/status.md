@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added descriptor-discovery unit coverage and sample descriptor contract metadata for Napoleon-advertised `observability_trace` support, including explicit handoff lists, `required_for`, and plural endpoint-derived forms.
 - Added Text Concierge telemetry-panel controls for governed observability trace handoffs, including readiness, blocker details, review results, and descriptor parsing for advertised `observability_trace` support without weakening the evidence-only boundary.
 - Added a governed observability trace handoff packet and sender for sanitized local trace evidence, gated by descriptor-advertised `observability_trace` support and fail-closed response checks for trace append, audit authority, task routing, approval, memory write, agent dispatch, external send, and local application claims.
 - Added Text Concierge import, readiness, preflight, proof export, comparison, and telemetry support for sanitized evaluator handoff required-action guidance, so live validation can tell Napoleon maintainers where to advertise `evaluation_review`; the latest `mimir` validation still had `/cos/descriptor`, `/cos/text-turn`, `/cos/trace/{trace_id}`, and `/cos/capabilities` passing while promotion remained blocked on that descriptor advertisement.
