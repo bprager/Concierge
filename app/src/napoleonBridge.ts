@@ -472,11 +472,7 @@ function contributionMatchesFindingClaim(contributionSummary: string, claim: str
   const normalizedContribution = normalizeAttributionText(contributionSummary);
   const normalizedClaim = normalizeAttributionText(claim);
   if (!normalizedContribution || !normalizedClaim) return false;
-  if (normalizedContribution.includes(normalizedClaim) || normalizedClaim.includes(normalizedContribution)) return true;
-
-  const contributionTokens = new Set(attributionTokens(contributionSummary));
-  const sharedTokenCount = attributionTokens(claim).filter((token) => contributionTokens.has(token)).length;
-  return sharedTokenCount >= 2;
+  return normalizedContribution.includes(normalizedClaim) || normalizedClaim.includes(normalizedContribution);
 }
 
 function hasUnprovenSelectedAgentAttribution(text: string | undefined, delegation: NapoleonDelegation | undefined): boolean {

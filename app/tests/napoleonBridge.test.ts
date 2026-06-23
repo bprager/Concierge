@@ -2671,6 +2671,128 @@ test("live bridge accepts guarded selected-agent wording when delegation provena
   }
 });
 
+test("live bridge fails closed when selected-agent contribution proof does not match guarded wording", async () => {
+  const cases = [
+    { slug: "found", text: "Research Analyst found the prior rollout note.", summary: "Found the prior budget note." },
+    {
+      slug: "identified",
+      text: "Research Analyst identified the prior rollout note.",
+      summary: "Identified the prior budget note.",
+    },
+    {
+      slug: "reported",
+      text: "Research Analyst reported the prior rollout note.",
+      summary: "Reported the prior budget note.",
+    },
+    {
+      slug: "surfaced",
+      text: "Research Analyst surfaced the prior rollout note.",
+      summary: "Surfaced the prior budget note.",
+    },
+    {
+      slug: "confirmed",
+      text: "Research Analyst confirmed the prior rollout note.",
+      summary: "Confirmed the prior budget note.",
+    },
+    {
+      slug: "verified",
+      text: "Research Analyst verified the prior rollout note.",
+      summary: "Verified the prior budget note.",
+    },
+    {
+      slug: "assessed",
+      text: "Research Analyst assessed the bridge plan as stale.",
+      summary: "Assessed the budget plan as stale.",
+    },
+    {
+      slug: "concluded",
+      text: "Research Analyst concluded the rollout note is stale.",
+      summary: "Concluded the budget note is stale.",
+    },
+    {
+      slug: "recommended",
+      text: "Research Analyst recommended the safer rollout note.",
+      summary: "Recommended the safer budget note.",
+    },
+  ];
+
+  for (const testCase of cases) {
+    await assert.rejects(
+      () =>
+        sendToNapoleon(
+          {
+            traceId: `trace_mismatched_agent_${testCase.slug}_text`,
+            conversationId: `conv_mismatched_agent_${testCase.slug}_text`,
+            turnId: `turn_mismatched_agent_${testCase.slug}_text`,
+            profile: "adult_owner",
+            channel: "text",
+            message: "Review the bridge plan",
+          },
+          {
+            getEndpoint: () => "https://napoleon.example/concierge",
+            descriptorConnection: readyDescriptorConnection,
+            emit: () => undefined,
+            fetch: async () => ({
+              ok: true,
+              status: 200,
+              json: async () => ({
+                text: testCase.text,
+                profileMode: "adult_owner",
+                governanceDecision: {
+                  decision_id: `decision_mismatched_agent_${testCase.slug}_text`,
+                  request_id: `cos_turn_mismatched_agent_${testCase.slug}_text`,
+                  outcome: "requires_review",
+                  authority_tier: "prepare_only",
+                  approval_requirement: "explicit_owner_approval",
+                  rationale: "External effects require owner approval.",
+                  blocked_effects: ["external_send"],
+                  trace_id: `trace_mismatched_agent_${testCase.slug}_text`,
+                  audit_id: `audit_mismatched_agent_${testCase.slug}_text`,
+                },
+                traceEnvelope: {
+                  trace_id: `trace_mismatched_agent_${testCase.slug}_text`,
+                  parent_trace_id: `conv_mismatched_agent_${testCase.slug}_text`,
+                  actor_id: "napoleon.chief_of_staff",
+                  request_id: `cos_turn_mismatched_agent_${testCase.slug}_text`,
+                  decision_id: `decision_mismatched_agent_${testCase.slug}_text`,
+                  timestamp: "2026-06-12T00:00:00.000Z",
+                },
+                auditEnvelope: {
+                  audit_id: `audit_mismatched_agent_${testCase.slug}_text`,
+                  trace_id: `trace_mismatched_agent_${testCase.slug}_text`,
+                  decision_id: `decision_mismatched_agent_${testCase.slug}_text`,
+                  actor_id: "napoleon.chief_of_staff",
+                  authority_tier: "prepare_only",
+                  approval_requirement: "explicit_owner_approval",
+                  evidence_links: [`trace:trace_mismatched_agent_${testCase.slug}_text`],
+                },
+                delegation: {
+                  selectedAgents: [
+                    {
+                      agentId: "napoleon.research_analyst",
+                      displayName: "Research Analyst",
+                      selectionReason: "Bridge rollout evidence needed review.",
+                      contributionSummary: testCase.summary,
+                    },
+                  ],
+                  allowedEffects: ["prepare_advisory_response"],
+                  blockedEffects: ["external_send"],
+                  governanceState: "requires_review",
+                  traceId: `trace_mismatched_agent_${testCase.slug}_text`,
+                  auditId: `audit_mismatched_agent_${testCase.slug}_text`,
+                },
+              }),
+            }),
+          },
+        ),
+      (error: unknown) =>
+        error instanceof Error &&
+        error.name === "NapoleonBridgeError" &&
+        error.message.includes("contract_mismatch"),
+    );
+  }
+});
+
 test("live bridge fails closed when delegation provenance disagrees with trace or audit envelope", async () => {
   await assert.rejects(
     () =>
