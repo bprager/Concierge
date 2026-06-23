@@ -5420,6 +5420,7 @@ test("local voice and avatar sample telemetry records no agent dispatch", async 
     const sampleEvents = telemetryBuffer.events?.filter((event) =>
       [
         "voice_segment_detected",
+        "stt_started",
         "stt_completed",
         "tts_started",
         "tts_completed",
@@ -5583,6 +5584,24 @@ test("runs local speech transcription sample without starting microphone capture
     assert.ok(sttReadiness.getByText("Concierge voice sample detected."));
     assert.ok(sttReadiness.getByText("Model: local-sample-stt"));
     assert.ok(sttReadiness.getByText("Raw audio stored: no"));
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const speechEvents = telemetryBuffer.events?.filter((event) =>
+      ["stt_started", "stt_completed"].includes(event.event),
+    );
+    assert.deepEqual(
+      speechEvents?.map((event) => event.event),
+      ["stt_started", "stt_completed"],
+    );
+    assert.equal(speechEvents?.[0]?.attributes.model, "local-sample-stt");
+    assert.equal(speechEvents?.[0]?.attributes.localSampleOnly, true);
+    assert.equal(speechEvents?.[0]?.attributes.captureStarted, false);
+    assert.equal(speechEvents?.[0]?.attributes.rawAudioStored, false);
+    assert.equal(speechEvents?.[0]?.attributes.approvalCaptured, false);
+    assert.equal(speechEvents?.[0]?.attributes.memoryWritePerformed, false);
+    assert.equal(speechEvents?.[0]?.attributes.agentDispatchPerformed, false);
+    assert.equal(speechEvents?.[0]?.attributes.externalSendPerformed, false);
   } finally {
     cleanup();
     dom.window.close();

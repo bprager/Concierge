@@ -428,7 +428,7 @@ Acceptance criteria:
 - Text Concierge exposes a local STT sample panel.
 - The local STT adapter produces a transcript from local sample metadata.
 - Running the local sample does not request microphone permission, start microphone capture, write memory, capture approval, dispatch agents, or send externally.
-- `stt_completed` events include model, latency, local-sample marker, capture-started false, raw-audio-stored false, and explicit false side-effect flags.
+- `stt_started` and `stt_completed` events include model, local-sample marker, capture-started false, raw-audio-stored false, and explicit false side-effect flags; completion also includes latency.
 - The STT sample does not store or display raw audio.
 - Child protected mode must not treat local STT output as permission for recording, guardian approval, or memory writes.
 

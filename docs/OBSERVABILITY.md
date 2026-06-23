@@ -72,6 +72,7 @@ Every user turn has:
 | camera_permission_result | avatar | conversation_id, result, capture_started, raw_video_stored, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | privacy_setting_changed | privacy | conversation_id, setting, enabled, local_only, raw_audio_stored, raw_video_stored, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | voice_segment_detected | voice | start_ms, end_ms, peak_rms, local_sample_only, capture_started, raw_audio_stored, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
+| stt_started | voice | model, local_sample_only, capture_started, raw_audio_stored, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | stt_completed | voice | latency_ms, model, local_sample_only, capture_started, raw_audio_stored, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | tts_started | voice | voice_id, chars, local_sample_only, audio_playback_started, raw_audio_stored, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |
 | tts_completed | voice | latency_ms, duration_ms, local_sample_only, audio_playback_started, raw_audio_stored, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed |

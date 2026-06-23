@@ -994,6 +994,18 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function runLocalSttSample() {
     const traceId = newTraceId();
+    emitEvent("stt_started", {
+      traceId,
+      conversationId,
+      model: localSttSample.model,
+      localSampleOnly: true,
+      captureStarted: false,
+      rawAudioStored: false,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+    });
     const result = transcribeLocalSpeechSample(localSttSample);
     setSttSampleResult(result);
     emitEvent("stt_completed", {
