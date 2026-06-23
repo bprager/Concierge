@@ -126,6 +126,7 @@ artifacts:
       - "fail closed"
       - "clear user-facing state"
       - "preserve the draft locally"
+      - "redact unsafe request, trace, decision, audit, and blocked-effect values before display"
       - "avoid retry storms"
       - "not treated as approval"
       - "does not execute side effects"

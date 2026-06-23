@@ -267,12 +267,14 @@ export function describeBridgeFailure(error: unknown): string {
   const blockedEffects = error.blockedEffects.length
     ? ` Blocked effects: ${sanitizeVisibleProvenanceList(error.blockedEffects)}.`
     : "";
-  const decision = error.decisionId ? `, decision ${error.decisionId}` : "";
-  const audit = error.auditId ? `, audit ${error.auditId}` : "";
+  const requestId = sanitizeVisibleProvenanceValue(error.requestId);
+  const traceId = sanitizeVisibleProvenanceValue(error.traceId);
+  const decision = error.decisionId ? `, decision ${sanitizeVisibleProvenanceValue(error.decisionId)}` : "";
+  const audit = error.auditId ? `, audit ${sanitizeVisibleProvenanceValue(error.auditId)}` : "";
   const governance = error.governanceOutcome ? `, governance ${error.governanceOutcome}` : "";
   const profile = error.profileMode ? `, profile ${error.profileMode}` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
-  return `Live Napoleon bridge blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}${profile}${decision}${audit}${governance}.${descriptor}${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
+  return `Live Napoleon bridge blocked: ${error.reason}. Request ${requestId}, trace ${traceId}${profile}${decision}${audit}${governance}.${descriptor}${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
 }
 
 export function describeBridgeFailureTranscriptMessage(error: unknown): string {
@@ -283,8 +285,8 @@ export function describeBridgeFailureTranscriptMessage(error: unknown): string {
   const blockedEffects = error.blockedEffects.length
     ? ` Blocked effects: ${sanitizeVisibleProvenanceList(error.blockedEffects)}.`
     : "";
-  const decision = error.decisionId ? ` Decision ${error.decisionId}.` : "";
-  const audit = error.auditId ? ` Audit ${error.auditId}.` : "";
+  const decision = error.decisionId ? ` Decision ${sanitizeVisibleProvenanceValue(error.decisionId)}.` : "";
+  const audit = error.auditId ? ` Audit ${sanitizeVisibleProvenanceValue(error.auditId)}.` : "";
   const governance = error.governanceOutcome ? ` Governance ${error.governanceOutcome}.` : "";
   const profile = error.profileMode ? ` Profile ${error.profileMode}.` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
@@ -299,12 +301,14 @@ export function describeGovernedHandoffFailure(error: unknown, label: string, pr
   const blockedEffects = error.blockedEffects.length
     ? ` Blocked effects: ${sanitizeVisibleProvenanceList(error.blockedEffects)}.`
     : "";
+  const requestId = sanitizeVisibleProvenanceValue(error.requestId);
+  const traceId = sanitizeVisibleProvenanceValue(error.traceId);
   const profile = error.profileMode ? `, profile ${error.profileMode}` : "";
-  const decision = error.decisionId ? `, decision ${error.decisionId}` : "";
-  const audit = error.auditId ? `, audit ${error.auditId}` : "";
+  const decision = error.decisionId ? `, decision ${sanitizeVisibleProvenanceValue(error.decisionId)}` : "";
+  const audit = error.auditId ? `, audit ${sanitizeVisibleProvenanceValue(error.auditId)}` : "";
   const governance = error.governanceOutcome ? `, governance ${error.governanceOutcome}` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
-  return `${label} blocked: ${error.reason}. Request ${error.requestId}, trace ${error.traceId}${profile}${decision}${audit}${governance}.${descriptor}${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
+  return `${label} blocked: ${error.reason}. Request ${requestId}, trace ${traceId}${profile}${decision}${audit}${governance}.${descriptor}${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
 }
 
 function describeEvidenceState(state: LiveBridgeEvidenceState | undefined): string {

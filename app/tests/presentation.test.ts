@@ -1349,13 +1349,13 @@ test("describes descriptor-specific bridge failure reasons", () => {
 });
 
 test("redacts unsafe returned provenance from bridge failure messages", () => {
-  const error = new NapoleonBridgeError("governance_denied", "trace_failure_redaction", "request_failure_redaction", 200, [
+  const error = new NapoleonBridgeError("governance_denied", "http://127.0.0.1:8787/trace", "Bearer local-secret-token", 200, [
     "memory_write",
     "http://127.0.0.1:8787/private",
     "Bearer local-secret-token",
   ], {
-    decisionId: "decision_failure_redaction",
-    auditId: "audit_failure_redaction",
+    decisionId: "http://127.0.0.1:8787/decision",
+    auditId: "Bearer local-secret-token",
     governanceOutcome: "deny",
     profileMode: "adult_owner",
   });
@@ -1368,6 +1368,14 @@ test("redacts unsafe returned provenance from bridge failure messages", () => {
   assert.equal(visibleText.includes("127.0.0.1"), false);
   assert.equal(visibleText.includes("local-secret-token"), false);
   assert.equal(visibleText.includes("bearer"), false);
+  assert.ok(bridgeMessage.includes("Request redacted, trace redacted"));
+  assert.ok(bridgeMessage.includes("decision redacted"));
+  assert.ok(bridgeMessage.includes("audit redacted"));
+  assert.ok(transcriptMessage.includes("Decision redacted"));
+  assert.ok(transcriptMessage.includes("Audit redacted"));
+  assert.ok(handoffMessage.includes("Request redacted, trace redacted"));
+  assert.ok(handoffMessage.includes("decision redacted"));
+  assert.ok(handoffMessage.includes("audit redacted"));
   assert.ok(bridgeMessage.includes("Blocked effects: memory_write, redacted, redacted"));
   assert.ok(transcriptMessage.includes("Blocked effects: memory_write, redacted, redacted"));
   assert.ok(handoffMessage.includes("Blocked effects: memory_write, redacted, redacted"));

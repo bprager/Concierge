@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened visible fail-closed bridge and governed handoff messages so unsafe returned request, trace, decision, audit, and blocked-effect values are redacted before display while safe failure labels remain visible.
 - Hardened the last successful Napoleon proof panel so unsafe returned decision, trace, and audit values are redacted before visible display.
 - Added recommendation proof-alignment metadata to the last successful Napoleon proof panel so accepted Napoleon recommendations visibly share the returned response trace/audit, while absent recommendation proof stays marked not returned.
 - Added proof-alignment metadata to the Napoleon delegation panel so returned selected-agent delegation is tied to the same returned response trace/audit, target-capability-only responses say selected-agent proof was not returned, and empty delegation state remains explicitly not returned.

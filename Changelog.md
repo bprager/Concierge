@@ -132,7 +132,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Hardened sanitized Napoleon response proof exports so selected-agent, selection-reason, allowed-effect, and blocked-effect arrays come from returned provenance instead of rendered display rows.
 - Hardened sanitized Napoleon response proof exports so unsafe returned provenance values such as endpoint-like strings, loopback hosts, bearer credentials, or authorization text are redacted before local proof JSON is created.
 - Hardened visible Napoleon delegation and proof panels so unsafe returned provenance values such as endpoint-like strings, loopback hosts, bearer credentials, authorization text, token-like values, or secret-like values are redacted before display.
-- Hardened visible fail-closed bridge and governed handoff messages so unsafe returned blocked-effect values such as endpoint-like strings, loopback hosts, bearer credentials, token-like values, or secret-like values are redacted before display.
+- Hardened visible fail-closed bridge and governed handoff messages so unsafe returned request, trace, decision, audit, or blocked-effect values such as endpoint-like strings, loopback hosts, bearer credentials, token-like values, or secret-like values are redacted before display.
 - Hardened visible Napoleon transcript metadata so unsafe returned target capability, decision, audit, or blocked-effect values are redacted before display.
 - Hardened visible fail-closed Napoleon transcript metadata so unsafe returned decision, audit, or blocked-effect values are redacted before display.
 - Hardened visible governed review responses so unsafe returned review text, decision, audit, trace, rationale, or blocked-effect values are redacted before display.
