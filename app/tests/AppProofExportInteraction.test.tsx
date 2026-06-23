@@ -4419,6 +4419,11 @@ test("submits a memory proposal through rendered governed controls without local
     assert.ok(view.getByText(/audit_memory_review_rendered/));
     assert.ok(view.getByText("no memory write; no approval captured; no agent dispatch; no external send."));
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/memory-proposals"));
+
+    await user.click(view.getByLabelText("Rehearsal Mode"));
+    assert.equal(view.queryByText("Napoleon accepted the memory proposal for review."), null);
+    assert.equal(view.queryByText(/decision_memory_review_rendered/), null);
+    assert.equal(view.queryByText(/audit_memory_review_rendered/), null);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();
@@ -4585,6 +4590,11 @@ test("submits a governance review through rendered governed controls without loc
     assert.ok(view.getByText(/audit_governance_review_rendered/));
     assert.ok(view.getByText("no approval captured; no memory write; no agent dispatch; no external send; no local application."));
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/steering"));
+
+    await user.click(view.getByLabelText("Rehearsal Mode"));
+    assert.equal(view.queryByText("Napoleon accepted the governance review packet."), null);
+    assert.equal(view.queryByText(/decision_governance_review_rendered/), null);
+    assert.equal(view.queryByText(/audit_governance_review_rendered/), null);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();
