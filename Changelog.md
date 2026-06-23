@@ -8,7 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
-- Hardened the last successful Napoleon proof panel so unsafe returned decision, trace, and audit values are redacted before visible display.
+- Hardened the last successful Napoleon proof panel so unsafe returned governance, profile mode, decision, trace, and audit values are redacted before visible display.
 - Added a recommendation proof-alignment row to the last successful Napoleon proof panel so returned Napoleon recommendations show they share the response trace/audit and missing recommendation proof remains explicit.
 - Added a proof-alignment row to the Napoleon delegation panel so returned selected-agent delegation, target-capability-only responses, and empty states stay distinct from imported readiness proof.
 - Added sanitized accepted real-runtime proof context to governed voice pipeline proof exports and comparisons so prior local review evidence can travel with the voice proof without granting live voice authority.
@@ -130,7 +130,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added count-only allowed-effect and blocked-effect metadata to Napoleon response proof export telemetry without emitting returned effect names.
 - Hardened Napoleon response proof export telemetry counts to derive selected-agent, selection-reason, allowed-effect, and blocked-effect totals from sanitized proof arrays instead of display text punctuation.
 - Hardened sanitized Napoleon response proof exports so selected-agent, selection-reason, allowed-effect, and blocked-effect arrays come from returned provenance instead of rendered display rows.
-- Hardened sanitized Napoleon response proof exports so unsafe returned provenance values such as endpoint-like strings, loopback hosts, bearer credentials, or authorization text are redacted before local proof JSON is created.
+- Hardened sanitized Napoleon response proof exports so unsafe returned governance, profile mode, decision, trace, audit, and other provenance values such as endpoint-like strings, loopback hosts, bearer credentials, or authorization text are redacted before local proof JSON is created.
 - Hardened visible Napoleon delegation and proof panels so unsafe returned provenance values such as endpoint-like strings, loopback hosts, bearer credentials, authorization text, token-like values, or secret-like values are redacted before display.
 - Hardened visible fail-closed bridge and governed handoff messages so unsafe returned request, trace, profile, decision, audit, governance, or blocked-effect values such as endpoint-like strings, loopback hosts, bearer credentials, token-like values, or secret-like values are redacted before display.
 - Hardened visible Napoleon transcript metadata so unsafe returned target capability, decision, audit, or blocked-effect values are redacted before display.

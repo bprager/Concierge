@@ -131,6 +131,8 @@ Napoleon response proof export telemetry may also report whether a target capabi
 
 Napoleon response proof export telemetry may report allowed and blocked effect counts with `allowedEffectCount` and `blockedEffectCount`, but returned effect names remain in the sanitized local export body and visible UI instead of telemetry attributes.
 
+Sanitized Napoleon response proof exports redact unsafe returned governance, profile mode, decision, trace, audit, and other provenance strings before creating local proof JSON, while preserving safe returned arrays.
+
 Explicit advisory harness text sends normalize configured `/cos`, `/cos/descriptor`, `/cos/capabilities`, and `/cos/text-turn` endpoints to `POST /cos/text-turn` before recording sanitized bridge evidence. The evidence still records only the `/cos/text-turn` target path and matching `/cos/trace/{trace_id}` proof state, not endpoint hosts, tokens, prompts, request bodies, response bodies, or trace bodies.
 
 Count-only Napoleon response proof telemetry derives selected-agent, selection-reason, allowed-effect, and blocked-effect totals from the sanitized proof export arrays, so punctuation inside returned text cannot inflate counts and the returned text remains local-only.
@@ -139,7 +141,7 @@ Sanitized Napoleon response proof exports preserve selected-agent names, selecti
 
 The visible Napoleon delegation panel includes proof-alignment metadata for returned delegation, target-capability-only responses, and empty states. This is display metadata only: it clarifies whether selected-agent delegation came from the same returned trace/audit as the Napoleon response proof, and it must not turn imported readiness proof into selected-agent provenance.
 
-The visible last successful Napoleon proof panel includes recommendation proof-alignment metadata. This is display metadata only: returned recommendation provenance is shown as sharing the same returned response trace/audit as the proof, while missing recommendation provenance is shown as not returned. The visible decision, trace, and audit rows use the same unsafe returned-provenance redaction as delegation and recommendation rows.
+The visible last successful Napoleon proof panel includes recommendation proof-alignment metadata. This is display metadata only: returned recommendation provenance is shown as sharing the same returned response trace/audit as the proof, while missing recommendation provenance is shown as not returned. The visible governance, profile mode, decision, trace, and audit rows use the same unsafe returned-provenance redaction as delegation and recommendation rows.
 
 Governed memory proposal, governance review, Chief of Staff steering, and taxonomy review failure events and visible failure messages carry the active profile mode alongside fail-closed reason, returned decision/audit/governance references when available, and blocked-effect metadata. This keeps child-protected, guest, collaborator, or owner scope visible and preserves Napoleon-supplied denial context when a governed handoff is blocked before or after contacting Napoleon.
 

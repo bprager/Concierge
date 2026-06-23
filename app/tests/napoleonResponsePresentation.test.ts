@@ -400,8 +400,11 @@ test("redacts unsafe returned provenance before exporting Napoleon response proo
   });
   const state = buildSuccessfulNapoleonResponsePresentation({
     text: "Napoleon returned sanitized response text.",
-    profileMode: "adult_owner",
-    governanceDecision: contract.governanceDecision,
+    profileMode: "Bearer local-secret-token" as "adult_owner",
+    governanceDecision: {
+      ...contract.governanceDecision,
+      outcome: "http://127.0.0.1:8787/governance" as "requires_review",
+    },
     traceEnvelope: contract.traceEnvelope,
     auditEnvelope: contract.auditEnvelope,
     requiresReview: true,
@@ -437,6 +440,8 @@ test("redacts unsafe returned provenance before exporting Napoleon response proo
       handledBy: string;
       targetCapability: string;
       recommendation: string;
+      governance: string;
+      profileMode: string;
       selectedAgents: string[];
       selectedAgentReasons: string[];
       allowedEffects: string[];
@@ -450,6 +455,8 @@ test("redacts unsafe returned provenance before exporting Napoleon response proo
   assert.equal(proof.responseProof.handledBy, "redacted");
   assert.equal(proof.responseProof.targetCapability, "redacted");
   assert.equal(proof.responseProof.recommendation, "redacted");
+  assert.equal(proof.responseProof.governance, "redacted");
+  assert.equal(proof.responseProof.profileMode, "redacted");
   assert.deepEqual(proof.responseProof.selectedAgents, ["redacted"]);
   assert.deepEqual(proof.responseProof.selectedAgentReasons, ["redacted"]);
   assert.deepEqual(proof.responseProof.allowedEffects, ["prepare_advisory_response", "redacted"]);
