@@ -206,6 +206,11 @@ def descriptor_advertises_evaluation_handoff(payload: dict[str, Any]) -> tuple[b
     if handoffs.intersection(EVALUATION_REVIEW_HANDOFF_NAMES):
         return True, "supported_handoffs"
 
+    raw_required_for = descriptor.get("required_for") if isinstance(descriptor.get("required_for"), list) else []
+    required_for = {str(handoff) for handoff in raw_required_for if isinstance(handoff, str)}
+    if required_for.intersection(EVALUATION_REVIEW_HANDOFF_NAMES):
+        return True, "required_for"
+
     endpoints = descriptor.get("endpoints") if isinstance(descriptor.get("endpoints"), dict) else {}
     for key, value in endpoints.items():
         key_text = str(key)

@@ -282,9 +282,15 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
 
 
 class RecordingCosHarness:
-    def __init__(self, descriptor_ready: bool, supported_handoffs: list[str] | None = None):
+    def __init__(
+        self,
+        descriptor_ready: bool,
+        supported_handoffs: list[str] | None = None,
+        required_for: list[str] | None = None,
+    ):
         self.descriptor_ready = descriptor_ready
         self.supported_handoffs = supported_handoffs
+        self.required_for = required_for
         self.get_count = 0
         self.get_paths = []
         self.post_count = 0
@@ -385,6 +391,8 @@ class RecordingCosHarness:
                     }
                     if "evaluation_review" in parent.supported_handoffs:
                         descriptor_payload["endpoints"]["evaluation_review"] = "POST /chief-of-staff/reviews/evaluation"
+                if parent.required_for is not None:
+                    descriptor_payload["required_for"] = parent.required_for
                 self.write_json(200, descriptor_payload)
 
             def do_POST(self):

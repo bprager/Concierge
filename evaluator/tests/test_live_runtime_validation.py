@@ -336,6 +336,35 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertIn("descriptor does not advertise an evaluation review handoff", stderr.getvalue())
         self.assertIn("Evaluator HTTP mode did not pass.", summary["promotionReadiness"]["blockingReasons"])
 
+    def test_main_accepts_required_for_evaluation_review_handoff_advertisement(self):
+        class MissingRouteResponse:
+            status_code = 404
+
+        class MissingRouteError(Exception):
+            response = MissingRouteResponse()
+
+        with RecordingCosHarness(descriptor_ready=True, required_for=["evaluation_review"]) as cos_harness:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                with mock.patch.object(
+                    live_runtime_validation,
+                    "run_http_eval",
+                    side_effect=MissingRouteError("not found"),
+                ) as run_http_eval:
+                    with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                        exit_code = live_runtime_validation.main([
+                            "--bridge-endpoint", f"{cos_harness.base_url}/cos",
+                            "--out-dir", tmpdir,
+                            "--runtime-validation-source", "real_runtime",
+                        ])
+
+                summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 1)
+        run_http_eval.assert_called_once()
+        self.assertEqual(summary["httpEvaluator"]["failureReason"], "http_evaluator_route_not_found")
+        self.assertTrue(summary["httpEvaluator"]["descriptorHandoffAdvertised"])
+        self.assertEqual(summary["httpEvaluator"]["descriptorHandoffSource"], "required_for")
+
     def test_derives_bridge_base_from_eval_endpoint(self):
         bridge, evaluator = live_runtime_validation.resolve_endpoints(
             None,

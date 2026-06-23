@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added live-runtime validation support for `required_for: evaluation_review` descriptor handoff advertisement, matching the app's Napoleon descriptor discovery behavior.
 - Added descriptor discovery support for Napoleon's plural review endpoint keys and `required_for` handoff claims, while keeping explicit `supportedHandoffs` lists authoritative.
 - Added evaluator scenario coverage requiring real-runtime promotion checks to distinguish descriptor-unadvertised evaluator-review handoffs from missing evaluator routes while keeping text-turn readiness separate from promotion readiness.
 - Added `evaluation_review` to Concierge's governed descriptor handoff allowlist and OpenAPI descriptor schema, so Napoleon can advertise evaluator review without the descriptor failing closed as an unknown route.
