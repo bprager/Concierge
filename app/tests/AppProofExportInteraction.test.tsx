@@ -5173,6 +5173,111 @@ test("clears returned taxonomy review results when descriptor context changes", 
   }
 });
 
+test("clears returned taxonomy review results when Rehearsal Mode is enabled", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const body = init?.body ? JSON.parse(String(init.body)) : {};
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/steering")) {
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon accepted the rehearsal-scoped taxonomy review packet for review.",
+            governanceDecision: {
+              decision_id: "decision_taxonomy_rehearsal_stale",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Taxonomy cleanup requires review before application.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: body.traceEnvelope.trace_id,
+              audit_id: "audit_taxonomy_rehearsal_stale",
+            },
+            traceEnvelope: {
+              trace_id: body.traceEnvelope.trace_id,
+              parent_trace_id: body.traceEnvelope.parent_trace_id,
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_taxonomy_rehearsal_stale",
+              timestamp: "2026-06-13T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_taxonomy_rehearsal_stale",
+              trace_id: body.traceEnvelope.trace_id,
+              decision_id: "decision_taxonomy_rehearsal_stale",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:taxonomy-rehearsal-stale"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    await user.click(view.getByRole("button", { name: "Draft taxonomy review" }));
+    await user.click(view.getByRole("button", { name: "Send taxonomy review to Napoleon review" }));
+
+    await view.findByText("Napoleon accepted the rehearsal-scoped taxonomy review packet for review.");
+    assert.ok(view.getByText(/decision_taxonomy_rehearsal_stale/));
+    assert.ok(view.getByText(/audit_taxonomy_rehearsal_stale/));
+
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    assert.equal(rehearsalCheckbox.checked, false);
+    fireEvent.click(rehearsalCheckbox);
+
+    assert.equal(view.queryByText("Napoleon accepted the rehearsal-scoped taxonomy review packet for review."), null);
+    assert.equal(view.queryByText(/decision_taxonomy_rehearsal_stale/), null);
+    assert.equal(view.queryByText(/audit_taxonomy_rehearsal_stale/), null);
+    assert.equal(view.queryByText("Chief of Staff taxonomy review draft"), null);
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send taxonomy review to Napoleon review" })), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears returned taxonomy review results when local capability ledger is cleared", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
