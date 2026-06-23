@@ -171,7 +171,7 @@ Napoleon may advertise this support directly in `supportedHandoffs` / `supported
 
 The Text Concierge local telemetry buffer panel shows observability trace handoff readiness beside the latest interaction trace. The send control remains disabled until a latest interaction trace exists, a Napoleon endpoint is configured, descriptor discovery is valid, the descriptor advertises `observability_trace`, and Rehearsal Mode is off. Returned review metadata is shown as evidence only, including outcome, decision, audit, and false side-effect fields.
 
-Returned observability trace handoff review metadata is cleared when governed handoff context changes, including Napoleon endpoint changes, bridge token changes, and returning to Rehearsal Mode, so local-only preview mode or a new connection scope does not keep stale live review evidence visible.
+Returned observability trace handoff review metadata is cleared when governed handoff context changes, including Napoleon endpoint changes, bridge token changes, descriptor rediscovery or mismatch, and returning to Rehearsal Mode, so local-only preview mode, fail-closed descriptor state, or a new connection scope does not keep stale live review evidence visible.
 
 Napoleon agent and profile metadata discovery target selection is named for `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}`. Retained local evidence records only target path, operation name, and conservative metadata such as agent/profile IDs, blocked effects, and explicit false side-effect flags. It does not retain endpoint hosts, bearer tokens, raw manifests, raw profile bodies, registry updates, agent dispatch, memory writes, approval capture, external sends, or runtime authority.
 

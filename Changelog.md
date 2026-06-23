@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered coverage proving observability trace handoff review results clear when descriptor rediscovery changes the descriptor context, including fail-closed checksum mismatch state.
 - Added rendered coverage proving observability trace handoff review results clear when the Napoleon endpoint or bridge token changes, preventing stale live review evidence from crossing connection scopes.
 - Added rendered coverage proving observability trace handoff review results clear when Rehearsal Mode returns to local-only preview, preventing stale live review evidence from remaining visible.
 - Added descriptor-discovery coverage and sample contract metadata for Napoleon-advertised `observability_trace` handoffs, including explicit `supportedHandoffs`, `required_for`, and plural endpoint-derived forms.
