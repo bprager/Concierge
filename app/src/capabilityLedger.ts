@@ -1825,6 +1825,60 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "voice_response_shaped") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "voice",
+      intentLabel: "prepare_local_spoken_response",
+      capabilityLabel: profileScopedCapability(
+        profileMode,
+        "voice_response_shaping",
+        "child_safe_voice_response_shaping",
+      ),
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.78,
+      architectureArea: "voice",
+      suggestedNextStep: "no_action",
+      details: [
+        attributes.wasShortened === true ? "spoken response shortened" : "spoken response not shortened",
+        attributes.bridgeProvidedProvenance === true
+          ? "bridge provenance available"
+          : "bridge provenance not available",
+        attributes.audioPlaybackStarted === false ? "no audio playback started" : "audio playback started",
+        attributes.microphoneCaptureStarted === false ? "no microphone capture started" : "microphone capture started",
+        attributes.rawAudioStored === false ? "no raw audio stored" : "raw audio storage reported",
+        attributes.liveNapoleonContacted === false ? "no live Napoleon contact" : "live Napoleon contact reported",
+      ],
+    });
+  }
+
+  if (eventName === "child_voice_policy_applied") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "voice",
+      intentLabel: "apply_child_voice_policy",
+      capabilityLabel: "child_safe_voice_policy",
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.82,
+      architectureArea: "voice",
+      suggestedNextStep: "no_action",
+      details: [
+        attributes.requiresGuardianReviewReminder === true
+          ? "guardian review reminder required"
+          : "guardian review reminder not required",
+        stringAttr(attributes, "pacing", "unknown") === "slow" ? "slow pacing applied" : "standard pacing applied",
+        attributes.audioPlaybackStarted === false ? "no audio playback started" : "audio playback started",
+        attributes.microphoneCaptureStarted === false ? "no microphone capture started" : "microphone capture started",
+        attributes.rawAudioStored === false ? "no raw audio stored" : "raw audio storage reported",
+        attributes.liveNapoleonContacted === false ? "no live Napoleon contact" : "live Napoleon contact reported",
+      ],
+    });
+  }
+
   if (eventName === "privacy_setting_changed" && attributes.setting === "wake_word") {
     return buildCapabilitySignal({
       ...base,

@@ -242,6 +242,117 @@ test("telemetry emits child-protected voice capability signals with separate lab
   );
 });
 
+test("telemetry emits voice capability signal for local response shaping", () => {
+  const signal = emitCapabilitySignal("voice_response_shaped", {
+    traceId: "trace_voice_response_shape_signal",
+    conversationId: "conv_voice_response_shape_signal",
+    profile: "adult_owner",
+    localPreparationOnly: true,
+    wasShortened: true,
+    originalChars: 220,
+    spokenChars: 118,
+    maxSpokenCharsApplied: 150,
+    pacing: "standard",
+    requiresGuardianReviewReminder: false,
+    bridgeProvidedProvenance: false,
+    audioPlaybackStarted: false,
+    microphoneCaptureStarted: false,
+    rawAudioStored: false,
+    liveNapoleonContacted: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    spokenText: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected voice response shaping capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.topicLabel, "voice");
+  assert.equal(signal.intentLabel, "prepare_local_spoken_response");
+  assert.equal(signal.capabilityLabel, "voice_response_shaping");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "voice");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.deepEqual(signal.details, [
+    "spoken response shortened",
+    "bridge provenance not available",
+    "no audio playback started",
+    "no microphone capture started",
+    "no raw audio stored",
+    "no live napoleon contact",
+  ]);
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
+test("telemetry emits child-protected voice shaping and policy signals with separate labels", () => {
+  const shapingSignal = emitCapabilitySignal("voice_response_shaped", {
+    traceId: "trace_child_voice_response_shape_signal",
+    conversationId: "conv_child_voice_response_shape_signal",
+    profile: "child_protected",
+    localPreparationOnly: true,
+    wasShortened: true,
+    originalChars: 220,
+    spokenChars: 110,
+    maxSpokenCharsApplied: 120,
+    pacing: "slow",
+    requiresGuardianReviewReminder: true,
+    bridgeProvidedProvenance: false,
+    audioPlaybackStarted: false,
+    microphoneCaptureStarted: false,
+    rawAudioStored: false,
+    liveNapoleonContacted: false,
+    approvalCaptured: false,
+    guardianApprovalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    spokenText: "must not be retained",
+  });
+  const policySignal = emitCapabilitySignal("child_voice_policy_applied", {
+    traceId: "trace_child_voice_policy_signal",
+    conversationId: "conv_child_voice_response_shape_signal",
+    profileMode: "child_protected",
+    childProtected: true,
+    maxSpokenCharsApplied: 120,
+    pacing: "slow",
+    requiresGuardianReviewReminder: true,
+    localPreparationOnly: true,
+    audioPlaybackStarted: false,
+    microphoneCaptureStarted: false,
+    rawAudioStored: false,
+    liveNapoleonContacted: false,
+    approvalCaptured: false,
+    guardianApprovalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    spokenText: "must not be retained",
+  });
+
+  assert.ok(shapingSignal);
+  assert.ok(policySignal);
+  if (!shapingSignal || !policySignal) throw new Error("expected child voice shaping capability signals");
+  assert.equal(shapingSignal.profileMode, "child_protected_user");
+  assert.equal(policySignal.profileMode, "child_protected_user");
+  assert.equal(shapingSignal.privacyClass, "child_sensitive");
+  assert.equal(policySignal.privacyClass, "child_sensitive");
+  assert.equal(shapingSignal.capabilityLabel, "child_safe_voice_response_shaping");
+  assert.equal(policySignal.capabilityLabel, "child_safe_voice_policy");
+  assert.equal(policySignal.intentLabel, "apply_child_voice_policy");
+  assert.deepEqual(policySignal.details, [
+    "guardian review reminder required",
+    "slow pacing applied",
+    "no audio playback started",
+    "no microphone capture started",
+    "no raw audio stored",
+    "no live napoleon contact",
+  ]);
+  assert.equal(JSON.stringify([shapingSignal, policySignal]).includes("must not be retained"), false);
+});
+
 test("telemetry emits voice capability signal for local wake-word readiness", () => {
   const signal = emitCapabilitySignal("privacy_setting_changed", {
     traceId: "trace_wake_word_readiness_signal",

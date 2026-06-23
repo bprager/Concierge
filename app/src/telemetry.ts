@@ -305,6 +305,8 @@ export function emitCapabilitySignal(
     "tts_completed",
     "voice_turn_rehearsed",
     "barge_in_rehearsed",
+    "voice_response_shaped",
+    "child_voice_policy_applied",
     "wake_word_sample_detected",
     "voice_segment_detected",
     "mic_permission_result",

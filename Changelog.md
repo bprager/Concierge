@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local capability-intelligence signals for voice response shaping and child voice policy dry runs, so spoken-response readiness appears in local capability summaries without retaining spoken text, starting capture/playback, or contacting Napoleon.
 - Added local capability-intelligence signals for barge-in rehearsal, with a separate child-safe label for child protected mode, so interruption-handling readiness appears in local capability summaries without retaining interrupted output, starting capture/playback, or contacting Napoleon.
 - Hardened repository authority-boundary validation for browser storage aliases, covering bracketed and call/apply `localStorage`/`sessionStorage` access so hidden prompt, proof, token, or response caches are blocked outside approved bounded metadata stores.
 - Added a compact Latest Napoleon turn summary and local turn timeline beside the composer, showing returned handler, governance, trace, blocked effects, and boundary from the last successful proof alongside the latest fail-closed bridge attempt without implying approval or side effects.

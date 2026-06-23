@@ -544,6 +544,7 @@ Acceptance criteria:
 - `voice_response_shaped` includes local-preparation marker, shortened state, original and spoken character counts, bridge-provenance marker, capture/playback/storage false, live-Napoleon-contact false, and explicit false side-effect flags.
 - The shortened state is based on the spoken body before provenance prefixes or child-protected guardian-review wording are added, so authority and safety wording cannot hide that returned content was shortened.
 - The voice response shaping panel visibly reports `Napoleon contact: no` before and after local preparation runs.
+- `voice_response_shaped` creates a metadata-only `voice` capability signal for spoken-response readiness, with a separate `child_safe_voice_response_shaping` label under child-protected mode.
 - All blocked effects are visible in the UI.
 - Child protected mode must not treat shaped speech text as guardian approval, recording permission, external speech permission, or Napoleon approval.
 
@@ -594,6 +595,7 @@ Acceptance criteria:
 - Running child protected shaping does not start audio playback, request microphone permission, start microphone capture, store raw audio, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - Child protected shaping blocked effects include `guardian_approval_capture`.
 - `voice_response_shaped` includes profile mode, child-protected marker, applied character budget, pacing, guardian-review reminder state, bridge-provenance marker, and explicit false side-effect flags.
+- `child_voice_policy_applied` creates a metadata-only `child_safe_voice_policy` capability signal for stricter child voice preparation without retaining spoken text.
 - Child protected shaped speech remains a local preview only and must not be treated as Napoleon approval, guardian approval, recording permission, external speech permission, or permission to keep secrets.
 
 Privacy and safety impact:
