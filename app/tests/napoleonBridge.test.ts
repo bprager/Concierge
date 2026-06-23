@@ -2001,6 +2001,68 @@ test("live bridge fails closed when text response implies calendar scheduling de
   );
 });
 
+test("live bridge fails closed when text response implies forwarding despite false side-effect fields", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_text_implied_forward_claim",
+          conversationId: "conv_text_implied_forward_claim",
+          turnId: "turn_text_implied_forward_claim",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Prepare the bridge summary",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Napoleon prepared the bridge summary and forwarded it.",
+              governanceDecision: {
+                decision_id: "decision_text_implied_forward_claim",
+                request_id: "cos_turn_text_implied_forward_claim",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["external_send", "memory_write", "agent_dispatch", "approval_capture"],
+                trace_id: "trace_text_implied_forward_claim",
+                audit_id: "audit_text_implied_forward_claim",
+              },
+              traceEnvelope: {
+                trace_id: "trace_text_implied_forward_claim",
+                parent_trace_id: "conv_text_implied_forward_claim",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_text_implied_forward_claim",
+                decision_id: "decision_text_implied_forward_claim",
+                timestamp: "2026-06-13T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_text_implied_forward_claim",
+                trace_id: "trace_text_implied_forward_claim",
+                decision_id: "decision_text_implied_forward_claim",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_text_implied_forward_claim"],
+              },
+              memoryWritePerformed: false,
+              approvalCaptured: false,
+              externalSendPerformed: false,
+              agentDispatchPerformed: false,
+              appliedLocally: false,
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error && error.name === "NapoleonBridgeError" && error.message.includes("contract_mismatch"),
+  );
+});
+
 test("live bridge accepts Napoleon recommendation text when provenance matches response envelopes", async () => {
   const response = await sendToNapoleon(
     {
