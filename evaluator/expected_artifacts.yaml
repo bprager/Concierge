@@ -192,6 +192,7 @@ artifacts:
       - "matching audit ID"
       - "recommendation proof alignment"
       - "same returned response trace/audit"
+      - "unsafe returned decision, trace, and audit"
       - "allowed effects"
       - "blocked effects"
       - "fails closed as contract mismatch"

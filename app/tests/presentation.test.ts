@@ -237,9 +237,18 @@ test("redacts unsafe returned provenance from visible Napoleon delegation and pr
   const proofView = describeNapoleonResponseProof({
     text: "Napoleon returned sanitized response text.",
     profileMode: "adult_owner",
-    governanceDecision: contract.governanceDecision,
-    traceEnvelope: contract.traceEnvelope,
-    auditEnvelope: contract.auditEnvelope,
+    governanceDecision: {
+      ...contract.governanceDecision,
+      decision_id: "Bearer local-secret-token",
+    },
+    traceEnvelope: {
+      ...contract.traceEnvelope,
+      trace_id: "http://127.0.0.1:8787/trace",
+    },
+    auditEnvelope: {
+      ...contract.auditEnvelope,
+      audit_id: "http://127.0.0.1:8787/audit",
+    },
     requiresReview: true,
     targetAgent: "http://127.0.0.1:8787/v1/concierge/turn",
     delegation,
@@ -256,6 +265,9 @@ test("redacts unsafe returned provenance from visible Napoleon delegation and pr
   assert.equal(visibleText.includes("bearer"), false);
   assert.ok(delegationView.details.some((detail) => detail.label === "Target capability" && detail.value === "redacted"));
   assert.ok(proofView.details.some((detail) => detail.label === "Napoleon recommendation" && detail.value === "redacted"));
+  assert.ok(proofView.details.some((detail) => detail.label === "Decision" && detail.value === "redacted"));
+  assert.ok(proofView.details.some((detail) => detail.label === "Trace" && detail.value === "redacted"));
+  assert.ok(proofView.details.some((detail) => detail.label === "Audit" && detail.value === "redacted"));
 });
 
 test("describes successful Napoleon response proof from returned provenance only", () => {
