@@ -182,6 +182,19 @@ export interface CapabilityAnswerRow {
   delta?: number;
 }
 
+export interface CapabilityAnswerDrilldownRow extends CapabilityAnswerRow {
+  evidenceRefs: string[];
+}
+
+export interface CapabilityAnswerDrilldown {
+  schemaVersion: "concierge.capability-answer-drilldown.v1";
+  profileMode: NapoleonProfileMode | "all_profiles";
+  rows: CapabilityAnswerDrilldownRow[];
+  boundary: RecommendationBoundary;
+  privacyCaveat: string;
+  authorityCaveat: string;
+}
+
 export interface CapabilityQuestionAnswer {
   kind: CapabilityQuestionKind;
   question: string;
@@ -190,6 +203,20 @@ export interface CapabilityQuestionAnswer {
   evidenceCount: number;
   caveat: string;
   boundary: RecommendationBoundary;
+  drilldown: CapabilityAnswerDrilldown;
+}
+
+export interface ExportedCapabilityAnswerDrilldown {
+  schemaVersion: "concierge.capability-answer-drilldown.export.v1";
+  generatedAt: string;
+  answerKind: CapabilityQuestionKind;
+  question: string;
+  profileMode: NapoleonProfileMode | "all_profiles";
+  evidenceCount: number;
+  rows: CapabilityAnswerDrilldownRow[];
+  boundary: RecommendationBoundary;
+  privacyCaveat: string;
+  authorityCaveat: string;
 }
 
 const DEFAULT_RECOMMENDATION_BOUNDARY: RecommendationBoundary = {
@@ -212,6 +239,10 @@ const CAPABILITY_LEDGER_SEASONAL_CAVEAT =
   "Seasonal summaries compare recent 28 days with the previous 28 days from local metadata only; sparse, disabled, or single-device telemetry can distort seasonal patterns.";
 const CAPABILITY_LEDGER_SCORING_CAVEAT =
   "Recommendation scores are local risk/value heuristics only; they do not approve implementation, change policy, write memory, dispatch agents, or send externally.";
+const CAPABILITY_ANSWER_DRILLDOWN_PRIVACY_CAVEAT =
+  "Local sanitized metadata only. Raw user text, endpoints, credentials, request bodies, response bodies, raw audio, and raw video are excluded.";
+const CAPABILITY_ANSWER_DRILLDOWN_AUTHORITY_CAVEAT =
+  "This drilldown is proposal-only evidence. It is not Napoleon approval, does not write memory, does not capture approval, does not dispatch agents, and does not send externally.";
 
 const DEFAULT_MAX_SIGNALS = 250;
 const DEFAULT_MAX_AGE_DAYS = 90;
@@ -641,6 +672,81 @@ const MISSING_PROPOSAL_CAVEAT =
 const STEERING_RECOMMENDATION_TYPE_CAVEAT =
   "Based on local enum-only Chief of Staff steering telemetry; this does not include rationale, evidence, endpoint, token, raw content, approval, implementation, memory writes, agent dispatch, or external sends.";
 
+function signalMatchesAnswerRow(signal: ConversationCapabilitySignal, row: CapabilityAnswerRow): boolean {
+  return (
+    signal.topicLabel === row.label ||
+    signal.intentLabel === row.label ||
+    signal.capabilityLabel === row.label ||
+    signal.architectureArea === row.label
+  );
+}
+
+function evidenceRefsForAnswerRow(signals: ConversationCapabilitySignal[], row: CapabilityAnswerRow): string[] {
+  return [
+    ...new Set(
+      signals
+        .filter((signal) => signalMatchesAnswerRow(signal, row))
+        .flatMap((signal) => signal.evidenceRefs)
+        .map(sanitizeCapabilityEvidenceRef),
+    ),
+  ]
+    .sort()
+    .slice(0, 12);
+}
+
+function buildCapabilityAnswerDrilldown(input: {
+  rows: CapabilityAnswerRow[];
+  signals: ConversationCapabilitySignal[];
+  profileMode: NapoleonProfileMode | "all_profiles";
+  boundary: RecommendationBoundary;
+}): CapabilityAnswerDrilldown {
+  return {
+    schemaVersion: "concierge.capability-answer-drilldown.v1",
+    profileMode: input.profileMode,
+    rows: input.rows.map((row) => ({
+      ...row,
+      evidenceRefs: evidenceRefsForAnswerRow(input.signals, row),
+    })),
+    boundary: input.boundary,
+    privacyCaveat: CAPABILITY_ANSWER_DRILLDOWN_PRIVACY_CAVEAT,
+    authorityCaveat: CAPABILITY_ANSWER_DRILLDOWN_AUTHORITY_CAVEAT,
+  };
+}
+
+function withCapabilityAnswerDrilldown(
+  answer: Omit<CapabilityQuestionAnswer, "drilldown">,
+  signals: ConversationCapabilitySignal[],
+  profileMode: NapoleonProfileMode | "all_profiles",
+): CapabilityQuestionAnswer {
+  return {
+    ...answer,
+    drilldown: buildCapabilityAnswerDrilldown({
+      rows: answer.rows,
+      signals,
+      profileMode,
+      boundary: answer.boundary,
+    }),
+  };
+}
+
+export function exportCapabilityAnswerDrilldown(
+  answer: CapabilityQuestionAnswer,
+  options: { generatedAt?: string } = {},
+): ExportedCapabilityAnswerDrilldown {
+  return {
+    schemaVersion: "concierge.capability-answer-drilldown.export.v1",
+    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    answerKind: answer.kind,
+    question: answer.kind,
+    profileMode: answer.drilldown.profileMode,
+    evidenceCount: answer.evidenceCount,
+    rows: answer.drilldown.rows,
+    boundary: answer.drilldown.boundary,
+    privacyCaveat: answer.drilldown.privacyCaveat,
+    authorityCaveat: answer.drilldown.authorityCaveat,
+  };
+}
+
 interface GroupedSignalStats {
   label: string;
   count: number;
@@ -955,10 +1061,11 @@ export function answerCapabilityQuestion(
   const signals = applyTaxonomyToSignals(rawSignals, taxonomy);
   const aggregate = aggregateCapabilitySignals(rawSignals, taxonomy);
   const windows = trendWindows(signals, options.now);
+  const drilldownProfileMode = activeProfileMode ?? "all_profiles";
 
   if (kind === "increasing_conversations") {
     const rows = trendRows(windows.recent, windows.previous, (signal) => signal.topicLabel);
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Increasing local conversation topics over recent 7 days vs previous 7 days: ${describeTrendRows(rows)}.`,
@@ -966,7 +1073,7 @@ export function answerCapabilityQuestion(
       evidenceCount: windows.recent.length + windows.previous.length,
       caveat: CAPABILITY_LEDGER_TREND_CAVEAT,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, [...windows.recent, ...windows.previous], drilldownProfileMode);
   }
 
   if (kind === "worsening_missing_capabilities") {
@@ -976,7 +1083,7 @@ export function answerCapabilityQuestion(
       includeStatus: true,
       includeArchitectureArea: true,
     });
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Missing capabilities getting worse over recent 7 days vs previous 7 days: ${describeTrendRows(rows)}.`,
@@ -984,7 +1091,7 @@ export function answerCapabilityQuestion(
       evidenceCount: recentMissing.length + previousMissing.length,
       caveat: `${CAPABILITY_LEDGER_TREND_CAVEAT} Recommendations are proposal-only.`,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, [...recentMissing, ...previousMissing], drilldownProfileMode);
   }
 
   if (kind === "recent_working_capabilities") {
@@ -996,7 +1103,7 @@ export function answerCapabilityQuestion(
       (signal) => 1 + signal.confidence,
       { includeStatus: true, includeArchitectureArea: true },
     );
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Recently working local capabilities from the recent 7 day window: ${describeRows(rows)}.`,
@@ -1004,12 +1111,12 @@ export function answerCapabilityQuestion(
       evidenceCount: recentWorking.length,
       caveat: CAPABILITY_LEDGER_TREND_CAVEAT,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, recentWorking, drilldownProfileMode);
   }
 
   if (kind === "weekly_changes") {
     const rows = trendRows(windows.recent, windows.previous, (signal) => signal.topicLabel);
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Local capability changes this week: ${describeTrendRows(rows)}.`,
@@ -1017,13 +1124,13 @@ export function answerCapabilityQuestion(
       evidenceCount: windows.recent.length + windows.previous.length,
       caveat: CAPABILITY_LEDGER_TREND_CAVEAT,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, [...windows.recent, ...windows.previous], drilldownProfileMode);
   }
 
   if (kind === "seasonal_changes") {
     const seasonalWindows = trendWindows(signals, options.now, SEASONAL_WINDOW_DAYS);
     const rows = trendRows(seasonalWindows.recent, seasonalWindows.previous, (signal) => signal.topicLabel);
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Seasonal local conversation changes over recent 28 days vs previous 28 days: ${describeTrendRows(rows)}.`,
@@ -1031,12 +1138,12 @@ export function answerCapabilityQuestion(
       evidenceCount: seasonalWindows.recent.length + seasonalWindows.previous.length,
       caveat: `${CAPABILITY_LEDGER_SEASONAL_CAVEAT} Results remain proposal-only and do not grant authority.`,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, [...seasonalWindows.recent, ...seasonalWindows.previous], drilldownProfileMode);
   }
 
   if (kind === "common_conversations") {
     const rows = sortedRows(aggregate.byTopic);
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Most common local conversation topics: ${describeRows(rows)}.`,
@@ -1044,7 +1151,7 @@ export function answerCapabilityQuestion(
       evidenceCount: signals.length,
       caveat: LOCAL_PROPOSAL_CAVEAT,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, signals, drilldownProfileMode);
   }
 
   if (kind === "working_well_conversations") {
@@ -1056,7 +1163,7 @@ export function answerCapabilityQuestion(
       (signal) => 1 + signal.confidence,
       { includeStatus: true, includeArchitectureArea: true },
     );
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Working-well local conversation capabilities: ${describeRows(rows)}.`,
@@ -1064,7 +1171,7 @@ export function answerCapabilityQuestion(
       evidenceCount: working.length,
       caveat: LOCAL_PROPOSAL_CAVEAT,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, working, drilldownProfileMode);
   }
 
   const missingOrBlocked = signals.filter(
@@ -1081,7 +1188,7 @@ export function answerCapabilityQuestion(
       { includeStatus: true, includeArchitectureArea: true },
     );
 
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Missing or blocked local capabilities: ${describeRows(rows)}.`,
@@ -1089,12 +1196,12 @@ export function answerCapabilityQuestion(
       evidenceCount: missingOrBlocked.length,
       caveat: "blocked can mean governance worked correctly; missing means a safe request path failed or is not implemented.",
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, missingOrBlocked, drilldownProfileMode);
   }
 
   if (kind === "easy_to_evolve_missing_capabilities") {
     const rows = scoredRecommendationRows(missingSafeRequests, windows, { lowEffortBias: true });
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Easy-to-evolve missing capabilities by local risk/value score, proposal-only: ${describeRows(rows)}.`,
@@ -1102,7 +1209,7 @@ export function answerCapabilityQuestion(
       evidenceCount: missingSafeRequests.length,
       caveat: `${MISSING_PROPOSAL_CAVEAT} ${CAPABILITY_LEDGER_SCORING_CAVEAT}`,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, missingSafeRequests, drilldownProfileMode);
   }
 
   if (kind === "architecture_improvement_areas") {
@@ -1113,7 +1220,7 @@ export function answerCapabilityQuestion(
       (signal) => 1 + signal.confidence,
       {},
     );
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Architecture areas to improve for missing safe capabilities: ${describeRows(rows)}.`,
@@ -1121,7 +1228,7 @@ export function answerCapabilityQuestion(
       evidenceCount: missingSafeRequests.length,
       caveat: `${MISSING_PROPOSAL_CAVEAT} Correctly blocked unsafe requests are excluded from architecture-fix ranking.`,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, missingSafeRequests, drilldownProfileMode);
   }
 
   if (kind === "recommended_next_capabilities") {
@@ -1133,7 +1240,7 @@ export function answerCapabilityQuestion(
         (signal.capabilityStatus === "degraded" && signal.suggestedNextStep !== "needs_human_review"),
     );
     const rows = scoredRecommendationRows(candidateSignals, windows);
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Recommended next capabilities by local risk/value score, proposal-only: ${describeRows(rows)}.`,
@@ -1141,7 +1248,7 @@ export function answerCapabilityQuestion(
       evidenceCount: candidateSignals.length,
       caveat: `${MISSING_PROPOSAL_CAVEAT} ${CAPABILITY_LEDGER_SCORING_CAVEAT}`,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, candidateSignals, drilldownProfileMode);
   }
 
   if (kind === "steering_recommendation_types") {
@@ -1152,7 +1259,7 @@ export function answerCapabilityQuestion(
         return bucket;
       }, {}),
     );
-    return {
+    return withCapabilityAnswerDrilldown({
       kind,
       question,
       summary: `Chief of Staff steering recommendation types from local enum-only telemetry: ${describeRows(rows)}.`,
@@ -1160,7 +1267,7 @@ export function answerCapabilityQuestion(
       evidenceCount: steeringSignals.length,
       caveat: STEERING_RECOMMENDATION_TYPE_CAVEAT,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
-    };
+    }, steeringSignals, drilldownProfileMode);
   }
 
   return null;

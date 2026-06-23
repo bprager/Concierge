@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added sanitized capability-intelligence answer evidence drilldowns and local JSON export, showing profile scope, score metadata, architecture area, suggested next step, and allowlisted evidence references without contacting Napoleon or exposing raw/private content.
 - Added rendered Chief of Staff steering and taxonomy review coverage proving returned live review results, decision, and audit evidence clear when the bridge bearer token changes.
 - Added rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear when the bridge bearer token changes.
 - Added symmetric rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear across both Napoleon endpoint and descriptor context changes.

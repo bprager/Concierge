@@ -8,6 +8,7 @@ import {
   clearCapabilityLedger,
   createCapabilityLedger,
   deriveCapabilitySignalFromEvent,
+  exportCapabilityAnswerDrilldown,
   deserializeCapabilityLedger,
   exportCapabilityLedger,
   serializeCapabilityLedger,
@@ -1231,6 +1232,88 @@ test("recommended next answers turn media session blocker details into a proposa
   assert.equal(answer.boundary.memoryWriteAllowed, false);
   assert.equal(answer.boundary.agentDispatchAllowed, false);
   assert.equal(answer.boundary.externalSendAllowed, false);
+});
+
+test("capability answers include sanitized evidence drilldown export metadata", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_drilldown_1",
+      conversationId: "conv_drilldown",
+      turnId: "turn_drilldown_1",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "bridge",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "bridge_failure_handling",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.91,
+      evidenceRefs: ["trace:trace_drilldown_1", "event:response_failed"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+      details: ["bridge timeout"],
+      rawMessage: "raw user request must not export",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_drilldown_2",
+      conversationId: "conv_drilldown",
+      turnId: "turn_drilldown_2",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "bridge",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "bridge_failure_handling",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.81,
+      evidenceRefs: ["trace:trace_drilldown_2", "audit:audit_drilldown_2"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, undefined, {
+    now: "2026-06-11T12:00:00.000Z",
+    profileMode: "adult_owner",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected recommendation answer");
+  assert.equal(answer.drilldown.profileMode, "adult_owner");
+  assert.equal(answer.drilldown.rows[0].label, "bridge_failure_handling");
+  assert.equal(answer.drilldown.rows[0].count, 2);
+  assert.equal(answer.drilldown.rows[0].status, "missing");
+  assert.equal(answer.drilldown.rows[0].architectureArea, "bridge");
+  assert.equal(answer.drilldown.rows[0].suggestedNextStep, "write_evaluator_case");
+  assert.equal(answer.drilldown.rows[0].confidence, 0.86);
+  assert.deepEqual(answer.drilldown.rows[0].evidenceRefs, [
+    "audit:audit_drilldown_2",
+    "event:response_failed",
+    "trace:trace_drilldown_1",
+    "trace:trace_drilldown_2",
+  ]);
+  assert.equal(answer.drilldown.boundary.proposalOnly, true);
+  assert.equal(answer.drilldown.boundary.approvalCaptured, false);
+  assert.equal(answer.drilldown.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.drilldown.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.drilldown.boundary.externalSendAllowed, false);
+
+  const exported = exportCapabilityAnswerDrilldown(answer, { generatedAt: "2026-06-11T12:00:00.000Z" });
+  assert.equal(exported.schemaVersion, "concierge.capability-answer-drilldown.export.v1");
+  assert.equal(exported.answerKind, "recommended_next_capabilities");
+  assert.equal(exported.rows[0].scoreComponents?.frequency, 2);
+  const exportedJson = JSON.stringify(exported);
+  assert.equal(exportedJson.includes("raw user request must not export"), false);
+  assert.equal(exportedJson.includes("private.example"), false);
+  assert.equal(exportedJson.includes("token"), false);
+  assert.equal(exported.boundary.externalSendAllowed, false);
 });
 
 test("child protected evidence stays minimized and increases recommendation caution", () => {

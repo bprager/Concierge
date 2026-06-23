@@ -767,6 +767,74 @@ test("renders steering recommendation type answers without leaking telemetry con
   }
 });
 
+test("renders and exports sanitized capability evidence drilldowns without contacting Napoleon", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }, { clearCapabilityLedger }, telemetry] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/capabilityLedger.js"),
+    import("../src/telemetry.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  let fetchCalls = 0;
+
+  try {
+    console.info = () => {};
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    telemetry.emitEvent("response_failed", {
+      traceId: "trace_ui_drilldown",
+      conversationId: "conv_ui_drilldown",
+      turnId: "turn_ui_drilldown",
+      profile: "adult_owner",
+      endpoint: "https://private.example.test/concierge",
+      token: "token_ui_drilldown_secret",
+      rawMessage: "raw user text must not render",
+    });
+
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What capabilities should be implemented next?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await view.findByText("Capability evidence drilldown");
+    assert.ok(view.getByText("bridge_failure_handling"));
+    assert.ok(view.getByText("bridge"));
+    assert.ok(view.getByText("missing"));
+    assert.ok(view.getByText("write_evaluator_case"));
+    assert.ok(view.getByText("proposal only; no approval captured; no memory write; no agent dispatch; no external send."));
+    assert.equal(view.queryByText(/raw user text must not render/), null);
+    assert.equal(view.queryByText(/private\.example/), null);
+    assert.equal(view.queryByText(/token_ui_drilldown_secret/), null);
+
+    await user.click(view.getByRole("button", { name: "Export capability evidence drilldown" }));
+    const exportBlock = await view.findByLabelText("Exported capability evidence drilldown");
+    const exported = exportBlock.textContent ?? "";
+    assert.ok(exported.includes("\"schemaVersion\": \"concierge.capability-answer-drilldown.export.v1\""));
+    assert.ok(exported.includes("\"answerKind\": \"recommended_next_capabilities\""));
+    assert.ok(exported.includes("\"label\": \"bridge_failure_handling\""));
+    assert.ok(exported.includes("\"proposalOnly\": true"));
+    assert.equal(exported.includes("raw user text must not render"), false);
+    assert.equal(exported.includes("private.example"), false);
+    assert.equal(exported.includes("token_ui_drilldown_secret"), false);
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders steering recommendation type answers within the active child profile scope", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }, { clearCapabilityLedger }, telemetry] = await Promise.all([

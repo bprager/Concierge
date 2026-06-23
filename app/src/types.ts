@@ -6,6 +6,7 @@ import type {
   NapoleonProfileMode,
   TraceEnvelope,
 } from "./contractBridge.js";
+import type { CapabilityAnswerDrilldown, CapabilityQuestionAnswer } from "./capabilityLedger.js";
 
 export type ConciergeRole = "user" | "assistant";
 
@@ -22,6 +23,8 @@ export interface ConciergeMessage {
     profileMode?: NapoleonProfileMode;
     descriptorFailureReason?: DescriptorFailClosedReason;
     blockedEffects?: string[];
+    capabilityDrilldown?: CapabilityAnswerDrilldown;
+    capabilityAnswer?: CapabilityQuestionAnswer;
   };
 }
 

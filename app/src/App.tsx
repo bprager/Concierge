@@ -36,7 +36,7 @@ import {
 } from "./avatarAffectFusion.js";
 import { buildAvatarPrivacyDashboard } from "./avatarPrivacyDashboard.js";
 import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
-import { answerCapabilityQuestion } from "./capabilityLedger.js";
+import { answerCapabilityQuestion, exportCapabilityAnswerDrilldown } from "./capabilityLedger.js";
 import {
   describeBridgeOperationSummary,
   describeNapoleonReviewOperationSummary,
@@ -447,6 +447,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [memorySubmissionFailure, setMemorySubmissionFailure] = useState<string | null>(null);
   const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
+  const [capabilityAnswerDrilldownExportJson, setCapabilityAnswerDrilldownExportJson] = useState<string | null>(null);
   const [steeringDraft, setSteeringDraft] = useState<ChiefOfStaffSteeringDraft | null>(null);
   const [steeringDraftExportJson, setSteeringDraftExportJson] = useState<string | null>(null);
   const [steeringSubmission, setSteeringSubmission] = useState<SteeringSubmissionView | null>(null);
@@ -1586,6 +1587,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setProfile(value);
     setPendingRehearsal(null);
     setCapabilityExportJson(null);
+    setCapabilityAnswerDrilldownExportJson(null);
     setTelemetryBufferExportJson(null);
     setInteractionTraceExportJson(null);
     clearBridgeReadinessProof();
@@ -1627,9 +1629,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setMessages((m) => [
         ...m,
         { role: "user", content },
-        { role: "assistant", content: formatCapabilityAnswer(capabilityAnswer, activeProfileMode) },
+        {
+          role: "assistant",
+          content: formatCapabilityAnswer(capabilityAnswer, activeProfileMode),
+          metadata: { capabilityDrilldown: capabilityAnswer.drilldown, capabilityAnswer },
+        },
       ]);
       setInput("");
+      setCapabilityAnswerDrilldownExportJson(null);
       setPendingRehearsal(null);
       setLastDecision(null);
       clearNapoleonPresentation();
@@ -1814,9 +1821,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         setMessages((m) => [
           ...m,
           { role: "user", content },
-          { role: "assistant", content: formatCapabilityAnswer(capabilityAnswer, activeProfileMode) },
+          {
+            role: "assistant",
+            content: formatCapabilityAnswer(capabilityAnswer, activeProfileMode),
+            metadata: { capabilityDrilldown: capabilityAnswer.drilldown, capabilityAnswer },
+          },
         ]);
         setInput("");
+        setCapabilityAnswerDrilldownExportJson(null);
         setPendingRehearsal(null);
         setLastDecision(null);
         clearNapoleonPresentation();
@@ -4932,11 +4944,91 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                     <dd>{m.metadata.blockedEffects.join(", ")}</dd>
                   </>
                 ) : null}
+                {m.metadata.capabilityDrilldown ? (
+                  <>
+                    <dt>Capability evidence drilldown</dt>
+                    <dd>
+                      <span>Profile scope: {m.metadata.capabilityDrilldown.profileMode}</span>
+                      <ol>
+                        {m.metadata.capabilityDrilldown.rows.map((row) => (
+                          <li key={`${row.label}:${row.status ?? "none"}:${row.architectureArea ?? "none"}`}>
+                            <strong>{row.label}</strong>
+                            <dl>
+                              <dt>Count</dt>
+                              <dd>{row.count}</dd>
+                              {row.status ? (
+                                <>
+                                  <dt>Status</dt>
+                                  <dd>{row.status}</dd>
+                                </>
+                              ) : null}
+                              {row.architectureArea ? (
+                                <>
+                                  <dt>Area</dt>
+                                  <dd>{row.architectureArea}</dd>
+                                </>
+                              ) : null}
+                              {row.confidence !== undefined ? (
+                                <>
+                                  <dt>Confidence</dt>
+                                  <dd>{row.confidence}</dd>
+                                </>
+                              ) : null}
+                              {row.suggestedNextStep ? (
+                                <>
+                                  <dt>Next</dt>
+                                  <dd>{row.suggestedNextStep}</dd>
+                                </>
+                              ) : null}
+                              {row.score !== undefined ? (
+                                <>
+                                  <dt>Score</dt>
+                                  <dd>{row.score}</dd>
+                                </>
+                              ) : null}
+                              {row.scoreExplanation ? (
+                                <>
+                                  <dt>Why</dt>
+                                  <dd>{row.scoreExplanation}</dd>
+                                </>
+                              ) : null}
+                              {row.evidenceRefs.length ? (
+                                <>
+                                  <dt>Evidence</dt>
+                                  <dd>{row.evidenceRefs.join(", ")}</dd>
+                                </>
+                              ) : null}
+                            </dl>
+                          </li>
+                        ))}
+                      </ol>
+                      <span>proposal only; no approval captured; no memory write; no agent dispatch; no external send.</span>
+                      <span>{m.metadata.capabilityDrilldown.privacyCaveat}</span>
+                      <span>{m.metadata.capabilityDrilldown.authorityCaveat}</span>
+                      {m.metadata.capabilityAnswer ? (
+                        <button
+                          className="secondary"
+                          onClick={() =>
+                            setCapabilityAnswerDrilldownExportJson(
+                              JSON.stringify(exportCapabilityAnswerDrilldown(m.metadata!.capabilityAnswer!), null, 2),
+                            )
+                          }
+                        >
+                          Export capability evidence drilldown
+                        </button>
+                      ) : null}
+                    </dd>
+                  </>
+                ) : null}
               </dl>
             ) : null}
           </article>
         ))}
       </section>
+
+      {capabilityAnswerDrilldownExportJson ? (
+        <pre aria-label="Exported capability evidence drilldown">{capabilityAnswerDrilldownExportJson}</pre>
+      ) : null}
 
       {lastDecision ? (
         <section className="governance">
