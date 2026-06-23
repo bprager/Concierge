@@ -804,27 +804,66 @@ test("telemetry emits child-protected avatar capability signals with separate la
     renderLoopStarted: false,
     rawVideo: "must not be retained",
   });
+  const policySignal = emitCapabilitySignal("child_avatar_policy_applied", {
+    traceId: "trace_child_avatar_policy_signal",
+    conversationId: "conv_child_avatar_signal",
+    profileMode: "child_protected",
+    childProtected: true,
+    cameraPolicy: "disabled_until_guardian_review",
+    affectPolicy: "disabled",
+    guardianApprovalCaptured: false,
+    localDisplayOnly: true,
+    cameraCaptureStarted: false,
+    faceDetectionStarted: false,
+    affectInferred: false,
+    avatarAnimationStarted: false,
+    liveNapoleonContacted: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    rawVideo: "must not be retained",
+  });
 
   assert.ok(stateSignal);
   assert.ok(expressionSignal);
   assert.ok(modelSignal);
   assert.ok(rendererSignal);
-  if (!stateSignal || !expressionSignal || !modelSignal || !rendererSignal) {
+  assert.ok(policySignal);
+  if (!stateSignal || !expressionSignal || !modelSignal || !rendererSignal || !policySignal) {
     throw new Error("expected child avatar capability signals");
   }
   assert.equal(stateSignal.profileMode, "child_protected_user");
   assert.equal(expressionSignal.profileMode, "child_protected_user");
   assert.equal(modelSignal.profileMode, "child_protected_user");
   assert.equal(rendererSignal.profileMode, "child_protected_user");
+  assert.equal(policySignal.profileMode, "child_protected_user");
   assert.equal(stateSignal.privacyClass, "child_sensitive");
   assert.equal(expressionSignal.privacyClass, "child_sensitive");
   assert.equal(modelSignal.privacyClass, "child_sensitive");
   assert.equal(rendererSignal.privacyClass, "child_sensitive");
+  assert.equal(policySignal.privacyClass, "child_sensitive");
   assert.equal(stateSignal.capabilityLabel, "child_safe_avatar_state_preview");
   assert.equal(expressionSignal.capabilityLabel, "child_safe_avatar_expression_mapping");
   assert.equal(modelSignal.capabilityLabel, "child_safe_avatar_model_reference");
   assert.equal(rendererSignal.capabilityLabel, "child_safe_avatar_renderer_readiness");
-  assert.equal(JSON.stringify([stateSignal, expressionSignal, modelSignal, rendererSignal]).includes("must not be retained"), false);
+  assert.equal(policySignal.capabilityLabel, "child_safe_avatar_policy");
+  assert.equal(policySignal.intentLabel, "apply_child_avatar_policy");
+  assert.deepEqual(policySignal.details, [
+    "camera disabled until guardian review",
+    "affect inference disabled",
+    "guardian approval not captured",
+    "no camera capture started",
+    "no affect inference started",
+    "no avatar animation started",
+    "no live napoleon contact",
+  ]);
+  assert.equal(
+    JSON.stringify([stateSignal, expressionSignal, modelSignal, rendererSignal, policySignal]).includes(
+      "must not be retained",
+    ),
+    false,
+  );
 });
 
 test("telemetry emits avatar capability signals for local avatar perception dry runs", () => {

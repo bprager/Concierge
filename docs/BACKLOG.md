@@ -839,6 +839,7 @@ Acceptance criteria:
 - Child protected avatar state displays a guardian-review reminder.
 - Running child protected avatar state does not request camera permission, start camera capture, run face detection, infer affect, start animation, contact Napoleon, write memory, capture approval, capture guardian approval, dispatch agents, or send externally.
 - `avatar_state_changed` includes profile mode, child-protected marker, camera policy, affect policy, guardian-approval-captured false, and blocked effects including guardian approval capture.
+- `child_avatar_policy_applied` creates a metadata-only `child_safe_avatar_policy` capability signal for stricter child avatar preparation without retaining raw video, starting capture, inferring affect, starting animation, treating guardian review as approval, contacting Napoleon, or causing side effects.
 
 Privacy and safety impact:
 

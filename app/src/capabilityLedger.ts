@@ -2016,6 +2016,36 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "child_avatar_policy_applied") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "avatar",
+      topicLabel: "avatar",
+      intentLabel: "apply_child_avatar_policy",
+      capabilityLabel: "child_safe_avatar_policy",
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.82,
+      architectureArea: "avatar",
+      suggestedNextStep: "no_action",
+      details: [
+        stringAttr(attributes, "cameraPolicy", "unknown") === "disabled_until_guardian_review"
+          ? "camera disabled until guardian review"
+          : "camera policy not guardian gated",
+        stringAttr(attributes, "affectPolicy", "unknown") === "disabled"
+          ? "affect inference disabled"
+          : "affect policy not disabled",
+        attributes.guardianApprovalCaptured === false
+          ? "guardian approval not captured"
+          : "guardian approval capture reported",
+        attributes.cameraCaptureStarted === false ? "no camera capture started" : "camera capture started",
+        attributes.affectInferred === false ? "no affect inference started" : "affect inference reported",
+        attributes.avatarAnimationStarted === false ? "no avatar animation started" : "avatar animation started",
+        attributes.liveNapoleonContacted === false ? "no live Napoleon contact" : "live Napoleon contact reported",
+      ],
+    });
+  }
+
   if (eventName === "avatar_expression_set") {
     return buildCapabilitySignal({
       ...base,

@@ -294,6 +294,7 @@ export function emitCapabilitySignal(
     "response_failed",
     "response_generated",
     "avatar_state_changed",
+    "child_avatar_policy_applied",
     "avatar_expression_set",
     "avatar_model_loaded",
     "avatar_renderer_readiness_prepared",
