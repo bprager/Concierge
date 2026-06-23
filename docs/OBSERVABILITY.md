@@ -32,6 +32,8 @@ The system emits:
 
 OpenTelemetry is the preferred standard for traces, metrics, and logs because it is vendor-neutral and supports multiple languages and destinations.
 
+Capability review packet export is a local rendered artifact, not a Napoleon audit stream. It may contain sanitized answer rows, review focus, evaluator-case candidate, evolution-proposal draft, and explicit local-only boundary fields, but must not contain endpoint hosts, bearer tokens, raw prompts, request bodies, response bodies, raw audio, or raw video. Exporting it does not send it, approve it, apply it, write memory, dispatch agents, or contact Napoleon.
+
 ## 3. Trace model
 
 Every user turn has:

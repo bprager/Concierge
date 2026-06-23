@@ -36,7 +36,11 @@ import {
 } from "./avatarAffectFusion.js";
 import { buildAvatarPrivacyDashboard } from "./avatarPrivacyDashboard.js";
 import { rehearseLocalBargeInSample, type LocalBargeInRehearsalResult } from "./bargeInRehearsal.js";
-import { answerCapabilityQuestion, exportCapabilityAnswerDrilldown } from "./capabilityLedger.js";
+import {
+  answerCapabilityQuestion,
+  exportCapabilityAnswerDrilldown,
+  exportCapabilityReviewPacket,
+} from "./capabilityLedger.js";
 import {
   describeBridgeOperationSummary,
   describeNapoleonReviewOperationSummary,
@@ -448,6 +452,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
   const [capabilityAnswerDrilldownExportJson, setCapabilityAnswerDrilldownExportJson] = useState<string | null>(null);
+  const [capabilityReviewPacketExportJson, setCapabilityReviewPacketExportJson] = useState<string | null>(null);
   const [steeringDraft, setSteeringDraft] = useState<ChiefOfStaffSteeringDraft | null>(null);
   const [steeringDraftExportJson, setSteeringDraftExportJson] = useState<string | null>(null);
   const [steeringSubmission, setSteeringSubmission] = useState<SteeringSubmissionView | null>(null);
@@ -1588,6 +1593,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setPendingRehearsal(null);
     setCapabilityExportJson(null);
     setCapabilityAnswerDrilldownExportJson(null);
+    setCapabilityReviewPacketExportJson(null);
     setTelemetryBufferExportJson(null);
     setInteractionTraceExportJson(null);
     clearBridgeReadinessProof();
@@ -1637,6 +1643,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       ]);
       setInput("");
       setCapabilityAnswerDrilldownExportJson(null);
+      setCapabilityReviewPacketExportJson(null);
       setPendingRehearsal(null);
       setLastDecision(null);
       clearNapoleonPresentation();
@@ -1829,6 +1836,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         ]);
         setInput("");
         setCapabilityAnswerDrilldownExportJson(null);
+        setCapabilityReviewPacketExportJson(null);
         setPendingRehearsal(null);
         setLastDecision(null);
         clearNapoleonPresentation();
@@ -5006,16 +5014,28 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                       <span>{m.metadata.capabilityDrilldown.privacyCaveat}</span>
                       <span>{m.metadata.capabilityDrilldown.authorityCaveat}</span>
                       {m.metadata.capabilityAnswer ? (
-                        <button
-                          className="secondary"
-                          onClick={() =>
-                            setCapabilityAnswerDrilldownExportJson(
-                              JSON.stringify(exportCapabilityAnswerDrilldown(m.metadata!.capabilityAnswer!), null, 2),
-                            )
-                          }
-                        >
-                          Export capability evidence drilldown
-                        </button>
+                        <>
+                          <button
+                            className="secondary"
+                            onClick={() =>
+                              setCapabilityAnswerDrilldownExportJson(
+                                JSON.stringify(exportCapabilityAnswerDrilldown(m.metadata!.capabilityAnswer!), null, 2),
+                              )
+                            }
+                          >
+                            Export capability evidence drilldown
+                          </button>
+                          <button
+                            className="secondary"
+                            onClick={() =>
+                              setCapabilityReviewPacketExportJson(
+                                JSON.stringify(exportCapabilityReviewPacket(m.metadata!.capabilityAnswer!), null, 2),
+                              )
+                            }
+                          >
+                            Export capability review packet
+                          </button>
+                        </>
                       ) : null}
                     </dd>
                   </>
@@ -5028,6 +5048,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
       {capabilityAnswerDrilldownExportJson ? (
         <pre aria-label="Exported capability evidence drilldown">{capabilityAnswerDrilldownExportJson}</pre>
+      ) : null}
+
+      {capabilityReviewPacketExportJson ? (
+        <pre aria-label="Exported capability review packet">{capabilityReviewPacketExportJson}</pre>
       ) : null}
 
       {lastDecision ? (

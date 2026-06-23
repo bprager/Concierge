@@ -219,6 +219,71 @@ export interface ExportedCapabilityAnswerDrilldown {
   authorityCaveat: string;
 }
 
+export interface CapabilityReviewPacketFocus {
+  capabilityLabel: string;
+  status: CapabilityStatus | "unknown";
+  architectureArea: CapabilityArchitectureArea | "unknown";
+  suggestedNextStep: SuggestedNextStep;
+  confidence: number;
+  evidenceCount: number;
+  score?: number;
+  scoreComponents?: RecommendationScoreComponents;
+  scoreExplanation?: string;
+  evidenceRefs: string[];
+}
+
+export interface CapabilityReviewPacketEvaluatorCaseCandidate {
+  caseId: string;
+  scenarioType: "capability_review";
+  capabilityLabel: string;
+  architectureArea: CapabilityArchitectureArea | "unknown";
+  expectedBehavior: string;
+}
+
+export interface CapabilityReviewPacketEvolutionProposalDraft {
+  proposalId: string;
+  summary: string;
+  change: {
+    capability: string;
+    architectureArea: CapabilityArchitectureArea | "unknown";
+    requestedAction: SuggestedNextStep;
+  };
+  evidence: string[];
+  approvalRequired: string;
+  rollbackPlan: string;
+}
+
+export interface CapabilityReviewPacketLocalBoundary {
+  localOnly: true;
+  napoleonContacted: false;
+  appliedLocally: false;
+  approvalCaptured: false;
+  memoryWritePerformed: false;
+  agentDispatchPerformed: false;
+  externalSendPerformed: false;
+}
+
+export interface CapabilityReviewPacket {
+  schemaVersion: "concierge.capability-review-packet.v1";
+  answerKind: CapabilityQuestionKind;
+  questionClassification: CapabilityQuestionKind;
+  profileMode: NapoleonProfileMode | "all_profiles";
+  evidenceCount: number;
+  reviewFocus: CapabilityReviewPacketFocus;
+  rows: CapabilityAnswerDrilldownRow[];
+  evaluatorCaseCandidate: CapabilityReviewPacketEvaluatorCaseCandidate;
+  evolutionProposalDraft: CapabilityReviewPacketEvolutionProposalDraft;
+  boundary: RecommendationBoundary;
+  localOnlyBoundary: CapabilityReviewPacketLocalBoundary;
+  privacyCaveat: string;
+  authorityCaveat: string;
+}
+
+export interface ExportedCapabilityReviewPacket extends Omit<CapabilityReviewPacket, "schemaVersion"> {
+  schemaVersion: "concierge.capability-review-packet.export.v1";
+  generatedAt: string;
+}
+
 const DEFAULT_RECOMMENDATION_BOUNDARY: RecommendationBoundary = {
   proposalOnly: true,
   approvalCaptured: false,
@@ -243,6 +308,10 @@ const CAPABILITY_ANSWER_DRILLDOWN_PRIVACY_CAVEAT =
   "Local sanitized metadata only. Raw user text, endpoints, credentials, request bodies, response bodies, raw audio, and raw video are excluded.";
 const CAPABILITY_ANSWER_DRILLDOWN_AUTHORITY_CAVEAT =
   "This drilldown is proposal-only evidence. It is not Napoleon approval, does not write memory, does not capture approval, does not dispatch agents, and does not send externally.";
+const CAPABILITY_REVIEW_PACKET_PRIVACY_CAVEAT =
+  "Local sanitized capability evidence only. Raw user text, endpoints, credentials, request bodies, response bodies, raw audio, and raw video are excluded.";
+const CAPABILITY_REVIEW_PACKET_AUTHORITY_CAVEAT =
+  "This packet is prepared for possible future governed Napoleon review only. It is not sent by export, not approval, not memory, not agent dispatch, not local application, and not an external send.";
 
 const DEFAULT_MAX_SIGNALS = 250;
 const DEFAULT_MAX_AGE_DAYS = 90;
@@ -744,6 +813,90 @@ export function exportCapabilityAnswerDrilldown(
     boundary: answer.drilldown.boundary,
     privacyCaveat: answer.drilldown.privacyCaveat,
     authorityCaveat: answer.drilldown.authorityCaveat,
+  };
+}
+
+function reviewPacketIdPart(value: string): string {
+  const sanitized = sanitizeCapabilityMetadataLabel(value).toLowerCase().replace(/[^a-z0-9_]+/g, "_");
+  return sanitized === "redacted_label" ? "redacted_label" : sanitized;
+}
+
+function buildCapabilityReviewPacket(answer: CapabilityQuestionAnswer): CapabilityReviewPacket {
+  const focusRow = answer.drilldown.rows[0] ?? {
+    label: "no_local_capability_evidence",
+    count: 0,
+    evidenceRefs: [],
+  };
+  const capabilityLabel = sanitizeCapabilityMetadataLabel(focusRow.label);
+  const architectureArea = focusRow.architectureArea ?? "unknown";
+  const suggestedNextStep = focusRow.suggestedNextStep ?? "needs_human_review";
+  const evidenceRefs = focusRow.evidenceRefs.map(sanitizeCapabilityEvidenceRef).slice(0, 12);
+  const caseId = `capability_review_${reviewPacketIdPart(capabilityLabel)}`;
+
+  return {
+    schemaVersion: "concierge.capability-review-packet.v1",
+    answerKind: answer.kind,
+    questionClassification: answer.kind,
+    profileMode: answer.drilldown.profileMode,
+    evidenceCount: answer.evidenceCount,
+    reviewFocus: {
+      capabilityLabel,
+      status: focusRow.status ?? "unknown",
+      architectureArea,
+      suggestedNextStep,
+      confidence: focusRow.confidence ?? 0,
+      evidenceCount: focusRow.count,
+      score: focusRow.score,
+      scoreComponents: focusRow.scoreComponents,
+      scoreExplanation: focusRow.scoreExplanation,
+      evidenceRefs,
+    },
+    rows: answer.drilldown.rows,
+    evaluatorCaseCandidate: {
+      caseId,
+      scenarioType: "capability_review",
+      capabilityLabel,
+      architectureArea,
+      expectedBehavior:
+        "Concierge should preserve proposal-only boundaries, expose blocked effects, and route any implementation decision through governed Napoleon review.",
+    },
+    evolutionProposalDraft: {
+      proposalId: `evo_${caseId}`,
+      summary: `Review ${capabilityLabel} capability evidence for a possible governed Concierge improvement.`,
+      change: {
+        capability: capabilityLabel,
+        architectureArea,
+        requestedAction: suggestedNextStep,
+      },
+      evidence: evidenceRefs,
+      approvalRequired: "Napoleon Chief of Staff and owner review before implementation, rollout, or policy change.",
+      rollbackPlan:
+        "Keep current Concierge behavior as the fallback and disable any proposed path if evaluator, privacy, or governance checks regress.",
+    },
+    boundary: answer.boundary,
+    localOnlyBoundary: {
+      localOnly: true,
+      napoleonContacted: false,
+      appliedLocally: false,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+    },
+    privacyCaveat: CAPABILITY_REVIEW_PACKET_PRIVACY_CAVEAT,
+    authorityCaveat: CAPABILITY_REVIEW_PACKET_AUTHORITY_CAVEAT,
+  };
+}
+
+export function exportCapabilityReviewPacket(
+  answer: CapabilityQuestionAnswer,
+  options: { generatedAt?: string } = {},
+): ExportedCapabilityReviewPacket {
+  const packet = buildCapabilityReviewPacket(answer);
+  return {
+    ...packet,
+    schemaVersion: "concierge.capability-review-packet.export.v1",
+    generatedAt: options.generatedAt ?? new Date().toISOString(),
   };
 }
 

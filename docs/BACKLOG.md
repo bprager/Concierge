@@ -155,6 +155,7 @@ Acceptance criteria:
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
 - Answers include a visible sanitized evidence drilldown with profile scope, answer rows, score components where available, architecture area, suggested next step, and allowlisted local evidence references.
 - The evidence drilldown can be exported as local JSON for inspection without contacting Napoleon, exposing endpoints or credentials, retaining raw text/media/request/response bodies, capturing approval, writing memory, dispatching agents, sending externally, or applying recommendations.
+- Capability answers can export a local review packet with safe question classification, profile scope, review focus, evaluator case candidate, evolution proposal draft, sanitized rows, allowlisted evidence, proposal-only boundary, and explicit false local side-effect fields; export does not contact Napoleon or apply recommendations.
 - Correctly blocked unsafe requests are classified separately from failed safe requests.
 - Capability ledger storage re-sanitizes appended labels and evidence references before any persistence, export, query answer, or Chief of Staff steering draft can reuse them.
 - Chief of Staff steering drafts only attach evidence from the missing or degraded recommendation bucket that produced the recommendation; correctly blocked unsafe traces are not reused as evolution proposal evidence because of a shared capability label; local taxonomy edits clear existing steering drafts and exports so obsolete labels cannot be handed off.
@@ -186,7 +187,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by `CAPABILITY-INTELLIGENCE-001`, `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`, `CHIEF-OF-STAFF-STEERING-PROFILE-MISMATCH-001`, `CHIEF-OF-STAFF-STEERING-EXPORT-STALE-001`, and `CHIEF-OF-STAFF-TAXONOMY-REVIEW-STALE-001`, plus app/unit regression coverage for sanitized capability-answer evidence drilldown display and export.
+- Covered by `CAPABILITY-INTELLIGENCE-001`, `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`, `CHIEF-OF-STAFF-STEERING-PROFILE-MISMATCH-001`, `CHIEF-OF-STAFF-STEERING-EXPORT-STALE-001`, and `CHIEF-OF-STAFF-TAXONOMY-REVIEW-STALE-001`, plus app/unit regression coverage for sanitized capability-answer evidence drilldown display, drilldown export, and local review packet export.
 
 ### TX-013 details
 

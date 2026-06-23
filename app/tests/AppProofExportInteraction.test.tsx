@@ -835,6 +835,76 @@ test("renders and exports sanitized capability evidence drilldowns without conta
   }
 });
 
+test("exports a sanitized local capability review packet from capability answers", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, fireEvent, render },
+    userEventModule,
+    { App },
+    { emitEvent, capabilityLedger },
+    { clearCapabilityLedger },
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalInfo = console.info;
+  const originalFetch = globalThis.fetch;
+  let fetchCalls = 0;
+  console.info = () => undefined;
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    globalThis.fetch = (async () => {
+      fetchCalls += 1;
+      return new Response(JSON.stringify({ error: "unexpected fetch" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as typeof fetch;
+
+    emitEvent("response_failed", {
+      traceId: "trace_capability_packet_ui",
+      conversationId: "conv_capability_packet_ui",
+      turnId: "turn_capability_packet_ui",
+      profile: "adult_owner",
+      rawMessage: "raw review packet text private.example token must not appear",
+      endpoint: "https://private.example.test/packet",
+    });
+
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What capabilities should be implemented next?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await view.findByText(/Recommended next capabilities by local risk\/value score/);
+    await user.click(view.getByRole("button", { name: "Export capability review packet" }));
+
+    const exportBlock = view.getByLabelText("Exported capability review packet");
+    assert.ok(exportBlock.textContent?.includes('"schemaVersion": "concierge.capability-review-packet.export.v1"'));
+    assert.ok(exportBlock.textContent?.includes('"questionClassification": "recommended_next_capabilities"'));
+    assert.ok(exportBlock.textContent?.includes('"reviewFocus"'));
+    assert.ok(exportBlock.textContent?.includes('"evaluatorCaseCandidate"'));
+    assert.ok(exportBlock.textContent?.includes('"evolutionProposalDraft"'));
+    assert.ok(exportBlock.textContent?.includes('"napoleonContacted": false'));
+    assert.ok(exportBlock.textContent?.includes('"appliedLocally": false'));
+    assert.ok(exportBlock.textContent?.includes('"proposalOnly": true'));
+    assert.equal(exportBlock.textContent?.includes("raw review packet text"), false);
+    assert.equal(exportBlock.textContent?.includes("private.example"), false);
+    assert.equal(exportBlock.textContent?.includes("token"), false);
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders steering recommendation type answers within the active child profile scope", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }, { clearCapabilityLedger }, telemetry] = await Promise.all([

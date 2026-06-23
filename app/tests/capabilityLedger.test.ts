@@ -9,6 +9,7 @@ import {
   createCapabilityLedger,
   deriveCapabilitySignalFromEvent,
   exportCapabilityAnswerDrilldown,
+  exportCapabilityReviewPacket,
   deserializeCapabilityLedger,
   exportCapabilityLedger,
   serializeCapabilityLedger,
@@ -1314,6 +1315,85 @@ test("capability answers include sanitized evidence drilldown export metadata", 
   assert.equal(exportedJson.includes("private.example"), false);
   assert.equal(exportedJson.includes("token"), false);
   assert.equal(exported.boundary.externalSendAllowed, false);
+});
+
+test("capability review packet export is sanitized local proposal evidence", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_packet_1",
+      conversationId: "conv_packet",
+      turnId: "turn_packet_1",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "private https://private.example.test/packet token",
+      intentLabel: "bridge_repair",
+      capabilityLabel: "bridge_failure_handling",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.88,
+      evidenceRefs: ["trace:trace_packet_1", "event:response_failed", "https://private.example.test/packet"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+      rawMessage: "raw packet question token must not be retained",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_packet_2",
+      conversationId: "conv_packet",
+      turnId: "turn_packet_2",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "bridge",
+      intentLabel: "bridge_repair",
+      capabilityLabel: "bridge_failure_handling",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.82,
+      evidenceRefs: ["trace:trace_packet_2", "audit:audit_packet_2"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion(
+    "What capabilities should be implemented next for https://private.example.test with token?",
+    ledger,
+    undefined,
+    { profileMode: "adult_owner" },
+  );
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+
+  const exported = exportCapabilityReviewPacket(answer, { generatedAt: "2026-06-23T00:00:00.000Z" });
+  const serialized = JSON.stringify(exported);
+
+  assert.equal(exported.schemaVersion, "concierge.capability-review-packet.export.v1");
+  assert.equal(exported.answerKind, "recommended_next_capabilities");
+  assert.equal(exported.questionClassification, "recommended_next_capabilities");
+  assert.equal(exported.profileMode, "adult_owner");
+  assert.equal(exported.reviewFocus.capabilityLabel, "bridge_failure_handling");
+  assert.equal(exported.reviewFocus.architectureArea, "bridge");
+  assert.equal(exported.reviewFocus.suggestedNextStep, "write_evaluator_case");
+  assert.equal(exported.evaluatorCaseCandidate.caseId, "capability_review_bridge_failure_handling");
+  assert.equal(exported.evolutionProposalDraft.change.capability, "bridge_failure_handling");
+  assert.equal(exported.localOnlyBoundary.napoleonContacted, false);
+  assert.equal(exported.localOnlyBoundary.appliedLocally, false);
+  assert.equal(exported.boundary.proposalOnly, true);
+  assert.equal(exported.boundary.approvalCaptured, false);
+  assert.equal(exported.boundary.memoryWriteAllowed, false);
+  assert.equal(exported.boundary.agentDispatchAllowed, false);
+  assert.equal(exported.boundary.externalSendAllowed, false);
+  assert.equal(serialized.includes("raw packet question"), false);
+  assert.equal(serialized.includes("private.example"), false);
+  assert.equal(serialized.includes("token"), false);
+  assert.equal(serialized.includes("https://"), false);
 });
 
 test("child protected evidence stays minimized and increases recommendation caution", () => {
