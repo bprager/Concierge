@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added symmetric rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear across both Napoleon endpoint and descriptor context changes.
 - Added rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear when the active user profile changes.
 - Added rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear when Napoleon connection or descriptor context changes.
 - Added rendered memory proposal and governance review coverage proving Rehearsal Mode clears returned live review results, decision, and audit evidence before returning to local-only preview mode.
