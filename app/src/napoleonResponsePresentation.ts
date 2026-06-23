@@ -8,6 +8,10 @@ export interface NapoleonResponsePresentationState {
   proofMetadata?: NapoleonResponseProofMetadata;
 }
 
+export interface NapoleonResponsePresentationOptions {
+  capabilityLabelsById?: Record<string, string>;
+}
+
 export interface NapoleonResponseProofExportInput {
   generatedAt?: string;
   conversationId?: string;
@@ -115,11 +119,13 @@ function sanitizeResponseProofMetadata(metadata: NapoleonResponseProofMetadata):
 
 export function buildSuccessfulNapoleonResponsePresentation(
   response: NapoleonResponse,
+  options: NapoleonResponsePresentationOptions = {},
 ): NapoleonResponsePresentationState {
   const selectedAgents = response.delegation?.selectedAgents ?? [];
   const agentNames = selectedAgents.map((agent) => agent.displayName);
   const targetCapability = response.targetAgent ?? "unavailable";
   const recommendation = response.recommendationProvenance?.summary ?? "unavailable";
+  const targetCapabilityLabel = response.targetAgent ? options.capabilityLabelsById?.[response.targetAgent] : undefined;
 
   return {
     delegation: describeDelegation(response.delegation, response.targetAgent, {
@@ -127,8 +133,9 @@ export function buildSuccessfulNapoleonResponsePresentation(
       governanceState: response.governanceDecision.outcome,
       traceId: response.traceEnvelope.trace_id,
       auditId: response.auditEnvelope.audit_id,
+      targetCapabilityLabel,
     }),
-    proof: describeNapoleonResponseProof(response),
+    proof: describeNapoleonResponseProof(response, { targetCapabilityLabel }),
     proofMetadata: {
       handledBy: agentNames.join(", ") || targetCapability || "unavailable",
       targetCapability,

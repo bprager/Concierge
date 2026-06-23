@@ -228,6 +228,64 @@ test("successful Napoleon response proof includes returned target capability wit
   assert.deepEqual(exported.responseProof.selectedAgents, []);
 });
 
+test("successful Napoleon response presentation labels known returned target capability without changing proof export authority", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge readiness",
+    profile: "adult_owner",
+    conversationId: "conv_labeled_target_capability",
+    turnId: "turn_labeled_target_capability",
+    traceId: "trace_labeled_target_capability",
+    governanceOutcome: "requires_review",
+  });
+  const state = buildSuccessfulNapoleonResponsePresentation(
+    {
+      text: "Napoleon prepared a bridge readiness summary.",
+      profileMode: "adult_owner",
+      governanceDecision: contract.governanceDecision,
+      traceEnvelope: contract.traceEnvelope,
+      auditEnvelope: contract.auditEnvelope,
+      requiresReview: true,
+      targetAgent: "napoleon.capability.answer",
+    },
+    {
+      capabilityLabelsById: {
+        "napoleon.capability.answer": "Answer with governance",
+      },
+    },
+  );
+
+  assert.ok(state.delegation?.body.includes("Answer with governance (napoleon.capability.answer)"));
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Target capability" && detail.value === "Answer with governance (napoleon.capability.answer)",
+    ),
+  );
+  assert.ok(state.proof?.summary.includes("Capability: Answer with governance (napoleon.capability.answer)"));
+  assert.ok(
+    state.proof?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Target capability" && detail.value === "Answer with governance (napoleon.capability.answer)",
+    ),
+  );
+  assert.ok(
+    state.proof?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Capability or agents" && detail.value === "Answer with governance (napoleon.capability.answer)",
+    ),
+  );
+
+  const exported = JSON.parse(
+    exportNapoleonResponseProofJson(state, {
+      generatedAt: "2026-06-13T00:00:00.000Z",
+      conversationId: "conv_labeled_target_capability",
+    }),
+  ) as { responseProof: { handledBy: string; targetCapability: string } };
+
+  assert.equal(exported.responseProof.handledBy, "napoleon.capability.answer");
+  assert.equal(exported.responseProof.targetCapability, "napoleon.capability.answer");
+});
+
 test("non-live response presentation clears stale delegation and proof together", () => {
   const state = clearNapoleonResponsePresentation();
 

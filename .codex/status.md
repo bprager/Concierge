@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added display-only advisory capability labels to successful Napoleon target-capability proof and delegation views when the returned capability ID matches explicitly discovered Chief of Staff capability metadata, while keeping sanitized proof exports tied to the returned capability ID.
 - Added rendered live-send coverage proving mismatched selected-agent proof fails closed as a contract mismatch without rendering rejected response text, mismatched proof, or a last-successful-proof panel.
 - Hardened live bridge selected-agent attribution matching so returned selected-agent proof must actually match the guarded wording claim; nearby but different contribution summaries such as rollout versus budget notes now fail closed as contract mismatches.
 - Broadened positive live bridge coverage proving guarded selected-agent wording such as found, identified, reported, surfaced, confirmed, verified, assessed, concluded, and recommended is accepted only when Napoleon returns matching selected-agent contribution proof with aligned trace and audit references.

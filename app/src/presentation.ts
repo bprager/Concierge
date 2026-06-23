@@ -103,6 +103,7 @@ export interface DelegationFallbackProvenance {
   governanceState?: string;
   traceId?: string;
   auditId?: string;
+  targetCapabilityLabel?: string;
 }
 
 export interface NapoleonResponseProofView {
@@ -111,6 +112,10 @@ export interface NapoleonResponseProofView {
   summary: string;
   caveat: string;
   details: Array<{ label: string; value: string }>;
+}
+
+export interface NapoleonResponsePresentationLabels {
+  targetCapabilityLabel?: string;
 }
 
 const FORBIDDEN_VISIBLE_PROVENANCE_PATTERNS = [
@@ -904,7 +909,13 @@ export function describeDelegation(
   const authorityBoundary =
     "Returned bridge provenance only; not approval, memory, dispatch, external send, or local application.";
   const safeTargetCapability = sanitizeVisibleProvenanceValue(targetCapability);
-  const targetCapabilityDisplay = safeTargetCapability === "redacted" ? "redacted metadata" : safeTargetCapability;
+  const safeTargetCapabilityLabel = sanitizeVisibleProvenanceValue(fallback?.targetCapabilityLabel, "");
+  const targetCapabilityDisplay =
+    safeTargetCapability === "redacted"
+      ? "redacted metadata"
+      : safeTargetCapabilityLabel && safeTargetCapabilityLabel !== "redacted" && safeTargetCapabilityLabel !== safeTargetCapability
+        ? `${safeTargetCapabilityLabel} (${safeTargetCapability})`
+        : safeTargetCapability;
   if (!delegation || delegation.selectedAgents.length === 0) {
     if (targetCapability) {
       const safeBlockedEffects = sanitizeVisibleProvenanceList(fallback?.blockedEffects);
@@ -915,7 +926,7 @@ export function describeDelegation(
       return {
         heading: "Napoleon target capability",
         body: hasVisibleTargetCapability
-          ? `Napoleon returned target capability ${safeTargetCapability}, but did not include selected-agent delegation provenance.`
+          ? `Napoleon returned target capability ${targetCapabilityDisplay}, but did not include selected-agent delegation provenance.`
           : "Napoleon returned target capability metadata, but it was redacted and did not include selected-agent delegation provenance.",
         details: [
           { label: "Target capability", value: targetCapabilityDisplay },
@@ -1008,7 +1019,10 @@ export function describeDelegation(
   };
 }
 
-export function describeNapoleonResponseProof(response: NapoleonResponse): NapoleonResponseProofView {
+export function describeNapoleonResponseProof(
+  response: NapoleonResponse,
+  labels: NapoleonResponsePresentationLabels = {},
+): NapoleonResponseProofView {
   const agentLabels =
     response.delegation?.selectedAgents.map((agent) => sanitizeVisibleProvenanceValue(agent.displayName)).join(", ") ||
     "";
@@ -1025,13 +1039,18 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
     ? sanitizeVisibleProvenanceValue(response.targetAgent, "")
     : "";
   const targetCapability = returnedTargetCapability === "redacted" ? "" : returnedTargetCapability;
+  const safeTargetCapabilityLabel = sanitizeVisibleProvenanceValue(labels.targetCapabilityLabel, "");
+  const targetCapabilityDisplay =
+    targetCapability && safeTargetCapabilityLabel && safeTargetCapabilityLabel !== "redacted" && safeTargetCapabilityLabel !== targetCapability
+      ? `${safeTargetCapabilityLabel} (${targetCapability})`
+      : targetCapability;
   const returnedRecommendation = response.recommendationProvenance?.summary
     ? sanitizeVisibleProvenanceValue(response.recommendationProvenance.summary, "")
     : undefined;
   const recommendation = returnedRecommendation === "redacted" ? undefined : returnedRecommendation;
   const status: NapoleonResponseProofView["status"] = agentLabels || targetCapability || recommendation ? "verified" : "limited";
   const proofParts = [
-    targetCapability ? `Capability: ${targetCapability}` : "",
+    targetCapabilityDisplay ? `Capability: ${targetCapabilityDisplay}` : "",
     agentLabels ? `Agents: ${agentLabels}` : "",
     recommendation ? `Napoleon recommendation: ${recommendation}` : "",
   ].filter(Boolean);
@@ -1053,7 +1072,7 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
       { label: "Attribution boundary", value: "Returned bridge provenance only; not local authority." },
       {
         label: "Target capability",
-        value: returnedTargetCapability === "redacted" ? "redacted metadata" : targetCapability || "not returned",
+        value: returnedTargetCapability === "redacted" ? "redacted metadata" : targetCapabilityDisplay || "not returned",
       },
       { label: "Selected agents", value: agentLabels || "not returned" },
       { label: "Why selected", value: selectionReasons || "not returned" },
@@ -1067,7 +1086,7 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
       },
       {
         label: "Capability or agents",
-        value: agentLabels || targetCapability || "No selected-agent provenance returned",
+        value: agentLabels || targetCapabilityDisplay || "No selected-agent provenance returned",
       },
       {
         label: "Allowed effects",

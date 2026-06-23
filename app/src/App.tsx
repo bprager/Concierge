@@ -540,7 +540,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   }
 
   function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {
-    setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response));
+    const capabilityLabelsById = Object.fromEntries(
+      (chiefOfStaffCapabilities?.capabilities ?? []).map((capability) => [capability.id, capability.label]),
+    );
+    setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response, { capabilityLabelsById }));
     setNapoleonProofExportJson(null);
     setNapoleonProofComparison(null);
   }
