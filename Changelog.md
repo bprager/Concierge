@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened live-runtime validation output so each run clears prior generated bridge, capability, evaluator, summary, and promotion-review artifacts before writing new evidence, preventing failed runs from inheriting stale success metadata.
 - Added rendered live-send coverage proving explicitly discovered advisory capability labels appear in transcript, delegation, and last-successful-proof display for matching returned target capability IDs while sanitized proof JSON and proof-export telemetry remain tied to the returned ID.
 - Added display-only advisory capability labels to successful Napoleon target-capability proof and delegation views when the returned capability ID matches explicitly discovered Chief of Staff capability metadata, while keeping sanitized proof exports tied to the returned capability ID.
 - Added rendered live-send coverage proving mismatched selected-agent proof fails closed as a contract mismatch without rendering rejected response text, mismatched proof, or a last-successful-proof panel.

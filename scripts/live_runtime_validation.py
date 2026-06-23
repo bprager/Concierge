@@ -47,6 +47,13 @@ ACCEPTED_BRIDGE_ENDPOINT_FORMS = [
 ]
 REDACTED_REPORT_FIELDS = {"response_excerpt"}
 RUNTIME_VALIDATION_SOURCES = ("real_runtime", "local_harness", "local_simulation")
+RUNTIME_ARTIFACT_FILENAMES = [
+    "bridge_evidence.json",
+    "capability_discovery.json",
+    "eval_http.json",
+    "summary.json",
+    "promotion_review.md",
+]
 FORBIDDEN_ARTIFACT_FIELDS = {
     "authorization",
     "auth",
@@ -241,6 +248,13 @@ def bridge_target_metadata(bridge_endpoint: str | None) -> dict[str, Any]:
 def endpoint_from_env(env: dict[str, str], key: str) -> str | None:
     value = env.get(key)
     return value.strip() if value and value.strip() else None
+
+
+def clear_runtime_artifacts(out_dir: Path) -> None:
+    for filename in RUNTIME_ARTIFACT_FILENAMES:
+        artifact = out_dir / filename
+        if artifact.exists():
+            artifact.unlink()
 
 
 def resolve_endpoint_configuration(
@@ -1060,6 +1074,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     if bridge_endpoint is None:
         out_dir = Path(args.out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
+        clear_runtime_artifacts(out_dir)
         write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint, endpoint_resolution)
         print(
             "live runtime validation requires --bridge-endpoint, NAPOLEON_BRIDGE_ENDPOINT, "
@@ -1070,6 +1085,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    clear_runtime_artifacts(out_dir)
     write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint, endpoint_resolution)
     evidence_path = out_dir / "bridge_evidence.json"
     capability_path = out_dir / "capability_discovery.json"

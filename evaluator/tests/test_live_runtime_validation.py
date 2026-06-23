@@ -558,6 +558,77 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             self.assertFalse(preflight["externalSendPerformed"])
             self.assertFalse((Path(tmpdir) / "summary.json").exists())
 
+    def test_reused_output_directory_does_not_retain_stale_runtime_artifacts(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_dir = Path(tmpdir)
+            (out_dir / "bridge_evidence.json").write_text(
+                json.dumps([{
+                    "status": "success",
+                    "operationId": "text_turn",
+                    "requestKind": "text_turn",
+                    "transport": "http_post",
+                    "targetPath": "/cos/text-turn",
+                    "runtimeValidationSource": "real_runtime",
+                    "traceEnvelopeObserved": True,
+                    "traceEnvelopeMatched": True,
+                    "traceTargetPath": "/cos/trace/{trace_id}",
+                }]),
+                encoding="utf-8",
+            )
+            (out_dir / "capability_discovery.json").write_text(
+                json.dumps({
+                    "kind": "chief_of_staff_capability_discovery_evidence",
+                    "status": "passed",
+                    "targetPath": "/cos/capabilities",
+                    "operationId": "chief_of_staff_capabilities",
+                    "requestKind": "chief_of_staff_capabilities",
+                    "capabilityCount": 6,
+                    "capabilityIds": ["napoleon.capability.stale"],
+                }),
+                encoding="utf-8",
+            )
+            (out_dir / "eval_http.json").write_text(
+                json.dumps({
+                    "run_id": "stale_eval",
+                    "score_total": 100,
+                    "evaluationTarget": {
+                        "path": "/chief-of-staff/reviews/evaluation",
+                        "requestKind": "evaluation_review_handoff",
+                        "operationId": "evaluation_review",
+                    },
+                }),
+                encoding="utf-8",
+            )
+
+            def fail_bridge_capture(*args):
+                return 1, "", "descriptor preflight failed\n"
+
+            stderr = io.StringIO()
+            with mock.patch.object(live_runtime_validation, "run_bridge_capture", side_effect=fail_bridge_capture):
+                with contextlib.redirect_stderr(stderr):
+                    exit_code = live_runtime_validation.main([
+                        "--bridge-endpoint", "http://127.0.0.1:18765/cos",
+                        "--eval-endpoint", "http://127.0.0.1:18765/chief-of-staff/reviews/evaluation",
+                        "--out-dir", tmpdir,
+                    ])
+
+            summary = json.loads((out_dir / "summary.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 1)
+        self.assertIn("descriptor preflight failed", stderr.getvalue())
+        self.assertEqual(summary["bridgeEvidence"]["status"], "failed")
+        self.assertEqual(summary["bridgeEvidence"]["record_count"], 0)
+        self.assertIsNone(summary["bridgeEvidence"]["lastOperationId"])
+        self.assertIsNone(summary["bridgeEvidence"]["lastTargetPath"])
+        self.assertEqual(summary["capabilityDiscovery"]["status"], "not_run")
+        self.assertEqual(summary["capabilityDiscovery"]["capabilityCount"], 0)
+        self.assertEqual(summary["capabilityDiscovery"]["capabilityIds"], [])
+        self.assertEqual(summary["httpEvaluator"]["status"], "not_run")
+        self.assertEqual(summary["httpEvaluator"]["run_id"], "not_run")
+        self.assertIsNone(summary["httpEvaluator"]["score_total"])
+        self.assertEqual(summary["artifactPrivacy"]["status"], "passed")
+        self.assertEqual(summary["artifactPrivacy"]["violation_count"], 0)
+
     def test_sanitize_eval_report_removes_nested_response_excerpts(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             report_path = Path(tmpdir) / "eval_http.json"
