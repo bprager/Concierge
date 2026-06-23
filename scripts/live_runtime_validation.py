@@ -30,6 +30,10 @@ EVALUATOR_PATH = "/v1/concierge/evaluate"
 NAPOLEON_EVALUATION_REVIEW_PATH = "/chief-of-staff/reviews/evaluation"
 KNOWN_BRIDGE_PATHS = bridge_evidence_capture.KNOWN_BRIDGE_PATHS
 EVALUATION_REVIEW_HANDOFF_NAMES = {"evaluation_review", "evaluation_reviews"}
+EVALUATION_REVIEW_HANDOFF_REQUIRED_ACTION = (
+    "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, "
+    "required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation."
+)
 
 BOUNDARY = (
     "Live runtime validation is evidence only. It is not Napoleon approval, "
@@ -483,6 +487,11 @@ def write_sanitized_evaluator_failure_report(
 ) -> None:
     target = evaluator_target_metadata(eval_endpoint)
     handoff = descriptor_handoff or {}
+    required_action = (
+        EVALUATION_REVIEW_HANDOFF_REQUIRED_ACTION
+        if failure_reason == "http_evaluator_handoff_not_advertised"
+        else None
+    )
     path.write_text(
         json.dumps(
             {
@@ -504,6 +513,7 @@ def write_sanitized_evaluator_failure_report(
                     "descriptorHandoffAdvertised": handoff.get("descriptorHandoffAdvertised"),
                     "descriptorHandoffSource": handoff.get("descriptorHandoffSource"),
                     "descriptorHandoffFailureReason": handoff.get("descriptorHandoffFailureReason", "none"),
+                    "descriptorHandoffRequiredAction": required_action,
                     "authorityBoundary": "Evaluator HTTP failure evidence is sanitized and non-authorizing.",
                 },
                 "live_runtime_sanitization": {
@@ -905,6 +915,7 @@ def eval_target_summary(path: Path) -> dict[str, Any]:
         "descriptorHandoffAdvertised": None,
         "descriptorHandoffSource": None,
         "descriptorHandoffFailureReason": "none",
+        "descriptorHandoffRequiredAction": None,
     }
     if not path.exists():
         return defaults
@@ -927,6 +938,7 @@ def eval_target_summary(path: Path) -> dict[str, Any]:
         "descriptorHandoffAdvertised": target.get("descriptorHandoffAdvertised"),
         "descriptorHandoffSource": target.get("descriptorHandoffSource"),
         "descriptorHandoffFailureReason": target.get("descriptorHandoffFailureReason") or "none",
+        "descriptorHandoffRequiredAction": target.get("descriptorHandoffRequiredAction"),
     }
 
 
@@ -1051,6 +1063,7 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- HTTP evaluator target path: `{evaluator['targetPath']}`",
         f"- HTTP evaluator request kind: `{evaluator['targetRequestKind']}`",
         f"- HTTP evaluator operation ID: `{evaluator['targetOperationId']}`",
+        f"- HTTP evaluator required action: {evaluator['descriptorHandoffRequiredAction'] or 'none'}",
         f"- Hard failure count: `{evaluator['hard_fail_count']}`",
         f"- Missing artifact count: `{evaluator['missing_artifact_count']}`",
         f"- Regression count: `{evaluator['regression_count']}`",

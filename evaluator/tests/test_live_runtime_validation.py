@@ -314,6 +314,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
 
                 summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
                 report = json.loads((Path(tmpdir) / "eval_http.json").read_text(encoding="utf-8"))
+                promotion_review = (Path(tmpdir) / "promotion_review.md").read_text(encoding="utf-8")
 
         summary_json = json.dumps(summary)
         self.assertEqual(exit_code, 1)
@@ -331,8 +332,16 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         )
         self.assertEqual(report["failureReason"], "http_evaluator_handoff_not_advertised")
         self.assertFalse(report["evaluationTarget"]["descriptorHandoffAdvertised"])
+        self.assertIn("evaluation_review", summary["httpEvaluator"]["descriptorHandoffRequiredAction"])
+        self.assertIn(
+            "supportedHandoffs",
+            report["evaluationTarget"]["descriptorHandoffRequiredAction"],
+        )
+        self.assertIn("required_for", promotion_review)
         self.assertNotIn(cos_harness.base_url, summary_json)
         self.assertNotIn("token_unadvertised_eval", summary_json)
+        self.assertNotIn(cos_harness.base_url, promotion_review)
+        self.assertNotIn("token_unadvertised_eval", promotion_review)
         self.assertIn("descriptor does not advertise an evaluation review handoff", stderr.getvalue())
         self.assertIn(
             "Napoleon descriptor does not advertise the evaluation review handoff.",
