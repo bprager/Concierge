@@ -431,7 +431,7 @@ function attributionTokens(value: string): string[] {
 
 function extractSelectedAgentFindingClaim(text: string, displayName: string): string | null {
   const pattern = new RegExp(
-    `\\b${escapeRegExp(displayName)}\\s+(?:confirmed|found|identified|recommended|reported|surfaced|verified)\\b([^.!?]*)`,
+    `\\b${escapeRegExp(displayName)}\\s+(?:concluded|confirmed|found|identified|recommended|reported|surfaced|verified)\\b([^.!?]*)`,
     "i",
   );
   const match = text.match(pattern);
@@ -442,7 +442,7 @@ function extractSelectedAgentFindingClaim(text: string, displayName: string): st
 
 function extractAgentStyleFindingClaims(text: string): Array<{ displayName: string; claim: string }> {
   const pattern =
-    /\b([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){1,4})\s+(?:confirmed|found|identified|recommended|reported|surfaced|verified)\b([^.!?]*)/g;
+    /\b([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){1,4})\s+(?:concluded|confirmed|found|identified|recommended|reported|surfaced|verified)\b([^.!?]*)/g;
   const claims: Array<{ displayName: string; claim: string }> = [];
   for (const match of text.matchAll(pattern)) {
     const displayName = match[1]?.trim();
