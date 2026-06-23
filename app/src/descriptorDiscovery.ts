@@ -81,6 +81,7 @@ function stringArrayValue(value: unknown): string[] | undefined {
 
 const GOVERNED_HANDOFF_CAPABILITIES = new Set<GovernedHandoffCapability>([
   "text_turn",
+  "evaluation_review",
   "memory_proposal_review",
   "chief_of_staff_steering",
   "governance_review",
@@ -107,6 +108,7 @@ function supportedHandoffsValue(value: unknown): GovernedHandoffCapability[] | n
 function supportedHandoffsFromRuntimeEndpoints(endpoints: Record<string, unknown>): GovernedHandoffCapability[] {
   const supported: GovernedHandoffCapability[] = [];
   if (endpoints.text_turn === "POST /cos/text-turn") supported.push("text_turn");
+  if (typeof endpoints.evaluation_review === "string") supported.push("evaluation_review");
   if (typeof endpoints.memory_proposal_review === "string") supported.push("memory_proposal_review");
   if (typeof endpoints.chief_of_staff_steering === "string") supported.push("chief_of_staff_steering");
   if (typeof endpoints.governance_review === "string") supported.push("governance_review");

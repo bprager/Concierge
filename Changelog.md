@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added `evaluation_review` to the governed descriptor handoff allowlist and OpenAPI descriptor schema, so Napoleon can advertise evaluator review without Concierge treating the descriptor as invalid.
 - Added Text Concierge readiness and preflight presentation for descriptor-unadvertised evaluator handoffs, including imported validation metadata, proof export comparison fields, and next-step wording that distinguishes this from a missing evaluator route.
 - Added descriptor-aware evaluator handoff checks to live-runtime validation so derived `/cos` evaluator attempts stop as sanitized `http_evaluator_handoff_not_advertised` evidence when the Napoleon descriptor does not advertise evaluation review.
 - Fixed live-runtime `/cos` endpoint normalization so `NAPOLEON_BRIDGE_ENDPOINT` values ending in `/cos` derive `/cos/descriptor`, `/cos/text-turn`, `/cos/trace/{trace_id}`, and `/cos/capabilities` once instead of duplicating the path.

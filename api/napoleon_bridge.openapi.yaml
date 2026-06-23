@@ -329,6 +329,32 @@ paths:
                         type: array
                         items:
                           type: string
+                      supportedHandoffs:
+                        type: array
+                        description: Governed handoffs advertised by Napoleon descriptor discovery. These are connection-state claims only and do not grant approval or execution authority.
+                        items:
+                          type: string
+                          enum:
+                            - text_turn
+                            - evaluation_review
+                            - memory_proposal_review
+                            - chief_of_staff_steering
+                            - governance_review
+                            - evolution_proposal_review
+                            - taxonomy_review
+                      supported_handoffs:
+                        type: array
+                        description: Snake-case equivalent of supportedHandoffs for /cos descriptor compatibility.
+                        items:
+                          type: string
+                          enum:
+                            - text_turn
+                            - evaluation_review
+                            - memory_proposal_review
+                            - chief_of_staff_steering
+                            - governance_review
+                            - evolution_proposal_review
+                            - taxonomy_review
                       governanceState:
                         type: string
                       traceId:
@@ -414,7 +440,7 @@ paths:
                     properties:
                       state:
                         type: string
-                        enum: [no_endpoint, missing_descriptor, descriptor_mismatch, ready]
+                        enum: [no_endpoint, missing_descriptor, descriptor_mismatch, auth_failure, bridge_timeout, http_failure, ready]
                       checksumState:
                         type: string
                         enum: [not_checked, matched, mismatch]

@@ -9,6 +9,7 @@ export type AuthorityTier =
   | "prohibited";
 export type GovernedHandoffCapability =
   | "text_turn"
+  | "evaluation_review"
   | "memory_proposal_review"
   | "chief_of_staff_steering"
   | "governance_review"
@@ -258,6 +259,7 @@ const MEMORY_TRIGGER_PATTERN = /\b(remember|prefer|preference|call me|nickname|m
 
 const DEFAULT_SUPPORTED_HANDOFFS: GovernedHandoffCapability[] = [
   "text_turn",
+  "evaluation_review",
   "memory_proposal_review",
   "chief_of_staff_steering",
   "governance_review",

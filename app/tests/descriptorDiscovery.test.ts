@@ -129,6 +129,7 @@ test("descriptor discovery falls back from runtime base URL to cos descriptor", 
           endpoints: {
             descriptor: "GET /cos/descriptor",
             text_turn: "POST /cos/text-turn",
+            evaluation_review: "POST /chief-of-staff/reviews/evaluation",
             trace: "GET /cos/trace/{trace_id}",
           },
           supported_authority_tiers: ["advisory_prepare_only"],
@@ -148,8 +149,32 @@ test("descriptor discovery falls back from runtime base URL to cos descriptor", 
   assert.equal(result.connection.state, "ready");
   assert.equal(result.connection.canAttemptLiveBridge, true);
   assert.equal(result.connection.descriptorStatus?.cachePolicy, "runtime_descriptor_live_response");
-  assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, ["text_turn"]);
+  assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, ["text_turn", "evaluation_review"]);
   assert.equal(result.input.maxAgeSeconds, 300);
+});
+
+test("descriptor discovery accepts explicit evaluation review handoff claims", async () => {
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "https://napoleon.example/concierge",
+    fetch: async () => ({
+      ok: true,
+      json: async () => ({
+        descriptor: {
+          schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+          serviceId: "napoleon.chief_of_staff",
+          runtimeAuthority: false,
+          commandExecution: false,
+          cachePolicy: "fail_closed_to_review_required",
+          blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+          supportedHandoffs: ["text_turn", "evaluation_review"],
+        },
+      }),
+    }),
+  });
+
+  assert.equal(result.connection.state, "ready");
+  assert.equal(result.connection.canAttemptLiveBridge, true);
+  assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, ["text_turn", "evaluation_review"]);
 });
 
 test("descriptor discovery fails closed for cos descriptors that grant runtime authority", async () => {
