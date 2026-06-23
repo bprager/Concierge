@@ -182,6 +182,19 @@ export interface CapabilityAnswerRow {
   delta?: number;
 }
 
+export interface CapabilityLatestTurnEvidence {
+  status: "accepted" | "blocked";
+  summary: string;
+  handledBy?: string;
+  governance?: string;
+  trace?: string;
+  failureReason?: string;
+  blockedEffects: string[];
+  nextStep: string;
+  boundary: string;
+  proposalOnly: true;
+}
+
 export interface CapabilityAnswerDrilldownRow extends CapabilityAnswerRow {
   evidenceRefs: string[];
 }
@@ -190,6 +203,7 @@ export interface CapabilityAnswerDrilldown {
   schemaVersion: "concierge.capability-answer-drilldown.v1";
   profileMode: NapoleonProfileMode | "all_profiles";
   rows: CapabilityAnswerDrilldownRow[];
+  latestTurnEvidence?: CapabilityLatestTurnEvidence;
   boundary: RecommendationBoundary;
   privacyCaveat: string;
   authorityCaveat: string;
@@ -214,6 +228,7 @@ export interface ExportedCapabilityAnswerDrilldown {
   profileMode: NapoleonProfileMode | "all_profiles";
   evidenceCount: number;
   rows: CapabilityAnswerDrilldownRow[];
+  latestTurnEvidence?: CapabilityLatestTurnEvidence;
   boundary: RecommendationBoundary;
   privacyCaveat: string;
   authorityCaveat: string;
@@ -270,6 +285,7 @@ export interface CapabilityReviewPacket {
   profileMode: NapoleonProfileMode | "all_profiles";
   evidenceCount: number;
   reviewFocus: CapabilityReviewPacketFocus;
+  latestTurnEvidence?: CapabilityLatestTurnEvidence;
   rows: CapabilityAnswerDrilldownRow[];
   evaluatorCaseCandidate: CapabilityReviewPacketEvaluatorCaseCandidate;
   evolutionProposalDraft: CapabilityReviewPacketEvolutionProposalDraft;
@@ -408,6 +424,43 @@ function sanitizeCapabilityDetail(value: string): string | null {
     return null;
   }
   return trimmed;
+}
+
+function sanitizeCapabilityDisplayText(value: string): string {
+  const trimmed = value.trim();
+  if (
+    !trimmed ||
+    trimmed.length > 240 ||
+    SENSITIVE_METADATA_PATTERN.test(trimmed) ||
+    /https?:\/\/|www\.|127\.0\.0\.1|localhost|Authorization|Bearer/i.test(trimmed) ||
+    !/^[a-z0-9][a-z0-9 _.,:;()/'"-]{0,239}$/i.test(trimmed)
+  ) {
+    return "redacted";
+  }
+  return trimmed;
+}
+
+function sanitizeCapabilityLatestTurnEvidence(evidence: CapabilityLatestTurnEvidence): CapabilityLatestTurnEvidence {
+  const blockedEffects = [
+    ...new Set(
+      evidence.blockedEffects
+        .map(sanitizeCapabilityMetadataLabel)
+        .filter((effect) => effect !== "redacted_label"),
+    ),
+  ].slice(0, 12);
+
+  return {
+    status: evidence.status === "accepted" ? "accepted" : "blocked",
+    summary: sanitizeCapabilityDisplayText(evidence.summary),
+    ...(evidence.handledBy ? { handledBy: sanitizeCapabilityDisplayText(evidence.handledBy) } : {}),
+    ...(evidence.governance ? { governance: sanitizeCapabilityDisplayText(evidence.governance) } : {}),
+    ...(evidence.trace ? { trace: sanitizeCapabilityDisplayText(evidence.trace) } : {}),
+    ...(evidence.failureReason ? { failureReason: sanitizeCapabilityDisplayText(evidence.failureReason) } : {}),
+    blockedEffects,
+    nextStep: sanitizeCapabilityDisplayText(evidence.nextStep),
+    boundary: sanitizeCapabilityDisplayText(evidence.boundary),
+    proposalOnly: true,
+  };
 }
 
 function normalizeProfileMode(profile: LocalProfile | NapoleonProfileMode | undefined): NapoleonProfileMode {
@@ -768,6 +821,7 @@ function buildCapabilityAnswerDrilldown(input: {
   signals: ConversationCapabilitySignal[];
   profileMode: NapoleonProfileMode | "all_profiles";
   boundary: RecommendationBoundary;
+  latestTurnEvidence?: CapabilityLatestTurnEvidence;
 }): CapabilityAnswerDrilldown {
   return {
     schemaVersion: "concierge.capability-answer-drilldown.v1",
@@ -776,6 +830,9 @@ function buildCapabilityAnswerDrilldown(input: {
       ...row,
       evidenceRefs: evidenceRefsForAnswerRow(input.signals, row),
     })),
+    ...(input.latestTurnEvidence
+      ? { latestTurnEvidence: sanitizeCapabilityLatestTurnEvidence(input.latestTurnEvidence) }
+      : {}),
     boundary: input.boundary,
     privacyCaveat: CAPABILITY_ANSWER_DRILLDOWN_PRIVACY_CAVEAT,
     authorityCaveat: CAPABILITY_ANSWER_DRILLDOWN_AUTHORITY_CAVEAT,
@@ -798,6 +855,21 @@ function withCapabilityAnswerDrilldown(
   };
 }
 
+export function withCapabilityLatestTurnEvidence(
+  answer: CapabilityQuestionAnswer,
+  latestTurnEvidence: CapabilityLatestTurnEvidence | null | undefined,
+): CapabilityQuestionAnswer {
+  if (!latestTurnEvidence) return answer;
+  const sanitizedLatestTurnEvidence = sanitizeCapabilityLatestTurnEvidence(latestTurnEvidence);
+  return {
+    ...answer,
+    drilldown: {
+      ...answer.drilldown,
+      latestTurnEvidence: sanitizedLatestTurnEvidence,
+    },
+  };
+}
+
 export function exportCapabilityAnswerDrilldown(
   answer: CapabilityQuestionAnswer,
   options: { generatedAt?: string } = {},
@@ -810,6 +882,7 @@ export function exportCapabilityAnswerDrilldown(
     profileMode: answer.drilldown.profileMode,
     evidenceCount: answer.evidenceCount,
     rows: answer.drilldown.rows,
+    ...(answer.drilldown.latestTurnEvidence ? { latestTurnEvidence: answer.drilldown.latestTurnEvidence } : {}),
     boundary: answer.drilldown.boundary,
     privacyCaveat: answer.drilldown.privacyCaveat,
     authorityCaveat: answer.drilldown.authorityCaveat,
@@ -851,6 +924,7 @@ function buildCapabilityReviewPacket(answer: CapabilityQuestionAnswer): Capabili
       scoreExplanation: focusRow.scoreExplanation,
       evidenceRefs,
     },
+    ...(answer.drilldown.latestTurnEvidence ? { latestTurnEvidence: answer.drilldown.latestTurnEvidence } : {}),
     rows: answer.drilldown.rows,
     evaluatorCaseCandidate: {
       caseId,

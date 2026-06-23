@@ -40,6 +40,8 @@ import {
   answerCapabilityQuestion,
   exportCapabilityAnswerDrilldown,
   exportCapabilityReviewPacket,
+  withCapabilityLatestTurnEvidence,
+  type CapabilityLatestTurnEvidence,
   type ExportedCapabilityReviewPacket,
 } from "./capabilityLedger.js";
 import {
@@ -303,8 +305,15 @@ function formatCapabilityAnswer(
         })
         .join("\n")
     : "No local signals yet.";
+  const latestTurnEvidence = answer.drilldown.latestTurnEvidence
+    ? `\n\nLatest Napoleon turn evidence: ${answer.drilldown.latestTurnEvidence.summary} Next: ${answer.drilldown.latestTurnEvidence.nextStep}.`
+    : "";
 
-  return `${answer.summary}\n\n${rows}\n\nProfile scope: ${profileMode}. Evidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
+  return `${answer.summary}\n\n${rows}${latestTurnEvidence}\n\nProfile scope: ${profileMode}. Evidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
+}
+
+function detailValue(details: Array<{ label: string; value: string }>, label: string): string {
+  return details.find((detail) => detail.label === label)?.value ?? "not returned";
 }
 
 function describeSteeringRecommendationType(draft: ReturnType<typeof draftChiefOfStaffSteering>): string {
@@ -1663,6 +1672,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       profileMode: activeProfileMode,
     });
     if (capabilityAnswer) {
+      const capabilityAnswerWithTurnEvidence = withLatestNapoleonTurnEvidence(capabilityAnswer);
       emitEvent("capability_intelligence_answered", {
         traceId,
         conversationId,
@@ -1677,8 +1687,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         { role: "user", content },
         {
           role: "assistant",
-          content: formatCapabilityAnswer(capabilityAnswer, activeProfileMode),
-          metadata: { capabilityDrilldown: capabilityAnswer.drilldown, capabilityAnswer },
+          content: formatCapabilityAnswer(capabilityAnswerWithTurnEvidence, activeProfileMode),
+          metadata: {
+            capabilityDrilldown: capabilityAnswerWithTurnEvidence.drilldown,
+            capabilityAnswer: capabilityAnswerWithTurnEvidence,
+          },
         },
       ]);
       setInput("");
@@ -1856,6 +1869,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         profileMode: activeProfileMode,
       });
       if (capabilityAnswer) {
+        const capabilityAnswerWithTurnEvidence = withLatestNapoleonTurnEvidence(capabilityAnswer);
         emitEvent("capability_intelligence_answered", {
           traceId,
           conversationId,
@@ -1870,8 +1884,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           { role: "user", content },
           {
             role: "assistant",
-            content: formatCapabilityAnswer(capabilityAnswer, activeProfileMode),
-            metadata: { capabilityDrilldown: capabilityAnswer.drilldown, capabilityAnswer },
+            content: formatCapabilityAnswer(capabilityAnswerWithTurnEvidence, activeProfileMode),
+            metadata: {
+              capabilityDrilldown: capabilityAnswerWithTurnEvidence.drilldown,
+              capabilityAnswer: capabilityAnswerWithTurnEvidence,
+            },
           },
         ]);
         setInput("");
@@ -3079,6 +3096,38 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     lastNapoleonTurnFailure,
     liveSendPreflight,
   );
+
+  function withLatestNapoleonTurnEvidence(
+    answer: NonNullable<ReturnType<typeof answerCapabilityQuestion>>,
+  ): NonNullable<ReturnType<typeof answerCapabilityQuestion>> {
+    if (!lastNapoleonPresentation.proof && !lastNapoleonTurnFailure) return answer;
+
+    const latestEntry = lastNapoleonTurnFailure
+      ? napoleonTurnTimeline.entries.find((entry) => entry.label === "Latest blocked attempt")
+      : napoleonTurnTimeline.entries.find((entry) => entry.label === "Latest successful response");
+    if (!latestEntry || latestEntry.status === "not_available") return answer;
+
+    const evidence: CapabilityLatestTurnEvidence = {
+      status: lastNapoleonTurnFailure ? "blocked" : "accepted",
+      summary: latestEntry.summary,
+      handledBy: detailValue(latestEntry.details, "Handled by"),
+      governance: detailValue(latestEntry.details, "Governance"),
+      trace: detailValue(latestEntry.details, "Trace"),
+      failureReason: detailValue(latestEntry.details, "Failure reason"),
+      blockedEffects: detailValue(latestEntry.details, "Blocked effects")
+        .split(",")
+        .map((effect) => effect.trim())
+        .filter(Boolean),
+      nextStep:
+        detailValue(latestEntry.details, "Next step") !== "not returned"
+          ? detailValue(latestEntry.details, "Next step")
+          : napoleonTurnTimeline.comparison.find((row) => row.label === "Next step")?.value ?? "not returned",
+      boundary: detailValue(latestEntry.details, "Boundary"),
+      proposalOnly: true,
+    };
+
+    return withCapabilityLatestTurnEvidence(answer, evidence);
+  }
 
   function renderGovernedReviewResponse(result: GovernedReviewResponseView, localEffects: string) {
     const responseView = describeGovernedReviewResponse(result, localEffects);
@@ -5097,6 +5146,17 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                     <dt>Capability evidence drilldown</dt>
                     <dd>
                       <span>Profile scope: {m.metadata.capabilityDrilldown.profileMode}</span>
+                      {m.metadata.capabilityDrilldown.latestTurnEvidence ? (
+                        <dl>
+                          <dt>Latest Napoleon turn evidence</dt>
+                          <dd>
+                            {m.metadata.capabilityDrilldown.latestTurnEvidence.status}:{" "}
+                            {m.metadata.capabilityDrilldown.latestTurnEvidence.summary} Next:{" "}
+                            {m.metadata.capabilityDrilldown.latestTurnEvidence.nextStep}. Blocked effects:{" "}
+                            {m.metadata.capabilityDrilldown.latestTurnEvidence.blockedEffects.join(", ") || "none"}.
+                          </dd>
+                        </dl>
+                      ) : null}
                       <ol>
                         {m.metadata.capabilityDrilldown.rows.map((row) => (
                           <li key={`${row.label}:${row.status ?? "none"}:${row.architectureArea ?? "none"}`}>

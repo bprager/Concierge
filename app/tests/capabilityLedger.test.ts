@@ -10,6 +10,7 @@ import {
   deriveCapabilitySignalFromEvent,
   exportCapabilityAnswerDrilldown,
   exportCapabilityReviewPacket,
+  withCapabilityLatestTurnEvidence,
   deserializeCapabilityLedger,
   exportCapabilityLedger,
   serializeCapabilityLedger,
@@ -1306,15 +1307,37 @@ test("capability answers include sanitized evidence drilldown export metadata", 
   assert.equal(answer.drilldown.boundary.agentDispatchAllowed, false);
   assert.equal(answer.drilldown.boundary.externalSendAllowed, false);
 
-  const exported = exportCapabilityAnswerDrilldown(answer, { generatedAt: "2026-06-11T12:00:00.000Z" });
+  const answerWithTurnEvidence = withCapabilityLatestTurnEvidence(answer, {
+    status: "blocked",
+    summary: "Blocked bridge attempt; governance no_go.",
+    handledBy: "not returned",
+    governance: "no_go",
+    trace: "trace_latest_drilldown",
+    failureReason: "governance_denied",
+    blockedEffects: ["memory_write", "external_send", "token_secret"],
+    nextStep: "Align the bridge contract before retry.",
+    boundary: "No Napoleon response was accepted; fail-closed local state only.",
+    proposalOnly: true,
+  });
+
+  const exported = exportCapabilityAnswerDrilldown(answerWithTurnEvidence, { generatedAt: "2026-06-11T12:00:00.000Z" });
   assert.equal(exported.schemaVersion, "concierge.capability-answer-drilldown.export.v1");
   assert.equal(exported.answerKind, "recommended_next_capabilities");
   assert.equal(exported.rows[0].scoreComponents?.frequency, 2);
+  assert.equal(exported.latestTurnEvidence?.status, "blocked");
+  assert.equal(exported.latestTurnEvidence?.trace, "trace_latest_drilldown");
+  assert.equal(exported.latestTurnEvidence?.blockedEffects.includes("external_send"), true);
+  assert.equal(exported.latestTurnEvidence?.blockedEffects.includes("token_secret"), false);
   const exportedJson = JSON.stringify(exported);
   assert.equal(exportedJson.includes("raw user request must not export"), false);
   assert.equal(exportedJson.includes("private.example"), false);
   assert.equal(exportedJson.includes("token"), false);
   assert.equal(exported.boundary.externalSendAllowed, false);
+
+  const packet = exportCapabilityReviewPacket(answerWithTurnEvidence, { generatedAt: "2026-06-11T12:00:00.000Z" });
+  assert.equal(packet.latestTurnEvidence?.status, "blocked");
+  assert.equal(packet.latestTurnEvidence?.proposalOnly, true);
+  assert.equal(JSON.stringify(packet).includes("token_secret"), false);
 });
 
 test("capability review packet export is sanitized local proposal evidence", () => {

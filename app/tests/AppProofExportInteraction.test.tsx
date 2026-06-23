@@ -895,6 +895,153 @@ test("renders and exports sanitized capability evidence drilldowns without conta
   }
 });
 
+test("capability recommendations include latest accepted Napoleon turn evidence", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, fireEvent, render, waitFor },
+    userEventModule,
+    { App },
+    { clearCapabilityLedger },
+    telemetry,
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/capabilityLedger.js"),
+    import("../src/telemetry.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  const requestedUrls: string[] = [];
+
+  try {
+    console.info = () => {};
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      requestedUrls.push(url);
+      if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+        return harnessJsonResponse(200, {
+          descriptor: {
+            schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+            serviceId: "napoleon.chief_of_staff",
+            runtimeAuthority: false,
+            commandExecution: false,
+            cachePolicy: "fail_closed_to_review_required",
+            blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+          },
+          checksum: { expected: "sha256:ui", actual: "sha256:ui" },
+          signature: { valid: true },
+        });
+      }
+      assert.equal(url, "http://127.0.0.1:8787/v1/concierge/turn");
+      const body = JSON.parse(String(init?.body ?? "{}")) as {
+        traceId: string;
+        profileMode: string;
+        chiefOfStaffRequest: { request_id: string };
+      };
+      return harnessJsonResponse(200, {
+        text: "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
+        profileMode: body.profileMode,
+        targetAgent: "napoleon.chief_of_staff",
+        governanceDecision: {
+          decision_id: `decision_${body.traceId}`,
+          request_id: body.chiefOfStaffRequest.request_id,
+          outcome: "requires_review",
+          authority_tier: "advisory_review",
+          approval_requirement: "chief_of_staff_and_owner_review",
+          rationale: "Local harness requires governed review.",
+          blocked_effects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+          trace_id: body.traceId,
+          audit_id: `audit_${body.traceId}`,
+        },
+        traceEnvelope: {
+          trace_id: body.traceId,
+          parent_trace_id: "local_harness",
+          actor_id: "napoleon.local_harness",
+          request_id: body.chiefOfStaffRequest.request_id,
+          decision_id: `decision_${body.traceId}`,
+          timestamp: "2026-06-12T00:00:00.000Z",
+        },
+        auditEnvelope: {
+          audit_id: `audit_${body.traceId}`,
+          trace_id: body.traceId,
+          decision_id: `decision_${body.traceId}`,
+          actor_id: "napoleon.local_harness",
+          authority_tier: "advisory_review",
+          approval_requirement: "chief_of_staff_and_owner_review",
+          evidence_links: [`trace:${body.traceId}`],
+        },
+        delegation: {
+          selectedAgents: [
+            {
+              agentId: "passive_brain",
+              displayName: "Passive Brain",
+              selectionReason: "Prior bridge context is relevant.",
+              contributionSummary: "bridge context",
+            },
+          ],
+          allowedEffects: ["prepare_advisory_response"],
+          blockedEffects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+          governanceState: "requires_review",
+          traceId: body.traceId,
+          auditId: `audit_${body.traceId}`,
+        },
+        recommendationProvenance: {
+          summary: "keeping this as a governed review draft",
+          traceId: body.traceId,
+          auditId: `audit_${body.traceId}`,
+        },
+      });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Ask Napoleon for bridge context" },
+    });
+    await user.click(view.getByRole("button", { name: "Send" }));
+    await view.findByText("Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.");
+    const fetchCountAfterLiveTurn = requestedUrls.length;
+
+    telemetry.emitEvent("response_failed", {
+      traceId: "trace_latest_turn_recommendation",
+      conversationId: "conv_latest_turn_recommendation",
+      turnId: "turn_latest_turn_recommendation",
+      profile: "adult_owner",
+    });
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What capabilities should be implemented next?" },
+    });
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    const latestEvidenceLabel = await view.findByText("Latest Napoleon turn evidence");
+    const latestEvidenceText = latestEvidenceLabel.closest("dl")?.textContent ?? "";
+    assert.ok(latestEvidenceText.includes("accepted"));
+    assert.ok(latestEvidenceText.includes("Passive Brain"));
+    assert.ok(latestEvidenceText.includes("requires_review"));
+    assert.ok(latestEvidenceText.includes("external_send"));
+    assert.equal(requestedUrls.length, fetchCountAfterLiveTurn);
+
+    await user.click(view.getByRole("button", { name: "Export capability evidence drilldown" }));
+    const exportBlock = await view.findByLabelText("Exported capability evidence drilldown");
+    const exported = exportBlock.textContent ?? "";
+    assert.ok(exported.includes('"latestTurnEvidence"'));
+    assert.ok(exported.includes('"status": "accepted"'));
+    assert.ok(exported.includes("Passive Brain"));
+    assert.equal(exported.includes("127.0.0.1"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("exports a sanitized local capability review packet from capability answers", async () => {
   const dom = installDom();
   const [

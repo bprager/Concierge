@@ -153,9 +153,9 @@ Acceptance criteria:
 - Easy-to-evolve and recommended-next answers use deterministic local ranking from count, confidence, capability status, architecture area, and suggested next step.
 - Recommended-next answers can propose a guided Media Session readiness repair flow from fixed local microphone, camera, and playback blocker details without treating ordinary correctly blocked unsafe requests as implementation recommendations.
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
-- Answers include a visible sanitized evidence drilldown with profile scope, answer rows, score components where available, architecture area, suggested next step, and allowlisted local evidence references.
-- The evidence drilldown can be exported as local JSON for inspection without contacting Napoleon, exposing endpoints or credentials, retaining raw text/media/request/response bodies, capturing approval, writing memory, dispatching agents, sending externally, or applying recommendations.
-- Capability answers can export a local review packet with safe question classification, profile scope, review focus, evaluator case candidate, evolution proposal draft, sanitized rows, allowlisted evidence, proposal-only boundary, and explicit false local side-effect fields; export does not contact Napoleon or apply recommendations.
+- Answers include a visible sanitized evidence drilldown with profile scope, answer rows, score components where available, architecture area, suggested next step, allowlisted local evidence references, and current accepted or blocked Napoleon turn evidence when available.
+- The evidence drilldown can be exported as local JSON for inspection without contacting Napoleon, exposing endpoints or credentials, retaining raw text/media/request/response bodies, capturing approval, writing memory, dispatching agents, sending externally, applying recommendations, or treating latest-turn evidence as authority.
+- Capability answers can export a local review packet with safe question classification, profile scope, review focus, evaluator case candidate, evolution proposal draft, sanitized latest-turn evidence when available, sanitized rows, allowlisted evidence, proposal-only boundary, and explicit false local side-effect fields; export does not contact Napoleon or apply recommendations.
 - Exported capability review packets can be submitted through the governed Chief of Staff evolution review target only after endpoint and descriptor preflight pass, the descriptor advertises the review handoff, active profile scope still matches, and Rehearsal Mode is off; submission remains proposal-only and cannot apply changes, write memory, capture approval, dispatch agents, or send externally.
 - Correctly blocked unsafe requests are classified separately from failed safe requests.
 - Capability ledger storage re-sanitizes appended labels and evidence references before any persistence, export, query answer, or Chief of Staff steering draft can reuse them.
@@ -188,7 +188,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by `CAPABILITY-INTELLIGENCE-001`, `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`, `CHIEF-OF-STAFF-STEERING-PROFILE-MISMATCH-001`, `CHIEF-OF-STAFF-STEERING-EXPORT-STALE-001`, and `CHIEF-OF-STAFF-TAXONOMY-REVIEW-STALE-001`, plus app/unit regression coverage for sanitized capability-answer evidence drilldown display, drilldown export, and local review packet export.
+- Covered by `CAPABILITY-INTELLIGENCE-001`, `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`, `CHIEF-OF-STAFF-STEERING-PROFILE-MISMATCH-001`, `CHIEF-OF-STAFF-STEERING-EXPORT-STALE-001`, and `CHIEF-OF-STAFF-TAXONOMY-REVIEW-STALE-001`, plus app/unit regression coverage for sanitized capability-answer evidence drilldown display, latest-turn evidence, drilldown export, and local review packet export.
 
 ### TX-013 details
 
