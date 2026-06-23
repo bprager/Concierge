@@ -99,6 +99,12 @@ test("successful Napoleon response presentation includes returned delegation and
   assert.ok(
     state.delegation?.details.some(
       (detail: { label: string; value: string }) =>
+        detail.label === "Handled by" && detail.value === "Passive Brain",
+    ),
+  );
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
         detail.label === "Provenance source" &&
         detail.value === "returned bridge delegation; not local metadata discovery",
     ),
@@ -113,6 +119,12 @@ test("successful Napoleon response presentation includes returned delegation and
   assert.equal(state.proof?.heading, "Last successful Napoleon proof");
   assert.equal(state.proof?.status, "verified");
   assert.ok(state.proof?.summary.includes("Napoleon recommendation"));
+  assert.ok(
+    state.proof?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Handled by" && detail.value === "Passive Brain",
+    ),
+  );
   assert.ok(
     state.proof?.details.some(
       (detail: { label: string; value: string }) =>
@@ -159,6 +171,12 @@ test("successful Napoleon response proof includes returned target capability wit
   assert.ok(
     state.delegation?.details.some(
       (detail: { label: string; value: string }) =>
+        detail.label === "Handled by" && detail.value === "napoleon.chief_of_staff",
+    ),
+  );
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
         detail.label === "Target capability" && detail.value === "napoleon.chief_of_staff",
     ),
   );
@@ -202,6 +220,12 @@ test("successful Napoleon response proof includes returned target capability wit
   );
   assert.equal(state.proof?.status, "verified");
   assert.ok(state.proof?.summary.includes("Capability: napoleon.chief_of_staff"));
+  assert.ok(
+    state.proof?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Handled by" && detail.value === "napoleon.chief_of_staff",
+    ),
+  );
   assert.ok(
     state.proof?.details.some(
       (detail: { label: string; value: string }) =>
@@ -258,10 +282,22 @@ test("successful Napoleon response presentation labels known returned target cap
   assert.ok(
     state.delegation?.details.some(
       (detail: { label: string; value: string }) =>
+        detail.label === "Handled by" && detail.value === "Answer with governance (napoleon.capability.answer)",
+    ),
+  );
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
         detail.label === "Target capability" && detail.value === "Answer with governance (napoleon.capability.answer)",
     ),
   );
   assert.ok(state.proof?.summary.includes("Capability: Answer with governance (napoleon.capability.answer)"));
+  assert.ok(
+    state.proof?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Handled by" && detail.value === "Answer with governance (napoleon.capability.answer)",
+    ),
+  );
   assert.ok(
     state.proof?.details.some(
       (detail: { label: string; value: string }) =>

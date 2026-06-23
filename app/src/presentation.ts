@@ -1004,6 +1004,7 @@ export function describeDelegation(
           ? `Napoleon returned target capability ${targetCapabilityDisplay}, but did not include selected-agent delegation provenance.`
           : "Napoleon returned target capability metadata, but it was redacted and did not include selected-agent delegation provenance.",
         details: [
+          { label: "Handled by", value: targetCapabilityDisplay },
           { label: "Target capability", value: targetCapabilityDisplay },
           { label: "Provenance source", value: "target capability only; selected-agent delegation not returned" },
           { label: "Selected agents", value: "not returned" },
@@ -1028,6 +1029,7 @@ export function describeDelegation(
       heading: "Napoleon delegation",
       body: "No Napoleon delegation provenance was returned, so Concierge will not attribute the answer to a capability or agent.",
       details: [
+        { label: "Handled by", value: "not returned" },
         { label: "Target capability", value: "not returned" },
         { label: "Provenance source", value: "not returned" },
         { label: "Selected agents", value: "not returned" },
@@ -1051,6 +1053,9 @@ export function describeDelegation(
         )}): ${sanitizeVisibleProvenanceValue(agent.selectionReason)}`,
     )
     .join("; ");
+  const handledByAgents = delegation.selectedAgents
+    .map((agent) => sanitizeVisibleProvenanceValue(agent.displayName))
+    .join(", ");
   const selectionReasons = delegation.selectedAgents
     .map(
       (agent) =>
@@ -1076,6 +1081,7 @@ export function describeDelegation(
     heading: "Napoleon delegation",
     body: contribution || "Napoleon provided delegation provenance for this response.",
     details: [
+      { label: "Handled by", value: handledByAgents || targetCapabilityDisplay || "not returned" },
       { label: "Target capability", value: targetCapabilityDisplay },
       { label: "Provenance source", value: "returned bridge delegation; not local metadata discovery" },
       { label: "Selected agents", value: agentLabels },
@@ -1141,6 +1147,10 @@ export function describeNapoleonResponseProof(
       { label: "Trace", value: sanitizeVisibleProvenanceValue(response.traceEnvelope.trace_id) },
       { label: "Audit", value: sanitizeVisibleProvenanceValue(response.auditEnvelope.audit_id) },
       { label: "Attribution boundary", value: "Returned bridge provenance only; not local authority." },
+      {
+        label: "Handled by",
+        value: agentLabels || targetCapabilityDisplay || "not returned",
+      },
       {
         label: "Target capability",
         value: returnedTargetCapability === "redacted" ? "redacted metadata" : targetCapabilityDisplay || "not returned",

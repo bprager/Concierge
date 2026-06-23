@@ -180,6 +180,11 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
 
   assert.equal(view.heading, "Napoleon delegation");
   assert.ok(view.body.includes("Passive Brain found the previous deployment risk note."));
+  assert.ok(
+    view.details.some(
+      (detail) => detail.label === "Handled by" && detail.value === "Passive Brain",
+    ),
+  );
   assert.ok(view.details.some((detail) => detail.label === "Target capability" && detail.value === "napoleon.chief_of_staff"));
   assert.ok(view.details.some((detail) => detail.label === "Selected agents" && detail.value.includes("Passive Brain")));
   assert.ok(view.details.some((detail) => detail.label === "Why selected" && detail.value.includes("Relevant deployment history")));
@@ -205,6 +210,7 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.ok(empty.body.includes("No Napoleon delegation provenance was returned"));
   assert.ok(!empty.body.includes("Napoleon recommends"));
   assert.ok(!empty.body.includes("Passive Brain found"));
+  assert.ok(empty.details.some((detail) => detail.label === "Handled by" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Target capability" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Selected agents" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Why selected" && detail.value === "not returned"));
@@ -330,6 +336,7 @@ test("labels redacted target-capability-only delegation metadata without attribu
   assert.ok(
     view.details.some((detail) => detail.label === "Target capability" && detail.value === "redacted metadata"),
   );
+  assert.ok(view.details.some((detail) => detail.label === "Handled by" && detail.value === "redacted metadata"));
   assert.ok(
     view.details.some(
       (detail) => detail.label === "Proof alignment" && detail.value === "selected-agent proof not returned",
@@ -379,6 +386,12 @@ test("describes successful Napoleon response proof from returned provenance only
   assert.ok(view.summary.includes("Passive Brain"));
   assert.ok(view.summary.includes("Napoleon recommendation"));
   assert.ok(view.caveat.includes("not Napoleon approval"));
+  assert.ok(
+    view.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Handled by" && detail.value === "Passive Brain",
+    ),
+  );
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Governance" && detail.value === "allow_prepare_only"));
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Profile mode" && detail.value === "child_protected_user"));
   assert.ok(view.details.some((detail: { label: string; value: string }) => detail.label === "Trace" && detail.value === "trace_proof"));

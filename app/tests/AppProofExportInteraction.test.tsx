@@ -281,10 +281,13 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(napoleonProofPanel);
     assert.ok(within(napoleonProofPanel).getByText("Napoleon recommendation"));
     assert.ok(within(napoleonProofPanel).getByText("keeping this as a governed review draft"));
+    assert.ok(within(napoleonProofPanel).getByText("Handled by"));
+    assert.ok(within(napoleonProofPanel).getAllByText("Passive Brain").length >= 1);
     assert.ok(within(napoleonProofPanel).getByText("Returned bridge provenance only; not local authority."));
     const delegationPanel = screen.getByLabelText("Napoleon delegation");
     assert.ok(within(delegationPanel).getByText("Napoleon delegation"));
     assert.ok(within(delegationPanel).getByText("Passive Brain found bridge context."));
+    assert.ok(within(delegationPanel).getByText("Handled by"));
     assert.ok(within(delegationPanel).getByText("Target capability"));
     assert.ok(within(delegationPanel).getByText("napoleon.chief_of_staff"));
     assert.ok(within(delegationPanel).getByText("Provenance source"));
@@ -1133,10 +1136,11 @@ test("shows Napoleon delegation panel before bridge provenance is returned", asy
       ),
     );
     assert.ok(delegationPanel.getByText("Target capability"));
+    assert.ok(delegationPanel.getByText("Handled by"));
     assert.ok(delegationPanel.getByText("Provenance source"));
     assert.ok(delegationPanel.getByText("Why selected"));
     assert.ok(delegationPanel.getByText("Authority boundary"));
-    assert.equal(delegationPanel.getAllByText("not returned").length, 11);
+    assert.equal(delegationPanel.getAllByText("not returned").length, 12);
     assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
     assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
   } finally {

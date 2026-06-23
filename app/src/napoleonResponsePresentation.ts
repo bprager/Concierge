@@ -200,7 +200,7 @@ export function exportNapoleonResponseProofJson(
   }
 
   const metadata: NapoleonResponseProofMetadata = sanitizeResponseProofMetadata(state.proofMetadata ?? {
-    handledBy: optionalProofDetailValue(proof, "Capability or agents"),
+    handledBy: optionalProofDetailValue(proof, "Handled by"),
     targetCapability: optionalProofDetailValue(proof, "Target capability"),
     recommendation: optionalProofDetailValue(proof, "Napoleon recommendation"),
     selectedAgents: splitList(proofDetailValue(proof, "Selected agents")),
