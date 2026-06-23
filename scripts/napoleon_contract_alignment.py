@@ -170,15 +170,37 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
     discovery_paths_needing_runtime_mapping = sorted(
         path for path in napoleon_discovery_contract_paths if path not in SUPPORTED_DISCOVERY_RUNTIME_PATHS
     )
+    runtime_mapped_napoleon_paths = (
+        set(supported_advisory_runtime_paths)
+        | set(supported_review_runtime_paths)
+        | set(supported_discovery_runtime_paths)
+        | alias_covered_paths
+    )
+    unmapped_napoleon_runtime_paths = sorted(path for path in napoleon_only if path not in runtime_mapped_napoleon_paths)
+    runtime_aligned = (
+        not unmapped_napoleon_runtime_paths
+        and not review_paths_needing_runtime_mapping
+        and not discovery_paths_needing_runtime_mapping
+    )
+    alignment_status = (
+        "exact_path_match"
+        if not napoleon_only and not concierge_only
+        else "runtime_mapped_with_local_contract_paths"
+        if runtime_aligned
+        else "runtime_mapping_gaps_present"
+    )
 
     return {
         "aligned": not napoleon_only and not concierge_only,
+        "runtimeAligned": runtime_aligned,
+        "alignmentStatus": alignment_status,
         "conciergeContract": str(concierge_openapi),
         "napoleonContract": str(napoleon_openapi),
         "conciergePaths": concierge_paths,
         "napoleonPaths": napoleon_paths,
         "napoleonOnlyPaths": napoleon_only,
         "conciergeOnlyPaths": concierge_only,
+        "unmappedNapoleonRuntimePaths": unmapped_napoleon_runtime_paths,
         "supportedAdvisoryRuntimePaths": supported_advisory_runtime_paths,
         "supportedReviewRuntimePaths": supported_review_runtime_paths,
         "supportedDiscoveryRuntimePaths": supported_discovery_runtime_paths,

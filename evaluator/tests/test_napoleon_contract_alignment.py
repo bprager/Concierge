@@ -47,6 +47,9 @@ paths:
             report = napoleon_contract_alignment.build_alignment_report(local, napoleon)
 
         self.assertFalse(report["aligned"])
+        self.assertTrue(report["runtimeAligned"])
+        self.assertEqual(report["alignmentStatus"], "runtime_mapped_with_local_contract_paths")
+        self.assertEqual(report["unmappedNapoleonRuntimePaths"], [])
         self.assertIn("/cos/text-turn", report["napoleonOnlyPaths"])
         self.assertIn("/v1/concierge/turn", report["conciergeOnlyPaths"])
         self.assertEqual(report["napoleonRuntimeAuthority"], False)
@@ -84,8 +87,51 @@ paths:
             report = napoleon_contract_alignment.build_alignment_report(local, napoleon)
 
         self.assertTrue(report["aligned"])
+        self.assertTrue(report["runtimeAligned"])
+        self.assertEqual(report["alignmentStatus"], "exact_path_match")
+        self.assertEqual(report["unmappedNapoleonRuntimePaths"], [])
         self.assertEqual(report["napoleonOnlyPaths"], [])
         self.assertEqual(report["conciergeOnlyPaths"], [])
+
+    def test_reports_unmapped_napoleon_runtime_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            local = self.write_yaml(
+                directory,
+                "local.yaml",
+                """
+openapi: 3.1.0
+paths:
+  /v1/concierge/turn:
+    post:
+      responses:
+        "200": {description: ok}
+""",
+            )
+            napoleon = self.write_yaml(
+                directory,
+                "napoleon.yaml",
+                """
+openapi: 3.1.0
+x-napoleon-runtime-authority: false
+paths:
+  /cos/text-turn:
+    post:
+      responses:
+        "202": {description: accepted}
+  /chief-of-staff/reviews/unknown:
+    post:
+      responses:
+        "202": {description: unknown review}
+""",
+            )
+
+            report = napoleon_contract_alignment.build_alignment_report(local, napoleon)
+
+        self.assertFalse(report["aligned"])
+        self.assertFalse(report["runtimeAligned"])
+        self.assertEqual(report["alignmentStatus"], "runtime_mapping_gaps_present")
+        self.assertEqual(report["unmappedNapoleonRuntimePaths"], ["/chief-of-staff/reviews/unknown"])
 
     def test_classifies_advisory_runtime_and_unmapped_review_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -212,6 +258,9 @@ paths:
             ["/agents", "/agents/{agent_id}", "/profiles/{profile_id}"],
         )
         self.assertEqual(report["napoleonDiscoveryPathsNeedingRuntimeMapping"], [])
+        self.assertTrue(report["runtimeAligned"])
+        self.assertEqual(report["alignmentStatus"], "runtime_mapped_with_local_contract_paths")
+        self.assertEqual(report["unmappedNapoleonRuntimePaths"], [])
         self.assertIn("/chief-of-staff/reviews/evolution-proposals", report["napoleonReviewContractPaths"])
         self.assertEqual(
             report["napoleonDiscoveryContractPaths"],

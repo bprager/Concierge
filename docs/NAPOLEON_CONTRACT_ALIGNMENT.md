@@ -10,6 +10,10 @@ NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napol
 
 The report is local evidence only. It does not contact Napoleon, approve a runtime, write memory, dispatch agents, send externally, or grant authority. It also separates exact path drift from practical integration readiness:
 
+- `aligned` is true only when Concierge and Napoleon expose the same literal path set.
+- `runtimeAligned` is true when every Napoleon-only runtime path in the snapshot is covered by a supported advisory path, supported review/discovery path, or explicit local handoff alias, even if Concierge intentionally keeps local `/v1/concierge/...` packaging paths.
+- `alignmentStatus` is `exact_path_match`, `runtime_mapped_with_local_contract_paths`, or `runtime_mapping_gaps_present`.
+- `unmappedNapoleonRuntimePaths` lists Napoleon-only paths that are not yet covered by any supported runtime mapping or local handoff alias.
 - `supportedAdvisoryRuntimePaths` lists Napoleon advisory harness paths Concierge already knows how to use directly, such as `/cos/descriptor`, `/cos/capabilities`, `/cos/text-turn`, and `/cos/trace/{trace_id}`.
 - `supportedReviewRuntimePaths` lists Napoleon review paths Concierge can target explicitly through a named governed bridge alias, while still requiring proof-bearing review responses.
 - `supportedDiscoveryRuntimePaths` lists Napoleon metadata discovery paths Concierge can target explicitly through named governed bridge aliases, such as `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}`. These are metadata-only reads and do not dispatch agents, update registries, write memory, capture approval, send externally, or grant runtime authority.
@@ -20,7 +24,7 @@ The report is local evidence only. It does not contact Napoleon, approve a runti
 
 ## Current Finding
 
-The Napoleon snapshot inspected from `bernd@mimir:~/Projects/Napoleon/docs/concierge-integration/apis/concierge-integration.openapi.yaml` is not path-aligned with Concierge's generated bridge registry.
+The Napoleon snapshot inspected from `bernd@mimir:~/Projects/Napoleon/docs/concierge-integration/apis/concierge-integration.openapi.yaml` is runtime-mapped but not path-identical with Concierge's generated bridge registry. In machine-readable report terms, `aligned` remains false because the literal path sets differ, while `runtimeAligned` is true and `alignmentStatus` is `runtime_mapped_with_local_contract_paths` when no Napoleon-only runtime paths are left unmapped.
 
 Concierge currently exposes governed bridge operations under:
 
@@ -48,7 +52,7 @@ The Napoleon advisory harness snapshot exposes:
 - `/profiles/{profile_id}`
 - `/evolution/proposals`
 
-The Napoleon snapshot declares `x-napoleon-runtime-authority: false`, so the mismatch is an integration contract gap, not an authority grant. Concierge should not silently treat these paths as equivalent until the bridge client, evidence comparator, descriptor discovery, and response validation are intentionally aligned.
+The Napoleon snapshot declares `x-napoleon-runtime-authority: false`, so the path mismatch is not an authority grant. Concierge should continue to treat local `/v1/concierge/...` paths and Napoleon runtime paths as separate named mappings, with descriptor preflight, evidence comparison, response validation, and proposal-only boundaries deciding whether a given handoff may be attempted.
 
 ## Current Compatibility
 
