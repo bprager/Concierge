@@ -4807,6 +4807,9 @@ test("exports a local Chief of Staff steering draft without sending or applying 
     assert.ok(exportBlock.textContent?.includes('"agentDispatchAllowed": false'));
     assert.ok(exportBlock.textContent?.includes('"evaluatorCaseCandidate"'));
     assert.ok(exportBlock.textContent?.includes('"evolutionProposal"'));
+    assert.ok(exportBlock.textContent?.includes('"handoffContext"'));
+    assert.ok(exportBlock.textContent?.includes('"blockerLabel": "Endpoint configured"'));
+    assert.ok(exportBlock.textContent?.includes("Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery."));
     assert.ok(exportBlock.textContent?.includes('"learningSignalCount": 1'));
     assert.equal(exportBlock.textContent?.includes("raw export steering miss"), false);
     assert.equal(exportBlock.textContent?.includes("127.0.0.1"), false);

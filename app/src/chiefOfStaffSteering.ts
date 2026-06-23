@@ -44,6 +44,7 @@ interface SteeringDraftOptions {
   traceId: string;
   endpointConfigured: boolean;
   profileMode?: LocalProfile | NapoleonProfileMode;
+  handoffContext?: SteeringHandoffContext;
 }
 
 interface SteeringRecommendation {
@@ -83,10 +84,21 @@ interface EvolutionProposalDraft {
   rollback_plan: string;
 }
 
+interface SteeringHandoffContext {
+  status: "ready" | "blocked";
+  summary: string;
+  nextStepSummary: string;
+  blockerLabel?: string;
+  blockerDetail?: string;
+  blockedEffects: string[];
+  proposalOnly: true;
+}
+
 export interface ChiefOfStaffSteeringDraft {
   recommendation: SteeringRecommendation;
   evaluatorCaseCandidate: EvaluatorCaseCandidate;
   evolutionProposal: EvolutionProposalDraft;
+  handoffContext: SteeringHandoffContext;
   sendState: {
     canSendToNapoleon: boolean;
     reason: string;
@@ -180,6 +192,22 @@ function normalizeSteeringProfileMode(profileMode: LocalProfile | NapoleonProfil
   return profileMode;
 }
 
+function defaultHandoffContext(endpointConfigured: boolean): SteeringHandoffContext {
+  return {
+    status: endpointConfigured ? "ready" : "blocked",
+    summary: endpointConfigured
+      ? "Chief of Staff steering has a configured endpoint, but descriptor and route readiness still need local preflight review."
+      : "Chief of Staff steering is blocked until a governed Napoleon endpoint is configured.",
+    nextStepSummary: endpointConfigured
+      ? "Next step: confirm descriptor preflight and governed handoff route readiness before sending."
+      : "Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery.",
+    blockerLabel: endpointConfigured ? undefined : "Endpoint configured",
+    blockerDetail: endpointConfigured ? undefined : "No Napoleon endpoint is configured.",
+    blockedEffects: ["memory_write", "approval_capture", "agent_dispatch", "external_send", "runtime_authority"],
+    proposalOnly: true,
+  };
+}
+
 export function draftChiefOfStaffSteering(
   ledger: CapabilityLedger,
   options: SteeringDraftOptions,
@@ -254,6 +282,7 @@ export function draftChiefOfStaffSteering(
       approval_required: "Napoleon Chief of Staff and owner review before implementation or rollout.",
       rollback_plan: "Keep the current Concierge behavior as last known good and disable the proposed capability path if evaluator or governance checks regress.",
     },
+    handoffContext: options.handoffContext ?? defaultHandoffContext(options.endpointConfigured),
     sendState: {
       canSendToNapoleon: options.endpointConfigured,
       reason: options.endpointConfigured

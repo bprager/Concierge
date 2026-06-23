@@ -2587,11 +2587,28 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function createSteeringDraft() {
     const traceId = newTraceId();
+    const steeringDraftHandoffReadiness = describeGovernedHandoffReadiness({
+      label: "Chief of Staff steering",
+      descriptorConnection,
+      draftReady: true,
+      rehearsalMode,
+      requiredHandoff: "evolution_proposal_review",
+    });
+    const steeringDraftBlocker = steeringDraftHandoffReadiness.items.find((item) => item.status === "blocked");
     const draft = draftChiefOfStaffSteering(capabilityLedger, {
       conversationId,
       traceId,
       endpointConfigured: Boolean(endpoint.trim()),
       profileMode: mapProfileToNapoleonMode(profile),
+      handoffContext: {
+        status: steeringDraftHandoffReadiness.status,
+        summary: steeringDraftHandoffReadiness.summary,
+        nextStepSummary: steeringDraftHandoffReadiness.nextStepSummary,
+        blockerLabel: steeringDraftBlocker?.label,
+        blockerDetail: steeringDraftBlocker?.detail,
+        blockedEffects: steeringDraftHandoffReadiness.blockedEffects,
+        proposalOnly: true,
+      },
     });
     setSteeringDraft(draft);
     setSteeringDraftExportJson(null);
@@ -2609,6 +2626,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       agentDispatchAllowed: draft.boundary.agentDispatchAllowed,
       externalSendAllowed: draft.boundary.externalSendAllowed,
       canSendToNapoleon: draft.sendState.canSendToNapoleon,
+      handoffStatus: draft.handoffContext.status,
+      handoffBlocker: draft.handoffContext.blockerLabel ?? "none",
     });
     for (const learningSignal of draft.evolutionProposal.learning_signals) {
       const { eventName, ...attributes } = buildLearningSignalTelemetryAttributes(learningSignal);
@@ -2635,6 +2654,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           recommendation: steeringDraft.recommendation,
           evaluatorCaseCandidate: steeringDraft.evaluatorCaseCandidate,
           evolutionProposal: steeringDraft.evolutionProposal,
+          handoffContext: steeringDraft.handoffContext,
           learningSignalCount: steeringDraft.evolutionProposal.learning_signals.length,
           sendState: steeringDraft.sendState,
           boundary: steeringDraft.boundary,
@@ -4815,6 +4835,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               )
                 ? "yes"
                 : "no"}
+            </dd>
+            <dt>Handoff context</dt>
+            <dd>
+              {steeringDraft.handoffContext.status}: {steeringDraft.handoffContext.summary}{" "}
+              {steeringDraft.handoffContext.blockerLabel
+                ? `${steeringDraft.handoffContext.blockerLabel}: ${steeringDraft.handoffContext.blockerDetail}. `
+                : ""}
+              {steeringDraft.handoffContext.nextStepSummary}
             </dd>
             <dt>Boundary</dt>
             <dd>

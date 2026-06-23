@@ -81,6 +81,15 @@ test("drafts proposal-only Chief of Staff steering from capability signals", () 
   assert.equal(draft.boundary.memoryWriteAllowed, false);
   assert.equal(draft.boundary.agentDispatchAllowed, false);
   assert.equal(draft.boundary.externalSendAllowed, false);
+  assert.equal(draft.handoffContext.status, "blocked");
+  assert.equal(draft.handoffContext.proposalOnly, true);
+  assert.equal(draft.handoffContext.blockerLabel, "Endpoint configured");
+  assert.equal(draft.handoffContext.blockerDetail, "No Napoleon endpoint is configured.");
+  assert.equal(
+    draft.handoffContext.nextStepSummary,
+    "Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery.",
+  );
+  assert.ok(draft.handoffContext.blockedEffects.includes("external_send"));
   assert.equal(draft.recommendation.recommendationType, "scored_capability_recommendation");
   assert.equal(draft.recommendation.capabilityLabel, "live_bridge_descriptor_discovery");
   assert.equal(draft.recommendation.architectureArea, "bridge");
