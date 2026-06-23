@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered UI coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when Napoleon connection context changes, keeping imported runtime proof metadata scoped to the current readiness context.
 - Added rendered UI coverage proving returned capability review packet results clear when the local capability ledger is cleared, keeping governed review decisions scoped to the local evidence context that produced the packet.
 - Added rendered UI coverage proving returned observability trace handoff review results clear when the local telemetry buffer is cleared or its retention limit changes, keeping live review evidence scoped to the visible browser-local buffer context.
 - Added rendered UI coverage proving returned observability trace handoff review results clear when the active user profile changes, including adult owner to child protected scope changes.

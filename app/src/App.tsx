@@ -784,6 +784,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setBridgeReadinessProofComparison(null);
   }
 
+  function clearAcceptedReadinessProofContext() {
+    setAcceptedReadinessProofInput("");
+    setAcceptedReadinessProofImport(null);
+    clearVoicePipelineProof();
+  }
+
   function clearBridgeEvidenceReadiness() {
     setBridgeEvidenceReadiness(buildBridgeEvidenceReadinessState());
     setEvaluatorValidationArtifactInput("");
@@ -820,6 +826,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setLiveDescriptorInput(null);
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
+    clearAcceptedReadinessProofContext();
     clearBridgeEvidenceReadiness();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
@@ -846,6 +853,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setLiveDescriptorInput(null);
     setDescriptorDiscoveryMessage(null);
     clearBridgeReadinessProof();
+    clearAcceptedReadinessProofContext();
     clearBridgeEvidenceReadiness();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
@@ -866,6 +874,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setDescriptorMode(value);
     setSteeringDraftExportJson(null);
     clearBridgeReadinessProof();
+    clearAcceptedReadinessProofContext();
     clearBridgeEvidenceReadiness();
     clearNapoleonPresentation();
     clearVisibleTurnBoundaryState();
@@ -882,6 +891,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (enabled) {
       setPendingRehearsal(null);
       clearBridgeReadinessProof();
+      clearAcceptedReadinessProofContext();
       clearBridgeEvidenceReadiness();
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
@@ -1625,6 +1635,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setDescriptorDiscoveryMessage(result.connection.message);
       setSteeringDraftExportJson(null);
       clearBridgeReadinessProof();
+      clearAcceptedReadinessProofContext();
       clearBridgeEvidenceReadiness();
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
@@ -1654,6 +1665,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setDescriptorDiscoveryMessage("Descriptor discovery failed closed. Concierge will not attempt live bridge calls.");
       setSteeringDraftExportJson(null);
       clearBridgeReadinessProof();
+      clearAcceptedReadinessProofContext();
       clearBridgeEvidenceReadiness();
       clearNapoleonPresentation();
       clearVisibleTurnBoundaryState();
@@ -1708,6 +1720,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setPendingRehearsal(null);
     setBridgeEvidenceReadiness(buildBridgeEvidenceReadinessState());
     clearBridgeReadinessProof();
+    clearAcceptedReadinessProofContext();
     void discoverDescriptor(preset.endpoint);
   }
 
@@ -1720,6 +1733,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setTelemetryBufferExportJson(null);
     setInteractionTraceExportJson(null);
     clearBridgeReadinessProof();
+    clearAcceptedReadinessProofContext();
     clearBridgeEvidenceReadiness();
     clearVoicePipelineProof();
     clearLocalVoiceAndAvatarSampleResults();
@@ -2608,6 +2622,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   function importAcceptedReadinessProof() {
     const traceId = newTraceId();
     const importResult = importAcceptedBridgeReadinessProof(acceptedReadinessProofInput);
+    clearVoicePipelineProof();
+    clearBridgeReadinessProof();
     setAcceptedReadinessProofImport(importResult);
     emitEvent("accepted_readiness_proof_imported", {
       traceId,

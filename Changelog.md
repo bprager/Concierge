@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when Napoleon connection context changes, preventing stale imported proof metadata from shaping current readiness displays.
 - Added rendered coverage proving returned capability review packet results clear when the local capability ledger is cleared, preventing stale decision and audit evidence from outliving the local evidence context.
 - Added rendered coverage proving observability trace handoff review results clear when the local telemetry buffer is cleared or its retention limit changes, preventing stale live review evidence from outliving the visible buffer context.
 - Added rendered coverage proving observability trace handoff review results clear when the active user profile changes, including adult owner to child protected scope changes.
