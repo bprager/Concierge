@@ -588,6 +588,17 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("sanitized bridge evidence capture must pass", checks["real_runtime_promotion_boundary"]["missing_terms"])
         self.assertIn("evaluator HTTP mode must pass", checks["real_runtime_promotion_boundary"]["missing_terms"])
         self.assertIn("artifact privacy audit must pass", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("evaluation_review", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("http_evaluator_handoff_not_advertised", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn("http_evaluator_route_not_found", checks["real_runtime_promotion_boundary"]["missing_terms"])
+        self.assertIn(
+            "text-turn readiness separate from promotion readiness",
+            checks["real_runtime_promotion_boundary"]["missing_terms"],
+        )
+        self.assertIn(
+            "advertise and expose the evaluation review handoff",
+            checks["real_runtime_promotion_boundary"]["missing_terms"],
+        )
         self.assertIn("not Napoleon approval", checks["real_runtime_promotion_boundary"]["missing_terms"])
 
     def test_descriptor_connection_state_scenario_requires_first_class_fail_closed_states(self):

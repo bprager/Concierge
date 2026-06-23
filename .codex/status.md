@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added evaluator scenario coverage requiring real-runtime promotion checks to distinguish descriptor-unadvertised evaluator-review handoffs from missing evaluator routes while keeping text-turn readiness separate from promotion readiness.
 - Added `evaluation_review` to Concierge's governed descriptor handoff allowlist and OpenAPI descriptor schema, so Napoleon can advertise evaluator review without the descriptor failing closed as an unknown route.
 - Hardened live-runtime validation output so each run clears prior generated bridge, capability, evaluator, summary, and promotion-review artifacts before writing new evidence, preventing failed runs from inheriting stale success metadata.
 - Added rendered live-send coverage proving explicitly discovered advisory capability labels appear in transcript, delegation, and last-successful-proof display for matching returned target capability IDs while sanitized proof JSON and proof-export telemetry remain tied to the returned ID.
