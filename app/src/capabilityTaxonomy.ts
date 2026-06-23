@@ -124,6 +124,12 @@ export interface ChiefOfStaffTaxonomyReviewSubmissionResult {
   externalSendPerformed: false;
 }
 
+interface TaxonomyReviewTargetMetadata {
+  bridgeTargetPath: string;
+  bridgeTargetOperation: string;
+  bridgeTargetRequestKind: string;
+}
+
 const TAXONOMY_SCHEMA_VERSION = "concierge.capability-taxonomy.v1" as const;
 const TAXONOMY_PRIVACY_CAVEAT =
   "Local metadata-only taxonomy edits. Renames, merges, deprecated markers, and split-candidate markers are local hints only and do not change Napoleon policy, routing, memory, approval, dispatch, or external sends.";
@@ -634,6 +640,7 @@ function failTaxonomyReviewClosed(
   blockedEffects: string[] = TAXONOMY_REVIEW_BLOCKED_EFFECTS,
   descriptorFailureReason?: DescriptorFailClosedReason,
   governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
+  targetMetadata?: TaxonomyReviewTargetMetadata,
 ): never {
   const attributes: Record<string, unknown> = {
     traceId: dependencies.traceId,
@@ -648,6 +655,11 @@ function failTaxonomyReviewClosed(
   if (governanceReferences?.decisionId) attributes.decisionId = governanceReferences.decisionId;
   if (governanceReferences?.auditId) attributes.auditId = governanceReferences.auditId;
   if (governanceReferences?.governanceOutcome) attributes.governanceOutcome = governanceReferences.governanceOutcome;
+  if (targetMetadata) {
+    attributes.bridgeTargetPath = targetMetadata.bridgeTargetPath;
+    attributes.bridgeTargetOperation = targetMetadata.bridgeTargetOperation;
+    attributes.bridgeTargetRequestKind = targetMetadata.bridgeTargetRequestKind;
+  }
   emitTaxonomyReviewEvent(dependencies, "capability_taxonomy_review_send_failed", attributes);
   throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, blockedEffects, {
     profileMode,
@@ -769,6 +781,12 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     approval_requirement: approvalRequirement,
     evidence_links: evolutionProposal.evidence,
   };
+  const target = resolveNapoleonEvolutionProposalReviewOperation(endpoint);
+  const targetMetadata: TaxonomyReviewTargetMetadata = {
+    bridgeTargetPath: target.path,
+    bridgeTargetOperation: target.operationId,
+    bridgeTargetRequestKind: target.requestKind,
+  };
 
   emitTaxonomyReviewEvent(dependencies, "capability_taxonomy_review_send_started", {
     traceId: dependencies.traceId,
@@ -777,9 +795,9 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     proposalId: evolutionProposal.proposal_id,
     recommendationCount: draft.recommendations.length,
     profileMode,
+    ...targetMetadata,
   });
 
-  const target = resolveNapoleonEvolutionProposalReviewOperation(endpoint);
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<TaxonomyReviewFetch>>;
   try {
@@ -807,19 +825,49 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     });
   } catch (error) {
     const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
-    failTaxonomyReviewClosed(dependencies, reason, requestId, profileMode);
+    failTaxonomyReviewClosed(
+      dependencies,
+      reason,
+      requestId,
+      profileMode,
+      undefined,
+      TAXONOMY_REVIEW_BLOCKED_EFFECTS,
+      undefined,
+      undefined,
+      targetMetadata,
+    );
   }
 
   if (!response.ok) {
     const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
-    failTaxonomyReviewClosed(dependencies, reason, requestId, profileMode, response.status);
+    failTaxonomyReviewClosed(
+      dependencies,
+      reason,
+      requestId,
+      profileMode,
+      response.status,
+      TAXONOMY_REVIEW_BLOCKED_EFFECTS,
+      undefined,
+      undefined,
+      targetMetadata,
+    );
   }
 
   let payload: Partial<ChiefOfStaffTaxonomyReviewSubmissionResult>;
   try {
     payload = (await response.json()) as Partial<ChiefOfStaffTaxonomyReviewSubmissionResult>;
   } catch {
-    failTaxonomyReviewClosed(dependencies, "contract_mismatch", requestId, profileMode);
+    failTaxonomyReviewClosed(
+      dependencies,
+      "contract_mismatch",
+      requestId,
+      profileMode,
+      undefined,
+      TAXONOMY_REVIEW_BLOCKED_EFFECTS,
+      undefined,
+      undefined,
+      targetMetadata,
+    );
   }
   if (
     !hasRequiredBridgeResponseFields(payload, "chief_of_staff_steering") ||
@@ -829,7 +877,17 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenTaxonomyReviewSideEffectClaim(payload as Partial<ChiefOfStaffTaxonomyReviewSubmissionResult> & Record<string, unknown>)
   ) {
-    failTaxonomyReviewClosed(dependencies, "contract_mismatch", requestId, profileMode);
+    failTaxonomyReviewClosed(
+      dependencies,
+      "contract_mismatch",
+      requestId,
+      profileMode,
+      undefined,
+      TAXONOMY_REVIEW_BLOCKED_EFFECTS,
+      undefined,
+      undefined,
+      targetMetadata,
+    );
   }
 
   if (payload.governanceDecision.outcome === "deny" || payload.governanceDecision.outcome === "no_go") {
@@ -846,6 +904,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
         auditId: payload.auditEnvelope.audit_id,
         governanceOutcome: payload.governanceDecision.outcome,
       },
+      targetMetadata,
     );
   }
 
@@ -862,6 +921,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     memoryWritePerformed: false,
     agentDispatchPerformed: false,
     externalSendPerformed: false,
+    ...targetMetadata,
   });
 
   return {

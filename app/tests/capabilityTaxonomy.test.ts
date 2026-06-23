@@ -832,6 +832,10 @@ test("taxonomy review handoff fails closed when Napoleon returns no-go", async (
   assert.equal(events.at(-1)?.attributes.decisionId, "decision_taxonomy_no_go");
   assert.equal(events.at(-1)?.attributes.auditId, "audit_taxonomy_no_go");
   assert.equal(events.at(-1)?.attributes.governanceOutcome, "no_go");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/v1/concierge/chief-of-staff/steering");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "chief_of_staff_steering");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetRequestKind, "chief_of_staff_steering_handoff");
+  assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("napoleon.example"), false);
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, blockedEffects);
 });
 
