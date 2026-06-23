@@ -32,7 +32,7 @@ User value: A broader evaluator catches governance, privacy, memory, and contrac
 Acceptance criteria:
 
 - The evaluator suite has at least 15 scenarios.
-- Scenarios cover adult, child protected, guest/collaborator, adversarial, self-evolution, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed behavior, descriptor connection state, bridge-client contract alignment, bridge delegation provenance, bridge response authority provenance, child protected bridge response semantics, governed review response semantics, profile-scope drift, live-runtime artifact semantics, real-runtime promotion boundaries, voice pipeline proof export/comparison, media session controller boundaries, local avatar readiness/privacy boundaries, conversation capability intelligence, and steering recommendation type summaries.
+- Scenarios cover adult, child protected, guest/collaborator, adversarial, self-evolution, memory proposal review, bridge failure handling, privacy settings controls, contract mismatch fail-closed behavior, descriptor connection state, bridge-client contract alignment, bridge delegation provenance, bridge response authority provenance, child protected bridge response semantics, governed review response semantics, profile-scope drift, live-runtime artifact semantics, real-runtime promotion boundaries, voice pipeline proof export/comparison, media session controller boundaries, local avatar readiness/privacy boundaries, conversation capability intelligence, steering recommendation type summaries, and stale steering draft profile mismatches.
 - Coverage tests verify the required scenario IDs and artifact checks.
 
 Privacy and safety impact:
@@ -42,7 +42,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by `MEMORY-PROPOSAL-001`, `BRIDGE-FAILURE-001`, `PRIVACY-SETTINGS-001`, `CONTRACT-MISMATCH-001`, `DESCRIPTOR-CONNECTION-STATE-001`, `BRIDGE-CLIENT-CONTRACT-001`, `BRIDGE-FIXTURE-DELEGATION-001`, `DELEGATION-PANEL-STATE-001`, `BRIDGE-RESPONSE-PROVENANCE-001`, `CHILD-BRIDGE-RESPONSE-SEMANTICS-001`, `GOVERNED-REVIEW-RESPONSE-SEMANTICS-001`, `PROFILE-SCOPE-DRIFT-001`, `LIVE-RUNTIME-ARTIFACT-SEMANTICS-001`, `REAL-RUNTIME-PROMOTION-BOUNDARY-001`, `VOICE-PIPELINE-PROOF-001`, `MEDIA-SESSION-CONTROLLER-001`, `AVATAR-LOCAL-BOUNDARY-001`, `CAPABILITY-INTELLIGENCE-001`, and `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`.
+- Covered by `MEMORY-PROPOSAL-001`, `BRIDGE-FAILURE-001`, `PRIVACY-SETTINGS-001`, `CONTRACT-MISMATCH-001`, `DESCRIPTOR-CONNECTION-STATE-001`, `BRIDGE-CLIENT-CONTRACT-001`, `BRIDGE-FIXTURE-DELEGATION-001`, `DELEGATION-PANEL-STATE-001`, `BRIDGE-RESPONSE-PROVENANCE-001`, `CHILD-BRIDGE-RESPONSE-SEMANTICS-001`, `GOVERNED-REVIEW-RESPONSE-SEMANTICS-001`, `PROFILE-SCOPE-DRIFT-001`, `LIVE-RUNTIME-ARTIFACT-SEMANTICS-001`, `REAL-RUNTIME-PROMOTION-BOUNDARY-001`, `VOICE-PIPELINE-PROOF-001`, `MEDIA-SESSION-CONTROLLER-001`, `AVATAR-LOCAL-BOUNDARY-001`, `CAPABILITY-INTELLIGENCE-001`, `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`, and `CHIEF-OF-STAFF-STEERING-PROFILE-MISMATCH-001`.
 
 ## Milestone P1: Text Concierge MVP
 
@@ -168,6 +168,7 @@ Acceptance criteria:
 - Evaluator coverage requires steering recommendation type summaries to stay profile-scoped, enum-only, child-protected separated, local-only, and non-authorizing.
 - Returned Chief of Staff steering review panels show the reviewed recommendation type alongside Napoleon's decision, trace, audit, blocked effects, and false local side-effect state, so the reviewed packet category remains visible after submission.
 - Chief of Staff steering submission fails closed before request fetch when a stale draft's affected profile does not match the active profile, so profile-scoped evolution evidence cannot be submitted across contexts.
+- Evaluator coverage requires stale steering draft profile mismatches to fail closed before request fetch with `governance_no_go`, visible blocked effects, no Napoleon contact, and no side effects.
 - Recommendations are proposal-only and do not implement features, grant approval, write memory, dispatch agents, or send externally.
 - Local Chief of Staff taxonomy review drafts can recommend metadata-only merge, split, and deprecation review, package evaluator-case and evolution-proposal drafts, and submit them through the governed Chief of Staff bridge only after endpoint and descriptor preflight pass, without applying taxonomy edits or changing Napoleon policy/routing; child-protected taxonomy review drafts and handoffs preserve child profile scope and guardian/owner review wording.
 - Clearing the local capability ledger clears any derived Chief of Staff steering or taxonomy review draft, response, or failure state so obsolete local evidence cannot be submitted or displayed; taxonomy edits clear derived Chief of Staff steering drafts, steering exports, steering results, taxonomy review drafts, and taxonomy review results; endpoint, bearer-token, descriptor, and Rehearsal Mode changes clear taxonomy review drafts and results so review packets are regenerated from the current handoff context.
@@ -181,7 +182,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by `CAPABILITY-INTELLIGENCE-001` and `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`.
+- Covered by `CAPABILITY-INTELLIGENCE-001`, `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`, and `CHIEF-OF-STAFF-STEERING-PROFILE-MISMATCH-001`.
 
 ### TX-013 details
 
@@ -938,7 +939,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by `CAPABILITY-INTELLIGENCE-001` and `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`.
+- Covered by `CAPABILITY-INTELLIGENCE-001`, `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`, and `CHIEF-OF-STAFF-STEERING-PROFILE-MISMATCH-001`.
 
 ### SE-008 details
 
@@ -964,7 +965,7 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by `CHIEF-OF-STAFF-STEERING-DRAFT-001`, app tests for proposal-only steering draft boundaries, and repository validation for governed bridge handoff contract alignment.
+- Covered by `CHIEF-OF-STAFF-STEERING-DRAFT-001`, `CHIEF-OF-STAFF-STEERING-PROFILE-MISMATCH-001`, app tests for proposal-only and profile-scoped steering draft boundaries, and repository validation for governed bridge handoff contract alignment.
 
 ## Milestone P5: Operations and observability
 
@@ -1034,4 +1035,4 @@ Privacy and safety impact:
 
 Evaluator coverage:
 
-- Covered by `CAPABILITY-INTELLIGENCE-001` and `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`.
+- Covered by `CAPABILITY-INTELLIGENCE-001`, `CAPABILITY-INTELLIGENCE-STEERING-TYPES-001`, and `CHIEF-OF-STAFF-STEERING-PROFILE-MISMATCH-001`.

@@ -258,6 +258,24 @@ artifacts:
       - "does not dispatch agents"
       - "does not send externally"
       - "does not capture approval"
+  steering_profile_mismatch_boundary:
+    required_terms:
+      - "stale Chief of Staff steering draft"
+      - "affected profile"
+      - "active profile"
+      - "fails closed before request fetch"
+      - "governance_no_go"
+      - "blocked effects"
+      - "regenerate the draft"
+      - "child protected evidence is not mixed"
+      - "does not submit adult-owner evidence"
+      - "does not contact Napoleon"
+      - "does not apply changes locally"
+      - "does not write memory"
+      - "does not dispatch agents"
+      - "does not send externally"
+      - "does not capture approval"
+      - "not Napoleon approval"
   profile_scope_drift_boundary:
     required_terms:
       - "profile scope drift"
