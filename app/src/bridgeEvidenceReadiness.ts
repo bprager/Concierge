@@ -28,6 +28,7 @@ export interface BridgeReadinessProofInput {
     descriptorHandoffAdvertised?: boolean | null;
     descriptorHandoffSource?: string | null;
     descriptorHandoffFailureReason?: string;
+    descriptorHandoffRequiredAction?: string;
   };
   generatedAt?: string;
   advisoryCapabilities?: {
@@ -346,6 +347,8 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
             sanitizeReadinessProofString(input.evaluatorValidation?.descriptorHandoffSource ?? undefined) ?? "unavailable",
           descriptorHandoffFailureReason:
             sanitizeReadinessProofString(input.evaluatorValidation?.descriptorHandoffFailureReason) ?? "none",
+          descriptorHandoffRequiredAction:
+            sanitizeReadinessProofString(input.evaluatorValidation?.descriptorHandoffRequiredAction) ?? "none",
           connectionValueStored: false,
           credentialValueStored: false,
           requestPayloadStored: false,
@@ -471,6 +474,7 @@ export function compareBridgeReadinessProofs(
     { label: "Evaluator HTTP target path", path: ["runtimeValidation", "evaluator", "targetPath"] },
     { label: "Evaluator descriptor handoff advertised", path: ["runtimeValidation", "evaluator", "descriptorHandoffAdvertised"] },
     { label: "Evaluator descriptor handoff source", path: ["runtimeValidation", "evaluator", "descriptorHandoffSource"] },
+    { label: "Evaluator descriptor handoff required action", path: ["runtimeValidation", "evaluator", "descriptorHandoffRequiredAction"] },
   ];
 
   const changes = comparedFields.flatMap(({ label, path }) => {

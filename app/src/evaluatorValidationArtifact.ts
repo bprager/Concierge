@@ -189,6 +189,7 @@ export function parseEvaluatorValidationArtifact(
   const descriptorHandoffAdvertised = cleanOptionalBoolean(evaluator.descriptorHandoffAdvertised);
   const descriptorHandoffSource = cleanString(evaluator.descriptorHandoffSource);
   const descriptorHandoffFailureReason = cleanString(evaluator.descriptorHandoffFailureReason);
+  const descriptorHandoffRequiredAction = cleanString(evaluator.descriptorHandoffRequiredAction);
 
   return {
     status: "accepted",
@@ -196,10 +197,12 @@ export function parseEvaluatorValidationArtifact(
       status === "passed"
         ? "Evaluator HTTP validation passed."
         : status === "failed" && cleanString(evaluator.failureReason) === "http_evaluator_handoff_not_advertised"
-          ? "Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review."
+          ? descriptorHandoffRequiredAction
+            ? `Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review. ${descriptorHandoffRequiredAction}`
+            : "Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review."
           : status === "failed"
             ? "Evaluator HTTP validation failed."
-          : "Evaluator HTTP validation has not run.",
+            : "Evaluator HTTP validation has not run.",
     runtimeValidationSource: cleanRuntimeSource(runtime?.source),
     validation: {
       status,
@@ -210,6 +213,7 @@ export function parseEvaluatorValidationArtifact(
       ...(descriptorHandoffAdvertised !== undefined ? { descriptorHandoffAdvertised } : {}),
       ...(descriptorHandoffSource ? { descriptorHandoffSource } : {}),
       ...(descriptorHandoffFailureReason ? { descriptorHandoffFailureReason } : {}),
+      ...(descriptorHandoffRequiredAction ? { descriptorHandoffRequiredAction } : {}),
     },
   };
 }

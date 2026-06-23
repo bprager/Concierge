@@ -2397,6 +2397,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           descriptorHandoffAdvertised?: boolean | null;
           descriptorHandoffSource?: string;
           descriptorHandoffFailureReason?: string;
+          descriptorHandoffRequiredAction?: string;
         };
       };
     };
@@ -2426,6 +2427,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         bridgeReadinessProof.runtimeValidation?.evaluator?.descriptorHandoffSource ?? "unavailable",
       evaluatorDescriptorHandoffFailureReason:
         bridgeReadinessProof.runtimeValidation?.evaluator?.descriptorHandoffFailureReason ?? "none",
+      evaluatorDescriptorHandoffRequiredAction:
+        bridgeReadinessProof.runtimeValidation?.evaluator?.descriptorHandoffRequiredAction ?? "none",
       evaluatorImportStatus: evaluatorValidationImport?.status ?? "not_imported",
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
@@ -2508,6 +2511,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       evaluatorDescriptorHandoffAdvertised: importResult.validation.descriptorHandoffAdvertised ?? "unavailable",
       evaluatorDescriptorHandoffSource: importResult.validation.descriptorHandoffSource ?? "unavailable",
       evaluatorDescriptorHandoffFailureReason: importResult.validation.descriptorHandoffFailureReason ?? "none",
+      evaluatorDescriptorHandoffRequiredAction: importResult.validation.descriptorHandoffRequiredAction ?? "none",
       runtimeValidationSource: importResult.runtimeValidationSource ?? "unavailable",
       approvalCaptured: false,
       memoryWritePerformed: false,
@@ -2877,6 +2881,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     evaluatorDescriptorHandoffAdvertised: evaluatorValidationImport?.validation.descriptorHandoffAdvertised,
     evaluatorDescriptorHandoffSource: evaluatorValidationImport?.validation.descriptorHandoffSource,
     evaluatorDescriptorHandoffFailureReason: evaluatorValidationImport?.validation.descriptorHandoffFailureReason,
+    evaluatorDescriptorHandoffRequiredAction: evaluatorValidationImport?.validation.descriptorHandoffRequiredAction,
   });
   const liveBridgeReadinessDetail = (label: string) =>
     liveBridgeReadiness.details.find((detail) => detail.label === label)?.value ?? "unavailable";
@@ -2938,6 +2943,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     evaluatorDescriptorHandoffAdvertised: evaluatorValidationImport?.validation.descriptorHandoffAdvertised,
     evaluatorDescriptorHandoffSource: evaluatorValidationImport?.validation.descriptorHandoffSource,
     evaluatorDescriptorHandoffFailureReason: evaluatorValidationImport?.validation.descriptorHandoffFailureReason,
+    evaluatorDescriptorHandoffRequiredAction: evaluatorValidationImport?.validation.descriptorHandoffRequiredAction,
     acceptedRealRuntimeProof: acceptedReadinessProofImport?.lastRealRuntimeProof,
   });
   const directSendPreflightBlocker = !rehearsalMode && !localGovernanceBlocksDirectSend
@@ -4786,6 +4792,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                 Status: {evaluatorValidationImport.validation.status}; target:{" "}
                 {evaluatorValidationImport.validation.targetPath ?? "unavailable"}
               </span>
+              {evaluatorValidationImport.validation.descriptorHandoffRequiredAction ? (
+                <span>{evaluatorValidationImport.validation.descriptorHandoffRequiredAction}</span>
+              ) : null}
               <span>Sanitized local evidence only; not Napoleon approval.</span>
             </div>
           ) : null}

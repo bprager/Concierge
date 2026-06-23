@@ -52,6 +52,8 @@ test("accepts sanitized unadvertised evaluator handoff summary", () => {
         descriptorHandoffAdvertised: false,
         descriptorHandoffSource: "not_advertised",
         descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+        descriptorHandoffRequiredAction:
+          "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
         endpointHostRetained: false,
         tokenRetained: false,
         requestBodyRetained: false,
@@ -65,7 +67,10 @@ test("accepts sanitized unadvertised evaluator handoff summary", () => {
   );
 
   assert.equal(result.status, "accepted");
-  assert.equal(result.summary, "Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review.");
+  assert.equal(
+    result.summary,
+    "Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review. Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
+  );
   assert.deepEqual(result.validation, {
     status: "failed",
     failureReason: "http_evaluator_handoff_not_advertised",
@@ -75,6 +80,8 @@ test("accepts sanitized unadvertised evaluator handoff summary", () => {
     descriptorHandoffAdvertised: false,
     descriptorHandoffSource: "not_advertised",
     descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+    descriptorHandoffRequiredAction:
+      "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
   });
 });
 

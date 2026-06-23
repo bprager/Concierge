@@ -3453,6 +3453,71 @@ test("imports sanitized evaluator validation artifact into readiness and preflig
   }
 });
 
+test("renders unadvertised evaluator handoff required action from validation import", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requiredAction =
+    "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.";
+
+  try {
+    const view = render(<App />);
+    const artifactInput = view.getByLabelText("Evaluator validation artifact");
+    fireEvent.change(artifactInput, {
+      target: {
+        value: JSON.stringify({
+          runtimeValidation: {
+            source: "real_runtime",
+          },
+          httpEvaluator: {
+            status: "failed",
+            failureReason: "http_evaluator_handoff_not_advertised",
+            targetPath: "/chief-of-staff/reviews/evaluation",
+            targetRequestKind: "evaluation_review_handoff",
+            targetOperationId: "evaluation_review",
+            descriptorHandoffAdvertised: false,
+            descriptorHandoffSource: "not_advertised",
+            descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+            descriptorHandoffRequiredAction: requiredAction,
+            endpointHostRetained: false,
+            tokenRetained: false,
+            requestBodyRetained: false,
+            responseBodyRetained: false,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          },
+        }),
+      },
+    });
+
+    await user.click(view.getByText("Import evaluator validation"));
+
+    await waitFor(() => assert.ok(view.getAllByText(requiredAction).length >= 1));
+    const readiness = view.getByText("Live bridge readiness").closest("section") as HTMLElement | null;
+    assert.ok(readiness);
+    assert.ok(within(readiness).getAllByText(requiredAction).length >= 1);
+
+    const preflight = view.getByText("Live send preflight").closest(".send-preflight") as HTMLElement | null;
+    assert.ok(preflight);
+    assert.ok(within(preflight).getAllByText(requiredAction).length >= 1);
+
+    await user.click(view.getByText("Export readiness proof"));
+    const readinessExport = view.getByLabelText("Exported bridge readiness proof");
+    assert.ok(readinessExport.textContent?.includes('"descriptorHandoffRequiredAction"'));
+    assert.ok(readinessExport.textContent?.includes("supportedHandoffs"));
+    assert.equal(readinessExport.textContent?.includes("127.0.0.1"), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("imports sanitized evaluator validation artifact from a selected local file", async () => {
   const dom = installDom();
   const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([

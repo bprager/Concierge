@@ -952,6 +952,8 @@ test("describes unadvertised evaluator handoff as a real-runtime promotion block
     evaluatorDescriptorHandoffAdvertised: false,
     evaluatorDescriptorHandoffSource: "not_advertised",
     evaluatorDescriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+    evaluatorDescriptorHandoffRequiredAction:
+      "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
   });
 
   assert.equal(view.status, "warning");
@@ -962,7 +964,8 @@ test("describes unadvertised evaluator handoff as a real-runtime promotion block
     view.details.some(
       (detail) =>
         detail.label === "Evaluator HTTP" &&
-        detail.value === "failed: evaluation review handoff not advertised; descriptor handoff not advertised via not_advertised",
+        detail.value ===
+          "failed: evaluation review handoff not advertised; descriptor handoff not advertised via not_advertised; Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
     ),
   );
   assert.ok(
@@ -970,6 +973,13 @@ test("describes unadvertised evaluator handoff as a real-runtime promotion block
       (detail) =>
         detail.label === "Evaluator descriptor handoff" &&
         detail.value === "not advertised: evaluation_handoff_not_advertised",
+    ),
+  );
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Evaluator required action" &&
+        detail.value.includes("supportedHandoffs"),
     ),
   );
 });
@@ -1437,6 +1447,8 @@ test("describes unadvertised evaluator handoff as a promotion warning in live se
     evaluatorDescriptorHandoffAdvertised: false,
     evaluatorDescriptorHandoffSource: "not_advertised",
     evaluatorDescriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+    evaluatorDescriptorHandoffRequiredAction:
+      "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
   });
 
   assert.equal(view.status, "warning");
@@ -1452,6 +1464,14 @@ test("describes unadvertised evaluator handoff as a promotion warning in live se
         item.label === "Evaluator descriptor handoff" &&
         item.status === "warning" &&
         item.detail === "not advertised: evaluation_handoff_not_advertised",
+    ),
+  );
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Evaluator required action" &&
+        item.status === "warning" &&
+        item.detail.includes("supportedHandoffs"),
     ),
   );
 });

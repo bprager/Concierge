@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added Text Concierge import, readiness, preflight, proof export, comparison, and telemetry support for sanitized evaluator handoff required-action guidance.
 - Added sanitized required-action guidance to descriptor-unadvertised evaluator handoff evidence, so live-runtime summaries and promotion review drafts state exactly where Napoleon can advertise `evaluation_review` without retaining endpoint hosts, tokens, request bodies, or response bodies.
 - Added specific live-runtime promotion blockers for evaluator review failures, so descriptor-unadvertised evaluation review handoffs, missing evaluator routes, and evaluator auth failures show actionable readiness reasons instead of only a generic HTTP evaluator failure.
 - Added evaluator harness coverage for the Napoleon base-URL `make eval-http` flow, proving it resolves to `/chief-of-staff/reviews/evaluation` with sanitized target metadata and no retained endpoint, token, request body, response body, approval, memory write, agent dispatch, or external send state.

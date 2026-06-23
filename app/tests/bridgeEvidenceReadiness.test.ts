@@ -293,6 +293,8 @@ test("exports sanitized unadvertised evaluator handoff as a promotion blocker", 
       descriptorHandoffAdvertised: false,
       descriptorHandoffSource: "not_advertised",
       descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+      descriptorHandoffRequiredAction:
+        "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
     },
     generatedAt: "2026-06-13T00:00:00.000Z",
   });
@@ -304,6 +306,7 @@ test("exports sanitized unadvertised evaluator handoff as a promotion blocker", 
         descriptorHandoffAdvertised: boolean;
         descriptorHandoffSource: string;
         descriptorHandoffFailureReason: string;
+        descriptorHandoffRequiredAction: string;
       };
     };
   };
@@ -313,6 +316,10 @@ test("exports sanitized unadvertised evaluator handoff as a promotion blocker", 
   assert.equal(proof.runtimeValidation.evaluator.descriptorHandoffAdvertised, false);
   assert.equal(proof.runtimeValidation.evaluator.descriptorHandoffSource, "not_advertised");
   assert.equal(proof.runtimeValidation.evaluator.descriptorHandoffFailureReason, "evaluation_handoff_not_advertised");
+  assert.equal(
+    proof.runtimeValidation.evaluator.descriptorHandoffRequiredAction,
+    "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
+  );
   assert.equal(exported.includes("127.0.0.1"), false);
 });
 

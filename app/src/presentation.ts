@@ -228,6 +228,7 @@ export interface LiveBridgeReadinessInput {
   evaluatorDescriptorHandoffAdvertised?: boolean | null;
   evaluatorDescriptorHandoffSource?: string | null;
   evaluatorDescriptorHandoffFailureReason?: string;
+  evaluatorDescriptorHandoffRequiredAction?: string;
 }
 
 export interface LiveBridgeReadinessView {
@@ -256,6 +257,7 @@ export interface LiveSendPreflightInput {
   evaluatorDescriptorHandoffAdvertised?: boolean | null;
   evaluatorDescriptorHandoffSource?: string | null;
   evaluatorDescriptorHandoffFailureReason?: string;
+  evaluatorDescriptorHandoffRequiredAction?: string;
   acceptedRealRuntimeProof?: {
     status: "success";
     operationId: string;
@@ -542,6 +544,7 @@ function describeEvaluatorHttpDetail(input: {
   descriptorHandoffAdvertised?: boolean | null;
   descriptorHandoffSource?: string | null;
   descriptorHandoffFailureReason?: string;
+  descriptorHandoffRequiredAction?: string;
 }): string {
   if (input.status === "passed") return "passed";
   if (input.status !== "failed") return "not run";
@@ -553,7 +556,8 @@ function describeEvaluatorHttpDetail(input: {
           ? "not advertised"
           : "unknown";
     const source = input.descriptorHandoffSource ? `; descriptor handoff ${advertised} via ${input.descriptorHandoffSource}` : "";
-    return `failed: evaluation review handoff not advertised${source}`;
+    const requiredAction = input.descriptorHandoffRequiredAction ? `; ${input.descriptorHandoffRequiredAction}` : "";
+    return `failed: evaluation review handoff not advertised${source}${requiredAction}`;
   }
   return `failed${input.failureReason ? `: ${input.failureReason}` : ""}`;
 }
@@ -749,6 +753,7 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
           descriptorHandoffAdvertised: input.evaluatorDescriptorHandoffAdvertised,
           descriptorHandoffSource: input.evaluatorDescriptorHandoffSource,
           descriptorHandoffFailureReason: input.evaluatorDescriptorHandoffFailureReason,
+          descriptorHandoffRequiredAction: input.evaluatorDescriptorHandoffRequiredAction,
         }),
       },
       {
@@ -759,6 +764,10 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
             : input.evaluatorDescriptorHandoffAdvertised === false
               ? `not advertised${input.evaluatorDescriptorHandoffFailureReason ? `: ${input.evaluatorDescriptorHandoffFailureReason}` : ""}`
               : "not returned",
+      },
+      {
+        label: "Evaluator required action",
+        value: input.evaluatorDescriptorHandoffRequiredAction ?? "not returned",
       },
       { label: "Evaluator target", value: input.evaluatorTargetPath ?? "not returned" },
       { label: "Promotion gate", value: describePromotionGate(runtimeValidationSource, evidencePending, evaluatorValidationStatus) },
@@ -1001,8 +1010,16 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
       descriptorHandoffAdvertised: input.evaluatorDescriptorHandoffAdvertised,
       descriptorHandoffSource: input.evaluatorDescriptorHandoffSource,
       descriptorHandoffFailureReason: input.evaluatorDescriptorHandoffFailureReason,
+      descriptorHandoffRequiredAction: input.evaluatorDescriptorHandoffRequiredAction,
     }),
   });
+  if (input.evaluatorDescriptorHandoffRequiredAction !== undefined) {
+    items.push({
+      label: "Evaluator required action",
+      status: "warning",
+      detail: input.evaluatorDescriptorHandoffRequiredAction,
+    });
+  }
   if (input.evaluatorDescriptorHandoffAdvertised !== undefined) {
     items.push({
       label: "Evaluator descriptor handoff",
