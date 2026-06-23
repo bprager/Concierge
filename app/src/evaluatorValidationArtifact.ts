@@ -84,6 +84,12 @@ function cleanRuntimeSource(value: unknown): RuntimeValidationSource | undefined
   return undefined;
 }
 
+function cleanOptionalBoolean(value: unknown): boolean | null | undefined {
+  if (value === true || value === false) return value;
+  if (value === null) return null;
+  return undefined;
+}
+
 function containsForbiddenArtifactContent(value: unknown): boolean {
   if (typeof value === "string") {
     return FORBIDDEN_ARTIFACT_VALUE_PATTERNS.some((pattern) => pattern.test(value));
@@ -180,14 +186,19 @@ export function parseEvaluatorValidationArtifact(
       },
     };
   }
+  const descriptorHandoffAdvertised = cleanOptionalBoolean(evaluator.descriptorHandoffAdvertised);
+  const descriptorHandoffSource = cleanString(evaluator.descriptorHandoffSource);
+  const descriptorHandoffFailureReason = cleanString(evaluator.descriptorHandoffFailureReason);
 
   return {
     status: "accepted",
     summary:
       status === "passed"
         ? "Evaluator HTTP validation passed."
-        : status === "failed"
-          ? "Evaluator HTTP validation failed."
+        : status === "failed" && cleanString(evaluator.failureReason) === "http_evaluator_handoff_not_advertised"
+          ? "Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review."
+          : status === "failed"
+            ? "Evaluator HTTP validation failed."
           : "Evaluator HTTP validation has not run.",
     runtimeValidationSource: cleanRuntimeSource(runtime?.source),
     validation: {
@@ -196,6 +207,9 @@ export function parseEvaluatorValidationArtifact(
       targetPath,
       requestKind,
       operationId,
+      ...(descriptorHandoffAdvertised !== undefined ? { descriptorHandoffAdvertised } : {}),
+      ...(descriptorHandoffSource ? { descriptorHandoffSource } : {}),
+      ...(descriptorHandoffFailureReason ? { descriptorHandoffFailureReason } : {}),
     },
   };
 }

@@ -2367,6 +2367,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           status?: string;
           failureReason?: string;
           targetPath?: string;
+          descriptorHandoffAdvertised?: boolean | null;
+          descriptorHandoffSource?: string;
+          descriptorHandoffFailureReason?: string;
         };
       };
     };
@@ -2390,6 +2393,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       evaluatorHttpStatus: bridgeReadinessProof.runtimeValidation?.evaluator?.status ?? "not_run",
       evaluatorFailureReason: bridgeReadinessProof.runtimeValidation?.evaluator?.failureReason ?? "none",
       evaluatorTargetPath: bridgeReadinessProof.runtimeValidation?.evaluator?.targetPath ?? "unavailable",
+      evaluatorDescriptorHandoffAdvertised:
+        bridgeReadinessProof.runtimeValidation?.evaluator?.descriptorHandoffAdvertised ?? "unavailable",
+      evaluatorDescriptorHandoffSource:
+        bridgeReadinessProof.runtimeValidation?.evaluator?.descriptorHandoffSource ?? "unavailable",
+      evaluatorDescriptorHandoffFailureReason:
+        bridgeReadinessProof.runtimeValidation?.evaluator?.descriptorHandoffFailureReason ?? "none",
       evaluatorImportStatus: evaluatorValidationImport?.status ?? "not_imported",
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
@@ -2469,6 +2478,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       evaluatorHttpStatus: importResult.validation.status,
       evaluatorFailureReason: importResult.validation.failureReason ?? "none",
       evaluatorTargetPath: importResult.validation.targetPath ?? "unavailable",
+      evaluatorDescriptorHandoffAdvertised: importResult.validation.descriptorHandoffAdvertised ?? "unavailable",
+      evaluatorDescriptorHandoffSource: importResult.validation.descriptorHandoffSource ?? "unavailable",
+      evaluatorDescriptorHandoffFailureReason: importResult.validation.descriptorHandoffFailureReason ?? "none",
       runtimeValidationSource: importResult.runtimeValidationSource ?? "unavailable",
       approvalCaptured: false,
       memoryWritePerformed: false,
@@ -2815,6 +2827,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     evaluatorValidationStatus: evaluatorValidationImport?.validation.status,
     evaluatorFailureReason: evaluatorValidationImport?.validation.failureReason,
     evaluatorTargetPath: evaluatorValidationImport?.validation.targetPath,
+    evaluatorDescriptorHandoffAdvertised: evaluatorValidationImport?.validation.descriptorHandoffAdvertised,
+    evaluatorDescriptorHandoffSource: evaluatorValidationImport?.validation.descriptorHandoffSource,
+    evaluatorDescriptorHandoffFailureReason: evaluatorValidationImport?.validation.descriptorHandoffFailureReason,
   });
   const liveBridgeReadinessDetail = (label: string) =>
     liveBridgeReadiness.details.find((detail) => detail.label === label)?.value ?? "unavailable";
@@ -2873,6 +2888,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     evaluatorValidationStatus: evaluatorValidationImport?.validation.status,
     evaluatorFailureReason: evaluatorValidationImport?.validation.failureReason,
     evaluatorTargetPath: evaluatorValidationImport?.validation.targetPath,
+    evaluatorDescriptorHandoffAdvertised: evaluatorValidationImport?.validation.descriptorHandoffAdvertised,
+    evaluatorDescriptorHandoffSource: evaluatorValidationImport?.validation.descriptorHandoffSource,
+    evaluatorDescriptorHandoffFailureReason: evaluatorValidationImport?.validation.descriptorHandoffFailureReason,
     acceptedRealRuntimeProof: acceptedReadinessProofImport?.lastRealRuntimeProof,
   });
   const directSendPreflightBlocker = !rehearsalMode && !localGovernanceBlocksDirectSend

@@ -25,6 +25,9 @@ export interface BridgeReadinessProofInput {
     targetPath?: string;
     requestKind?: string;
     operationId?: string;
+    descriptorHandoffAdvertised?: boolean | null;
+    descriptorHandoffSource?: string | null;
+    descriptorHandoffFailureReason?: string;
   };
   generatedAt?: string;
   advisoryCapabilities?: {
@@ -338,6 +341,11 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
           targetPath: sanitizeReadinessProofString(input.evaluatorValidation?.targetPath) ?? "unavailable",
           requestKind: sanitizeReadinessProofString(input.evaluatorValidation?.requestKind) ?? "unavailable",
           operationId: sanitizeReadinessProofString(input.evaluatorValidation?.operationId) ?? "unavailable",
+          descriptorHandoffAdvertised: input.evaluatorValidation?.descriptorHandoffAdvertised ?? null,
+          descriptorHandoffSource:
+            sanitizeReadinessProofString(input.evaluatorValidation?.descriptorHandoffSource ?? undefined) ?? "unavailable",
+          descriptorHandoffFailureReason:
+            sanitizeReadinessProofString(input.evaluatorValidation?.descriptorHandoffFailureReason) ?? "none",
           connectionValueStored: false,
           credentialValueStored: false,
           requestPayloadStored: false,
@@ -461,6 +469,8 @@ export function compareBridgeReadinessProofs(
     { label: "Evaluator HTTP status", path: ["runtimeValidation", "evaluator", "status"] },
     { label: "Evaluator HTTP failure reason", path: ["runtimeValidation", "evaluator", "failureReason"] },
     { label: "Evaluator HTTP target path", path: ["runtimeValidation", "evaluator", "targetPath"] },
+    { label: "Evaluator descriptor handoff advertised", path: ["runtimeValidation", "evaluator", "descriptorHandoffAdvertised"] },
+    { label: "Evaluator descriptor handoff source", path: ["runtimeValidation", "evaluator", "descriptorHandoffSource"] },
   ];
 
   const changes = comparedFields.flatMap(({ label, path }) => {

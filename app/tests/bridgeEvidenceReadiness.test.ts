@@ -266,6 +266,56 @@ test("exports sanitized missing evaluator route as a promotion blocker", () => {
   assert.equal(exported.includes("token"), false);
 });
 
+test("exports sanitized unadvertised evaluator handoff as a promotion blocker", () => {
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+    ...validEvidence,
+    status: "success",
+    provenanceVerified: true,
+  });
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: state,
+    runtimeValidationSource: "real_runtime",
+    evaluatorValidation: {
+      status: "failed",
+      failureReason: "http_evaluator_handoff_not_advertised",
+      targetPath: "/chief-of-staff/reviews/evaluation",
+      requestKind: "evaluation_review_handoff",
+      operationId: "evaluation_review",
+      descriptorHandoffAdvertised: false,
+      descriptorHandoffSource: "not_advertised",
+      descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+    },
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    runtimeValidation: {
+      promotionGate: string;
+      evaluator: {
+        failureReason: string;
+        descriptorHandoffAdvertised: boolean;
+        descriptorHandoffSource: string;
+        descriptorHandoffFailureReason: string;
+      };
+    };
+  };
+
+  assert.equal(proof.runtimeValidation.promotionGate, "blocked_until_evaluator_http_passes");
+  assert.equal(proof.runtimeValidation.evaluator.failureReason, "http_evaluator_handoff_not_advertised");
+  assert.equal(proof.runtimeValidation.evaluator.descriptorHandoffAdvertised, false);
+  assert.equal(proof.runtimeValidation.evaluator.descriptorHandoffSource, "not_advertised");
+  assert.equal(proof.runtimeValidation.evaluator.descriptorHandoffFailureReason, "evaluation_handoff_not_advertised");
+  assert.equal(exported.includes("127.0.0.1"), false);
+});
+
 test("keeps readiness proof promotion blocked until evaluator HTTP passes", () => {
   const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
     ...validEvidence,

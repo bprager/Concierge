@@ -192,6 +192,9 @@ export interface LiveBridgeReadinessInput {
   evaluatorValidationStatus?: "not_run" | "passed" | "failed";
   evaluatorFailureReason?: string;
   evaluatorTargetPath?: string;
+  evaluatorDescriptorHandoffAdvertised?: boolean | null;
+  evaluatorDescriptorHandoffSource?: string | null;
+  evaluatorDescriptorHandoffFailureReason?: string;
 }
 
 export interface LiveBridgeReadinessView {
@@ -217,6 +220,9 @@ export interface LiveSendPreflightInput {
   evaluatorValidationStatus?: LiveBridgeReadinessInput["evaluatorValidationStatus"];
   evaluatorFailureReason?: string;
   evaluatorTargetPath?: string;
+  evaluatorDescriptorHandoffAdvertised?: boolean | null;
+  evaluatorDescriptorHandoffSource?: string | null;
+  evaluatorDescriptorHandoffFailureReason?: string;
   acceptedRealRuntimeProof?: {
     status: "success";
     operationId: string;
@@ -392,6 +398,7 @@ function describePromotionBlockers(input: {
   evidenceComparison: LiveBridgeEvidenceState;
   runtimeValidationSource?: LiveBridgeReadinessInput["runtimeValidationSource"];
   evaluatorValidationStatus: NonNullable<LiveBridgeReadinessInput["evaluatorValidationStatus"]>;
+  evaluatorFailureReason?: string;
   lastEvidenceStatus?: LiveBridgeReadinessInput["lastEvidenceStatus"];
   lastFailureReason?: string;
 }): string[] {
@@ -435,7 +442,11 @@ function describePromotionBlockers(input: {
   }
 
   if (input.evaluatorValidationStatus === "failed" || input.evaluatorValidationStatus === "not_run") {
-    blockers.push("Pass evaluator HTTP mode against Napoleon.");
+    blockers.push(
+      input.evaluatorFailureReason === "http_evaluator_handoff_not_advertised"
+        ? "Have Napoleon advertise the evaluation review handoff, or import an explicit evaluator endpoint proof."
+        : "Pass evaluator HTTP mode against Napoleon.",
+    );
   }
 
   if (input.lastEvidenceStatus === "fail_closed") {
@@ -447,6 +458,28 @@ function describePromotionBlockers(input: {
   }
 
   return blockers;
+}
+
+function describeEvaluatorHttpDetail(input: {
+  status?: "not_run" | "passed" | "failed";
+  failureReason?: string;
+  descriptorHandoffAdvertised?: boolean | null;
+  descriptorHandoffSource?: string | null;
+  descriptorHandoffFailureReason?: string;
+}): string {
+  if (input.status === "passed") return "passed";
+  if (input.status !== "failed") return "not run";
+  if (input.failureReason === "http_evaluator_handoff_not_advertised") {
+    const advertised =
+      input.descriptorHandoffAdvertised === true
+        ? "advertised"
+        : input.descriptorHandoffAdvertised === false
+          ? "not advertised"
+          : "unknown";
+    const source = input.descriptorHandoffSource ? `; descriptor handoff ${advertised} via ${input.descriptorHandoffSource}` : "";
+    return `failed: evaluation review handoff not advertised${source}`;
+  }
+  return `failed${input.failureReason ? `: ${input.failureReason}` : ""}`;
 }
 
 function describePreflightBlockerSummary(items: LiveSendPreflightItem[]): string {
@@ -479,7 +512,11 @@ function describePreflightBlockerSummary(items: LiveSendPreflightItem[]): string
   if (warning) {
     if (warning.label === "Rehearsal Mode") return "Main preflight warning: Rehearsal Mode is active.";
     if (warning.label === "Runtime validation") return "Main preflight warning: real Napoleon runtime evidence is not proven.";
-    if (warning.label === "Evaluator HTTP") return "Main preflight warning: evaluator HTTP mode has not passed.";
+    if (warning.label === "Evaluator HTTP") {
+      return warning.detail.includes("not advertised")
+        ? "Main preflight warning: Napoleon has not advertised evaluator review for promotion evidence."
+        : "Main preflight warning: evaluator HTTP mode has not passed.";
+    }
     if (warning.label === "Promotion gate") return "Main preflight warning: promotion evidence is incomplete.";
     return `Main preflight warning: ${warning.label.toLowerCase()} needs review.`;
   }
@@ -516,7 +553,11 @@ function describePreflightNextStepSummary(items: LiveSendPreflightItem[]): strin
   if (warning) {
     if (warning.label === "Rehearsal Mode") return "Next step: turn Rehearsal Mode off only when you want a separate governed bridge attempt.";
     if (warning.label === "Runtime validation") return "Next step: capture and compare real Napoleon runtime evidence before treating this as promotion-ready.";
-    if (warning.label === "Evaluator HTTP") return "Next step: run evaluator HTTP validation against the configured Napoleon endpoint.";
+    if (warning.label === "Evaluator HTTP") {
+      return warning.detail.includes("not advertised")
+        ? "Next step: have Napoleon advertise and expose evaluation review, or import an explicit evaluator endpoint proof."
+        : "Next step: run evaluator HTTP validation against the configured Napoleon endpoint.";
+    }
     if (warning.label === "Promotion gate") return "Next step: complete the remaining runtime and evaluator evidence before promotion.";
     return `Next step: review ${warning.label.toLowerCase()} before treating the bridge as promotion-ready.`;
   }
@@ -581,7 +622,9 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
     summary = `Last Napoleon live text turn failed closed${input.lastFailureReason ? `: ${input.lastFailureReason}` : ""}. Concierge remains prepare-only for blocked effects.`;
   } else if (evaluatorPromotionBlocked) {
     summary =
-      input.evaluatorFailureReason === "http_evaluator_route_not_found"
+      input.evaluatorFailureReason === "http_evaluator_handoff_not_advertised"
+        ? "Real Napoleon text bridge evidence passes, but the descriptor does not advertise evaluation review for promotion evidence."
+        : input.evaluatorFailureReason === "http_evaluator_route_not_found"
         ? "Real Napoleon text bridge evidence passes, but the evaluator route is not available for promotion evidence."
         : "Real Napoleon text bridge evidence passes, but evaluator HTTP mode has not passed for promotion evidence.";
   } else if (localOnlyValidation && !evidencePending) {
@@ -609,6 +652,7 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
       evidenceComparison,
       runtimeValidationSource,
       evaluatorValidationStatus,
+      evaluatorFailureReason: input.evaluatorFailureReason,
       lastEvidenceStatus: input.lastEvidenceStatus,
       lastFailureReason: input.lastFailureReason,
     }),
@@ -623,12 +667,22 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
       { label: "Runtime validation", value: describeRuntimeValidationSource(runtimeValidationSource) },
       {
         label: "Evaluator HTTP",
+        value: describeEvaluatorHttpDetail({
+          status: evaluatorValidationStatus,
+          failureReason: input.evaluatorFailureReason,
+          descriptorHandoffAdvertised: input.evaluatorDescriptorHandoffAdvertised,
+          descriptorHandoffSource: input.evaluatorDescriptorHandoffSource,
+          descriptorHandoffFailureReason: input.evaluatorDescriptorHandoffFailureReason,
+        }),
+      },
+      {
+        label: "Evaluator descriptor handoff",
         value:
-          evaluatorValidationStatus === "failed"
-            ? `failed${input.evaluatorFailureReason ? `: ${input.evaluatorFailureReason}` : ""}`
-            : evaluatorValidationStatus === "passed"
-              ? "passed"
-              : "not run",
+          input.evaluatorDescriptorHandoffAdvertised === true
+            ? `advertised${input.evaluatorDescriptorHandoffSource ? ` via ${input.evaluatorDescriptorHandoffSource}` : ""}`
+            : input.evaluatorDescriptorHandoffAdvertised === false
+              ? `not advertised${input.evaluatorDescriptorHandoffFailureReason ? `: ${input.evaluatorDescriptorHandoffFailureReason}` : ""}`
+              : "not returned",
       },
       { label: "Evaluator target", value: input.evaluatorTargetPath ?? "not returned" },
       { label: "Promotion gate", value: describePromotionGate(runtimeValidationSource, evidencePending, evaluatorValidationStatus) },
@@ -865,13 +919,24 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
   items.push({
     label: "Evaluator HTTP",
     status: evaluatorPromotionBlocked ? "warning" : evaluatorValidationStatus === "passed" ? "ready" : "warning",
-    detail:
-      evaluatorValidationStatus === "failed"
-        ? `failed${input.evaluatorFailureReason ? `: ${input.evaluatorFailureReason}` : ""}`
-        : evaluatorValidationStatus === "passed"
-          ? "passed"
-          : "not run",
+    detail: describeEvaluatorHttpDetail({
+      status: evaluatorValidationStatus,
+      failureReason: input.evaluatorFailureReason,
+      descriptorHandoffAdvertised: input.evaluatorDescriptorHandoffAdvertised,
+      descriptorHandoffSource: input.evaluatorDescriptorHandoffSource,
+      descriptorHandoffFailureReason: input.evaluatorDescriptorHandoffFailureReason,
+    }),
   });
+  if (input.evaluatorDescriptorHandoffAdvertised !== undefined) {
+    items.push({
+      label: "Evaluator descriptor handoff",
+      status: input.evaluatorDescriptorHandoffAdvertised ? "ready" : "warning",
+      detail:
+        input.evaluatorDescriptorHandoffAdvertised === true
+          ? `advertised${input.evaluatorDescriptorHandoffSource ? ` via ${input.evaluatorDescriptorHandoffSource}` : ""}`
+          : `not advertised${input.evaluatorDescriptorHandoffFailureReason ? `: ${input.evaluatorDescriptorHandoffFailureReason}` : ""}`,
+    });
+  }
   if (input.evaluatorTargetPath !== undefined) {
     items.push({
       label: "Evaluator target",

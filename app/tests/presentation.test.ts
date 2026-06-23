@@ -669,6 +669,46 @@ test("describes missing evaluator route as a real-runtime promotion blocker", ()
   );
 });
 
+test("describes unadvertised evaluator handoff as a real-runtime promotion blocker", () => {
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+    evaluatorValidationStatus: "failed",
+    evaluatorFailureReason: "http_evaluator_handoff_not_advertised",
+    evaluatorTargetPath: "/chief-of-staff/reviews/evaluation",
+    evaluatorDescriptorHandoffAdvertised: false,
+    evaluatorDescriptorHandoffSource: "not_advertised",
+    evaluatorDescriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canSendLive, true);
+  assert.ok(view.summary.includes("descriptor does not advertise evaluation review"));
+  assert.ok(view.promotionBlockers.some((blocker) => blocker.includes("advertise the evaluation review handoff")));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Evaluator HTTP" &&
+        detail.value === "failed: evaluation review handoff not advertised; descriptor handoff not advertised via not_advertised",
+    ),
+  );
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Evaluator descriptor handoff" &&
+        detail.value === "not advertised: evaluation_handoff_not_advertised",
+    ),
+  );
+});
+
 test("describes live bridge readiness as blocked when descriptor lacks text-turn route", () => {
   const view = describeLiveBridgeReadiness({
     descriptorConnection: buildDescriptorConnectionState({
@@ -1107,6 +1147,46 @@ test("describes missing evaluator HTTP as a promotion warning in live send prefl
         item.label === "Promotion gate" &&
         item.status === "warning" &&
         item.detail.includes("blocked until evaluator HTTP mode passes"),
+    ),
+  );
+});
+
+test("describes unadvertised evaluator handoff as a promotion warning in live send preflight", () => {
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+    evaluatorValidationStatus: "failed",
+    evaluatorFailureReason: "http_evaluator_handoff_not_advertised",
+    evaluatorTargetPath: "/chief-of-staff/reviews/evaluation",
+    evaluatorDescriptorHandoffAdvertised: false,
+    evaluatorDescriptorHandoffSource: "not_advertised",
+    evaluatorDescriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canAttemptLiveSend, true);
+  assert.equal(view.blockerSummary, "Main preflight warning: Napoleon has not advertised evaluator review for promotion evidence.");
+  assert.equal(
+    view.nextStepSummary,
+    "Next step: have Napoleon advertise and expose evaluation review, or import an explicit evaluator endpoint proof.",
+  );
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Evaluator descriptor handoff" &&
+        item.status === "warning" &&
+        item.detail === "not advertised: evaluation_handoff_not_advertised",
     ),
   );
 });

@@ -37,6 +37,47 @@ test("accepts sanitized live runtime evaluator summary", () => {
   assert.equal(result.runtimeValidationSource, "real_runtime");
 });
 
+test("accepts sanitized unadvertised evaluator handoff summary", () => {
+  const result = parseEvaluatorValidationArtifact(
+    JSON.stringify({
+      runtimeValidation: {
+        source: "real_runtime",
+      },
+      httpEvaluator: {
+        status: "failed",
+        failureReason: "http_evaluator_handoff_not_advertised",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+        targetRequestKind: "evaluation_review_handoff",
+        targetOperationId: "evaluation_review",
+        descriptorHandoffAdvertised: false,
+        descriptorHandoffSource: "not_advertised",
+        descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+        endpointHostRetained: false,
+        tokenRetained: false,
+        requestBodyRetained: false,
+        responseBodyRetained: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+      },
+    }),
+  );
+
+  assert.equal(result.status, "accepted");
+  assert.equal(result.summary, "Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review.");
+  assert.deepEqual(result.validation, {
+    status: "failed",
+    failureReason: "http_evaluator_handoff_not_advertised",
+    targetPath: "/chief-of-staff/reviews/evaluation",
+    requestKind: "evaluation_review_handoff",
+    operationId: "evaluation_review",
+    descriptorHandoffAdvertised: false,
+    descriptorHandoffSource: "not_advertised",
+    descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+  });
+});
+
 test("rejects malformed evaluator validation artifact", () => {
   const result = parseEvaluatorValidationArtifact("{not json");
 
