@@ -2586,6 +2586,140 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
   }
 });
 
+test("clears prior Napoleon proof and delegation when a later live send returns no-go", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  let textTurnCount = 0;
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+      return harnessJsonResponse(200, {
+        descriptor: {
+          schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+          serviceId: "napoleon.chief_of_staff",
+          runtimeAuthority: false,
+          commandExecution: false,
+          cachePolicy: "fail_closed_to_review_required",
+          blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+        },
+        checksum: { expected: "sha256:ui", actual: "sha256:ui" },
+        signature: { valid: true },
+      });
+    }
+
+    assert.equal(url, "http://127.0.0.1:8787/v1/concierge/turn");
+    textTurnCount += 1;
+    const body = JSON.parse(String(init?.body ?? "{}")) as {
+      traceId: string;
+      profileMode: string;
+      chiefOfStaffRequest: { request_id: string };
+    };
+    const responseBase = {
+      profileMode: body.profileMode,
+      governanceDecision: {
+        decision_id: `decision_${body.traceId}`,
+        request_id: body.chiefOfStaffRequest.request_id,
+        outcome: textTurnCount === 1 ? "requires_review" : "no_go",
+        authority_tier: textTurnCount === 1 ? "advisory_review" : "prohibited",
+        approval_requirement: textTurnCount === 1 ? "chief_of_staff_and_owner_review" : "unavailable",
+        rationale:
+          textTurnCount === 1
+            ? "Local harness requires governed review."
+            : "No-go decisions must fail closed in Concierge.",
+        blocked_effects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+        trace_id: body.traceId,
+        audit_id: `audit_${body.traceId}`,
+      },
+      traceEnvelope: {
+        trace_id: body.traceId,
+        parent_trace_id: "local_harness",
+        actor_id: "napoleon.local_harness",
+        request_id: body.chiefOfStaffRequest.request_id,
+        decision_id: `decision_${body.traceId}`,
+        timestamp: "2026-06-12T00:00:00.000Z",
+      },
+      auditEnvelope: {
+        audit_id: `audit_${body.traceId}`,
+        trace_id: body.traceId,
+        decision_id: `decision_${body.traceId}`,
+        actor_id: "napoleon.local_harness",
+        authority_tier: textTurnCount === 1 ? "advisory_review" : "prohibited",
+        approval_requirement: textTurnCount === 1 ? "chief_of_staff_and_owner_review" : "unavailable",
+        evidence_links: [`trace:${body.traceId}`, "harness:local"],
+      },
+    };
+    if (textTurnCount === 1) {
+      return harnessJsonResponse(200, {
+        ...responseBase,
+        text: "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
+        targetAgent: "napoleon.chief_of_staff",
+        delegation: {
+          selectedAgents: [
+            {
+              agentId: "passive_brain",
+              displayName: "Passive Brain",
+              selectionReason: "Prior bridge context is relevant.",
+              contributionSummary: "bridge context",
+            },
+          ],
+          allowedEffects: ["prepare_advisory_response"],
+          blockedEffects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+          governanceState: "requires_review",
+          traceId: body.traceId,
+          auditId: `audit_${body.traceId}`,
+        },
+        recommendationProvenance: {
+          summary: "keeping this as a governed review draft",
+          traceId: body.traceId,
+          auditId: `audit_${body.traceId}`,
+        },
+      });
+    }
+
+    return harnessJsonResponse(200, {
+      ...responseBase,
+      text: "Napoleon refused the unsafe external action.",
+    });
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Draft a bridge readiness summary" } });
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    await view.findByText("Last successful Napoleon proof");
+    const delegationPanel = view.getByLabelText("Napoleon delegation");
+    assert.ok(within(delegationPanel).getAllByText(/Passive Brain/).length > 0);
+
+    fireEvent.change(composer, { target: { value: "Send the unsafe external action" } });
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    assert.ok((await view.findAllByText(/Napoleon bridge blocked: governance_no_go/)).length > 0);
+    assert.equal(view.queryByText("Last successful Napoleon proof"), null);
+    assert.equal(within(delegationPanel).queryAllByText(/Passive Brain/).length, 0);
+    assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
+    assert.equal(view.queryByText("Napoleon refused the unsafe external action."), null);
+    assert.equal(textTurnCount, 2);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("blocks rendered live send before fetch when descriptor integrity mismatches", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
