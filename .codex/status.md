@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added direct import of successful live-runtime validation `summary.json` files into the Text Concierge accepted readiness proof flow, accepting only real-runtime, bridge-passed, evaluator-passed, privacy-passed, promotion-ready, side-effect-free metadata as local review context rather than Napoleon approval.
 - Added governed capability review packet submission through the Chief of Staff evolution review bridge so exported capability evidence can be sent for Napoleon review only after descriptor, profile, and Rehearsal Mode gates pass, while remaining proposal-only with no local side effects.
 - Added sanitized local capability review packet export from capability answers so review focus, evaluator-case candidates, evolution-proposal drafts, sanitized rows, and explicit no-side-effect boundaries can be inspected without contacting Napoleon or exposing raw/private content.
 - Added sanitized capability-intelligence answer evidence drilldowns and local JSON export so local capability answers can show profile scope, score metadata, architecture area, suggested next step, and allowlisted evidence references without contacting Napoleon or exposing raw/private content.

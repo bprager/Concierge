@@ -3342,6 +3342,70 @@ test("imports an accepted real-runtime readiness proof as sanitized local metada
   }
 });
 
+test("imports live-runtime validation summary as accepted readiness proof metadata", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+    const acceptedProofInput = view.getByLabelText("Accepted readiness proof");
+    fireEvent.change(acceptedProofInput, {
+      target: {
+        value: JSON.stringify({
+          runtimeValidation: {
+            source: "real_runtime",
+          },
+          bridgeEvidence: {
+            status: "passed",
+            lastEvidenceStatus: "success",
+            captureState: "passed",
+            comparisonState: "passed",
+            lastOperationId: "text_turn",
+            lastTargetPath: "/cos/text-turn",
+          },
+          httpEvaluator: {
+            status: "passed",
+            targetPath: "/chief-of-staff/reviews/evaluation",
+          },
+          artifactPrivacy: {
+            status: "passed",
+          },
+          promotionReadiness: {
+            gate: "real_runtime_evidence_available",
+            locallySafeToConsider: true,
+          },
+          promotionBoundary: {
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            appliedLocally: false,
+          },
+        }),
+      },
+    });
+
+    await user.click(view.getByText("Import accepted readiness proof"));
+
+    await waitFor(() => assert.ok(view.getByText("Accepted live-runtime validation summary imported.")));
+    const readiness = view.getByText("Live bridge readiness").closest("section") as HTMLElement | null;
+    assert.ok(readiness);
+    assert.ok(within(readiness).getByText("success: text_turn at /cos/text-turn"));
+    assert.ok(within(readiness).getByText("Sanitized local metadata only; not Napoleon approval."));
+
+    const voiceReadiness = within(view.getByLabelText("Voice readiness"));
+    assert.ok(voiceReadiness.getByText("Accepted real-runtime proof: success: text_turn at /cos/text-turn."));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("blocks rendered live send before fetch when endpoint changes without live descriptor discovery", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

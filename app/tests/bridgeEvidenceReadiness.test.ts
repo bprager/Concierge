@@ -786,6 +786,51 @@ test("imports only accepted real-runtime readiness proof metadata", () => {
   });
 });
 
+test("imports successful live-runtime summary as accepted readiness proof metadata", () => {
+  const accepted = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      runtimeValidation: {
+        source: "real_runtime",
+      },
+      bridgeEvidence: {
+        status: "passed",
+        lastEvidenceStatus: "success",
+        lastOperationId: "text_turn",
+        lastTargetPath: "/cos/text-turn",
+        captureState: "passed",
+        comparisonState: "passed",
+      },
+      httpEvaluator: {
+        status: "passed",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+      },
+      artifactPrivacy: {
+        status: "passed",
+      },
+      promotionReadiness: {
+        gate: "real_runtime_evidence_available",
+        locallySafeToConsider: true,
+      },
+      promotionBoundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      },
+    }),
+  );
+
+  assert.equal(accepted.status, "accepted");
+  assert.equal(accepted.summary, "Accepted live-runtime validation summary imported.");
+  assert.deepEqual(accepted.lastRealRuntimeProof, {
+    operationId: "text_turn",
+    targetPath: "/cos/text-turn",
+    status: "success",
+    promotionGate: "real_runtime_evidence_available",
+  });
+});
+
 test("rejects unsafe or non-real-runtime accepted readiness proof imports", () => {
   const localHarness = importAcceptedBridgeReadinessProof(
     JSON.stringify({

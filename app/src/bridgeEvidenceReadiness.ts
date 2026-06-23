@@ -375,6 +375,21 @@ function parseBridgeReadinessProof(json: string): Record<string, unknown> | null
   }
 }
 
+function parseLiveRuntimeValidationSummary(json: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(json) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    const summary = parsed as Record<string, unknown>;
+    if (summary.kind === "concierge_bridge_readiness_proof") return null;
+    if (!summary.runtimeValidation || !summary.bridgeEvidence || !summary.httpEvaluator) return null;
+    if (!summary.artifactPrivacy || !summary.promotionReadiness || !summary.promotionBoundary) return null;
+    if (containsForbiddenEvidenceContent(summary)) return null;
+    return summary;
+  } catch {
+    return null;
+  }
+}
+
 function nestedRecord(value: unknown, key: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const nested = (value as Record<string, unknown>)[key];
@@ -473,22 +488,73 @@ export function compareBridgeReadinessProofs(
 
 export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridgeReadinessProofImport {
   const proof = parseBridgeReadinessProof(json);
-  if (!proof) {
+  if (proof) {
+    const evidence = nestedRecord(proof, "evidence");
+    const runtimeValidation = nestedRecord(proof, "runtimeValidation");
+    const boundary = nestedRecord(proof, "boundary");
+    const sideEffectKeys = [
+      "approvalCaptured",
+      "memoryWritePerformed",
+      "agentDispatchPerformed",
+      "externalSendPerformed",
+      "localApplicationPerformed",
+      "appliedLocally",
+    ];
+    const sideEffectClaimed = sideEffectKeys.some((key) => boundary[key] === true);
+
+    if (sideEffectClaimed) {
+      return {
+        status: "rejected",
+        summary: "Accepted readiness proof import rejected because it claims a forbidden side effect.",
+      };
+    }
+
+    if (
+      runtimeValidation.source !== "real_runtime" ||
+      runtimeValidation.promotionGate !== "real_runtime_evidence_available" ||
+      evidence.captureState !== "passed" ||
+      evidence.comparisonState !== "passed" ||
+      evidence.lastEvidenceStatus !== "success"
+    ) {
+      return {
+        status: "rejected",
+        summary: "Accepted readiness proof import rejected because it is not a successful real-runtime proof.",
+      };
+    }
+
+    return {
+      status: "accepted",
+      summary: "Accepted real-runtime readiness proof imported.",
+      lastRealRuntimeProof: {
+        operationId: proofField(proof, ["evidence", "lastOperationId"]),
+        targetPath: proofField(proof, ["evidence", "lastTargetPath"]),
+        status: "success",
+        promotionGate: proofField(proof, ["runtimeValidation", "promotionGate"]),
+      },
+    };
+  }
+
+  const summary = parseLiveRuntimeValidationSummary(json);
+  if (!summary) {
     return {
       status: "rejected",
       summary: "Accepted readiness proof import rejected because the JSON is invalid or contains unsafe raw data.",
     };
   }
 
-  const evidence = nestedRecord(proof, "evidence");
-  const runtimeValidation = nestedRecord(proof, "runtimeValidation");
-  const boundary = nestedRecord(proof, "boundary");
+  const evidence = nestedRecord(summary, "bridgeEvidence");
+  const runtimeValidation = nestedRecord(summary, "runtimeValidation");
+  const evaluator = nestedRecord(summary, "httpEvaluator");
+  const artifactPrivacy = nestedRecord(summary, "artifactPrivacy");
+  const promotionReadiness = nestedRecord(summary, "promotionReadiness");
+  const boundary = nestedRecord(summary, "promotionBoundary");
   const sideEffectKeys = [
     "approvalCaptured",
     "memoryWritePerformed",
     "agentDispatchPerformed",
     "externalSendPerformed",
     "localApplicationPerformed",
+    "appliedLocally",
   ];
   const sideEffectClaimed = sideEffectKeys.some((key) => boundary[key] === true);
 
@@ -501,7 +567,11 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
 
   if (
     runtimeValidation.source !== "real_runtime" ||
-    runtimeValidation.promotionGate !== "real_runtime_evidence_available" ||
+    promotionReadiness.gate !== "real_runtime_evidence_available" ||
+    promotionReadiness.locallySafeToConsider !== true ||
+    evaluator.status !== "passed" ||
+    artifactPrivacy.status !== "passed" ||
+    evidence.status !== "passed" ||
     evidence.captureState !== "passed" ||
     evidence.comparisonState !== "passed" ||
     evidence.lastEvidenceStatus !== "success"
@@ -514,12 +584,12 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
 
   return {
     status: "accepted",
-    summary: "Accepted real-runtime readiness proof imported.",
+    summary: "Accepted live-runtime validation summary imported.",
     lastRealRuntimeProof: {
-      operationId: proofField(proof, ["evidence", "lastOperationId"]),
-      targetPath: proofField(proof, ["evidence", "lastTargetPath"]),
+      operationId: proofField(summary, ["bridgeEvidence", "lastOperationId"]),
+      targetPath: proofField(summary, ["bridgeEvidence", "lastTargetPath"]),
       status: "success",
-      promotionGate: proofField(proof, ["runtimeValidation", "promotionGate"]),
+      promotionGate: proofField(summary, ["promotionReadiness", "gate"]),
     },
   };
 }

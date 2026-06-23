@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added direct import of successful live-runtime validation `summary.json` files as accepted real-runtime readiness proof metadata, requiring real runtime source, passed bridge/evaluator/privacy gates, promotion readiness, and no side effects.
 - Added governed capability review packet submission through the Chief of Staff evolution review bridge, with descriptor/Rehearsal Mode/profile gates, sanitized packet evidence, and no local side effects.
 - Added sanitized local capability review packet export from capability answers, including review focus, evaluator-case candidate, evolution-proposal draft, and explicit no-side-effect boundaries without contacting Napoleon or exposing raw/private content.
 - Added sanitized capability-intelligence answer evidence drilldowns and local JSON export, showing profile scope, score metadata, architecture area, suggested next step, and allowlisted evidence references without contacting Napoleon or exposing raw/private content.
