@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened live bridge response side-effect validation so destructive "deleted it" claims fail closed even when explicit side-effect fields are false.
 - Hardened live bridge response side-effect validation so "forwarded it" claims fail closed like other external-send wording even when explicit side-effect fields are false.
 - Hardened live bridge response provenance so title-case agent-style "found" claims fail closed unless matching selected-agent contribution proof is returned.
 - Added explicit authority-boundary rendering to Napoleon delegation details and normalized returned selected-agent contribution wording without inventing attribution.
