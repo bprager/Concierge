@@ -65,6 +65,7 @@ export interface ConversationCapabilitySignal {
   privacyClass: CapabilityPrivacyClass;
   suggestedNextStep: SuggestedNextStep;
   recommendationBoundary: RecommendationBoundary;
+  details?: string[];
 }
 
 export interface CapabilitySignalInput {
@@ -85,6 +86,7 @@ export interface CapabilitySignalInput {
   privacyClass: CapabilityPrivacyClass;
   suggestedNextStep: SuggestedNextStep;
   rawMessage?: string;
+  details?: string[];
 }
 
 export interface CapabilityAggregate {
@@ -173,6 +175,7 @@ export interface CapabilityAnswerRow {
   score?: number;
   scoreComponents?: RecommendationScoreComponents;
   scoreExplanation?: string;
+  details?: string[];
   previousCount?: number;
   delta?: number;
 }
@@ -292,6 +295,19 @@ function sanitizeCapabilityEvidenceRef(value: string): string {
   return trimmed;
 }
 
+function sanitizeCapabilityDetail(value: string): string | null {
+  const trimmed = value.trim().toLowerCase();
+  if (
+    !trimmed ||
+    trimmed.length > 80 ||
+    SENSITIVE_METADATA_PATTERN.test(trimmed) ||
+    !/^[a-z0-9][a-z0-9 _.-]{0,79}$/.test(trimmed)
+  ) {
+    return null;
+  }
+  return trimmed;
+}
+
 function normalizeProfileMode(profile: LocalProfile | NapoleonProfileMode | undefined): NapoleonProfileMode {
   if (profile === "child_protected") return "child_protected_user";
   return profile ?? "adult_owner";
@@ -306,6 +322,7 @@ function privacyClassForProfile(
 
 export function buildCapabilitySignal(input: CapabilitySignalInput): ConversationCapabilitySignal {
   const profileMode = normalizeProfileMode(input.profileMode);
+  const details = [...new Set((input.details ?? []).map(sanitizeCapabilityDetail).filter((detail) => detail !== null))];
 
   return {
     eventName: "conversation_capability_signal",
@@ -326,6 +343,7 @@ export function buildCapabilitySignal(input: CapabilitySignalInput): Conversatio
     privacyClass: privacyClassForProfile(profileMode, input.privacyClass),
     suggestedNextStep: input.suggestedNextStep,
     recommendationBoundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    ...(details.length ? { details } : {}),
   };
 }
 
@@ -423,6 +441,7 @@ function sanitizeSignal(value: unknown): ConversationCapabilitySignal | null {
     architectureArea: candidate.architectureArea,
     privacyClass: candidate.privacyClass,
     suggestedNextStep: candidate.suggestedNextStep,
+    details: Array.isArray(candidate.details) ? candidate.details.filter(isString) : undefined,
   });
 }
 
@@ -592,7 +611,12 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
 
 function describeRows(rows: CapabilityAnswerRow[]): string {
   if (rows.length === 0) return "No local signals yet";
-  return rows.map((row) => `${row.label} (${row.count})`).join(", ");
+  return rows
+    .map((row) => {
+      const details = row.details?.length ? `: ${row.details.join(", ")}` : "";
+      return `${row.label} (${row.count})${details}`;
+    })
+    .join(", ");
 }
 
 function describeTrendRows(rows: CapabilityAnswerRow[]): string {
@@ -616,6 +640,11 @@ interface GroupedSignalStats {
   suggestedNextStep?: SuggestedNextStep;
   confidenceTotal: number;
   score: number;
+  details: string[];
+}
+
+function mergeDetails(signals: ConversationCapabilitySignal[]): string[] {
+  return [...new Set(signals.flatMap((signal) => signal.details ?? []))].slice(0, 6);
 }
 
 function rounded(value: number): number {
@@ -703,10 +732,12 @@ function groupedRows(
       suggestedNextStep: options.includeSuggestedNextStep ? signal.suggestedNextStep : undefined,
       confidenceTotal: 0,
       score: 0,
+      details: [],
     };
     row.count += 1;
     row.confidenceTotal += signal.confidence;
     row.score += scoreForSignal(signal);
+    row.details.push(...(signal.details ?? []));
     grouped[key] = row;
   }
 
@@ -719,6 +750,7 @@ function groupedRows(
       suggestedNextStep: row.suggestedNextStep,
       confidence: rounded(row.confidenceTotal / row.count),
       score: rounded(row.score),
+      details: [...new Set(row.details)].slice(0, 6),
     }))
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || b.count - a.count || a.label.localeCompare(b.label))
     .slice(0, 5);
@@ -883,6 +915,7 @@ function scoredRecommendationRows(
         score: finalPriorityScore,
         scoreComponents,
         scoreExplanation: recommendationExplanation(scoreComponents),
+        details: mergeDetails(group.signals),
       };
     })
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || b.count - a.count || a.label.localeCompare(b.label))
@@ -1023,19 +1056,13 @@ export function answerCapabilityQuestion(
   const missingSafeRequests = signals.filter((signal) => signal.capabilityStatus === "missing");
 
   if (kind === "missing_or_blocked_capabilities") {
-    const grouped: Record<string, CapabilityAnswerRow> = {};
-    for (const signal of missingOrBlocked) {
-      const key = `${signal.capabilityLabel}:${signal.capabilityStatus}:${signal.architectureArea}`;
-      const row = grouped[key] ?? {
-        label: signal.capabilityLabel,
-        count: 0,
-        status: signal.capabilityStatus,
-        architectureArea: signal.architectureArea,
-      };
-      row.count += 1;
-      grouped[key] = row;
-    }
-    const rows = Object.values(grouped).sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+    const rows = groupedRows(
+      missingOrBlocked,
+      (signal) => `${signal.capabilityLabel}:${signal.capabilityStatus}:${signal.architectureArea}`,
+      (signal) => signal.capabilityLabel,
+      (signal) => 1 + signal.confidence,
+      { includeStatus: true, includeArchitectureArea: true },
+    );
 
     return {
       kind,
@@ -1158,6 +1185,41 @@ function mediaSessionReadinessStatus(attributes: Record<string, unknown>): {
     outcomeSignal: "blocked",
     suggestedNextStep: "needs_human_review",
   };
+}
+
+function mediaSessionReadinessDetails(attributes: Record<string, unknown>): string[] {
+  const statusDetails: Record<string, Record<string, string>> = {
+    microphoneStatus: {
+      stopped: "microphone ready",
+      available: "microphone ready",
+      active_preview: "microphone ready",
+      permission_needed: "microphone permission needed",
+      permission_requested: "microphone permission requested",
+      unavailable: "microphone unavailable",
+      blocked: "microphone blocked",
+    },
+    cameraStatus: {
+      stopped: "camera ready",
+      available: "camera ready",
+      active_preview: "camera ready",
+      permission_needed: "camera permission needed",
+      permission_requested: "camera permission requested",
+      unavailable: "camera unavailable",
+      blocked: "camera blocked",
+    },
+    playbackStatus: {
+      stopped: "playback ready",
+      available: "playback ready",
+      active_preview: "playback ready",
+      permission_needed: "playback permission needed",
+      permission_requested: "playback permission requested",
+      unavailable: "playback unavailable",
+      blocked: "playback blocked",
+    },
+  };
+  return Object.entries(statusDetails)
+    .map(([attribute, labels]) => labels[stringAttr(attributes, attribute, "unknown")])
+    .filter((detail): detail is string => Boolean(detail));
 }
 
 export function deriveCapabilitySignalFromEvent(
@@ -1460,6 +1522,7 @@ export function deriveCapabilitySignalFromEvent(
       confidence: 0.76,
       architectureArea: "settings_privacy",
       suggestedNextStep: readiness.suggestedNextStep,
+      details: mediaSessionReadinessDetails(attributes),
     });
   }
 

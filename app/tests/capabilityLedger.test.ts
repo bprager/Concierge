@@ -324,6 +324,44 @@ test("answers missing or blocked capability questions separately from successful
   assert.equal(answer.boundary.externalSendAllowed, false);
 });
 
+test("answers media session blocker questions with specific local readiness details", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("media_session_readiness_summarized", {
+      traceId: "trace_media_session_blockers",
+      conversationId: "conv_media_session_blockers",
+      turnId: "turn_media_session_blockers",
+      profile: "adult_owner",
+      microphoneStatus: "permission_needed",
+      cameraStatus: "blocked",
+      playbackStatus: "stopped",
+      microphonePermissionStatus: "https://private.example.test/mic",
+      rawAudio: "must not be retained",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What capabilities are missing or blocked?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected media session blocker answer");
+  assert.equal(answer.kind, "missing_or_blocked_capabilities");
+  assert.equal(answer.rows[0].label, "media_session_readiness_summary");
+  assert.deepEqual(answer.rows[0].details, [
+    "microphone permission needed",
+    "camera blocked",
+    "playback ready",
+  ]);
+  assert.ok(answer.summary.includes("microphone permission needed"));
+  assert.ok(answer.summary.includes("camera blocked"));
+  assert.equal(JSON.stringify(answer).includes("private.example.test"), false);
+  assert.equal(JSON.stringify(answer).includes("must not be retained"), false);
+  assert.equal(answer.boundary.approvalCaptured, false);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+});
+
 test("answers working-well conversation questions from local working signals", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(
