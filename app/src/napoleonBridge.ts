@@ -81,6 +81,15 @@ interface BridgeEvidenceContext {
   provenanceVerified?: boolean;
 }
 
+function bridgeTargetTelemetryAttributes(evidenceContext?: BridgeEvidenceContext): Record<string, unknown> {
+  if (!evidenceContext?.targetPath) return {};
+  return {
+    bridgeTargetPath: evidenceContext.targetPath,
+    bridgeTargetOperation: evidenceContext.operationId,
+    bridgeTargetRequestKind: evidenceContext.requestKind,
+  };
+}
+
 interface BridgeDependencies {
   getEndpoint?: () => string | null;
   getAuthToken?: () => string | null;
@@ -660,6 +669,7 @@ function failClosed(
   if (evidenceContext?.descriptorFailureReason) {
     failureAttributes.descriptorFailureReason = evidenceContext.descriptorFailureReason;
   }
+  Object.assign(failureAttributes, bridgeTargetTelemetryAttributes(evidenceContext));
   emitBridgeEvent(dependencies, "bridge_request_failed", failureAttributes);
   throw new NapoleonBridgeError(reason, traceId, requestId, status, evidenceContext?.blockedEffects ?? [], {
     decisionId: evidenceContext?.decisionId,
@@ -748,10 +758,11 @@ export async function sendToNapoleon(
 
   const advisoryHarnessTextTurnEndpoint = resolveAdvisoryHarnessTextTurnEndpoint(endpoint);
   const advisoryHarnessMode = Boolean(advisoryHarnessTextTurnEndpoint);
+  const textTurnOperation = getBridgeOperation("text_turn");
   const targetEndpoint = advisoryHarnessTextTurnEndpoint
     ? normalizeAdvisoryHarnessTextTurnEndpoint(advisoryHarnessTextTurnEndpoint)
     : resolveNapoleonBridgeOperation(endpoint, "text_turn");
-  const targetPath = advisoryHarnessMode ? "/cos/text-turn" : getBridgeOperation("text_turn").path;
+  const targetPath = advisoryHarnessMode ? "/cos/text-turn" : textTurnOperation.path;
   evidenceContext.targetPath = targetPath;
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<BridgeFetch>>;
@@ -876,12 +887,13 @@ export async function sendToNapoleon(
       outcome: adapted.governanceDecision.outcome,
       decisionId: adapted.governanceDecision.decision_id,
       auditId: adapted.auditEnvelope.audit_id,
+      ...bridgeTargetTelemetryAttributes(evidenceContext),
     });
     captureBridgeEvidence(dependencies, {
       kind: "bridge_contract_evidence",
       operationId: "text_turn",
       requestKind: "text_turn",
-      transport: getBridgeOperation("text_turn").transport,
+      transport: textTurnOperation.transport,
       status: "success",
       httpStatus: response.status ?? 202,
       targetPath,
@@ -902,7 +914,6 @@ export async function sendToNapoleon(
     });
     return adapted;
   }
-  const textTurnOperation = getBridgeOperation("text_turn");
   if (!hasRequiredBridgeResponseFields(payload, textTurnOperation.id)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
@@ -1005,12 +1016,13 @@ export async function sendToNapoleon(
     outcome: normalized.governanceDecision.outcome,
     decisionId: normalized.governanceDecision.decision_id,
     auditId: normalized.auditEnvelope.audit_id,
+    ...bridgeTargetTelemetryAttributes(evidenceContext),
   });
   captureBridgeEvidence(dependencies, {
     kind: "bridge_contract_evidence",
     operationId: "text_turn",
     requestKind: "text_turn",
-    transport: getBridgeOperation("text_turn").transport,
+    transport: textTurnOperation.transport,
     status: "success",
     httpStatus: response.status ?? 200,
     targetPath,

@@ -247,6 +247,7 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   let headers: Record<string, string> | undefined;
   let targetUrl: string | undefined;
   const evidence: unknown[] = [];
+  const events: TelemetryPayload[] = [];
 
   const response = await sendToNapoleon(
     {
@@ -261,7 +262,7 @@ test("live bridge request sends contract-first payload to configured endpoint", 
       getEndpoint: () => "https://napoleon.example/concierge",
       descriptorConnection: readyDescriptorConnection,
       getAuthToken: () => "token_live",
-      emit: () => undefined,
+      emit: (event) => events.push(event),
       captureEvidence: (record) => evidence.push(record),
       fetch: async (url, init) => {
         targetUrl = url;
@@ -330,6 +331,11 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   assert.equal(response.requiresReview, true);
   assert.equal(response.delegation?.selectedAgents[0]?.displayName, "Passive Brain");
   assert.equal(response.delegation?.blockedEffects[0], "external_send");
+  assert.equal(events.at(-1)?.event, "bridge_request_completed");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/v1/concierge/turn");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "text_turn");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetRequestKind, "text_turn");
+  assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("napoleon.example"), false);
   assert.equal(evidence.length, 1);
   assert.deepEqual(evidence[0], {
     kind: "bridge_contract_evidence",
@@ -1054,6 +1060,10 @@ test("live bridge fails closed when Napoleon returns deny or no-go governance", 
     assert.equal(events.at(-1)?.attributes.decisionId, `decision_remote_${outcome}`);
     assert.equal(events.at(-1)?.attributes.auditId, `audit_remote_${outcome}`);
     assert.equal(events.at(-1)?.attributes.governanceOutcome, outcome);
+    assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/v1/concierge/turn");
+    assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "text_turn");
+    assert.equal(events.at(-1)?.attributes.bridgeTargetRequestKind, "text_turn");
+    assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("napoleon.example"), false);
     const failure = events.at(-1);
     assert.deepEqual(failure?.attributes.blockedEffects, [
       "external_send",

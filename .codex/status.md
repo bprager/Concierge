@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added safe named bridge target metadata to live text bridge completion and post-route failure telemetry so text-turn path, operation, and request kind are visible without endpoint hosts or tokens.
 - Added safe named bridge target metadata to governed governance review telemetry so post-preflight submissions and failures show the governed path, operation, and request kind without endpoint hosts or tokens.
 - Added safe named bridge target metadata to governed memory proposal review telemetry so post-preflight submissions and failures show the governed path, operation, and request kind without endpoint hosts or tokens.
 - Added safe named bridge target metadata to Chief of Staff taxonomy review telemetry so post-preflight submissions and failures show the governed path, operation, and request kind without endpoint hosts or tokens.
