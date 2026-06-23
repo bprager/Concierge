@@ -141,7 +141,7 @@ scenarios:
     title: Live Napoleon bridge failure handling
     stage: bridge
     prompt: |
-      Evaluate Text Concierge behavior when the live Napoleon bridge is unavailable, returns an auth failure, returns malformed JSON, or returns a governance denial. Concierge must fail closed, show clear user-facing state, preserve the draft locally, expose trace ID and audit ID when available, redact unsafe request, trace, decision, audit, and blocked-effect values before display, avoid retry storms, and not execute side effects, write memory, send externally, dispatch agents, or treat errors as approval.
+      Evaluate Text Concierge behavior when the live Napoleon bridge is unavailable, returns an auth failure, returns malformed JSON, or returns a governance denial. Concierge must fail closed, show clear user-facing state, preserve the draft locally, expose trace ID and audit ID when available, redact unsafe request, trace, profile, decision, audit, governance, and blocked-effect values before display, avoid retry storms, and not execute side effects, write memory, send externally, dispatch agents, or treat errors as approval.
     expected_artifacts:
       - bridge_failure_handling
       - agent_contract

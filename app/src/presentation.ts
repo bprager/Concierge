@@ -271,8 +271,8 @@ export function describeBridgeFailure(error: unknown): string {
   const traceId = sanitizeVisibleProvenanceValue(error.traceId);
   const decision = error.decisionId ? `, decision ${sanitizeVisibleProvenanceValue(error.decisionId)}` : "";
   const audit = error.auditId ? `, audit ${sanitizeVisibleProvenanceValue(error.auditId)}` : "";
-  const governance = error.governanceOutcome ? `, governance ${error.governanceOutcome}` : "";
-  const profile = error.profileMode ? `, profile ${error.profileMode}` : "";
+  const governance = error.governanceOutcome ? `, governance ${sanitizeVisibleProvenanceValue(error.governanceOutcome)}` : "";
+  const profile = error.profileMode ? `, profile ${sanitizeVisibleProvenanceValue(error.profileMode)}` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
   return `Live Napoleon bridge blocked: ${error.reason}. Request ${requestId}, trace ${traceId}${profile}${decision}${audit}${governance}.${descriptor}${blockedEffects} Concierge did not send externally, did not write memory, did not dispatch agents, and did not capture approval.`;
 }
@@ -287,8 +287,8 @@ export function describeBridgeFailureTranscriptMessage(error: unknown): string {
     : "";
   const decision = error.decisionId ? ` Decision ${sanitizeVisibleProvenanceValue(error.decisionId)}.` : "";
   const audit = error.auditId ? ` Audit ${sanitizeVisibleProvenanceValue(error.auditId)}.` : "";
-  const governance = error.governanceOutcome ? ` Governance ${error.governanceOutcome}.` : "";
-  const profile = error.profileMode ? ` Profile ${error.profileMode}.` : "";
+  const governance = error.governanceOutcome ? ` Governance ${sanitizeVisibleProvenanceValue(error.governanceOutcome)}.` : "";
+  const profile = error.profileMode ? ` Profile ${sanitizeVisibleProvenanceValue(error.profileMode)}.` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
   return `Napoleon bridge blocked: ${error.reason}.${profile}${decision}${audit}${governance}${descriptor}${blockedEffects} Concierge did not execute anything and remains in prepare-only mode.`;
 }
@@ -303,10 +303,10 @@ export function describeGovernedHandoffFailure(error: unknown, label: string, pr
     : "";
   const requestId = sanitizeVisibleProvenanceValue(error.requestId);
   const traceId = sanitizeVisibleProvenanceValue(error.traceId);
-  const profile = error.profileMode ? `, profile ${error.profileMode}` : "";
+  const profile = error.profileMode ? `, profile ${sanitizeVisibleProvenanceValue(error.profileMode)}` : "";
   const decision = error.decisionId ? `, decision ${sanitizeVisibleProvenanceValue(error.decisionId)}` : "";
   const audit = error.auditId ? `, audit ${sanitizeVisibleProvenanceValue(error.auditId)}` : "";
-  const governance = error.governanceOutcome ? `, governance ${error.governanceOutcome}` : "";
+  const governance = error.governanceOutcome ? `, governance ${sanitizeVisibleProvenanceValue(error.governanceOutcome)}` : "";
   const descriptor = describeBridgeDescriptorDetail(error);
   return `${label} blocked: ${error.reason}. Request ${requestId}, trace ${traceId}${profile}${decision}${audit}${governance}.${descriptor}${blockedEffects} Concierge did not ${primaryEffect}, did not write memory, did not dispatch agents, did not send externally, and did not capture approval.`;
 }

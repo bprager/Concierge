@@ -1356,8 +1356,8 @@ test("redacts unsafe returned provenance from bridge failure messages", () => {
   ], {
     decisionId: "http://127.0.0.1:8787/decision",
     auditId: "Bearer local-secret-token",
-    governanceOutcome: "deny",
-    profileMode: "adult_owner",
+    governanceOutcome: "https://127.0.0.1/governance",
+    profileMode: "Bearer local-secret-token",
   });
 
   const bridgeMessage = describeBridgeFailure(error);
@@ -1371,11 +1371,17 @@ test("redacts unsafe returned provenance from bridge failure messages", () => {
   assert.ok(bridgeMessage.includes("Request redacted, trace redacted"));
   assert.ok(bridgeMessage.includes("decision redacted"));
   assert.ok(bridgeMessage.includes("audit redacted"));
+  assert.ok(bridgeMessage.includes("profile redacted"));
+  assert.ok(bridgeMessage.includes("governance redacted"));
   assert.ok(transcriptMessage.includes("Decision redacted"));
   assert.ok(transcriptMessage.includes("Audit redacted"));
+  assert.ok(transcriptMessage.includes("Profile redacted"));
+  assert.ok(transcriptMessage.includes("Governance redacted"));
   assert.ok(handoffMessage.includes("Request redacted, trace redacted"));
   assert.ok(handoffMessage.includes("decision redacted"));
   assert.ok(handoffMessage.includes("audit redacted"));
+  assert.ok(handoffMessage.includes("profile redacted"));
+  assert.ok(handoffMessage.includes("governance redacted"));
   assert.ok(bridgeMessage.includes("Blocked effects: memory_write, redacted, redacted"));
   assert.ok(transcriptMessage.includes("Blocked effects: memory_write, redacted, redacted"));
   assert.ok(handoffMessage.includes("Blocked effects: memory_write, redacted, redacted"));
