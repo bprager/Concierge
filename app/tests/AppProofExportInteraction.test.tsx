@@ -2735,6 +2735,42 @@ test("shows named Napoleon governed targets in governed routes", async () => {
   }
 });
 
+test("shows runtime contract alignment status in governed routes", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App />);
+    const routesPanel = view.getByText("Governed Napoleon routes").closest("section") as HTMLElement;
+    assert.ok(routesPanel);
+    const routes = within(routesPanel);
+
+    assert.ok(
+      routes.getByText(
+        "Contract alignment: Runtime mapped; exact Concierge and Napoleon path sets differ. Status: runtime_mapped_with_local_contract_paths. Unmapped Napoleon runtime paths: 0.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "Concierge keeps local /v1/concierge/... packaging paths while named Napoleon /cos, review, evidence, and metadata targets are explicitly mapped.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "Local contract metadata only; this is not Napoleon approval, runtime validation, memory permission, agent dispatch, external send, or local application.",
+      ),
+    );
+    assert.equal(routesPanel.textContent?.includes("127.0.0.1"), false);
+    assert.equal(routesPanel.textContent?.includes("secret-token"), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows transport token and side-effect boundaries for named Napoleon routes", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([

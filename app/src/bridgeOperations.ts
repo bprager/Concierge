@@ -32,6 +32,16 @@ export interface BridgeOperationSummary {
   sourceSummary?: string;
 }
 
+export interface RuntimeContractAlignmentSummary {
+  status: "runtime_mapped_with_local_contract_paths";
+  aligned: false;
+  runtimeAligned: true;
+  summary: string;
+  detail: string;
+  unmappedNapoleonRuntimePaths: readonly string[];
+  boundary: string;
+}
+
 type NapoleonReviewOperation = GeneratedNapoleonReviewOperation;
 
 interface NapoleonDiscoveryOperation {
@@ -95,6 +105,18 @@ export const NAPOLEON_DISCOVERY_OPERATIONS: NapoleonDiscoveryOperation[] = [
     tokenPlacement: "authorization_header_only",
   },
 ];
+
+export const RUNTIME_CONTRACT_ALIGNMENT_SUMMARY: RuntimeContractAlignmentSummary = {
+  status: "runtime_mapped_with_local_contract_paths",
+  aligned: false,
+  runtimeAligned: true,
+  summary: "Runtime mapped; exact Concierge and Napoleon path sets differ.",
+  detail:
+    "Concierge keeps local /v1/concierge/... packaging paths while named Napoleon /cos, review, evidence, and metadata targets are explicitly mapped.",
+  unmappedNapoleonRuntimePaths: [],
+  boundary:
+    "Local contract metadata only; this is not Napoleon approval, runtime validation, memory permission, agent dispatch, external send, or local application.",
+};
 
 export function getBridgeOperation(id: BridgeOperationId): BridgeOperation {
   const operation = BRIDGE_OPERATIONS.find((candidate) => candidate.id === id);

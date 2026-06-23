@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added visible runtime-contract alignment status to the governed Napoleon routes panel, showing mapped runtime compatibility separately from exact path mismatch without implying approval or runtime validation.
 - Added runtime-alignment classification to `make napoleon-contract-alignment`, distinguishing exact path-set equality from fully mapped Napoleon runtime compatibility.
 - Added live-runtime validation support for `required_for: evaluation_review` descriptor handoff advertisement, matching the app's Napoleon descriptor discovery behavior.
 - Added descriptor discovery support for Napoleon's plural review endpoint keys and `required_for` handoff claims, while keeping explicit `supportedHandoffs` lists authoritative.

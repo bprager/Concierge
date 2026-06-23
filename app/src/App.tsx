@@ -43,6 +43,7 @@ import {
   type ExportedCapabilityReviewPacket,
 } from "./capabilityLedger.js";
 import {
+  RUNTIME_CONTRACT_ALIGNMENT_SUMMARY,
   describeBridgeOperationSummary,
   describeNapoleonReviewOperationSummary,
   describeTaxonomyReviewBridgeSummary,
@@ -4547,6 +4548,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         <div>
           <strong>Governed Napoleon routes</strong>
           <span>These are the contract paths Concierge can use; endpoint hosts and tokens stay out of this view.</span>
+          <span>
+            Contract alignment: {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.summary} Status:{" "}
+            {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status}. Unmapped Napoleon runtime paths:{" "}
+            {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.unmappedNapoleonRuntimePaths.length}.
+          </span>
+          <span>{RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.detail}</span>
+          <span>{RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.boundary}</span>
         </div>
         <dl>
           {governedOperationSummaries.map((operation) => (

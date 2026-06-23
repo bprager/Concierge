@@ -6,6 +6,7 @@ import {
   GENERATED_NAPOLEON_REVIEW_OPERATIONS,
   NAPOLEON_DISCOVERY_OPERATIONS,
   NAPOLEON_REVIEW_OPERATIONS,
+  RUNTIME_CONTRACT_ALIGNMENT_SUMMARY,
   buildAgentManifestBridgeTarget,
   buildAgentManifestListBridgeTarget,
   buildChiefOfStaffRequestBridgeTarget,
@@ -674,6 +675,18 @@ test("describes governed bridge operation routes without endpoint hosts or secre
     descriptorSummary.requiredResponseSummary,
     "serviceId, ready, runtimeAuthority, cachePolicy, blockedEffects",
   );
+});
+
+test("describes runtime contract alignment without treating path drift as authority", () => {
+  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.aligned, false);
+  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.runtimeAligned, true);
+  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status, "runtime_mapped_with_local_contract_paths");
+  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.unmappedNapoleonRuntimePaths.length, 0);
+  assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.summary, /Runtime mapped/);
+  assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.detail, /local \/v1\/concierge/);
+  assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.boundary, /not Napoleon approval/);
+  assert.equal(JSON.stringify(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY).includes("secret-token"), false);
 });
 
 test("describes all core governed operation routes for the UI", () => {
