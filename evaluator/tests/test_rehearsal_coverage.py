@@ -127,6 +127,38 @@ class RehearsalCoverageTest(unittest.TestCase):
             checks["conversation_capability_intelligence"]["missing_terms"],
         )
 
+    def test_capability_intelligence_steering_type_scenario_requires_enum_only_profile_scope(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("CAPABILITY-INTELLIGENCE-STEERING-TYPES-001", scenarios)
+        self.assertIn(
+            "steering_recommendation_type_summary",
+            scenarios["CAPABILITY-INTELLIGENCE-STEERING-TYPES-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = """
+        Concierge can summarize which Chief of Staff recommendations were common.
+        """
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["steering_recommendation_type_summary"],
+        )
+
+        self.assertFalse(checks["steering_recommendation_type_summary"]["found"])
+        self.assertIn("steering recommendation type summary", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("active profile scope", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("child-protected evidence is not mixed", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("enum-only counts", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("guided_readiness_repair", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("scored_capability_recommendation", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("does not expose rationale", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("does not expose evidence text", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("does not expose endpoints", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("does not expose tokens", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("does not contact Napoleon", checks["steering_recommendation_type_summary"]["missing_terms"])
+        self.assertIn("does not send externally", checks["steering_recommendation_type_summary"]["missing_terms"])
+
     def test_voice_pipeline_proof_scenario_requires_sanitized_non_authority_boundary(self):
         scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
 

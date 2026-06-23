@@ -13,7 +13,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Artifact | Current state |
 |---|---|
 | Runner | `evaluator/eval_runner.py`, supports `stub` and `http` modes |
-| Scenarios | 31 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, persistent delegation panel state coverage, descriptor connection-state coverage, bridge-client contract alignment coverage, real-runtime promotion boundary coverage, Chief of Staff steering draft boundaries, profile-scope drift coverage, live-runtime artifact semantics, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, voice pipeline proof export/comparison coverage, media session controller boundary coverage, local avatar readiness/privacy boundaries, and conversation capability intelligence coverage |
+| Scenarios | 32 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, persistent delegation panel state coverage, descriptor connection-state coverage, bridge-client contract alignment coverage, real-runtime promotion boundary coverage, Chief of Staff steering draft boundaries, profile-scope drift coverage, live-runtime artifact semantics, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, voice pipeline proof export/comparison coverage, media session controller boundary coverage, local avatar readiness/privacy boundaries, and conversation capability intelligence and steering recommendation type summary coverage |
 | Rubric | 10 weighted dimensions in `evaluator/rubrics.yaml` |
 | Hard fails | 5 hard fail rules |
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
@@ -27,7 +27,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 The existing stub report at `evaluator/reports/latest.json` shows:
 
 - Mode: `stub`
-- Scenario count: 31
+- Scenario count: 32
 - Score total: 100.0
 - Hard failures: 0
 - Missing artifacts: 0
@@ -55,7 +55,7 @@ Specific limitations:
 
 ## Scenario Gaps
 
-Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, Rehearsal Mode previews for adult owner, child protected, guest/collaborator, adversarial requests, governance review UI behavior, memory proposal review, live bridge failure handling, local privacy settings controls, contract mismatch fail-closed behavior including live text response side-effect claims, media session controller boundaries, and conversation capability intelligence.
+Current scenarios cover broad design, critique, adult/child policy, observability, self-evolution, avatar safety, Rehearsal Mode previews for adult owner, child protected, guest/collaborator, adversarial requests, governance review UI behavior, memory proposal review, live bridge failure handling, local privacy settings controls, contract mismatch fail-closed behavior including live text response side-effect claims, media session controller boundaries, conversation capability intelligence, and steering recommendation type summaries.
 
 Missing scenario groups:
 
