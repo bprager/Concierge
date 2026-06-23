@@ -684,7 +684,7 @@ test("shows Napoleon delegation panel before bridge provenance is returned", asy
     assert.ok(delegationPanel.getByText("Target capability"));
     assert.ok(delegationPanel.getByText("Provenance source"));
     assert.ok(delegationPanel.getByText("Why selected"));
-    assert.equal(delegationPanel.getAllByText("not returned").length, 9);
+    assert.equal(delegationPanel.getAllByText("not returned").length, 10);
     assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
     assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
   } finally {

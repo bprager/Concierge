@@ -103,6 +103,13 @@ test("successful Napoleon response presentation includes returned delegation and
         detail.value === "returned bridge delegation; not local metadata discovery",
     ),
   );
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Proof alignment" &&
+        detail.value === "same returned trace/audit as Napoleon response proof; not imported readiness proof",
+    ),
+  );
   assert.equal(state.proof?.heading, "Last successful Napoleon proof");
   assert.equal(state.proof?.status, "verified");
   assert.ok(state.proof?.summary.includes("Napoleon recommendation"));
@@ -177,6 +184,13 @@ test("successful Napoleon response proof includes returned target capability wit
     state.delegation?.details.some(
       (detail: { label: string; value: string }) =>
         detail.label === "Trace" && detail.value === "trace_target_capability",
+    ),
+  );
+  assert.ok(
+    state.delegation?.details.some(
+      (detail: { label: string; value: string }) =>
+        detail.label === "Proof alignment" &&
+        detail.value === "target capability shares returned trace/audit; selected-agent proof not returned",
     ),
   );
   assert.equal(state.proof?.status, "verified");

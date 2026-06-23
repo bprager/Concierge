@@ -184,6 +184,13 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.ok(view.details.some((detail) => detail.label === "Selected agents" && detail.value.includes("Passive Brain")));
   assert.ok(view.details.some((detail) => detail.label === "Why selected" && detail.value.includes("Relevant deployment history")));
   assert.ok(view.details.some((detail) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Proof alignment" &&
+        detail.value === "same returned trace/audit as Napoleon response proof; not imported readiness proof",
+    ),
+  );
 
   const empty = describeDelegation(undefined);
 
@@ -199,6 +206,7 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.ok(empty.details.some((detail) => detail.label === "Governance state" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Trace" && detail.value === "not returned"));
   assert.ok(empty.details.some((detail) => detail.label === "Audit" && detail.value === "not returned"));
+  assert.ok(empty.details.some((detail) => detail.label === "Proof alignment" && detail.value === "not returned"));
 });
 
 test("redacts unsafe returned provenance from visible Napoleon delegation and proof views", () => {

@@ -912,6 +912,10 @@ export function describeDelegation(
           { label: "Governance state", value: safeGovernanceState },
           { label: "Trace", value: safeTraceId },
           { label: "Audit", value: safeAuditId },
+          {
+            label: "Proof alignment",
+            value: "target capability shares returned trace/audit; selected-agent proof not returned",
+          },
         ],
       };
     }
@@ -929,6 +933,7 @@ export function describeDelegation(
         { label: "Governance state", value: "not returned" },
         { label: "Trace", value: "not returned" },
         { label: "Audit", value: "not returned" },
+        { label: "Proof alignment", value: "not returned" },
       ],
     };
   }
@@ -972,6 +977,10 @@ export function describeDelegation(
       { label: "Governance state", value: sanitizeVisibleProvenanceValue(delegation.governanceState) },
       { label: "Trace", value: sanitizeVisibleProvenanceValue(delegation.traceId) },
       { label: "Audit", value: sanitizeVisibleProvenanceValue(delegation.auditId) },
+      {
+        label: "Proof alignment",
+        value: "same returned trace/audit as Napoleon response proof; not imported readiness proof",
+      },
     ],
   };
 }
