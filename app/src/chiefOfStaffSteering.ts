@@ -116,6 +116,12 @@ export interface ChiefOfStaffSteeringSubmissionResult {
   externalSendPerformed: false;
 }
 
+interface SteeringTargetMetadata {
+  bridgeTargetPath: string;
+  bridgeTargetOperation: string;
+  bridgeTargetRequestKind: string;
+}
+
 const PROPOSAL_BOUNDARY: RecommendationBoundary = {
   proposalOnly: true,
   approvalCaptured: false,
@@ -336,6 +342,7 @@ function failSteeringClosed(
   blockedEffects: string[] = [],
   descriptorFailureReason?: DescriptorFailClosedReason,
   governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
+  targetMetadata?: SteeringTargetMetadata,
 ): never {
   const attributes: Record<string, unknown> = {
     traceId,
@@ -349,6 +356,11 @@ function failSteeringClosed(
   if (governanceReferences?.decisionId) attributes.decisionId = governanceReferences.decisionId;
   if (governanceReferences?.auditId) attributes.auditId = governanceReferences.auditId;
   if (governanceReferences?.governanceOutcome) attributes.governanceOutcome = governanceReferences.governanceOutcome;
+  if (targetMetadata) {
+    attributes.bridgeTargetPath = targetMetadata.bridgeTargetPath;
+    attributes.bridgeTargetOperation = targetMetadata.bridgeTargetOperation;
+    attributes.bridgeTargetRequestKind = targetMetadata.bridgeTargetRequestKind;
+  }
   emitSteeringEvent(dependencies, "capability_recommendation_send_failed", attributes);
   throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, {
     profileMode,
@@ -460,14 +472,20 @@ export async function submitChiefOfStaffSteeringDraft(
     approval_requirement: approvalRequirement,
     evidence_links: evolutionProposal.evidence,
   };
+  const target = resolveNapoleonEvolutionProposalReviewOperation(endpoint);
+  const targetMetadata: SteeringTargetMetadata = {
+    bridgeTargetPath: target.path,
+    bridgeTargetOperation: target.operationId,
+    bridgeTargetRequestKind: target.requestKind,
+  };
   emitSteeringEvent(dependencies, "capability_recommendation_send_started", {
     traceId: dependencies.traceId,
     requestId,
     proposalId: evolutionProposal.proposal_id,
     profileMode,
+    ...targetMetadata,
   });
 
-  const target = resolveNapoleonEvolutionProposalReviewOperation(endpoint);
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<SteeringFetch>>;
   try {
@@ -494,19 +512,52 @@ export async function submitChiefOfStaffSteeringDraft(
     });
   } catch (error) {
     const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
-    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
+    failSteeringClosed(
+      dependencies,
+      reason,
+      dependencies.traceId,
+      requestId,
+      profileMode,
+      undefined,
+      blockedEffects,
+      undefined,
+      undefined,
+      targetMetadata,
+    );
   }
 
   if (!response.ok) {
     const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
-    failSteeringClosed(dependencies, reason, dependencies.traceId, requestId, profileMode, response.status, blockedEffects);
+    failSteeringClosed(
+      dependencies,
+      reason,
+      dependencies.traceId,
+      requestId,
+      profileMode,
+      response.status,
+      blockedEffects,
+      undefined,
+      undefined,
+      targetMetadata,
+    );
   }
 
   let payload: Partial<ChiefOfStaffSteeringSubmissionResult>;
   try {
     payload = (await response.json()) as Partial<ChiefOfStaffSteeringSubmissionResult>;
   } catch {
-    failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
+    failSteeringClosed(
+      dependencies,
+      "contract_mismatch",
+      dependencies.traceId,
+      requestId,
+      profileMode,
+      undefined,
+      blockedEffects,
+      undefined,
+      undefined,
+      targetMetadata,
+    );
   }
   if (
     !hasRequiredBridgeResponseFields(payload, "chief_of_staff_steering") ||
@@ -516,7 +567,18 @@ export async function submitChiefOfStaffSteeringDraft(
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenSteeringSideEffectClaim(payload as Partial<ChiefOfStaffSteeringSubmissionResult> & Record<string, unknown>)
   ) {
-    failSteeringClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
+    failSteeringClosed(
+      dependencies,
+      "contract_mismatch",
+      dependencies.traceId,
+      requestId,
+      profileMode,
+      undefined,
+      blockedEffects,
+      undefined,
+      undefined,
+      targetMetadata,
+    );
   }
 
   if (payload.governanceDecision.outcome === "deny" || payload.governanceDecision.outcome === "no_go") {
@@ -534,6 +596,7 @@ export async function submitChiefOfStaffSteeringDraft(
         auditId: payload.auditEnvelope.audit_id,
         governanceOutcome: payload.governanceDecision.outcome,
       },
+      targetMetadata,
     );
   }
 
@@ -549,6 +612,7 @@ export async function submitChiefOfStaffSteeringDraft(
     memoryWritePerformed: false,
     agentDispatchPerformed: false,
     externalSendPerformed: false,
+    ...targetMetadata,
   });
 
   return {

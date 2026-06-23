@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added safe named bridge target metadata to Chief of Staff steering send telemetry so post-preflight submissions and failures show the governed path, operation, and request kind without endpoint hosts or tokens.
 - Hardened fail-closed bridge and governed handoff messages so redacted returned request, trace, profile, decision, audit, and governance references are labeled as metadata state.
 - Hardened the Napoleon delegation panel so redacted target-capability metadata is shown as metadata state instead of attribution or proof-alignment wording.
 - Hardened the visible Napoleon proof panel so redacted target-capability or recommendation metadata is shown as metadata state instead of attribution-style proof wording.

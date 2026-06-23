@@ -95,7 +95,7 @@ Every user turn has:
 | conversation_capability_signal | capability_intelligence | observed_at, conversation_id, turn_id, profile_mode, channel, topic_label, intent_label, capability_label, capability_status, outcome_signal, confidence, architecture_area, privacy_class |
 | capability_recommendation_created | capability_intelligence | recommendation_id, capability_label, architecture_area, priority_score, score_components, risk_level, evidence_count, suggested_next_step |
 | chief_of_staff_steering_draft_exported | capability_intelligence | conversation_id, capability, evaluator_case_id, proposal_id, learning_signal_count, proposal_only, approval_captured, memory_write_allowed, agent_dispatch_allowed, external_send_allowed |
-| capability_recommendation_send_failed | capability_intelligence | request_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome |
+| capability_recommendation_send_failed | capability_intelligence | request_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome, bridge_target_path, bridge_target_operation, bridge_target_request_kind |
 | capability_taxonomy_review_send_failed | capability_intelligence | conversation_id, request_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome |
 | capability_intelligence_answered | capability_intelligence | conversation_id, turn_id, profile_mode, kind, evidence_count |
 | capability_ledger_persisted | capability_intelligence | conversation_id, turn_id, evidence_count, privacy_class, storage |
