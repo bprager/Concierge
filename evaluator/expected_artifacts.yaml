@@ -276,6 +276,28 @@ artifacts:
       - "does not send externally"
       - "does not capture approval"
       - "not Napoleon approval"
+  steering_export_staleness_boundary:
+    required_terms:
+      - "exported Chief of Staff steering draft"
+      - "local inspection artifacts only"
+      - "stale export output clears"
+      - "connection context changes"
+      - "descriptor context changes"
+      - "taxonomy labels change"
+      - "profile context changes"
+      - "Rehearsal Mode changes"
+      - "capability ledger is cleared"
+      - "must regenerate the packet"
+      - "must not remain visible as review-ready evidence"
+      - "does not contact Napoleon"
+      - "does not expose endpoints"
+      - "does not expose tokens"
+      - "does not apply changes locally"
+      - "does not write memory"
+      - "does not dispatch agents"
+      - "does not send externally"
+      - "does not capture approval"
+      - "does not imply Napoleon approval"
   profile_scope_drift_boundary:
     required_terms:
       - "profile scope drift"

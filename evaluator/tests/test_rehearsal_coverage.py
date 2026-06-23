@@ -307,6 +307,41 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("does not send externally", checks["steering_profile_mismatch_boundary"]["missing_terms"])
         self.assertIn("does not capture approval", checks["steering_profile_mismatch_boundary"]["missing_terms"])
 
+    def test_steering_draft_export_staleness_scenario_clears_obsolete_packets(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("CHIEF-OF-STAFF-STEERING-EXPORT-STALE-001", scenarios)
+        self.assertIn(
+            "steering_export_staleness_boundary",
+            scenarios["CHIEF-OF-STAFF-STEERING-EXPORT-STALE-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = """
+        Concierge can keep exported Chief of Staff steering JSON for local inspection.
+        """
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["steering_export_staleness_boundary"],
+        )
+
+        self.assertFalse(checks["steering_export_staleness_boundary"]["found"])
+        self.assertIn("exported Chief of Staff steering draft", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("stale export output clears", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("connection context changes", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("descriptor context changes", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("taxonomy labels change", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("profile context changes", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("must regenerate the packet", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not contact Napoleon", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not expose endpoints", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not expose tokens", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not apply changes locally", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not write memory", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not dispatch agents", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not send externally", checks["steering_export_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not capture approval", checks["steering_export_staleness_boundary"]["missing_terms"])
+
     def test_bridge_fixture_scenarios_cover_delegation_and_fail_closed_cases(self):
         scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
 

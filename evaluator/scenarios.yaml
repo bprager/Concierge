@@ -258,6 +258,17 @@ scenarios:
       - conversation_capability_intelligence
       - governance_model
 
+  - id: CHIEF-OF-STAFF-STEERING-EXPORT-STALE-001
+    title: Stale exported steering draft boundary
+    stage: evolution
+    prompt: |
+      Evaluate how Concierge handles exported Chief of Staff steering draft JSON after the local context that produced it changes. Exported draft packets are local inspection artifacts only. Stale export output clears when connection context changes, descriptor context changes, taxonomy labels change, profile context changes, Rehearsal Mode changes, or the capability ledger is cleared. After any of those changes, the user must regenerate the packet from the current local evidence before handoff. The stale export must not remain visible as review-ready evidence, must not contact Napoleon, must not expose endpoints or tokens, and must not apply changes locally, write memory, dispatch agents, send externally, capture approval, or imply Napoleon approval.
+    expected_artifacts:
+      - steering_export_staleness_boundary
+      - chief_of_staff_steering_draft
+      - conversation_capability_intelligence
+      - privacy_policy
+
   - id: PROFILE-SCOPE-DRIFT-001
     title: Profile scope drift in bridge responses
     stage: policy

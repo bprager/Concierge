@@ -100,7 +100,7 @@ Create a trace contract that can be validated by tests before the UI grows.
 Current state:
 
 - The docs describe evaluator quality gates, hard fails, regression, reports, and human review.
-- The implementation is a deterministic keyword/artifact checker with 33 scenarios, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, descriptor connection state, bridge-client contract alignment, real-runtime promotion boundaries, Chief of Staff steering draft boundaries, profile-scope drift, live-runtime artifact semantics, voice pipeline proof export/comparison, media session controller boundaries, local avatar readiness/privacy boundaries, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, and conversation capability intelligence, steering recommendation type summary, and stale steering profile-mismatch coverage.
+- The implementation is a deterministic keyword/artifact checker with 34 scenarios, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, descriptor connection state, bridge-client contract alignment, real-runtime promotion boundaries, Chief of Staff steering draft boundaries, profile-scope drift, live-runtime artifact semantics, voice pipeline proof export/comparison, media session controller boundaries, local avatar readiness/privacy boundaries, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, and conversation capability intelligence, steering recommendation type summary, stale steering profile-mismatch, and stale steering export coverage.
 
 Missing:
 
