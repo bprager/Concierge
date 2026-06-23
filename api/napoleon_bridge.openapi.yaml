@@ -491,7 +491,11 @@ paths:
                   const: chief_of_staff_steering_handoff
                 handoffKind:
                   type: string
-                  enum: [capability_recommendation_handoff, taxonomy_review_handoff, governance_review_handoff]
+                  enum:
+                    - capability_recommendation_handoff
+                    - capability_review_packet_handoff
+                    - taxonomy_review_handoff
+                    - governance_review_handoff
                 profileMode:
                   type: string
                   enum: [adult_owner, child_protected_user, guest, collaborator]
@@ -556,6 +560,8 @@ paths:
                   type: object
                   required: [proposal_id, summary, risk_level, evidence, change, evaluator_cases, rollback_plan]
                 taxonomyReview:
+                  type: object
+                capabilityReviewPacket:
                   type: object
                 governanceReview:
                   type: object

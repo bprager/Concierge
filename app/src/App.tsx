@@ -40,6 +40,7 @@ import {
   answerCapabilityQuestion,
   exportCapabilityAnswerDrilldown,
   exportCapabilityReviewPacket,
+  type ExportedCapabilityReviewPacket,
 } from "./capabilityLedger.js";
 import {
   describeBridgeOperationSummary,
@@ -71,6 +72,7 @@ import {
 import {
   draftChiefOfStaffSteering,
   submitChiefOfStaffSteeringDraft,
+  submitCapabilityReviewPacket,
   type ChiefOfStaffSteeringSubmissionResult,
 } from "./chiefOfStaffSteering.js";
 import {
@@ -453,6 +455,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
   const [capabilityAnswerDrilldownExportJson, setCapabilityAnswerDrilldownExportJson] = useState<string | null>(null);
   const [capabilityReviewPacketExportJson, setCapabilityReviewPacketExportJson] = useState<string | null>(null);
+  const [capabilityReviewPacket, setCapabilityReviewPacket] = useState<ExportedCapabilityReviewPacket | null>(null);
+  const [capabilityReviewPacketSubmission, setCapabilityReviewPacketSubmission] =
+    useState<ChiefOfStaffSteeringSubmissionResult | null>(null);
+  const [capabilityReviewPacketFailure, setCapabilityReviewPacketFailure] = useState<string | null>(null);
   const [steeringDraft, setSteeringDraft] = useState<ChiefOfStaffSteeringDraft | null>(null);
   const [steeringDraftExportJson, setSteeringDraftExportJson] = useState<string | null>(null);
   const [steeringSubmission, setSteeringSubmission] = useState<SteeringSubmissionView | null>(null);
@@ -505,6 +511,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setSteeringFailure(null);
     setTaxonomyReviewSubmission(null);
     setTaxonomyReviewFailure(null);
+    setCapabilityReviewPacketSubmission(null);
+    setCapabilityReviewPacketFailure(null);
   }
 
   function clearProfileScopedCapabilityDrafts() {
@@ -515,12 +523,20 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setTaxonomyReviewDraft(null);
     setTaxonomyReviewSubmission(null);
     setTaxonomyReviewFailure(null);
+    clearCapabilityReviewPacketState();
   }
 
   function clearTaxonomyReviewDraftState() {
     setTaxonomyReviewDraft(null);
     setTaxonomyReviewSubmission(null);
     setTaxonomyReviewFailure(null);
+  }
+
+  function clearCapabilityReviewPacketState() {
+    setCapabilityReviewPacketExportJson(null);
+    setCapabilityReviewPacket(null);
+    setCapabilityReviewPacketSubmission(null);
+    setCapabilityReviewPacketFailure(null);
   }
 
   function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {
@@ -583,6 +599,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     draftReady: Boolean(taxonomyReviewDraft),
     rehearsalMode,
     requiredHandoff: "taxonomy_review",
+  });
+  const capabilityReviewPacketHandoffReadiness = describeGovernedHandoffReadiness({
+    label: "Capability review packet",
+    descriptorConnection,
+    draftReady: Boolean(capabilityReviewPacket),
+    rehearsalMode,
+    requiredHandoff: "evolution_proposal_review",
   });
   const latestInteractionTraceId = findLatestInteractionTraceId(browserStorage());
 
@@ -709,6 +732,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     clearTaxonomyReviewDraftState();
+    clearCapabilityReviewPacketState();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_endpoint", value.trim());
@@ -734,6 +758,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     clearTaxonomyReviewDraftState();
+    clearCapabilityReviewPacketState();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_auth_token", value.trim());
@@ -753,6 +778,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearLocalReviewDrafts();
     clearGovernedHandoffResults();
     clearTaxonomyReviewDraftState();
+    clearCapabilityReviewPacketState();
   }
 
   function updateRehearsalMode(enabled: boolean) {
@@ -768,6 +794,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
       clearTaxonomyReviewDraftState();
+      clearCapabilityReviewPacketState();
     }
   }
 
@@ -1510,6 +1537,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       clearLocalReviewDrafts();
       clearGovernedHandoffResults();
       clearTaxonomyReviewDraftState();
+      clearCapabilityReviewPacketState();
       const discoveryFailed =
         result.connection.failClosedReason === "auth_failure" ||
         result.connection.failClosedReason === "bridge_timeout" ||
@@ -1593,7 +1621,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setPendingRehearsal(null);
     setCapabilityExportJson(null);
     setCapabilityAnswerDrilldownExportJson(null);
-    setCapabilityReviewPacketExportJson(null);
+    clearCapabilityReviewPacketState();
     setTelemetryBufferExportJson(null);
     setInteractionTraceExportJson(null);
     clearBridgeReadinessProof();
@@ -1643,7 +1671,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       ]);
       setInput("");
       setCapabilityAnswerDrilldownExportJson(null);
-      setCapabilityReviewPacketExportJson(null);
+      clearCapabilityReviewPacketState();
       setPendingRehearsal(null);
       setLastDecision(null);
       clearNapoleonPresentation();
@@ -1836,7 +1864,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         ]);
         setInput("");
         setCapabilityAnswerDrilldownExportJson(null);
-        setCapabilityReviewPacketExportJson(null);
+        clearCapabilityReviewPacketState();
         setPendingRehearsal(null);
         setLastDecision(null);
         clearNapoleonPresentation();
@@ -2212,6 +2240,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setTaxonomyReviewDraft(null);
     setTaxonomyReviewSubmission(null);
     setTaxonomyReviewFailure(null);
+    clearCapabilityReviewPacketState();
     refreshCapabilityLedgerStatus();
     emitEvent("capability_ledger_cleared", {
       traceId,
@@ -2701,6 +2730,29 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         describeGovernedHandoffFailure(error, "Chief of Staff taxonomy review handoff", "apply taxonomy edits"),
       );
       setTaxonomyReviewSubmission(null);
+      refreshCapabilityLedgerStatus();
+    }
+  }
+
+  async function submitCapabilityReviewPacketExport() {
+    if (!capabilityReviewPacket) return;
+    const traceId = newTraceId();
+    try {
+      const result = await submitCapabilityReviewPacket(capabilityReviewPacket, {
+        conversationId,
+        traceId,
+        profile,
+        rehearsalMode,
+        descriptorConnection: currentDescriptorInput(),
+      });
+      setCapabilityReviewPacketSubmission(result);
+      setCapabilityReviewPacketFailure(null);
+      refreshCapabilityLedgerStatus();
+    } catch (error) {
+      setCapabilityReviewPacketFailure(
+        describeGovernedHandoffFailure(error, "Capability review packet handoff", "apply changes"),
+      );
+      setCapabilityReviewPacketSubmission(null);
       refreshCapabilityLedgerStatus();
     }
   }
@@ -5027,11 +5079,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                           </button>
                           <button
                             className="secondary"
-                            onClick={() =>
-                              setCapabilityReviewPacketExportJson(
-                                JSON.stringify(exportCapabilityReviewPacket(m.metadata!.capabilityAnswer!), null, 2),
-                              )
-                            }
+                            onClick={() => {
+                              const packet = exportCapabilityReviewPacket(m.metadata!.capabilityAnswer!);
+                              setCapabilityReviewPacket(packet);
+                              setCapabilityReviewPacketExportJson(JSON.stringify(packet, null, 2));
+                              setCapabilityReviewPacketSubmission(null);
+                              setCapabilityReviewPacketFailure(null);
+                            }}
                           >
                             Export capability review packet
                           </button>
@@ -5051,7 +5105,49 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       ) : null}
 
       {capabilityReviewPacketExportJson ? (
-        <pre aria-label="Exported capability review packet">{capabilityReviewPacketExportJson}</pre>
+        <>
+          <pre aria-label="Exported capability review packet">{capabilityReviewPacketExportJson}</pre>
+          {capabilityReviewPacket ? (
+            <section className="capability-review-packet-handoff">
+              <section className={`send-preflight ${capabilityReviewPacketHandoffReadiness.status}`}>
+                <div>
+                  <strong>{capabilityReviewPacketHandoffReadiness.heading}</strong>
+                  <span>{capabilityReviewPacketHandoffReadiness.summary}</span>
+                  <span>{capabilityReviewPacketHandoffReadiness.nextStepSummary}</span>
+                  <span>{capabilityReviewPacketHandoffReadiness.caveat}</span>
+                </div>
+                <dl>
+                  {capabilityReviewPacketHandoffReadiness.items.map((item) => (
+                    <div key={item.label}>
+                      <dt>{item.label}</dt>
+                      <dd>
+                        {item.status}: {item.detail}
+                      </dd>
+                    </div>
+                  ))}
+                  <div>
+                    <dt>Blocked effects</dt>
+                    <dd>{capabilityReviewPacketHandoffReadiness.blockedEffects.join(", ")}</dd>
+                  </div>
+                </dl>
+              </section>
+              <button
+                className="secondary"
+                onClick={submitCapabilityReviewPacketExport}
+                disabled={!capabilityReviewPacketHandoffReadiness.canSubmit}
+              >
+                Send capability review packet to Napoleon review
+              </button>
+              {capabilityReviewPacketFailure ? <p className="warning">{capabilityReviewPacketFailure}</p> : null}
+              {capabilityReviewPacketSubmission
+                ? renderGovernedReviewResponse(
+                    capabilityReviewPacketSubmission,
+                    "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
+                  )
+                : null}
+            </section>
+          ) : null}
+        </>
       ) : null}
 
       {lastDecision ? (

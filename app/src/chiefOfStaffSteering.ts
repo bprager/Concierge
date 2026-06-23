@@ -3,6 +3,7 @@ import {
   type CapabilityArchitectureArea,
   type CapabilityAnswerRow,
   type CapabilityLedger,
+  type ExportedCapabilityReviewPacket,
   type ConversationCapabilitySignal,
   type RecommendationBoundary,
 } from "./capabilityLedger.js";
@@ -128,6 +129,10 @@ interface SteeringFailureMetadata {
   governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string };
   targetMetadata?: SteeringTargetMetadata;
   recommendationType?: SteeringRecommendation["recommendationType"];
+}
+
+interface CapabilityReviewPacketFailureMetadata extends Omit<SteeringFailureMetadata, "recommendationType"> {
+  capabilityLabel?: string;
 }
 
 const PROPOSAL_BOUNDARY: RecommendationBoundary = {
@@ -398,6 +403,338 @@ function failSteeringClosed(
     auditId: governanceReferences?.auditId,
     governanceOutcome: governanceReferences?.governanceOutcome,
   });
+}
+
+function capabilityReviewPacketMatchesActiveProfile(
+  packet: ExportedCapabilityReviewPacket,
+  profileMode: NapoleonProfileMode,
+): boolean {
+  return packet.profileMode === "all_profiles" || packet.profileMode === profileMode;
+}
+
+function failCapabilityReviewPacketClosed(
+  dependencies: SteeringSubmissionDependencies,
+  reason: ConstructorParameters<typeof NapoleonBridgeError>[0],
+  traceId: string,
+  requestId: string,
+  profileMode?: string,
+  status?: number,
+  blockedEffects: string[] = [],
+  failureMetadata: CapabilityReviewPacketFailureMetadata = {},
+): never {
+  const { descriptorFailureReason, governanceReferences, targetMetadata, capabilityLabel } = failureMetadata;
+  const attributes: Record<string, unknown> = {
+    traceId,
+    requestId,
+    profileMode,
+    reason,
+    status,
+    blockedEffects,
+  };
+  if (capabilityLabel) attributes.capability = capabilityLabel;
+  if (descriptorFailureReason) attributes.descriptorFailureReason = descriptorFailureReason;
+  if (governanceReferences?.decisionId) attributes.decisionId = governanceReferences.decisionId;
+  if (governanceReferences?.auditId) attributes.auditId = governanceReferences.auditId;
+  if (governanceReferences?.governanceOutcome) attributes.governanceOutcome = governanceReferences.governanceOutcome;
+  if (targetMetadata) {
+    attributes.bridgeTargetPath = targetMetadata.bridgeTargetPath;
+    attributes.bridgeTargetOperation = targetMetadata.bridgeTargetOperation;
+    attributes.bridgeTargetRequestKind = targetMetadata.bridgeTargetRequestKind;
+  }
+  emitSteeringEvent(dependencies, "capability_review_packet_send_failed", attributes);
+  throw new NapoleonBridgeError(reason, traceId, requestId, status, blockedEffects, {
+    profileMode,
+    descriptorFailureReason,
+    decisionId: governanceReferences?.decisionId,
+    auditId: governanceReferences?.auditId,
+    governanceOutcome: governanceReferences?.governanceOutcome,
+  });
+}
+
+function riskForPacketArchitecture(area: CapabilityArchitectureArea | "unknown"): EvolutionProposalDraft["risk_level"] {
+  return area === "unknown" ? "medium" : riskForArchitecture(area);
+}
+
+function normalizeCapabilityReviewPacketEvolutionProposal(packet: ExportedCapabilityReviewPacket): EvolutionProposalDraft {
+  const architectureArea = packet.evolutionProposalDraft.change.architectureArea;
+  const evaluatorCase = packet.evaluatorCaseCandidate.caseId;
+  return {
+    proposal_id: packet.evolutionProposalDraft.proposalId,
+    summary: packet.evolutionProposalDraft.summary,
+    risk_level: riskForPacketArchitecture(architectureArea),
+    evidence: packet.evolutionProposalDraft.evidence,
+    learning_signals: [],
+    change: {
+      capability: packet.evolutionProposalDraft.change.capability,
+      architecture_area: architectureArea === "unknown" ? "observability" : architectureArea,
+      requested_action: packet.evolutionProposalDraft.change.requestedAction,
+    },
+    affected_profiles: [packet.profileMode],
+    affected_channels: ["text"],
+    evaluator_cases: [evaluatorCase],
+    approval_required: packet.evolutionProposalDraft.approvalRequired,
+    rollback_plan: packet.evolutionProposalDraft.rollbackPlan,
+  };
+}
+
+export async function submitCapabilityReviewPacket(
+  packet: ExportedCapabilityReviewPacket,
+  dependencies: SteeringSubmissionDependencies,
+): Promise<ChiefOfStaffSteeringSubmissionResult> {
+  const profile = dependencies.profile ?? "adult_owner";
+  const profileMode = mapProfileToNapoleonMode(profile);
+  const isChildProtected = profileMode === "child_protected_user";
+  const approvalRequirement = isChildProtected
+    ? "guardian_and_owner_review_required_before_child_protected_capability_change"
+    : "Napoleon Chief of Staff and owner review before implementation or rollout.";
+  const requestId = `cos_${dependencies.traceId}`;
+  const localDecisionId = `local_capability_review_packet_${dependencies.traceId}`;
+  const localAuditId = `local_audit_${dependencies.traceId}`;
+  const endpoint = getConfiguredEndpoint(dependencies);
+  const authToken = getConfiguredAuthToken(dependencies);
+  const descriptorConnection = buildDescriptorConnectionState(
+    dependencies.descriptorConnection ?? {
+      endpointConfigured: Boolean(endpoint),
+      descriptor: null,
+    },
+  );
+  const blockedEffects = ["memory_write", "agent_dispatch", "external_send", "approval_capture", "runtime_authority"];
+  const capabilityLabel = packet.reviewFocus.capabilityLabel;
+
+  if (!capabilityReviewPacketMatchesActiveProfile(packet, profileMode)) {
+    failCapabilityReviewPacketClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
+      capabilityLabel,
+    });
+  }
+  if (dependencies.rehearsalMode) {
+    failCapabilityReviewPacketClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
+      capabilityLabel,
+    });
+  }
+  if (!endpoint) {
+    failCapabilityReviewPacketClosed(dependencies, "no_endpoint", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
+      capabilityLabel,
+    });
+  }
+  if (!descriptorConnection.canAttemptLiveBridge) {
+    failCapabilityReviewPacketClosed(
+      dependencies,
+      descriptorFailClosedReasonToBridgeFailure(descriptorConnection.failClosedReason),
+      dependencies.traceId,
+      requestId,
+      profileMode,
+      undefined,
+      blockedEffects,
+      {
+        descriptorFailureReason: descriptorConnection.failClosedReason,
+        capabilityLabel,
+      },
+    );
+  }
+  if (!descriptorSupportsGovernedHandoff(descriptorConnection, "evolution_proposal_review")) {
+    failCapabilityReviewPacketClosed(
+      dependencies,
+      "descriptor_mismatch",
+      dependencies.traceId,
+      requestId,
+      profileMode,
+      undefined,
+      blockedEffects,
+      {
+        descriptorFailureReason: "descriptor_invalid",
+        capabilityLabel,
+      },
+    );
+  }
+
+  const evolutionProposal = normalizeCapabilityReviewPacketEvolutionProposal(packet);
+  const childScopedEvolutionProposal = isChildProtected
+    ? {
+        ...evolutionProposal,
+        affected_profiles: ["child_protected_user"],
+        approval_required: approvalRequirement,
+      }
+    : evolutionProposal;
+  const sourceEvidence = packet.reviewFocus.evidenceRefs.length
+    ? packet.reviewFocus.evidenceRefs
+    : childScopedEvolutionProposal.evidence;
+  const chiefOfStaffRequest: ChiefOfStaffRequest = {
+    request_id: requestId,
+    requester: "concierge.capability_intelligence",
+    request_type: "evolution_proposal_review",
+    profile_mode: profileMode,
+    source_evidence: sourceEvidence,
+    requested_authority_tier: "advisory_review",
+    trace_id: dependencies.traceId,
+    payload_schema: "concierge.capability-review-packet.export.v1",
+  };
+  const governanceRequest: GovernanceEvaluationRequest = {
+    request_id: `gov_${dependencies.traceId}`,
+    actor_id: "concierge.capability_intelligence",
+    action: isChildProtected
+      ? "submit_child_capability_review_packet_for_review"
+      : "submit_capability_review_packet_for_review",
+    target: "napoleon.chief_of_staff",
+    requested_authority_tier: "advisory_review",
+    evidence_links: sourceEvidence,
+    trace_id: dependencies.traceId,
+  };
+  const traceEnvelope: TraceEnvelope = {
+    trace_id: dependencies.traceId,
+    parent_trace_id: dependencies.conversationId,
+    actor_id: "concierge.capability_intelligence",
+    request_id: requestId,
+    decision_id: localDecisionId,
+    timestamp: new Date().toISOString(),
+  };
+  const auditEnvelope: AuditEnvelope = {
+    audit_id: localAuditId,
+    trace_id: dependencies.traceId,
+    decision_id: localDecisionId,
+    actor_id: "concierge.capability_intelligence",
+    authority_tier: "advisory_review",
+    approval_requirement: approvalRequirement,
+    evidence_links: sourceEvidence,
+  };
+  const target = resolveNapoleonEvolutionProposalReviewOperation(endpoint);
+  const targetMetadata: SteeringTargetMetadata = {
+    bridgeTargetPath: target.path,
+    bridgeTargetOperation: target.operationId,
+    bridgeTargetRequestKind: target.requestKind,
+  };
+  emitSteeringEvent(dependencies, "capability_review_packet_send_started", {
+    traceId: dependencies.traceId,
+    requestId,
+    capability: capabilityLabel,
+    evaluatorCaseId: packet.evaluatorCaseCandidate.caseId,
+    proposalId: childScopedEvolutionProposal.proposal_id,
+    profileMode,
+    ...targetMetadata,
+  });
+
+  const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
+  let response: Awaited<ReturnType<SteeringFetch>>;
+  try {
+    response = await fetcher(target.url, {
+      method: "POST",
+      headers: buildSteeringHeaders(authToken),
+      body: JSON.stringify({
+        requestKind: target.requestKind,
+        handoffKind: "capability_review_packet_handoff",
+        bridgeTargetPath: target.path,
+        bridgeTargetOperation: target.operationId,
+        profileMode,
+        descriptorStatus: descriptorConnection.descriptorStatus,
+        descriptorConnection,
+        chiefOfStaffRequest,
+        governanceRequest,
+        traceEnvelope,
+        auditEnvelope,
+        capabilityReviewPacket: packet,
+        evaluatorCaseCandidate: packet.evaluatorCaseCandidate,
+        evolutionProposal: childScopedEvolutionProposal,
+        boundary: packet.boundary,
+        localOnlyBoundary: packet.localOnlyBoundary,
+        blockedEffects,
+      }),
+    });
+  } catch (error) {
+    const reason = error instanceof Error && error.name === "AbortError" ? "bridge_timeout" : "http_failure";
+    failCapabilityReviewPacketClosed(dependencies, reason, dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
+      targetMetadata,
+      capabilityLabel,
+    });
+  }
+
+  if (!response.ok) {
+    const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
+    failCapabilityReviewPacketClosed(
+      dependencies,
+      reason,
+      dependencies.traceId,
+      requestId,
+      profileMode,
+      response.status,
+      blockedEffects,
+      {
+        targetMetadata,
+        capabilityLabel,
+      },
+    );
+  }
+
+  let payload: Partial<ChiefOfStaffSteeringSubmissionResult>;
+  try {
+    payload = (await response.json()) as Partial<ChiefOfStaffSteeringSubmissionResult>;
+  } catch {
+    failCapabilityReviewPacketClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
+      targetMetadata,
+      capabilityLabel,
+    });
+  }
+  if (
+    !hasRequiredBridgeResponseFields(payload, "chief_of_staff_steering") ||
+    !isGovernanceDecision(payload.governanceDecision) ||
+    !isTraceEnvelope(payload.traceEnvelope) ||
+    !isAuditEnvelope(payload.auditEnvelope) ||
+    !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasForbiddenSteeringSideEffectClaim(payload as Partial<ChiefOfStaffSteeringSubmissionResult> & Record<string, unknown>)
+  ) {
+    failCapabilityReviewPacketClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
+      targetMetadata,
+      capabilityLabel,
+    });
+  }
+
+  if (payload.governanceDecision.outcome === "deny" || payload.governanceDecision.outcome === "no_go") {
+    failCapabilityReviewPacketClosed(
+      dependencies,
+      payload.governanceDecision.outcome === "deny" ? "governance_denied" : "governance_no_go",
+      dependencies.traceId,
+      payload.governanceDecision.request_id,
+      profileMode,
+      response.status,
+      payload.governanceDecision.blocked_effects,
+      {
+        governanceReferences: {
+          decisionId: payload.governanceDecision.decision_id,
+          auditId: payload.auditEnvelope.audit_id,
+          governanceOutcome: payload.governanceDecision.outcome,
+        },
+        targetMetadata,
+        capabilityLabel,
+      },
+    );
+  }
+
+  emitSteeringEvent(dependencies, "capability_review_packet_send_completed", {
+    traceId: dependencies.traceId,
+    requestId,
+    capability: capabilityLabel,
+    evaluatorCaseId: packet.evaluatorCaseCandidate.caseId,
+    proposalId: childScopedEvolutionProposal.proposal_id,
+    decisionId: payload.governanceDecision.decision_id,
+    auditId: payload.auditEnvelope.audit_id,
+    outcome: payload.governanceDecision.outcome,
+    appliedLocally: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    ...targetMetadata,
+  });
+
+  return {
+    text: payload.text ?? "Napoleon accepted the capability review packet for governed review.",
+    governanceDecision: payload.governanceDecision,
+    traceEnvelope: payload.traceEnvelope,
+    auditEnvelope: payload.auditEnvelope,
+    appliedLocally: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+  };
 }
 
 export async function submitChiefOfStaffSteeringDraft(

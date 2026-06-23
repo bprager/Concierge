@@ -1,13 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  answerCapabilityQuestion,
   appendCapabilitySignal,
   buildCapabilitySignal,
   createCapabilityLedger,
   deriveCapabilitySignalFromEvent,
+  exportCapabilityReviewPacket,
 } from "../src/capabilityLedger.js";
 import {
   draftChiefOfStaffSteering,
+  submitCapabilityReviewPacket,
   submitChiefOfStaffSteeringDraft,
 } from "../src/chiefOfStaffSteering.js";
 import { defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
@@ -662,6 +665,129 @@ test("steering handoff fails closed while Rehearsal Mode is active", async () =>
   assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
   assert.equal(events.at(-1)?.attributes.recommendationType, "scored_capability_recommendation");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, steeringBlockedEffects);
+});
+
+test("capability review packet handoff posts sanitized proposal evidence without side effects", async () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_capability_packet",
+      conversationId: "conv_capability_packet",
+      turnId: "turn_capability_packet",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "private https://private.example.test token",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "bridge_failure_handling",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.9,
+      evidenceRefs: ["trace:trace_capability_packet", "event:response_failed", "https://private.example.test"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+      rawMessage: "raw packet text token must not be retained",
+    }),
+  );
+  const answer = answerCapabilityQuestion(
+    "What capabilities should be implemented next for https://private.example.test with token?",
+    ledger,
+    undefined,
+    { profileMode: "adult_owner" },
+  );
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  const packet = exportCapabilityReviewPacket(answer, { generatedAt: "2026-06-23T00:00:00.000Z" });
+  let posted: Record<string, unknown> | undefined;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  const result = await submitCapabilityReviewPacket(packet, {
+    conversationId: "conv_capability_packet",
+    traceId: "trace_submit_capability_packet",
+    profile: "adult_owner",
+    getEndpoint: () => "https://napoleon.example/concierge",
+    descriptorConnection: readyDescriptorConnection,
+    emit: (event: TelemetryPayload) => events.push(event),
+    fetch: async (
+      _url: string,
+      init?: { method?: string; headers?: Record<string, string>; body?: string },
+    ) => {
+      posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          text: "Napoleon accepted the capability review packet for governed review.",
+          governanceDecision: {
+            decision_id: "decision_capability_packet",
+            request_id: "cos_trace_submit_capability_packet",
+            outcome: "requires_review",
+            authority_tier: "advisory_review",
+            approval_requirement: "chief_of_staff_and_owner_review",
+            rationale: "Capability review packets require governed review before implementation.",
+            blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+            trace_id: "trace_submit_capability_packet",
+            audit_id: "audit_capability_packet",
+          },
+          traceEnvelope: {
+            trace_id: "trace_submit_capability_packet",
+            parent_trace_id: "conv_capability_packet",
+            actor_id: "napoleon.chief_of_staff",
+            request_id: "cos_trace_submit_capability_packet",
+            decision_id: "decision_capability_packet",
+            timestamp: "2026-06-23T00:00:00.000Z",
+          },
+          auditEnvelope: {
+            audit_id: "audit_capability_packet",
+            trace_id: "trace_submit_capability_packet",
+            decision_id: "decision_capability_packet",
+            actor_id: "napoleon.chief_of_staff",
+            authority_tier: "advisory_review",
+            approval_requirement: "chief_of_staff_and_owner_review",
+            evidence_links: ["trace:trace_submit_capability_packet"],
+          },
+          appliedLocally: false,
+          memoryWritePerformed: false,
+          approvalCaptured: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+        }),
+      };
+    },
+  });
+
+  assert.equal(posted?.requestKind, "chief_of_staff_steering_handoff");
+  assert.equal(posted?.handoffKind, "capability_review_packet_handoff");
+  assert.equal((posted?.chiefOfStaffRequest as { request_type: string }).request_type, "evolution_proposal_review");
+  assert.equal((posted?.governanceRequest as { action: string }).action, "submit_capability_review_packet_for_review");
+  assert.equal((posted?.capabilityReviewPacket as { schemaVersion: string }).schemaVersion, "concierge.capability-review-packet.export.v1");
+  assert.equal(
+    (posted?.capabilityReviewPacket as { questionClassification: string }).questionClassification,
+    "recommended_next_capabilities",
+  );
+  assert.equal(
+    (posted?.evaluatorCaseCandidate as { caseId: string }).caseId,
+    "capability_review_bridge_failure_handling",
+  );
+  assert.equal(
+    (posted?.evolutionProposal as { change: { capability: string } }).change.capability,
+    "bridge_failure_handling",
+  );
+  assert.equal((posted?.boundary as { proposalOnly: boolean }).proposalOnly, true);
+  assert.equal(result.appliedLocally, false);
+  assert.equal(result.memoryWritePerformed, false);
+  assert.equal(result.approvalCaptured, false);
+  assert.equal(result.agentDispatchPerformed, false);
+  assert.equal(result.externalSendPerformed, false);
+  assert.equal(JSON.stringify(posted).includes("private.example"), false);
+  assert.equal(JSON.stringify(posted).includes("raw packet text"), false);
+  assert.equal(JSON.stringify(posted).includes("token"), false);
+  assert.equal(events.find((event) => event.event === "capability_review_packet_send_started")?.attributes.profileMode, "adult_owner");
+  assert.equal(
+    events.find((event) => event.event === "capability_review_packet_send_completed")?.attributes.decisionId,
+    "decision_capability_packet",
+  );
 });
 
 test("steering handoff posts evolution review packet without applying proposal locally", async () => {

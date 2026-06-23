@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added governed capability review packet submission through the Chief of Staff evolution review bridge so exported capability evidence can be sent for Napoleon review only after descriptor, profile, and Rehearsal Mode gates pass, while remaining proposal-only with no local side effects.
 - Added sanitized local capability review packet export from capability answers so review focus, evaluator-case candidates, evolution-proposal drafts, sanitized rows, and explicit no-side-effect boundaries can be inspected without contacting Napoleon or exposing raw/private content.
 - Added sanitized capability-intelligence answer evidence drilldowns and local JSON export so local capability answers can show profile scope, score metadata, architecture area, suggested next step, and allowlisted evidence references without contacting Napoleon or exposing raw/private content.
 - Added rendered Chief of Staff steering and taxonomy review coverage proving returned live review results, decision, and audit evidence clear when the bridge bearer token changes, while preserving existing local-harness steering drafts when the token value has not changed.

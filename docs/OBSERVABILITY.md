@@ -32,7 +32,7 @@ The system emits:
 
 OpenTelemetry is the preferred standard for traces, metrics, and logs because it is vendor-neutral and supports multiple languages and destinations.
 
-Capability review packet export is a local rendered artifact, not a Napoleon audit stream. It may contain sanitized answer rows, review focus, evaluator-case candidate, evolution-proposal draft, and explicit local-only boundary fields, but must not contain endpoint hosts, bearer tokens, raw prompts, request bodies, response bodies, raw audio, or raw video. Exporting it does not send it, approve it, apply it, write memory, dispatch agents, or contact Napoleon.
+Capability review packet export is a local rendered artifact, not a Napoleon audit stream. It may contain sanitized answer rows, review focus, evaluator-case candidate, evolution-proposal draft, and explicit local-only boundary fields, but must not contain endpoint hosts, bearer tokens, raw prompts, request bodies, response bodies, raw audio, or raw video. Exporting it does not send it, approve it, apply it, write memory, dispatch agents, or contact Napoleon. Governed packet submission emits metadata-only send started/completed/failed events and still cannot apply changes locally.
 
 ## 3. Trace model
 
@@ -101,6 +101,9 @@ Every user turn has:
 | capability_recommendation_created | capability_intelligence | recommendation_id, capability_label, architecture_area, priority_score, score_components, risk_level, evidence_count, suggested_next_step |
 | chief_of_staff_steering_draft_exported | capability_intelligence | conversation_id, capability, evaluator_case_id, proposal_id, learning_signal_count, proposal_only, approval_captured, memory_write_allowed, agent_dispatch_allowed, external_send_allowed |
 | capability_recommendation_send_failed | capability_intelligence | request_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome, bridge_target_path, bridge_target_operation, bridge_target_request_kind |
+| capability_review_packet_send_started | capability_intelligence | conversation_id, request_id, packet_schema_version, question_classification, profile_mode, bridge_target_path, bridge_target_operation, bridge_target_request_kind |
+| capability_review_packet_send_completed | capability_intelligence | conversation_id, request_id, packet_schema_version, question_classification, decision_id, audit_id, outcome, applied_locally, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed, bridge_target_path, bridge_target_operation, bridge_target_request_kind |
+| capability_review_packet_send_failed | capability_intelligence | conversation_id, request_id, packet_schema_version, question_classification, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome, bridge_target_path, bridge_target_operation, bridge_target_request_kind |
 | capability_taxonomy_review_send_failed | capability_intelligence | conversation_id, request_id, profile_mode, reason, descriptor_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome, bridge_target_path, bridge_target_operation, bridge_target_request_kind |
 | capability_intelligence_answered | capability_intelligence | conversation_id, turn_id, profile_mode, kind, evidence_count |
 | capability_ledger_persisted | capability_intelligence | conversation_id, turn_id, evidence_count, privacy_class, storage |

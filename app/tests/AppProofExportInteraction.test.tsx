@@ -905,6 +905,155 @@ test("exports a sanitized local capability review packet from capability answers
   }
 });
 
+test("sends exported capability review packet through governed review controls", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, fireEvent, render, waitFor },
+    userEventModule,
+    { App },
+    { emitEvent, capabilityLedger },
+    { clearCapabilityLedger },
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalInfo = console.info;
+  const originalFetch = globalThis.fetch;
+  const postedBodies: Record<string, unknown>[] = [];
+  console.info = () => undefined;
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+              supportedHandoffs: ["text_turn", "evolution_proposal_review"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url.endsWith("/v1/concierge/chief-of-staff/steering")) {
+        const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        postedBodies.push(body);
+        const traceEnvelope = body.traceEnvelope as { trace_id: string; parent_trace_id: string; request_id: string };
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon accepted the capability review packet for governed review.",
+            governanceDecision: {
+              decision_id: "decision_capability_packet_rendered",
+              request_id: traceEnvelope.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Capability review packets require review before implementation.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: traceEnvelope.trace_id,
+              audit_id: "audit_capability_packet_rendered",
+            },
+            traceEnvelope: {
+              trace_id: traceEnvelope.trace_id,
+              parent_trace_id: traceEnvelope.parent_trace_id,
+              actor_id: "napoleon.chief_of_staff",
+              request_id: traceEnvelope.request_id,
+              decision_id: "decision_capability_packet_rendered",
+              timestamp: "2026-06-23T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_capability_packet_rendered",
+              trace_id: traceEnvelope.trace_id,
+              decision_id: "decision_capability_packet_rendered",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:capability-packet-rendered"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(JSON.stringify({ error: "unexpected fetch" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as typeof fetch;
+
+    emitEvent("response_failed", {
+      traceId: "trace_capability_packet_send_ui",
+      conversationId: "conv_capability_packet_send_ui",
+      turnId: "turn_capability_packet_send_ui",
+      profile: "adult_owner",
+      rawMessage: "raw send packet text private.example token must not appear",
+      endpoint: "https://private.example.test/packet",
+    });
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (!rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, true));
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What capabilities should be implemented next?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await view.findByText(/Recommended next capabilities by local risk\/value score/);
+    await user.click(view.getByRole("button", { name: "Export capability review packet" }));
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    await user.click(view.getByRole("button", { name: "Send capability review packet to Napoleon review" }));
+
+    await view.findByText("Napoleon accepted the capability review packet for governed review.");
+    assert.ok(view.getByText(/decision_capability_packet_rendered/));
+    assert.ok(view.getByText(/audit_capability_packet_rendered/));
+    assert.equal(postedBodies.length, 1);
+    const posted = JSON.stringify(postedBodies[0]);
+    assert.ok(posted.includes('"handoffKind":"capability_review_packet_handoff"'));
+    assert.ok(posted.includes('"schemaVersion":"concierge.capability-review-packet.export.v1"'));
+    assert.ok(posted.includes('"proposalOnly":true'));
+    assert.ok(posted.includes('"appliedLocally":false'));
+    assert.equal(posted.includes("raw send packet text"), false);
+    assert.equal(posted.includes("private.example"), false);
+    assert.equal(posted.includes("token"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    clearCapabilityLedger(capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders steering recommendation type answers within the active child profile scope", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }, { clearCapabilityLedger }, telemetry] = await Promise.all([
