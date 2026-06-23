@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Added a compact Latest Napoleon turn summary and local turn timeline beside the composer, showing returned handler, governance, trace, blocked effects, and boundary from the last successful proof alongside the latest fail-closed bridge attempt without implying approval or side effects.
+- Added display-only turn comparison rows to the Napoleon turn timeline, explaining why the latest attempt was blocked, what prior handler/governance/trace state existed, and the local next step without exposing raw bridge data or granting authority.
 - Added a sanitized current-proof review summary to Napoleon response proof comparisons, showing current handler, governance, trace, blocked effects, and boundary without exposing raw response content.
 - Added first-class visible `Handled by` provenance rows to Napoleon delegation and last-successful-proof panels, tied only to returned bridge capability or selected-agent metadata.
 - Added visible runtime-contract alignment status to the governed Napoleon routes panel, showing mapped runtime compatibility separately from exact path mismatch without implying approval or runtime validation.

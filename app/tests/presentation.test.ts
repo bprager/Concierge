@@ -474,6 +474,20 @@ test("describes Napoleon turn timeline as empty before proof or failure returns"
   assert.equal(view.entries[1].status, "not_available");
   assert.ok(view.entries[1].summary.includes("No fail-closed Napoleon bridge attempt"));
   assert.ok(view.entries[1].details.some((detail) => detail.label === "Failure reason" && detail.value === "not returned"));
+  assert.ok(
+    view.comparison.some(
+      (detail) =>
+        detail.label === "Why blocked" &&
+        detail.value === "No fail-closed Napoleon bridge attempt has been recorded in this session.",
+    ),
+  );
+  assert.ok(
+    view.comparison.some(
+      (detail) =>
+        detail.label === "Next step" &&
+        detail.value === "Send through the governed bridge after descriptor and preflight readiness pass.",
+    ),
+  );
 });
 
 test("describes Napoleon turn timeline from latest proof and fail-closed metadata", () => {
@@ -526,6 +540,35 @@ test("describes Napoleon turn timeline from latest proof and fail-closed metadat
   assert.equal(view.entries[1].summary, "Blocked by contract_mismatch; governance not returned.");
   assert.ok(view.entries[1].details.some((detail) => detail.label === "Trace" && detail.value === "trace_blocked_timeline"));
   assert.ok(view.entries[1].details.some((detail) => detail.label === "Failure reason" && detail.value === "contract_mismatch"));
+  assert.ok(
+    view.comparison.some(
+      (detail) =>
+        detail.label === "Why blocked" &&
+        detail.value === "contract_mismatch; No Napoleon response was accepted; fail-closed local state only.",
+    ),
+  );
+  assert.ok(
+    view.comparison.some(
+      (detail) => detail.label === "Prior accepted handler" && detail.value === "Passive Brain",
+    ),
+  );
+  assert.ok(
+    view.comparison.some(
+      (detail) => detail.label === "Governance change" && detail.value === "allow_prepare_only -> not returned",
+    ),
+  );
+  assert.ok(
+    view.comparison.some(
+      (detail) => detail.label === "Trace change" && detail.value === "trace_turn_timeline -> trace_blocked_timeline",
+    ),
+  );
+  assert.ok(
+    view.comparison.some(
+      (detail) =>
+        detail.label === "Next step" &&
+        detail.value === "Align the bridge contract or descriptor before attempting another live turn.",
+    ),
+  );
 });
 
 test("describes latest Napoleon turn summary from fail-closed bridge metadata", () => {

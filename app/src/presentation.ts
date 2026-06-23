@@ -144,6 +144,7 @@ export interface NapoleonTurnTimelineView {
   summary: string;
   caveat: string;
   entries: NapoleonTurnTimelineEntryView[];
+  comparison: Array<{ label: string; value: string }>;
 }
 
 export interface NapoleonResponsePresentationLabels {
@@ -1264,6 +1265,14 @@ function proofDetailValue(proof: NapoleonResponseProofView, label: string, fallb
   return proof.details.find((detail) => detail.label === label)?.value || fallback;
 }
 
+function timelineDetailValue(
+  view: Pick<LastNapoleonTurnSummaryView, "details">,
+  label: string,
+  fallback = "not returned",
+): string {
+  return view.details.find((detail) => detail.label === label)?.value || fallback;
+}
+
 export function describeLastNapoleonTurnSummary(
   proof: NapoleonResponseProofView | null | undefined,
   failure?: LastNapoleonTurnFailureInput | null,
@@ -1356,6 +1365,49 @@ export function describeNapoleonTurnTimeline(
         ],
       };
   const hasEntries = Boolean(proof || failure);
+  const comparison = failure
+    ? [
+        {
+          label: "Why blocked",
+          value: `${timelineDetailValue(blocked, "Failure reason")}; ${timelineDetailValue(blocked, "Boundary")}`,
+        },
+        {
+          label: "Prior accepted handler",
+          value: timelineDetailValue(successful, "Handled by"),
+        },
+        {
+          label: "Governance change",
+          value: `${timelineDetailValue(successful, "Governance")} -> ${timelineDetailValue(blocked, "Governance")}`,
+        },
+        {
+          label: "Trace change",
+          value: `${timelineDetailValue(successful, "Trace")} -> ${timelineDetailValue(blocked, "Trace")}`,
+        },
+        {
+          label: "Blocked effects now",
+          value: timelineDetailValue(blocked, "Blocked effects"),
+        },
+        {
+          label: "Next step",
+          value: timelineDetailValue(blocked, "Next step"),
+        },
+      ]
+    : [
+        {
+          label: "Why blocked",
+          value: "No fail-closed Napoleon bridge attempt has been recorded in this session.",
+        },
+        {
+          label: "Prior accepted handler",
+          value: timelineDetailValue(successful, "Handled by"),
+        },
+        {
+          label: "Next step",
+          value: proof
+            ? "Continue from the latest accepted returned proof, or inspect preflight before sending again."
+            : "Send through the governed bridge after descriptor and preflight readiness pass.",
+        },
+      ];
 
   return {
     heading: "Napoleon turn timeline",
@@ -1379,6 +1431,7 @@ export function describeNapoleonTurnTimeline(
         details: blocked.details,
       },
     ],
+    comparison,
   };
 }
 

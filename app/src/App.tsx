@@ -5565,6 +5565,17 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               </li>
             ))}
           </ol>
+          <div className="turn-comparison">
+            <strong>Turn comparison</strong>
+            <dl>
+              {napoleonTurnTimeline.comparison.map((detail) => (
+                <div key={detail.label}>
+                  <dt>{detail.label}</dt>
+                  <dd>{detail.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </section>
         <div className={`send-preflight ${liveSendPreflight.status}`}>
           <div>
