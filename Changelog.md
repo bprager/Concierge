@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened the visible Napoleon proof panel so redacted target-capability or recommendation metadata is shown as metadata state instead of attribution-style proof wording.
 - Hardened Napoleon response proof comparisons so redacted, unavailable, and empty entries inside returned proof lists are labeled as metadata states without hiding safe returned values in the same list.
 - Hardened Napoleon response proof comparisons so redacted, unavailable, and empty proof fields are labeled as metadata states instead of returned authority values.
 - Hardened the Napoleon delegation panel so redacted selected-agent names or contribution summaries are not rephrased into visible "found redacted" claims.

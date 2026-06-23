@@ -266,7 +266,17 @@ test("redacts unsafe returned provenance from visible Napoleon delegation and pr
   assert.equal(delegationView.body.includes("found redacted"), false);
   assert.equal(delegationView.body, "Napoleon provided delegation provenance for this response.");
   assert.ok(delegationView.details.some((detail) => detail.label === "Target capability" && detail.value === "redacted"));
-  assert.ok(proofView.details.some((detail) => detail.label === "Napoleon recommendation" && detail.value === "redacted"));
+  assert.equal(proofView.summary.includes("Napoleon recommendation: redacted"), false);
+  assert.ok(
+    proofView.details.some(
+      (detail) => detail.label === "Napoleon recommendation" && detail.value === "redacted metadata",
+    ),
+  );
+  assert.ok(
+    proofView.details.some(
+      (detail) => detail.label === "Recommendation proof alignment" && detail.value === "not returned",
+    ),
+  );
   assert.ok(proofView.details.some((detail) => detail.label === "Decision" && detail.value === "redacted"));
   assert.ok(proofView.details.some((detail) => detail.label === "Trace" && detail.value === "redacted"));
   assert.ok(proofView.details.some((detail) => detail.label === "Audit" && detail.value === "redacted"));

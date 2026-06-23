@@ -1004,12 +1004,14 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
           )}`,
       )
       .join("; ") || "";
-  const targetCapability = response.targetAgent
+  const returnedTargetCapability = response.targetAgent
     ? sanitizeVisibleProvenanceValue(response.targetAgent, "")
     : "";
-  const recommendation = response.recommendationProvenance?.summary
+  const targetCapability = returnedTargetCapability === "redacted" ? "" : returnedTargetCapability;
+  const returnedRecommendation = response.recommendationProvenance?.summary
     ? sanitizeVisibleProvenanceValue(response.recommendationProvenance.summary, "")
     : undefined;
+  const recommendation = returnedRecommendation === "redacted" ? undefined : returnedRecommendation;
   const status: NapoleonResponseProofView["status"] = agentLabels || targetCapability || recommendation ? "verified" : "limited";
   const proofParts = [
     targetCapability ? `Capability: ${targetCapability}` : "",
@@ -1032,10 +1034,16 @@ export function describeNapoleonResponseProof(response: NapoleonResponse): Napol
       { label: "Trace", value: sanitizeVisibleProvenanceValue(response.traceEnvelope.trace_id) },
       { label: "Audit", value: sanitizeVisibleProvenanceValue(response.auditEnvelope.audit_id) },
       { label: "Attribution boundary", value: "Returned bridge provenance only; not local authority." },
-      { label: "Target capability", value: targetCapability || "not returned" },
+      {
+        label: "Target capability",
+        value: returnedTargetCapability === "redacted" ? "redacted metadata" : targetCapability || "not returned",
+      },
       { label: "Selected agents", value: agentLabels || "not returned" },
       { label: "Why selected", value: selectionReasons || "not returned" },
-      { label: "Napoleon recommendation", value: recommendation || "not returned" },
+      {
+        label: "Napoleon recommendation",
+        value: returnedRecommendation === "redacted" ? "redacted metadata" : recommendation || "not returned",
+      },
       {
         label: "Recommendation proof alignment",
         value: recommendation ? "same returned trace/audit as Napoleon response proof" : "not returned",

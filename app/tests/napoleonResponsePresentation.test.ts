@@ -431,6 +431,15 @@ test("redacts unsafe returned provenance before exporting Napoleon response proo
     },
   });
 
+  const recommendationDetail = state.proof?.details.find((detail) => detail.label === "Napoleon recommendation");
+  const recommendationAlignment = state.proof?.details.find(
+    (detail) => detail.label === "Recommendation proof alignment",
+  );
+  assert.ok(state.proof);
+  assert.equal(state.proof.summary.includes("Napoleon recommendation: redacted"), false);
+  assert.equal(recommendationDetail?.value, "redacted metadata");
+  assert.equal(recommendationAlignment?.value, "not returned");
+
   const json = exportNapoleonResponseProofJson(state, {
     generatedAt: "2026-06-13T00:00:00.000Z",
     conversationId: "conv_response_export_redaction",
