@@ -159,6 +159,7 @@ export type CapabilityQuestionKind =
   | "easy_to_evolve_missing_capabilities"
   | "architecture_improvement_areas"
   | "recommended_next_capabilities"
+  | "steering_recommendation_types"
   | "increasing_conversations"
   | "worsening_missing_capabilities"
   | "recent_working_capabilities"
@@ -595,8 +596,12 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   const asksEasyToEvolve = /\b(easy|easiest|evolve|evolution|small)\b/.test(lower);
   const asksArchitecture = /\b(architecture|part|area|component|improved|improve|fix)\b/.test(lower);
   const asksNext = /\b(implement|implemented|next|recommend|recommended|prioritize|priority)\b/.test(lower);
+  const asksSteeringRecommendationTypes =
+    /\b(steering|chief of staff|chief-of-staff)\b/.test(lower) &&
+    /\b(recommendation type|recommendation types|types?|categories|category)\b/.test(lower);
 
   if (asksSeasonal) return "seasonal_changes";
+  if (asksSteeringRecommendationTypes) return "steering_recommendation_types";
   if (asksAboutConversation && asksIncreasing) return "increasing_conversations";
   if (asksCapability && asksMissingOrBlocked && asksWorse) return "worsening_missing_capabilities";
   if (asksWorked && asksRecent) return "recent_working_capabilities";
@@ -633,6 +638,8 @@ const LOCAL_PROPOSAL_CAVEAT =
 
 const MISSING_PROPOSAL_CAVEAT =
   "Based on local metadata only; results are incomplete when telemetry is disabled or other devices are not included; correctly blocked unsafe requests are excluded; recommendations are proposal-only.";
+const STEERING_RECOMMENDATION_TYPE_CAVEAT =
+  "Based on local enum-only Chief of Staff steering telemetry; this does not include rationale, evidence, endpoint, token, raw content, approval, implementation, memory writes, agent dispatch, or external sends.";
 
 interface GroupedSignalStats {
   label: string;
@@ -1137,12 +1144,38 @@ export function answerCapabilityQuestion(
     };
   }
 
+  if (kind === "steering_recommendation_types") {
+    const steeringSignals = signals.filter((signal) => signal.topicLabel === "chief_of_staff_steering");
+    const rows = sortedRows(
+      steeringSignals.reduce<Record<string, number>>((bucket, signal) => {
+        increment(bucket, signal.capabilityLabel);
+        return bucket;
+      }, {}),
+    );
+    return {
+      kind,
+      question,
+      summary: `Chief of Staff steering recommendation types from local enum-only telemetry: ${describeRows(rows)}.`,
+      rows,
+      evidenceCount: steeringSignals.length,
+      caveat: STEERING_RECOMMENDATION_TYPE_CAVEAT,
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    };
+  }
+
   return null;
 }
 
 function stringAttr(attributes: Record<string, unknown>, key: string, fallback: string): string {
   const value = attributes[key];
   return typeof value === "string" && value.trim() ? value : fallback;
+}
+
+function steeringRecommendationTypeFromAttributes(attributes: Record<string, unknown>): string {
+  const recommendationType = stringAttr(attributes, "recommendationType", "unknown_steering_recommendation_type");
+  return recommendationType === "guided_readiness_repair" || recommendationType === "scored_capability_recommendation"
+    ? recommendationType
+    : "unknown_steering_recommendation_type";
 }
 
 function profileScopedCapability(
@@ -1322,6 +1355,21 @@ export function deriveCapabilitySignalFromEvent(
       confidence: failed ? 0.88 : 0.82,
       architectureArea: failed ? "bridge" : "governance_ux",
       suggestedNextStep: failed ? "add_backlog_item" : "needs_human_review",
+    });
+  }
+
+  if (eventName.startsWith("capability_recommendation_send_")) {
+    const failed = eventName.endsWith("_failed");
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "chief_of_staff_steering",
+      intentLabel: "track_steering_recommendation_type",
+      capabilityLabel: steeringRecommendationTypeFromAttributes(attributes),
+      capabilityStatus: failed ? "blocked" : "working",
+      outcomeSignal: failed ? "bridge_failed" : "review_required",
+      confidence: failed ? 0.86 : 0.82,
+      architectureArea: failed ? "bridge" : "observability",
+      suggestedNextStep: failed ? "add_backlog_item" : "no_action",
     });
   }
 

@@ -613,6 +613,63 @@ test("answers next capability recommendation questions without granting authorit
   assert.equal(answer.boundary.externalSendAllowed, false);
 });
 
+test("answers Chief of Staff steering recommendation type summaries from enum-only metadata", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("capability_recommendation_send_started", {
+      traceId: "trace_guided",
+      conversationId: "conv_steering_types",
+      profile: "adult_owner",
+      recommendationType: "guided_readiness_repair",
+      rationale: "Do not expose this rationale",
+      endpoint: "https://private.example.test/concierge",
+      token: "token_secret",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("capability_recommendation_send_completed", {
+      traceId: "trace_scored",
+      conversationId: "conv_steering_types",
+      profile: "adult_owner",
+      recommendationType: "scored_capability_recommendation",
+      evidence: ["trace_missing_bridge"],
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("capability_recommendation_send_failed", {
+      traceId: "trace_guided_failed",
+      conversationId: "conv_steering_types",
+      profile: "adult_owner",
+      recommendationType: "guided_readiness_repair",
+      reason: "governance_no_go",
+      rawContent: "raw proposal text",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What steering recommendation types are most common?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected steering recommendation type answer");
+  assert.equal(answer.kind, "steering_recommendation_types");
+  assert.deepEqual(answer.rows.map((row) => [row.label, row.count]), [
+    ["guided_readiness_repair", 2],
+    ["scored_capability_recommendation", 1],
+  ]);
+  assert.equal(answer.evidenceCount, 3);
+  assert.ok(answer.summary.includes("Chief of Staff steering recommendation types"));
+  assert.ok(answer.caveat.includes("enum-only"));
+  assert.equal(answer.boundary.proposalOnly, true);
+  const answerJson = JSON.stringify(answer);
+  assert.equal(answerJson.includes("Do not expose this rationale"), false);
+  assert.equal(answerJson.includes("private.example.test"), false);
+  assert.equal(answerJson.includes("token_secret"), false);
+  assert.equal(answerJson.includes("trace_missing_bridge"), false);
+  assert.equal(answerJson.includes("raw proposal text"), false);
+});
+
 test("answers capability questions from the active profile scope only", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(
