@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered Chief of Staff steering and taxonomy review coverage proving returned live review results, decision, and audit evidence clear when the bridge bearer token changes, while preserving existing local-harness steering drafts when the token value has not changed.
 - Added rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear when the bridge bearer token changes.
 - Added symmetric rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear across both Napoleon endpoint and descriptor context changes.
 - Added rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear when the active user profile changes.

@@ -712,7 +712,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   }
 
   function updateAuthToken(value: string) {
+    const authTokenChanged = value !== authToken;
     setAuthToken(value);
+    if (authTokenChanged) {
+      setSteeringDraft(null);
+    }
     setSteeringDraftExportJson(null);
     setLiveDescriptorInput(null);
     setDescriptorDiscoveryMessage(null);
