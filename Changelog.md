@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added descriptor discovery support for Napoleon's plural review endpoint keys and `required_for` handoff claims, while keeping explicit `supportedHandoffs` lists authoritative.
 - Added evaluator scenario coverage requiring real-runtime promotion checks to distinguish descriptor-unadvertised evaluator-review handoffs from missing evaluator routes while keeping text-turn readiness separate from promotion readiness.
 - Added `evaluation_review` to the governed descriptor handoff allowlist and OpenAPI descriptor schema, so Napoleon can advertise evaluator review without Concierge treating the descriptor as invalid.
 - Added Text Concierge readiness and preflight presentation for descriptor-unadvertised evaluator handoffs, including imported validation metadata, proof export comparison fields, and next-step wording that distinguishes this from a missing evaluator route.

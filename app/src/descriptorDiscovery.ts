@@ -105,16 +105,56 @@ function supportedHandoffsValue(value: unknown): GovernedHandoffCapability[] | n
   return governedHandoffs;
 }
 
+function pushUniqueHandoff(supported: GovernedHandoffCapability[], capability: GovernedHandoffCapability): void {
+  if (!supported.includes(capability)) supported.push(capability);
+}
+
+function supportedHandoffsFromRequiredFor(value: unknown): GovernedHandoffCapability[] {
+  const values = stringArrayValue(value) ?? [];
+  const supported: GovernedHandoffCapability[] = [];
+  for (const item of values) {
+    if (item === "evaluation_review") pushUniqueHandoff(supported, "evaluation_review");
+    if (item === "governance_review") pushUniqueHandoff(supported, "governance_review");
+    if (item === "evolution_proposal_review") pushUniqueHandoff(supported, "evolution_proposal_review");
+    if (item === "memory_proposal_review") pushUniqueHandoff(supported, "memory_proposal_review");
+    if (item === "chief_of_staff_steering") pushUniqueHandoff(supported, "chief_of_staff_steering");
+    if (item === "taxonomy_review") pushUniqueHandoff(supported, "taxonomy_review");
+  }
+  return supported;
+}
+
 function supportedHandoffsFromRuntimeEndpoints(endpoints: Record<string, unknown>): GovernedHandoffCapability[] {
   const supported: GovernedHandoffCapability[] = [];
-  if (endpoints.text_turn === "POST /cos/text-turn") supported.push("text_turn");
-  if (typeof endpoints.evaluation_review === "string") supported.push("evaluation_review");
-  if (typeof endpoints.memory_proposal_review === "string") supported.push("memory_proposal_review");
-  if (typeof endpoints.chief_of_staff_steering === "string") supported.push("chief_of_staff_steering");
-  if (typeof endpoints.governance_review === "string") supported.push("governance_review");
-  if (typeof endpoints.evolution_proposal_review === "string") supported.push("evolution_proposal_review");
-  if (typeof endpoints.taxonomy_review === "string") supported.push("taxonomy_review");
+  if (endpoints.text_turn === "POST /cos/text-turn") pushUniqueHandoff(supported, "text_turn");
+  if (typeof endpoints.evaluation_review === "string" || typeof endpoints.evaluation_reviews === "string") {
+    pushUniqueHandoff(supported, "evaluation_review");
+  }
+  if (typeof endpoints.memory_proposal_review === "string" || typeof endpoints.memory_proposal_reviews === "string") {
+    pushUniqueHandoff(supported, "memory_proposal_review");
+  }
+  if (typeof endpoints.chief_of_staff_steering === "string") pushUniqueHandoff(supported, "chief_of_staff_steering");
+  if (typeof endpoints.governance_review === "string" || typeof endpoints.governance_reviews === "string") {
+    pushUniqueHandoff(supported, "governance_review");
+  }
+  if (typeof endpoints.evolution_proposal_review === "string" || typeof endpoints.evolution_proposal_reviews === "string") {
+    pushUniqueHandoff(supported, "evolution_proposal_review");
+  }
+  if (typeof endpoints.taxonomy_review === "string" || typeof endpoints.taxonomy_reviews === "string") {
+    pushUniqueHandoff(supported, "taxonomy_review");
+  }
   return supported;
+}
+
+function mergeSupportedHandoffs(
+  ...groups: Array<GovernedHandoffCapability[] | null | undefined>
+): GovernedHandoffCapability[] | undefined {
+  const merged: GovernedHandoffCapability[] = [];
+  for (const group of groups) {
+    for (const capability of group ?? []) {
+      pushUniqueHandoff(merged, capability);
+    }
+  }
+  return merged.length ? merged : undefined;
 }
 
 function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null | typeof INVALID_DESCRIPTOR {
@@ -139,6 +179,12 @@ function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null | typeof
     ? supportedHandoffsValue(candidate.supportedHandoffs)
     : supportedHandoffsValue(candidate.supported_handoffs);
   if (supportedHandoffs === null) return INVALID_DESCRIPTOR;
+  const derivedSupportedHandoffs =
+    supportedHandoffs ??
+    mergeSupportedHandoffs(
+      supportedHandoffsFromRequiredFor(candidate.required_for),
+      supportedHandoffsFromRuntimeEndpoints(endpoints),
+    );
   const liveRuntimeDescriptor =
     schemaVersion === "napoleon/concierge/runtime-descriptor/v1" &&
     serviceId === "napoleon.chief_of_staff" &&
@@ -157,7 +203,7 @@ function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null | typeof
       commandExecution,
       cachePolicy: "runtime_descriptor_live_response",
       blockedEffects,
-      supportedHandoffs: supportedHandoffsFromRuntimeEndpoints(endpoints),
+      supportedHandoffs: derivedSupportedHandoffs ?? [],
     };
   }
   if (
@@ -175,7 +221,7 @@ function parseDescriptor(value: unknown): ChiefOfStaffDescriptor | null | typeof
       commandExecution: commandExecution as false,
       cachePolicy,
       blockedEffects,
-      supportedHandoffs,
+      supportedHandoffs: derivedSupportedHandoffs,
     };
   }
   return null;

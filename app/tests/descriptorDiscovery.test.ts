@@ -153,6 +153,70 @@ test("descriptor discovery falls back from runtime base URL to cos descriptor", 
   assert.equal(result.input.maxAgeSeconds, 300);
 });
 
+test("descriptor discovery derives handoffs from Napoleon plural endpoint and required_for fields", async () => {
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "http://127.0.0.1:8765/cos/descriptor",
+    now: () => "2026-06-23T18:00:00.000Z",
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        schema_version: "napoleon/concierge/runtime-descriptor/v1",
+        service_id: "napoleon.chief_of_staff",
+        runtime_authority: false,
+        command_execution: false,
+        endpoints: {
+          descriptor: "GET /cos/descriptor",
+          text_turn: "POST /cos/text-turn",
+          evaluation_reviews: "/chief-of-staff/reviews/evaluation",
+          governance_reviews: "/chief-of-staff/reviews/governance",
+          evolution_proposal_reviews: "/chief-of-staff/reviews/evolution-proposals",
+          trace: "GET /cos/trace/{trace_id}",
+        },
+        required_for: ["evaluation_review", "governance_review", "evolution_proposal_review"],
+        supported_authority_tiers: ["advisory_prepare_only"],
+        blocked_effects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+      }),
+    }),
+  });
+
+  assert.equal(result.connection.state, "ready");
+  assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, [
+    "evaluation_review",
+    "governance_review",
+    "evolution_proposal_review",
+    "text_turn",
+  ]);
+});
+
+test("descriptor discovery keeps explicit handoff lists authoritative over endpoint hints", async () => {
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "http://127.0.0.1:8765/cos/descriptor",
+    fetch: async () => ({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        schema_version: "napoleon/concierge/runtime-descriptor/v1",
+        service_id: "napoleon.chief_of_staff",
+        runtime_authority: false,
+        command_execution: false,
+        endpoints: {
+          descriptor: "GET /cos/descriptor",
+          text_turn: "POST /cos/text-turn",
+          evaluation_reviews: "/chief-of-staff/reviews/evaluation",
+        },
+        supported_handoffs: ["evaluation_review"],
+        required_for: ["text_turn", "governance_review"],
+        supported_authority_tiers: ["advisory_prepare_only"],
+        blocked_effects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+      }),
+    }),
+  });
+
+  assert.equal(result.connection.state, "ready");
+  assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, ["evaluation_review"]);
+});
+
 test("descriptor discovery accepts explicit evaluation review handoff claims", async () => {
   const result = await discoverNapoleonDescriptor({
     getEndpoint: () => "https://napoleon.example/concierge",
