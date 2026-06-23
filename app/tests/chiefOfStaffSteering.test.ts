@@ -4,6 +4,7 @@ import {
   appendCapabilitySignal,
   buildCapabilitySignal,
   createCapabilityLedger,
+  deriveCapabilitySignalFromEvent,
 } from "../src/capabilityLedger.js";
 import {
   draftChiefOfStaffSteering,
@@ -147,6 +148,49 @@ test("steering draft evidence excludes correctly blocked unsafe signals with the
   assert.equal(draft.recommendation.capabilityLabel, "memory_review");
   assert.deepEqual(draft.evolutionProposal.evidence, ["trace:trace_missing_memory_review"]);
   assert.equal(draft.evolutionProposal.evidence.includes("trace:trace_blocked_memory_write"), false);
+});
+
+test("steering draft carries media session repair recommendation into proposal rationale", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("media_session_readiness_summarized", {
+      traceId: "trace_media_steering_repair",
+      conversationId: "conv_media_steering_repair",
+      turnId: "turn_media_steering_repair",
+      profile: "adult_owner",
+      microphoneStatus: "permission_needed",
+      cameraStatus: "blocked",
+      playbackStatus: "stopped",
+      rawVideo: "must not be retained",
+      endpoint: "https://private.example.test",
+    }),
+  );
+
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_media_steering",
+    endpointConfigured: false,
+    profileMode: "adult_owner",
+  });
+
+  assert.equal(draft.recommendation.capabilityLabel, "media_session_readiness_summary");
+  assert.equal(draft.recommendation.suggestedNextStep, "needs_human_review");
+  assert.ok(draft.recommendation.rationale.includes("guided Media Session readiness repair"));
+  assert.ok(draft.recommendation.rationale.includes("microphone permission needed"));
+  assert.ok(draft.recommendation.rationale.includes("camera blocked"));
+  assert.ok(draft.evolutionProposal.summary.includes("guided Media Session readiness repair"));
+  assert.equal(draft.evolutionProposal.change.requested_action, draft.recommendation.rationale);
+  assert.deepEqual(draft.evolutionProposal.evidence, [
+    "trace:trace_media_steering_repair",
+    "event:media_session_readiness_summarized",
+  ]);
+  assert.equal(JSON.stringify(draft).includes("private.example.test"), false);
+  assert.equal(JSON.stringify(draft).includes("must not be retained"), false);
+  assert.equal(draft.boundary.proposalOnly, true);
+  assert.equal(draft.boundary.memoryWriteAllowed, false);
+  assert.equal(draft.boundary.agentDispatchAllowed, false);
+  assert.equal(draft.boundary.externalSendAllowed, false);
 });
 
 test("steering draft uses only the active profile capability evidence", () => {

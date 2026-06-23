@@ -142,6 +142,12 @@ function supportsSteeringRecommendation(signal: ConversationCapabilitySignal, ro
   if (row.architectureArea && signal.architectureArea !== row.architectureArea) return false;
   if (row.status && signal.capabilityStatus !== row.status) return false;
   if (signal.capabilityStatus === "missing") return true;
+  if (
+    signal.capabilityStatus === "blocked" &&
+    signal.capabilityLabel.endsWith("media_session_readiness_summary")
+  ) {
+    return true;
+  }
   return signal.capabilityStatus === "degraded" && signal.suggestedNextStep !== "needs_human_review";
 }
 
@@ -181,15 +187,19 @@ export function draftChiefOfStaffSteering(
     }),
   );
 
+  const recommendationRationale =
+    top?.recommendation ??
+    top?.scoreExplanation ??
+    "No strong local capability recommendation exists yet; keep gathering metadata-only signals.";
+  const requestedAction = top?.recommendation ?? top?.suggestedNextStep ?? "needs_human_review";
+
   const recommendation: SteeringRecommendation = {
     capabilityLabel,
     architectureArea,
     evidenceCount: top?.count ?? 0,
     confidence,
     suggestedNextStep: top?.suggestedNextStep ?? "needs_human_review",
-    rationale:
-      top?.scoreExplanation ??
-      "No strong local capability recommendation exists yet; keep gathering metadata-only signals.",
+    rationale: recommendationRationale,
   };
   const evaluatorCaseCandidate: EvaluatorCaseCandidate = {
     caseId,
@@ -205,14 +215,14 @@ export function draftChiefOfStaffSteering(
     evaluatorCaseCandidate,
     evolutionProposal: {
       proposal_id: `evo_${caseId}_${options.traceId}`,
-      summary: `Improve ${capabilityLabel} in ${architectureArea} based on local capability signals.`,
+      summary: top?.recommendation ?? `Improve ${capabilityLabel} in ${architectureArea} based on local capability signals.`,
       risk_level: riskForArchitecture(architectureArea),
       evidence: evidenceRefs,
       learning_signals: learningSignals,
       change: {
         capability: capabilityLabel,
         architecture_area: architectureArea,
-        requested_action: recommendation.suggestedNextStep,
+        requested_action: requestedAction,
       },
       affected_profiles: [profileMode ?? "adult_owner"],
       affected_channels: ["text"],
