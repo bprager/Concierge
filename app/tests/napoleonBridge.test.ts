@@ -2552,6 +2552,79 @@ test("live bridge accepts Napoleon recommendation text when provenance matches r
   assert.equal(response.text, "Napoleon recommends preparing the bridge rollout plan for review.");
 });
 
+test("live bridge accepts selected-agent assessment text when delegation provenance matches response envelopes", async () => {
+  const response = await sendToNapoleon(
+    {
+      traceId: "trace_proven_agent_assessment_text",
+      conversationId: "conv_proven_agent_assessment_text",
+      turnId: "turn_proven_agent_assessment_text",
+      profile: "adult_owner",
+      channel: "text",
+      message: "Review the bridge plan",
+    },
+    {
+      getEndpoint: () => "https://napoleon.example/concierge",
+      descriptorConnection: readyDescriptorConnection,
+      emit: () => undefined,
+      fetch: async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          text: "Research Analyst assessed the bridge plan as stale.",
+          profileMode: "adult_owner",
+          governanceDecision: {
+            decision_id: "decision_proven_agent_assessment_text",
+            request_id: "cos_turn_proven_agent_assessment_text",
+            outcome: "requires_review",
+            authority_tier: "prepare_only",
+            approval_requirement: "explicit_owner_approval",
+            rationale: "External effects require owner approval.",
+            blocked_effects: ["external_send"],
+            trace_id: "trace_proven_agent_assessment_text",
+            audit_id: "audit_proven_agent_assessment_text",
+          },
+          traceEnvelope: {
+            trace_id: "trace_proven_agent_assessment_text",
+            parent_trace_id: "conv_proven_agent_assessment_text",
+            actor_id: "napoleon.chief_of_staff",
+            request_id: "cos_turn_proven_agent_assessment_text",
+            decision_id: "decision_proven_agent_assessment_text",
+            timestamp: "2026-06-12T00:00:00.000Z",
+          },
+          auditEnvelope: {
+            audit_id: "audit_proven_agent_assessment_text",
+            trace_id: "trace_proven_agent_assessment_text",
+            decision_id: "decision_proven_agent_assessment_text",
+            actor_id: "napoleon.chief_of_staff",
+            authority_tier: "prepare_only",
+            approval_requirement: "explicit_owner_approval",
+            evidence_links: ["trace:trace_proven_agent_assessment_text"],
+          },
+          delegation: {
+            selectedAgents: [
+              {
+                agentId: "napoleon.research_analyst",
+                displayName: "Research Analyst",
+                selectionReason: "Bridge rollout evidence needed review.",
+                contributionSummary: "Assessed the bridge plan as stale.",
+              },
+            ],
+            allowedEffects: ["prepare_advisory_response"],
+            blockedEffects: ["external_send"],
+            governanceState: "requires_review",
+            traceId: "trace_proven_agent_assessment_text",
+            auditId: "audit_proven_agent_assessment_text",
+          },
+        }),
+      }),
+    },
+  );
+
+  assert.equal(response.text, "Research Analyst assessed the bridge plan as stale.");
+  assert.equal(response.delegation?.selectedAgents[0]?.displayName, "Research Analyst");
+  assert.equal(response.delegation?.selectedAgents[0]?.contributionSummary, "Assessed the bridge plan as stale.");
+});
+
 test("live bridge fails closed when delegation provenance disagrees with trace or audit envelope", async () => {
   await assert.rejects(
     () =>

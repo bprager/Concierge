@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added positive live bridge coverage proving selected-agent assessment wording such as "Research Analyst assessed..." is accepted when Napoleon returns matching selected-agent contribution proof with aligned trace and audit references.
 - Centralized the live bridge selected-agent attribution vocabulary and hardened unreturned title-case assessment claims such as "Research Analyst assessed..." so they fail closed unless matching selected-agent contribution proof is returned.
 - Hardened live bridge response provenance so unreturned title-case selected-agent conclusion claims such as "Research Analyst concluded..." fail closed unless matching selected-agent contribution proof is returned.
 - Hardened live bridge response provenance so unreturned title-case selected-agent recommendation claims such as "Research Analyst recommended..." fail closed unless matching selected-agent contribution proof is returned.

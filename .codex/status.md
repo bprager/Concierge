@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added positive live bridge coverage proving selected-agent assessment wording such as "Research Analyst assessed..." is accepted when Napoleon returns matching selected-agent contribution proof with aligned trace and audit references.
 - Centralized the live bridge selected-agent attribution vocabulary and hardened title-case assessment claims such as "Research Analyst assessed..." so they fail closed unless Napoleon returns matching selected-agent contribution proof.
 - Hardened live bridge response provenance so title-case selected-agent conclusion claims such as "Research Analyst concluded..." fail closed unless Napoleon returns matching selected-agent contribution proof.
 - Hardened live bridge response provenance so title-case selected-agent recommendation claims such as "Research Analyst recommended..." fail closed unless Napoleon returns matching selected-agent contribution proof.
