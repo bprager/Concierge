@@ -123,6 +123,13 @@ interface SteeringTargetMetadata {
   bridgeTargetRequestKind: string;
 }
 
+interface SteeringFailureMetadata {
+  descriptorFailureReason?: DescriptorFailClosedReason;
+  governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string };
+  targetMetadata?: SteeringTargetMetadata;
+  recommendationType?: SteeringRecommendation["recommendationType"];
+}
+
 const PROPOSAL_BOUNDARY: RecommendationBoundary = {
   proposalOnly: true,
   approvalCaptured: false,
@@ -362,10 +369,9 @@ function failSteeringClosed(
   profileMode?: string,
   status?: number,
   blockedEffects: string[] = [],
-  descriptorFailureReason?: DescriptorFailClosedReason,
-  governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
-  targetMetadata?: SteeringTargetMetadata,
+  failureMetadata: SteeringFailureMetadata = {},
 ): never {
+  const { descriptorFailureReason, governanceReferences, targetMetadata, recommendationType } = failureMetadata;
   const attributes: Record<string, unknown> = {
     traceId,
     requestId,
@@ -374,6 +380,7 @@ function failSteeringClosed(
     status,
     blockedEffects,
   };
+  if (recommendationType) attributes.recommendationType = recommendationType;
   if (descriptorFailureReason) attributes.descriptorFailureReason = descriptorFailureReason;
   if (governanceReferences?.decisionId) attributes.decisionId = governanceReferences.decisionId;
   if (governanceReferences?.auditId) attributes.auditId = governanceReferences.auditId;
@@ -416,6 +423,7 @@ export async function submitChiefOfStaffSteeringDraft(
   );
   const blockedEffects = ["memory_write", "agent_dispatch", "external_send", "approval_capture", "runtime_authority"];
   const recommendation = isChildProtected ? { ...draft.recommendation, childSafetyCaution: true as const } : draft.recommendation;
+  const recommendationType = recommendation.recommendationType;
   const evolutionProposal = isChildProtected
     ? {
         ...draft.evolutionProposal,
@@ -425,13 +433,19 @@ export async function submitChiefOfStaffSteeringDraft(
     : draft.evolutionProposal;
 
   if (!draftMatchesActiveProfile(draft, profileMode)) {
-    failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
+    failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
+      recommendationType,
+    });
   }
   if (dependencies.rehearsalMode) {
-    failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
+    failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
+      recommendationType,
+    });
   }
   if (!endpoint) {
-    failSteeringClosed(dependencies, "no_endpoint", dependencies.traceId, requestId, profileMode, undefined, blockedEffects);
+    failSteeringClosed(dependencies, "no_endpoint", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
+      recommendationType,
+    });
   }
   if (!descriptorConnection.canAttemptLiveBridge) {
     failSteeringClosed(
@@ -442,7 +456,10 @@ export async function submitChiefOfStaffSteeringDraft(
       profileMode,
       undefined,
       blockedEffects,
-      descriptorConnection.failClosedReason,
+      {
+        descriptorFailureReason: descriptorConnection.failClosedReason,
+        recommendationType,
+      },
     );
   }
   if (!descriptorSupportsGovernedHandoff(descriptorConnection, "evolution_proposal_review")) {
@@ -454,7 +471,10 @@ export async function submitChiefOfStaffSteeringDraft(
       profileMode,
       undefined,
       blockedEffects,
-      "descriptor_invalid",
+      {
+        descriptorFailureReason: "descriptor_invalid",
+        recommendationType,
+      },
     );
   }
 
@@ -504,6 +524,7 @@ export async function submitChiefOfStaffSteeringDraft(
     traceId: dependencies.traceId,
     requestId,
     proposalId: evolutionProposal.proposal_id,
+    recommendationType,
     profileMode,
     ...targetMetadata,
   });
@@ -542,9 +563,10 @@ export async function submitChiefOfStaffSteeringDraft(
       profileMode,
       undefined,
       blockedEffects,
-      undefined,
-      undefined,
-      targetMetadata,
+      {
+        targetMetadata,
+        recommendationType,
+      },
     );
   }
 
@@ -558,9 +580,10 @@ export async function submitChiefOfStaffSteeringDraft(
       profileMode,
       response.status,
       blockedEffects,
-      undefined,
-      undefined,
-      targetMetadata,
+      {
+        targetMetadata,
+        recommendationType,
+      },
     );
   }
 
@@ -576,9 +599,10 @@ export async function submitChiefOfStaffSteeringDraft(
       profileMode,
       undefined,
       blockedEffects,
-      undefined,
-      undefined,
-      targetMetadata,
+      {
+        targetMetadata,
+        recommendationType,
+      },
     );
   }
   if (
@@ -597,9 +621,10 @@ export async function submitChiefOfStaffSteeringDraft(
       profileMode,
       undefined,
       blockedEffects,
-      undefined,
-      undefined,
-      targetMetadata,
+      {
+        targetMetadata,
+        recommendationType,
+      },
     );
   }
 
@@ -612,13 +637,15 @@ export async function submitChiefOfStaffSteeringDraft(
       profileMode,
       response.status,
       payload.governanceDecision.blocked_effects,
-      undefined,
       {
-        decisionId: payload.governanceDecision.decision_id,
-        auditId: payload.auditEnvelope.audit_id,
-        governanceOutcome: payload.governanceDecision.outcome,
+        governanceReferences: {
+          decisionId: payload.governanceDecision.decision_id,
+          auditId: payload.auditEnvelope.audit_id,
+          governanceOutcome: payload.governanceDecision.outcome,
+        },
+        targetMetadata,
+        recommendationType,
       },
-      targetMetadata,
     );
   }
 
@@ -626,6 +653,7 @@ export async function submitChiefOfStaffSteeringDraft(
     traceId: dependencies.traceId,
     requestId,
     proposalId: evolutionProposal.proposal_id,
+    recommendationType,
     decisionId: payload.governanceDecision.decision_id,
     auditId: payload.auditEnvelope.audit_id,
     outcome: payload.governanceDecision.outcome,

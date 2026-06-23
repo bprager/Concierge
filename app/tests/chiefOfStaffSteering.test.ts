@@ -660,6 +660,7 @@ test("steering handoff fails closed while Rehearsal Mode is active", async () =>
   assert.equal(fetchCalled, false);
   assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
   assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.recommendationType, "scored_capability_recommendation");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, steeringBlockedEffects);
 });
 
@@ -693,6 +694,7 @@ test("steering handoff posts evolution review packet without applying proposal l
   let posted: Record<string, unknown> | undefined;
   let headers: Record<string, string> | undefined;
   let targetUrl: string | undefined;
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
 
   const result = await submitChiefOfStaffSteeringDraft(draft, {
     conversationId: "conv_steering",
@@ -700,6 +702,7 @@ test("steering handoff posts evolution review packet without applying proposal l
     getEndpoint: () => "https://napoleon.example/concierge",
     descriptorConnection: readyDescriptorConnection,
     getAuthToken: () => "token_steering",
+    emit: (event) => events.push(event),
     fetch: async (url, init) => {
       targetUrl = url;
       posted = JSON.parse(String(init?.body)) as Record<string, unknown>;
@@ -767,6 +770,13 @@ test("steering handoff posts evolution review packet without applying proposal l
   assert.equal(postedLearningSignals[0].governance_boundary.applied_locally, false);
   assert.equal(postedLearningSignals[0].governance_boundary.external_send_performed, false);
   assert.equal(targetUrl, "https://napoleon.example/concierge/v1/concierge/chief-of-staff/steering");
+  const startedEvent = events.find((event) => event.event === "capability_recommendation_send_started");
+  const completedEvent = events.find((event) => event.event === "capability_recommendation_send_completed");
+  assert.equal(startedEvent?.attributes.recommendationType, "scored_capability_recommendation");
+  assert.equal(completedEvent?.attributes.recommendationType, "scored_capability_recommendation");
+  assert.equal(JSON.stringify(events).includes("Evolution proposals require review"), false);
+  assert.equal(JSON.stringify(events).includes("trace_missing_bridge"), false);
+  assert.equal(JSON.stringify(events).includes("token_steering"), false);
   assert.equal(posted?.requestKind, "chief_of_staff_steering_handoff");
   assert.equal(posted?.bridgeTargetPath, "/v1/concierge/chief-of-staff/steering");
   assert.equal(posted?.bridgeTargetOperation, "chief_of_staff_steering");
