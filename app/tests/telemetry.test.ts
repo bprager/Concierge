@@ -74,6 +74,57 @@ test("telemetry emits voice capability signal for local STT completion", () => {
   assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
 });
 
+test("telemetry emits voice capability signal for local TTS completion", () => {
+  const signal = emitCapabilitySignal("tts_completed", {
+    traceId: "trace_tts_signal",
+    conversationId: "conv_tts_signal",
+    profile: "adult_owner",
+    voiceId: "local-neutral",
+    localSampleOnly: true,
+    audioPlaybackStarted: false,
+    rawAudioStored: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.topicLabel, "voice");
+  assert.equal(signal.intentLabel, "prepare_local_speech");
+  assert.equal(signal.capabilityLabel, "speech_synthesis_sample");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "voice");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
+test("telemetry emits voice capability signal for local voice turn rehearsal", () => {
+  const signal = emitCapabilitySignal("voice_turn_rehearsed", {
+    traceId: "trace_voice_turn_signal",
+    conversationId: "conv_voice_turn_signal",
+    profile: "adult_owner",
+    localRehearsalOnly: true,
+    liveNapoleonContacted: false,
+    microphoneCaptureStarted: false,
+    audioPlaybackStarted: false,
+    rawAudioStored: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.topicLabel, "voice");
+  assert.equal(signal.intentLabel, "rehearse_local_voice_turn");
+  assert.equal(signal.capabilityLabel, "voice_turn_rehearsal");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "voice");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
 test("untracked telemetry events do not create capability signals", () => {
   const signal = emitCapabilitySignal("settings_changed", {
     traceId: "trace_settings",

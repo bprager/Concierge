@@ -1254,6 +1254,36 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "tts_completed") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "voice",
+      intentLabel: "prepare_local_speech",
+      capabilityLabel: "speech_synthesis_sample",
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.74,
+      architectureArea: "voice",
+      suggestedNextStep: "no_action",
+    });
+  }
+
+  if (eventName === "voice_turn_rehearsed") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "voice",
+      intentLabel: "rehearse_local_voice_turn",
+      capabilityLabel: "voice_turn_rehearsal",
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.8,
+      architectureArea: "voice",
+      suggestedNextStep: "no_action",
+    });
+  }
+
   return buildCapabilitySignal({
     ...base,
     topicLabel: "unknown",

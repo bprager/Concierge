@@ -291,6 +291,8 @@ export function emitCapabilitySignal(
     "response_failed",
     "response_generated",
     "stt_completed",
+    "tts_completed",
+    "voice_turn_rehearsed",
   ]);
 
   if (!trackableEvents.has(event)) return null;
