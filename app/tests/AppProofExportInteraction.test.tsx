@@ -3817,6 +3817,55 @@ test("Chief of Staff steering draft displays metadata-only learning signals with
   }
 });
 
+test("Chief of Staff steering draft marks media readiness repair recommendations visibly", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, render },
+    userEventModule,
+    { App },
+    { emitEvent, capabilityLedger },
+    { clearCapabilityLedger },
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalInfo = console.info;
+  console.info = () => undefined;
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    emitEvent("media_session_readiness_summarized", {
+      traceId: "trace_visible_media_repair",
+      conversationId: "conv_visible_media_repair",
+      turnId: "turn_visible_media_repair",
+      profile: "adult_owner",
+      microphoneStatus: "permission_needed",
+      cameraStatus: "blocked",
+      playbackStatus: "stopped",
+      rawVideo: "must not be retained",
+      endpoint: "https://private.example.test",
+    });
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+    await view.findByText("Chief of Staff steering draft");
+
+    assert.ok(view.getByText("Recommendation type"));
+    assert.ok(view.getByText("guided readiness repair"));
+    assert.ok(view.getByText(/guided Media Session readiness repair/));
+    assert.equal(view.container.textContent?.includes("private.example.test"), false);
+    assert.equal(view.container.textContent?.includes("must not be retained"), false);
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("exports a local Chief of Staff steering draft without sending or applying it", async () => {
   const dom = installDom();
   const [

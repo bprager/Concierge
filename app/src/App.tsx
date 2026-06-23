@@ -286,6 +286,12 @@ function formatCapabilityAnswer(answer: NonNullable<ReturnType<typeof answerCapa
   return `${answer.summary}\n\n${rows}\n\nEvidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
 }
 
+function describeSteeringRecommendationType(draft: ReturnType<typeof draftChiefOfStaffSteering>): string {
+  return draft.recommendation.rationale.includes("guided Media Session readiness repair")
+    ? "guided readiness repair"
+    : "scored capability recommendation";
+}
+
 function stanceForProfile(profile: LocalProfile): { stance: string; reason: string; confidence: number } {
   if (profile === "child_protected") {
     return {
@@ -4602,6 +4608,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               {steeringDraft.recommendation.capabilityLabel}, {steeringDraft.recommendation.architectureArea},{" "}
               confidence {steeringDraft.recommendation.confidence}
             </dd>
+            <dt>Recommendation type</dt>
+            <dd>{describeSteeringRecommendationType(steeringDraft)}</dd>
             <dt>Rationale</dt>
             <dd>{steeringDraft.recommendation.rationale}</dd>
             <dt>Evaluator case</dt>
