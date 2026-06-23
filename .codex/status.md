@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a sanitized current-proof review summary to Napoleon response proof comparisons, showing current handler, governance, trace, blocked effects, and boundary without exposing raw response content.
 - Added first-class visible `Handled by` provenance rows to Napoleon delegation and last-successful-proof panels, tied only to returned bridge capability or selected-agent metadata.
 - Added visible runtime-contract alignment status to the governed Napoleon routes panel, showing mapped runtime compatibility separately from exact path mismatch without implying approval or runtime validation.
 - Added runtime-alignment classification to `make napoleon-contract-alignment`, distinguishing exact path-set equality from fully mapped Napoleon runtime compatibility.

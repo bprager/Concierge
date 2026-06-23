@@ -5230,6 +5230,30 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               <strong>Napoleon proof comparison</strong>
               <span>{napoleonProofComparison.summary}</span>
               <span>Comparison uses local sanitized proof metadata only and is not Napoleon approval.</span>
+              {napoleonProofComparison.reviewSummary ? (
+                <dl>
+                  <div>
+                    <dt>Current handled by</dt>
+                    <dd>{napoleonProofComparison.reviewSummary.handledBy}</dd>
+                  </div>
+                  <div>
+                    <dt>Current governance</dt>
+                    <dd>{napoleonProofComparison.reviewSummary.governance}</dd>
+                  </div>
+                  <div>
+                    <dt>Current trace</dt>
+                    <dd>{napoleonProofComparison.reviewSummary.trace}</dd>
+                  </div>
+                  <div>
+                    <dt>Current blocked effects</dt>
+                    <dd>{napoleonProofComparison.reviewSummary.blockedEffects}</dd>
+                  </div>
+                  <div>
+                    <dt>Current boundary</dt>
+                    <dd>{napoleonProofComparison.reviewSummary.boundary}</dd>
+                  </div>
+                </dl>
+              ) : null}
               {napoleonProofComparison.changes.length > 0 ? (
                 <dl>
                   {napoleonProofComparison.changes.map((change) => (

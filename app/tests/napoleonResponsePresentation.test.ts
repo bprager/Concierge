@@ -586,6 +586,11 @@ test("compares sanitized Napoleon response proof exports", () => {
 
   assert.equal(comparison.status, "changed");
   assert.ok(comparison.summary.includes("changed"));
+  assert.equal(comparison.reviewSummary?.handledBy, "Planner");
+  assert.equal(comparison.reviewSummary?.governance, "allow_prepare_only");
+  assert.equal(comparison.reviewSummary?.trace, "trace_current");
+  assert.equal(comparison.reviewSummary?.blockedEffects, "agent_dispatch, memory_write");
+  assert.equal(comparison.reviewSummary?.boundary, "Returned bridge provenance only; not local authority.");
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Handled by"));
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Governance"));
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Selected agents"));
@@ -596,6 +601,25 @@ test("compares sanitized Napoleon response proof exports", () => {
       (change: { current: string }) => !change.current.includes("Summarize the bridge rollout"),
     ),
   );
+});
+
+test("summarizes current Napoleon response proof when no previous proof is available", () => {
+  const current = responseProofJson({
+    traceId: "trace_current_review_summary",
+    governanceOutcome: "requires_review",
+    agentName: "Passive Brain",
+    blockedEffects: ["memory_write", "external_send"],
+  });
+
+  const comparison = compareNapoleonResponseProofs(null, current);
+
+  assert.equal(comparison.status, "not_available");
+  assert.equal(comparison.reviewSummary?.handledBy, "Passive Brain");
+  assert.equal(comparison.reviewSummary?.governance, "requires_review");
+  assert.equal(comparison.reviewSummary?.trace, "trace_current_review_summary");
+  assert.equal(comparison.reviewSummary?.blockedEffects, "external_send, memory_write");
+  assert.equal(comparison.reviewSummary?.boundary, "Returned bridge provenance only; not local authority.");
+  assert.deepEqual(comparison.changes, []);
 });
 
 test("compares Napoleon response proof attribution boundary changes", () => {

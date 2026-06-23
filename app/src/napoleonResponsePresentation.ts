@@ -23,9 +23,18 @@ export interface NapoleonResponseProofChange {
   current: string;
 }
 
+export interface NapoleonResponseProofReviewSummary {
+  handledBy: string;
+  governance: string;
+  trace: string;
+  blockedEffects: string;
+  boundary: string;
+}
+
 export interface NapoleonResponseProofComparison {
   status: "not_available" | "unchanged" | "changed" | "invalid_previous" | "invalid_current";
   summary: string;
+  reviewSummary?: NapoleonResponseProofReviewSummary;
   changes: NapoleonResponseProofChange[];
 }
 
@@ -305,6 +314,18 @@ function proofComparisonValue(value: string): string {
   return value;
 }
 
+function buildNapoleonResponseProofReviewSummary(
+  proof: Record<string, unknown>,
+): NapoleonResponseProofReviewSummary {
+  return {
+    handledBy: proofComparisonValue(proofField(proof, ["responseProof", "handledBy"])),
+    governance: proofComparisonValue(proofField(proof, ["responseProof", "governance"])),
+    trace: proofComparisonValue(proofField(proof, ["responseProof", "traceId"])),
+    blockedEffects: proofComparisonValue(proofField(proof, ["responseProof", "blockedEffects"])),
+    boundary: proofComparisonValue(proofField(proof, ["responseProof", "attributionBoundary"])),
+  };
+}
+
 export function compareNapoleonResponseProofs(
   previousJson: string | null,
   currentJson: string,
@@ -321,6 +342,7 @@ export function compareNapoleonResponseProofs(
     return {
       status: "not_available",
       summary: "No previous Napoleon response proof is available in this app session.",
+      reviewSummary: buildNapoleonResponseProofReviewSummary(currentProof),
       changes: [],
     };
   }
@@ -330,6 +352,7 @@ export function compareNapoleonResponseProofs(
     return {
       status: "invalid_previous",
       summary: "The previous Napoleon response proof is not valid sanitized proof JSON.",
+      reviewSummary: buildNapoleonResponseProofReviewSummary(currentProof),
       changes: [],
     };
   }
@@ -372,6 +395,7 @@ export function compareNapoleonResponseProofs(
   return {
     status,
     summary: `${summary} Governance ${governance}; trace ${trace}.`,
+    reviewSummary: buildNapoleonResponseProofReviewSummary(currentProof),
     changes,
   };
 }

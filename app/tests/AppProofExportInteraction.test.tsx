@@ -401,6 +401,17 @@ test("exports and compares Napoleon proof through rendered app controls", async 
         .length,
       0,
     );
+    const proofComparisonPanel = within(screen.getByText("Napoleon proof comparison").parentElement as HTMLElement);
+    assert.ok(proofComparisonPanel.getByText("Current handled by"));
+    assert.ok(proofComparisonPanel.getByText("Current governance"));
+    assert.ok(proofComparisonPanel.getByText("Current trace"));
+    assert.ok(proofComparisonPanel.getByText("Current blocked effects"));
+    assert.ok(proofComparisonPanel.getByText("Current boundary"));
+    assert.ok(proofComparisonPanel.getAllByText("Passive Brain").length >= 1);
+    assert.ok(proofComparisonPanel.getByText("requires_review"));
+    assert.ok(proofComparisonPanel.getByText(lastTextTurnTraceId));
+    assert.ok(proofComparisonPanel.getByText("agent_dispatch, approval_capture, external_send, memory_write"));
+    assert.ok(proofComparisonPanel.getByText("Returned bridge provenance only; not local authority."));
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/turn"));
   } finally {
     cleanup();
