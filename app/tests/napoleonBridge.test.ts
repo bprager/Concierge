@@ -1487,6 +1487,67 @@ test("live bridge fails closed when response text invents unreturned agent-style
   );
 });
 
+test("live bridge fails closed when response text invents unreturned agent-style confirmation attribution", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_unreturned_agent_confirmation_text",
+          conversationId: "conv_unreturned_agent_confirmation_text",
+          turnId: "turn_unreturned_agent_confirmation_text",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Research Analyst confirmed the prior rollout note.",
+              profileMode: "adult_owner",
+              governanceDecision: {
+                decision_id: "decision_unreturned_agent_confirmation_text",
+                request_id: "cos_turn_unreturned_agent_confirmation_text",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["external_send"],
+                trace_id: "trace_unreturned_agent_confirmation_text",
+                audit_id: "audit_unreturned_agent_confirmation_text",
+              },
+              traceEnvelope: {
+                trace_id: "trace_unreturned_agent_confirmation_text",
+                parent_trace_id: "conv_unreturned_agent_confirmation_text",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_unreturned_agent_confirmation_text",
+                decision_id: "decision_unreturned_agent_confirmation_text",
+                timestamp: "2026-06-12T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_unreturned_agent_confirmation_text",
+                trace_id: "trace_unreturned_agent_confirmation_text",
+                decision_id: "decision_unreturned_agent_confirmation_text",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_unreturned_agent_confirmation_text"],
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
 test("live bridge fails closed when response text invents Napoleon recommendation attribution", async () => {
   await assert.rejects(
     () =>
