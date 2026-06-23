@@ -1239,6 +1239,21 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "stt_completed") {
+    return buildCapabilitySignal({
+      ...base,
+      channel: "voice",
+      topicLabel: "voice",
+      intentLabel: "transcribe_local_sample",
+      capabilityLabel: "speech_transcription_sample",
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      confidence: 0.76,
+      architectureArea: "voice",
+      suggestedNextStep: "no_action",
+    });
+  }
+
   return buildCapabilitySignal({
     ...base,
     topicLabel: "unknown",

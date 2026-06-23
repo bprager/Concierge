@@ -290,6 +290,7 @@ export function emitCapabilitySignal(
     "memory_proposal_dismissed_locally",
     "response_failed",
     "response_generated",
+    "stt_completed",
   ]);
 
   if (!trackableEvents.has(event)) return null;

@@ -31,7 +31,7 @@ Tracking only topics would be misleading. A frequent topic may already work well
 
 The local ledger should store derived metadata, not raw conversation transcripts by default.
 
-Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model, bounded ledger, serialization, deserialization, validation, age/count pruning, trend windows, export, and clear helpers. It is wired through `app/src/telemetry.ts` for current Text Concierge events and uses browser-local storage through `app/src/capabilityLedgerStorage.ts`. `app/src/capabilityTaxonomy.ts` provides local taxonomy renames, merges, deprecation markers, split-candidate markers, reset, serialization, export, Chief of Staff taxonomy review drafts, and governed taxonomy review submission. The Text Concierge UI shows retained local signal count, count/age retention limits, taxonomy label counts, clear/export/taxonomy controls, a local taxonomy review draft panel, and a governed review handoff when endpoint and descriptor preflight pass.
+Initial implementation: `app/src/capabilityLedger.ts` defines the TypeScript model, bounded ledger, serialization, deserialization, validation, age/count pruning, trend windows, export, and clear helpers. It is wired through `app/src/telemetry.ts` for current Text Concierge events and local STT completion metadata, and uses browser-local storage through `app/src/capabilityLedgerStorage.ts`. `app/src/capabilityTaxonomy.ts` provides local taxonomy renames, merges, deprecation markers, split-candidate markers, reset, serialization, export, Chief of Staff taxonomy review drafts, and governed taxonomy review submission. The Text Concierge UI shows retained local signal count, count/age retention limits, taxonomy label counts, clear/export/taxonomy controls, a local taxonomy review draft panel, and a governed review handoff when endpoint and descriptor preflight pass.
 
 Each turn can emit a `conversation_capability_signal` with:
 
@@ -62,6 +62,7 @@ Persistent local storage:
 - Clear control: removes the persisted snapshot, clears the in-memory ledger, and clears derived Chief of Staff steering and taxonomy review drafts, review responses, and failure states so obsolete local evidence cannot be handed off.
 - Export control: renders local JSON for derived metadata only, includes retention settings and trend caveats, and states that export does not grant permission to share externally; export and clear telemetry explicitly records no approval capture, memory write, agent dispatch, or external send. Switching the active profile clears the already-rendered export output so a local metadata view from one profile is not left visible under another profile.
 - Child protected records remain distinguishable through `profile_mode` and `privacy_class: child_sensitive`, without retaining raw child content.
+- Local STT sample completion can create a `voice` capability signal for `speech_transcription_sample` as working rehearsal evidence. It is metadata-only and does not retain raw audio, start capture, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 
 Local taxonomy storage:
 

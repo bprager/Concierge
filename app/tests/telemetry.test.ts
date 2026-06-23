@@ -49,6 +49,31 @@ test("telemetry capability signals preserve child protected minimization", () =>
   assert.equal(JSON.stringify(signal).includes("do not store this child text"), false);
 });
 
+test("telemetry emits voice capability signal for local STT completion", () => {
+  const signal = emitCapabilitySignal("stt_completed", {
+    traceId: "trace_stt_signal",
+    conversationId: "conv_stt_signal",
+    profile: "adult_owner",
+    model: "local-sample-stt",
+    localSampleOnly: true,
+    captureStarted: false,
+    rawAudioStored: false,
+    rawAudio: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected capability signal");
+  assert.equal(signal.channel, "voice");
+  assert.equal(signal.topicLabel, "voice");
+  assert.equal(signal.intentLabel, "transcribe_local_sample");
+  assert.equal(signal.capabilityLabel, "speech_transcription_sample");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "rehearsed");
+  assert.equal(signal.architectureArea, "voice");
+  assert.equal(signal.privacyClass, "metadata_only");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
 test("untracked telemetry events do not create capability signals", () => {
   const signal = emitCapabilitySignal("settings_changed", {
     traceId: "trace_settings",
