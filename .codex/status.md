@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered Chief of Staff steering coverage proving Rehearsal Mode clears returned live review results, decision, and audit evidence before returning to local-only preview mode.
 - Added rendered live-send coverage proving a later Napoleon `no_go` response clears prior successful proof and delegation provenance, keeps the blocked response fail-closed, and does not render rejected response text.
 - Added rendered live-send coverage proving the Napoleon delegation panel shows returned selected agents, selection reasons, allowed and blocked effects, governance state, trace, audit, and proof alignment from the same successful governed text response.
 - Added local capability-intelligence signals for completed speech transcription, speech synthesis, and voice-turn rehearsal samples, with separate child-safe labels for child protected mode, so working voice preparation contributes metadata-only evidence to local capability summaries without retaining raw audio or contacting Napoleon.

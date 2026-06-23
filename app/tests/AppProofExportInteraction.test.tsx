@@ -4009,6 +4009,11 @@ test("submits a steering draft through rendered governed controls without local 
     assert.ok(view.getByText("not applied; no memory write; no approval captured; no agent dispatch; no external send."));
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/steering"));
 
+    await user.click(view.getByLabelText("Rehearsal Mode"));
+    assert.equal(view.queryByText("Napoleon accepted the steering draft for review."), null);
+    assert.equal(view.queryByText(/decision_steering_rendered/), null);
+    assert.equal(view.queryByText(/audit_steering_rendered/), null);
+
     fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
     assert.equal(view.queryByText("Napoleon accepted the steering draft for review."), null);
     assert.equal(view.queryByText(/decision_steering_rendered/), null);
