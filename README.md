@@ -78,6 +78,8 @@ The lower-level evaluator-only command is still available:
 make eval-http
 ```
 
+`NAPOLEON_EVAL_ENDPOINT` may be a Napoleon base URL or the explicit `/chief-of-staff/reviews/evaluation` URL. The evaluator resolves Napoleon base URLs to the named evaluation review path and keeps only sanitized target metadata in the report.
+
 Review the core documents:
 
 - [PRD](docs/PRD.md)

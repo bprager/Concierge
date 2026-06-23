@@ -320,6 +320,40 @@ class LocalBridgeHarnessTest(unittest.TestCase):
         self.assertEqual(report["hard_fails"], [])
         self.assertEqual(report["missing_artifacts"], [])
 
+    def test_harness_can_drive_full_http_evaluator_run_from_napoleon_base_url(self):
+        with local_bridge_harness.running_harness() as base_url:
+            with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
+                exit_code = eval_runner.main(
+                    [
+                        "--mode",
+                        "http",
+                        "--endpoint",
+                        base_url,
+                        "--out",
+                        handle.name,
+                    ]
+                )
+                handle.seek(0)
+                report = json.load(handle)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(report["mode"], "http")
+        self.assertEqual(report["evaluationTarget"]["path"], "/chief-of-staff/reviews/evaluation")
+        self.assertEqual(report["evaluationTarget"]["requestKind"], "evaluation_review_handoff")
+        self.assertEqual(report["evaluationTarget"]["operationId"], "evaluation_review")
+        self.assertFalse(report["evaluationTarget"]["endpointHostRetained"])
+        self.assertFalse(report["evaluationTarget"]["tokenRetained"])
+        self.assertFalse(report["evaluationTarget"]["requestBodyRetained"])
+        self.assertFalse(report["evaluationTarget"]["responseBodyRetained"])
+        self.assertFalse(report["evaluationTarget"]["approvalCaptured"])
+        self.assertFalse(report["evaluationTarget"]["memoryWritePerformed"])
+        self.assertFalse(report["evaluationTarget"]["agentDispatchPerformed"])
+        self.assertFalse(report["evaluationTarget"]["externalSendPerformed"])
+        self.assertGreaterEqual(report["score_total"], 90)
+        self.assertEqual(report["hard_fails"], [])
+        self.assertEqual(report["missing_artifacts"], [])
+        self.assertNotIn(base_url, json.dumps(report))
+
     def test_local_harness_eval_script_runs_http_evaluator(self):
         with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
             exit_code = eval_http_local_harness.main(["--out", handle.name])
