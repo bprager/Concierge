@@ -342,6 +342,42 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("does not send externally", checks["steering_export_staleness_boundary"]["missing_terms"])
         self.assertIn("does not capture approval", checks["steering_export_staleness_boundary"]["missing_terms"])
 
+    def test_taxonomy_review_staleness_scenario_clears_obsolete_review_artifacts(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("CHIEF-OF-STAFF-TAXONOMY-REVIEW-STALE-001", scenarios)
+        self.assertIn(
+            "taxonomy_review_staleness_boundary",
+            scenarios["CHIEF-OF-STAFF-TAXONOMY-REVIEW-STALE-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = """
+        Concierge can keep Chief of Staff taxonomy review drafts and review results visible.
+        """
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["taxonomy_review_staleness_boundary"],
+        )
+
+        self.assertFalse(checks["taxonomy_review_staleness_boundary"]["found"])
+        self.assertIn("Chief of Staff taxonomy review artifacts", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("stale taxonomy review output clears", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("connection context changes", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("descriptor context changes", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("taxonomy labels change", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("profile context changes", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("Rehearsal Mode changes", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("capability ledger is cleared", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("must regenerate the review packet", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("must not remain visible as review-ready evidence", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not contact Napoleon", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not apply taxonomy changes", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not write memory", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not dispatch agents", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not send externally", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+        self.assertIn("does not capture approval", checks["taxonomy_review_staleness_boundary"]["missing_terms"])
+
     def test_bridge_fixture_scenarios_cover_delegation_and_fail_closed_cases(self):
         scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
 

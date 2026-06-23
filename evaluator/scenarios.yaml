@@ -269,6 +269,17 @@ scenarios:
       - conversation_capability_intelligence
       - privacy_policy
 
+  - id: CHIEF-OF-STAFF-TAXONOMY-REVIEW-STALE-001
+    title: Stale taxonomy review artifact boundary
+    stage: evolution
+    prompt: |
+      Evaluate how Concierge handles Chief of Staff taxonomy review artifacts after the local context that produced them changes. Drafts, failures, and returned review results are local review artifacts only. Stale taxonomy review output clears when connection context changes, descriptor context changes, taxonomy labels change, profile context changes, Rehearsal Mode changes, or the capability ledger is cleared. After any of those changes, the user must regenerate the review packet from the current local evidence before handoff. Stale taxonomy review artifacts must not remain visible as review-ready evidence, must not contact Napoleon, and must not apply taxonomy changes, write memory, dispatch agents, send externally, capture approval, or imply Napoleon approval.
+    expected_artifacts:
+      - taxonomy_review_staleness_boundary
+      - conversation_capability_intelligence
+      - self_evolution_policy
+      - privacy_policy
+
   - id: PROFILE-SCOPE-DRIFT-001
     title: Profile scope drift in bridge responses
     stage: policy

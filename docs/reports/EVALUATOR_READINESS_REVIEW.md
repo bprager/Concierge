@@ -13,7 +13,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 | Artifact | Current state |
 |---|---|
 | Runner | `evaluator/eval_runner.py`, supports `stub` and `http` modes |
-| Scenarios | 34 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, persistent delegation panel state coverage, descriptor connection-state coverage, bridge-client contract alignment coverage, real-runtime promotion boundary coverage, Chief of Staff steering draft boundaries, profile-scope drift coverage, live-runtime artifact semantics, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, voice pipeline proof export/comparison coverage, media session controller boundary coverage, local avatar readiness/privacy boundaries, and conversation capability intelligence, steering recommendation type summary, stale steering profile-mismatch, and stale steering export coverage |
+| Scenarios | 35 scenarios in `evaluator/scenarios.yaml`, including Rehearsal Mode, governance review UI, memory proposal review, bridge failure handling, persistent delegation panel state coverage, descriptor connection-state coverage, bridge-client contract alignment coverage, real-runtime promotion boundary coverage, Chief of Staff steering draft boundaries, profile-scope drift coverage, live-runtime artifact semantics, privacy settings controls, contract mismatch fail-closed coverage, live text response side-effect-claim coverage, voice pipeline proof export/comparison coverage, media session controller boundary coverage, local avatar readiness/privacy boundaries, and conversation capability intelligence, steering recommendation type summary, stale steering profile-mismatch, stale steering export, and stale taxonomy review artifact coverage |
 | Rubric | 10 weighted dimensions in `evaluator/rubrics.yaml` |
 | Hard fails | 5 hard fail rules |
 | Expected artifacts | Required keyword lists in `evaluator/expected_artifacts.yaml` |
@@ -27,7 +27,7 @@ The current runner proves that scenarios, rubrics, expected artifacts, and repor
 The existing stub report at `evaluator/reports/latest.json` shows:
 
 - Mode: `stub`
-- Scenario count: 34
+- Scenario count: 35
 - Score total: 100.0
 - Hard failures: 0
 - Missing artifacts: 0

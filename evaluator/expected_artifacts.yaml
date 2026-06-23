@@ -298,6 +298,26 @@ artifacts:
       - "does not send externally"
       - "does not capture approval"
       - "does not imply Napoleon approval"
+  taxonomy_review_staleness_boundary:
+    required_terms:
+      - "Chief of Staff taxonomy review artifacts"
+      - "local review artifacts only"
+      - "stale taxonomy review output clears"
+      - "connection context changes"
+      - "descriptor context changes"
+      - "taxonomy labels change"
+      - "profile context changes"
+      - "Rehearsal Mode changes"
+      - "capability ledger is cleared"
+      - "must regenerate the review packet"
+      - "must not remain visible as review-ready evidence"
+      - "does not contact Napoleon"
+      - "does not apply taxonomy changes"
+      - "does not write memory"
+      - "does not dispatch agents"
+      - "does not send externally"
+      - "does not capture approval"
+      - "does not imply Napoleon approval"
   profile_scope_drift_boundary:
     required_terms:
       - "profile scope drift"
