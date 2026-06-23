@@ -265,7 +265,11 @@ test("redacts unsafe returned provenance from visible Napoleon delegation and pr
   assert.equal(visibleText.includes("bearer"), false);
   assert.equal(delegationView.body.includes("found redacted"), false);
   assert.equal(delegationView.body, "Napoleon provided delegation provenance for this response.");
-  assert.ok(delegationView.details.some((detail) => detail.label === "Target capability" && detail.value === "redacted"));
+  assert.ok(
+    delegationView.details.some(
+      (detail) => detail.label === "Target capability" && detail.value === "redacted metadata",
+    ),
+  );
   assert.equal(proofView.summary.includes("Napoleon recommendation: redacted"), false);
   assert.ok(
     proofView.details.some(
@@ -280,6 +284,25 @@ test("redacts unsafe returned provenance from visible Napoleon delegation and pr
   assert.ok(proofView.details.some((detail) => detail.label === "Decision" && detail.value === "redacted"));
   assert.ok(proofView.details.some((detail) => detail.label === "Trace" && detail.value === "redacted"));
   assert.ok(proofView.details.some((detail) => detail.label === "Audit" && detail.value === "redacted"));
+});
+
+test("labels redacted target-capability-only delegation metadata without attribution wording", () => {
+  const view = describeDelegation(undefined, "http://127.0.0.1:8787/v1/concierge/turn", {
+    blockedEffects: ["memory_write"],
+    governanceState: "requires_review",
+    traceId: "trace_target_only",
+    auditId: "audit_target_only",
+  });
+
+  assert.equal(view.body.includes("target capability redacted"), false);
+  assert.ok(
+    view.details.some((detail) => detail.label === "Target capability" && detail.value === "redacted metadata"),
+  );
+  assert.ok(
+    view.details.some(
+      (detail) => detail.label === "Proof alignment" && detail.value === "selected-agent proof not returned",
+    ),
+  );
 });
 
 test("describes successful Napoleon response proof from returned provenance only", () => {

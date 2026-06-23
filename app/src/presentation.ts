@@ -897,17 +897,21 @@ export function describeDelegation(
   fallback?: DelegationFallbackProvenance,
 ): DelegationView {
   const safeTargetCapability = sanitizeVisibleProvenanceValue(targetCapability);
+  const targetCapabilityDisplay = safeTargetCapability === "redacted" ? "redacted metadata" : safeTargetCapability;
   if (!delegation || delegation.selectedAgents.length === 0) {
     if (targetCapability) {
       const safeBlockedEffects = sanitizeVisibleProvenanceList(fallback?.blockedEffects);
       const safeGovernanceState = sanitizeVisibleProvenanceValue(fallback?.governanceState);
       const safeTraceId = sanitizeVisibleProvenanceValue(fallback?.traceId);
       const safeAuditId = sanitizeVisibleProvenanceValue(fallback?.auditId);
+      const hasVisibleTargetCapability = safeTargetCapability && safeTargetCapability !== "redacted";
       return {
         heading: "Napoleon target capability",
-        body: `Napoleon returned target capability ${safeTargetCapability}, but did not include selected-agent delegation provenance.`,
+        body: hasVisibleTargetCapability
+          ? `Napoleon returned target capability ${safeTargetCapability}, but did not include selected-agent delegation provenance.`
+          : "Napoleon returned target capability metadata, but it was redacted and did not include selected-agent delegation provenance.",
         details: [
-          { label: "Target capability", value: safeTargetCapability },
+          { label: "Target capability", value: targetCapabilityDisplay },
           { label: "Provenance source", value: "target capability only; selected-agent delegation not returned" },
           { label: "Selected agents", value: "not returned" },
           { label: "Why selected", value: "not returned" },
@@ -918,7 +922,9 @@ export function describeDelegation(
           { label: "Audit", value: safeAuditId },
           {
             label: "Proof alignment",
-            value: "target capability shares returned trace/audit; selected-agent proof not returned",
+            value: hasVisibleTargetCapability
+              ? "target capability shares returned trace/audit; selected-agent proof not returned"
+              : "selected-agent proof not returned",
           },
         ],
       };
@@ -974,7 +980,7 @@ export function describeDelegation(
     heading: "Napoleon delegation",
     body: contribution || "Napoleon provided delegation provenance for this response.",
     details: [
-      { label: "Target capability", value: safeTargetCapability },
+      { label: "Target capability", value: targetCapabilityDisplay },
       { label: "Provenance source", value: "returned bridge delegation; not local metadata discovery" },
       { label: "Selected agents", value: agentLabels },
       { label: "Why selected", value: selectionReasons },
