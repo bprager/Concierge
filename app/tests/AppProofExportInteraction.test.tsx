@@ -4269,14 +4269,17 @@ test("shows active profile boundary when Napoleon response tries to drift profil
 
 test("drafts a proposal-only taxonomy review from rendered app controls", async () => {
   const dom = installDom();
-  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+  const [{ cleanup, render }, userEventModule, { App }, { clearCapabilityLedger }, telemetry] = await Promise.all([
     import("@testing-library/react"),
     import("@testing-library/user-event"),
     import("../src/App.js"),
+    import("../src/capabilityLedger.js"),
+    import("../src/telemetry.js"),
   ]);
   const user = userEventModule.default.setup();
 
   try {
+    clearCapabilityLedger(telemetry.capabilityLedger);
     const view = render(<App />);
 
     await user.click(view.getByRole("button", { name: "Draft taxonomy review" }));
@@ -4287,6 +4290,7 @@ test("drafts a proposal-only taxonomy review from rendered app controls", async 
     assert.ok(view.getByText(/evo_capability_taxonomy_review_/));
     assert.ok(view.getByText("No local taxonomy review recommendations yet."));
   } finally {
+    clearCapabilityLedger(telemetry.capabilityLedger);
     cleanup();
     dom.window.close();
   }

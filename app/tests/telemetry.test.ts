@@ -102,6 +102,87 @@ test("telemetry emits descriptor discovery capability signals without endpoint d
   assert.equal(JSON.stringify([readySignal, failedSignal]).includes("secret-token"), false);
 });
 
+test("telemetry emits advisory capability discovery signals without manifest details", () => {
+  const readySignal = emitCapabilitySignal("chief_of_staff_capabilities_discovered", {
+    traceId: "trace_capability_discovery_ready",
+    conversationId: "conv_capability_discovery_ready",
+    capabilityCount: 2,
+    agentCount: 1,
+    profileMetadataReturned: true,
+    serviceId: "napoleon.chief_of_staff",
+    runtimeAuthority: false,
+    blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch"],
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    responseApprovalCaptured: false,
+    responseMemoryWritePerformed: false,
+    responseAgentDispatchPerformed: false,
+    responseExternalSendPerformed: false,
+    endpoint: "https://napoleon.example.test/cos/capabilities",
+    bearerToken: "secret-token",
+    rawManifest: "must not be retained",
+  });
+  const blockedSignal = emitCapabilitySignal("chief_of_staff_capabilities_blocked", {
+    traceId: "trace_capability_discovery_blocked",
+    conversationId: "conv_capability_discovery_blocked",
+    capabilityCount: 0,
+    agentCount: 0,
+    profileMetadataReturned: false,
+    serviceId: "not_returned",
+    runtimeAuthority: true,
+    blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch"],
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    responseApprovalCaptured: true,
+    responseMemoryWritePerformed: true,
+    responseAgentDispatchPerformed: true,
+    responseExternalSendPerformed: true,
+    endpoint: "https://napoleon.example.test/cos/capabilities",
+    bearerToken: "secret-token",
+    rawManifest: "must not be retained",
+  });
+
+  assert.ok(readySignal);
+  assert.ok(blockedSignal);
+  if (!readySignal || !blockedSignal) throw new Error("expected capability discovery signals");
+  assert.equal(readySignal.topicLabel, "napoleon_connection");
+  assert.equal(readySignal.intentLabel, "discover_advisory_capabilities");
+  assert.equal(readySignal.capabilityLabel, "chief_of_staff_capability_discovery");
+  assert.equal(readySignal.capabilityStatus, "working");
+  assert.equal(readySignal.outcomeSignal, "rehearsed");
+  assert.equal(readySignal.architectureArea, "agent_registry");
+  assert.deepEqual(readySignal.details, [
+    "capabilities returned 2",
+    "agents returned 1",
+    "profile metadata returned",
+    "runtime authority blocked",
+    "no agent dispatch performed",
+    "no memory write performed",
+    "no approval captured",
+    "no external send performed",
+  ]);
+  assert.equal(blockedSignal.capabilityStatus, "blocked");
+  assert.equal(blockedSignal.outcomeSignal, "blocked");
+  assert.equal(blockedSignal.suggestedNextStep, "needs_human_review");
+  assert.deepEqual(blockedSignal.details, [
+    "capabilities returned 0",
+    "agents returned 0",
+    "profile metadata not returned",
+    "runtime authority reported",
+    "no agent dispatch performed",
+    "no memory write performed",
+    "no approval captured",
+    "no external send performed",
+  ]);
+  assert.equal(JSON.stringify([readySignal, blockedSignal]).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify([readySignal, blockedSignal]).includes("secret-token"), false);
+  assert.equal(JSON.stringify([readySignal, blockedSignal]).includes("must not be retained"), false);
+});
+
 test("telemetry emits voice capability signal for local STT completion", () => {
   const signal = emitCapabilitySignal("stt_completed", {
     traceId: "trace_stt_signal",

@@ -293,6 +293,8 @@ export function emitCapabilitySignal(
     "memory_proposal_dismissed_locally",
     "descriptor_discovery_completed",
     "descriptor_discovery_failed",
+    "chief_of_staff_capabilities_discovered",
+    "chief_of_staff_capabilities_blocked",
     "response_failed",
     "response_generated",
     "avatar_state_changed",

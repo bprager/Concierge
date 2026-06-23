@@ -1505,6 +1505,11 @@ function stringAttr(attributes: Record<string, unknown>, key: string, fallback: 
   return typeof value === "string" && value.trim() ? value : fallback;
 }
 
+function numberAttr(attributes: Record<string, unknown>, key: string, fallback: number): number {
+  const value = attributes[key];
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback;
+}
+
 function steeringRecommendationTypeFromAttributes(attributes: Record<string, unknown>): string {
   const recommendationType = stringAttr(attributes, "recommendationType", "unknown_steering_recommendation_type");
   return recommendationType === "guided_readiness_repair" || recommendationType === "scored_capability_recommendation"
@@ -1647,6 +1652,57 @@ function descriptorDiscoveryDetails(attributes: Record<string, unknown>): string
   ];
 }
 
+function advisoryCapabilityDiscoveryReadinessStatus(eventName: string, attributes: Record<string, unknown>): {
+  capabilityStatus: CapabilityStatus;
+  outcomeSignal: CapabilityOutcomeSignal;
+  suggestedNextStep: SuggestedNextStep;
+  confidence: number;
+} {
+  const ready =
+    eventName === "chief_of_staff_capabilities_discovered" &&
+    stringAttr(attributes, "serviceId", "not_returned") !== "not_returned" &&
+    attributes.runtimeAuthority === false &&
+    attributes.approvalCaptured === false &&
+    attributes.memoryWritePerformed === false &&
+    attributes.agentDispatchPerformed === false &&
+    attributes.externalSendPerformed === false &&
+    attributes.responseApprovalCaptured !== true &&
+    attributes.responseMemoryWritePerformed !== true &&
+    attributes.responseAgentDispatchPerformed !== true &&
+    attributes.responseExternalSendPerformed !== true;
+
+  if (ready) {
+    return {
+      capabilityStatus: "working",
+      outcomeSignal: "rehearsed",
+      suggestedNextStep: "no_action",
+      confidence: 0.78,
+    };
+  }
+
+  return {
+    capabilityStatus: "blocked",
+    outcomeSignal: eventName === "chief_of_staff_capabilities_blocked" ? "blocked" : "bridge_failed",
+    suggestedNextStep: "needs_human_review",
+    confidence: 0.86,
+  };
+}
+
+function advisoryCapabilityDiscoveryDetails(attributes: Record<string, unknown>): string[] {
+  const capabilityCount = numberAttr(attributes, "capabilityCount", 0);
+  const agentCount = numberAttr(attributes, "agentCount", 0);
+  return [
+    `capabilities returned ${capabilityCount}`,
+    `agents returned ${agentCount}`,
+    attributes.profileMetadataReturned === true ? "profile metadata returned" : "profile metadata not returned",
+    attributes.runtimeAuthority === false ? "runtime authority blocked" : "runtime authority reported",
+    attributes.agentDispatchPerformed === false ? "no agent dispatch performed" : "agent dispatch reported",
+    attributes.memoryWritePerformed === false ? "no memory write performed" : "memory write reported",
+    attributes.approvalCaptured === false ? "no approval captured" : "approval captured reported",
+    attributes.externalSendPerformed === false ? "no external send performed" : "external send reported",
+  ];
+}
+
 export function deriveCapabilitySignalFromEvent(
   eventName: string,
   attributes: Record<string, unknown>,
@@ -1780,6 +1836,25 @@ export function deriveCapabilitySignalFromEvent(
       architectureArea: "bridge",
       suggestedNextStep: readiness.suggestedNextStep,
       details: descriptorDiscoveryDetails(attributes),
+    });
+  }
+
+  if (
+    eventName === "chief_of_staff_capabilities_discovered" ||
+    eventName === "chief_of_staff_capabilities_blocked"
+  ) {
+    const readiness = advisoryCapabilityDiscoveryReadinessStatus(eventName, attributes);
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "napoleon_connection",
+      intentLabel: "discover_advisory_capabilities",
+      capabilityLabel: "chief_of_staff_capability_discovery",
+      capabilityStatus: readiness.capabilityStatus,
+      outcomeSignal: readiness.outcomeSignal,
+      confidence: readiness.confidence,
+      architectureArea: "agent_registry",
+      suggestedNextStep: readiness.suggestedNextStep,
+      details: advisoryCapabilityDiscoveryDetails(attributes),
     });
   }
 

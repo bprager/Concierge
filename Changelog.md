@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local capability-intelligence signals for advisory Chief of Staff capability discovery readiness, so Napoleon capability metadata readiness and blocked side-effect claims appear in local capability summaries without retaining raw manifests, profile bodies, endpoints, credentials, or bridge payloads.
 - Added local capability-intelligence signals for Napoleon descriptor discovery readiness, so connection health and fail-closed descriptor blockers appear in local capability summaries without retaining endpoints, credentials, descriptor bodies, or bridge payloads.
 - Added local capability-intelligence signals for child avatar policy dry runs, so stricter child avatar readiness appears in local capability summaries without retaining raw video, starting capture or animation, treating guardian review as approval, or contacting Napoleon.
 - Added local capability-intelligence signals for voice response shaping and child voice policy dry runs, so spoken-response readiness appears in local capability summaries without retaining spoken text, starting capture/playback, or contacting Napoleon.
