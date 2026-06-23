@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear when the bridge bearer token changes.
 - Added symmetric rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear across both Napoleon endpoint and descriptor context changes.
 - Added rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear when the active user profile changes.
 - Added rendered memory proposal and governance review coverage proving returned live review results, decision, and audit evidence clear when Napoleon connection or descriptor context changes.

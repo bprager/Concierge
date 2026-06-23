@@ -4561,6 +4561,154 @@ test("clears returned memory review results when descriptor context changes", as
   }
 });
 
+test("clears returned memory review results when bridge token changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const body = init?.body ? JSON.parse(String(init.body)) : {};
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/turn")) {
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon prepared the credential-scoped preference note for review.",
+            profileMode: body.profileMode,
+            targetAgent: "napoleon.memory",
+            governanceDecision: {
+              decision_id: "decision_memory_turn_token_result",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Memory-like requests require governed review.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: body.traceId,
+              audit_id: "audit_memory_turn_token_result",
+            },
+            traceEnvelope: {
+              trace_id: body.traceId,
+              parent_trace_id: "rendered-memory-token-result",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_memory_turn_token_result",
+              timestamp: "2026-06-14T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_memory_turn_token_result",
+              trace_id: body.traceId,
+              decision_id: "decision_memory_turn_token_result",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:memory-turn-token-result"],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/memory-proposals")) {
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon accepted the credential-scoped memory proposal for review.",
+            governanceDecision: {
+              decision_id: "decision_memory_token_result_stale",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Memory write remains blocked pending review.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: body.traceEnvelope.trace_id,
+              audit_id: "audit_memory_token_result_stale",
+            },
+            traceEnvelope: {
+              trace_id: body.traceEnvelope.trace_id,
+              parent_trace_id: body.traceEnvelope.parent_trace_id,
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_memory_token_result_stale",
+              timestamp: "2026-06-14T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_memory_token_result_stale",
+              trace_id: body.traceEnvelope.trace_id,
+              decision_id: "decision_memory_token_result_stale",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:memory-token-result-stale"],
+            },
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Remember that I prefer concise updates" },
+    });
+    await user.click(view.getByRole("button", { name: "Send" }));
+    await view.findByText("Napoleon prepared the credential-scoped preference note for review.");
+    await user.click(view.getByRole("button", { name: "Send memory proposal to Napoleon review" }));
+
+    await view.findByText("Napoleon accepted the credential-scoped memory proposal for review.");
+    assert.ok(view.getByText(/decision_memory_token_result_stale/));
+    assert.ok(view.getByText(/audit_memory_token_result_stale/));
+
+    fireEvent.change(view.getByLabelText("Bridge token"), { target: { value: "rotated-token" } });
+
+    assert.equal(view.queryByText("Napoleon accepted the credential-scoped memory proposal for review."), null);
+    assert.equal(view.queryByText(/decision_memory_token_result_stale/), null);
+    assert.equal(view.queryByText(/audit_memory_token_result_stale/), null);
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send memory proposal to Napoleon review" })), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears returned governance review results when descriptor context changes", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
@@ -4853,6 +5001,156 @@ test("clears returned governance review results when Napoleon endpoint changes",
     assert.equal(view.queryByText("Napoleon accepted the endpoint-scoped governance review packet."), null);
     assert.equal(view.queryByText(/decision_governance_endpoint_result_stale/), null);
     assert.equal(view.queryByText(/audit_governance_endpoint_result_stale/), null);
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send governance review to Napoleon" })), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
+test("clears returned governance review results when bridge token changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const body = init?.body ? JSON.parse(String(init.body)) : {};
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/turn")) {
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon prepared the credential-scoped external-send request for review.",
+            profileMode: body.profileMode,
+            targetAgent: "napoleon.chief_of_staff",
+            governanceDecision: {
+              decision_id: "decision_governance_turn_token_result",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "External sends require governed review.",
+              blocked_effects: ["approval_capture", "memory_write", "agent_dispatch", "external_send"],
+              trace_id: body.traceId,
+              audit_id: "audit_governance_turn_token_result",
+            },
+            traceEnvelope: {
+              trace_id: body.traceId,
+              parent_trace_id: "rendered-governance-token-result",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_governance_turn_token_result",
+              timestamp: "2026-06-14T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_governance_turn_token_result",
+              trace_id: body.traceId,
+              decision_id: "decision_governance_turn_token_result",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:governance-turn-token-result"],
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/steering")) {
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon accepted the credential-scoped governance review packet.",
+            governanceDecision: {
+              decision_id: "decision_governance_token_result_stale",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Review acknowledgement is not approval.",
+              blocked_effects: ["approval_capture", "memory_write", "agent_dispatch", "external_send"],
+              trace_id: body.traceEnvelope.trace_id,
+              audit_id: "audit_governance_token_result_stale",
+            },
+            traceEnvelope: {
+              trace_id: body.traceEnvelope.trace_id,
+              parent_trace_id: body.traceEnvelope.parent_trace_id,
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_governance_token_result_stale",
+              timestamp: "2026-06-14T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_governance_token_result_stale",
+              trace_id: body.traceEnvelope.trace_id,
+              decision_id: "decision_governance_token_result_stale",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:governance-token-result-stale"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Prepare an external send for review" },
+    });
+    await user.click(view.getByRole("button", { name: "Send" }));
+    await view.findByText("Napoleon prepared the credential-scoped external-send request for review.");
+    await view.findByText("Governance review readiness");
+    await user.click(view.getByRole("button", { name: "Send governance review to Napoleon" }));
+
+    await view.findByText("Napoleon accepted the credential-scoped governance review packet.");
+    assert.ok(view.getByText(/decision_governance_token_result_stale/));
+    assert.ok(view.getByText(/audit_governance_token_result_stale/));
+
+    fireEvent.change(view.getByLabelText("Bridge token"), { target: { value: "rotated-token" } });
+
+    assert.equal(view.queryByText("Napoleon accepted the credential-scoped governance review packet."), null);
+    assert.equal(view.queryByText(/decision_governance_token_result_stale/), null);
+    assert.equal(view.queryByText(/audit_governance_token_result_stale/), null);
     assert.equal(Boolean(view.queryByRole("button", { name: "Send governance review to Napoleon" })), false);
   } finally {
     globalThis.fetch = originalFetch;
