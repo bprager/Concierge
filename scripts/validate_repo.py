@@ -774,6 +774,29 @@ def validate_documented_current_scenario_counts() -> None:
     print(f"documented current evaluator scenario counts match {actual}")
 
 
+CANONICAL_NAPOLEON_REVIEW_DOCS = [
+    "docs/ARCHITECTURE.md",
+    "docs/BACKLOG.md",
+    "docs/NAPOLEON_CONTRACT_ALIGNMENT.md",
+]
+
+
+def validate_documented_napoleon_review_operations() -> None:
+    operations = load_generated_napoleon_review_operations()
+    combined_text = "\n".join((ROOT / relative_path).read_text(encoding="utf-8") for relative_path in CANONICAL_NAPOLEON_REVIEW_DOCS)
+    missing: list[str] = []
+    for operation in operations:
+        for field in ["id", "path", "requestKind"]:
+            value = operation.get(field)
+            if not value:
+                continue
+            if value not in combined_text:
+                missing.append(f"canonical docs do not document {field} {value}")
+    if missing:
+        raise SystemExit("Canonical Napoleon review operation docs are stale:\n" + "\n".join(missing))
+    print("canonical Napoleon review operation docs mention all generated review targets")
+
+
 def load_generated_operation_section(section_name: str) -> list[dict[str, Any]]:
     text = (ROOT / "app/src/generatedBridgeOperations.ts").read_text(encoding="utf-8")
     section = re.search(
@@ -1969,6 +1992,7 @@ def main() -> int:
     validate_authority_boundary()
     validate_markdown_links()
     validate_documented_current_scenario_counts()
+    validate_documented_napoleon_review_operations()
     return 0
 
 
