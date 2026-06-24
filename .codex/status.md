@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added explicit generated-route coverage for governance evaluation, making the route panel show that the Napoleon handoff cannot override governance, capture approval, write memory, dispatch agents, send externally, update registries, append traces, route tasks, or apply changes locally.
 - Added explicit generated-route coverage for evolution proposal submission, making the route panel show that the Napoleon handoff is proposal-submission-only and cannot apply evolution changes, update registries, capture approval, write memory, dispatch agents, send externally, append traces, route tasks, or apply changes locally.
 - Added explicit generated-route coverage for new-agent proposal review, making the route panel show that the Napoleon handoff is review-only and cannot activate agents, update registries, capture approval, write memory, dispatch agents, send externally, append traces, route tasks, or apply changes locally.
 - Hardened repository authority-boundary validation for mixed bracket/dot `navigator` aliases, covering clipboard, share, service-worker registration, permission, geolocation, device, and credential side channels so UI code cannot move prompts, proof data, tokens, or local-device access around the governed Napoleon bridge.

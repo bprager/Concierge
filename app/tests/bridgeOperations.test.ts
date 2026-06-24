@@ -779,3 +779,18 @@ test("describes evolution proposal submission without evolution application auth
   assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
   assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 });
+
+test("describes governance evaluation without governance override authority", () => {
+  const summary = describeNapoleonReviewOperationSummary("governance_evaluation");
+
+  assert.equal(summary.label, "Governance evaluation handoff");
+  assert.equal(summary.path, "/governance/evaluate");
+  assert.equal(summary.requestKind, "governance_evaluation_handoff");
+  assert.ok(summary.boundary.includes("governance-evaluation Napoleon target"));
+  assert.ok(summary.boundary.includes("governance override"));
+  assert.ok(summary.boundary.includes("approval capture"));
+  assert.ok(summary.sideEffects.includes("No governance override"));
+  assert.ok(summary.sideEffects.includes("approval capture"));
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
+});
