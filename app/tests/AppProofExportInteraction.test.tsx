@@ -4023,6 +4023,16 @@ test("shows named Napoleon governed targets in governed routes", async () => {
     assert.ok(routes.getByText("New agent proposal review"));
     assert.ok(routes.getByText("/chief-of-staff/reviews/new-agent-proposals"));
     assert.ok(routes.getByText("new_agent_proposal_review_handoff"));
+    assert.ok(
+      routes.getByText(
+        "review-only Napoleon target; no local approval, agent activation, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "Side effects: No agent activation, registry update, local approval, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
+      ),
+    );
     assert.equal(
       routes.getAllByText("Source: Generated from api/napoleon_bridge.openapi.yaml review/evidence metadata").length,
       8,

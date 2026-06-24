@@ -747,3 +747,18 @@ test("describes named Napoleon review targets with generated metadata source", (
   assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
   assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 });
+
+test("describes new agent proposal review without agent activation authority", () => {
+  const summary = describeNapoleonReviewOperationSummary("new_agent_proposal_review");
+
+  assert.equal(summary.label, "New agent proposal review");
+  assert.equal(summary.path, "/chief-of-staff/reviews/new-agent-proposals");
+  assert.equal(summary.requestKind, "new_agent_proposal_review_handoff");
+  assert.ok(summary.boundary.includes("no local approval"));
+  assert.ok(summary.boundary.includes("agent activation"));
+  assert.ok(summary.boundary.includes("registry update"));
+  assert.ok(summary.sideEffects.includes("No agent activation"));
+  assert.ok(summary.sideEffects.includes("registry update"));
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
+});
