@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened selected-agent attribution validation so exact returned selected-agent display names are guarded regardless of capitalization, preventing lower-case agent names from claiming findings or reports without matching contribution provenance.
 - Added route-specific boundary and side-effect summaries for generated core bridge routes in the governed routes panel, making descriptor discovery, capability discovery, text turns, memory proposal review, and Chief of Staff steering explicitly non-authorizing without exposing endpoint hosts or tokens.
 - Added explicit generated-route coverage for evaluator review and evolution proposal review handoffs showing that those Napoleon handoffs cannot grant evaluator or release approval, apply evolution changes, capture approval, update registries, write memory, dispatch agents, send externally, append traces, route tasks, or apply changes locally.
 - Added explicit generated-route coverage for observability trace handoffs showing that the Napoleon handoff cannot append traces, create audit authority, capture approval, write memory, route tasks, dispatch agents, send externally, or apply changes locally.

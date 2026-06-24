@@ -477,7 +477,10 @@ function contributionMatchesFindingClaim(contributionSummary: string, claim: str
 
 function hasUnprovenSelectedAgentAttribution(text: string | undefined, delegation: NapoleonDelegation | undefined): boolean {
   if (!text) return false;
-  const protectedAgentNames = ["Passive Brain"];
+  const protectedAgentNames = [
+    "Passive Brain",
+    ...(delegation?.selectedAgents.map((agent) => agent.displayName).filter((displayName) => displayName.trim()) ?? []),
+  ];
   const directClaims = [
     ...protectedAgentNames
       .map((displayName) => ({ displayName, claim: extractSelectedAgentFindingClaim(text, displayName) }))

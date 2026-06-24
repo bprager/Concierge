@@ -2671,6 +2671,153 @@ test("live bridge accepts guarded selected-agent wording when delegation provena
   }
 });
 
+test("live bridge fails closed when lower-case selected-agent attribution lacks contribution proof", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_lowercase_agent_unproven_text",
+          conversationId: "conv_lowercase_agent_unproven_text",
+          turnId: "turn_lowercase_agent_unproven_text",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Review the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "research analyst reported the prior rollout note.",
+              profileMode: "adult_owner",
+              governanceDecision: {
+                decision_id: "decision_lowercase_agent_unproven_text",
+                request_id: "cos_turn_lowercase_agent_unproven_text",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["external_send"],
+                trace_id: "trace_lowercase_agent_unproven_text",
+                audit_id: "audit_lowercase_agent_unproven_text",
+              },
+              traceEnvelope: {
+                trace_id: "trace_lowercase_agent_unproven_text",
+                parent_trace_id: "conv_lowercase_agent_unproven_text",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_lowercase_agent_unproven_text",
+                decision_id: "decision_lowercase_agent_unproven_text",
+                timestamp: "2026-06-12T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_lowercase_agent_unproven_text",
+                trace_id: "trace_lowercase_agent_unproven_text",
+                decision_id: "decision_lowercase_agent_unproven_text",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_lowercase_agent_unproven_text"],
+              },
+              delegation: {
+                selectedAgents: [
+                  {
+                    agentId: "napoleon.research_analyst",
+                    displayName: "research analyst",
+                    selectionReason: "Bridge rollout evidence needed review.",
+                  },
+                ],
+                allowedEffects: ["prepare_advisory_response"],
+                blockedEffects: ["external_send"],
+                governanceState: "requires_review",
+                traceId: "trace_lowercase_agent_unproven_text",
+                auditId: "audit_lowercase_agent_unproven_text",
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
+test("live bridge accepts lower-case selected-agent attribution when contribution proof matches", async () => {
+  const response = await sendToNapoleon(
+    {
+      traceId: "trace_lowercase_agent_proven_text",
+      conversationId: "conv_lowercase_agent_proven_text",
+      turnId: "turn_lowercase_agent_proven_text",
+      profile: "adult_owner",
+      channel: "text",
+      message: "Review the bridge plan",
+    },
+    {
+      getEndpoint: () => "https://napoleon.example/concierge",
+      descriptorConnection: readyDescriptorConnection,
+      emit: () => undefined,
+      fetch: async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          text: "research analyst reported the prior rollout note.",
+          profileMode: "adult_owner",
+          governanceDecision: {
+            decision_id: "decision_lowercase_agent_proven_text",
+            request_id: "cos_turn_lowercase_agent_proven_text",
+            outcome: "requires_review",
+            authority_tier: "prepare_only",
+            approval_requirement: "explicit_owner_approval",
+            rationale: "External effects require owner approval.",
+            blocked_effects: ["external_send"],
+            trace_id: "trace_lowercase_agent_proven_text",
+            audit_id: "audit_lowercase_agent_proven_text",
+          },
+          traceEnvelope: {
+            trace_id: "trace_lowercase_agent_proven_text",
+            parent_trace_id: "conv_lowercase_agent_proven_text",
+            actor_id: "napoleon.chief_of_staff",
+            request_id: "cos_turn_lowercase_agent_proven_text",
+            decision_id: "decision_lowercase_agent_proven_text",
+            timestamp: "2026-06-12T00:00:00.000Z",
+          },
+          auditEnvelope: {
+            audit_id: "audit_lowercase_agent_proven_text",
+            trace_id: "trace_lowercase_agent_proven_text",
+            decision_id: "decision_lowercase_agent_proven_text",
+            actor_id: "napoleon.chief_of_staff",
+            authority_tier: "prepare_only",
+            approval_requirement: "explicit_owner_approval",
+            evidence_links: ["trace:trace_lowercase_agent_proven_text"],
+          },
+          delegation: {
+            selectedAgents: [
+              {
+                agentId: "napoleon.research_analyst",
+                displayName: "research analyst",
+                selectionReason: "Bridge rollout evidence needed review.",
+                contributionSummary: "Reported the prior rollout note.",
+              },
+            ],
+            allowedEffects: ["prepare_advisory_response"],
+            blockedEffects: ["external_send"],
+            governanceState: "requires_review",
+            traceId: "trace_lowercase_agent_proven_text",
+            auditId: "audit_lowercase_agent_proven_text",
+          },
+        }),
+      }),
+    },
+  );
+
+  assert.equal(response.text, "research analyst reported the prior rollout note.");
+  assert.equal(response.delegation?.selectedAgents[0]?.displayName, "research analyst");
+});
+
 test("live bridge fails closed when selected-agent contribution proof does not match guarded wording", async () => {
   const cases = [
     { slug: "found", text: "Research Analyst found the prior rollout note.", summary: "Found the prior budget note." },
