@@ -387,7 +387,7 @@ function describeBridgeFailureNextStep(error: NapoleonBridgeError): string {
   if (error.reason === "governance_denied" || error.reason === "governance_no_go") {
     return "Revise the request or keep it local; Napoleon governance did not allow forwarding.";
   }
-  if (error.reason === "contract_mismatch" || error.reason === "descriptor_mismatch") {
+  if (error.reason === "contract_mismatch" || error.reason === "descriptor_mismatch" || error.reason === "missing_descriptor") {
     return "Align the bridge contract or descriptor before attempting another live turn.";
   }
   return "Review the fail-closed bridge details before attempting another governed Napoleon turn.";

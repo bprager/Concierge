@@ -5644,7 +5644,7 @@ test("blocks rendered live send before fetch when endpoint changes without live 
     await waitFor(() => assert.equal(composer.value, "Draft a bridge readiness summary"));
     await user.click(view.getByRole("button", { name: "Send" }));
 
-    const blockedMessages = await view.findAllByText(/Napoleon bridge blocked: descriptor_mismatch/);
+    const blockedMessages = await view.findAllByText(/Napoleon bridge blocked: missing_descriptor/);
     const blockedReply = blockedMessages.find((message) => message.closest("article"))?.closest("article") as HTMLElement | null;
     assert.ok(blockedReply);
     assert.ok(within(blockedReply).getByText("Blocked Napoleon governed bridge attempt"));
@@ -5696,7 +5696,7 @@ test("blocks rendered live send before fetch when no Napoleon descriptor is disc
     await waitFor(() => assert.equal(composer.value, "Draft a bridge readiness summary"));
     await user.click(view.getByRole("button", { name: "Send" }));
 
-    const blockedMessages = await view.findAllByText(/Napoleon bridge blocked: descriptor_mismatch/);
+    const blockedMessages = await view.findAllByText(/Napoleon bridge blocked: missing_descriptor/);
     const blockedReply = blockedMessages.find((message) => message.closest("article"))?.closest("article") as HTMLElement | null;
     assert.ok(blockedReply);
     assert.ok(within(blockedReply).getByText("Blocked Napoleon governed bridge attempt"));

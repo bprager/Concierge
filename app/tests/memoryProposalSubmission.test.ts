@@ -137,7 +137,7 @@ test("memory proposal submission fails closed before fetch when descriptor disco
     (error: unknown) =>
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
-      error.message.includes("descriptor_mismatch") &&
+      error.message.includes("missing_descriptor") &&
       (error as { descriptorFailureReason?: string }).descriptorFailureReason === "no_descriptor" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
@@ -145,6 +145,7 @@ test("memory proposal submission fails closed before fetch when descriptor disco
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.reason, "missing_descriptor");
   assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "no_descriptor");
 });
 

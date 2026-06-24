@@ -95,14 +95,16 @@ test("live bridge fails closed before fetch when descriptor discovery has not co
     (error: unknown) =>
       error instanceof Error &&
       error.name === "NapoleonBridgeError" &&
-      error.message.includes("descriptor_mismatch") &&
+      error.message.includes("missing_descriptor") &&
       (error as { descriptorFailureReason?: string }).descriptorFailureReason === "no_descriptor" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(textTurnBlockedEffects),
   );
 
   assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.attributes.reason, "missing_descriptor");
   assert.equal(events.at(-1)?.attributes.descriptorFailureReason, "no_descriptor");
+  assert.equal((evidence[0] as { reason?: string }).reason, "missing_descriptor");
   assert.equal((evidence[0] as { descriptorFailureReason?: string }).descriptorFailureReason, "no_descriptor");
 });
 

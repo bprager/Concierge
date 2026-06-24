@@ -2016,7 +2016,7 @@ test("describes bridge failure transcript message with reason and blocked effect
 
 test("describes descriptor-specific bridge failure reasons", () => {
   const missingDescriptor = new NapoleonBridgeError(
-    "descriptor_mismatch",
+    "missing_descriptor",
     "trace_missing_descriptor",
     "request_missing_descriptor",
     undefined,
@@ -2037,9 +2037,13 @@ test("describes descriptor-specific bridge failure reasons", () => {
   );
 
   const missingMessage = describeBridgeFailure(missingDescriptor);
+  const missingTranscript = describeBridgeFailureTranscriptMessage(missingDescriptor);
   const checksumTranscript = describeBridgeFailureTranscriptMessage(checksumMismatch);
 
+  assert.ok(missingMessage.includes("missing_descriptor"));
   assert.ok(missingMessage.includes("descriptor missing"));
+  assert.ok(missingTranscript.includes("missing_descriptor"));
+  assert.ok(missingTranscript.includes("descriptor missing"));
   assert.ok(checksumTranscript.includes("descriptor signature/checksum mismatch"));
 });
 

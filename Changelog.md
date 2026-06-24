@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added first-class `missing_descriptor` governed bridge failure reporting so the transcript, telemetry, and bridge evidence distinguish an absent Napoleon descriptor from invalid or mismatched descriptors.
 - Hardened repository authority-boundary validation for optional-chained media capture, device enumeration, speech, audio context, media recorder, and playback calls so future voice/avatar code cannot bypass visible permission handlers.
 - Hardened repository authority-boundary validation for optional-chained browser side-channel calls such as `fetch?.(...)`, `sendBeacon?.(...)`, `window.open?.(...)`, `postMessage?.(...)`, clipboard writes, service-worker registration, and bridge-module direct URL fetches.
 - Added rendered proof export coverage for proof-alignment metadata in selected-agent and target-capability-only Napoleon response proof exports and telemetry.

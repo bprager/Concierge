@@ -101,6 +101,7 @@ interface BridgeDependencies {
 
 export type NapoleonBridgeFailureReason =
   | "no_endpoint"
+  | "missing_descriptor"
   | "descriptor_mismatch"
   | "auth_failure"
   | "contract_mismatch"
@@ -114,6 +115,7 @@ export function descriptorFailClosedReasonToBridgeFailure(
 ): NapoleonBridgeFailureReason {
   if (reason === "auth_failure" || reason === "bridge_timeout" || reason === "http_failure") return reason;
   if (reason === "no_endpoint") return "no_endpoint";
+  if (reason === "no_descriptor") return "missing_descriptor";
   return "descriptor_mismatch";
 }
 
