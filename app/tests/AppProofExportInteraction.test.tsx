@@ -3646,6 +3646,10 @@ test("disables direct send when local governance marks the prompt no-go", async 
     await view.findByText(/Local governance blocks sending this request: no_go/);
     const preflight = view.getByText("Live send preflight").closest(".send-preflight") as HTMLElement | null;
     assert.ok(preflight);
+    assert.ok(within(preflight).getByText("Main preflight blocker: local governance returned no_go."));
+    assert.ok(
+      within(preflight).getByText("Next step: revise the request; local governance no_go cannot be forwarded to Napoleon."),
+    );
     assert.ok(within(preflight).getByText(/Local governance blocks sending this request: no_go/));
     const allowedEffectsRow = within(preflight).getByText("Allowed effects").closest("div") as HTMLElement | null;
     assert.ok(allowedEffectsRow);

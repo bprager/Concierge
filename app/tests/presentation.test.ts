@@ -1417,6 +1417,8 @@ test("describes local no-go governance in live send preflight", () => {
 
   assert.equal(view.status, "blocked");
   assert.equal(view.canAttemptLiveSend, false);
+  assert.equal(view.blockerSummary, "Main preflight blocker: local governance returned no_go.");
+  assert.equal(view.nextStepSummary, "Next step: revise the request; local governance no_go cannot be forwarded to Napoleon.");
   assert.ok(
     view.items.some(
       (item) =>

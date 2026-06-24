@@ -273,6 +273,7 @@ export interface LiveSendPreflightItem {
   status: "ready" | "blocked" | "warning";
   detail: string;
   descriptorFailureReason?: DescriptorFailClosedReason;
+  governanceOutcome?: GovernanceOutcome;
 }
 
 export interface LiveSendPreflightView {
@@ -594,7 +595,11 @@ function describePreflightBlockerSummary(items: LiveSendPreflightItem[]): string
         : "Main preflight blocker: fix descriptor integrity before sending.";
     }
     if (blocked.label === "Text-turn route") return "Main preflight blocker: use a descriptor that advertises text_turn.";
-    if (blocked.label === "Governance send gate") return "Main preflight blocker: local governance does not allow this send.";
+    if (blocked.label === "Governance send gate") {
+      return blocked.governanceOutcome
+        ? `Main preflight blocker: local governance returned ${blocked.governanceOutcome}.`
+        : "Main preflight blocker: local governance does not allow this send.";
+    }
     if (blocked.label === "Text ready") return "Main preflight blocker: enter text before sending.";
     return `Main preflight blocker: ${blocked.label.toLowerCase()} is blocked.`;
   }
@@ -645,7 +650,11 @@ function describePreflightNextStepSummary(items: LiveSendPreflightItem[]): strin
         : "Next step: refresh descriptor discovery or align the expected descriptor checksum/signature.";
     }
     if (blocked.label === "Text-turn route") return "Next step: use a Napoleon descriptor that advertises the governed text_turn route.";
-    if (blocked.label === "Governance send gate") return "Next step: revise the request until local governance allows an advisory bridge send.";
+    if (blocked.label === "Governance send gate") {
+      return blocked.governanceOutcome
+        ? `Next step: revise the request; local governance ${blocked.governanceOutcome} cannot be forwarded to Napoleon.`
+        : "Next step: revise the request until local governance allows an advisory bridge send.";
+    }
     if (blocked.label === "Text ready") return "Next step: enter the text request before attempting the governed bridge send.";
     return `Next step: resolve ${blocked.label.toLowerCase()} before attempting the governed bridge send.`;
   }
@@ -991,6 +1000,7 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
         : input.governanceOutcome
           ? `Local governance blocks sending this request: ${input.governanceOutcome}.`
           : "Local governance blocks sending this request.",
+      governanceOutcome: input.governanceCanSendAdvisory ? undefined : input.governanceOutcome,
     },
     {
       label: "Allowed effects",

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added outcome-specific local governance live-send preflight summaries, so `no_go` and `deny` blockers appear in the main disabled-send reason and next-step guidance before any Napoleon bridge request is attempted.
 - Added descriptor-specific live-send preflight summary and next-step guidance, so auth failure, timeout, and HTTP descriptor discovery blockers are not collapsed into generic descriptor-discovery wording.
 - Hardened selected-agent attribution validation so exact returned selected-agent display names are guarded regardless of capitalization, preventing lower-case agent names from claiming findings or reports without matching contribution provenance.
 - Added descriptor-specific live voice readiness guidance, keeping live voice blocked while showing exact descriptor recovery reasons such as HTTP failure before any future voice pipeline can start.
