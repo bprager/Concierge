@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered UI coverage proving returned Chief of Staff steering review results clear when Napoleon endpoint context changes, while the local proposal draft remains blocked until descriptor preflight is valid for the new endpoint.
 - Added rendered UI coverage proving returned Chief of Staff steering review results clear when descriptor context changes, while the local proposal draft remains blocked until descriptor preflight is valid again.
 - Added rendered UI coverage proving returned capability review packet results and exported packet state clear when descriptor context changes, keeping governed review decisions out of stale descriptor or fail-closed checksum/signature scopes.
 - Added rendered UI coverage proving returned capability review packet results and exported packet state clear when the bridge token changes, keeping governed review decisions scoped to the credential context that produced them.
