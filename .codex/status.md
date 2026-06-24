@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered UI coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when the bridge token changes, preventing imported runtime proof context from crossing credential scopes.
 - Added rendered UI coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when the active profile changes, preventing adult-owner runtime proof context from remaining visible in child-protected scope.
 - Added rendered UI coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when Rehearsal Mode is enabled, keeping local-only preview mode free of imported live-runtime proof context.
 - Clarified rendered memory proposal and governance review coverage proving returned live review results clear when Rehearsal Mode is enabled, including disabled live submit controls after returning to local-only preview mode.
