@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added evaluator coverage requiring returned Napoleon proof and delegation provenance to clear when endpoint, token, descriptor, profile, or Rehearsal context changes, preventing stale proof from remaining review-ready evidence.
 - Added first-class `missing_descriptor` governed bridge failure reporting so the transcript, telemetry, and bridge evidence distinguish an absent Napoleon descriptor from invalid or mismatched descriptors.
 - Hardened live bridge delegation validation so returned allowed effects are normalized before forbidden authority checks, preventing case or spacing variants of memory writes, agent dispatch, external sends, approval capture, or runtime authority from appearing as allowed.
 - Added canonical effect-label normalization to sanitized Napoleon response proof exports so returned allowed and blocked effects compare consistently without treating casing, spaces, or hyphens as separate authority metadata.
