@@ -1923,16 +1923,32 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
-  if (eventName === "evolution_proposal_submission_drafted" || eventName.startsWith("evolution_proposal_submission_send_")) {
+  if (
+    eventName === "evolution_proposal_submission_drafted" ||
+    eventName.startsWith("evolution_proposal_submission_send_") ||
+    eventName.startsWith("evolution_proposal_lifecycle_")
+  ) {
     const failed = eventName.endsWith("_failed");
     const governedBlock = failed && isGovernanceBlockedResponseFailure(attributes);
+    const lifecycleBlocked = eventName === "evolution_proposal_lifecycle_recorded" && attributes.lifecycleState === "blocked";
     return buildCapabilitySignal({
       ...base,
       topicLabel: "self_evolution",
-      intentLabel: "governed_evolution_proposal_submission",
-      capabilityLabel: "evolution_proposal_submission",
-      capabilityStatus: failed ? "blocked" : "working",
-      outcomeSignal: eventName === "evolution_proposal_submission_drafted" ? "rehearsed" : governedBlock ? "blocked" : failed ? "bridge_failed" : "review_required",
+      intentLabel: eventName.startsWith("evolution_proposal_lifecycle_")
+        ? "track_evolution_proposal_lifecycle"
+        : "governed_evolution_proposal_submission",
+      capabilityLabel: eventName.startsWith("evolution_proposal_lifecycle_")
+        ? "evolution_proposal_lifecycle_tracking"
+        : "evolution_proposal_submission",
+      capabilityStatus: failed || lifecycleBlocked ? "blocked" : "working",
+      outcomeSignal:
+        eventName === "evolution_proposal_submission_drafted"
+          ? "rehearsed"
+          : governedBlock || lifecycleBlocked
+            ? "blocked"
+            : failed
+              ? "bridge_failed"
+              : "review_required",
       confidence: failed ? 0.86 : 0.82,
       architectureArea: governedBlock ? "governance_ux" : failed ? "bridge" : "observability",
       suggestedNextStep: governedBlock ? "no_action" : failed ? "add_backlog_item" : "needs_human_review",

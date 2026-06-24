@@ -130,6 +130,16 @@ import {
   type EvolutionProposalSubmissionResult,
 } from "./evolutionProposalSubmission.js";
 import {
+  buildDraftEvolutionProposalLifecycleRecord,
+  exportEvolutionProposalLifecycleRecords,
+  loadEvolutionProposalLifecycleRecords,
+  persistEvolutionProposalLifecycleRecords,
+  updateEvolutionProposalLifecycleAfterFailure,
+  updateEvolutionProposalLifecycleAfterSubmission,
+  upsertEvolutionProposalLifecycleRecord,
+  type EvolutionProposalLifecycleRecord,
+} from "./evolutionProposalLifecycle.js";
+import {
   buildMediaSessionReadinessTelemetryAttributes,
   buildMediaSessionSummary,
   type LocalMediaPermissionStatus,
@@ -512,6 +522,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [evolutionProposalSubmission, setEvolutionProposalSubmission] =
     useState<EvolutionProposalSubmissionResult | null>(null);
   const [evolutionProposalSubmissionFailure, setEvolutionProposalSubmissionFailure] = useState<string | null>(null);
+  const [evolutionProposalLifecycleRecords, setEvolutionProposalLifecycleRecords] = useState(() =>
+    loadEvolutionProposalLifecycleRecords(browserStorage()),
+  );
+  const [evolutionProposalLifecycleExportJson, setEvolutionProposalLifecycleExportJson] = useState<string | null>(null);
   const [steeringDraft, setSteeringDraft] = useState<ChiefOfStaffSteeringDraft | null>(null);
   const [steeringDraftExportJson, setSteeringDraftExportJson] = useState<string | null>(null);
   const [steeringSubmission, setSteeringSubmission] = useState<SteeringSubmissionView | null>(null);
@@ -611,6 +625,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setEvolutionProposalSubmissionPacketExportJson(null);
     setEvolutionProposalSubmission(null);
     setEvolutionProposalSubmissionFailure(null);
+    setEvolutionProposalLifecycleExportJson(null);
   }
 
   function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {
@@ -3073,6 +3088,33 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     }
   }
 
+  function rememberEvolutionProposalLifecycle(record: EvolutionProposalLifecycleRecord) {
+    setEvolutionProposalLifecycleRecords((current) => {
+      const next = upsertEvolutionProposalLifecycleRecord(current, record);
+      persistEvolutionProposalLifecycleRecords(browserStorage(), next);
+      return next;
+    });
+    setEvolutionProposalLifecycleExportJson(null);
+  }
+
+  function exportEvolutionProposalLifecycle() {
+    const exported = exportEvolutionProposalLifecycleRecords(evolutionProposalLifecycleRecords);
+    setEvolutionProposalLifecycleExportJson(JSON.stringify(exported, null, 2));
+    emitEvent("evolution_proposal_lifecycle_exported", {
+      traceId: newTraceId(),
+      conversationId,
+      recordCount: evolutionProposalLifecycleRecords.length,
+      proposalOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      registryUpdatePerformed: false,
+      evolutionApplied: false,
+      appliedLocally: false,
+    });
+  }
+
   function draftNewAgentProposalReviewPacket() {
     if (!capabilityReviewPacket) return;
     const traceId = newTraceId();
@@ -3137,6 +3179,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setEvolutionProposalSubmissionPacketExportJson(JSON.stringify(packet, null, 2));
     setEvolutionProposalSubmission(null);
     setEvolutionProposalSubmissionFailure(null);
+    const lifecycleRecord = buildDraftEvolutionProposalLifecycleRecord(packet);
+    rememberEvolutionProposalLifecycle(lifecycleRecord);
     emitEvent("evolution_proposal_submission_drafted", {
       traceId,
       conversationId,
@@ -3152,6 +3196,22 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       registryUpdatePerformed: packet.boundary.registryUpdatePerformed,
       evolutionApplied: packet.boundary.evolutionApplied,
       appliedLocally: packet.boundary.appliedLocally,
+    });
+    emitEvent("evolution_proposal_lifecycle_recorded", {
+      traceId,
+      conversationId,
+      proposalId: packet.proposalId,
+      lifecycleState: lifecycleRecord.currentLifecycleState,
+      latestKnownOutcome: lifecycleRecord.latestKnownOutcome,
+      privacyClass: lifecycleRecord.privacyClass,
+      proposalOnly: lifecycleRecord.boundary.proposalOnly,
+      approvalCaptured: lifecycleRecord.boundary.approvalCaptured,
+      memoryWritePerformed: lifecycleRecord.boundary.memoryWritePerformed,
+      agentDispatchPerformed: lifecycleRecord.boundary.agentDispatchPerformed,
+      externalSendPerformed: lifecycleRecord.boundary.externalSendPerformed,
+      registryUpdatePerformed: lifecycleRecord.boundary.registryUpdatePerformed,
+      evolutionApplied: lifecycleRecord.boundary.evolutionApplied,
+      appliedLocally: lifecycleRecord.boundary.appliedLocally,
     });
     refreshCapabilityLedgerStatus();
   }
@@ -3169,12 +3229,57 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       });
       setEvolutionProposalSubmission(result);
       setEvolutionProposalSubmissionFailure(null);
+      const currentLifecycle =
+        evolutionProposalLifecycleRecords.find((record) => record.proposalId === evolutionProposalSubmissionPacket.proposalId) ??
+        buildDraftEvolutionProposalLifecycleRecord(evolutionProposalSubmissionPacket);
+      const nextLifecycle = updateEvolutionProposalLifecycleAfterSubmission(currentLifecycle, result);
+      rememberEvolutionProposalLifecycle(nextLifecycle);
+      emitEvent("evolution_proposal_lifecycle_recorded", {
+        traceId,
+        conversationId,
+        proposalId: nextLifecycle.proposalId,
+        lifecycleState: nextLifecycle.currentLifecycleState,
+        latestKnownOutcome: nextLifecycle.latestKnownOutcome,
+        decisionId: nextLifecycle.intakeDecisionId,
+        auditId: nextLifecycle.intakeAuditId,
+        statusRefreshAvailable: nextLifecycle.statusRefresh.available,
+        privacyClass: nextLifecycle.privacyClass,
+        proposalOnly: nextLifecycle.boundary.proposalOnly,
+        approvalCaptured: nextLifecycle.boundary.approvalCaptured,
+        memoryWritePerformed: nextLifecycle.boundary.memoryWritePerformed,
+        agentDispatchPerformed: nextLifecycle.boundary.agentDispatchPerformed,
+        externalSendPerformed: nextLifecycle.boundary.externalSendPerformed,
+        registryUpdatePerformed: nextLifecycle.boundary.registryUpdatePerformed,
+        evolutionApplied: nextLifecycle.boundary.evolutionApplied,
+        appliedLocally: nextLifecycle.boundary.appliedLocally,
+      });
       refreshCapabilityLedgerStatus();
     } catch (error) {
-      setEvolutionProposalSubmissionFailure(
-        describeGovernedHandoffFailure(error, "Evolution proposal submission handoff", "apply evolution changes"),
-      );
+      const failure = describeGovernedHandoffFailure(error, "Evolution proposal submission handoff", "apply evolution changes");
+      setEvolutionProposalSubmissionFailure(failure);
       setEvolutionProposalSubmission(null);
+      const currentLifecycle =
+        evolutionProposalLifecycleRecords.find((record) => record.proposalId === evolutionProposalSubmissionPacket.proposalId) ??
+        buildDraftEvolutionProposalLifecycleRecord(evolutionProposalSubmissionPacket);
+      const nextLifecycle = updateEvolutionProposalLifecycleAfterFailure(currentLifecycle, failure);
+      rememberEvolutionProposalLifecycle(nextLifecycle);
+      emitEvent("evolution_proposal_lifecycle_recorded", {
+        traceId,
+        conversationId,
+        proposalId: nextLifecycle.proposalId,
+        lifecycleState: nextLifecycle.currentLifecycleState,
+        latestKnownOutcome: nextLifecycle.latestKnownOutcome,
+        statusRefreshAvailable: nextLifecycle.statusRefresh.available,
+        privacyClass: nextLifecycle.privacyClass,
+        proposalOnly: nextLifecycle.boundary.proposalOnly,
+        approvalCaptured: nextLifecycle.boundary.approvalCaptured,
+        memoryWritePerformed: nextLifecycle.boundary.memoryWritePerformed,
+        agentDispatchPerformed: nextLifecycle.boundary.agentDispatchPerformed,
+        externalSendPerformed: nextLifecycle.boundary.externalSendPerformed,
+        registryUpdatePerformed: nextLifecycle.boundary.registryUpdatePerformed,
+        evolutionApplied: nextLifecycle.boundary.evolutionApplied,
+        appliedLocally: nextLifecycle.boundary.appliedLocally,
+      });
       refreshCapabilityLedgerStatus();
     }
   }
@@ -5817,6 +5922,42 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                           "not applied; no registry update; no approval captured; no memory write; no agent dispatch; no external send.",
                         )
                       : null}
+                    {evolutionProposalLifecycleRecords.length ? (
+                      <section className="evolution-proposal-lifecycle" aria-label="Evolution proposal lifecycle">
+                        <div className="review-heading">
+                          <strong>Evolution proposal lifecycle</strong>
+                          <span>
+                            Local metadata-only tracking; Napoleon remains the authority for approval, implementation,
+                            rollout, and rollback.
+                          </span>
+                        </div>
+                        <button className="secondary" onClick={exportEvolutionProposalLifecycle}>
+                          Export evolution proposal lifecycle
+                        </button>
+                        <dl>
+                          {evolutionProposalLifecycleRecords.slice(0, 3).map((record) => (
+                            <div key={record.proposalId}>
+                              <dt>{record.proposalId}</dt>
+                              <dd>
+                                {record.currentLifecycleState}: {record.latestKnownOutcome} Decision{" "}
+                                {record.intakeDecisionId ?? "not returned"}; audit {record.intakeAuditId ?? "not returned"};
+                                status refresh{" "}
+                                {record.statusRefresh.available
+                                  ? "available"
+                                  : `unavailable (${record.statusRefresh.reason})`}
+                                ; next step {record.nextRecommendedUserAction}; boundary proposal-only, no local
+                                evolution, no registry update, no approval capture.
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </section>
+                    ) : null}
+                    {evolutionProposalLifecycleExportJson ? (
+                      <pre aria-label="Exported evolution proposal lifecycle">
+                        {evolutionProposalLifecycleExportJson}
+                      </pre>
+                    ) : null}
                   </section>
                 </>
               ) : null}

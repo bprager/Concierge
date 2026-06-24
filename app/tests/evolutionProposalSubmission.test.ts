@@ -5,7 +5,17 @@ import { defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
 import {
   buildEvolutionProposalSubmissionPacket,
   submitEvolutionProposalToNapoleon,
+  type EvolutionProposalSubmissionResult,
 } from "../src/evolutionProposalSubmission.js";
+import {
+  buildDraftEvolutionProposalLifecycleRecord,
+  exportEvolutionProposalLifecycleRecords,
+  loadEvolutionProposalLifecycleRecords,
+  persistEvolutionProposalLifecycleRecords,
+  updateEvolutionProposalLifecycleAfterFailure,
+  updateEvolutionProposalLifecycleAfterSubmission,
+  upsertEvolutionProposalLifecycleRecord,
+} from "../src/evolutionProposalLifecycle.js";
 
 type TestFetchInit = { method?: string; headers?: Record<string, string>; body?: string };
 
@@ -305,4 +315,65 @@ test("evolution proposal submission rejects response-side application or registr
     (error: unknown) =>
       error instanceof Error && error.name === "NapoleonBridgeError" && error.message.includes("contract_mismatch"),
   );
+});
+
+test("evolution proposal lifecycle records stay metadata-only and proposal-only", async () => {
+  const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_evolution",
+  });
+  const draftRecord = buildDraftEvolutionProposalLifecycleRecord(packet, {
+    draftedAt: "2026-06-24T00:00:00.000Z",
+  });
+  const submittedRecord = updateEvolutionProposalLifecycleAfterSubmission(
+    draftRecord,
+    buildResponse("trace_submit", "cos_trace_submit") as EvolutionProposalSubmissionResult,
+    {
+      submittedAt: "2026-06-24T00:01:00.000Z",
+    },
+  );
+  const blockedRecord = updateEvolutionProposalLifecycleAfterFailure(draftRecord, "Descriptor handoff unavailable.", {
+    updatedAt: "2026-06-24T00:02:00.000Z",
+  });
+  const records = upsertEvolutionProposalLifecycleRecord(
+    upsertEvolutionProposalLifecycleRecord([], draftRecord),
+    submittedRecord,
+  );
+  const storage = new Map<string, string>();
+
+  assert.equal(submittedRecord.currentLifecycleState, "accepted_for_review");
+  assert.equal(submittedRecord.intakeDecisionId, "decision_trace_submit");
+  assert.equal(submittedRecord.intakeAuditId, "audit_trace_submit");
+  assert.equal(submittedRecord.statusRefresh.available, false);
+  assert.equal(submittedRecord.statusRefresh.reason, "descriptor_status_route_not_advertised");
+  assert.equal(submittedRecord.boundary.proposalOnly, true);
+  assert.equal(submittedRecord.boundary.evolutionApplied, false);
+  assert.equal(submittedRecord.boundary.registryUpdatePerformed, false);
+  assert.equal(submittedRecord.boundary.approvalCaptured, false);
+  assert.equal(blockedRecord.currentLifecycleState, "blocked");
+  assert.equal(records.length, 1);
+
+  persistEvolutionProposalLifecycleRecords(
+    {
+      getItem: (key) => storage.get(key) ?? null,
+      setItem: (key, value) => storage.set(key, value),
+      removeItem: (key) => storage.delete(key),
+    },
+    records,
+  );
+  const loaded = loadEvolutionProposalLifecycleRecords({
+    getItem: (key) => storage.get(key) ?? null,
+    setItem: (key, value) => storage.set(key, value),
+    removeItem: (key) => storage.delete(key),
+  });
+  const exported = exportEvolutionProposalLifecycleRecords(loaded, {
+    generatedAt: "2026-06-24T00:03:00.000Z",
+  });
+  const exportedJson = JSON.stringify(exported);
+
+  assert.equal(loaded.length, 1);
+  assert.equal(exported.records[0]?.proposalId, packet.proposalId);
+  assert.equal(exported.records[0]?.boundary.appliedLocally, false);
+  assert.equal(exportedJson.includes("private.example"), false);
+  assert.equal(exportedJson.includes("token"), false);
 });

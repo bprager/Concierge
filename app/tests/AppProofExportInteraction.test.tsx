@@ -1513,6 +1513,208 @@ test("sends exported capability review packet through governed review controls",
   }
 });
 
+test("renders governed evolution proposal submission controls from capability review packets", async () => {
+  const runScenario = async (supportsSubmission: boolean) => {
+    const dom = installDom();
+    const [
+      { cleanup, fireEvent, render, waitFor },
+      userEventModule,
+      { App },
+      { emitEvent, capabilityLedger },
+      { clearCapabilityLedger },
+    ] = await Promise.all([
+      import("@testing-library/react"),
+      import("@testing-library/user-event"),
+      import("../src/App.js"),
+      import("../src/telemetry.js"),
+      import("../src/capabilityLedger.js"),
+    ]);
+    const user = userEventModule.default.setup();
+    const originalInfo = console.info;
+    const originalFetch = globalThis.fetch;
+    const postedBodies: Record<string, unknown>[] = [];
+    const requestedUrls: string[] = [];
+    console.info = () => undefined;
+
+    try {
+      clearCapabilityLedger(capabilityLedger);
+      globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input);
+        requestedUrls.push(url);
+        if (url.endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+          return new Response(
+            JSON.stringify({
+              descriptor: {
+                schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+                serviceId: "napoleon.chief_of_staff",
+                runtimeAuthority: false,
+                commandExecution: false,
+                cachePolicy: "fail_closed_to_review_required",
+                blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+                supportedHandoffs: supportsSubmission
+                  ? ["text_turn", "evolution_proposal_review", "evolution_proposal_submission"]
+                  : ["text_turn", "evolution_proposal_review"],
+              },
+              checksum: {
+                expected: "sha256:local-static",
+                actual: "sha256:local-static",
+              },
+              signature: {
+                valid: true,
+              },
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
+        }
+        if (url.endsWith("/evolution/proposals")) {
+          const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+          postedBodies.push(body);
+          const traceEnvelope = body.traceEnvelope as { trace_id: string; parent_trace_id: string; request_id: string };
+          return new Response(
+            JSON.stringify({
+              text: "Napoleon accepted the evolution proposal for governed intake.",
+              governanceDecision: {
+                decision_id: "decision_evolution_submission_rendered",
+                request_id: traceEnvelope.request_id,
+                outcome: "allow_prepare_only",
+                authority_tier: "advisory_review",
+                approval_requirement: "chief_of_staff_and_owner_review",
+                rationale: "Evolution proposal submission requires Napoleon intake review.",
+                blocked_effects: ["evolution_application", "registry_update", "memory_write", "agent_dispatch", "external_send"],
+                trace_id: traceEnvelope.trace_id,
+                audit_id: "audit_evolution_submission_rendered",
+              },
+              traceEnvelope: {
+                trace_id: traceEnvelope.trace_id,
+                parent_trace_id: traceEnvelope.parent_trace_id,
+                actor_id: "napoleon.evolution_controller",
+                request_id: traceEnvelope.request_id,
+                decision_id: "decision_evolution_submission_rendered",
+                timestamp: "2026-06-24T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_evolution_submission_rendered",
+                trace_id: traceEnvelope.trace_id,
+                decision_id: "decision_evolution_submission_rendered",
+                actor_id: "napoleon.evolution_controller",
+                authority_tier: "advisory_review",
+                approval_requirement: "chief_of_staff_and_owner_review",
+                evidence_links: ["trace:evolution-submission-rendered"],
+              },
+              appliedLocally: false,
+              memoryWritePerformed: false,
+              approvalCaptured: false,
+              agentDispatchPerformed: false,
+              externalSendPerformed: false,
+              registryUpdatePerformed: false,
+              evolutionApplied: false,
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
+        }
+        return new Response(JSON.stringify({ error: "unexpected fetch" }), {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        });
+      }) as typeof fetch;
+
+      emitEvent("response_failed", {
+        traceId: supportsSubmission ? "trace_evolution_submit_ready" : "trace_evolution_submit_blocked",
+        conversationId: supportsSubmission ? "conv_evolution_submit_ready" : "conv_evolution_submit_blocked",
+        turnId: supportsSubmission ? "turn_evolution_submit_ready" : "turn_evolution_submit_blocked",
+        profile: "adult_owner",
+        rawMessage: "raw evolution packet text private.example token must not appear",
+        endpoint: "https://private.example.test/evolution",
+      });
+
+      const view = render(<App />);
+      await user.click(view.getByRole("button", { name: "Use local harness" }));
+      await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+      const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+      if (!rehearsalCheckbox.checked) {
+        await user.click(rehearsalCheckbox);
+      }
+      fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+        target: { value: "What capabilities should be implemented next?" },
+      });
+      await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+      await view.findByText(/Recommended next capabilities by local risk\/value score/);
+      await user.click(view.getByRole("button", { name: "Export capability review packet" }));
+      await user.click(view.getByRole("button", { name: "Draft evolution proposal submission packet" }));
+
+      const exportBlock = view.getByLabelText("Exported evolution proposal submission packet");
+      assert.ok(exportBlock.textContent?.includes('"schemaVersion": "concierge.evolution-proposal-submission.v1"'));
+      assert.ok(exportBlock.textContent?.includes('"requestKind": "evolution_proposal_submission_handoff"'));
+      assert.ok(exportBlock.textContent?.includes('"proposalOnly": true'));
+      assert.ok(exportBlock.textContent?.includes('"evolutionApplied": false'));
+      assert.ok(exportBlock.textContent?.includes('"registryUpdatePerformed": false'));
+      assert.equal(exportBlock.textContent?.includes("raw evolution packet text"), false);
+      assert.equal(exportBlock.textContent?.includes("private.example"), false);
+      assert.equal(exportBlock.textContent?.includes("token"), false);
+
+      const submitButton = view.getByRole("button", {
+        name: "Send evolution proposal to Napoleon intake",
+      }) as HTMLButtonElement;
+
+      if (!supportsSubmission) {
+        assert.equal(submitButton.disabled, true);
+        assert.equal(requestedUrls.some((url) => url.endsWith("/evolution/proposals")), false);
+        return;
+      }
+
+      if ((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked) {
+        await user.click(view.getByLabelText("Rehearsal Mode"));
+      }
+      await waitFor(() => assert.equal(submitButton.disabled, false));
+      await user.click(submitButton);
+
+      await view.findByText("Napoleon accepted the evolution proposal for governed intake.");
+      assert.ok(view.getAllByText(/decision_evolution_submission_rendered/).length >= 1);
+      assert.ok(view.getAllByText(/audit_evolution_submission_rendered/).length >= 1);
+      const lifecyclePanel = view.getByLabelText("Evolution proposal lifecycle");
+      assert.ok(lifecyclePanel.textContent?.includes("accepted_for_review"));
+      assert.ok(lifecyclePanel.textContent?.includes("decision_evolution_submission_rendered"));
+      assert.ok(lifecyclePanel.textContent?.includes("audit_evolution_submission_rendered"));
+      assert.ok(lifecyclePanel.textContent?.includes("descriptor_status_route_not_advertised"));
+      assert.ok(lifecyclePanel.textContent?.includes("proposal-only"));
+      await user.click(view.getByRole("button", { name: "Export evolution proposal lifecycle" }));
+      const lifecycleExport = view.getByLabelText("Exported evolution proposal lifecycle");
+      assert.ok(lifecycleExport.textContent?.includes('"schemaVersion": "concierge.evolution-proposal-lifecycle-export.v1"'));
+      assert.ok(lifecycleExport.textContent?.includes('"currentLifecycleState": "accepted_for_review"'));
+      assert.ok(lifecycleExport.textContent?.includes('"decision_evolution_submission_rendered"'));
+      assert.ok(lifecycleExport.textContent?.includes('"proposalOnly": true'));
+      assert.ok(lifecycleExport.textContent?.includes('"evolutionApplied": false'));
+      assert.ok(lifecycleExport.textContent?.includes('"registryUpdatePerformed": false'));
+      assert.equal(lifecycleExport.textContent?.includes("raw evolution packet text"), false);
+      assert.equal(lifecycleExport.textContent?.includes("private.example"), false);
+      assert.equal(lifecycleExport.textContent?.includes("token"), false);
+      assert.equal(postedBodies.length, 1);
+      assert.equal(requestedUrls.some((url) => url.endsWith("/evolution/proposals")), true);
+      const posted = JSON.stringify(postedBodies[0]);
+      assert.ok(posted.includes('"requestKind":"evolution_proposal_submission_handoff"'));
+      assert.ok(posted.includes('"handoffKind":"evolution_proposal_submission_handoff"'));
+      assert.ok(posted.includes('"bridgeTargetPath":"/evolution/proposals"'));
+      assert.ok(posted.includes('"request_type":"evolution_proposal_submission"'));
+      assert.ok(posted.includes('"proposalOnly":true'));
+      assert.ok(posted.includes('"evolutionApplied":false'));
+      assert.ok(posted.includes('"registryUpdatePerformed":false'));
+      assert.equal(posted.includes("raw evolution packet text"), false);
+      assert.equal(posted.includes("private.example"), false);
+      assert.equal(posted.includes("token"), false);
+    } finally {
+      globalThis.fetch = originalFetch;
+      console.info = originalInfo;
+      clearCapabilityLedger(capabilityLedger);
+      cleanup();
+      dom.window.close();
+    }
+  };
+
+  await runScenario(false);
+  await runScenario(true);
+});
+
 test("clears returned capability review packet results when local capability ledger is cleared", async () => {
   const dom = installDom();
   const [

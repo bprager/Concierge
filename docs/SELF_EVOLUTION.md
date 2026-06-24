@@ -56,6 +56,8 @@ Chief of Staff steering drafts attach these records to evolution proposal drafts
 
 Capability Intelligence review packets can now be converted into explicit evolution proposal submission packets for Napoleon's `/evolution/proposals` intake path. This is still proposal-only: Concierge can package evidence and submit it through the governed bridge when descriptor preflight advertises the handoff, but it cannot approve, apply, roll out, update registries, write memory, dispatch agents, send externally, or treat a returned response as local authority.
 
+After a submission attempt, Concierge keeps a browser-local evolution proposal lifecycle record with metadata only: proposal ID, source capability review ID, profile scope, capability, architecture area, drafted/submitted timestamps, latest local state, returned Napoleon decision/audit/trace references when available, and the next local user action. The record can show `drafted`, `accepted_for_review`, `rejected`, or `blocked` based on local handoff evidence, but it cannot mark approval, implementation, rollout, rollback, registry update, or local application. Until Napoleon advertises a governed status route, status refresh is explicitly shown as unavailable rather than inferred.
+
 ## 4. Change categories
 
 | Category | Example | Risk |

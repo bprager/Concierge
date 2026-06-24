@@ -302,6 +302,8 @@ export function emitCapabilitySignal(
     "evolution_proposal_submission_send_started",
     "evolution_proposal_submission_send_completed",
     "evolution_proposal_submission_send_failed",
+    "evolution_proposal_lifecycle_recorded",
+    "evolution_proposal_lifecycle_exported",
     "observability_trace_handoff_started",
     "observability_trace_handoff_completed",
     "observability_trace_handoff_failed",
