@@ -119,6 +119,9 @@ class RehearsalCoverageTest(unittest.TestCase):
 
         self.assertFalse(checks["conversation_capability_intelligence"]["found"])
         self.assertIn("not raw transcripts by default", checks["conversation_capability_intelligence"]["missing_terms"])
+        self.assertIn("seasonal", checks["conversation_capability_intelligence"]["missing_terms"])
+        self.assertIn("28 days", checks["conversation_capability_intelligence"]["missing_terms"])
+        self.assertIn("previous 28 days", checks["conversation_capability_intelligence"]["missing_terms"])
         self.assertIn("child-protected taxonomy review", checks["conversation_capability_intelligence"]["missing_terms"])
         self.assertIn("guardian/owner review", checks["conversation_capability_intelligence"]["missing_terms"])
         self.assertIn("proposal-only recommendations", checks["conversation_capability_intelligence"]["missing_terms"])
