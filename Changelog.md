@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered coverage proving returned Chief of Staff steering review results clear when the active user profile changes, preventing adult-owner decision and audit evidence from crossing into child-protected scope.
 - Added rendered coverage proving returned Chief of Staff steering review results clear when Napoleon endpoint context changes, while the local draft remains blocked until descriptor preflight is valid for the new endpoint.
 - Added rendered coverage proving returned Chief of Staff steering review results clear when descriptor context changes, while the local draft remains blocked until descriptor preflight is valid again.
 - Added rendered coverage proving returned capability review packet results and exported packet state clear when descriptor context changes, preventing stale review decisions from surviving fail-closed descriptor state changes.
