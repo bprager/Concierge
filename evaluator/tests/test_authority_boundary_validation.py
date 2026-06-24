@@ -889,6 +889,46 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_expression_external_target_assignments(self):
+        for source in [
+            "anchor.href = outboundUrl;",
+            "anchor.href = outbound.url;",
+            "anchor.href = buildOutboundUrl();",
+            "anchor.href = new URL(path, endpoint).toString();",
+            "anchor.href = `${endpoint}/send`;",
+            "image.src = pixelUrl;",
+            "image.src = assetMap.trackingPixel;",
+            "source.srcSet = mediaCandidates;",
+            "source.srcSet = candidates.join(',');",
+            "link.imageSrcSet = preloadCandidates;",
+            "form.action = submitUrl;",
+            "form.action = getSubmitTarget(profile);",
+            "button.formAction = submitUrl;",
+            "anchor.ping = auditUrl;",
+            'anchor["href"] = outboundUrl;',
+            'anchor["href"] = buildOutboundUrl();',
+            'source["srcset"] = mediaCandidates;',
+            'source["srcset"] = candidates.join(",");',
+            'button["formaction"] = submitUrl;',
+            'use["xlink:href"] = externalSpriteUrl;',
+            'link["imagesrcset"] = preloadCandidates;',
+            'image.setAttribute("src", pixelUrl);',
+            'image.setAttribute("src", buildPixelUrl());',
+            'anchor.setAttribute("href", outboundUrl);',
+            'anchor.setAttribute("href", `${endpoint}/send`);',
+            'source.setAttribute("srcset", mediaCandidates);',
+            'source.setAttribute("srcset", candidates.join(","));',
+            'link.setAttribute("imagesrcset", preloadCandidates);',
+            'button.setAttribute("formaction", submitUrl);',
+            'use.setAttribute("xlink:href", externalSpriteUrl);',
+            'anchor.setAttribute("ping", auditUrl);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.tsx", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_dynamic_html_injection_side_channels(self):
         for source in [
             '<div dangerouslySetInnerHTML={{ __html: remoteMarkup }} />',
