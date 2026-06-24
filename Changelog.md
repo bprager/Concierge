@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation for dynamic `object` and `embed` data targets such as `object.data = externalWidgetUrl`, `embed["data"] = buildWidgetUrl()`, and `setAttribute("data", ...)`, so UI code cannot load hidden embedded content around the governed bridge.
 - Hardened repository authority-boundary validation for dynamic external target setters such as `anchor.href = outboundUrl`, `anchor.href = buildOutboundUrl()`, `image.src = pixelUrl`, `form.action = submitUrl`, source-set setters, SVG `xlink:href`, and `setAttribute(...)` forms, so UI code cannot add hidden navigation or resource-loading side channels around the governed bridge.
 - Hardened repository authority-boundary validation for direct `globalThis.location` and mixed bracket/dot `location` navigation aliases, including `assign`/`replace` call/apply forms, so UI code cannot add navigation side channels around the governed bridge.
 - Added rendered coverage proving descriptor-discovery auth failure and timeout states expose descriptor failure metadata, block before text-turn fetch, and do not leak private transport response text.

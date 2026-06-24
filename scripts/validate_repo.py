@@ -524,6 +524,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(
         rf"\b[A-Za-z_$][A-Za-z0-9_$]*\.setAttribute\s*\(\s*['\"](?:{EXTERNAL_TARGET_DYNAMIC_ATTRIBUTES})['\"]\s*,\s*(?!['\"])[^)]+"
     ),
+    re.compile(r"\b\w*(?:object|embed)\w*\.data\s*=\s*(?!['\"])[^;\n]+", re.IGNORECASE),
+    re.compile(r"\b\w*(?:object|embed)\w*\s*\[\s*['\"]data['\"]\s*\]\s*=\s*(?!['\"])[^;\n]+", re.IGNORECASE),
+    re.compile(r"\b\w*(?:object|embed)\w*\.setAttribute\s*\(\s*['\"]data['\"]\s*,\s*(?!['\"])[^)]+", re.IGNORECASE),
     re.compile(r"\bhttp-?equiv\s*=\s*['\"]refresh['\"][^>\n]*\bcontent\s*=\s*['\"][^'\"]*url\s*=\s*https?://", re.IGNORECASE),
     re.compile(r"\bcontent\s*=\s*['\"][^'\"]*url\s*=\s*https?://[^>\n]*\bhttp-?equiv\s*=\s*['\"]refresh['\"]", re.IGNORECASE),
     re.compile(r"(?:@import\s+)?\burl\s*\(\s*['\"]?https?://"),

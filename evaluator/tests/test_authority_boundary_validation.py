@@ -922,6 +922,13 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'button.setAttribute("formaction", submitUrl);',
             'use.setAttribute("xlink:href", externalSpriteUrl);',
             'anchor.setAttribute("ping", auditUrl);',
+            "object.data = externalWidgetUrl;",
+            "embed.data = buildWidgetUrl();",
+            "previewObject.data = `${endpoint}/widget`;",
+            'object["data"] = externalWidgetUrl;',
+            'embed["data"] = buildWidgetUrl();',
+            'previewObject.setAttribute("data", externalWidgetUrl);',
+            'embed.setAttribute("data", buildWidgetUrl());',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.tsx", source)
