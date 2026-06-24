@@ -1876,6 +1876,23 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName.startsWith("observability_trace_handoff_")) {
+    const failed = eventName.endsWith("_failed");
+    const governedBlock = failed && isGovernanceBlockedResponseFailure(attributes);
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "observability",
+      intentLabel: "governed_trace_evidence_handoff",
+      capabilityLabel: "observability_trace_handoff",
+      capabilityStatus: failed ? "blocked" : "working",
+      outcomeSignal: governedBlock ? "blocked" : failed ? "bridge_failed" : "review_required",
+      confidence: failed ? 0.86 : 0.82,
+      architectureArea: governedBlock ? "governance_ux" : failed ? "bridge" : "observability",
+      suggestedNextStep: governedBlock ? "no_action" : failed ? "add_backlog_item" : "needs_human_review",
+      details: governedBlock ? governanceBlockedResponseDetails(attributes) : undefined,
+    });
+  }
+
   if (eventName.startsWith("memory_proposal_send_")) {
     const failed = eventName.endsWith("_failed");
     const governedBlock = failed && isGovernanceBlockedResponseFailure(attributes);

@@ -378,6 +378,46 @@ test("taxonomy review no-go failures are tracked as governed blocks", () => {
   assert.ok(signal.details?.includes("governance outcome no_go"));
 });
 
+test("observability trace handoff no-go failures are tracked as governed blocks", () => {
+  const signal = deriveCapabilitySignalFromEvent("observability_trace_handoff_failed", {
+    traceId: "trace_observability_no_go",
+    conversationId: "conv_observability_no_go",
+    turnId: "turn_observability_no_go",
+    profile: "adult_owner",
+    reason: "governance_no_go",
+    governanceOutcome: "no_go",
+    blockedEffects: ["trace_append", "audit_authority", "external_send"],
+    rawTraceBody: "raw trace evidence text",
+  });
+
+  assert.equal(signal.topicLabel, "observability");
+  assert.equal(signal.intentLabel, "governed_trace_evidence_handoff");
+  assert.equal(signal.capabilityLabel, "observability_trace_handoff");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.architectureArea, "governance_ux");
+  assert.ok(signal.details?.includes("bridge failure reason governance_no_go"));
+  assert.ok(signal.details?.includes("governance outcome no_go"));
+  assert.equal(JSON.stringify(signal).includes("raw trace evidence text"), false);
+});
+
+test("observability trace handoff transport failures still suggest bridge follow-up", () => {
+  const signal = deriveCapabilitySignalFromEvent("observability_trace_handoff_failed", {
+    traceId: "trace_observability_timeout",
+    conversationId: "conv_observability_timeout",
+    turnId: "turn_observability_timeout",
+    profile: "adult_owner",
+    reason: "bridge_timeout",
+  });
+
+  assert.equal(signal.capabilityLabel, "observability_trace_handoff");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "bridge_failed");
+  assert.equal(signal.suggestedNextStep, "add_backlog_item");
+  assert.equal(signal.architectureArea, "bridge");
+});
+
 test("memory proposal no-go failures are tracked as governed blocks", () => {
   const signal = deriveCapabilitySignalFromEvent("memory_proposal_send_failed", {
     traceId: "trace_memory_no_go",

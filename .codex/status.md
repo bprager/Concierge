@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Capability Intelligence now tracks governed observability trace handoff send events, classifying governed `deny` and `no_go` outcomes as correct safety blocks with no bridge-repair next step while preserving real bridge failures as follow-up candidates.
 - Capability Intelligence now tracks memory proposal review handoff send events, classifying governed `deny` and `no_go` outcomes as correct safety blocks with no bridge-repair next step while preserving real bridge failures as follow-up candidates.
 - Capability Intelligence now tracks capability review packet and taxonomy review handoff send events, classifying governed `deny` and `no_go` outcomes as correct safety blocks with no bridge-repair next step while preserving real bridge failures as follow-up candidates.
 - Capability Intelligence now keeps governed Chief of Staff steering `deny` and `no_go` send failures countable by recommendation type while classifying them as correct governance blocks with no bridge-repair next step.
