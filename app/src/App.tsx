@@ -2668,6 +2668,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           descriptorHandoffSource?: string;
           descriptorHandoffFailureReason?: string;
           descriptorHandoffRequiredAction?: string;
+          napoleonRequiredActions?: unknown[];
         };
       };
     };
@@ -2699,6 +2700,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         bridgeReadinessProof.runtimeValidation?.evaluator?.descriptorHandoffFailureReason ?? "none",
       evaluatorDescriptorHandoffRequiredAction:
         bridgeReadinessProof.runtimeValidation?.evaluator?.descriptorHandoffRequiredAction ?? "none",
+      evaluatorNapoleonRequiredActionCount:
+        bridgeReadinessProof.runtimeValidation?.evaluator?.napoleonRequiredActions?.length ?? 0,
       evaluatorImportStatus: evaluatorValidationImport?.status ?? "not_imported",
       proofComparisonStatus: comparison.status,
       proofComparisonChangeCount: comparison.changes.length,
@@ -2783,6 +2786,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       evaluatorDescriptorHandoffSource: importResult.validation.descriptorHandoffSource ?? "unavailable",
       evaluatorDescriptorHandoffFailureReason: importResult.validation.descriptorHandoffFailureReason ?? "none",
       evaluatorDescriptorHandoffRequiredAction: importResult.validation.descriptorHandoffRequiredAction ?? "none",
+      evaluatorNapoleonRequiredActionCount: importResult.validation.napoleonRequiredActions?.length ?? 0,
       runtimeValidationSource: importResult.runtimeValidationSource ?? "unavailable",
       approvalCaptured: false,
       memoryWritePerformed: false,

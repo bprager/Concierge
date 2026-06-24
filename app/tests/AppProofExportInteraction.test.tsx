@@ -5867,6 +5867,14 @@ test("renders unadvertised evaluator handoff required action from validation imp
     assert.ok(readinessExport.textContent?.includes('"sideEffectsPerformed": false'));
     assert.ok(readinessExport.textContent?.includes("supportedHandoffs"));
     assert.equal(readinessExport.textContent?.includes("127.0.0.1"), false);
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const importEvent = telemetryBuffer.events?.find((event) => event.event === "evaluator_validation_artifact_imported");
+    assert.equal(importEvent?.attributes.evaluatorNapoleonRequiredActionCount, 1);
+    const readinessEvent = telemetryBuffer.events?.find((event) => event.event === "bridge_readiness_proof_exported");
+    assert.equal(readinessEvent?.attributes.evaluatorNapoleonRequiredActionCount, 1);
+    assert.equal(JSON.stringify(readinessEvent).includes("advertise_evaluation_review_handoff"), false);
   } finally {
     cleanup();
     dom.window.close();
