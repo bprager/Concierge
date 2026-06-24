@@ -416,6 +416,10 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhich\b.*\bgovernance\b.*\b(state|outcome|decision)\b/.test(lower) ||
     /\bwhat\b.*\b(state|outcome|decision)\b.*\bgovernance\b/.test(lower) ||
     /\bgovernance\s+(state|outcome|decision)\b/.test(lower);
+  const asksAboutReturnedProofReference =
+    /\b(what|which)\b.*\b(trace|audit)\b.*\b(napoleon|returned|return)\b/.test(lower) ||
+    /\bnapoleon\b.*\b(trace|audit)\b.*\b(returned|return)\b/.test(lower) ||
+    /\b(returned|return)\b.*\b(trace|audit)\b/.test(lower);
   const asksAboutReturnedRecommendation =
     /\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
     /\bwhat\b.*\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
@@ -435,6 +439,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     !asksAboutReturnedHandler &&
     !asksAboutReturnedEffects &&
     !asksAboutReturnedGovernance &&
+    !asksAboutReturnedProofReference &&
     !asksAboutReturnedRecommendation &&
     !asksAboutReturnedSelectedAgents &&
     !asksAboutNamedSelectedAgentContribution &&
@@ -446,6 +451,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutReturnedHandler ||
     asksAboutReturnedEffects ||
     asksAboutReturnedGovernance ||
+    asksAboutReturnedProofReference ||
     asksAboutReturnedRecommendation ||
     asksAboutReturnedSelectedAgents ||
     asksAboutNamedSelectedAgentContribution ||

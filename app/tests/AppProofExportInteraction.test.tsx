@@ -610,6 +610,38 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(governanceStateAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(governanceStateAnswerEvent).includes("What was the governance state?"), false);
     assert.equal(JSON.stringify(governanceStateAnswerEvent).includes("requires_review"), false);
+    const requestCountBeforeTraceAuditQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeTraceAuditQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What trace and audit did Napoleon return?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let traceAuditAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeTraceAuditQuestion + 1);
+      traceAuditAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(traceAuditAnswer);
+      assert.ok(traceAuditAnswer.textContent?.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
+    });
+    assert.ok(traceAuditAnswer);
+    const traceAuditAnswerText = traceAuditAnswer.textContent ?? "";
+    assert.ok(traceAuditAnswerText.includes("Handled by: Passive Brain."));
+    assert.ok(traceAuditAnswerText.includes("Governance: requires_review."));
+    assert.equal(requestedUrls.length, requestCountBeforeTraceAuditQuestion);
+    const traceAuditAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(traceAuditAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(traceAuditAnswerEvent?.attributes.traceReturned, true);
+    assert.equal(traceAuditAnswerEvent?.attributes.auditReturned, true);
+    assert.equal(traceAuditAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(traceAuditAnswerEvent).includes("What trace and audit did Napoleon return?"), false);
+    assert.equal(JSON.stringify(traceAuditAnswerEvent).includes(lastTextTurnTraceId), false);
     const requestCountBeforeSelectedAgentsQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeSelectedAgentsQuestion = Array.from(
       document.querySelectorAll("article.assistant"),
