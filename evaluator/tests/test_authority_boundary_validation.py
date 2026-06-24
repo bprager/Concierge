@@ -49,13 +49,21 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         for source in [
             'await childProcess["execFile"]("osascript", args);',
             'await childProcess["execFile"].call(childProcess, "osascript", args);',
+            'await childProcess["exec" + "File"]("osascript", args);',
+            'await childProcess["exec" + "File"].call(childProcess, "osascript", args);',
+            'await childProcess["exec" + "Sync"]("osascript", args);',
             'await childProcess["spawnSync"]("sh", ["-c", script]);',
             'await childProcess["spawnSync"].apply(childProcess, ["sh", ["-c", script]]);',
+            'await childProcess["spawn" + "Sync"]("sh", ["-c", script]);',
+            'await childProcess["spawn" + "Sync"].apply(childProcess, ["sh", ["-c", script]]);',
             'const command = new globalThis["Deno"]["Command"]("osascript", { args });',
+            'const command = new globalThis["Deno"]["Com" + "mand"]("osascript", { args });',
             'const child = globalThis["Bun"]["spawn"](["osascript", "-e", script]);',
             'const child = globalThis["Bun"]["spawn"].call(globalThis.Bun, ["osascript", "-e", script]);',
             'const result = window["Bun"]["spawnSync"](["sh", "-c", script]);',
             'const result = window["Bun"]["spawnSync"].apply(window.Bun, [["sh", "-c", script]]);',
+            'const result = window["Bun"]["spawn" + "Sync"](["sh", "-c", script]);',
+            'const result = window["Bun"]["spawn" + "Sync"].apply(window.Bun, [["sh", "-c", script]]);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_authority_boundary_text("app/src/processAlias.ts", source)
@@ -84,6 +92,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'await window["write" + "Memory"](proposal);',
             'await globalThis["save" + "Memory"](proposal);',
             'await window["graph" + "_write"](payload);',
+            'await memoryClient["write" + "Memory"](proposal);',
+            'await memoryClient["save" + "Memory"](proposal);',
+            'await memoryClient["memory" + "Graph"](proposal);',
+            'await graphClient["graph" + "_write"](payload);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_authority_boundary_text("app/src/memory.ts", source)
@@ -106,9 +118,14 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "await executeTool(toolName, payload);",
             'await window["invoke" + "Agent"](request);',
             'await window["dispatch" + "Agent"](request);',
+            'await router["invoke" + "Agent"](request);',
+            'await router["dispatch" + "Agent"](request);',
             'await globalThis["run" + "Tool"]("calendar.lookup", payload);',
             'await globalThis["call" + "Tool"]("calendar.lookup", payload);',
             'await window["execute" + "Tool"](toolName, payload);',
+            'await tools["run" + "Tool"]("calendar.lookup", payload);',
+            'await tools["call" + "Tool"]("calendar.lookup", payload);',
+            'await tools["execute" + "Tool"](toolName, payload);',
             'await tool["execute"](payload);',
         ]:
             with self.subTest(source=source):

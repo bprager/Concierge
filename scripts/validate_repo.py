@@ -162,11 +162,14 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
             r"|\b(?:exec|execFile|execFileSync|execSync|spawn|spawnSync)\s*\("
             r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:execFile|execFileSync|execSync|spawn|spawnSync)['\"]\s*\]\s*\("
             r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:execFile|execFileSync|execSync|spawn|spawnSync)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*(?:['\"]exec['\"]\s*\+\s*['\"](?:File|FileSync|Sync)['\"]|['\"]spawn['\"]\s*\+\s*['\"]Sync['\"])\s*\]\s*(?:\(|\.\s*(?:call|apply)\s*\()"
             r"|\bDeno\.Command\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"]Deno['\"]\s*\]\s*\[\s*['\"]Command['\"]\s*\]\s*\("
+            r"|\b(?:globalThis|window)\s*\[\s*['\"]Deno['\"]\s*\]\s*\[\s*['\"]Com['\"]\s*\+\s*['\"]mand['\"]\s*\]\s*(?:\(|\.\s*(?:call|apply)\s*\()"
             r"|\bBun\.spawnSync\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"]Bun['\"]\s*\]\s*\[\s*['\"](?:spawn|spawnSync)['\"]\s*\]\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"]Bun['\"]\s*\]\s*\[\s*['\"](?:spawn|spawnSync)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+            r"|\b(?:globalThis|window)\s*\[\s*['\"]Bun['\"]\s*\]\s*\[\s*['\"]spawn['\"]\s*\+\s*['\"]Sync['\"]\s*\]\s*(?:\(|\.\s*(?:call|apply)\s*\()"
             r"|\bCommand::new\s*\("
         ),
         "direct process or shell execution",
@@ -175,6 +178,9 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         re.compile(
             r"\b(memgraph\w*|neo4j|bolt://|writeMemory|saveMemory|memoryGraph)\b"
             r"|\bgraph_write\s*\("
+            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:write|save)['\"]\s*\+\s*['\"]Memory['\"]\s*\]\s*\("
+            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"]graph['\"]\s*\+\s*['\"]_write['\"]\s*\]\s*\("
+            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"]memory['\"]\s*\+\s*['\"]Graph['\"]\s*\]\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"](?:write|save)['\"]\s*\+\s*['\"]Memory['\"]\s*\]\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"]graph['\"]\s*\+\s*['\"]_write['\"]\s*\]\s*\(",
             re.IGNORECASE,
@@ -185,6 +191,8 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         re.compile(
             r"\b(dispatchAgent|invokeAgent|agentRegistry|taskRouter|callTool|runTool|executeTool)\b"
             r"|\btool\.execute\s*\("
+            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:invoke|dispatch)['\"]\s*\+\s*['\"]Agent['\"]\s*\]\s*\("
+            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:run|call|execute)['\"]\s*\+\s*['\"]Tool['\"]\s*\]\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"]invoke['\"]\s*\+\s*['\"]Agent['\"]\s*\]\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"]dispatch['\"]\s*\+\s*['\"]Agent['\"]\s*\]\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"]run['\"]\s*\+\s*['\"]Tool['\"]\s*\]\s*\("

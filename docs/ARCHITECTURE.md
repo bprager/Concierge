@@ -183,9 +183,11 @@ Dynamic HTML injection APIs, including bracket-style aliases such as `container[
 
 Dynamic code execution APIs, including bracket-style aliases for eval and Function calls, constructor calls with or without `new`, indirect constructor-constructor access, dot-property aliases such as `new window.Function(...)`, and string-timer aliases, are treated as hidden authority paths and are rejected from Concierge runtime source.
 
-Direct memory and graph write aliases, including split bracket forms such as `window["write" + "Memory"]`, `globalThis["save" + "Memory"]`, and `window["graph" + "_write"]`, are rejected so memory review remains proposal-only through Napoleon instead of becoming a local write path.
+Direct process aliases with concatenated bracket names such as `childProcess["exec" + "File"] (...)`, `childProcess["spawn" + "Sync"] (...)`, `globalThis["Deno"]["Com" + "mand"] (...)`, and `window["Bun"]["spawn" + "Sync"] (...)` are rejected so UI code cannot execute local commands beside Napoleon governance.
 
-Direct agent and tool dispatch aliases, including split bracket forms such as `window["dispatch" + "Agent"]`, `globalThis["call" + "Tool"]`, and `window["execute" + "Tool"]`, are rejected so Concierge cannot become a local router or tool runner beside Napoleon.
+Direct memory and graph write aliases, including split bracket forms on arbitrary objects such as `memoryClient["write" + "Memory"]`, `memoryClient["save" + "Memory"]`, `memoryClient["memory" + "Graph"]`, and `graphClient["graph" + "_write"]`, are rejected so memory review remains proposal-only through Napoleon instead of becoming a local write path.
+
+Direct agent and tool dispatch aliases, including split bracket forms on arbitrary objects such as `router["dispatch" + "Agent"]`, `globalThis["call" + "Tool"]`, and `tools["execute" + "Tool"]`, are rejected so Concierge cannot become a local router or tool runner beside Napoleon.
 
 JavaScript runtime process APIs such as `execFile`, `execFileSync`, `execSync`, `spawnSync`, `Deno.Command`, `Bun.spawn`, `Bun.spawnSync`, and bracket-style aliases such as `childProcess["execFile"]`, `globalThis["Deno"]["Command"]`, and `window["Bun"]["spawnSync"]` are treated as direct command execution and rejected from Concierge runtime source.
 
