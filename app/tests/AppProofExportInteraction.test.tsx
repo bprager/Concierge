@@ -3648,6 +3648,181 @@ test("clears Napoleon proof and delegation when descriptor discovery refreshes c
   }
 });
 
+for (const descriptorFailure of [
+  {
+    name: "auth failure",
+    reason: "auth_failure",
+    userMessage: "Napoleon descriptor discovery failed authentication, so Concierge is blocked from live bridge sends.",
+    descriptorFailureText: "descriptor auth failure",
+    nextStep: "Fix descriptor authentication or the bridge token before sending.",
+    response: () => harnessJsonResponse(401, { text: "Unauthorized stale_descriptor_secret" }),
+  },
+  {
+    name: "timeout",
+    reason: "bridge_timeout",
+    userMessage: "Napoleon descriptor discovery timed out, so Concierge is blocked from live bridge sends.",
+    descriptorFailureText: "descriptor timeout",
+    nextStep: "Restore descriptor connectivity and rediscover the descriptor before sending.",
+    response: () => {
+      const error = new Error("Private descriptor timeout detail for http://127.0.0.1:8787");
+      error.name = "AbortError";
+      throw error;
+    },
+  },
+  {
+    name: "HTTP failure",
+    reason: "http_failure",
+    userMessage: "Napoleon descriptor discovery failed over HTTP, so Concierge is blocked from live bridge sends.",
+    descriptorFailureText: "descriptor HTTP failure",
+    nextStep: "Resolve the descriptor HTTP failure and rediscover the descriptor before sending.",
+    response: () => harnessJsonResponse(503, { text: "Private upstream descriptor outage" }),
+  },
+] as const) {
+  test(`clears Napoleon proof and delegation when descriptor discovery refresh returns ${descriptorFailure.name}`, async () => {
+    const dom = installDom();
+    const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+      import("@testing-library/react"),
+      import("@testing-library/user-event"),
+      import("../src/App.js"),
+    ]);
+    const user = userEventModule.default.setup();
+    const requestedUrls: string[] = [];
+    let descriptorRefreshShouldFail = false;
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      requestedUrls.push(url);
+      if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+        if (descriptorRefreshShouldFail) return descriptorFailure.response();
+        return harnessJsonResponse(200, {
+          descriptor: {
+            schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+            serviceId: "napoleon.chief_of_staff",
+            runtimeAuthority: false,
+            commandExecution: false,
+            cachePolicy: "fail_closed_to_review_required",
+            blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+          },
+          checksum: { expected: "sha256:initial", actual: "sha256:initial" },
+          signature: { valid: true },
+        });
+      }
+
+      assert.equal(url, "http://127.0.0.1:8787/v1/concierge/turn");
+      const body = JSON.parse(String(init?.body ?? "{}")) as {
+        traceId: string;
+        profileMode: string;
+        chiefOfStaffRequest: { request_id: string };
+      };
+      return harnessJsonResponse(200, {
+        text: `Napoleon recommends clearing proof if descriptor discovery later returns ${descriptorFailure.reason}.`,
+        profileMode: body.profileMode,
+        targetAgent: "napoleon.chief_of_staff",
+        governanceDecision: {
+          decision_id: `decision_${body.traceId}`,
+          request_id: body.chiefOfStaffRequest.request_id,
+          outcome: "requires_review",
+          authority_tier: "advisory_review",
+          approval_requirement: "chief_of_staff_and_owner_review",
+          rationale: "Local harness requires governed review.",
+          blocked_effects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+          trace_id: body.traceId,
+          audit_id: `audit_${body.traceId}`,
+        },
+        traceEnvelope: {
+          trace_id: body.traceId,
+          parent_trace_id: "local_harness",
+          actor_id: "napoleon.local_harness",
+          request_id: body.chiefOfStaffRequest.request_id,
+          decision_id: `decision_${body.traceId}`,
+          timestamp: "2026-06-12T00:00:00.000Z",
+        },
+        auditEnvelope: {
+          audit_id: `audit_${body.traceId}`,
+          trace_id: body.traceId,
+          decision_id: `decision_${body.traceId}`,
+          actor_id: "napoleon.local_harness",
+          authority_tier: "advisory_review",
+          approval_requirement: "chief_of_staff_and_owner_review",
+          evidence_links: [`trace:${body.traceId}`, "harness:local"],
+        },
+        delegation: {
+          selectedAgents: [
+            {
+              agentId: "passive_brain",
+              displayName: "Passive Brain",
+              selectionReason: "Failure-refresh scoped prior context is relevant.",
+              contributionSummary: "failure-refresh scoped context",
+            },
+          ],
+          allowedEffects: ["prepare_advisory_response"],
+          blockedEffects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+          governanceState: "requires_review",
+          traceId: body.traceId,
+          auditId: `audit_${body.traceId}`,
+        },
+        recommendationProvenance: {
+          summary: `clearing proof if descriptor discovery later returns ${descriptorFailure.reason}`,
+          traceId: body.traceId,
+          auditId: `audit_${body.traceId}`,
+        },
+      });
+    }) as typeof fetch;
+
+    try {
+      const view = render(<App />);
+
+      await user.click(view.getByRole("button", { name: "Use local harness" }));
+      await waitFor(() =>
+        assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+      );
+      await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+      const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+      fireEvent.change(composer, { target: { value: `Prepare a descriptor ${descriptorFailure.reason} proof` } });
+      await waitFor(() => assert.equal(composer.value, `Prepare a descriptor ${descriptorFailure.reason} proof`));
+      await user.click(view.getByRole("button", { name: "Send" }));
+
+      await view.findByText("Last successful Napoleon proof");
+      const delegationPanel = view.getByLabelText("Napoleon delegation");
+      assert.ok(within(delegationPanel).getAllByText(/Passive Brain/).length > 0);
+      assert.ok(within(delegationPanel).getByText("napoleon.chief_of_staff"));
+      assert.ok(within(delegationPanel).getAllByText(/Failure-refresh scoped prior context is relevant/).length > 0);
+
+      const descriptorRequestCountBeforeRefresh = requestedUrls.filter((url) =>
+        url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor"
+      ).length;
+      descriptorRefreshShouldFail = true;
+      await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+      await waitFor(() =>
+        assert.ok(
+          requestedUrls.filter((url) => url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")
+            .length > descriptorRequestCountBeforeRefresh,
+        ),
+      );
+      await waitFor(() => assert.ok(view.getAllByText(descriptorFailure.userMessage).length > 0));
+
+      assert.equal(view.queryByText("Last successful Napoleon proof"), null);
+      assert.equal(within(delegationPanel).queryAllByText(/Passive Brain/).length, 0);
+      assert.equal(within(delegationPanel).queryByText("napoleon.chief_of_staff"), null);
+      assert.equal(
+        within(delegationPanel).queryAllByText(/Failure-refresh scoped prior context is relevant/).length,
+        0,
+      );
+      assert.ok(within(delegationPanel).getByText("Connection state"));
+      assert.ok(within(delegationPanel).getByText(descriptorFailure.reason));
+      assert.ok(within(delegationPanel).getByText("Descriptor failure"));
+      assert.ok(within(delegationPanel).getByText(descriptorFailure.descriptorFailureText));
+      assert.ok(within(delegationPanel).getByText(descriptorFailure.nextStep));
+      assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
+      assert.equal(view.container.textContent?.includes("stale_descriptor_secret"), false);
+      assert.equal(view.container.textContent?.includes("Private descriptor timeout detail"), false);
+      assert.equal(view.container.textContent?.includes("Private upstream descriptor outage"), false);
+    } finally {
+      cleanup();
+      dom.window.close();
+    }
+  });
+}
+
 test("clears Napoleon proof and delegation when Rehearsal Mode is enabled", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
