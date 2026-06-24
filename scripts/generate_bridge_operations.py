@@ -38,6 +38,7 @@ NAPOLEON_REVIEW_OPERATION_IDS = {
     "evaluation_review",
     "evolution_proposal_review",
     "evolution_proposal_submission",
+    "evolution_proposal_status",
     "governance_evaluation",
     "governance_review",
     "new_agent_proposal_review",
@@ -49,6 +50,7 @@ NAPOLEON_REVIEW_REQUEST_KINDS = {
     "evaluation_review_handoff",
     "evolution_proposal_review_handoff",
     "evolution_proposal_submission_handoff",
+    "evolution_proposal_status_handoff",
     "governance_evaluation_handoff",
     "governance_review_handoff",
     "new_agent_proposal_review_handoff",
@@ -115,6 +117,7 @@ def sorted_review_operations(openapi: dict[str, Any]) -> list[dict[str, Any]]:
         path = operation.get("path")
         request_kind = operation.get("requestKind")
         response_required = operation.get("responseRequired")
+        transport = operation.get("transport", "http_post")
         if operation_id not in NAPOLEON_REVIEW_OPERATION_IDS:
             raise SystemExit(f"Unknown Napoleon review operation id: {operation_id}")
         if operation_id in seen_ids:
@@ -123,6 +126,8 @@ def sorted_review_operations(openapi: dict[str, Any]) -> list[dict[str, Any]]:
             raise SystemExit(f"Invalid Napoleon review operation path for {operation_id}: {path}")
         if request_kind not in NAPOLEON_REVIEW_REQUEST_KINDS:
             raise SystemExit(f"Invalid Napoleon review requestKind for {operation_id}: {request_kind}")
+        if transport not in HTTP_METHOD_TO_TRANSPORT.values():
+            raise SystemExit(f"Invalid Napoleon review transport for {operation_id}: {transport}")
         if not isinstance(response_required, list) or not all(isinstance(item, str) for item in response_required):
             raise SystemExit(f"Napoleon review operation lacks responseRequired list: {operation_id}")
         seen_ids.add(operation_id)
@@ -131,7 +136,7 @@ def sorted_review_operations(openapi: dict[str, Any]) -> list[dict[str, Any]]:
                 "id": operation_id,
                 "path": path,
                 "requestKind": request_kind,
-                "transport": "http_post",
+                "transport": transport,
                 "responseRequired": response_required,
             }
         )

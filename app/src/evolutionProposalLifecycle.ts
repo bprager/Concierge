@@ -1,5 +1,5 @@
 import type { CapabilityPrivacyClass } from "./capabilityLedger.js";
-import type { NapoleonProfileMode } from "./contractBridge.js";
+import type { AuditEnvelope, GovernanceDecision, NapoleonProfileMode, TraceEnvelope } from "./contractBridge.js";
 import type { EvolutionProposalSubmissionPacket, EvolutionProposalSubmissionResult } from "./evolutionProposalSubmission.js";
 
 export const EVOLUTION_PROPOSAL_LIFECYCLE_STORAGE_KEY = "concierge_evolution_proposal_lifecycle";
@@ -31,8 +31,8 @@ export interface EvolutionProposalLifecycleRecord {
   intakeAuditId?: string;
   intakeTraceId?: string;
   statusRefresh: {
-    available: false;
-    reason: "descriptor_status_route_not_advertised";
+    available: boolean;
+    reason: "descriptor_status_route_not_advertised" | "refreshed_via_governed_route";
     nextStep: string;
   };
   nextRecommendedUserAction: string;
@@ -55,6 +55,22 @@ export interface EvolutionProposalLifecycleExport {
   privacyCaveat: string;
   authorityCaveat: string;
   records: EvolutionProposalLifecycleRecord[];
+}
+
+export interface EvolutionProposalStatusResult {
+  proposalId: string;
+  lifecycleState: EvolutionProposalLifecycleState;
+  latestKnownOutcome: string;
+  governanceDecision: GovernanceDecision;
+  traceEnvelope: TraceEnvelope;
+  auditEnvelope: AuditEnvelope;
+  appliedLocally: false;
+  memoryWritePerformed: false;
+  approvalCaptured: false;
+  agentDispatchPerformed: false;
+  externalSendPerformed: false;
+  registryUpdatePerformed: false;
+  evolutionApplied: false;
 }
 
 export interface EvolutionProposalLifecycleStorage {
@@ -158,6 +174,34 @@ export function updateEvolutionProposalLifecycleAfterFailure(
     latestKnownOutcome: safeMetadata(`Submission blocked: ${reason}`, "Submission blocked."),
     statusRefresh: unavailableRefresh(),
     nextRecommendedUserAction: "Fix the governed handoff blocker before attempting submission again.",
+    privacyClass: "metadata_only",
+    boundary: baseBoundary(),
+  };
+}
+
+export function updateEvolutionProposalLifecycleFromStatus(
+  current: EvolutionProposalLifecycleRecord,
+  result: EvolutionProposalStatusResult,
+  options: { updatedAt?: string } = {},
+): EvolutionProposalLifecycleRecord {
+  const updatedAt = nowIso(options.updatedAt);
+  return {
+    ...current,
+    updatedAt,
+    currentLifecycleState: result.lifecycleState,
+    latestKnownOutcome: safeMetadata(result.latestKnownOutcome, "Napoleon returned proposal status metadata."),
+    intakeDecisionId: result.governanceDecision.decision_id,
+    intakeAuditId: result.auditEnvelope.audit_id,
+    intakeTraceId: result.traceEnvelope.trace_id,
+    statusRefresh: {
+      available: true,
+      reason: "refreshed_via_governed_route",
+      nextStep: "Latest status was refreshed through a descriptor-advertised governed route.",
+    },
+    nextRecommendedUserAction:
+      result.lifecycleState === "implemented" || result.lifecycleState === "rolled_back"
+        ? "Review Napoleon's implementation, rollout, or rollback evidence before relying on the change."
+        : "Continue tracking through Napoleon-governed status evidence.",
     privacyClass: "metadata_only",
     boundary: baseBoundary(),
   };

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added descriptor-gated, read-only evolution proposal status refresh for `/evolution/proposals/{proposal_id}/status`, with Text UI lifecycle updates, `evolution_proposal_status_handoff` contract metadata, telemetry classification, and fail-closed rejection of local evolution or side-effect claims.
 - Added local metadata-only evolution proposal lifecycle tracking after `/evolution/proposals` intake submissions, with Text UI state/export, decision/audit references, fail-closed blocked-state records, and status-refresh-unavailable wording until Napoleon advertises a governed status route.
 - Added a proposal-only new-agent review packet flow from Capability Intelligence, with Text UI draft/export/submission controls, descriptor-gated `/chief-of-staff/reviews/new-agent-proposals` handoff, Capability Intelligence telemetry classification, and fail-closed rejection of registry update or agent activation claims.
 - Added a proposal-only evolution proposal submission flow from Capability Intelligence, with Text UI draft/export/submission controls, descriptor-gated `/evolution/proposals` intake handoff, Capability Intelligence telemetry classification, and fail-closed rejection of local evolution or registry-update claims.

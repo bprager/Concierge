@@ -89,6 +89,15 @@ export const GENERATED_NAPOLEON_REVIEW_OPERATIONS = [
     tokenPlacement: "authorization_header_only",
   },
   {
+    id: "evolution_proposal_status",
+    path: "/evolution/proposals/{proposal_id}/status",
+    requestKind: "evolution_proposal_status_handoff",
+    transport: "http_get",
+    responseRequired: ["proposalId", "lifecycleState", "latestKnownOutcome", "governanceDecision", "traceEnvelope", "auditEnvelope", "appliedLocally", "memoryWritePerformed", "approvalCaptured", "agentDispatchPerformed", "externalSendPerformed", "registryUpdatePerformed", "evolutionApplied"],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+  {
     id: "evolution_proposal_submission",
     path: "/evolution/proposals",
     requestKind: "evolution_proposal_submission_handoff",

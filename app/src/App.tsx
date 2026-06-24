@@ -95,6 +95,7 @@ import {
   buildRehearsalPreview,
   buildTextTurnContract,
   defaultChiefOfStaffDescriptor,
+  descriptorSupportsGovernedHandoff,
   mapProfileToNapoleonMode,
   transitionMemoryProposalReviewState,
   type DescriptorConnectionInput,
@@ -136,9 +137,11 @@ import {
   persistEvolutionProposalLifecycleRecords,
   updateEvolutionProposalLifecycleAfterFailure,
   updateEvolutionProposalLifecycleAfterSubmission,
+  updateEvolutionProposalLifecycleFromStatus,
   upsertEvolutionProposalLifecycleRecord,
   type EvolutionProposalLifecycleRecord,
 } from "./evolutionProposalLifecycle.js";
+import { refreshEvolutionProposalStatusFromNapoleon } from "./evolutionProposalStatus.js";
 import {
   buildMediaSessionReadinessTelemetryAttributes,
   buildMediaSessionSummary,
@@ -522,6 +525,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [evolutionProposalSubmission, setEvolutionProposalSubmission] =
     useState<EvolutionProposalSubmissionResult | null>(null);
   const [evolutionProposalSubmissionFailure, setEvolutionProposalSubmissionFailure] = useState<string | null>(null);
+  const [evolutionProposalStatusFailure, setEvolutionProposalStatusFailure] = useState<string | null>(null);
   const [evolutionProposalLifecycleRecords, setEvolutionProposalLifecycleRecords] = useState(() =>
     loadEvolutionProposalLifecycleRecords(browserStorage()),
   );
@@ -591,6 +595,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setNewAgentProposalFailure(null);
     setEvolutionProposalSubmission(null);
     setEvolutionProposalSubmissionFailure(null);
+    setEvolutionProposalStatusFailure(null);
     setObservabilityTraceHandoffResult(null);
     setObservabilityTraceHandoffFailure(null);
   }
@@ -625,6 +630,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setEvolutionProposalSubmissionPacketExportJson(null);
     setEvolutionProposalSubmission(null);
     setEvolutionProposalSubmissionFailure(null);
+    setEvolutionProposalStatusFailure(null);
     setEvolutionProposalLifecycleExportJson(null);
   }
 
@@ -774,6 +780,21 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     rehearsalMode,
     requiredHandoff: "evolution_proposal_submission",
   });
+  const evolutionProposalStatusRefreshAvailable = Boolean(
+    !rehearsalMode &&
+      endpoint.trim() &&
+      descriptorConnection.canAttemptLiveBridge &&
+      descriptorSupportsGovernedHandoff(descriptorConnection, "evolution_proposal_status"),
+  );
+  const evolutionProposalStatusRefreshBlockedReason = rehearsalMode
+    ? "Rehearsal Mode is active, so Concierge will not contact Napoleon."
+    : !endpoint.trim()
+      ? "No Napoleon endpoint is configured."
+      : !descriptorConnection.canAttemptLiveBridge
+        ? descriptorConnection.message
+        : !descriptorSupportsGovernedHandoff(descriptorConnection, "evolution_proposal_status")
+          ? "Descriptor does not advertise the read-only evolution proposal status handoff."
+          : null;
   const latestInteractionTraceId = findLatestInteractionTraceId(browserStorage());
   const observabilityTraceHandoffReadiness = describeGovernedHandoffReadiness({
     label: "Observability trace handoff",
@@ -3284,6 +3305,47 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     }
   }
 
+  async function refreshEvolutionProposalLifecycleStatus(record: EvolutionProposalLifecycleRecord) {
+    const traceId = newTraceId();
+    try {
+      const result = await refreshEvolutionProposalStatusFromNapoleon(record, {
+        conversationId,
+        traceId,
+        profile,
+        rehearsalMode,
+        descriptorConnection: currentDescriptorInput(),
+      });
+      const nextLifecycle = updateEvolutionProposalLifecycleFromStatus(record, result);
+      rememberEvolutionProposalLifecycle(nextLifecycle);
+      setEvolutionProposalStatusFailure(null);
+      emitEvent("evolution_proposal_lifecycle_recorded", {
+        traceId,
+        conversationId,
+        proposalId: nextLifecycle.proposalId,
+        lifecycleState: nextLifecycle.currentLifecycleState,
+        latestKnownOutcome: nextLifecycle.latestKnownOutcome,
+        decisionId: nextLifecycle.intakeDecisionId,
+        auditId: nextLifecycle.intakeAuditId,
+        statusRefreshAvailable: nextLifecycle.statusRefresh.available,
+        privacyClass: nextLifecycle.privacyClass,
+        proposalOnly: nextLifecycle.boundary.proposalOnly,
+        approvalCaptured: nextLifecycle.boundary.approvalCaptured,
+        memoryWritePerformed: nextLifecycle.boundary.memoryWritePerformed,
+        agentDispatchPerformed: nextLifecycle.boundary.agentDispatchPerformed,
+        externalSendPerformed: nextLifecycle.boundary.externalSendPerformed,
+        registryUpdatePerformed: nextLifecycle.boundary.registryUpdatePerformed,
+        evolutionApplied: nextLifecycle.boundary.evolutionApplied,
+        appliedLocally: nextLifecycle.boundary.appliedLocally,
+      });
+      refreshCapabilityLedgerStatus();
+    } catch (error) {
+      setEvolutionProposalStatusFailure(
+        describeGovernedHandoffFailure(error, "Evolution proposal status refresh", "apply evolution changes"),
+      );
+      refreshCapabilityLedgerStatus();
+    }
+  }
+
   const canSendRehearsal = Boolean(
     pendingRehearsal &&
       !rehearsalMode &&
@@ -3408,6 +3470,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     describeNapoleonReviewOperationSummary("evaluation_review"),
     describeNapoleonReviewOperationSummary("evolution_proposal_review"),
     describeNapoleonReviewOperationSummary("evolution_proposal_submission"),
+    describeNapoleonReviewOperationSummary("evolution_proposal_status"),
     describeNapoleonReviewOperationSummary("governance_evaluation"),
     describeNapoleonReviewOperationSummary("governance_review"),
     describeNapoleonReviewOperationSummary("new_agent_proposal_review"),
@@ -5934,6 +5997,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                         <button className="secondary" onClick={exportEvolutionProposalLifecycle}>
                           Export evolution proposal lifecycle
                         </button>
+                        {evolutionProposalStatusRefreshBlockedReason ? (
+                          <p className="warning">{evolutionProposalStatusRefreshBlockedReason}</p>
+                        ) : null}
+                        {evolutionProposalStatusFailure ? (
+                          <p className="warning">{evolutionProposalStatusFailure}</p>
+                        ) : null}
                         <dl>
                           {evolutionProposalLifecycleRecords.slice(0, 3).map((record) => (
                             <div key={record.proposalId}>
@@ -5947,6 +6016,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                                   : `unavailable (${record.statusRefresh.reason})`}
                                 ; next step {record.nextRecommendedUserAction}; boundary proposal-only, no local
                                 evolution, no registry update, no approval capture.
+                                <button
+                                  className="secondary"
+                                  onClick={() => refreshEvolutionProposalLifecycleStatus(record)}
+                                  disabled={!evolutionProposalStatusRefreshAvailable}
+                                >
+                                  Refresh status from Napoleon
+                                </button>
                               </dd>
                             </div>
                           ))}

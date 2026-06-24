@@ -14,8 +14,10 @@ import {
   persistEvolutionProposalLifecycleRecords,
   updateEvolutionProposalLifecycleAfterFailure,
   updateEvolutionProposalLifecycleAfterSubmission,
+  updateEvolutionProposalLifecycleFromStatus,
   upsertEvolutionProposalLifecycleRecord,
 } from "../src/evolutionProposalLifecycle.js";
+import { refreshEvolutionProposalStatusFromNapoleon } from "../src/evolutionProposalStatus.js";
 
 type TestFetchInit = { method?: string; headers?: Record<string, string>; body?: string };
 
@@ -131,6 +133,50 @@ function buildResponse(traceId: string, requestId: string, overrides: Record<str
       request_id: requestId,
       decision_id: `decision_${traceId}`,
       timestamp: "2026-06-24T00:00:00.000Z",
+    },
+    auditEnvelope: {
+      audit_id: `audit_${traceId}`,
+      trace_id: traceId,
+      decision_id: `decision_${traceId}`,
+      actor_id: "napoleon.chief_of_staff",
+      authority_tier: "advisory_review",
+      approval_requirement: "Napoleon review before evolution changes.",
+      evidence_links: ["trace:trace_capability_gap"],
+    },
+    appliedLocally: false,
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    registryUpdatePerformed: false,
+    evolutionApplied: false,
+    ...overrides,
+  };
+}
+
+function buildStatusResponse(traceId: string, requestId: string, overrides: Record<string, unknown> = {}) {
+  return {
+    proposalId: "evo_capability_intelligence_review",
+    lifecycleState: "implemented",
+    latestKnownOutcome: "Napoleon implemented the proposal after governed review.",
+    governanceDecision: {
+      decision_id: `decision_${traceId}`,
+      request_id: requestId,
+      outcome: "allow_prepare_only",
+      authority_tier: "advisory_review",
+      approval_requirement: "Napoleon review before evolution changes.",
+      rationale: "Status metadata returned for tracking only.",
+      blocked_effects: blockedEffects,
+      trace_id: traceId,
+      audit_id: `audit_${traceId}`,
+    },
+    traceEnvelope: {
+      trace_id: traceId,
+      parent_trace_id: "conv_evolution",
+      actor_id: "napoleon.chief_of_staff",
+      request_id: requestId,
+      decision_id: `decision_${traceId}`,
+      timestamp: "2026-06-24T00:04:00.000Z",
     },
     auditEnvelope: {
       audit_id: `audit_${traceId}`,
@@ -308,6 +354,116 @@ test("evolution proposal submission rejects response-side application or registr
           json: async () =>
             buildResponse("trace_submit", "cos_trace_submit", {
               registryUpdatePerformed: true,
+              evolutionApplied: true,
+            }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error && error.name === "NapoleonBridgeError" && error.message.includes("contract_mismatch"),
+  );
+});
+
+test("evolution proposal status refresh fails closed when descriptor does not advertise status handoff", async () => {
+  const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_evolution",
+  });
+  const record = buildDraftEvolutionProposalLifecycleRecord(packet);
+  let fetchCalled = false;
+
+  await assert.rejects(
+    () =>
+      refreshEvolutionProposalStatusFromNapoleon(record, {
+        conversationId: "conv_evolution",
+        traceId: "trace_status",
+        getEndpoint: () => "https://napoleon.example",
+        descriptorConnection: textTurnOnlyDescriptorConnection,
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => ({}) };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("descriptor_mismatch") &&
+      (error as { descriptorFailureReason?: string }).descriptorFailureReason === "descriptor_invalid",
+  );
+
+  assert.equal(fetchCalled, false);
+});
+
+test("evolution proposal status refresh uses read-only Napoleon status path and updates metadata lifecycle", async () => {
+  const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_evolution",
+  });
+  const record = updateEvolutionProposalLifecycleAfterSubmission(
+    buildDraftEvolutionProposalLifecycleRecord(packet, {
+      draftedAt: "2026-06-24T00:00:00.000Z",
+    }),
+    buildResponse("trace_submit", "cos_trace_submit") as EvolutionProposalSubmissionResult,
+    {
+      submittedAt: "2026-06-24T00:01:00.000Z",
+    },
+  );
+  let requestedUrl = "";
+  let requestedMethod = "";
+  let requestedBody: unknown = "not checked";
+
+  const result = await refreshEvolutionProposalStatusFromNapoleon(record, {
+    conversationId: "conv_evolution",
+    traceId: "trace_status",
+    getEndpoint: () => "https://napoleon.example/evolution/proposals",
+    descriptorConnection: readyDescriptorConnection,
+    fetch: async (url: string, init?: TestFetchInit) => {
+      requestedUrl = url;
+      requestedMethod = init?.method ?? "";
+      requestedBody = init?.body;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => buildStatusResponse("trace_status", "cos_trace_status"),
+      };
+    },
+  });
+  const refreshed = updateEvolutionProposalLifecycleFromStatus(record, result, {
+    updatedAt: "2026-06-24T00:05:00.000Z",
+  });
+
+  assert.equal(requestedUrl, "https://napoleon.example/evolution/proposals/evo_capability_intelligence_review/status");
+  assert.equal(requestedMethod, "GET");
+  assert.equal(requestedBody, undefined);
+  assert.equal(result.evolutionApplied, false);
+  assert.equal(result.registryUpdatePerformed, false);
+  assert.equal(result.approvalCaptured, false);
+  assert.equal(refreshed.currentLifecycleState, "implemented");
+  assert.equal(refreshed.latestKnownOutcome, "Napoleon implemented the proposal after governed review.");
+  assert.equal(refreshed.statusRefresh.available, true);
+  assert.equal(refreshed.statusRefresh.reason, "refreshed_via_governed_route");
+  assert.equal(refreshed.boundary.appliedLocally, false);
+});
+
+test("evolution proposal status refresh rejects response-side evolution claims", async () => {
+  const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_evolution",
+  });
+  const record = buildDraftEvolutionProposalLifecycleRecord(packet);
+
+  await assert.rejects(
+    () =>
+      refreshEvolutionProposalStatusFromNapoleon(record, {
+        conversationId: "conv_evolution",
+        traceId: "trace_status",
+        getEndpoint: () => "https://napoleon.example",
+        descriptorConnection: readyDescriptorConnection,
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () =>
+            buildStatusResponse("trace_status", "cos_trace_status", {
+              appliedLocally: true,
               evolutionApplied: true,
             }),
         }),

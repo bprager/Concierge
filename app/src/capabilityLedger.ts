@@ -1926,18 +1926,24 @@ export function deriveCapabilitySignalFromEvent(
   if (
     eventName === "evolution_proposal_submission_drafted" ||
     eventName.startsWith("evolution_proposal_submission_send_") ||
+    eventName.startsWith("evolution_proposal_status_refresh_") ||
     eventName.startsWith("evolution_proposal_lifecycle_")
   ) {
     const failed = eventName.endsWith("_failed");
     const governedBlock = failed && isGovernanceBlockedResponseFailure(attributes);
     const lifecycleBlocked = eventName === "evolution_proposal_lifecycle_recorded" && attributes.lifecycleState === "blocked";
+    const statusRefresh = eventName.startsWith("evolution_proposal_status_refresh_");
     return buildCapabilitySignal({
       ...base,
       topicLabel: "self_evolution",
-      intentLabel: eventName.startsWith("evolution_proposal_lifecycle_")
+      intentLabel: statusRefresh
+        ? "refresh_evolution_proposal_status"
+        : eventName.startsWith("evolution_proposal_lifecycle_")
         ? "track_evolution_proposal_lifecycle"
         : "governed_evolution_proposal_submission",
-      capabilityLabel: eventName.startsWith("evolution_proposal_lifecycle_")
+      capabilityLabel: statusRefresh
+        ? "evolution_proposal_status_refresh"
+        : eventName.startsWith("evolution_proposal_lifecycle_")
         ? "evolution_proposal_lifecycle_tracking"
         : "evolution_proposal_submission",
       capabilityStatus: failed || lifecycleBlocked ? "blocked" : "working",

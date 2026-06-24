@@ -276,6 +276,26 @@ export function buildEvolutionProposalSubmissionBridgeTarget(
   };
 }
 
+export interface EvolutionProposalStatusBridgeTarget {
+  url: string;
+  path: "/evolution/proposals/{proposal_id}/status";
+  requestKind: "evolution_proposal_status_handoff";
+  operationId: "evolution_proposal_status";
+}
+
+export function buildEvolutionProposalStatusBridgeTarget(
+  configuredEndpoint: string,
+  proposalId: string,
+): EvolutionProposalStatusBridgeTarget {
+  getNapoleonReviewOperation("evolution_proposal_status");
+  return {
+    url: `${stripKnownBridgeOperationPath(configuredEndpoint)}/evolution/proposals/${encodeURIComponent(proposalId)}/status`,
+    path: "/evolution/proposals/{proposal_id}/status",
+    requestKind: "evolution_proposal_status_handoff",
+    operationId: "evolution_proposal_status",
+  };
+}
+
 export interface GovernanceReviewBridgeTarget {
   url: string;
   path: "/v1/concierge/chief-of-staff/steering" | "/chief-of-staff/reviews/governance";
@@ -433,6 +453,7 @@ const NAPOLEON_REVIEW_OPERATION_LABELS: Record<NapoleonReviewOperationId, string
   evaluation_review: "Evaluation review handoff",
   evolution_proposal_review: "Evolution proposal review",
   evolution_proposal_submission: "Evolution proposal submission",
+  evolution_proposal_status: "Evolution proposal status",
   governance_evaluation: "Governance evaluation handoff",
   governance_review: "Governance review handoff",
   new_agent_proposal_review: "New agent proposal review",
@@ -517,6 +538,7 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
   const isEvolutionReview = operation.id === "evolution_proposal_review";
   const isNewAgentReview = operation.id === "new_agent_proposal_review";
   const isEvolutionSubmission = operation.id === "evolution_proposal_submission";
+  const isEvolutionStatus = operation.id === "evolution_proposal_status";
   const isGovernanceEvaluation = operation.id === "governance_evaluation";
   const isChiefOfStaffRequest = operation.id === "chief_of_staff_request";
   const isGovernanceReview = operation.id === "governance_review";
@@ -545,6 +567,11 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
       "proposal-submission Napoleon target; no local evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or local application.";
     sideEffects =
       "No evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge";
+  } else if (isEvolutionStatus) {
+    boundary =
+      "proposal-status Napoleon target; read-only status metadata only, with no local approval, evolution application, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.";
+    sideEffects =
+      "No approval, evolution application, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge";
   } else if (isGovernanceEvaluation) {
     boundary =
       "governance-evaluation Napoleon target; no local governance override, approval capture, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.";

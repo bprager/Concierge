@@ -17,6 +17,7 @@ export type GovernedHandoffCapability =
   | "governance_evaluation"
   | "evolution_proposal_review"
   | "evolution_proposal_submission"
+  | "evolution_proposal_status"
   | "new_agent_proposal_review"
   | "taxonomy_review"
   | "observability_trace";
@@ -277,6 +278,7 @@ const DEFAULT_SUPPORTED_HANDOFFS: GovernedHandoffCapability[] = [
   "governance_evaluation",
   "evolution_proposal_review",
   "evolution_proposal_submission",
+  "evolution_proposal_status",
   "new_agent_proposal_review",
   "taxonomy_review",
   "observability_trace",

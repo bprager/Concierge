@@ -89,6 +89,7 @@ const GOVERNED_HANDOFF_CAPABILITIES = new Set<GovernedHandoffCapability>([
   "governance_evaluation",
   "evolution_proposal_review",
   "evolution_proposal_submission",
+  "evolution_proposal_status",
   "new_agent_proposal_review",
   "taxonomy_review",
   "observability_trace",
@@ -123,6 +124,7 @@ function supportedHandoffsFromRequiredFor(value: unknown): GovernedHandoffCapabi
     if (item === "governance_evaluation") pushUniqueHandoff(supported, "governance_evaluation");
     if (item === "evolution_proposal_review") pushUniqueHandoff(supported, "evolution_proposal_review");
     if (item === "evolution_proposal_submission") pushUniqueHandoff(supported, "evolution_proposal_submission");
+    if (item === "evolution_proposal_status") pushUniqueHandoff(supported, "evolution_proposal_status");
     if (item === "new_agent_proposal_review") pushUniqueHandoff(supported, "new_agent_proposal_review");
     if (item === "memory_proposal_review") pushUniqueHandoff(supported, "memory_proposal_review");
     if (item === "chief_of_staff_steering") pushUniqueHandoff(supported, "chief_of_staff_steering");
@@ -154,6 +156,9 @@ function supportedHandoffsFromRuntimeEndpoints(endpoints: Record<string, unknown
   }
   if (typeof endpoints.evolution_proposal_submission === "string" || typeof endpoints.evolution_proposal_submissions === "string") {
     pushUniqueHandoff(supported, "evolution_proposal_submission");
+  }
+  if (typeof endpoints.evolution_proposal_status === "string" || typeof endpoints.evolution_proposal_statuses === "string") {
+    pushUniqueHandoff(supported, "evolution_proposal_status");
   }
   if (typeof endpoints.evolution_proposal_review === "string" || typeof endpoints.evolution_proposal_reviews === "string") {
     pushUniqueHandoff(supported, "evolution_proposal_review");

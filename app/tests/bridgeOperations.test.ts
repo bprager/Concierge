@@ -184,6 +184,12 @@ test("bridge operations declare governed transport and bearer-token policy", () 
     "evolution_proposal_submission_handoff",
   );
   assert.equal(getNapoleonReviewOperation("evolution_proposal_submission").path, "/evolution/proposals");
+  assert.equal(
+    getNapoleonReviewOperation("evolution_proposal_status").requestKind,
+    "evolution_proposal_status_handoff",
+  );
+  assert.equal(getNapoleonReviewOperation("evolution_proposal_status").path, "/evolution/proposals/{proposal_id}/status");
+  assert.equal(getNapoleonReviewOperation("evolution_proposal_status").transport, "http_get");
   assert.equal(getNapoleonReviewOperation("governance_review").requestKind, "governance_review_handoff");
   assert.equal(getNapoleonReviewOperation("governance_review").path, "/chief-of-staff/reviews/governance");
   assert.equal(getNapoleonReviewOperation("observability_trace").requestKind, "observability_trace_handoff");
@@ -198,7 +204,7 @@ test("bridge operations declare governed transport and bearer-token policy", () 
   );
   assert.deepEqual(
     NAPOLEON_REVIEW_OPERATIONS.map((operation) => operation.governedBridgeOnly),
-    [true, true, true, true, true, true, true, true],
+    [true, true, true, true, true, true, true, true, true],
   );
 });
 

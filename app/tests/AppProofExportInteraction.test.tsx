@@ -333,7 +333,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(within(readinessPanel).getByText("Readiness proof source"));
     assert.ok(
       within(readinessPanel).getByText(
-        "Readiness proof exports include 8 named Napoleon review/evidence targets generated from api/napoleon_bridge.openapi.yaml review/evidence metadata.",
+        "Readiness proof exports include 9 named Napoleon review/evidence targets generated from api/napoleon_bridge.openapi.yaml review/evidence metadata.",
       ),
     );
     assert.ok(
@@ -1552,7 +1552,12 @@ test("renders governed evolution proposal submission controls from capability re
                 cachePolicy: "fail_closed_to_review_required",
                 blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
                 supportedHandoffs: supportsSubmission
-                  ? ["text_turn", "evolution_proposal_review", "evolution_proposal_submission"]
+                  ? [
+                      "text_turn",
+                      "evolution_proposal_review",
+                      "evolution_proposal_submission",
+                      "evolution_proposal_status",
+                    ]
                   : ["text_turn", "evolution_proposal_review"],
               },
               checksum: {
@@ -1600,6 +1605,52 @@ test("renders governed evolution proposal submission controls from capability re
                 authority_tier: "advisory_review",
                 approval_requirement: "chief_of_staff_and_owner_review",
                 evidence_links: ["trace:evolution-submission-rendered"],
+              },
+              appliedLocally: false,
+              memoryWritePerformed: false,
+              approvalCaptured: false,
+              agentDispatchPerformed: false,
+              externalSendPerformed: false,
+              registryUpdatePerformed: false,
+              evolutionApplied: false,
+            }),
+            { status: 200, headers: { "Content-Type": "application/json" } },
+          );
+        }
+        if (url.includes("/evolution/proposals/") && url.endsWith("/status")) {
+          const proposalId = decodeURIComponent(url.match(/\/evolution\/proposals\/([^/]+)\/status$/)?.[1] ?? "");
+          return new Response(
+            JSON.stringify({
+              proposalId,
+              lifecycleState: "implemented",
+              latestKnownOutcome: "Napoleon implemented the proposal after governed rollout.",
+              governanceDecision: {
+                decision_id: "decision_evolution_status_rendered",
+                request_id: "cos_evolution_status_rendered",
+                outcome: "allow_prepare_only",
+                authority_tier: "advisory_review",
+                approval_requirement: "chief_of_staff_and_owner_review",
+                rationale: "Status metadata only.",
+                blocked_effects: ["evolution_application", "registry_update", "memory_write", "agent_dispatch", "external_send"],
+                trace_id: "trace_evolution_status_rendered",
+                audit_id: "audit_evolution_status_rendered",
+              },
+              traceEnvelope: {
+                trace_id: "trace_evolution_status_rendered",
+                parent_trace_id: "conv_evolution_status_rendered",
+                actor_id: "napoleon.evolution_controller",
+                request_id: "cos_evolution_status_rendered",
+                decision_id: "decision_evolution_status_rendered",
+                timestamp: "2026-06-24T00:01:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_evolution_status_rendered",
+                trace_id: "trace_evolution_status_rendered",
+                decision_id: "decision_evolution_status_rendered",
+                actor_id: "napoleon.evolution_controller",
+                authority_tier: "advisory_review",
+                approval_requirement: "chief_of_staff_and_owner_review",
+                evidence_links: ["trace:evolution-status-rendered"],
               },
               appliedLocally: false,
               memoryWritePerformed: false,
@@ -1678,11 +1729,24 @@ test("renders governed evolution proposal submission controls from capability re
       assert.ok(lifecyclePanel.textContent?.includes("audit_evolution_submission_rendered"));
       assert.ok(lifecyclePanel.textContent?.includes("descriptor_status_route_not_advertised"));
       assert.ok(lifecyclePanel.textContent?.includes("proposal-only"));
+      await waitFor(() =>
+        assert.equal(
+          (view.getByRole("button", { name: "Refresh status from Napoleon" }) as HTMLButtonElement).disabled,
+          false,
+        ),
+      );
+      await user.click(view.getByRole("button", { name: "Refresh status from Napoleon" }));
+      await waitFor(() => assert.ok(lifecyclePanel.textContent?.includes("implemented")));
+      assert.ok(lifecyclePanel.textContent?.includes("Napoleon implemented the proposal after governed rollout."));
+      assert.ok(lifecyclePanel.textContent?.includes("decision_evolution_status_rendered"));
+      assert.ok(lifecyclePanel.textContent?.includes("audit_evolution_status_rendered"));
+      assert.ok(lifecyclePanel.textContent?.includes("available"));
       await user.click(view.getByRole("button", { name: "Export evolution proposal lifecycle" }));
       const lifecycleExport = view.getByLabelText("Exported evolution proposal lifecycle");
       assert.ok(lifecycleExport.textContent?.includes('"schemaVersion": "concierge.evolution-proposal-lifecycle-export.v1"'));
-      assert.ok(lifecycleExport.textContent?.includes('"currentLifecycleState": "accepted_for_review"'));
-      assert.ok(lifecycleExport.textContent?.includes('"decision_evolution_submission_rendered"'));
+      assert.ok(lifecycleExport.textContent?.includes('"currentLifecycleState": "implemented"'));
+      assert.ok(lifecycleExport.textContent?.includes('"decision_evolution_status_rendered"'));
+      assert.ok(lifecycleExport.textContent?.includes('"reason": "refreshed_via_governed_route"'));
       assert.ok(lifecycleExport.textContent?.includes('"proposalOnly": true'));
       assert.ok(lifecycleExport.textContent?.includes('"evolutionApplied": false'));
       assert.ok(lifecycleExport.textContent?.includes('"registryUpdatePerformed": false'));
@@ -1691,6 +1755,10 @@ test("renders governed evolution proposal submission controls from capability re
       assert.equal(lifecycleExport.textContent?.includes("token"), false);
       assert.equal(postedBodies.length, 1);
       assert.equal(requestedUrls.some((url) => url.endsWith("/evolution/proposals")), true);
+      assert.equal(
+        requestedUrls.some((url) => url.includes("/evolution/proposals/") && url.endsWith("/status")),
+        true,
+      );
       const posted = JSON.stringify(postedBodies[0]);
       assert.ok(posted.includes('"requestKind":"evolution_proposal_submission_handoff"'));
       assert.ok(posted.includes('"handoffKind":"evolution_proposal_submission_handoff"'));
@@ -4837,6 +4905,19 @@ test("shows named Napoleon governed targets in governed routes", async () => {
         "Side effects: No evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
       ),
     );
+    assert.ok(routes.getByText("Evolution proposal status"));
+    assert.ok(routes.getByText("/evolution/proposals/{proposal_id}/status"));
+    assert.ok(routes.getByText("evolution_proposal_status_handoff"));
+    assert.ok(
+      routes.getByText(
+        "proposal-status Napoleon target; read-only status metadata only, with no local approval, evolution application, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "Side effects: No approval, evolution application, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
+      ),
+    );
     assert.ok(routes.getByText("Observability trace handoff"));
     assert.ok(routes.getByText("/observability/traces"));
     assert.ok(routes.getByText("observability_trace_handoff"));
@@ -4878,7 +4959,7 @@ test("shows named Napoleon governed targets in governed routes", async () => {
     );
     assert.equal(
       routes.getAllByText("Source: Generated from api/napoleon_bridge.openapi.yaml review/evidence metadata").length,
-      8,
+      9,
     );
     assert.equal(
       routes.queryByText(
