@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local blocked-attempt answers for follow-ups like "Why was that blocked?", keeping the answer tied to latest fail-closed bridge metadata without a new Napoleon request or raw failure/effect telemetry.
 - Added local returned-proof answers for governance-state follow-ups like "What was the governance state?", keeping the answer tied to current bridge proof without a new Napoleon request or raw governance telemetry.
 - Added local returned-proof answers for direct trace/audit follow-ups like "What trace and audit did Napoleon return?", keeping the answer tied to current bridge proof without a new Napoleon request or raw trace/audit telemetry.
 - Added local returned-proof answers for capability-handler follow-ups like "Which capability handled that?", keeping the answer tied to current bridge proof without a new Napoleon request or raw capability telemetry.

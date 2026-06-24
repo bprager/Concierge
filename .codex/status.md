@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local blocked-attempt answers for follow-ups such as "Why was that blocked?", so Concierge uses only the latest fail-closed Napoleon turn metadata, avoids a new bridge request, and keeps telemetry to booleans, counts, and false side-effect flags.
 - Added local returned-proof answers for direct trace/audit follow-ups such as "What trace and audit did Napoleon return?", so Concierge uses only the current Napoleon proof, avoids a new bridge request, and keeps telemetry to booleans, counts, and false side-effect flags.
 - Added local returned-proof answers for governance-state follow-ups such as "What was the governance state?", so Concierge uses only the current Napoleon proof, avoids a new bridge request, and keeps telemetry to booleans, counts, and false side-effect flags.
 - Added local returned-proof answers for capability-handler follow-ups such as "Which capability handled that?", so Concierge uses only the current Napoleon proof, avoids a new bridge request, and keeps telemetry to booleans, counts, and false side-effect flags.

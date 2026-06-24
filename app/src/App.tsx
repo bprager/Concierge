@@ -513,6 +513,26 @@ function isNapoleonProofCurrentnessQuestion(content: string): boolean {
   return asksAboutProof && asksAboutCurrentness;
 }
 
+function isNapoleonBlockedAttemptQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  const asksAboutBlockedAttempt =
+    /\bwhy\b.*\b(that|this|it|attempt|turn|send|request|bridge)\b.*\b(blocked|failed|denied|stopped)\b/.test(
+      lower,
+    ) ||
+    /\bwhy\b.*\b(blocked|failed|denied|stopped|fail-closed|fail closed)\b/.test(lower) ||
+    /\bwhat\b.*\b(reason|cause|happened)\b.*\b(blocked|failed|denied|stopped|fail-closed|fail closed)\b/.test(
+      lower,
+    ) ||
+    /\bwhat\b.*\b(blocked|failed|denied|stopped)\b.*\b(that|this|it|attempt|turn|send|request|bridge)\b/.test(
+      lower,
+    );
+  const asksAboutNapoleonBlockedAttempt =
+    lower.includes("napoleon") &&
+    /\b(why|reason|cause|happened|attempt|turn|send|request|bridge|fail-closed|fail closed)\b/.test(lower) &&
+    /\b(blocked|failed|denied|stopped|fail-closed|fail closed)\b/.test(lower);
+  return asksAboutBlockedAttempt || asksAboutNapoleonBlockedAttempt;
+}
+
 function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   const asksAboutSendButton =
@@ -598,6 +618,62 @@ function formatNapoleonLiveSendReadinessAnswer(input: {
     endpointConfigured: input.endpointConfigured,
     rehearsalMode: input.rehearsalMode,
     blockedEffectCount: blockedEffects.length,
+  };
+}
+
+function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInput | null): {
+  content: string;
+  failureReturned: boolean;
+  blockedEffectCount: number;
+  governanceReturned: boolean;
+  traceReturned: boolean;
+  descriptorFailureReturned: boolean;
+} {
+  if (!failure) {
+    return {
+      content: [
+        "Latest blocked Napoleon attempt:",
+        "Failure reason: not returned.",
+        "Governance: not returned.",
+        "Trace: not returned.",
+        "Blocked effects: not returned.",
+        "Next step: No fail-closed Napoleon bridge attempt has been recorded in this session.",
+        "This is local display of blocked-attempt metadata only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ].join("\n\n"),
+      failureReturned: false,
+      blockedEffectCount: 0,
+      governanceReturned: false,
+      traceReturned: false,
+      descriptorFailureReturned: false,
+    };
+  }
+
+  const reason = sanitizeVisibleProvenanceValue(failure.reason);
+  const governance = sanitizeVisibleProvenanceValue(failure.governanceOutcome);
+  const trace = sanitizeVisibleProvenanceValue(failure.traceId);
+  const descriptor = sanitizeVisibleProvenanceValue(failure.descriptorFailureReason);
+  const blockedEffects = failure.blockedEffects?.length
+    ? failure.blockedEffects.map((effect) => sanitizeVisibleProvenanceValue(effect)).join(", ")
+    : "not returned";
+  const nextStep = sanitizeVisibleProvenanceValue(failure.nextStep);
+
+  return {
+    content: [
+      "Latest blocked Napoleon attempt:",
+      `Failure reason: ${reason}.`,
+      `Governance: ${governance}.`,
+      `Trace: ${trace}.`,
+      `Descriptor: ${descriptor}.`,
+      `Blocked effects: ${blockedEffects}.`,
+      `Next step: ${nextStep}.`,
+      "No Napoleon response was accepted; fail-closed local state only.",
+      "This is local display of blocked-attempt metadata only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+    ].join("\n\n"),
+    failureReturned: true,
+    blockedEffectCount: failure.blockedEffects?.length ?? 0,
+    governanceReturned: governance !== "not returned" && governance !== "unavailable",
+    traceReturned: trace !== "not returned" && trace !== "unavailable",
+    descriptorFailureReturned: descriptor !== "not returned" && descriptor !== "unavailable",
   };
 }
 
@@ -2578,6 +2654,49 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     return true;
   }
 
+  function answerNapoleonBlockedAttemptQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isNapoleonBlockedAttemptQuestion(content)) return false;
+
+    const answer = formatNapoleonBlockedAttemptAnswer(lastNapoleonTurnFailure);
+    emitEvent("napoleon_blocked_attempt_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      failureReturned: answer.failureReturned,
+      blockedEffectCount: answer.blockedEffectCount,
+      governanceReturned: answer.governanceReturned,
+      traceReturned: answer.traceReturned,
+      descriptorFailureReturned: answer.descriptorFailureReturned,
+      localAnswerOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerNapoleonReviewRequirementQuestion(
     content: string,
     traceId: string,
@@ -2726,6 +2845,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const activeProfileMode = mapProfileToNapoleonMode(profile);
     if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
+    if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
@@ -2928,6 +3048,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const activeProfileMode = mapProfileToNapoleonMode(profile);
       if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
+      if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;

@@ -7814,6 +7814,43 @@ test("shows fail-closed transcript metadata when Napoleon response mismatches th
     assert.ok(delegationPanel.getByText(/external_send/));
     assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
     assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
+
+    const requestCountBeforeBlockedQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "Why was that blocked?" } });
+    await waitFor(() => assert.equal(composer.value, "Why was that blocked?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let blockedAttemptAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      blockedAttemptAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("Latest blocked Napoleon attempt:")
+      ) as HTMLElement | undefined;
+      assert.ok(blockedAttemptAnswer);
+    });
+    assert.ok(blockedAttemptAnswer);
+    const blockedAttemptAnswerText = blockedAttemptAnswer.textContent ?? "";
+    assert.ok(blockedAttemptAnswerText.includes("Failure reason: contract_mismatch."));
+    assert.ok(blockedAttemptAnswerText.includes("Governance: not returned."));
+    assert.ok(
+      blockedAttemptAnswerText.includes(
+        "Blocked effects: runtime_authority, command_execution, task_routing, agent_dispatch, registry_runtime_activation, graph_write, memory_write, audit_append, event_publication, approval_capture, external_send, service_control, remediation.",
+      ),
+    );
+    assert.ok(
+      blockedAttemptAnswerText.includes("Next step: Align the bridge contract or descriptor before attempting another live turn."),
+    );
+    assert.ok(blockedAttemptAnswerText.includes("No Napoleon response was accepted; fail-closed local state only."));
+    assert.equal(blockedAttemptAnswerText.includes("Napoleon wrote memory and sent the deployment summary externally."), false);
+    assert.equal(requestedUrls.length, requestCountBeforeBlockedQuestion);
+    const blockedAttemptAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.failureReturned, true);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.blockedEffectCount, 13);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(blockedAttemptAnswerEvent).includes("Why was that blocked?"), false);
+    assert.equal(JSON.stringify(blockedAttemptAnswerEvent).includes("contract_mismatch"), false);
+    assert.equal(JSON.stringify(blockedAttemptAnswerEvent).includes("memory_write"), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();
