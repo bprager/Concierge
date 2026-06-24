@@ -525,6 +525,31 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(delegationAnswerEvent).includes("Passive Brain"), false);
     assert.equal(JSON.stringify(delegationAnswerEvent).includes("memory_write"), false);
     assert.equal(JSON.stringify(delegationAnswerEvent).includes(lastTextTurnTraceId), false);
+    const requestCountBeforeNaturalDelegationQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Who handled that?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let naturalDelegationAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      naturalDelegationAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(naturalDelegationAnswer);
+      assert.ok(naturalDelegationAnswer.textContent?.includes("Handled by: Passive Brain."));
+    });
+    assert.ok(naturalDelegationAnswer);
+    const naturalDelegationAnswerText = naturalDelegationAnswer.textContent ?? "";
+    assert.ok(naturalDelegationAnswerText.includes("Target capability: napoleon.chief_of_staff."));
+    assert.ok(naturalDelegationAnswerText.includes("This is local display of returned bridge provenance only"));
+    assert.equal(requestedUrls.length, requestCountBeforeNaturalDelegationQuestion);
+    const naturalDelegationAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(naturalDelegationAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(naturalDelegationAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(naturalDelegationAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(naturalDelegationAnswerEvent).includes("Who handled that?"), false);
     const requestCountBeforeReviewQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "What does Napoleon require me to review before I can act?" },

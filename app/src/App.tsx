@@ -364,8 +364,13 @@ function isNapoleonRequiredActionQuestion(content: string): boolean {
 
 function isNapoleonDelegationQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
-  if (!lower.includes("napoleon")) return false;
+  const asksAboutReturnedHandler =
+    /\bwho\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
+    /\bwhich\b.*\bagents?\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
+    /\bwhat\b.*\bcapability\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower);
+  if (!lower.includes("napoleon") && !asksAboutReturnedHandler) return false;
   return (
+    asksAboutReturnedHandler ||
     /\bwho\b.*\bhandled\b/.test(lower) ||
     /\bwho\b.*\banswered\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b/.test(lower) ||

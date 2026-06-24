@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local returned-proof answers for natural delegation follow-ups such as "Who handled that?", so handler questions use the current Napoleon proof without a new bridge request, side effects, or raw follow-up/provenance telemetry.
 - Added local text answers for disabled send-button questions, so the user can ask why Send is unavailable and get the current preflight blocker and next step without Napoleon contact, approval capture, memory write, agent dispatch, external send, or raw prompt/endpoint/token telemetry.
 - Added local text answers for Napoleon live-send readiness questions, so the user can ask whether Concierge can send to Napoleon now and get current preflight blocker and next-step guidance without a bridge call, approval capture, memory write, agent dispatch, external send, or raw prompt/endpoint/token telemetry.
 - Repository authority-boundary validation now rejects split-string browser side-channel aliases for cross-context messaging, clipboard, history state, cookies, and local/session storage, closing another bypass path around the governed Napoleon bridge.
