@@ -378,6 +378,46 @@ test("taxonomy review no-go failures are tracked as governed blocks", () => {
   assert.ok(signal.details?.includes("governance outcome no_go"));
 });
 
+test("memory proposal no-go failures are tracked as governed blocks", () => {
+  const signal = deriveCapabilitySignalFromEvent("memory_proposal_send_failed", {
+    traceId: "trace_memory_no_go",
+    conversationId: "conv_memory_no_go",
+    turnId: "turn_memory_no_go",
+    profile: "adult_owner",
+    reason: "governance_no_go",
+    governanceOutcome: "no_go",
+    blockedEffects: ["memory_write", "approval_capture"],
+    rawMemoryProposal: "raw memory proposal text",
+  });
+
+  assert.equal(signal.topicLabel, "memory");
+  assert.equal(signal.intentLabel, "governed_memory_proposal_handoff");
+  assert.equal(signal.capabilityLabel, "memory_proposal_review");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.architectureArea, "governance_ux");
+  assert.ok(signal.details?.includes("bridge failure reason governance_no_go"));
+  assert.ok(signal.details?.includes("governance outcome no_go"));
+  assert.equal(JSON.stringify(signal).includes("raw memory proposal text"), false);
+});
+
+test("memory proposal transport failures still suggest bridge follow-up", () => {
+  const signal = deriveCapabilitySignalFromEvent("memory_proposal_send_failed", {
+    traceId: "trace_memory_timeout",
+    conversationId: "conv_memory_timeout",
+    turnId: "turn_memory_timeout",
+    profile: "adult_owner",
+    reason: "bridge_timeout",
+  });
+
+  assert.equal(signal.capabilityLabel, "memory_proposal_review");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "bridge_failed");
+  assert.equal(signal.suggestedNextStep, "add_backlog_item");
+  assert.equal(signal.architectureArea, "bridge");
+});
+
 test("capability recommendations remain proposal-only and non-authoritative", () => {
   const signal = deriveCapabilitySignalFromEvent("memory_proposal_acknowledged_locally", {
     traceId: "trace_memory_ack",

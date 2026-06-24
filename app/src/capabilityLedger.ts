@@ -1876,6 +1876,23 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName.startsWith("memory_proposal_send_")) {
+    const failed = eventName.endsWith("_failed");
+    const governedBlock = failed && isGovernanceBlockedResponseFailure(attributes);
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "memory",
+      intentLabel: "governed_memory_proposal_handoff",
+      capabilityLabel: "memory_proposal_review",
+      capabilityStatus: failed ? "blocked" : "working",
+      outcomeSignal: governedBlock ? "blocked" : failed ? "bridge_failed" : "review_required",
+      confidence: failed ? 0.86 : 0.84,
+      architectureArea: governedBlock ? "governance_ux" : failed ? "bridge" : "memory_review",
+      suggestedNextStep: governedBlock ? "no_action" : failed ? "add_backlog_item" : "needs_human_review",
+      details: governedBlock ? governanceBlockedResponseDetails(attributes) : undefined,
+    });
+  }
+
   if (eventName.startsWith("memory_proposal_")) {
     return buildCapabilitySignal({
       ...base,
