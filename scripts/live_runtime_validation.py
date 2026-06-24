@@ -28,8 +28,12 @@ from scripts import bridge_evidence_capture
 DEFAULT_OUT_DIR = Path("/tmp/concierge-live-runtime-validation")
 EVALUATOR_PATH = "/v1/concierge/evaluate"
 NAPOLEON_EVALUATION_REVIEW_PATH = "/chief-of-staff/reviews/evaluation"
+CHIEF_OF_STAFF_REQUEST_PATH = "/chief-of-staff/requests"
+GOVERNANCE_EVALUATION_PATH = "/governance/evaluate"
 KNOWN_BRIDGE_PATHS = bridge_evidence_capture.KNOWN_BRIDGE_PATHS
 EVALUATION_REVIEW_HANDOFF_NAMES = {"evaluation_review", "evaluation_reviews"}
+CHIEF_OF_STAFF_REQUEST_HANDOFF_NAMES = {"chief_of_staff_request", "chief_of_staff_requests"}
+GOVERNANCE_EVALUATION_HANDOFF_NAMES = {"governance_evaluation", "governance_evaluations"}
 EVALUATION_REVIEW_HANDOFF_REQUIRED_ACTION = (
     "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, "
     "required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation."
@@ -78,6 +82,7 @@ RUNTIME_VALIDATION_SOURCES = ("real_runtime", "local_harness", "local_simulation
 RUNTIME_ARTIFACT_FILENAMES = [
     "bridge_evidence.json",
     "capability_discovery.json",
+    "contract_packet_submissions.json",
     "eval_http.json",
     "summary.json",
     "promotion_review.md",
@@ -134,7 +139,13 @@ def runtime_validation_caveat(source: str) -> str:
 
 def strip_known_path(endpoint: str) -> str:
     value = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
-    for path in [*KNOWN_BRIDGE_PATHS, "/cos", NAPOLEON_EVALUATION_REVIEW_PATH]:
+    for path in [
+        *KNOWN_BRIDGE_PATHS,
+        "/cos",
+        NAPOLEON_EVALUATION_REVIEW_PATH,
+        CHIEF_OF_STAFF_REQUEST_PATH,
+        GOVERNANCE_EVALUATION_PATH,
+    ]:
         if value.endswith(path):
             return value[: -len(path)].rstrip("/")
     return value
@@ -225,7 +236,11 @@ def descriptor_payload(payload: dict[str, Any]) -> dict[str, Any]:
     return descriptor if isinstance(descriptor, dict) else {}
 
 
-def descriptor_advertises_evaluation_handoff(payload: dict[str, Any]) -> tuple[bool, str]:
+def descriptor_advertises_handoff(
+    payload: dict[str, Any],
+    handoff_names: set[str],
+    target_path: str,
+) -> tuple[bool, str]:
     descriptor = descriptor_payload(payload)
     raw_handoffs = (
         descriptor.get("supportedHandoffs")
@@ -235,23 +250,31 @@ def descriptor_advertises_evaluation_handoff(payload: dict[str, Any]) -> tuple[b
         else []
     )
     handoffs = {str(handoff) for handoff in raw_handoffs if isinstance(handoff, str)}
-    if handoffs.intersection(EVALUATION_REVIEW_HANDOFF_NAMES):
+    if handoffs.intersection(handoff_names):
         return True, "supported_handoffs"
 
     raw_required_for = descriptor.get("required_for") if isinstance(descriptor.get("required_for"), list) else []
     required_for = {str(handoff) for handoff in raw_required_for if isinstance(handoff, str)}
-    if required_for.intersection(EVALUATION_REVIEW_HANDOFF_NAMES):
+    if required_for.intersection(handoff_names):
         return True, "required_for"
 
     endpoints = descriptor.get("endpoints") if isinstance(descriptor.get("endpoints"), dict) else {}
     for key, value in endpoints.items():
         key_text = str(key)
         value_text = str(value)
-        if key_text in EVALUATION_REVIEW_HANDOFF_NAMES:
+        if key_text in handoff_names:
             return True, "descriptor_endpoints"
-        if NAPOLEON_EVALUATION_REVIEW_PATH in value_text:
+        if target_path in value_text:
             return True, "descriptor_endpoints"
     return False, "not_advertised"
+
+
+def descriptor_advertises_evaluation_handoff(payload: dict[str, Any]) -> tuple[bool, str]:
+    return descriptor_advertises_handoff(
+        payload,
+        EVALUATION_REVIEW_HANDOFF_NAMES,
+        NAPOLEON_EVALUATION_REVIEW_PATH,
+    )
 
 
 def descriptor_evaluation_handoff_status(bridge_endpoint: str, auth_token: str | None) -> dict[str, Any]:
@@ -769,6 +792,299 @@ def run_capability_discovery(
         return 1, exc.__class__.__name__
 
 
+def contract_packet_submission_targets(bridge_endpoint: str) -> list[dict[str, Any]]:
+    base = strip_known_path(bridge_endpoint)
+    return [
+        {
+            "targetPath": CHIEF_OF_STAFF_REQUEST_PATH,
+            "operationId": "chief_of_staff_request",
+            "requestKind": "chief_of_staff_request_handoff",
+            "handoffNames": CHIEF_OF_STAFF_REQUEST_HANDOFF_NAMES,
+            "url": f"{base}{CHIEF_OF_STAFF_REQUEST_PATH}",
+        },
+        {
+            "targetPath": GOVERNANCE_EVALUATION_PATH,
+            "operationId": "governance_evaluation",
+            "requestKind": "governance_evaluation_handoff",
+            "handoffNames": GOVERNANCE_EVALUATION_HANDOFF_NAMES,
+            "url": f"{base}{GOVERNANCE_EVALUATION_PATH}",
+        },
+    ]
+
+
+def contract_packet_headers(auth_token: str | None, bridge_endpoint: str) -> dict[str, str]:
+    if not auth_token:
+        return {"Content-Type": "application/json"}
+    if is_generated_concierge_endpoint(bridge_endpoint):
+        return {"Content-Type": "application/json", "Authorization": f"Bearer {auth_token}"}
+    return {"Content-Type": "application/json", "X-Napoleon-Auth": auth_token}
+
+
+def post_remote_json(url: str, payload: dict[str, Any], headers: dict[str, str]) -> tuple[int, Any]:
+    data = json.dumps(payload).encode("utf-8")
+    req = request.Request(url, data=data, headers=headers, method="POST")
+    try:
+        with request.urlopen(req, timeout=10) as response:
+            return response.status, json.loads(response.read().decode("utf-8"))
+    except error.HTTPError as exc:
+        raw = exc.read().decode("utf-8")
+        decoded = json.loads(raw) if raw else {}
+        return exc.code, decoded
+
+
+def load_descriptor_for_contract_packets(
+    bridge_endpoint: str,
+    auth_token: str | None,
+) -> tuple[int, dict[str, Any], str]:
+    cos_mode = is_cos_endpoint(bridge_endpoint)
+    status_code, payload = bridge_evidence_capture.get_json(
+        bridge_evidence_capture.descriptor_url(bridge_endpoint),
+        auth_token,
+        cos_mode,
+    )
+    descriptor_preflight = bridge_evidence_capture.descriptor_connection_from_response(status_code, payload)
+    if (
+        not descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"]
+        and not cos_mode
+        and status_code == 404
+    ):
+        status_code, payload = bridge_evidence_capture.get_json(
+            bridge_evidence_capture.bridge_url(bridge_endpoint, "/cos/descriptor"),
+            auth_token,
+            True,
+        )
+        descriptor_preflight = bridge_evidence_capture.descriptor_connection_from_response(status_code, payload)
+    if not descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"]:
+        return status_code, {}, "descriptor_preflight_failed"
+    return status_code, payload if isinstance(payload, dict) else {}, "none"
+
+
+def contract_packet_payload(target: dict[str, Any]) -> dict[str, Any]:
+    operation_id = str(target["operationId"])
+    trace_id = f"trace_live_runtime_{operation_id}"
+    request_id = f"request_live_runtime_{operation_id}"
+    decision_id = f"decision_live_runtime_{operation_id}"
+    audit_id = f"audit_live_runtime_{operation_id}"
+    return {
+        "requestKind": target["requestKind"],
+        "packetType": operation_id,
+        "profileMode": "adult_owner",
+        "authorityTier": "advisory_review",
+        "approvalRequirement": "chief_of_staff_and_owner_review",
+        "traceEnvelope": {
+            "trace_id": trace_id,
+            "parent_trace_id": "live_runtime_validation",
+            "actor_id": "concierge.live_runtime_validation",
+            "request_id": request_id,
+            "decision_id": decision_id,
+            "timestamp": "2026-06-24T00:00:00.000Z",
+        },
+        "auditEnvelope": {
+            "audit_id": audit_id,
+            "trace_id": trace_id,
+            "decision_id": decision_id,
+            "actor_id": "concierge.live_runtime_validation",
+            "authority_tier": "advisory_review",
+            "approval_requirement": "chief_of_staff_and_owner_review",
+            "evidence_links": ["live_runtime_validation"],
+        },
+        "governanceDecision": {
+            "decision_id": decision_id,
+            "request_id": request_id,
+            "outcome": "requires_review",
+            "authority_tier": "advisory_review",
+            "approval_requirement": "chief_of_staff_and_owner_review",
+            "blocked_effects": [
+                "memory_write",
+                "approval_capture",
+                "external_send",
+                "agent_dispatch",
+                "routing",
+                "registry_update",
+                "trace_append",
+                "local_application",
+            ],
+            "trace_id": trace_id,
+            "audit_id": audit_id,
+        },
+        "requestedOperationId": operation_id,
+        "requestedTargetPath": target["targetPath"],
+        "blockedEffects": [
+            "memory_write",
+            "approval_capture",
+            "external_send",
+            "agent_dispatch",
+            "routing",
+            "registry_update",
+            "trace_append",
+            "local_application",
+        ],
+        "approvalCaptured": False,
+        "memoryWritePerformed": False,
+        "agentDispatchPerformed": False,
+        "externalSendPerformed": False,
+        "routingPerformed": False,
+        "registryUpdatePerformed": False,
+        "traceAppendPerformed": False,
+        "appliedLocally": False,
+        "boundary": "This is a live-runtime validation packet only; Concierge does not apply, approve, route, dispatch, write memory, update registries, append traces, or send externally.",
+    }
+
+
+def response_flag(payload: Any, camel: str, snake: str) -> bool:
+    return isinstance(payload, dict) and (payload.get(camel) is True or payload.get(snake) is True)
+
+
+def contract_packet_submission_record(
+    target: dict[str, Any],
+    status_code: int,
+    payload: Any,
+) -> dict[str, Any]:
+    governance = payload.get("governanceDecision") if isinstance(payload, dict) else None
+    if not isinstance(governance, dict) and isinstance(payload, dict):
+        governance = payload.get("governance_decision") if isinstance(payload.get("governance_decision"), dict) else None
+    trace = payload.get("traceEnvelope") if isinstance(payload, dict) else None
+    if not isinstance(trace, dict) and isinstance(payload, dict):
+        trace = payload.get("trace_envelope") if isinstance(payload.get("trace_envelope"), dict) else None
+    audit = payload.get("auditEnvelope") if isinstance(payload, dict) else None
+    if not isinstance(audit, dict) and isinstance(payload, dict):
+        audit = payload.get("audit_envelope") if isinstance(payload.get("audit_envelope"), dict) else None
+    outcome = ""
+    if isinstance(governance, dict):
+        outcome = str(governance.get("outcome") or governance.get("decision") or "")
+    side_effects = {
+        "approvalCaptured": response_flag(payload, "approvalCaptured", "approval_captured"),
+        "memoryWritePerformed": response_flag(payload, "memoryWritePerformed", "memory_write_performed"),
+        "agentDispatchPerformed": response_flag(payload, "agentDispatchPerformed", "agent_dispatch_performed"),
+        "externalSendPerformed": response_flag(payload, "externalSendPerformed", "external_send_performed"),
+        "routingPerformed": response_flag(payload, "routingPerformed", "routing_performed"),
+        "registryUpdatePerformed": response_flag(payload, "registryUpdatePerformed", "registry_update_performed"),
+        "traceAppendPerformed": response_flag(payload, "traceAppendPerformed", "trace_append_performed"),
+        "appliedLocally": response_flag(payload, "appliedLocally", "applied_locally"),
+    }
+    passed = (
+        200 <= status_code < 300
+        and isinstance(governance, dict)
+        and isinstance(trace, dict)
+        and isinstance(audit, dict)
+        and outcome not in {"deny", "denied", "no_go", "nogo"}
+        and not any(side_effects.values())
+    )
+    return {
+        "status": "passed" if passed else "failed",
+        "statusCode": status_code,
+        "targetPath": target["targetPath"],
+        "operationId": target["operationId"],
+        "requestKind": target["requestKind"],
+        "governanceOutcome": outcome or "missing",
+        "governanceDecisionObserved": isinstance(governance, dict),
+        "traceEnvelopeObserved": isinstance(trace, dict),
+        "auditEnvelopeObserved": isinstance(audit, dict),
+        "endpointHostRetained": False,
+        "tokenRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        **side_effects,
+    }
+
+
+def run_contract_packet_submissions(
+    bridge_endpoint: str,
+    out_path: Path,
+    auth_token: str | None,
+    runtime_validation_source: str,
+) -> tuple[int, str | None]:
+    try:
+        _, descriptor, descriptor_failure = load_descriptor_for_contract_packets(bridge_endpoint, auth_token)
+        targets = contract_packet_submission_targets(bridge_endpoint)
+        handoff_status: dict[str, Any] = {}
+        missing_handoffs: list[str] = []
+        for target in targets:
+            advertised, source = descriptor_advertises_handoff(
+                descriptor,
+                set(target["handoffNames"]),
+                str(target["targetPath"]),
+            )
+            handoff_status[str(target["operationId"])] = {
+                "advertised": advertised,
+                "source": source,
+                "targetPath": target["targetPath"],
+                "requestKind": target["requestKind"],
+            }
+            if not advertised:
+                missing_handoffs.append(str(target["operationId"]))
+
+        submissions: list[dict[str, Any]] = []
+        failure_reason = "none"
+        if descriptor_failure != "none":
+            failure_reason = descriptor_failure
+        elif missing_handoffs:
+            failure_reason = "contract_packet_handoff_not_advertised"
+        else:
+            headers = contract_packet_headers(auth_token, bridge_endpoint)
+            for target in targets:
+                status_code, payload = post_remote_json(
+                    str(target["url"]),
+                    contract_packet_payload(target),
+                    headers,
+                )
+                record = contract_packet_submission_record(target, status_code, payload)
+                submissions.append(record)
+            if any(record["status"] != "passed" for record in submissions):
+                failure_reason = "contract_packet_submission_failed"
+
+        passed = failure_reason == "none" and len(submissions) == len(targets)
+        evidence = {
+            "kind": "governed_contract_packet_submission_evidence",
+            "status": "passed" if passed else "failed",
+            "failureReason": failure_reason,
+            "runtimeValidationSource": runtime_validation_source,
+            "descriptorHandoffStatus": handoff_status,
+            "submissionCount": len(submissions),
+            "submissions": submissions,
+            "endpointHostRetained": False,
+            "tokenRetained": False,
+            "requestBodyRetained": False,
+            "responseBodyRetained": False,
+            "approvalCaptured": False,
+            "memoryWritePerformed": False,
+            "agentDispatchPerformed": False,
+            "externalSendPerformed": False,
+            "routingPerformed": False,
+            "registryUpdatePerformed": False,
+            "traceAppendPerformed": False,
+            "appliedLocally": False,
+            "boundary": "Contract packet submission evidence is sanitized metadata only and is not approval, routing, dispatch, memory write, trace append, registry update, external send, or local application authority.",
+        }
+        out_path.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+        return (0 if passed else 1), None if passed else failure_reason
+    except Exception as exc:
+        evidence = {
+            "kind": "governed_contract_packet_submission_evidence",
+            "status": "failed",
+            "failureReason": exc.__class__.__name__,
+            "runtimeValidationSource": runtime_validation_source,
+            "descriptorHandoffStatus": {},
+            "submissionCount": 0,
+            "submissions": [],
+            "endpointHostRetained": False,
+            "tokenRetained": False,
+            "requestBodyRetained": False,
+            "responseBodyRetained": False,
+            "approvalCaptured": False,
+            "memoryWritePerformed": False,
+            "agentDispatchPerformed": False,
+            "externalSendPerformed": False,
+            "routingPerformed": False,
+            "registryUpdatePerformed": False,
+            "traceAppendPerformed": False,
+            "appliedLocally": False,
+            "boundary": "Contract packet submission validation failed closed without retaining endpoints, tokens, request bodies, or response bodies.",
+        }
+        out_path.write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
+        return 1, exc.__class__.__name__
+
+
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -1030,10 +1346,59 @@ def capability_discovery_summary(path: Path, exit_code: int | None, failure_reas
     }
 
 
+def contract_packet_submission_summary(path: Path, exit_code: int | None, failure_reason: str | None) -> dict[str, Any]:
+    defaults = {
+        "status": "not_run",
+        "failureReason": failure_reason or "none",
+        "path": str(path),
+        "submissionCount": 0,
+        "descriptorHandoffStatus": {},
+        "submissions": [],
+        "endpointHostRetained": False,
+        "tokenRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        "approvalCaptured": False,
+        "memoryWritePerformed": False,
+        "agentDispatchPerformed": False,
+        "externalSendPerformed": False,
+        "routingPerformed": False,
+        "registryUpdatePerformed": False,
+        "traceAppendPerformed": False,
+        "appliedLocally": False,
+    }
+    if exit_code is None or not path.exists():
+        return defaults
+    payload = load_json(path)
+    if not isinstance(payload, dict):
+        return {**defaults, "status": "failed", "failureReason": failure_reason or "invalid_packet_artifact"}
+    return {
+        "status": "passed" if exit_code == 0 and payload.get("status") == "passed" else "failed",
+        "failureReason": failure_reason or str(payload.get("failureReason") or "none"),
+        "path": str(path),
+        "submissionCount": payload.get("submissionCount", 0),
+        "descriptorHandoffStatus": payload.get("descriptorHandoffStatus", {}),
+        "submissions": payload.get("submissions", []),
+        "endpointHostRetained": payload.get("endpointHostRetained") is True,
+        "tokenRetained": payload.get("tokenRetained") is True,
+        "requestBodyRetained": payload.get("requestBodyRetained") is True,
+        "responseBodyRetained": payload.get("responseBodyRetained") is True,
+        "approvalCaptured": payload.get("approvalCaptured") is True,
+        "memoryWritePerformed": payload.get("memoryWritePerformed") is True,
+        "agentDispatchPerformed": payload.get("agentDispatchPerformed") is True,
+        "externalSendPerformed": payload.get("externalSendPerformed") is True,
+        "routingPerformed": payload.get("routingPerformed") is True,
+        "registryUpdatePerformed": payload.get("registryUpdatePerformed") is True,
+        "traceAppendPerformed": payload.get("traceAppendPerformed") is True,
+        "appliedLocally": payload.get("appliedLocally") is True,
+    }
+
+
 def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
     runtime = summary["runtimeValidation"]
     bridge = summary["bridgeEvidence"]
     capabilities = summary["capabilityDiscovery"]
+    packets = summary["contractPacketSubmissions"]
     evaluator = summary["httpEvaluator"]
     artifact_privacy = summary["artifactPrivacy"]
     evaluator_failure_reason = evaluator.get("failureReason")
@@ -1048,6 +1413,7 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
         (runtime["source"] == "real_runtime", "Evidence source is not real Napoleon runtime."),
         (bridge["status"] == "passed", "Descriptor discovery and bridge evidence capture did not pass."),
         (capabilities["status"] == "passed", "Descriptor-gated capability discovery did not pass."),
+        (packets["status"] == "passed", "Governed contract packet submission validation did not pass."),
         (evaluator["status"] == "passed", evaluator_blocker),
         (artifact_privacy["status"] == "passed", "Artifact privacy audit did not pass."),
     ]
@@ -1065,6 +1431,7 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
     runtime = summary["runtimeValidation"]
     bridge = summary["bridgeEvidence"]
     capabilities = summary["capabilityDiscovery"]
+    packets = summary["contractPacketSubmissions"]
     evaluator = summary["httpEvaluator"]
     artifact_privacy = summary["artifactPrivacy"]
     boundary = summary["promotionBoundary"]
@@ -1112,6 +1479,8 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- Capability discovery status: `{capabilities['status']}`",
         f"- Capability discovery target path: `{capabilities['targetPath']}`",
         f"- Capability discovery count: `{capabilities['capabilityCount']}`",
+        f"- Contract packet submission status: `{packets['status']}`",
+        f"- Contract packet submission count: `{packets['submissionCount']}`",
         f"- HTTP evaluator status: `{evaluator['status']}`",
         f"- HTTP evaluator run ID: `{evaluator['run_id']}`",
         f"- HTTP evaluator score: `{evaluator['score_total']}`",
@@ -1132,6 +1501,7 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         "",
         checkbox(bridge["status"] == "passed", "Descriptor discovery and bridge evidence capture passed."),
         checkbox(capabilities["status"] == "passed", "Descriptor-gated capability discovery passed."),
+        checkbox(packets["status"] == "passed", "Governed contract packet submissions passed."),
         checkbox(evaluator["status"] == "passed", "Evaluator HTTP mode passed."),
         checkbox(artifact_privacy["status"] == "passed", "Artifact privacy audit passed."),
         checkbox(runtime["source"] == "real_runtime", "Evidence source is real Napoleon runtime, not local harness or simulation."),
@@ -1165,6 +1535,9 @@ def write_summary(
     capability_exit_code: int | None,
     capability_failure_reason: str | None,
     capability_path: Path,
+    contract_packet_exit_code: int | None,
+    contract_packet_failure_reason: str | None,
+    contract_packet_path: Path,
     eval_report_path: Path,
     runtime_validation_source: str,
     artifact_privacy: dict[str, Any],
@@ -1185,6 +1558,11 @@ def write_summary(
             capability_path,
             capability_exit_code,
             capability_failure_reason,
+        ),
+        "contractPacketSubmissions": contract_packet_submission_summary(
+            contract_packet_path,
+            contract_packet_exit_code,
+            contract_packet_failure_reason,
         ),
         "httpEvaluator": {
             "status": "passed" if eval_exit_code == 0 else "failed" if eval_exit_code is not None else "not_run",
@@ -1261,6 +1639,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint, endpoint_resolution)
     evidence_path = out_dir / "bridge_evidence.json"
     capability_path = out_dir / "capability_discovery.json"
+    contract_packet_path = out_dir / "contract_packet_submissions.json"
     eval_report_path = out_dir / "eval_http.json"
     summary_path = out_dir / "summary.json"
     promotion_review_path = out_dir / "promotion_review.md"
@@ -1288,6 +1667,21 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         if capability_exit_code != 0:
             print(
                 "Capability discovery failed closed; summary will record sanitized capability failure.",
+                file=sys.stderr,
+            )
+
+    contract_packet_exit_code: int | None = None
+    contract_packet_failure_reason: str | None = None
+    if bridge_exit_code == 0:
+        contract_packet_exit_code, contract_packet_failure_reason = run_contract_packet_submissions(
+            bridge_endpoint,
+            contract_packet_path,
+            auth_token,
+            args.runtime_validation_source,
+        )
+        if contract_packet_exit_code != 0:
+            print(
+                "Contract packet submission validation failed closed; summary will record sanitized packet failure.",
                 file=sys.stderr,
             )
 
@@ -1344,7 +1738,10 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         ]
         if value
     }
-    artifact_privacy = audit_artifact_privacy([evidence_path, capability_path, eval_report_path], sensitive_values)
+    artifact_privacy = audit_artifact_privacy(
+        [evidence_path, capability_path, contract_packet_path, eval_report_path],
+        sensitive_values,
+    )
 
     summary = write_summary(
         summary_path,
@@ -1356,6 +1753,9 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         capability_exit_code,
         capability_failure_reason,
         capability_path,
+        contract_packet_exit_code,
+        contract_packet_failure_reason,
+        contract_packet_path,
         eval_report_path,
         args.runtime_validation_source,
         artifact_privacy,
@@ -1364,6 +1764,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         "summary": str(summary_path),
         "runtime_validation_source": summary["runtimeValidation"]["source"],
         "bridge_status": summary["bridgeEvidence"]["status"],
+        "contract_packet_status": summary["contractPacketSubmissions"]["status"],
         "http_evaluator_status": summary["httpEvaluator"]["status"],
         "artifact_privacy_status": summary["artifactPrivacy"]["status"],
         "boundary": BOUNDARY,
@@ -1373,6 +1774,8 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         return bridge_exit_code
     if capability_exit_code not in (None, 0):
         return capability_exit_code
+    if contract_packet_exit_code not in (None, 0):
+        return contract_packet_exit_code
     if eval_exit_code not in (None, 0):
         return eval_exit_code
     if summary["artifactPrivacy"]["status"] != "passed":

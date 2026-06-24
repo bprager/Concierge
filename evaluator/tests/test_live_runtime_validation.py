@@ -25,6 +25,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
                 summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
                 evidence = json.loads((Path(tmpdir) / "bridge_evidence.json").read_text(encoding="utf-8"))
                 capabilities = json.loads((Path(tmpdir) / "capability_discovery.json").read_text(encoding="utf-8"))
+                packets = json.loads((Path(tmpdir) / "contract_packet_submissions.json").read_text(encoding="utf-8"))
                 report = json.loads((Path(tmpdir) / "eval_http.json").read_text(encoding="utf-8"))
                 review = (Path(tmpdir) / "promotion_review.md").read_text(encoding="utf-8")
 
@@ -42,6 +43,28 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertFalse(summary["capabilityDiscovery"]["memoryWritePerformed"])
         self.assertFalse(summary["capabilityDiscovery"]["agentDispatchPerformed"])
         self.assertFalse(summary["capabilityDiscovery"]["externalSendPerformed"])
+        self.assertEqual(summary["contractPacketSubmissions"]["status"], "passed")
+        self.assertEqual(summary["contractPacketSubmissions"]["submissionCount"], 2)
+        packet_paths = {record["targetPath"] for record in summary["contractPacketSubmissions"]["submissions"]}
+        self.assertEqual(packet_paths, {"/chief-of-staff/requests", "/governance/evaluate"})
+        for record in summary["contractPacketSubmissions"]["submissions"]:
+            self.assertEqual(record["status"], "passed")
+            self.assertEqual(record["governanceOutcome"], "requires_review")
+            self.assertTrue(record["governanceDecisionObserved"])
+            self.assertTrue(record["traceEnvelopeObserved"])
+            self.assertTrue(record["auditEnvelopeObserved"])
+            self.assertFalse(record["endpointHostRetained"])
+            self.assertFalse(record["tokenRetained"])
+            self.assertFalse(record["requestBodyRetained"])
+            self.assertFalse(record["responseBodyRetained"])
+            self.assertFalse(record["approvalCaptured"])
+            self.assertFalse(record["memoryWritePerformed"])
+            self.assertFalse(record["agentDispatchPerformed"])
+            self.assertFalse(record["externalSendPerformed"])
+            self.assertFalse(record["routingPerformed"])
+            self.assertFalse(record["registryUpdatePerformed"])
+            self.assertFalse(record["traceAppendPerformed"])
+            self.assertFalse(record["appliedLocally"])
         self.assertEqual(summary["httpEvaluator"]["status"], "passed")
         self.assertTrue(summary["httpEvaluator"]["sanitized"])
         self.assertEqual(summary["httpEvaluator"]["targetPath"], "/v1/concierge/evaluate")
@@ -57,7 +80,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertIn("not real Napoleon runtime validation", summary["runtimeValidation"]["caveat"])
         self.assertEqual(summary["artifactPrivacy"]["status"], "passed")
         self.assertEqual(summary["artifactPrivacy"]["violation_count"], 0)
-        self.assertEqual(summary["artifactPrivacy"]["checked_count"], 3)
+        self.assertEqual(summary["artifactPrivacy"]["checked_count"], 4)
         self.assertEqual(capabilities["kind"], "chief_of_staff_capability_discovery_evidence")
         self.assertEqual(capabilities["targetPath"], "/v1/concierge/chief-of-staff/capabilities")
         self.assertEqual(capabilities["operationId"], "chief_of_staff_capabilities")
@@ -68,6 +91,10 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertFalse(capabilities["memoryWritePerformed"])
         self.assertFalse(capabilities["agentDispatchPerformed"])
         self.assertFalse(capabilities["externalSendPerformed"])
+        self.assertEqual(packets["kind"], "governed_contract_packet_submission_evidence")
+        self.assertEqual(packets["status"], "passed")
+        self.assertEqual(packets["submissionCount"], 2)
+        self.assertNotIn(base_url, json.dumps(packets))
         self.assertEqual(report["score_total"], 100.0)
         self.assertNotIn("response_excerpt", json.dumps(report))
         self.assertNotIn("PRD: Concierge", json.dumps(report))
@@ -88,6 +115,8 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertIn("- HTTP evaluator target path: `/v1/concierge/evaluate`", review)
         self.assertIn("- Capability discovery status: `passed`", review)
         self.assertIn("- Capability discovery target path: `/v1/concierge/chief-of-staff/capabilities`", review)
+        self.assertIn("- Contract packet submission status: `passed`", review)
+        self.assertIn("- Contract packet submission count: `2`", review)
         self.assertIn("- HTTP evaluator request kind: `evaluator_prompt`", review)
         self.assertIn("- HTTP evaluator operation ID: `evaluate`", review)
         self.assertIn("Artifact privacy audit passed.", review)
@@ -97,10 +126,19 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertFalse(base_url in review)
         self.assertIn("runtime_validation_source", stdout.getvalue())
         self.assertIn("bridge_status", stdout.getvalue())
+        self.assertIn("contract_packet_status", stdout.getvalue())
         self.assertIn("artifact_privacy_status", stdout.getvalue())
 
     def test_summary_reports_sanitized_cos_bridge_operation_metadata(self):
-        with RecordingCosHarness(descriptor_ready=True) as cos_harness:
+        with RecordingCosHarness(
+            descriptor_ready=True,
+            supported_handoffs=[
+                "text_turn",
+                "evaluation_review",
+                "chief_of_staff_request",
+                "governance_evaluation",
+            ],
+        ) as cos_harness:
             with local_bridge_harness.running_harness() as eval_base_url:
                 with tempfile.TemporaryDirectory() as tmpdir:
                     stdout = io.StringIO()
@@ -118,9 +156,14 @@ class LiveRuntimeValidationTest(unittest.TestCase):
 
         summary_json = json.dumps(summary)
         self.assertEqual(exit_code, 0)
-        self.assertEqual(cos_harness.last_get_path, "/cos/capabilities")
-        self.assertEqual(cos_harness.get_paths, ["/cos/descriptor", "/cos/trace/trace_bridge_evidence_capture", "/cos/capabilities"])
-        self.assertEqual(cos_harness.last_post_path, "/cos/text-turn")
+        self.assertEqual(cos_harness.last_get_path, "/cos/descriptor")
+        self.assertEqual(cos_harness.get_paths, [
+            "/cos/descriptor",
+            "/cos/trace/trace_bridge_evidence_capture",
+            "/cos/capabilities",
+            "/cos/descriptor",
+        ])
+        self.assertEqual(cos_harness.last_post_path, "/governance/evaluate")
         self.assertEqual(evidence[0]["targetPath"], "/cos/text-turn")
         self.assertTrue(evidence[0]["traceEnvelopeObserved"])
         self.assertTrue(evidence[0]["traceEnvelopeMatched"])
@@ -140,6 +183,8 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(summary["capabilityDiscovery"]["operationId"], "chief_of_staff_capabilities")
         self.assertEqual(summary["capabilityDiscovery"]["capabilityCount"], 1)
         self.assertEqual(summary["capabilityDiscovery"]["capabilityIds"], ["napoleon.capability.governed_text_turn"])
+        self.assertEqual(summary["contractPacketSubmissions"]["status"], "passed")
+        self.assertEqual(summary["contractPacketSubmissions"]["submissionCount"], 2)
         self.assertFalse(summary["capabilityDiscovery"]["endpointHostRetained"])
         self.assertFalse(summary["capabilityDiscovery"]["tokenRetained"])
         self.assertFalse(summary["capabilityDiscovery"]["responseBodyRetained"])
@@ -153,6 +198,50 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertNotIn(eval_base_url, summary_json)
         self.assertNotIn("token_cos_summary", summary_json)
         self.assertIn("bridge_status", stdout.getvalue())
+
+    def test_main_blocks_when_contract_packet_handoffs_are_not_advertised(self):
+        with RecordingCosHarness(descriptor_ready=True, supported_handoffs=["text_turn", "evaluation_review"]) as cos_harness:
+            with local_bridge_harness.running_harness() as eval_base_url:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    stderr = io.StringIO()
+                    with contextlib.redirect_stderr(stderr):
+                        exit_code = live_runtime_validation.main([
+                            "--bridge-endpoint", f"{cos_harness.base_url}/cos/text-turn",
+                            "--eval-endpoint", f"{eval_base_url}/v1/concierge/evaluate",
+                            "--out-dir", tmpdir,
+                            "--auth-token", "token_missing_packet_handoff",
+                            "--runtime-validation-source", "real_runtime",
+                        ])
+
+                    summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+                    packets = json.loads((Path(tmpdir) / "contract_packet_submissions.json").read_text(encoding="utf-8"))
+                    review = (Path(tmpdir) / "promotion_review.md").read_text(encoding="utf-8")
+
+        summary_json = json.dumps(summary)
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(summary["bridgeEvidence"]["status"], "passed")
+        self.assertEqual(summary["capabilityDiscovery"]["status"], "passed")
+        self.assertEqual(summary["contractPacketSubmissions"]["status"], "failed")
+        self.assertEqual(
+            summary["contractPacketSubmissions"]["failureReason"],
+            "contract_packet_handoff_not_advertised",
+        )
+        self.assertEqual(summary["contractPacketSubmissions"]["submissionCount"], 0)
+        self.assertEqual(packets["status"], "failed")
+        self.assertEqual(packets["failureReason"], "contract_packet_handoff_not_advertised")
+        self.assertFalse(packets["endpointHostRetained"])
+        self.assertFalse(packets["tokenRetained"])
+        self.assertFalse(packets["requestBodyRetained"])
+        self.assertFalse(packets["responseBodyRetained"])
+        self.assertNotIn(cos_harness.base_url, summary_json)
+        self.assertNotIn(eval_base_url, summary_json)
+        self.assertNotIn("token_missing_packet_handoff", summary_json)
+        self.assertIn(
+            "Governed contract packet submission validation did not pass.",
+            summary["promotionReadiness"]["blockingReasons"],
+        )
+        self.assertIn("- Contract packet submission status: `failed`", review)
+        self.assertIn("Contract packet submission validation failed closed", stderr.getvalue())
 
     def test_capability_discovery_evidence_fails_when_response_claims_side_effects(self):
         evidence = live_runtime_validation.sanitized_capability_discovery_evidence(

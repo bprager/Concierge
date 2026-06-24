@@ -391,6 +391,10 @@ class RecordingCosHarness:
                     }
                     if "evaluation_review" in parent.supported_handoffs:
                         descriptor_payload["endpoints"]["evaluation_review"] = "POST /chief-of-staff/reviews/evaluation"
+                    if "chief_of_staff_request" in parent.supported_handoffs:
+                        descriptor_payload["endpoints"]["chief_of_staff_request"] = "POST /chief-of-staff/requests"
+                    if "governance_evaluation" in parent.supported_handoffs:
+                        descriptor_payload["endpoints"]["governance_evaluation"] = "POST /governance/evaluate"
                 if parent.required_for is not None:
                     descriptor_payload["required_for"] = parent.required_for
                 self.write_json(200, descriptor_payload)
@@ -401,6 +405,26 @@ class RecordingCosHarness:
                 parent.last_auth_header = self.headers.get("X-Napoleon-Auth", "")
                 length = int(self.headers.get("Content-Length", "0"))
                 parent.last_turn_payload = json.loads(self.rfile.read(length).decode("utf-8"))
+                if self.path == "/chief-of-staff/requests":
+                    self.write_json(
+                        200,
+                        local_bridge_harness.build_review_response(
+                            parent.last_turn_payload,
+                            "chief_of_staff_request_handoff",
+                            applied_locally=False,
+                        ),
+                    )
+                    return
+                if self.path == "/governance/evaluate":
+                    self.write_json(
+                        200,
+                        local_bridge_harness.build_review_response(
+                            parent.last_turn_payload,
+                            "governance_evaluation_handoff",
+                            applied_locally=False,
+                        ),
+                    )
+                    return
                 if self.path != "/cos/text-turn":
                     self.write_json(404, {"error": "not_found"})
                     return
