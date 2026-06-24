@@ -458,6 +458,36 @@ const BRIDGE_OPERATION_REQUIRED_PROOF_SUMMARIES: Partial<Record<BridgeOperationI
   text_turn: "/cos/trace/{trace_id}",
 };
 
+const BRIDGE_OPERATION_BOUNDARIES: Record<BridgeOperationId, string> = {
+  chief_of_staff_capabilities:
+    "capability-discovery Napoleon bridge target; no local approval, runtime authority grant, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+  chief_of_staff_descriptor:
+    "descriptor-discovery Napoleon bridge target; no local approval, runtime authority grant, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+  chief_of_staff_steering:
+    "Chief of Staff steering Napoleon bridge target; no local evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+  evaluate:
+    "evaluator Napoleon bridge target; no local evaluator approval, release approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
+  memory_proposal_review:
+    "proposal-review Napoleon bridge target; no local memory write, approval capture, agent dispatch, external send, registry update, trace append, task routing, or local application.",
+  text_turn:
+    "text-turn Napoleon bridge target; no local approval capture, memory write, agent dispatch, external send, registry update, trace append, task routing, or local application.",
+};
+
+const BRIDGE_OPERATION_SIDE_EFFECT_SUMMARIES: Record<BridgeOperationId, string> = {
+  chief_of_staff_capabilities:
+    "No approval, runtime authority grant, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
+  chief_of_staff_descriptor:
+    "No approval, runtime authority grant, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
+  chief_of_staff_steering:
+    "No evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
+  evaluate:
+    "No evaluator approval, release approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
+  memory_proposal_review:
+    "No memory write, approval capture, agent dispatch, external send, registry update, trace append, task routing, or application is performed by Concierge",
+  text_turn:
+    "No approval capture, memory write, agent dispatch, external send, registry update, trace append, task routing, or application is performed by Concierge",
+};
+
 export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOperationSummary {
   const operation = getBridgeOperation(id);
   return {
@@ -467,12 +497,12 @@ export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOpe
     path: operation.path,
     requestKind: operation.requestKind,
     transport: BRIDGE_OPERATION_TRANSPORT_LABELS[operation.transport],
-    boundary: "Governed Napoleon bridge only",
+    boundary: BRIDGE_OPERATION_BOUNDARIES[operation.id],
     tokenHandling:
       ADVISORY_HARNESS_ENDPOINT_FORMS[operation.id] !== undefined
         ? "Bearer token is sent only in the Authorization header for generated routes or X-Napoleon-Auth for explicit /cos advisory routes"
         : "Bearer token is sent only in the Authorization header",
-    sideEffects: "No memory write, approval capture, agent dispatch, or external send is performed by Concierge",
+    sideEffects: BRIDGE_OPERATION_SIDE_EFFECT_SUMMARIES[operation.id],
     requiredResponseFields: operation.responseRequired,
     requiredResponseSummary: operation.responseRequired.join(", "),
     acceptedEndpointForms: ADVISORY_HARNESS_ENDPOINT_FORMS[operation.id],

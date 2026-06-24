@@ -647,12 +647,18 @@ test("describes governed bridge operation routes without endpoint hosts or secre
   assert.equal(summary.path, "/v1/concierge/turn");
   assert.equal(summary.requestKind, "text_turn");
   assert.equal(summary.transport, "HTTP POST");
-  assert.equal(summary.boundary, "Governed Napoleon bridge only");
+  assert.equal(
+    summary.boundary,
+    "text-turn Napoleon bridge target; no local approval capture, memory write, agent dispatch, external send, registry update, trace append, task routing, or local application.",
+  );
   assert.equal(
     summary.tokenHandling,
     "Bearer token is sent only in the Authorization header for generated routes or X-Napoleon-Auth for explicit /cos advisory routes",
   );
-  assert.equal(summary.sideEffects, "No memory write, approval capture, agent dispatch, or external send is performed by Concierge");
+  assert.equal(
+    summary.sideEffects,
+    "No approval capture, memory write, agent dispatch, external send, registry update, trace append, task routing, or application is performed by Concierge",
+  );
   assert.deepEqual(summary.requiredResponseFields, ["text", "governanceDecision", "traceEnvelope", "auditEnvelope"]);
   assert.equal(summary.requiredResponseSummary, "text, governanceDecision, traceEnvelope, auditEnvelope");
   assert.deepEqual(summary.acceptedEndpointForms, [
@@ -672,9 +678,55 @@ test("describes governed bridge operation routes without endpoint hosts or secre
   const descriptorSummary = describeBridgeOperationSummary("chief_of_staff_descriptor");
   assert.equal(descriptorSummary.transport, "HTTP GET");
   assert.equal(
+    descriptorSummary.boundary,
+    "descriptor-discovery Napoleon bridge target; no local approval, runtime authority grant, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+  );
+  assert.equal(
+    descriptorSummary.sideEffects,
+    "No approval, runtime authority grant, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
+  );
+  assert.equal(
     descriptorSummary.requiredResponseSummary,
     "serviceId, ready, runtimeAuthority, cachePolicy, blockedEffects",
   );
+});
+
+test("describes memory proposal review without local memory or approval authority", () => {
+  const summary = describeBridgeOperationSummary("memory_proposal_review");
+
+  assert.equal(summary.label, "Memory proposal review");
+  assert.equal(summary.path, "/v1/concierge/memory-proposals");
+  assert.equal(summary.requestKind, "memory_proposal_review_handoff");
+  assert.equal(
+    summary.boundary,
+    "proposal-review Napoleon bridge target; no local memory write, approval capture, agent dispatch, external send, registry update, trace append, task routing, or local application.",
+  );
+  assert.equal(
+    summary.sideEffects,
+    "No memory write, approval capture, agent dispatch, external send, registry update, trace append, task routing, or application is performed by Concierge",
+  );
+  assert.equal(summary.requiredResponseSummary.includes("memoryWritePerformed"), true);
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
+});
+
+test("describes Chief of Staff steering without local evolution or routing authority", () => {
+  const summary = describeBridgeOperationSummary("chief_of_staff_steering");
+
+  assert.equal(summary.label, "Chief of Staff steering");
+  assert.equal(summary.path, "/v1/concierge/chief-of-staff/steering");
+  assert.equal(summary.requestKind, "chief_of_staff_steering_handoff");
+  assert.equal(
+    summary.boundary,
+    "Chief of Staff steering Napoleon bridge target; no local evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+  );
+  assert.equal(
+    summary.sideEffects,
+    "No evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
+  );
+  assert.equal(summary.requiredResponseSummary.includes("appliedLocally"), true);
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 });
 
 test("describes runtime contract alignment without treating path drift as authority", () => {
@@ -734,6 +786,19 @@ test("describes all core governed operation routes for the UI", () => {
     "agentDispatchPerformed",
     "externalSendPerformed",
   ]);
+  assert.equal(
+    summaries.find((summary) => summary.id === "chief_of_staff_capabilities")?.boundary,
+    "capability-discovery Napoleon bridge target; no local approval, runtime authority grant, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+  );
+  assert.equal(
+    summaries.find((summary) => summary.id === "memory_proposal_review")?.sideEffects,
+    "No memory write, approval capture, agent dispatch, external send, registry update, trace append, task routing, or application is performed by Concierge",
+  );
+  assert.equal(
+    summaries.find((summary) => summary.id === "chief_of_staff_steering")?.boundary,
+    "Chief of Staff steering Napoleon bridge target; no local evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+  );
+  assert.equal(summaries.some((summary) => summary.boundary === "Governed Napoleon bridge only"), false);
 });
 
 test("describes named Napoleon review targets with generated metadata source", () => {

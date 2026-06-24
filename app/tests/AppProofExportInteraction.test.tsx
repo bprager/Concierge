@@ -4056,9 +4056,9 @@ test("shows named Napoleon governed targets in governed routes", async () => {
       ),
     );
     assert.ok(
-      routes.getByText(
+      routes.getAllByText(
         "Side effects: No evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
-      ),
+      ).length >= 1,
     );
     assert.ok(routes.getByText("Evolution proposal submission"));
     assert.ok(routes.getByText("/evolution/proposals"));
@@ -4122,6 +4122,63 @@ test("shows named Napoleon governed targets in governed routes", async () => {
       ),
       null,
     );
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
+test("shows explicit core governed route boundaries in governed routes", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App />);
+    const routesPanel = view.getByText("Governed Napoleon routes").closest("section") as HTMLElement;
+    assert.ok(routesPanel);
+    const routes = within(routesPanel);
+
+    assert.ok(
+      routes.getByText(
+        "descriptor-discovery Napoleon bridge target; no local approval, runtime authority grant, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "capability-discovery Napoleon bridge target; no local approval, runtime authority grant, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "text-turn Napoleon bridge target; no local approval capture, memory write, agent dispatch, external send, registry update, trace append, task routing, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "proposal-review Napoleon bridge target; no local memory write, approval capture, agent dispatch, external send, registry update, trace append, task routing, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "Side effects: No memory write, approval capture, agent dispatch, external send, registry update, trace append, task routing, or application is performed by Concierge",
+      ),
+    );
+    assert.ok(
+      routes.getAllByText(
+        "Chief of Staff steering Napoleon bridge target; no local evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+      ).length >= 2,
+    );
+    assert.ok(
+      routes.getAllByText(
+        "Side effects: No evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
+      ).length >= 2,
+    );
+    assert.equal(routesPanel.textContent?.includes("Governed Napoleon bridge only"), false);
+    assert.equal(routesPanel.textContent?.includes("127.0.0.1"), false);
+    assert.equal(routesPanel.textContent?.includes("secret-token"), false);
   } finally {
     cleanup();
     dom.window.close();

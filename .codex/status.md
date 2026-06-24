@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added route-specific boundary and side-effect summaries for generated core bridge routes in the governed routes panel, making descriptor discovery, capability discovery, text turns, memory proposal review, and Chief of Staff steering visibly non-authorizing without exposing endpoint hosts or tokens.
 - Added explicit generated-route coverage for evaluator review and evolution proposal review handoffs, making the route panel show that those Napoleon handoffs cannot grant evaluator or release approval, apply evolution changes, capture approval, update registries, write memory, dispatch agents, send externally, append traces, route tasks, or apply changes locally.
 - Added explicit generated-route coverage for observability trace handoffs, making the route panel show that the Napoleon handoff cannot append traces, create audit authority, capture approval, write memory, route tasks, dispatch agents, send externally, or apply changes locally.
 - Added explicit generated-route coverage for governance review handoffs, making the route panel show that the Napoleon handoff cannot capture approval, override governance, write memory, dispatch agents, send externally, update registries, append traces, route tasks, or apply changes locally.
