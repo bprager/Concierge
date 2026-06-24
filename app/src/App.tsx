@@ -368,9 +368,15 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwho\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
     /\bwhat\b.*\bcapability\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower);
-  if (!lower.includes("napoleon") && !asksAboutReturnedHandler) return false;
+  const asksAboutReturnedEffects =
+    /\bwhat\b.*\b(blocked|allowed)\b/.test(lower) ||
+    /\bwhat\b.*\beffects?\b.*\b(blocked|allowed)\b/.test(lower) ||
+    /\bwhich\b.*\beffects?\b.*\b(blocked|allowed)\b/.test(lower) ||
+    /\b(blocked|allowed)\b.*\beffects?\b/.test(lower);
+  if (!lower.includes("napoleon") && !asksAboutReturnedHandler && !asksAboutReturnedEffects) return false;
   return (
     asksAboutReturnedHandler ||
+    asksAboutReturnedEffects ||
     /\bwho\b.*\bhandled\b/.test(lower) ||
     /\bwho\b.*\banswered\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b/.test(lower) ||

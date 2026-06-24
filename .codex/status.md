@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local returned-proof answers for natural blocked-effect follow-ups such as "What was blocked?", so effect questions use the current Napoleon proof without a new bridge request, side effects, or raw follow-up/effect telemetry.
 - Added local returned-proof answers for natural delegation follow-ups such as "Who handled that?", so handler questions use the current Napoleon proof without a new bridge request, side effects, or raw follow-up/provenance telemetry.
 - Added local text answers for disabled send-button questions, so the user can ask why Send is unavailable and get the current preflight blocker and next step without Napoleon contact, approval capture, memory write, agent dispatch, external send, or raw prompt/endpoint/token telemetry.
 - Added local text answers for Napoleon live-send readiness questions, so the user can ask whether Concierge can send to Napoleon now and get current preflight blocker and next-step guidance without a bridge call, approval capture, memory write, agent dispatch, external send, or raw prompt/endpoint/token telemetry.
