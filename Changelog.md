@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered coverage proving remote Napoleon governance deny failures appear in the persistent delegation panel with failure reason, returned governance state, blocked effects, next step, and no selected-agent or recommendation attribution.
 - Added persistent Napoleon delegation panel rendering and coverage for post-bridge contract mismatch and remote no-go failures, showing failure reason, governance when returned, blocked effects, and next step without selected-agent or Napoleon recommendation attribution.
 - Added specific Napoleon delegation panel next-step guidance and rendered coverage for descriptor authentication failure and descriptor timeout states, keeping selected-agent and Napoleon recommendation attribution absent while blocked effects remain visible.
 - Added rendered coverage proving descriptor signature/checksum mismatch appears in the persistent Napoleon delegation panel with fail-closed connection state, next step, and blocked effects while keeping selected-agent and Napoleon recommendation attribution absent.
