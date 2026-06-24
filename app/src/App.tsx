@@ -362,8 +362,26 @@ function isNapoleonRequiredActionQuestion(content: string): boolean {
   );
 }
 
+function extractRequestedSelectedAgentName(content: string): string | null {
+  const match = content.match(
+    /\b[Ww]hat\s+did\s+([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,3})\s+(?:find|found|identify|identified|report|reported|surface|surfaced|confirm|confirmed|verify|verified|assess|assessed|conclude|concluded|recommend|recommended)\b/,
+  );
+  const name = match?.[1]?.trim();
+  if (!name || name.toLocaleLowerCase() === "napoleon") return null;
+  return name;
+}
+
+function isNamedSelectedAgentContributionQuestion(content: string): boolean {
+  return extractRequestedSelectedAgentName(content) !== null;
+}
+
+function selectedAgentNameFromContribution(contribution: string): string {
+  return contribution.split(":")[0]?.trim() ?? "";
+}
+
 function isNapoleonDelegationQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
+  const asksAboutNamedSelectedAgentContribution = isNamedSelectedAgentContributionQuestion(content);
   const asksAboutReturnedHandler =
     /\bwho\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
@@ -383,13 +401,20 @@ function isNapoleonDelegationQuestion(content: string): boolean {
       lower,
     ) ||
     /\b(what|which)\b.*\b(passive brain|selected agent|agent)\b.*\b(found|recommended|surfaced|reported)\b/.test(lower);
-  if (!lower.includes("napoleon") && !asksAboutReturnedHandler && !asksAboutReturnedEffects && !asksAboutReturnedRecommendation) {
+  if (
+    !lower.includes("napoleon") &&
+    !asksAboutReturnedHandler &&
+    !asksAboutReturnedEffects &&
+    !asksAboutReturnedRecommendation &&
+    !asksAboutNamedSelectedAgentContribution
+  ) {
     return false;
   }
   return (
     asksAboutReturnedHandler ||
     asksAboutReturnedEffects ||
     asksAboutReturnedRecommendation ||
+    asksAboutNamedSelectedAgentContribution ||
     /\bwho\b.*\bhandled\b/.test(lower) ||
     /\bwho\b.*\banswered\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b/.test(lower) ||
@@ -537,6 +562,7 @@ function formatNapoleonLiveSendReadinessAnswer(input: {
 
 function formatNapoleonDelegationAnswer(
   presentation: Parameters<typeof exportNapoleonResponseProofJson>[0],
+  questionContent = "",
 ): {
   content: string;
   proofReturned: boolean;
@@ -567,6 +593,7 @@ function formatNapoleonDelegationAnswer(
 
   const proof = presentation.proof;
   const metadata = presentation.proofMetadata;
+  const requestedSelectedAgentName = extractRequestedSelectedAgentName(questionContent);
   const trace = detailValue(proof.details, "Trace");
   const audit = detailValue(proof.details, "Audit");
   const whySelected = metadata.selectedAgentReasons.length
@@ -577,9 +604,18 @@ function formatNapoleonDelegationAnswer(
   const targetCapability = metadata.targetCapability || "not returned";
   const recommendation =
     metadata.recommendation && metadata.recommendation !== "unavailable" ? metadata.recommendation : "not returned";
-  const selectedAgentContributions = metadata.selectedAgentContributions.length
-    ? metadata.selectedAgentContributions.join("; ")
-    : "not returned";
+  const matchingSelectedAgentContributions = requestedSelectedAgentName
+    ? metadata.selectedAgentContributions.filter(
+        (contribution) =>
+          selectedAgentNameFromContribution(contribution).toLocaleLowerCase() ===
+          requestedSelectedAgentName.toLocaleLowerCase(),
+      )
+    : metadata.selectedAgentContributions;
+  const selectedAgentContributions = matchingSelectedAgentContributions.length
+    ? matchingSelectedAgentContributions.join("; ")
+    : requestedSelectedAgentName
+      ? `not returned for ${requestedSelectedAgentName}`
+      : "not returned";
 
   return {
     content: [
@@ -602,7 +638,7 @@ function formatNapoleonDelegationAnswer(
     blockedEffectCount: metadata.blockedEffects.length,
     targetCapabilityReturned: targetCapability !== "not returned" && targetCapability !== "unavailable",
     recommendationReturned: recommendation !== "not returned" && recommendation !== "unavailable",
-    selectedAgentContributionCount: metadata.selectedAgentContributions.length,
+    selectedAgentContributionCount: matchingSelectedAgentContributions.length,
     traceReturned: trace !== "not returned" && trace !== "unavailable",
     auditReturned: audit !== "not returned" && audit !== "unavailable",
   };
@@ -2446,7 +2482,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   function answerNapoleonDelegationQuestion(content: string, traceId: string, turnId: string, activeProfileMode: NapoleonProfileMode) {
     if (!isNapoleonDelegationQuestion(content)) return false;
 
-    const answer = formatNapoleonDelegationAnswer(lastNapoleonPresentation);
+    const answer = formatNapoleonDelegationAnswer(lastNapoleonPresentation, content);
     emitEvent("napoleon_delegation_answered", {
       traceId,
       conversationId,
