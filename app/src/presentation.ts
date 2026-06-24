@@ -1499,6 +1499,13 @@ export function describeLastNapoleonTurnSummary(
 
   const handledBy = proofDetailValue(proof, "Handled by");
   const governance = proofDetailValue(proof, "Governance");
+  const recommendationProofAlignment = proofDetailValue(proof, "Recommendation proof alignment");
+  const proofAlignment =
+    recommendationProofAlignment !== "not returned"
+      ? recommendationProofAlignment
+      : handledBy !== "not returned"
+        ? "same returned trace/audit as Napoleon response proof"
+        : "not returned";
 
   return {
     heading: "Latest Napoleon turn",
@@ -1512,7 +1519,7 @@ export function describeLastNapoleonTurnSummary(
       { label: "Blocked effects", value: proofDetailValue(proof, "Blocked effects") },
       { label: "Boundary", value: proofDetailValue(proof, "Attribution boundary") },
       { label: "Attribution source", value: "accepted Napoleon bridge response proof" },
-      { label: "Proof alignment", value: proofDetailValue(proof, "Recommendation proof alignment") },
+      { label: "Proof alignment", value: proofAlignment },
     ],
   };
 }

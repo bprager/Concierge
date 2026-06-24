@@ -689,6 +689,50 @@ test("describes latest Napoleon turn summary from fail-closed bridge metadata", 
   assert.ok(view.details.some((detail) => detail.label === "Next step" && detail.value.includes("Revise the request")));
 });
 
+test("describes latest Napoleon turn proof alignment from accepted selected-agent provenance", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the deployment risk",
+    profile: "adult_owner",
+    conversationId: "conv_latest_agent_proof",
+    turnId: "turn_latest_agent_proof",
+    traceId: "trace_latest_agent_proof",
+  });
+  const proof = describeNapoleonResponseProof({
+    text: "Passive Brain found the previous deployment risk note.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: false,
+    delegation: {
+      selectedAgents: [
+        {
+          agentId: "napoleon.passive_brain",
+          displayName: "Passive Brain",
+          selectionReason: "Relevant deployment history was found.",
+          contributionSummary: "Found the previous deployment risk note.",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["memory_write", "external_send"],
+      governanceState: "allow_prepare_only",
+      traceId: "trace_latest_agent_proof",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+
+  const view = describeLastNapoleonTurnSummary(proof);
+
+  assert.equal(view.status, "available");
+  assert.ok(view.summary.includes("Passive Brain"));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Proof alignment" && detail.value === "same returned trace/audit as Napoleon response proof",
+    ),
+  );
+});
+
 test("redacts unsafe latest Napoleon turn failure metadata", () => {
   const failure = describeLastNapoleonTurnFailure(
     new NapoleonBridgeError(
