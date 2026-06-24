@@ -733,6 +733,45 @@ test("describes latest Napoleon turn proof alignment from accepted selected-agen
   );
 });
 
+test("describes latest Napoleon turn proof alignment from accepted target-capability-only provenance", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge readiness",
+    profile: "adult_owner",
+    conversationId: "conv_latest_target_capability",
+    turnId: "turn_latest_target_capability",
+    traceId: "trace_latest_target_capability",
+    governanceOutcome: "requires_review",
+  });
+  const proof = describeNapoleonResponseProof({
+    text: "Napoleon prepared a bridge readiness summary.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: true,
+    targetAgent: "napoleon.chief_of_staff",
+  });
+
+  const view = describeLastNapoleonTurnSummary(proof);
+
+  assert.equal(view.status, "available");
+  assert.equal(view.summary, "Handled by napoleon.chief_of_staff; governance requires_review.");
+  assert.ok(
+    proof.details.some(
+      (detail) =>
+        detail.label === "Proof alignment" &&
+        detail.value === "target capability shares returned trace/audit; selected-agent proof not returned",
+    ),
+  );
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Proof alignment" &&
+        detail.value === "target capability shares returned trace/audit; selected-agent proof not returned",
+    ),
+  );
+});
+
 test("redacts unsafe latest Napoleon turn failure metadata", () => {
   const failure = describeLastNapoleonTurnFailure(
     new NapoleonBridgeError(

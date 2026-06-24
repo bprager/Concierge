@@ -11,6 +11,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Recently Completed
 
 - Capability Intelligence latest-turn evidence now preserves accepted selected-agent proof alignment to the returned Napoleon response trace/audit even when no recommendation provenance is present.
+- Capability Intelligence latest-turn evidence now preserves target-capability-only proof alignment as returned capability metadata with selected-agent proof explicitly not returned.
 - Capability Intelligence latest-turn evidence now includes explicit attribution-source and proof-alignment fields in rendered drilldowns and local exports, keeping accepted Napoleon bridge proof separate from local capability summaries and fail-closed metadata.
 - Observability trace handoff readiness now uses evidence-specific UI wording for sanitized trace evidence and an evidence-only trace packet instead of proposal-only review draft language.
 - Repository validation now checks canonical Napoleon review/evidence/submission documentation against every generated target ID, path, and request kind, and the architecture/backlog/observability docs now include observability trace handoff in the same fail-closed descriptor and Rehearsal Mode rules as other governed handoffs.

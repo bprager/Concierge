@@ -1373,6 +1373,11 @@ export function describeNapoleonResponseProof(
     : undefined;
   const recommendation = returnedRecommendation === "redacted" ? undefined : returnedRecommendation;
   const status: NapoleonResponseProofView["status"] = agentLabels || targetCapability || recommendation ? "verified" : "limited";
+  const proofAlignment = agentLabels
+    ? "same returned trace/audit as Napoleon response proof"
+    : targetCapabilityDisplay
+      ? "target capability shares returned trace/audit; selected-agent proof not returned"
+      : "not returned";
   const proofParts = [
     targetCapabilityDisplay ? `Capability: ${targetCapabilityDisplay}` : "",
     agentLabels ? `Agents: ${agentLabels}` : "",
@@ -1411,6 +1416,10 @@ export function describeNapoleonResponseProof(
       {
         label: "Recommendation proof alignment",
         value: recommendation ? "same returned trace/audit as Napoleon response proof" : "not returned",
+      },
+      {
+        label: "Proof alignment",
+        value: proofAlignment,
       },
       {
         label: "Capability or agents",
@@ -1500,12 +1509,11 @@ export function describeLastNapoleonTurnSummary(
   const handledBy = proofDetailValue(proof, "Handled by");
   const governance = proofDetailValue(proof, "Governance");
   const recommendationProofAlignment = proofDetailValue(proof, "Recommendation proof alignment");
-  const proofAlignment =
-    recommendationProofAlignment !== "not returned"
-      ? recommendationProofAlignment
-      : handledBy !== "not returned"
-        ? "same returned trace/audit as Napoleon response proof"
-        : "not returned";
+  const proofAlignment = proofDetailValue(
+    proof,
+    "Proof alignment",
+    recommendationProofAlignment !== "not returned" ? recommendationProofAlignment : "not returned",
+  );
 
   return {
     heading: "Latest Napoleon turn",
