@@ -419,11 +419,16 @@ function isNapoleonDelegationQuestion(content: string): boolean {
       lower,
     ) ||
     /\b(what|which)\b.*\b(passive brain|selected agent|agent)\b.*\b(found|recommended|surfaced|reported)\b/.test(lower);
+  const asksAboutReturnedSelectedAgents =
+    /\b(which|what)\b.*\b(selected\s+)?agents?\b.*\b(selected|chosen|picked|returned|involved)\b/.test(lower) ||
+    /\b(selected\s+agents?|chosen\s+agents?)\b/.test(lower) ||
+    /\bwhich\b.*\bagents?\b.*\bselected\b/.test(lower);
   if (
     !lower.includes("napoleon") &&
     !asksAboutReturnedHandler &&
     !asksAboutReturnedEffects &&
     !asksAboutReturnedRecommendation &&
+    !asksAboutReturnedSelectedAgents &&
     !asksAboutNamedSelectedAgentContribution &&
     !asksAboutNamedSelectedAgentReason
   ) {
@@ -433,6 +438,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutReturnedHandler ||
     asksAboutReturnedEffects ||
     asksAboutReturnedRecommendation ||
+    asksAboutReturnedSelectedAgents ||
     asksAboutNamedSelectedAgentContribution ||
     asksAboutNamedSelectedAgentReason ||
     /\bwho\b.*\bhandled\b/.test(lower) ||
@@ -634,6 +640,7 @@ function formatNapoleonDelegationAnswer(
   const allowedEffects = metadata.allowedEffects.length ? metadata.allowedEffects.join(", ") : "not returned";
   const blockedEffects = metadata.blockedEffects.length ? metadata.blockedEffects.join(", ") : "not returned";
   const targetCapability = metadata.targetCapability || "not returned";
+  const selectedAgents = metadata.selectedAgents.length ? metadata.selectedAgents.join(", ") : "not returned";
   const recommendation =
     metadata.recommendation && metadata.recommendation !== "unavailable" ? metadata.recommendation : "not returned";
   const matchingSelectedAgentContributions = requestedSelectedAgentName
@@ -654,6 +661,7 @@ function formatNapoleonDelegationAnswer(
       "Latest Napoleon delegation from returned bridge proof:",
       `Handled by: ${metadata.handledBy}.`,
       `Target capability: ${targetCapability}.`,
+      `Selected agents: ${selectedAgents}.`,
       `Napoleon recommendation: ${recommendation}.`,
       `Selected-agent contribution: ${selectedAgentContributions}.`,
       `Why selected: ${whySelected}.`,

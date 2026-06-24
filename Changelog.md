@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local returned-proof answers for selected-agent list follow-ups like "Which agents were selected?", keeping the answer tied to current bridge proof without a new Napoleon request or raw selected-agent telemetry.
 - Added local returned-proof answers for selected-agent selection-reason follow-ups like "Why was Passive Brain selected?", keeping the answer tied to current bridge proof without a new Napoleon request or raw reason telemetry.
 - Added local returned-proof answers for specifically named selected-agent follow-ups like "What did Research Analyst find?", so Concierge reports when that agent's contribution was not returned instead of attributing another selected agent's contribution, without a new Napoleon request or raw agent/contribution telemetry.
 - Added local returned-proof answers for Napoleon recommendation and selected-agent contribution follow-ups like "What did Napoleon recommend?" and "What did Passive Brain find?", keeping the answer tied to current bridge proof without a new Napoleon request or raw follow-up/proof telemetry.
