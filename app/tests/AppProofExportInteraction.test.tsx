@@ -7749,7 +7749,7 @@ test("clears returned governance review results when user profile changes", asyn
   }
 });
 
-test("submits a memory proposal through rendered governed controls without local side effects", async () => {
+test("submits a memory proposal and clears returned review when Rehearsal Mode is enabled", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
     import("@testing-library/react"),
@@ -7908,6 +7908,7 @@ test("submits a memory proposal through rendered governed controls without local
     assert.equal(view.queryByText("Napoleon accepted the memory proposal for review."), null);
     assert.equal(view.queryByText(/decision_memory_review_rendered/), null);
     assert.equal(view.queryByText(/audit_memory_review_rendered/), null);
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send memory proposal to Napoleon review" })), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();
@@ -7915,7 +7916,7 @@ test("submits a memory proposal through rendered governed controls without local
   }
 });
 
-test("submits a governance review through rendered governed controls without local approval", async () => {
+test("submits a governance review and clears returned review when Rehearsal Mode is enabled", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
     import("@testing-library/react"),
@@ -8079,6 +8080,7 @@ test("submits a governance review through rendered governed controls without loc
     assert.equal(view.queryByText("Napoleon accepted the governance review packet."), null);
     assert.equal(view.queryByText(/decision_governance_review_rendered/), null);
     assert.equal(view.queryByText(/audit_governance_review_rendered/), null);
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send governance review to Napoleon" })), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();

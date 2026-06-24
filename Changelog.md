@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Clarified rendered coverage that returned memory proposal and governance review results clear when Rehearsal Mode is enabled, including disabled live submit controls after the reset.
 - Added rendered coverage proving returned Chief of Staff steering review results clear when the active user profile changes, preventing adult-owner decision and audit evidence from crossing into child-protected scope.
 - Added rendered coverage proving returned Chief of Staff steering review results clear when Napoleon endpoint context changes, while the local draft remains blocked until descriptor preflight is valid for the new endpoint.
 - Added rendered coverage proving returned Chief of Staff steering review results clear when descriptor context changes, while the local draft remains blocked until descriptor preflight is valid again.
