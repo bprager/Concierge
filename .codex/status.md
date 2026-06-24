@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added reverse Napoleon contract-alignment reporting so named Concierge review/evidence/status targets missing from an inspected Napoleon runtime snapshot are visible as non-authorizing runtime exposure gaps.
 - Added local Napoleon-compatible harness support for the descriptor-advertised read-only evolution proposal status route, including `/evolution/proposals/{proposal_id}/status` response metadata, explicit false evolution/registry side-effect fields, and regression coverage.
 - Clarified canonical backlog and architecture documentation for the read-only evolution proposal status route, including descriptor-gated route visibility, fail-closed profile-scope handling, and the no-approval/no-evolution-application boundary.
 - Added Napoleon contract-alignment coverage for the read-only evolution proposal status route, so `/evolution/proposals/{proposal_id}/status` is treated as a mapped, non-authorizing runtime path in alignment reports instead of an unmapped evolution gap.

@@ -133,6 +133,68 @@ paths:
         self.assertEqual(report["alignmentStatus"], "runtime_mapping_gaps_present")
         self.assertEqual(report["unmappedNapoleonRuntimePaths"], ["/chief-of-staff/reviews/unknown"])
 
+    def test_reports_concierge_review_targets_missing_from_napoleon_runtime(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            local = self.write_yaml(
+                directory,
+                "local.yaml",
+                """
+openapi: 3.1.0
+x-concierge-napoleon-review-operations:
+  - id: evolution_proposal_status
+    path: /evolution/proposals/{proposal_id}/status
+    requestKind: evolution_proposal_status_handoff
+paths:
+  /v1/concierge/turn:
+    post:
+      responses:
+        "200": {description: ok}
+""",
+            )
+            napoleon = self.write_yaml(
+                directory,
+                "napoleon.yaml",
+                """
+openapi: 3.1.0
+x-napoleon-runtime-authority: false
+paths:
+  /cos/text-turn:
+    post:
+      responses:
+        "202": {description: accepted}
+  /evolution/proposals:
+    post:
+      responses:
+        "202": {description: evolution}
+""",
+            )
+
+            report = napoleon_contract_alignment.build_alignment_report(local, napoleon)
+
+        self.assertFalse(report["aligned"])
+        self.assertFalse(report["runtimeAligned"])
+        self.assertEqual(report["alignmentStatus"], "runtime_mapping_gaps_present")
+        self.assertEqual(
+            report["conciergeReviewPathsMissingFromNapoleonRuntime"],
+            ["/evolution/proposals/{proposal_id}/status"],
+        )
+        self.assertEqual(
+            report["conciergeReviewOperationsMissingFromNapoleonRuntime"],
+            [
+                {
+                    "id": "evolution_proposal_status",
+                    "path": "/evolution/proposals/{proposal_id}/status",
+                    "requestKind": "evolution_proposal_status_handoff",
+                    "sideEffectsPerformed": False,
+                    "approvalCaptured": False,
+                    "memoryWritePerformed": False,
+                    "agentDispatchPerformed": False,
+                    "externalSendPerformed": False,
+                }
+            ],
+        )
+
     def test_classifies_advisory_runtime_and_unmapped_review_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp)
@@ -263,6 +325,8 @@ paths:
             ["/agents", "/agents/{agent_id}", "/profiles/{profile_id}"],
         )
         self.assertEqual(report["napoleonDiscoveryPathsNeedingRuntimeMapping"], [])
+        self.assertEqual(report["conciergeReviewPathsMissingFromNapoleonRuntime"], [])
+        self.assertEqual(report["conciergeReviewOperationsMissingFromNapoleonRuntime"], [])
         self.assertTrue(report["runtimeAligned"])
         self.assertEqual(report["alignmentStatus"], "runtime_mapped_with_local_contract_paths")
         self.assertEqual(report["unmappedNapoleonRuntimePaths"], [])

@@ -109,6 +109,38 @@ def present_paths(paths: set[str], candidates: set[str]) -> list[str]:
     return sorted(path for path in candidates if path in paths)
 
 
+def concierge_review_operations_missing_from_napoleon(
+    concierge: dict[str, Any],
+    napoleon_paths: set[str],
+) -> list[dict[str, Any]]:
+    operations = concierge.get("x-concierge-napoleon-review-operations", [])
+    if not isinstance(operations, list):
+        return []
+    missing: list[dict[str, Any]] = []
+    for operation in operations:
+        if not isinstance(operation, dict):
+            continue
+        operation_id = operation.get("id")
+        path = operation.get("path")
+        request_kind = operation.get("requestKind")
+        if not isinstance(operation_id, str) or not isinstance(path, str) or not isinstance(request_kind, str):
+            continue
+        if path not in napoleon_paths:
+            missing.append(
+                {
+                    "id": operation_id,
+                    "path": path,
+                    "requestKind": request_kind,
+                    "sideEffectsPerformed": False,
+                    "approvalCaptured": False,
+                    "memoryWritePerformed": False,
+                    "agentDispatchPerformed": False,
+                    "externalSendPerformed": False,
+                }
+            )
+    return sorted(missing, key=lambda item: (item["path"], item["id"]))
+
+
 def local_handoff_aliases(concierge_paths: set[str], napoleon_paths: set[str]) -> list[dict[str, Any]]:
     aliases: list[dict[str, Any]] = []
     for alias in LOCAL_HANDOFF_ALIAS_CANDIDATES:
@@ -154,6 +186,8 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
     napoleon_review_contract_paths = present_paths(napoleon_set, NAPOLEON_REVIEW_CONTRACT_PATHS)
     napoleon_discovery_contract_paths = present_paths(napoleon_set, NAPOLEON_DISCOVERY_CONTRACT_PATHS)
     supported_discovery_runtime_paths = present_paths(napoleon_set, SUPPORTED_DISCOVERY_RUNTIME_PATHS)
+    concierge_review_operations_missing = concierge_review_operations_missing_from_napoleon(concierge, napoleon_set)
+    concierge_review_paths_missing = sorted({operation["path"] for operation in concierge_review_operations_missing})
     aliases = local_handoff_aliases(concierge_set, napoleon_set)
     alias_covered_paths = {
         path
@@ -183,6 +217,7 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
         not unmapped_napoleon_runtime_paths
         and not review_paths_needing_runtime_mapping
         and not discovery_paths_needing_runtime_mapping
+        and not concierge_review_paths_missing
     )
     alignment_status = (
         "exact_path_match"
@@ -212,6 +247,8 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
         "napoleonReviewPathsNeedingRuntimeMapping": review_paths_needing_runtime_mapping,
         "napoleonReviewPathsWithoutLocalAlias": review_paths_without_local_alias,
         "napoleonDiscoveryPathsNeedingRuntimeMapping": discovery_paths_needing_runtime_mapping,
+        "conciergeReviewPathsMissingFromNapoleonRuntime": concierge_review_paths_missing,
+        "conciergeReviewOperationsMissingFromNapoleonRuntime": concierge_review_operations_missing,
         "napoleonRuntimeAuthority": napoleon.get("x-napoleon-runtime-authority"),
         "nonAuthorityBoundary": "alignment_check_only",
         "sideEffectsPerformed": False,
