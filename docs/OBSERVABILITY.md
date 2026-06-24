@@ -62,6 +62,7 @@ Every user turn has:
 | context_requested | bridge | context_type, purpose |
 | governance_decision | Napoleon | action_type, decision, reason |
 | delegation_requested | Napoleon | target_agent, reason, request_kind |
+| napoleon_delegation_answered | UI | conversation_id, turn_id, profile, profile_mode, proof_returned, selected_agent_count, allowed_effect_count, blocked_effect_count, target_capability_returned, trace_returned, audit_returned, local_answer_only, approval_captured, memory_write_performed, agent_dispatch_performed, external_send_performed, applied_locally |
 | response_generated | UI | conversation_id, turn_id, profile, profile_mode, response_type, governance_outcome, decision_id, audit_id |
 | response_failed | UI | conversation_id, turn_id, profile, profile_mode, error, bridge_failure_reason, status, blocked_effects, decision_id, audit_id, governance_outcome |
 | bridge_request_started | bridge | trace_id, profile, profile_mode, channel, request_id, bridge_target_path, bridge_target_operation, bridge_target_request_kind |
@@ -158,6 +159,8 @@ Count-only Napoleon response proof telemetry derives selected-agent, selection-r
 Sanitized Napoleon response proof exports preserve selected-agent names, selection reasons, allowed effects, and blocked effects from returned bridge provenance arrays before rendering, so multi-agent proof is not reconstructed from semicolon- or comma-delimited UI rows.
 
 The visible Napoleon delegation panel includes proof-alignment metadata for returned delegation, target-capability-only responses, and empty states. This is display metadata only: it clarifies whether selected-agent delegation came from the same returned trace/audit as the Napoleon response proof, and it must not turn imported readiness proof, redacted target-capability metadata, or redacted selected-agent contribution metadata into attribution or selected-agent finding claims.
+
+Local answers to Napoleon delegation questions use only the current returned bridge proof already held in the text UI. The `napoleon_delegation_answered` event records proof availability and count-only selected-agent, allowed-effect, and blocked-effect totals plus false side-effect flags; it must not copy selected-agent names, returned effect names, trace IDs, audit IDs, endpoint hosts, bearer tokens, prompts, request bodies, or response bodies into telemetry. If no returned proof is current, Concierge answers with a no-proof statement instead of inferring a handler or contacting Napoleon.
 
 When a live text bridge attempt fails closed after descriptor preflight, such as response contract mismatch or returned governance `deny` / `no_go`, the persistent Napoleon delegation panel shows failure reason, returned governance state when available, blocked effects, and next step while keeping handled-by, selected agents, target capability, trace/audit proof alignment, and recommendation attribution marked not returned unless accepted bridge provenance exists.
 

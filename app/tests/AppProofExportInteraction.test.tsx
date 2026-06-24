@@ -179,7 +179,7 @@ function installDom() {
 
 test("exports and compares Napoleon proof through rendered app controls", async () => {
   const dom = installDom();
-  const [{ cleanup, render, screen, waitFor, within }, userEventModule, { App }] = await Promise.all([
+  const [{ cleanup, fireEvent, render, screen, waitFor, within }, userEventModule, { App }] = await Promise.all([
     import("@testing-library/react"),
     import("@testing-library/user-event"),
     import("../src/App.js"),
@@ -481,6 +481,50 @@ test("exports and compares Napoleon proof through rendered app controls", async 
         "same returned trace/audit as Napoleon response proof; not imported readiness proof",
       ),
     );
+    const requestCountBeforeDelegationQuestion = requestedUrls.length;
+    assert.equal((rehearsalCheckbox as HTMLInputElement).checked, false);
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Who handled the last Napoleon answer and what effects were blocked?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let delegationAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      delegationAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      ) as HTMLElement | undefined;
+      assert.ok(delegationAnswer);
+    });
+    assert.ok(delegationAnswer);
+    const delegationAnswerText = delegationAnswer.textContent ?? "";
+    assert.ok(delegationAnswerText.includes("Handled by: Passive Brain."));
+    assert.ok(delegationAnswerText.includes("Target capability: napoleon.chief_of_staff."));
+    assert.ok(
+      delegationAnswerText.includes(
+        "Why selected: Passive Brain: Prior bridge context is relevant; deployment context was requested.",
+      ),
+    );
+    assert.ok(delegationAnswerText.includes("Allowed effects: prepare_advisory_response."));
+    assert.ok(delegationAnswerText.includes("Blocked effects: memory_write, approval_capture, external_send, agent_dispatch."));
+    assert.ok(delegationAnswerText.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
+    assert.ok(
+      delegationAnswerText.includes(
+        "This is local display of returned bridge provenance only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeDelegationQuestion);
+    const delegationAnswerTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const delegationAnswerEvent = delegationAnswerTelemetryBuffer.events
+      ?.filter((event) => event.event === "napoleon_delegation_answered")
+      .at(-1);
+    assert.equal(delegationAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(delegationAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(delegationAnswerEvent?.attributes.blockedEffectCount, 4);
+    assert.equal(delegationAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(delegationAnswerEvent).includes("Passive Brain"), false);
+    assert.equal(JSON.stringify(delegationAnswerEvent).includes("memory_write"), false);
+    assert.equal(JSON.stringify(delegationAnswerEvent).includes(lastTextTurnTraceId), false);
     const textTurnTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };
@@ -2760,7 +2804,7 @@ test("renders steering recommendation type answers within the active child profi
 
 test("shows Napoleon delegation panel before bridge provenance is returned", async () => {
   const dom = installDom();
-  const [{ cleanup, render, within }, { App }] = await Promise.all([
+  const [{ cleanup, fireEvent, render, waitFor, within }, { App }] = await Promise.all([
     import("@testing-library/react"),
     import("../src/App.js"),
   ]);
@@ -2788,6 +2832,27 @@ test("shows Napoleon delegation panel before bridge provenance is returned", asy
     assert.equal(delegationPanel.getAllByText("not returned").length, 10);
     assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
     assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
+
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Who handled the last Napoleon answer and what effects were blocked?" },
+    });
+    fireEvent.click(view.getByRole("button", { name: "Rehearse" }));
+
+    let delegationAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      delegationAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("No returned Napoleon delegation proof is available in this session."),
+      ) as HTMLElement | undefined;
+      assert.ok(delegationAnswer);
+    });
+    assert.ok(delegationAnswer);
+    const delegationAnswerText = delegationAnswer.textContent ?? "";
+    assert.ok(delegationAnswerText.includes("Concierge will not name a handler, capability, or selected agent from local inference"));
+    assert.ok(
+      delegationAnswerText.includes(
+        "this local answer did not contact Napoleon, approve, write memory, dispatch agents, or send externally",
+      ),
+    );
   } finally {
     cleanup();
     dom.window.close();
