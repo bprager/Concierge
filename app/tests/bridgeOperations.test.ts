@@ -794,3 +794,20 @@ test("describes governance evaluation without governance override authority", ()
   assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
   assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 });
+
+test("describes Chief of Staff request without task routing authority", () => {
+  const summary = describeNapoleonReviewOperationSummary("chief_of_staff_request");
+
+  assert.equal(summary.label, "Chief of Staff request handoff");
+  assert.equal(summary.path, "/chief-of-staff/requests");
+  assert.equal(summary.requestKind, "chief_of_staff_request_handoff");
+  assert.ok(summary.boundary.includes("request-handoff Napoleon target"));
+  assert.ok(summary.boundary.includes("task routing"));
+  assert.ok(summary.boundary.includes("registry update"));
+  assert.ok(summary.boundary.includes("trace append"));
+  assert.ok(summary.sideEffects.includes("No task routing"));
+  assert.ok(summary.sideEffects.includes("registry update"));
+  assert.ok(summary.sideEffects.includes("trace append"));
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
+});

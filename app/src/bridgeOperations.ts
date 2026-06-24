@@ -486,6 +486,7 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
   const isNewAgentReview = operation.id === "new_agent_proposal_review";
   const isEvolutionSubmission = operation.id === "evolution_proposal_submission";
   const isGovernanceEvaluation = operation.id === "governance_evaluation";
+  const isChiefOfStaffRequest = operation.id === "chief_of_staff_request";
   return {
     id: operation.id,
     operationId: operation.id,
@@ -499,6 +500,8 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
         ? "proposal-submission Napoleon target; no local evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or local application."
         : isGovernanceEvaluation
           ? "governance-evaluation Napoleon target; no local governance override, approval capture, memory write, agent dispatch, external send, registry update, trace append, routing, or local application."
+          : isChiefOfStaffRequest
+            ? "request-handoff Napoleon target; no local task routing, registry update, trace append, approval capture, memory write, agent dispatch, external send, or local application."
         : "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
     tokenHandling: "Bearer token is sent only in the Authorization header",
     sideEffects: isNewAgentReview
@@ -507,6 +510,8 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
         ? "No evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge"
         : isGovernanceEvaluation
           ? "No governance override, approval capture, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge"
+          : isChiefOfStaffRequest
+            ? "No task routing, registry update, trace append, approval capture, memory write, agent dispatch, external send, or application is performed by Concierge"
         : "No local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
     requiredResponseFields: operation.responseRequired,
     requiredResponseSummary: operation.responseRequired.join(", "),

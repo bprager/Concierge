@@ -4011,6 +4011,16 @@ test("shows named Napoleon governed targets in governed routes", async () => {
     assert.ok(routes.getByText("Chief of Staff request handoff"));
     assert.ok(routes.getByText("/chief-of-staff/requests"));
     assert.ok(routes.getByText("chief_of_staff_request_handoff"));
+    assert.ok(
+      routes.getByText(
+        "request-handoff Napoleon target; no local task routing, registry update, trace append, approval capture, memory write, agent dispatch, external send, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "Side effects: No task routing, registry update, trace append, approval capture, memory write, agent dispatch, external send, or application is performed by Concierge",
+      ),
+    );
     assert.ok(routes.getByText("Governance evaluation handoff"));
     assert.ok(routes.getByText("/governance/evaluate"));
     assert.ok(routes.getByText("governance_evaluation_handoff"));
@@ -4060,7 +4070,7 @@ test("shows named Napoleon governed targets in governed routes", async () => {
     assert.ok(
       routes.getAllByText(
         "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
-      ).length >= 5,
+      ).length >= 4,
     );
   } finally {
     cleanup();
@@ -4125,7 +4135,7 @@ test("shows transport token and side-effect boundaries for named Napoleon routes
     assert.ok(requestRoute.getByText("Token handling: Bearer token is sent only in the Authorization header"));
     assert.ok(
       requestRoute.getByText(
-        "Side effects: No local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
+        "Side effects: No task routing, registry update, trace append, approval capture, memory write, agent dispatch, external send, or application is performed by Concierge",
       ),
     );
   } finally {
