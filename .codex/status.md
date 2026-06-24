@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered UI coverage proving returned capability review packet results and exported packet state clear when descriptor context changes, keeping governed review decisions out of stale descriptor or fail-closed checksum/signature scopes.
 - Added rendered UI coverage proving returned capability review packet results and exported packet state clear when the bridge token changes, keeping governed review decisions scoped to the credential context that produced them.
 - Added rendered UI coverage proving returned capability review packet results and exported packet state clear when Rehearsal Mode is enabled, keeping local-only preview mode free of stale live review evidence.
 - Added rendered UI coverage proving returned capability review packet results and exported packet state clear when the active user profile changes, keeping governed review decisions out of stale adult-owner or child-protected scopes.
