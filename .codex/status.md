@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered coverage proving descriptor-discovery auth failure and timeout states expose descriptor failure metadata, block before text-turn fetch, and do not leak private transport response text.
 - Added a rendered stale-descriptor cache mode and fail-closed live-send coverage so descriptor staleness is visible in connection state, readiness, preflight, and blocked transcript metadata before any text-turn request is fetched.
 - Added rendered UI coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when descriptor mode changes, preventing imported runtime proof context from surviving fail-closed checksum/signature states.
 - Added rendered UI coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when the bridge token changes, preventing imported runtime proof context from crossing credential scopes.

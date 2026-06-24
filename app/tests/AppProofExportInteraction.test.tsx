@@ -5455,6 +5455,8 @@ test("blocks rendered live send before fetch when descriptor discovery auth fail
     assert.ok(blockedReply);
     assert.ok(within(blockedReply).getByText("Blocked Napoleon governed bridge attempt"));
     assert.ok(within(blockedReply).getByText("No Napoleon response was accepted; fail-closed local state only."));
+    assert.ok(within(blockedReply).getByText("Descriptor failure"));
+    assert.ok(within(blockedReply).getByText("auth_failure"));
     assert.equal(
       requestedUrls.some((url) => url === "http://127.0.0.1:8787/v1/concierge/turn"),
       false,
@@ -5462,6 +5464,82 @@ test("blocks rendered live send before fetch when descriptor discovery auth fail
     assert.ok(authHeaders.includes("Bearer secret_token"));
     assert.equal(postedBodies.length, 0);
     assert.equal(view.container.textContent?.includes("Unauthorized secret_token"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
+test("blocks rendered live send before fetch when descriptor discovery times out", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: string | URL | Request) => {
+      const url = String(input);
+      requestedUrls.push(url);
+      if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+        const error = new Error("Private descriptor timeout detail for http://127.0.0.1:8787");
+        error.name = "AbortError";
+        throw error;
+      }
+
+      assert.fail(`unexpected fetch after descriptor timeout: ${url}`);
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+    await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    const timeoutMessages = await view.findAllByText(
+      "Napoleon descriptor discovery timed out, so Concierge is blocked from live bridge sends.",
+    );
+    assert.ok(timeoutMessages.length > 0);
+
+    const preflight = view.getByText("Live send preflight").closest("div")?.parentElement as HTMLElement | null;
+    assert.ok(preflight);
+    assert.ok(preflight.classList.contains("blocked"));
+    assert.ok(within(preflight).getByText("Descriptor discovered"));
+    assert.ok(
+      within(preflight).getByText(
+        "bridge_timeout: Napoleon descriptor discovery timed out, so Concierge is blocked from live bridge sends.",
+      ),
+    );
+
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Draft a bridge readiness summary" } });
+    await waitFor(() => assert.equal(composer.value, "Draft a bridge readiness summary"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    const blockedMessages = await view.findAllByText(/Napoleon bridge blocked: bridge_timeout/);
+    const blockedReply = blockedMessages.find((message) => message.closest("article"))?.closest("article") as HTMLElement | null;
+    assert.ok(blockedReply);
+    assert.ok(within(blockedReply).getByText("Blocked Napoleon governed bridge attempt"));
+    assert.ok(within(blockedReply).getByText("No Napoleon response was accepted; fail-closed local state only."));
+    assert.ok(within(blockedReply).getByText("Descriptor failure"));
+    assert.ok(within(blockedReply).getByText("bridge_timeout"));
+    assert.ok(within(blockedReply).getByText("Blocked effects"));
+    assert.ok(within(blockedReply).getAllByText(/runtime_authority/).length > 0);
+    assert.equal(
+      requestedUrls.some((url) => url === "http://127.0.0.1:8787/v1/concierge/turn"),
+      false,
+    );
+    assert.equal(view.container.textContent?.includes("Private descriptor timeout detail"), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();
