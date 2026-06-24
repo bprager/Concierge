@@ -3642,6 +3642,52 @@ test("clears Napoleon proof and delegation when descriptor discovery refreshes c
     assert.equal(within(delegationPanel).queryByText("napoleon.chief_of_staff"), null);
     assert.equal(within(delegationPanel).queryAllByText(/Refreshed descriptor-scoped prior context is relevant/).length, 0);
     assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
+
+    const requestCountBeforeLocalPreviews = requestedUrls.length;
+    await user.click(view.getByRole("button", { name: "Shape sample response for voice" }));
+    await user.click(view.getByRole("button", { name: "Prepare neutral avatar state" }));
+    await user.click(view.getByRole("button", { name: "Map sample stance to expression" }));
+
+    assert.equal(requestedUrls.length, requestCountBeforeLocalPreviews);
+    const shaping = within(view.getByLabelText("Voice response shaping"));
+    assert.ok(shaping.getByText("Provenance state: stale_cleared"));
+    assert.ok(
+      shaping.getByText(
+        "Authority boundary: Bridge proof was cleared; speech summary must not claim Napoleon or delegated-agent authority.",
+      ),
+    );
+    assert.equal(shaping.queryByText(/Napoleon recommends/), null);
+    assert.equal(shaping.queryByText(/Passive Brain found/), null);
+
+    const avatarState = within(view.getByLabelText("Avatar state"));
+    assert.ok(avatarState.getByText("Provenance state: stale_cleared"));
+    assert.ok(avatarState.getByText("Provenance: Bridge proof cleared; local preview without Napoleon provenance"));
+    assert.ok(
+      avatarState.getByText(
+        "Authority boundary: Avatar proof was cleared; local preview must not claim Napoleon or delegated-agent authority.",
+      ),
+    );
+
+    const avatarExpression = within(view.getByLabelText("Avatar expression"));
+    assert.ok(avatarExpression.getByText("Provenance state: stale_cleared"));
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const latestTelemetryEvent = (eventName: string) =>
+      [...(telemetryBuffer.events ?? [])].reverse().find((event) => event.event === eventName);
+    const voiceEvent = latestTelemetryEvent("voice_response_shaped");
+    const avatarEvent = latestTelemetryEvent("avatar_state_changed");
+    const expressionEvent = latestTelemetryEvent("avatar_expression_set");
+    assert.ok(voiceEvent);
+    assert.equal(voiceEvent.attributes.provenanceState, "stale_cleared");
+    assert.equal(voiceEvent.attributes.bridgeProvidedProvenance, false);
+    assert.ok(avatarEvent);
+    assert.equal(avatarEvent.attributes.provenanceState, "stale_cleared");
+    assert.equal(avatarEvent.attributes.bridgeProvidedProvenance, false);
+    assert.ok(expressionEvent);
+    assert.equal(expressionEvent.attributes.provenanceState, "stale_cleared");
+    assert.equal(expressionEvent.attributes.bridgeProvidedProvenance, false);
   } finally {
     cleanup();
     dom.window.close();

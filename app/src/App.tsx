@@ -4,6 +4,7 @@ import {
   localAvatarExpressionSample,
   localNeutralAvatarStateSample,
   mapLocalAvatarExpression,
+  type AvatarProvenanceState,
   type LocalAvatarExpressionResult,
   type LocalNeutralAvatarStateResult,
 } from "./avatarState.js";
@@ -196,6 +197,7 @@ import {
 import {
   localVoiceResponseShapeSample,
   shapeVoiceResponseForSpeech,
+  type VoiceResponseProvenanceState,
   type VoiceResponseShapeResult,
 } from "./voiceResponseShaping.js";
 import { detectVoiceSegments, localVadSampleFrames, type VoiceActivitySegment } from "./voiceActivity.js";
@@ -450,6 +452,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     useState<LocalAvatarRendererReadinessResult | null>(null);
   const [lastDecision, setLastDecision] = useState<ReturnType<typeof describeGovernanceDecision> | null>(null);
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
+  const [bridgeResponseProvenanceState, setBridgeResponseProvenanceState] =
+    useState<VoiceResponseProvenanceState>("not_returned");
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
   const [napoleonProofComparison, setNapoleonProofComparison] = useState<NapoleonResponseProofComparison | null>(null);
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
@@ -501,6 +505,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [observabilityTraceHandoffFailure, setObservabilityTraceHandoffFailure] = useState<string | null>(null);
 
   function clearNapoleonPresentation() {
+    setBridgeResponseProvenanceState((current) =>
+      lastNapoleonPresentation.proof || current === "returned_bridge" ? "stale_cleared" : current,
+    );
     setLastNapoleonPresentation(clearNapoleonResponsePresentation());
     setNapoleonProofExportJson(null);
     setNapoleonProofComparison(null);
@@ -575,6 +582,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       (chiefOfStaffCapabilities?.capabilities ?? []).map((capability) => [capability.id, capability.label]),
     );
     setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response, { capabilityLabelsById }));
+    setBridgeResponseProvenanceState("returned_bridge");
     setNapoleonProofExportJson(null);
     setNapoleonProofComparison(null);
     setLastBridgeFailure(null);
@@ -614,6 +622,44 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       signatureValid: descriptorMode === "checksum_mismatch" ? false : true,
     };
   }
+
+  function voiceAvatarBridgePreviewInput(): {
+    responseText: string;
+    speakerLabel: string;
+    bridgeProvidedProvenance: boolean;
+    provenanceState: VoiceResponseProvenanceState;
+  } {
+    if (bridgeResponseProvenanceState === "returned_bridge") {
+      const recommendation = lastNapoleonPresentation.proofMetadata?.recommendation;
+      const selectedAgent = lastNapoleonPresentation.proofMetadata?.selectedAgents[0] ?? "Passive Brain";
+      return {
+        responseText: `Napoleon recommends ${
+          recommendation && recommendation !== "unavailable" ? recommendation : "using the latest governed bridge response"
+        }. ${selectedAgent} found returned bridge context for this preview.`,
+        speakerLabel: "Napoleon",
+        bridgeProvidedProvenance: true,
+        provenanceState: "returned_bridge",
+      };
+    }
+
+    if (bridgeResponseProvenanceState === "stale_cleared") {
+      return {
+        responseText:
+          "Napoleon recommends using previously returned bridge context. Passive Brain found stale context that must not be attributed after proof is cleared.",
+        speakerLabel: "Napoleon",
+        bridgeProvidedProvenance: true,
+        provenanceState: "stale_cleared",
+      };
+    }
+
+    return {
+      responseText: localVoiceResponseShapeSample.responseText,
+      speakerLabel: localVoiceResponseShapeSample.speakerLabel,
+      bridgeProvidedProvenance: false,
+      provenanceState: "not_returned",
+    };
+  }
+
   const descriptorConnection = buildDescriptorConnectionState(currentDescriptorInput());
   const descriptorStatus = descriptorConnection.descriptorStatus;
   const memoryHandoffReadiness = describeGovernedHandoffReadiness({
@@ -1301,8 +1347,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function runLocalVoiceResponseShaping() {
     const traceId = newTraceId();
+    const previewInput = voiceAvatarBridgePreviewInput();
     const result = shapeVoiceResponseForSpeech({
       ...localVoiceResponseShapeSample,
+      responseText: previewInput.responseText,
+      speakerLabel: previewInput.speakerLabel,
+      bridgeProvidedProvenance: previewInput.bridgeProvidedProvenance,
+      provenanceState: previewInput.provenanceState,
       profileMode: profile,
     });
     setVoiceResponseShapeResult(result);
@@ -1355,7 +1406,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function runLocalNeutralAvatarState() {
     const traceId = newTraceId();
-    const result = buildLocalNeutralAvatarState({ ...localNeutralAvatarStateSample, profileMode: profile });
+    const previewInput = voiceAvatarBridgePreviewInput();
+    const result = buildLocalNeutralAvatarState({
+      ...localNeutralAvatarStateSample,
+      responseText: previewInput.responseText,
+      bridgeProvidedProvenance: previewInput.bridgeProvidedProvenance,
+      provenanceState: previewInput.provenanceState as AvatarProvenanceState,
+      profileMode: profile,
+    });
     setNeutralAvatarStateResult(result);
     emitEvent("avatar_state_changed", {
       traceId,
@@ -1409,7 +1467,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
 
   function runLocalAvatarExpressionMapping() {
     const traceId = newTraceId();
-    const result = mapLocalAvatarExpression({ ...localAvatarExpressionSample, profileMode: profile });
+    const previewInput = voiceAvatarBridgePreviewInput();
+    const result = mapLocalAvatarExpression({
+      ...localAvatarExpressionSample,
+      bridgeProvidedProvenance: previewInput.bridgeProvidedProvenance,
+      provenanceState: previewInput.provenanceState as AvatarProvenanceState,
+      profileMode: profile,
+    });
     setAvatarExpressionResult(result);
     emitEvent("avatar_expression_set", {
       traceId,
@@ -3892,6 +3956,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               <span>Guardian review reminder: {voiceResponseShapeResult.requiresGuardianReviewReminder ? "yes" : "no"}</span>
             </div>
             <div>
+              <strong>Provenance state</strong>
+              <span>Provenance state: {voiceResponseShapeResult.provenanceState}</span>
+            </div>
+            <div>
               <strong>Spoken summary</strong>
               <span>Spoken summary: {voiceResponseShapeResult.spokenText}</span>
             </div>
@@ -3966,6 +4034,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               <span>Provenance: {neutralAvatarStateResult.provenanceLabel}</span>
             </div>
             <div>
+              <strong>Provenance state</strong>
+              <span>Provenance state: {neutralAvatarStateResult.provenanceState}</span>
+            </div>
+            <div>
               <strong>Authority boundary</strong>
               <span>Authority boundary: {neutralAvatarStateResult.authorityBoundary}</span>
             </div>
@@ -4026,6 +4098,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <div>
               <strong>Child protected</strong>
               <span>Child protected: {avatarExpressionResult.childProtected ? "yes" : "no"}</span>
+            </div>
+            <div>
+              <strong>Provenance state</strong>
+              <span>Provenance state: {avatarExpressionResult.provenanceState}</span>
             </div>
             <div>
               <strong>Affect</strong>
