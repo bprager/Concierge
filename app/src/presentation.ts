@@ -1639,13 +1639,32 @@ export function describeGovernedHandoffReadiness(
     },
   ];
   const blockedItem = items.find((item) => item.status === "blocked");
+  const descriptorFailureReason = describeDescriptorFailureReason(descriptor.failClosedReason);
+  const descriptorFailureNextStep =
+    descriptor.failClosedReason === "no_endpoint"
+      ? "Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery."
+      : descriptor.failClosedReason === "no_descriptor"
+        ? "Next step: run descriptor discovery for the configured Napoleon endpoint before attempting the governed handoff."
+        : descriptor.failClosedReason === "descriptor_signature_or_checksum_mismatch"
+          ? "Next step: resolve the descriptor signature or checksum mismatch, then refresh descriptor discovery."
+          : descriptor.failClosedReason === "descriptor_stale"
+            ? "Next step: refresh the stale Napoleon descriptor before attempting the governed handoff."
+            : descriptor.failClosedReason === "auth_failure"
+              ? "Next step: fix descriptor authentication or the bridge token, then refresh descriptor discovery."
+              : descriptor.failClosedReason === "bridge_timeout"
+                ? "Next step: restore descriptor connectivity, then refresh descriptor discovery."
+                : descriptor.failClosedReason === "http_failure"
+                  ? "Next step: resolve the descriptor HTTP failure, then refresh descriptor discovery."
+                  : descriptorFailureReason
+                    ? `Next step: resolve ${descriptorFailureReason}, then refresh descriptor discovery.`
+                    : "Next step: refresh descriptor discovery and resolve any descriptor integrity or transport failure.";
   const nextStepSummary = blockedItem
     ? blockedItem.label === "Review draft"
       ? "Next step: create the proposal-only review draft before attempting handoff."
       : blockedItem.label === "Endpoint configured"
         ? "Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery."
         : blockedItem.label === "Descriptor preflight"
-          ? "Next step: refresh descriptor discovery and resolve any descriptor integrity or transport failure."
+          ? descriptorFailureNextStep
           : blockedItem.label === "Governed handoff route"
             ? `Next step: use a Napoleon descriptor that advertises ${input.requiredHandoff ?? "the required governed handoff route"}.`
             : blockedItem.label === "Rehearsal Mode"

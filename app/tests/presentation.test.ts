@@ -264,6 +264,37 @@ test("empty Napoleon delegation explains descriptor fail-closed connection state
   assert.ok(!view.body.includes("Passive Brain"));
 });
 
+test("governed handoff readiness names descriptor HTTP failure in next step", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: null,
+    failClosedReason: "http_failure",
+  });
+
+  const view = describeGovernedHandoffReadiness({
+    label: "Memory proposal review",
+    descriptorConnection,
+    draftReady: true,
+    rehearsalMode: false,
+    requiredHandoff: "memory_proposal_review",
+  });
+
+  assert.equal(view.heading, "Memory proposal review readiness");
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canSubmit, false);
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Descriptor preflight" &&
+        item.status === "blocked" &&
+        item.detail === "Napoleon descriptor discovery failed over HTTP, so Concierge is blocked from live bridge sends.",
+    ),
+  );
+  assert.equal(view.nextStepSummary, "Next step: resolve the descriptor HTTP failure, then refresh descriptor discovery.");
+  assert.ok(view.blockedEffects.includes("memory_write"));
+  assert.ok(view.caveat.includes("not Napoleon approval"));
+});
+
 test("omits empty selected-agent contribution after normalizing returned wording", () => {
   const view = describeDelegation(
     {
