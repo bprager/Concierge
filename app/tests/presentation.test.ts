@@ -1129,6 +1129,36 @@ test("describes missing real runtime proof as a live voice blocker", () => {
   assert.ok(view.items.some((item: { label: string; detail: string }) => item.label === "Runtime proof" && item.detail.includes("not available")));
 });
 
+test("describes descriptor HTTP failure as a live voice blocker", () => {
+  const view = describeLiveVoiceReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: null,
+      failClosedReason: "http_failure",
+    }),
+    microphoneEnabled: true,
+    microphonePermissionStatus: "granted",
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+    rehearsalMode: false,
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canStartLiveVoice, false);
+  assert.ok(view.summary.includes("voice pipeline is not implemented"));
+  assert.ok(
+    view.items.some(
+      (item: { label: string; status: string; detail: string }) =>
+        item.label === "Descriptor preflight" &&
+        item.status === "blocked" &&
+        item.detail.includes("descriptor HTTP failure") &&
+        item.detail.includes("Refresh descriptor discovery"),
+    ),
+  );
+  assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Voice pipeline" && item.status === "blocked"));
+});
+
 test("describes accepted real runtime proof in live voice readiness without starting voice", () => {
   const view = describeLiveVoiceReadiness({
     descriptorConnection: buildDescriptorConnectionState({

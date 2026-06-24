@@ -11,6 +11,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Recently Completed
 
 - Hardened selected-agent attribution validation so exact returned selected-agent display names are guarded regardless of capitalization, preventing lower-case agent names from claiming findings or reports without matching contribution provenance.
+- Added descriptor-specific live voice readiness guidance so future voice setup remains blocked but names exact descriptor recovery reasons such as HTTP failure, auth failure, timeout, stale descriptor, missing descriptor, or integrity mismatch.
 - Added descriptor-specific governed handoff retry guidance so review and evidence handoff readiness names HTTP failure, auth failure, timeout, stale descriptor, missing descriptor, or integrity mismatch instead of only showing a generic descriptor preflight blocker.
 - Added rendered UI coverage proving descriptor-discovery HTTP failure is visible in the Napoleon delegation panel and live-send preflight, blocks before any text-turn fetch, and keeps private upstream response details out of the screen.
 - Added route-specific boundary and side-effect summaries for generated core bridge routes in the governed routes panel, making descriptor discovery, capability discovery, text turns, memory proposal review, and Chief of Staff steering visibly non-authorizing without exposing endpoint hosts or tokens.

@@ -391,7 +391,7 @@ Evaluator coverage:
 | VO-007 | Add voice-specific response shaping | P1 | Long text responses are summarized for speech | voice_response_shaped |
 | VO-008 | Add wake word option | P2 | Wake word can be enabled or disabled without starting listening or capture | privacy_setting_changed |
 | VO-009 | Add child voice constraints | P1 | Child mode has slower pacing and stricter side effect controls | child_voice_policy_applied |
-| VO-010 | Add live voice readiness gate | P0 | Live voice remains visibly blocked and shows proposal-only pipeline stages until consent, descriptor, runtime proof, and voice pipeline exist | mic_permission_requested, mic_permission_result |
+| VO-010 | Add live voice readiness gate | P0 | Live voice remains visibly blocked and shows proposal-only pipeline stages until consent, descriptor, runtime proof, and voice pipeline exist; descriptor blockers name the specific repair reason such as HTTP failure, auth failure, timeout, stale descriptor, missing descriptor, or integrity mismatch | mic_permission_requested, mic_permission_result |
 
 ### VO-001 details
 

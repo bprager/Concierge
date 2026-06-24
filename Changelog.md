@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Hardened selected-agent attribution validation so exact returned selected-agent display names are guarded regardless of capitalization, preventing lower-case agent names from claiming findings or reports without matching contribution provenance.
+- Added descriptor-specific live voice readiness guidance, keeping live voice blocked while showing exact descriptor recovery reasons such as HTTP failure before any future voice pipeline can start.
 - Added descriptor-specific governed handoff retry guidance so memory, governance, steering, taxonomy, capability review, and observability handoff readiness names HTTP failure, auth failure, timeout, stale descriptor, missing descriptor, or integrity mismatch instead of a generic descriptor preflight blocker.
 - Added rendered coverage proving descriptor-discovery HTTP failure exposes fail-closed delegation and preflight state, blocks before text-turn fetch, and does not leak private upstream response details.
 - Added route-specific boundary and side-effect summaries for generated core bridge routes in the governed routes panel, making descriptor discovery, capability discovery, text turns, memory proposal review, and Chief of Staff steering explicitly non-authorizing without exposing endpoint hosts or tokens.

@@ -809,6 +809,10 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
   const acceptedRealRuntimeProof = input.acceptedRealRuntimeProof;
   const runtimeProofReady = realRuntimeReady || Boolean(acceptedRealRuntimeProof);
   const descriptorReady = input.descriptorConnection.canAttemptLiveBridge;
+  const descriptorFailureReason = describeDescriptorFailureReason(input.descriptorConnection.failClosedReason);
+  const descriptorBlockedDetail = descriptorFailureReason
+    ? `Napoleon descriptor blocks live voice: ${descriptorFailureReason}. Refresh descriptor discovery after resolving this blocker.`
+    : `Napoleon descriptor blocks live voice: ${input.descriptorConnection.state}.`;
   const childProtected = input.profileMode === "child_protected_user";
   const blockedEffects = [
     "microphone_capture",
@@ -852,7 +856,7 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
         status: descriptorReady ? "ready" : "blocked",
         detail: descriptorReady
           ? "Napoleon descriptor is ready for governed bridge calls."
-          : `Napoleon descriptor blocks live voice: ${input.descriptorConnection.state}.`,
+          : descriptorBlockedDetail,
       },
       {
         label: "Runtime proof",
