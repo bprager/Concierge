@@ -499,21 +499,34 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\.\s*createObjectURL\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\.\s*createObjectURL\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(r"\b(?:indexedDB|window\.indexedDB)\.(?:open|deleteDatabase)\s*\("),
     re.compile(r"\b(?:indexedDB|window\.indexedDB)\.(?:open|deleteDatabase)\.(?:call|apply)\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]indexedDB['\"]\s*\]\s*\.\s*(?:open|deleteDatabase)\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]indexedDB['\"]\s*\]\s*\.\s*(?:open|deleteDatabase)\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]indexedDB['\"]\s*\]\s*\[\s*['\"](?:open|deleteDatabase)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]indexedDB['\"]\s*\]\s*\[\s*['\"](?:open|deleteDatabase)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\b(?:caches|window\.caches)\.(?:open|delete|match|put)\s*\("),
     re.compile(r"\b(?:caches|window\.caches)\.(?:open|delete|match|put)\.(?:call|apply)\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]caches['\"]\s*\]\s*\.\s*(?:open|delete|match|put)\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]caches['\"]\s*\]\s*\.\s*(?:open|delete|match|put)\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\bwindow\s*\[\s*['\"]caches['\"]\s*\]\s*\[\s*['\"](?:open|delete|match|put)['\"]\s*\]\s*\("),
     re.compile(r"\bglobalThis\s*\[\s*['\"]caches['\"]\s*\]\s*\[\s*['\"](?:open|delete|match|put)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]caches['\"]\s*\]\s*\[\s*['\"](?:open|delete|match|put)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\bdocument\.cookie\s*="),
     re.compile(r"\bdocument\s*\[\s*['\"]cookie['\"]\s*\]\s*="),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]\s*\.\s*cookie\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]\s*\[\s*['\"]cookie['\"]\s*\]\s*="),
     re.compile(r"\b(?:history|window\.history)\.(?:pushState|replaceState)\s*\("),
     re.compile(r"\b(?:history|window\.history)\.(?:pushState|replaceState)\.(?:call|apply)\s*\("),

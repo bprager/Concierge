@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Added rendered proof export coverage for proof-alignment metadata in selected-agent and target-capability-only Napoleon response proof exports and telemetry.
+- Hardened repository authority-boundary validation for mixed bracket/dot `URL.createObjectURL`, IndexedDB, Cache Storage, and cookie-write aliases so hidden executable or persistence paths remain blocked around the governed bridge.
 - Added proof-alignment metadata to sanitized Napoleon response proof exports, comparison summaries, and export telemetry so exported proof preserves selected-agent versus target-capability-only attribution boundaries.
 - Added explicit target-capability-only proof alignment to latest Napoleon turn evidence, so Capability Intelligence does not blur returned capability metadata into selected-agent proof.
 - Added selected-agent latest-turn proof alignment for capability-intelligence evidence when an accepted Napoleon bridge response has agent provenance but no recommendation provenance.

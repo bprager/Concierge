@@ -427,6 +427,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'const module = new window["WebAssembly"]["Module"](bytes);',
             'const instance = new globalThis["WebAssembly"]["Instance"](module, imports);',
             'const url = globalThis["URL"]["createObjectURL"](blob);',
+            'const url = window["URL"].createObjectURL(blob);',
+            'const url = globalThis["URL"].createObjectURL.call(globalThis.URL, blob);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
@@ -440,8 +442,14 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'await window["indexedDB"]["deleteDatabase"]("concierge-proof-cache");',
             'const db = await globalThis["indexedDB"]["open"].call(globalThis.indexedDB, "concierge-raw-transcripts");',
             'await window["indexedDB"]["deleteDatabase"].apply(window.indexedDB, ["concierge-proof-cache"]);',
+            'const db = await globalThis["indexedDB"].open("concierge-raw-transcripts");',
+            'await window["indexedDB"].deleteDatabase.call(window.indexedDB, "concierge-proof-cache");',
             'const cache = await globalThis["caches"]["open"].call(globalThis.caches, "concierge-hidden-cache");',
             'await window["caches"]["put"].apply(window.caches, [request, response]);',
+            'const cache = await globalThis["caches"].open("concierge-hidden-cache");',
+            'await window["caches"].put.apply(window.caches, [request, response]);',
+            'globalThis["document"].cookie = "concierge_secret=raw-transcript";',
+            'window["document"].cookie = "concierge_secret=raw-transcript";',
             'const channel = new globalThis["BroadcastChannel"]("concierge-proof");',
             'const channel = globalThis["BroadcastChannel"]("concierge-proof");',
             'const channel = new window["MessageChannel"]();',
