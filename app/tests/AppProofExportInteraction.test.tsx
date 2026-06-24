@@ -4206,6 +4206,21 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
     assert.ok(within(blockedReply).getAllByText(/audit_trace_/).length > 0);
     assert.ok(within(blockedReply).getByText("Blocked effects"));
     assert.ok(within(blockedReply).getByText("memory_write, approval_capture, external_send, agent_dispatch"));
+    const delegationPanel = within(view.getByLabelText("Napoleon delegation"));
+    assert.ok(
+      delegationPanel.getByText(
+        "Napoleon bridge failed closed before delegation provenance could be accepted. Concierge will not attribute the answer to a capability or agent.",
+      ),
+    );
+    assert.ok(delegationPanel.getByText("Failure reason"));
+    assert.ok(delegationPanel.getByText("governance_no_go"));
+    assert.ok(delegationPanel.getByText("Governance state"));
+    assert.ok(delegationPanel.getByText("no_go"));
+    assert.ok(delegationPanel.getByText("Revise the request or keep it local; Napoleon governance did not allow forwarding."));
+    assert.ok(delegationPanel.getByText("Blocked effects"));
+    assert.ok(delegationPanel.getByText("memory_write, approval_capture, external_send, agent_dispatch"));
+    assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
+    assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/turn"));
   } finally {
     cleanup();
@@ -5827,6 +5842,20 @@ test("shows fail-closed transcript metadata when Napoleon response mismatches th
     assert.ok(within(blockedReply).getByText("Blocked effects"));
     assert.ok(within(blockedReply).getAllByText(/memory_write/).length > 0);
     assert.ok(within(blockedReply).getAllByText(/external_send/).length > 0);
+    const delegationPanel = within(view.getByLabelText("Napoleon delegation"));
+    assert.ok(
+      delegationPanel.getByText(
+        "Napoleon bridge failed closed before delegation provenance could be accepted. Concierge will not attribute the answer to a capability or agent.",
+      ),
+    );
+    assert.ok(delegationPanel.getByText("Failure reason"));
+    assert.ok(delegationPanel.getByText("contract_mismatch"));
+    assert.ok(delegationPanel.getByText("Align the bridge contract or descriptor before attempting another live turn."));
+    assert.ok(delegationPanel.getByText("Blocked effects"));
+    assert.ok(delegationPanel.getByText(/memory_write/));
+    assert.ok(delegationPanel.getByText(/external_send/));
+    assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
+    assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();

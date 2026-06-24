@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added persistent Napoleon delegation panel rendering and coverage for post-bridge contract mismatch and remote no-go failures, showing failure reason, governance when returned, blocked effects, and next step without selected-agent or Napoleon recommendation attribution.
 - Added specific Napoleon delegation panel next-step guidance and rendered coverage for descriptor authentication failure and descriptor timeout states, keeping selected-agent and Napoleon recommendation attribution absent while blocked effects remain visible.
 - Added rendered coverage proving descriptor signature/checksum mismatch appears in the persistent Napoleon delegation panel with fail-closed connection state, next step, and blocked effects while keeping selected-agent and Napoleon recommendation attribution absent.
 - Added descriptor-aware empty-state details to the persistent Napoleon delegation panel, so checksum/signature mismatch and other descriptor fail-closed states show connection state, next step, and blocked effects before any returned agent provenance exists.
