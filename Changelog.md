@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added specific Napoleon delegation panel next-step guidance and rendered coverage for descriptor authentication failure and descriptor timeout states, keeping selected-agent and Napoleon recommendation attribution absent while blocked effects remain visible.
 - Added rendered coverage proving descriptor signature/checksum mismatch appears in the persistent Napoleon delegation panel with fail-closed connection state, next step, and blocked effects while keeping selected-agent and Napoleon recommendation attribution absent.
 - Added descriptor-aware empty-state details to the persistent Napoleon delegation panel, so checksum/signature mismatch and other descriptor fail-closed states show connection state, next step, and blocked effects before any returned agent provenance exists.
 - Added rendered coverage proving imported accepted real-runtime readiness proof clears when the active user profile changes, preventing adult-owner runtime proof context from remaining visible in child-protected scope.

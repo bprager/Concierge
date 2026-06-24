@@ -1132,7 +1132,13 @@ export function describeDelegation(
             ? "Resolve the descriptor signature or checksum mismatch before sending."
             : connection.failClosedReason === "descriptor_stale"
               ? "Refresh the stale descriptor before sending."
-              : "Discover a valid Napoleon descriptor before sending.";
+              : connection.failClosedReason === "auth_failure"
+                ? "Fix descriptor authentication or the bridge token before sending."
+                : connection.failClosedReason === "bridge_timeout"
+                  ? "Restore descriptor connectivity and rediscover the descriptor before sending."
+                  : connection.failClosedReason === "http_failure"
+                    ? "Resolve the descriptor HTTP failure and rediscover the descriptor before sending."
+                    : "Discover a valid Napoleon descriptor before sending.";
       return {
         heading: "Napoleon delegation",
         body: connection.canAttemptLiveBridge
