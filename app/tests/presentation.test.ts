@@ -1818,6 +1818,9 @@ test("describes governed handoff readiness as blocked when descriptor lacks requ
         blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
         supportedHandoffs: ["text_turn"],
       },
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
     }),
     draftReady: true,
     requiredHandoff: "evolution_proposal_review",
@@ -1833,6 +1836,57 @@ test("describes governed handoff readiness as blocked when descriptor lacks requ
         item.detail.includes("not advertised"),
     ),
   );
+});
+
+test("describes observability trace handoff readiness as evidence-only", () => {
+  const view = describeGovernedHandoffReadiness({
+    label: "Observability trace handoff",
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: {
+        schemaVersion: "napoleon/concierge/runtime-descriptor/v1",
+        serviceId: "napoleon.chief_of_staff",
+        runtimeAuthority: false,
+        commandExecution: false,
+        cachePolicy: "runtime_descriptor_live_response",
+        blockedEffects: [
+          "runtime_authority",
+          "trace_append",
+          "audit_authority",
+          "memory_write",
+          "agent_dispatch",
+          "external_send",
+        ],
+        supportedHandoffs: ["text_turn", "observability_trace"],
+      },
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    draftReady: true,
+    artifactLabel: "Trace evidence",
+    artifactReadyDetail: "A sanitized latest interaction trace is available.",
+    artifactBlockedDetail: "Create a latest interaction trace before attempting handoff.",
+    readyNextStepSummary: "Next step: submit this evidence-only trace packet through the governed Napoleon bridge when ready.",
+    requiredHandoff: "observability_trace",
+  });
+
+  assert.equal(view.status, "ready");
+  assert.equal(view.canSubmit, true);
+  assert.ok(
+    view.items.some(
+      (item: { label: string; status: string; detail: string }) =>
+        item.label === "Trace evidence" &&
+        item.status === "ready" &&
+        item.detail === "A sanitized latest interaction trace is available.",
+    ),
+  );
+  assert.equal(
+    view.nextStepSummary,
+    "Next step: submit this evidence-only trace packet through the governed Napoleon bridge when ready.",
+  );
+  assert.equal(JSON.stringify(view).includes("proposal-only packet"), false);
+  assert.ok(view.blockedEffects.includes("trace_append"));
 });
 
 test("describes bridge failure with blocked effects visible", () => {

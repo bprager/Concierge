@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Observability trace handoff readiness now uses evidence-specific UI wording for sanitized trace evidence and an evidence-only trace packet instead of proposal-only review draft language.
 - Repository validation now checks canonical Napoleon review/evidence/submission documentation against every generated target ID, path, and request kind, and the architecture/backlog/observability docs now include observability trace handoff in the same fail-closed descriptor and Rehearsal Mode rules as other governed handoffs.
 - Capability Intelligence now tracks governed observability trace handoff send events, classifying governed `deny` and `no_go` outcomes as correct safety blocks with no bridge-repair next step while preserving real bridge failures as follow-up candidates.
 - Capability Intelligence now tracks memory proposal review handoff send events, classifying governed `deny` and `no_go` outcomes as correct safety blocks with no bridge-repair next step while preserving real bridge failures as follow-up candidates.

@@ -11022,6 +11022,10 @@ test("submits latest interaction trace evidence through governed observability h
 
     const buffer = within(view.getByLabelText("Local telemetry buffer"));
     assert.ok(buffer.getByText("Trace handoff: Observability trace handoff can be submitted through the governed bridge for Napoleon review."));
+    assert.ok(buffer.getByText("Trace evidence: ready - A sanitized latest interaction trace is available."));
+    assert.ok(
+      buffer.getByText("Next step: submit this evidence-only trace packet through the governed Napoleon bridge when ready."),
+    );
     assert.equal(buffer.getByRole("button", { name: "Send trace evidence" }).hasAttribute("disabled"), false);
 
     await user.click(buffer.getByRole("button", { name: "Send trace evidence" }));

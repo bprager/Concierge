@@ -656,6 +656,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     label: "Observability trace handoff",
     descriptorConnection,
     draftReady: Boolean(latestInteractionTraceId),
+    artifactLabel: "Trace evidence",
+    artifactReadyDetail: "A sanitized latest interaction trace is available.",
+    artifactBlockedDetail: "Create a latest interaction trace before attempting handoff.",
+    readyNextStepSummary: "Next step: submit this evidence-only trace packet through the governed Napoleon bridge when ready.",
     rehearsalMode,
     requiredHandoff: "observability_trace",
   });

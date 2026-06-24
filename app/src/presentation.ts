@@ -315,6 +315,10 @@ export interface GovernedHandoffReadinessInput {
   label: string;
   descriptorConnection: DescriptorConnectionState;
   draftReady: boolean;
+  artifactLabel?: string;
+  artifactReadyDetail?: string;
+  artifactBlockedDetail?: string;
+  readyNextStepSummary?: string;
   rehearsalMode?: boolean;
   requiredHandoff?: GovernedHandoffCapability;
 }
@@ -1638,11 +1642,14 @@ export function describeGovernedHandoffReadiness(
     ? descriptorSupportsGovernedHandoff(descriptor, input.requiredHandoff)
     : true;
   const canSubmit = input.draftReady && endpointReady && descriptorReady && handoffRouteReady && rehearsalReady;
+  const artifactLabel = input.artifactLabel ?? "Review draft";
+  const artifactReadyDetail = input.artifactReadyDetail ?? "A proposal-only review draft is available.";
+  const artifactBlockedDetail = input.artifactBlockedDetail ?? "Create a review draft before handoff.";
   const items: LiveSendPreflightItem[] = [
     {
-      label: "Review draft",
+      label: artifactLabel,
       status: input.draftReady ? "ready" : "blocked",
-      detail: input.draftReady ? "A proposal-only review draft is available." : "Create a review draft before handoff.",
+      detail: input.draftReady ? artifactReadyDetail : artifactBlockedDetail,
     },
     {
       label: "Endpoint configured",
@@ -1696,8 +1703,8 @@ export function describeGovernedHandoffReadiness(
                     ? `Next step: resolve ${descriptorFailureReason}, then refresh descriptor discovery.`
                     : "Next step: refresh descriptor discovery and resolve any descriptor integrity or transport failure.";
   const nextStepSummary = blockedItem
-    ? blockedItem.label === "Review draft"
-      ? "Next step: create the proposal-only review draft before attempting handoff."
+    ? blockedItem.label === artifactLabel
+      ? `Next step: ${artifactBlockedDetail}`
       : blockedItem.label === "Endpoint configured"
         ? "Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery."
         : blockedItem.label === "Descriptor preflight"
@@ -1707,7 +1714,7 @@ export function describeGovernedHandoffReadiness(
             : blockedItem.label === "Rehearsal Mode"
               ? "Next step: turn Rehearsal Mode off only when you want a separate governed handoff attempt."
               : `Next step: resolve ${blockedItem.label.toLowerCase()} before attempting the governed handoff.`
-    : "Next step: submit this proposal-only packet through the governed Napoleon bridge when ready.";
+    : (input.readyNextStepSummary ?? "Next step: submit this proposal-only packet through the governed Napoleon bridge when ready.");
 
   return {
     heading: `${input.label} readiness`,
@@ -1715,7 +1722,7 @@ export function describeGovernedHandoffReadiness(
     canSubmit,
     summary: canSubmit
       ? `${input.label} can be submitted through the governed bridge for Napoleon review.`
-      : `${input.label} is blocked until the review draft, endpoint, descriptor preflight, governed handoff route, and Rehearsal Mode state are ready.`,
+      : `${input.label} is blocked until the ${artifactLabel.toLowerCase()}, endpoint, descriptor preflight, governed handoff route, and Rehearsal Mode state are ready.`,
     nextStepSummary,
     caveat:
       "This handoff readiness check is not Napoleon approval, does not apply changes, does not write memory, does not dispatch agents, and does not send externally.",
