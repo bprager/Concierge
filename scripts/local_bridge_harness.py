@@ -20,6 +20,21 @@ DESCRIPTOR = {
     "runtimeAuthority": False,
     "commandExecution": False,
     "cachePolicy": "fail_closed_to_review_required",
+    "supportedHandoffs": [
+        "text_turn",
+        "evaluation_review",
+        "memory_proposal_review",
+        "chief_of_staff_steering",
+        "chief_of_staff_request",
+        "governance_review",
+        "governance_evaluation",
+        "evolution_proposal_review",
+        "evolution_proposal_submission",
+        "evolution_proposal_status",
+        "new_agent_proposal_review",
+        "taxonomy_review",
+        "observability_trace",
+    ],
     "blockedEffects": [
         "runtime_authority",
         "command_execution",
@@ -227,6 +242,24 @@ def build_review_response(
     return response
 
 
+def build_evolution_proposal_status_response(proposal_id: str) -> dict[str, Any]:
+    trace_id = f"trace_status_{proposal_id}"
+    request_id = f"evo_status_{proposal_id}"
+    return {
+        "proposalId": proposal_id,
+        "lifecycleState": "accepted_for_review",
+        "latestKnownOutcome": "Local harness accepted the proposal for governed review only.",
+        **governance_response(trace_id, request_id, f"decision_{trace_id}", f"audit_{trace_id}"),
+        "appliedLocally": False,
+        "memoryWritePerformed": False,
+        "approvalCaptured": False,
+        "agentDispatchPerformed": False,
+        "externalSendPerformed": False,
+        "registryUpdatePerformed": False,
+        "evolutionApplied": False,
+    }
+
+
 class HarnessHandler(BaseHTTPRequestHandler):
     server_version = "ConciergeLocalBridgeHarness/0.1"
 
@@ -272,6 +305,15 @@ class HarnessHandler(BaseHTTPRequestHandler):
                 self.write_json(404, discovery_boundary({"error": "profile_not_found", "profileId": profile_id}))
                 return
             self.write_json(200, discovery_boundary(profile))
+            return
+        if self.path.startswith("/evolution/proposals/") and self.path.endswith("/status"):
+            proposal_id = unquote(
+                self.path.removeprefix("/evolution/proposals/").removesuffix("/status").strip("/")
+            )
+            if not proposal_id:
+                self.write_json(404, {"error": "proposal_not_found"})
+                return
+            self.write_json(200, build_evolution_proposal_status_response(proposal_id))
             return
         self.write_json(404, {"error": "not_found"})
 

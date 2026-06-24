@@ -14,6 +14,7 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             descriptor = self.fetch_json(f"{base_url}/v1/concierge/chief-of-staff/descriptor")
             self.assertEqual(descriptor["descriptor"]["serviceId"], "napoleon.chief_of_staff")
             self.assertFalse(descriptor["descriptor"]["runtimeAuthority"])
+            self.assertIn("evolution_proposal_status", descriptor["descriptor"]["supportedHandoffs"])
             self.assertTrue(descriptor["signature"]["valid"])
 
             payload = {
@@ -271,6 +272,23 @@ class LocalBridgeHarnessTest(unittest.TestCase):
             self.assertFalse(memory["approvalCaptured"])
             self.assertFalse(memory["agentDispatchPerformed"])
             self.assertFalse(memory["externalSendPerformed"])
+
+    def test_harness_supports_read_only_evolution_proposal_status(self):
+        with local_bridge_harness.running_harness() as base_url:
+            status = self.fetch_json(f"{base_url}/evolution/proposals/evo_harness/status")
+
+            self.assertEqual(status["proposalId"], "evo_harness")
+            self.assertEqual(status["lifecycleState"], "accepted_for_review")
+            self.assertEqual(status["governanceDecision"]["outcome"], "requires_review")
+            self.assertEqual(status["traceEnvelope"]["trace_id"], status["governanceDecision"]["trace_id"])
+            self.assertEqual(status["auditEnvelope"]["audit_id"], status["governanceDecision"]["audit_id"])
+            self.assertFalse(status["appliedLocally"])
+            self.assertFalse(status["memoryWritePerformed"])
+            self.assertFalse(status["approvalCaptured"])
+            self.assertFalse(status["agentDispatchPerformed"])
+            self.assertFalse(status["externalSendPerformed"])
+            self.assertFalse(status["registryUpdatePerformed"])
+            self.assertFalse(status["evolutionApplied"])
 
     def test_harness_supports_evaluator_http_request_kind(self):
         with local_bridge_harness.running_harness() as base_url:
