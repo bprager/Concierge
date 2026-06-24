@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local text answers for Napoleon review-readiness questions from the latest returned bridge proof, with no new Napoleon contact and count-only telemetry.
 - Added local text answers for Napoleon delegation and blocked-effect questions from the latest returned bridge proof, with no new Napoleon contact and count-only telemetry.
 - Added local text answers for Napoleon-required-action questions from sanitized evaluator validation imports, with count-only telemetry and no live Napoleon contact.
 - Added a focused local export for sanitized Napoleon required-action packets from evaluator validation imports, with count-only telemetry and explicit non-approval/no-side-effect boundaries.

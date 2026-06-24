@@ -375,6 +375,26 @@ function isNapoleonDelegationQuestion(content: string): boolean {
   );
 }
 
+function isNapoleonReviewRequirementQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  if (!lower.includes("napoleon")) return false;
+  const asksAboutReview =
+    /\breview\b/.test(lower) ||
+    /\brequires?_review\b/.test(lower) ||
+    /\bapproval\b/.test(lower) ||
+    /\bgovernance\b/.test(lower);
+  const asksAboutActing =
+    /\bact\b/.test(lower) ||
+    /\bacting\b/.test(lower) ||
+    /\baction\b/.test(lower) ||
+    /\bbefore\b/.test(lower) ||
+    /\bcan i\b/.test(lower) ||
+    /\bmay i\b/.test(lower) ||
+    /\bneed\b/.test(lower) ||
+    /\brequire\b/.test(lower);
+  return asksAboutReview && asksAboutActing;
+}
+
 function formatNapoleonDelegationAnswer(
   presentation: Parameters<typeof exportNapoleonResponseProofJson>[0],
 ): {
@@ -430,6 +450,65 @@ function formatNapoleonDelegationAnswer(
     allowedEffectCount: metadata.allowedEffects.length,
     blockedEffectCount: metadata.blockedEffects.length,
     targetCapabilityReturned: targetCapability !== "not returned" && targetCapability !== "unavailable",
+    traceReturned: trace !== "not returned" && trace !== "unavailable",
+    auditReturned: audit !== "not returned" && audit !== "unavailable",
+  };
+}
+
+function formatNapoleonReviewRequirementAnswer(
+  presentation: Parameters<typeof exportNapoleonResponseProofJson>[0],
+): {
+  content: string;
+  proofReturned: boolean;
+  reviewRequired: boolean;
+  blockedEffectCount: number;
+  governanceReturned: boolean;
+  decisionReturned: boolean;
+  traceReturned: boolean;
+  auditReturned: boolean;
+} {
+  if (!presentation.proof || !presentation.proofMetadata) {
+    return {
+      content:
+        "No returned Napoleon review proof is available in this session. Concierge will not infer whether action is reviewed, approved, or blocked from local state; this local answer did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      proofReturned: false,
+      reviewRequired: false,
+      blockedEffectCount: 0,
+      governanceReturned: false,
+      decisionReturned: false,
+      traceReturned: false,
+      auditReturned: false,
+    };
+  }
+
+  const proof = presentation.proof;
+  const metadata = presentation.proofMetadata;
+  const governance = detailValue(proof.details, "Governance");
+  const decision = detailValue(proof.details, "Decision");
+  const trace = detailValue(proof.details, "Trace");
+  const audit = detailValue(proof.details, "Audit");
+  const blockedEffects = metadata.blockedEffects.length ? metadata.blockedEffects.join(", ") : "not returned";
+  const reviewRequired = governance === "requires_review" || governance === "deny" || governance === "no_go";
+  const nextStep = reviewRequired
+    ? "Review the returned Napoleon governance state and blocked effects before treating this as actionable."
+    : "No returned review requirement is visible in the latest accepted proof, but this is still not local approval.";
+
+  return {
+    content: [
+      "Latest Napoleon review requirement from returned bridge proof:",
+      `Governance: ${governance}.`,
+      `Review required: ${reviewRequired ? "yes" : "no returned review requirement"}.`,
+      `Decision: ${decision}.`,
+      `Trace: ${trace}. Audit: ${audit}.`,
+      `Blocked effects: ${blockedEffects}.`,
+      `Next step: ${nextStep}`,
+      "This is local display of returned bridge proof only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+    ].join("\n\n"),
+    proofReturned: true,
+    reviewRequired,
+    blockedEffectCount: metadata.blockedEffects.length,
+    governanceReturned: governance !== "not returned" && governance !== "unavailable",
+    decisionReturned: decision !== "not returned" && decision !== "unavailable",
     traceReturned: trace !== "not returned" && trace !== "unavailable",
     auditReturned: audit !== "not returned" && audit !== "unavailable",
   };
@@ -2128,6 +2207,51 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     return true;
   }
 
+  function answerNapoleonReviewRequirementQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isNapoleonReviewRequirementQuestion(content)) return false;
+
+    const answer = formatNapoleonReviewRequirementAnswer(lastNapoleonPresentation);
+    emitEvent("napoleon_review_requirement_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      proofReturned: answer.proofReturned,
+      reviewRequired: answer.reviewRequired,
+      blockedEffectCount: answer.blockedEffectCount,
+      governanceReturned: answer.governanceReturned,
+      decisionReturned: answer.decisionReturned,
+      traceReturned: answer.traceReturned,
+      auditReturned: answer.auditReturned,
+      localAnswerOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerNapoleonRequiredActionQuestion(content: string, traceId: string, turnId: string, activeProfileMode: NapoleonProfileMode) {
     if (!isNapoleonRequiredActionQuestion(content)) return false;
 
@@ -2179,6 +2303,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
     const activeProfileMode = mapProfileToNapoleonMode(profile);
+    if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
     const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
@@ -2378,6 +2503,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const traceId = newTraceId();
       const turnId = `turn_${Date.now().toString(16)}`;
       const activeProfileMode = mapProfileToNapoleonMode(profile);
+      if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
       const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {

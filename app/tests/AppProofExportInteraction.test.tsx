@@ -525,6 +525,44 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(delegationAnswerEvent).includes("Passive Brain"), false);
     assert.equal(JSON.stringify(delegationAnswerEvent).includes("memory_write"), false);
     assert.equal(JSON.stringify(delegationAnswerEvent).includes(lastTextTurnTraceId), false);
+    const requestCountBeforeReviewQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What does Napoleon require me to review before I can act?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let reviewAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      reviewAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("Latest Napoleon review requirement from returned bridge proof:"),
+      ) as HTMLElement | undefined;
+      assert.ok(reviewAnswer);
+    });
+    assert.ok(reviewAnswer);
+    const reviewAnswerText = reviewAnswer.textContent ?? "";
+    assert.ok(reviewAnswerText.includes("Governance: requires_review."));
+    assert.ok(reviewAnswerText.includes("Review required: yes."));
+    assert.ok(reviewAnswerText.includes("Decision: decision_"));
+    assert.ok(reviewAnswerText.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
+    assert.ok(reviewAnswerText.includes("Blocked effects: memory_write, approval_capture, external_send, agent_dispatch."));
+    assert.ok(
+      reviewAnswerText.includes(
+        "This is local display of returned bridge proof only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeReviewQuestion);
+    const reviewAnswerTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const reviewAnswerEvent = reviewAnswerTelemetryBuffer.events
+      ?.filter((event) => event.event === "napoleon_review_requirement_answered")
+      .at(-1);
+    assert.equal(reviewAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(reviewAnswerEvent?.attributes.proofReturned, true);
+    assert.equal(reviewAnswerEvent?.attributes.reviewRequired, true);
+    assert.equal(reviewAnswerEvent?.attributes.blockedEffectCount, 4);
+    assert.equal(reviewAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(reviewAnswerEvent).includes("memory_write"), false);
+    assert.equal(JSON.stringify(reviewAnswerEvent).includes(lastTextTurnTraceId), false);
     const textTurnTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };

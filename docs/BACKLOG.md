@@ -83,6 +83,7 @@ Acceptance criteria:
 
 - `allow_prepare_only`, `requires_review`, `deny`, and `no_go` have distinct visible states.
 - Review panels show decision ID, audit ID, authority tier, approval requirement, rationale, blocked effects, and trace ID.
+- The text surface can answer review-readiness questions such as "What does Napoleon require me to review before I can act?" from the latest returned bridge proof, without contacting Napoleon or treating the answer as approval.
 - Local acknowledgement may record that review was seen, but it is not Napoleon approval.
 - A live governance review packet can be submitted only through the governed Chief of Staff bridge after endpoint and descriptor preflight pass and Rehearsal Mode is off.
 - Napoleon review responses require matching governance, trace, and audit proof before Concierge displays them as reviewed.
@@ -93,6 +94,7 @@ Privacy and safety impact:
 
 - Local acknowledgement does not execute side effects, write memory, send externally, or dispatch agents.
 - Governed review handoff does not capture approval, write memory, dispatch agents, send externally, apply locally, or grant runtime authority.
+- Local review-readiness answers emit only proof availability, review-required status, returned-field booleans, blocked-effect counts, and explicit false side-effect flags; they do not retain raw prompts, responses, effect names, trace IDs, audit IDs, endpoint hosts, or bearer tokens in telemetry.
 - Concierge remains a presentation and consent surface; Napoleon and Chief of Staff remain the authority layer.
 
 Evaluator coverage:
