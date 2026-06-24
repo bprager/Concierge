@@ -550,6 +550,36 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(naturalDelegationAnswerEvent?.attributes.selectedAgentCount, 1);
     assert.equal(naturalDelegationAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(naturalDelegationAnswerEvent).includes("Who handled that?"), false);
+    const requestCountBeforeCapabilityHandlerQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCapabilityHandlerQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Which capability handled that?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let capabilityHandlerAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCapabilityHandlerQuestion + 1);
+      capabilityHandlerAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(capabilityHandlerAnswer);
+      assert.ok(capabilityHandlerAnswer.textContent?.includes("Target capability: napoleon.chief_of_staff."));
+    });
+    assert.ok(capabilityHandlerAnswer);
+    const capabilityHandlerAnswerText = capabilityHandlerAnswer.textContent ?? "";
+    assert.ok(capabilityHandlerAnswerText.includes("Handled by: Passive Brain."));
+    assert.equal(requestedUrls.length, requestCountBeforeCapabilityHandlerQuestion);
+    const capabilityHandlerAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(capabilityHandlerAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(capabilityHandlerAnswerEvent?.attributes.targetCapabilityReturned, true);
+    assert.equal(capabilityHandlerAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(capabilityHandlerAnswerEvent).includes("Which capability handled that?"), false);
+    assert.equal(JSON.stringify(capabilityHandlerAnswerEvent).includes("napoleon.chief_of_staff"), false);
     const requestCountBeforeSelectedAgentsQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeSelectedAgentsQuestion = Array.from(
       document.querySelectorAll("article.assistant"),

@@ -403,7 +403,9 @@ function isNapoleonDelegationQuestion(content: string): boolean {
   const asksAboutReturnedHandler =
     /\bwho\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
-    /\bwhat\b.*\bcapability\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower);
+    /\b(which|what)\b.*\bcapability\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(
+      lower,
+    );
   const asksAboutReturnedEffects =
     /\bwhat\b.*\b(blocked|allowed)\b/.test(lower) ||
     /\bwhat\b.*\beffects?\b.*\b(blocked|allowed)\b/.test(lower) ||
