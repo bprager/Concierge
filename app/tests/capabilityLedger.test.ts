@@ -257,6 +257,46 @@ test("remote Napoleon governance deny failures are not treated as bridge repair 
   assert.ok(signal.details?.includes("governance outcome deny"));
 });
 
+test("Chief of Staff steering no-go failures keep enum counts without bridge repair guidance", () => {
+  const signal = deriveCapabilitySignalFromEvent("capability_recommendation_send_failed", {
+    traceId: "trace_steering_no_go",
+    conversationId: "conv_steering_no_go",
+    turnId: "turn_steering_no_go",
+    profile: "adult_owner",
+    recommendationType: "scored_capability_recommendation",
+    reason: "governance_no_go",
+    blockedEffects: ["memory_write", "external_send"],
+    rawContent: "raw proposal text",
+  });
+
+  assert.equal(signal.topicLabel, "chief_of_staff_steering");
+  assert.equal(signal.intentLabel, "track_steering_recommendation_type");
+  assert.equal(signal.capabilityLabel, "scored_capability_recommendation");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.architectureArea, "governance_ux");
+  assert.ok(signal.details?.includes("bridge failure reason governance_no_go"));
+  assert.equal(JSON.stringify(signal).includes("raw proposal text"), false);
+});
+
+test("Chief of Staff steering transport failures still suggest bridge follow-up", () => {
+  const signal = deriveCapabilitySignalFromEvent("capability_recommendation_send_failed", {
+    traceId: "trace_steering_timeout",
+    conversationId: "conv_steering_timeout",
+    turnId: "turn_steering_timeout",
+    profile: "adult_owner",
+    recommendationType: "guided_readiness_repair",
+    reason: "bridge_timeout",
+  });
+
+  assert.equal(signal.capabilityLabel, "guided_readiness_repair");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "bridge_failed");
+  assert.equal(signal.suggestedNextStep, "add_backlog_item");
+  assert.equal(signal.architectureArea, "bridge");
+});
+
 test("capability recommendations remain proposal-only and non-authoritative", () => {
   const signal = deriveCapabilitySignalFromEvent("memory_proposal_acknowledged_locally", {
     traceId: "trace_memory_ack",

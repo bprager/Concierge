@@ -1705,17 +1705,20 @@ function advisoryCapabilityDiscoveryDetails(attributes: Record<string, unknown>)
 
 function isGovernanceBlockedResponseFailure(attributes: Record<string, unknown>): boolean {
   const bridgeFailureReason = stringAttr(attributes, "bridgeFailureReason", "");
+  const reason = stringAttr(attributes, "reason", "");
   const governanceOutcome = stringAttr(attributes, "governanceOutcome", "");
   return (
     bridgeFailureReason === "governance_no_go" ||
     bridgeFailureReason === "governance_denied" ||
+    reason === "governance_no_go" ||
+    reason === "governance_denied" ||
     governanceOutcome === "no_go" ||
     governanceOutcome === "deny"
   );
 }
 
 function governanceBlockedResponseDetails(attributes: Record<string, unknown>): string[] {
-  const bridgeFailureReason = stringAttr(attributes, "bridgeFailureReason", "not_returned");
+  const bridgeFailureReason = stringAttr(attributes, "bridgeFailureReason", stringAttr(attributes, "reason", "not_returned"));
   const governanceOutcome = stringAttr(attributes, "governanceOutcome", "not_returned");
   const details = [
     bridgeFailureReason === "not_returned" ? "bridge failure reason not returned" : `bridge failure reason ${bridgeFailureReason}`,
@@ -1822,16 +1825,18 @@ export function deriveCapabilitySignalFromEvent(
 
   if (eventName.startsWith("capability_recommendation_send_")) {
     const failed = eventName.endsWith("_failed");
+    const governedBlock = failed && isGovernanceBlockedResponseFailure(attributes);
     return buildCapabilitySignal({
       ...base,
       topicLabel: "chief_of_staff_steering",
       intentLabel: "track_steering_recommendation_type",
       capabilityLabel: steeringRecommendationTypeFromAttributes(attributes),
       capabilityStatus: failed ? "blocked" : "working",
-      outcomeSignal: failed ? "bridge_failed" : "review_required",
+      outcomeSignal: governedBlock ? "blocked" : failed ? "bridge_failed" : "review_required",
       confidence: failed ? 0.86 : 0.82,
-      architectureArea: failed ? "bridge" : "observability",
-      suggestedNextStep: failed ? "add_backlog_item" : "no_action",
+      architectureArea: governedBlock ? "governance_ux" : failed ? "bridge" : "observability",
+      suggestedNextStep: governedBlock ? "no_action" : failed ? "add_backlog_item" : "no_action",
+      details: governedBlock ? governanceBlockedResponseDetails(attributes) : undefined,
     });
   }
 
