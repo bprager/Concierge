@@ -1960,7 +1960,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       ...base,
       targetAgent: "napoleon.chief_of_staff",
       reason: "governed_bridge_text_turn",
-      requestKind: "concierge_text_turn",
+      requestKind: "text_turn",
       agentDispatchPerformed: false,
       externalSendPerformed: false,
     });

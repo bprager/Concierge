@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Governed live text delegation trace events now use the canonical OpenAPI-aligned `text_turn` request kind, keeping local telemetry and bridge request evidence aligned.
 - The local text-turn JSON schema and canonical sample contract now require the OpenAPI-aligned `requestKind: "text_turn"` discriminator, with evaluator coverage to prevent request-envelope drift.
 - Capability Intelligence latest-turn evidence now carries canonical target-capability, governance, and failure-reason metadata in rendered drilldowns, exports, and review packets without turning local summaries into authority.
 - Capability Intelligence latest-turn evidence exports and review packets now canonicalize blocked-effect labels after redaction, keeping returned bridge metadata stable across casing, spaces, and hyphens.

@@ -514,6 +514,12 @@ test("exports and compares Napoleon proof through rendered app controls", async 
       governanceDecision?.attributes.reason,
       "Text Concierge may prepare an advisory response but blocked effects remain unavailable.",
     );
+    const delegationRequested = textTurnEvents?.find((event) => event.event === "delegation_requested");
+    assert.equal(delegationRequested?.attributes.targetAgent, "napoleon.chief_of_staff");
+    assert.equal(delegationRequested?.attributes.reason, "governed_bridge_text_turn");
+    assert.equal(delegationRequested?.attributes.requestKind, "text_turn");
+    assert.equal(delegationRequested?.attributes.agentDispatchPerformed, false);
+    assert.equal(delegationRequested?.attributes.externalSendPerformed, false);
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));
     await screen.findByText("No previous Napoleon response proof is available in this app session.");
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));
