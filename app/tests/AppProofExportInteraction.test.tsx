@@ -4264,6 +4264,20 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
   ]);
   const user = userEventModule.default.setup();
   const requestedUrls: string[] = [];
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
+  console.info = (...args: unknown[]) => {
+    const payload = args[1];
+    if (
+      args[0] === "[concierge.telemetry]" &&
+      payload &&
+      typeof payload === "object" &&
+      "event" in payload &&
+      "attributes" in payload
+    ) {
+      telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+    }
+  };
   globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
     requestedUrls.push(url);
@@ -4372,8 +4386,19 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
     assert.ok(delegationPanel.getByText("memory_write, approval_capture, external_send, agent_dispatch"));
     assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
     assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
+    const capabilitySignal = telemetryPayloads.find(
+      (payload) =>
+        payload.event === "conversation_capability_signal" &&
+        payload.attributes.capabilityLabel === "governed_bridge_no_go_handling",
+    );
+    assert.ok(capabilitySignal);
+    assert.equal(capabilitySignal.attributes.capabilityStatus, "blocked");
+    assert.equal(capabilitySignal.attributes.outcomeSignal, "blocked");
+    assert.equal(capabilitySignal.attributes.suggestedNextStep, "no_action");
+    assert.equal(capabilitySignal.attributes.architectureArea, "governance_ux");
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/turn"));
   } finally {
+    console.info = originalInfo;
     cleanup();
     dom.window.close();
   }

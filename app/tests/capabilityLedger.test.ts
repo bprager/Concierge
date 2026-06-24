@@ -216,6 +216,47 @@ test("blocked governance outcomes are separate from failed safe requests", () =>
   assert.equal(failed.suggestedNextStep, "write_evaluator_case");
 });
 
+test("remote Napoleon governance no-go failures are not treated as missing capabilities", () => {
+  const signal = deriveCapabilitySignalFromEvent("response_failed", {
+    traceId: "trace_remote_no_go",
+    conversationId: "conv_remote_no_go",
+    turnId: "turn_remote_no_go",
+    profile: "adult_owner",
+    bridgeFailureReason: "governance_no_go",
+    governanceOutcome: "no_go",
+    blockedEffects: ["memory_write", "external_send"],
+  });
+
+  assert.equal(signal.topicLabel, "governance");
+  assert.equal(signal.intentLabel, "remote_governance_block");
+  assert.equal(signal.capabilityLabel, "governed_bridge_no_go_handling");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.architectureArea, "governance_ux");
+  assert.ok(signal.details?.includes("bridge failure reason governance_no_go"));
+  assert.ok(signal.details?.includes("governance outcome no_go"));
+});
+
+test("remote Napoleon governance deny failures are not treated as bridge repair recommendations", () => {
+  const signal = deriveCapabilitySignalFromEvent("response_failed", {
+    traceId: "trace_remote_deny",
+    conversationId: "conv_remote_deny",
+    turnId: "turn_remote_deny",
+    profile: "adult_owner",
+    bridgeFailureReason: "governance_denied",
+    governanceOutcome: "deny",
+    blockedEffects: ["approval_capture"],
+  });
+
+  assert.equal(signal.capabilityLabel, "governed_bridge_no_go_handling");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.ok(signal.details?.includes("bridge failure reason governance_denied"));
+  assert.ok(signal.details?.includes("governance outcome deny"));
+});
+
 test("capability recommendations remain proposal-only and non-authoritative", () => {
   const signal = deriveCapabilitySignalFromEvent("memory_proposal_acknowledged_locally", {
     traceId: "trace_memory_ack",

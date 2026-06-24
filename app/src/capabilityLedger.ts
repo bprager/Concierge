@@ -1703,6 +1703,32 @@ function advisoryCapabilityDiscoveryDetails(attributes: Record<string, unknown>)
   ];
 }
 
+function isGovernanceBlockedResponseFailure(attributes: Record<string, unknown>): boolean {
+  const bridgeFailureReason = stringAttr(attributes, "bridgeFailureReason", "");
+  const governanceOutcome = stringAttr(attributes, "governanceOutcome", "");
+  return (
+    bridgeFailureReason === "governance_no_go" ||
+    bridgeFailureReason === "governance_denied" ||
+    governanceOutcome === "no_go" ||
+    governanceOutcome === "deny"
+  );
+}
+
+function governanceBlockedResponseDetails(attributes: Record<string, unknown>): string[] {
+  const bridgeFailureReason = stringAttr(attributes, "bridgeFailureReason", "not_returned");
+  const governanceOutcome = stringAttr(attributes, "governanceOutcome", "not_returned");
+  const details = [
+    bridgeFailureReason === "not_returned" ? "bridge failure reason not returned" : `bridge failure reason ${bridgeFailureReason}`,
+    governanceOutcome === "not_returned" ? "governance outcome not returned" : `governance outcome ${governanceOutcome}`,
+    "remote governance block treated as correct safety behavior",
+  ];
+  const blockedEffects = attributes.blockedEffects;
+  if (Array.isArray(blockedEffects) && blockedEffects.length > 0) {
+    details.push(`blocked effects ${blockedEffects.length}`);
+  }
+  return details;
+}
+
 export function deriveCapabilitySignalFromEvent(
   eventName: string,
   attributes: Record<string, unknown>,
@@ -1859,6 +1885,21 @@ export function deriveCapabilitySignalFromEvent(
   }
 
   if (eventName === "response_failed") {
+    if (isGovernanceBlockedResponseFailure(attributes)) {
+      return buildCapabilitySignal({
+        ...base,
+        topicLabel: "governance",
+        intentLabel: "remote_governance_block",
+        capabilityLabel: "governed_bridge_no_go_handling",
+        capabilityStatus: "blocked",
+        outcomeSignal: "blocked",
+        confidence: 0.9,
+        architectureArea: "governance_ux",
+        suggestedNextStep: "no_action",
+        details: governanceBlockedResponseDetails(attributes),
+      });
+    }
+
     return buildCapabilitySignal({
       ...base,
       topicLabel: "bridge",
