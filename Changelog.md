@@ -16,6 +16,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Aligned the local text-turn JSON schema and sample contract with the OpenAPI `requestKind: "text_turn"` discriminator so request-envelope examples cannot drift from the canonical bridge contract.
 - Aligned governed live text delegation telemetry with the canonical `text_turn` request kind so local trace events match the bridge contract.
 - Added safe named bridge target metadata to live text `bridge_request_started` telemetry so start, completion, and failure events can be compared without exposing endpoint hosts, bearer tokens, prompts, request bodies, or response bodies.
+- Added rendered coverage proving Napoleon proof and delegation provenance, including target capability, recommendation text, selected agents, and selection reasons, is cleared when bridge endpoint or token context changes.
 - Hardened repository authority-boundary validation for optional-chained media capture, device enumeration, speech, audio context, media recorder, and playback calls so future voice/avatar code cannot bypass visible permission handlers.
 - Hardened repository authority-boundary validation for optional-chained browser side-channel calls such as `fetch?.(...)`, `sendBeacon?.(...)`, `window.open?.(...)`, `postMessage?.(...)`, clipboard writes, service-worker registration, and bridge-module direct URL fetches.
 - Added rendered proof export coverage for proof-alignment metadata in selected-agent and target-capability-only Napoleon response proof exports and telemetry.

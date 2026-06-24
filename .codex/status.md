@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Rendered proof/delegation coverage now proves returned Napoleon provenance is cleared when endpoint or bridge-token context changes, including target capability, recommendation text, selected agents, and selection reasons.
 - Live text bridge start telemetry now includes safe named target metadata, keeping start, completion, and failure traces comparable without retaining endpoint hosts, tokens, raw prompts, request bodies, or response bodies.
 - Governed live text delegation trace events now use the canonical OpenAPI-aligned `text_turn` request kind, keeping local telemetry and bridge request evidence aligned.
 - The local text-turn JSON schema and canonical sample contract now require the OpenAPI-aligned `requestKind: "text_turn"` discriminator, with evaluator coverage to prevent request-envelope drift.
