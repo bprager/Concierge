@@ -414,14 +414,22 @@ function isNapoleonProofCurrentnessQuestion(content: string): boolean {
 
 function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
-  if (!lower.includes("napoleon")) return false;
+  const asksAboutSendButton =
+    /\bsend button\b/.test(lower) ||
+    /\blive send button\b/.test(lower) ||
+    /\bsend control\b/.test(lower) ||
+    /\bsend\b.*\b(disabled|blocked|unavailable|greyed|grayed)\b/.test(lower) ||
+    /\b(disabled|blocked|unavailable|greyed|grayed)\b.*\bsend\b/.test(lower);
+  if (!lower.includes("napoleon") && !asksAboutSendButton) return false;
   const asksAboutSending =
+    asksAboutSendButton ||
     /\bsend\b/.test(lower) ||
     /\bforward\b/.test(lower) ||
     /\bcontact\b/.test(lower) ||
     /\bbridge\b/.test(lower) ||
     /\bendpoint\b/.test(lower);
   const asksAboutReadiness =
+    asksAboutSendButton ||
     /\bready\b/.test(lower) ||
     /\breadiness\b/.test(lower) ||
     /\bcan i\b/.test(lower) ||
