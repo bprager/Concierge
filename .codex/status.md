@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Repository authority-boundary validation now rejects split-string browser side-channel aliases for cross-context messaging, clipboard, history state, cookies, and local/session storage, closing another bypass path around the governed Napoleon bridge.
 - Added local text answers for Napoleon proof-currentness questions, so the user can ask whether the latest returned proof is still current or why stale proof cannot be reused; answers stay local, expose safe clear reasons, do not contact Napoleon, and keep telemetry to state, booleans, counts, and false side-effect flags.
 - Added local text answers for Napoleon review-readiness questions from the current returned bridge proof, so the user can ask what must be reviewed before acting without extra Napoleon contact, side effects, or telemetry that copies effect labels, decision IDs, trace IDs, or audit IDs.
 - Added local text answers for Napoleon delegation and blocked-effect questions from the current returned bridge proof, with no extra Napoleon contact, no side effects, and count-only telemetry that omits returned agent names, effect labels, trace IDs, and audit IDs.

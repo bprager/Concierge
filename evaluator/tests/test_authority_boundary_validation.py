@@ -785,6 +785,27 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_split_string_browser_side_channel_aliases(self):
+        for source in [
+            'window["post" + "Message"]({ proof: secretProofJson }, "*");',
+            'parent["post" + "Message"].call(parent, secretProofJson, "https://api.example.test");',
+            'const channel = new window["Broadcast" + "Channel"]("concierge-proof");',
+            'const channel = globalThis["Message" + "Channel"]();',
+            'await window["navigator"]["clip" + "board"]["write" + "Text"](secretProofJson);',
+            'await globalThis["navigator"]["clip" + "board"]["read" + "Text"].call(globalThis.navigator.clipboard);',
+            'window["history"]["push" + "State"]({ proof: secretProofJson }, "", "/review");',
+            'globalThis["history"]["replace" + "State"].apply(globalThis.history, [{ prompt: rawPromptText }, "", "/turn"]);',
+            'document["cook" + "ie"] = "concierge_secret=raw-transcript";',
+            'window["local" + "Storage"]["set" + "Item"]("raw_prompt_cache", rawPromptText);',
+            'globalThis["session" + "Storage"]["clear"]();',
+            'window["name"] = secretProofJson;',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.tsx", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_direct_location_assignment_side_channels(self):
         for source in [
             'window.location = "https://api.example.test/export";',

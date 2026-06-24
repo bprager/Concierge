@@ -477,8 +477,14 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]postMessage['\"]\s*\]\s*\("),
     re.compile(r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]postMessage['\"]\s*\]\s*\?\.\s*\("),
     re.compile(r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]postMessage['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
+    re.compile(
+        r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]post['\"]\s*\+\s*['\"]Message['\"]\s*\]\s*(?:\.\s*(?:call|apply))?\s*\("
+    ),
     re.compile(r"\b(?:BroadcastChannel|MessageChannel)\s*\("),
     re.compile(r"\b(?:BroadcastChannel|MessageChannel|(?:globalThis|window)\.(?:BroadcastChannel|MessageChannel))\.(?:call|apply)\s*\("),
+    re.compile(
+        r"\b(?:new\s+)?(?:globalThis|window)\s*\[\s*['\"](?:Broadcast|Message)['\"]\s*\+\s*['\"]Channel['\"]\s*\]\s*(?:\.\s*(?:call|apply))?\s*\("
+    ),
     re.compile(r"\b(?:navigator|window\.navigator)\.clipboard\.(?:read|readText|write|writeText)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.clipboard\.(?:read|readText|write|writeText)\s*\?\.\s*\("),
     re.compile(
@@ -504,6 +510,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]clipboard['\"]\s*\]\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]clip['\"]\s*\+\s*['\"]board['\"]\s*\]\s*\[\s*['\"](?:read|write)['\"]\s*\+\s*['\"]Text['\"]\s*\]\s*(?:\.\s*(?:call|apply))?\s*\("
+    ),
     re.compile(r"\bdocument\.execCommand\s*\(\s*['\"](?:copy|cut|paste)['\"]", re.IGNORECASE),
     re.compile(
         r"\b(?:(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]|document)\s*\[\s*['\"]execCommand['\"]\s*\]\s*\(\s*['\"](?:copy|cut|paste)['\"]",
@@ -561,18 +570,25 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]caches['\"]\s*\]\s*\[\s*['\"](?:open|delete|match|put)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\bdocument\.cookie\s*="),
     re.compile(r"\bdocument\s*\[\s*['\"]cookie['\"]\s*\]\s*="),
+    re.compile(r"\bdocument\s*\[\s*['\"]cook['\"]\s*\+\s*['\"]ie['\"]\s*\]\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]\s*\.\s*cookie\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]\s*\[\s*['\"]cookie['\"]\s*\]\s*="),
     re.compile(r"\b(?:history|window\.history)\.(?:pushState|replaceState)\s*\("),
     re.compile(r"\b(?:history|window\.history)\.(?:pushState|replaceState)\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\[\s*['\"](?:pushState|replaceState)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\[\s*['\"](?:pushState|replaceState)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\[\s*['\"](?:push|replace)['\"]\s*\+\s*['\"]State['\"]\s*\]\s*(?:\.\s*(?:call|apply))?\s*\("
+    ),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\.\s*(?:pushState|replaceState)\s*\("),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\.\s*(?:pushState|replaceState)\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(r"\b(?:globalThis|window)\.name\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]name['\"]\s*\]\s*="),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"](?:local|session)['\"]\s*\+\s*['\"]Storage['\"]\s*\]\s*\[\s*(?:['\"](?:get|set|remove)['\"]\s*\+\s*['\"]Item['\"]|['\"]clear['\"])\s*\]\s*(?:\.\s*(?:call|apply))?\s*\("
+    ),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"](?:BroadcastChannel|MessageChannel)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"](?:BroadcastChannel|MessageChannel)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"](?:BroadcastChannel|MessageChannel)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
