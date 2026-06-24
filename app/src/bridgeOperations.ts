@@ -483,6 +483,8 @@ export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOpe
 
 export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperationId): BridgeOperationSummary {
   const operation = getNapoleonReviewOperation(id);
+  const isEvaluationReview = operation.id === "evaluation_review";
+  const isEvolutionReview = operation.id === "evolution_proposal_review";
   const isNewAgentReview = operation.id === "new_agent_proposal_review";
   const isEvolutionSubmission = operation.id === "evolution_proposal_submission";
   const isGovernanceEvaluation = operation.id === "governance_evaluation";
@@ -493,7 +495,17 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
     "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.";
   let sideEffects =
     "No local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge";
-  if (isNewAgentReview) {
+  if (isEvaluationReview) {
+    boundary =
+      "evaluator-review Napoleon target; no local evaluator approval, release approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.";
+    sideEffects =
+      "No evaluator approval, release approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge";
+  } else if (isEvolutionReview) {
+    boundary =
+      "evolution-review Napoleon target; no local evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.";
+    sideEffects =
+      "No evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge";
+  } else if (isNewAgentReview) {
     boundary =
       "review-only Napoleon target; no local approval, agent activation, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.";
     sideEffects =

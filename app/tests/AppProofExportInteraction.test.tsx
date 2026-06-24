@@ -4034,6 +4034,32 @@ test("shows named Napoleon governed targets in governed routes", async () => {
         "Side effects: No governance override, approval capture, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
       ),
     );
+    assert.ok(routes.getByText("Evaluation review handoff"));
+    assert.ok(routes.getByText("/chief-of-staff/reviews/evaluation"));
+    assert.ok(routes.getByText("evaluation_review_handoff"));
+    assert.ok(
+      routes.getByText(
+        "evaluator-review Napoleon target; no local evaluator approval, release approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "Side effects: No evaluator approval, release approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
+      ),
+    );
+    assert.ok(routes.getByText("Evolution proposal review"));
+    assert.ok(routes.getByText("/chief-of-staff/reviews/evolution-proposals"));
+    assert.ok(routes.getByText("evolution_proposal_review_handoff"));
+    assert.ok(
+      routes.getByText(
+        "evolution-review Napoleon target; no local evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "Side effects: No evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
+      ),
+    );
     assert.ok(routes.getByText("Evolution proposal submission"));
     assert.ok(routes.getByText("/evolution/proposals"));
     assert.ok(routes.getByText("evolution_proposal_submission_handoff"));
@@ -4090,10 +4116,11 @@ test("shows named Napoleon governed targets in governed routes", async () => {
       routes.getAllByText("Source: Generated from api/napoleon_bridge.openapi.yaml review/evidence metadata").length,
       8,
     );
-    assert.ok(
-      routes.getAllByText(
+    assert.equal(
+      routes.queryByText(
         "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
-      ).length >= 2,
+      ),
+      null,
     );
   } finally {
     cleanup();

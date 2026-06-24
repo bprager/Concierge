@@ -754,6 +754,39 @@ test("describes named Napoleon review targets with generated metadata source", (
   assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 });
 
+test("describes evaluation review without evaluator or release approval authority", () => {
+  const summary = describeNapoleonReviewOperationSummary("evaluation_review");
+
+  assert.equal(summary.label, "Evaluation review handoff");
+  assert.equal(summary.path, "/chief-of-staff/reviews/evaluation");
+  assert.equal(summary.requestKind, "evaluation_review_handoff");
+  assert.ok(summary.boundary.includes("evaluator-review Napoleon target"));
+  assert.ok(summary.boundary.includes("evaluator approval"));
+  assert.ok(summary.boundary.includes("release approval"));
+  assert.ok(summary.sideEffects.includes("No evaluator approval"));
+  assert.ok(summary.sideEffects.includes("release approval"));
+  assert.ok(summary.sideEffects.includes("trace append"));
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
+});
+
+test("describes evolution proposal review without evolution application authority", () => {
+  const summary = describeNapoleonReviewOperationSummary("evolution_proposal_review");
+
+  assert.equal(summary.label, "Evolution proposal review");
+  assert.equal(summary.path, "/chief-of-staff/reviews/evolution-proposals");
+  assert.equal(summary.requestKind, "evolution_proposal_review_handoff");
+  assert.ok(summary.boundary.includes("evolution-review Napoleon target"));
+  assert.ok(summary.boundary.includes("evolution application"));
+  assert.ok(summary.boundary.includes("approval capture"));
+  assert.ok(summary.boundary.includes("registry update"));
+  assert.ok(summary.sideEffects.includes("No evolution application"));
+  assert.ok(summary.sideEffects.includes("approval capture"));
+  assert.ok(summary.sideEffects.includes("registry update"));
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
+});
+
 test("describes new agent proposal review without agent activation authority", () => {
   const summary = describeNapoleonReviewOperationSummary("new_agent_proposal_review");
 
