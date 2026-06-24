@@ -375,13 +375,31 @@ function isNamedSelectedAgentContributionQuestion(content: string): boolean {
   return extractRequestedSelectedAgentName(content) !== null;
 }
 
-function selectedAgentNameFromContribution(contribution: string): string {
-  return contribution.split(":")[0]?.trim() ?? "";
+function extractRequestedSelectedAgentReasonName(content: string): string | null {
+  const match =
+    content.match(
+      /\b[Ww]hy\s+(?:was|were)\s+([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,3})\s+selected\b/,
+    ) ??
+    content.match(
+      /\b[Ww]hy\s+did\s+(?:Napoleon|the bridge|Chief of Staff)\s+select\s+([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,3})\b/,
+    );
+  const name = match?.[1]?.trim();
+  if (!name || name.toLocaleLowerCase() === "napoleon") return null;
+  return name;
+}
+
+function isNamedSelectedAgentReasonQuestion(content: string): boolean {
+  return extractRequestedSelectedAgentReasonName(content) !== null;
+}
+
+function selectedAgentNameFromProofLine(proofLine: string): string {
+  return proofLine.split(":")[0]?.trim() ?? "";
 }
 
 function isNapoleonDelegationQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   const asksAboutNamedSelectedAgentContribution = isNamedSelectedAgentContributionQuestion(content);
+  const asksAboutNamedSelectedAgentReason = isNamedSelectedAgentReasonQuestion(content);
   const asksAboutReturnedHandler =
     /\bwho\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
@@ -406,7 +424,8 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     !asksAboutReturnedHandler &&
     !asksAboutReturnedEffects &&
     !asksAboutReturnedRecommendation &&
-    !asksAboutNamedSelectedAgentContribution
+    !asksAboutNamedSelectedAgentContribution &&
+    !asksAboutNamedSelectedAgentReason
   ) {
     return false;
   }
@@ -415,6 +434,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutReturnedEffects ||
     asksAboutReturnedRecommendation ||
     asksAboutNamedSelectedAgentContribution ||
+    asksAboutNamedSelectedAgentReason ||
     /\bwho\b.*\bhandled\b/.test(lower) ||
     /\bwho\b.*\banswered\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b/.test(lower) ||
@@ -572,6 +592,7 @@ function formatNapoleonDelegationAnswer(
   targetCapabilityReturned: boolean;
   recommendationReturned: boolean;
   selectedAgentContributionCount: number;
+  selectedAgentReasonCount: number;
   traceReturned: boolean;
   auditReturned: boolean;
 } {
@@ -586,6 +607,7 @@ function formatNapoleonDelegationAnswer(
       targetCapabilityReturned: false,
       recommendationReturned: false,
       selectedAgentContributionCount: 0,
+      selectedAgentReasonCount: 0,
       traceReturned: false,
       auditReturned: false,
     };
@@ -594,11 +616,21 @@ function formatNapoleonDelegationAnswer(
   const proof = presentation.proof;
   const metadata = presentation.proofMetadata;
   const requestedSelectedAgentName = extractRequestedSelectedAgentName(questionContent);
+  const requestedSelectedAgentReasonName = extractRequestedSelectedAgentReasonName(questionContent);
   const trace = detailValue(proof.details, "Trace");
   const audit = detailValue(proof.details, "Audit");
-  const whySelected = metadata.selectedAgentReasons.length
-    ? metadata.selectedAgentReasons.join("; ")
-    : "No selected-agent reason was returned.";
+  const matchingSelectedAgentReasons = requestedSelectedAgentReasonName
+    ? metadata.selectedAgentReasons.filter(
+        (reason) =>
+          selectedAgentNameFromProofLine(reason).toLocaleLowerCase() ===
+          requestedSelectedAgentReasonName.toLocaleLowerCase(),
+      )
+    : metadata.selectedAgentReasons;
+  const whySelected = matchingSelectedAgentReasons.length
+    ? matchingSelectedAgentReasons.join("; ")
+    : requestedSelectedAgentReasonName
+      ? `not returned for ${requestedSelectedAgentReasonName}`
+      : "No selected-agent reason was returned.";
   const allowedEffects = metadata.allowedEffects.length ? metadata.allowedEffects.join(", ") : "not returned";
   const blockedEffects = metadata.blockedEffects.length ? metadata.blockedEffects.join(", ") : "not returned";
   const targetCapability = metadata.targetCapability || "not returned";
@@ -607,7 +639,7 @@ function formatNapoleonDelegationAnswer(
   const matchingSelectedAgentContributions = requestedSelectedAgentName
     ? metadata.selectedAgentContributions.filter(
         (contribution) =>
-          selectedAgentNameFromContribution(contribution).toLocaleLowerCase() ===
+          selectedAgentNameFromProofLine(contribution).toLocaleLowerCase() ===
           requestedSelectedAgentName.toLocaleLowerCase(),
       )
     : metadata.selectedAgentContributions;
@@ -639,6 +671,7 @@ function formatNapoleonDelegationAnswer(
     targetCapabilityReturned: targetCapability !== "not returned" && targetCapability !== "unavailable",
     recommendationReturned: recommendation !== "not returned" && recommendation !== "unavailable",
     selectedAgentContributionCount: matchingSelectedAgentContributions.length,
+    selectedAgentReasonCount: matchingSelectedAgentReasons.length,
     traceReturned: trace !== "not returned" && trace !== "unavailable",
     auditReturned: audit !== "not returned" && audit !== "unavailable",
   };
@@ -2496,6 +2529,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       targetCapabilityReturned: answer.targetCapabilityReturned,
       recommendationReturned: answer.recommendationReturned,
       selectedAgentContributionCount: answer.selectedAgentContributionCount,
+      selectedAgentReasonCount: answer.selectedAgentReasonCount,
       traceReturned: answer.traceReturned,
       auditReturned: answer.auditReturned,
       localAnswerOnly: true,

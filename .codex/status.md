@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local returned-proof answers for selected-agent selection-reason follow-ups such as "Why was Passive Brain selected?", so Concierge uses only the current Napoleon proof, avoids a new bridge request, and keeps telemetry to counts and false side-effect flags.
 - Added local returned-proof answers for specifically named selected-agent follow-ups such as "What did Research Analyst find?", so Concierge says when that agent's contribution was not returned, does not reuse another selected agent's contribution, and keeps telemetry to counts and false side-effect flags.
 - Added local returned-proof answers for Napoleon recommendation and selected-agent contribution follow-ups such as "What did Napoleon recommend?" and "What did Passive Brain find?", so Concierge can speak from current returned bridge proof without a new Napoleon request, side effects, or raw recommendation/contribution telemetry.
 - Added local returned-proof answers for natural review-reference follow-ups such as "What review reference should I use?", so decision/trace/audit questions use the current Napoleon proof without a new bridge request, side effects, or raw follow-up/proof telemetry.
