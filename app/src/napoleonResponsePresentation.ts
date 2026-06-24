@@ -116,6 +116,13 @@ function sanitizeResponseProofList(values: string[]): string[] {
   return values.map((value) => sanitizeResponseProofString(value));
 }
 
+function sanitizeResponseProofEffectList(values: string[]): string[] {
+  return sanitizeResponseProofList(values).map((value) => {
+    if (value === "redacted" || value === "unavailable") return value;
+    return value.toLocaleLowerCase().replace(/[\s-]+/g, "_");
+  });
+}
+
 function sanitizeResponseProofMetadata(metadata: NapoleonResponseProofMetadata): NapoleonResponseProofMetadata {
   return {
     handledBy: sanitizeResponseProofString(metadata.handledBy),
@@ -124,8 +131,8 @@ function sanitizeResponseProofMetadata(metadata: NapoleonResponseProofMetadata):
     recommendation: sanitizeResponseProofString(metadata.recommendation),
     selectedAgents: sanitizeResponseProofList(metadata.selectedAgents),
     selectedAgentReasons: sanitizeResponseProofList(metadata.selectedAgentReasons),
-    allowedEffects: sanitizeResponseProofList(metadata.allowedEffects),
-    blockedEffects: sanitizeResponseProofList(metadata.blockedEffects),
+    allowedEffects: sanitizeResponseProofEffectList(metadata.allowedEffects),
+    blockedEffects: sanitizeResponseProofEffectList(metadata.blockedEffects),
   };
 }
 

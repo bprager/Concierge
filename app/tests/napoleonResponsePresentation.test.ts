@@ -489,6 +489,47 @@ test("exports selected-agent proof arrays from returned provenance instead of di
   assert.deepEqual(proof.responseProof.blockedEffects, ["memory_write", "external_send", "agent_dispatch"]);
 });
 
+test("normalizes returned effect labels in Napoleon response proof exports", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge rollout",
+    profile: "adult_owner",
+    conversationId: "conv_response_export_normalized_effects",
+    turnId: "turn_response_export_normalized_effects",
+    traceId: "trace_response_export_normalized_effects",
+    governanceOutcome: "requires_review",
+  });
+  const state = buildSuccessfulNapoleonResponsePresentation({
+    text: "Prepared through Napoleon.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: true,
+    delegation: {
+      selectedAgents: [],
+      allowedEffects: [" Prepare Advisory Response ", "local-preview"],
+      blockedEffects: [" Memory Write ", "Agent-Dispatch", "EXTERNAL_SEND"],
+      governanceState: "requires_review",
+      traceId: "trace_response_export_normalized_effects",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+
+  const json = exportNapoleonResponseProofJson(state, {
+    generatedAt: "2026-06-13T00:00:00.000Z",
+    conversationId: "conv_response_export_normalized_effects",
+  });
+  const proof = JSON.parse(json) as {
+    responseProof: {
+      allowedEffects: string[];
+      blockedEffects: string[];
+    };
+  };
+
+  assert.deepEqual(proof.responseProof.allowedEffects, ["prepare_advisory_response", "local_preview"]);
+  assert.deepEqual(proof.responseProof.blockedEffects, ["memory_write", "agent_dispatch", "external_send"]);
+});
+
 test("redacts unsafe returned provenance before exporting Napoleon response proof", () => {
   const contract = buildTextTurnContract({
     message: "Summarize the bridge rollout",
