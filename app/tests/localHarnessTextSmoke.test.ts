@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runLocalHarnessTextSmoke } from "../src/localHarnessSmoke.js";
+import { runLocalHarnessContractPacketSmoke, runLocalHarnessTextSmoke } from "../src/localHarnessSmoke.js";
 
 function harnessJsonResponse(status: number, payload: unknown) {
   return {
@@ -132,6 +132,108 @@ test("smoke tests a governed text turn through a local Napoleon-compatible harne
     ),
   );
   assert.ok(result.liveBridgeReadiness.blockedEffects.includes("memory_write"));
+});
+
+test("smoke tests governed contract packet submissions through a local Napoleon-compatible harness", async () => {
+  const requestedUrls: string[] = [];
+  const result = await runLocalHarnessContractPacketSmoke({
+    endpoint: "http://127.0.0.1:8787",
+    message: "Prepare a bridge review request for Napoleon",
+    profile: "adult_owner",
+    fetch: async (url, init) => {
+      requestedUrls.push(url);
+      if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+        return harnessJsonResponse(200, {
+          descriptor: {
+            schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+            serviceId: "napoleon.chief_of_staff",
+            runtimeAuthority: false,
+            commandExecution: false,
+            cachePolicy: "fail_closed_to_review_required",
+            blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+            supportedHandoffs: ["chief_of_staff_request", "governance_evaluation"],
+          },
+          checksum: { expected: "sha256:smoke", actual: "sha256:smoke" },
+          signature: { valid: true },
+        });
+      }
+
+      assert.equal(init?.method, "POST");
+      const body = JSON.parse(init?.body ?? "{}") as {
+        requestKind: string;
+        bridgeTargetPath: string;
+        traceEnvelope: { trace_id: string; parent_trace_id: string; request_id: string };
+      };
+      const isGovernance = url === "http://127.0.0.1:8787/governance/evaluate";
+      assert.ok(isGovernance || url === "http://127.0.0.1:8787/chief-of-staff/requests");
+      assert.equal(body.bridgeTargetPath, isGovernance ? "/governance/evaluate" : "/chief-of-staff/requests");
+      assert.equal(
+        body.requestKind,
+        isGovernance ? "governance_evaluation_handoff" : "chief_of_staff_request_handoff",
+      );
+
+      return harnessJsonResponse(200, {
+        text: isGovernance
+          ? "Napoleon evaluated the governance packet as review-only evidence."
+          : "Napoleon received the Chief of Staff request packet for review.",
+        governanceDecision: {
+          decision_id: isGovernance ? "decision_governance_packet_smoke" : "decision_cos_packet_smoke",
+          request_id: body.traceEnvelope.request_id,
+          outcome: "requires_review",
+          authority_tier: "advisory_review",
+          approval_requirement: "chief_of_staff_and_owner_review",
+          rationale: isGovernance
+            ? "Governance packet evidence remains non-authorizing."
+            : "Chief of Staff request packet remains review-only.",
+          blocked_effects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+          trace_id: body.traceEnvelope.trace_id,
+          audit_id: isGovernance ? "audit_governance_packet_smoke" : "audit_cos_packet_smoke",
+        },
+        traceEnvelope: {
+          trace_id: body.traceEnvelope.trace_id,
+          parent_trace_id: body.traceEnvelope.parent_trace_id,
+          actor_id: isGovernance ? "napoleon.governance" : "napoleon.chief_of_staff",
+          request_id: body.traceEnvelope.request_id,
+          decision_id: isGovernance ? "decision_governance_packet_smoke" : "decision_cos_packet_smoke",
+          timestamp: "2026-06-24T00:00:00.000Z",
+        },
+        auditEnvelope: {
+          audit_id: isGovernance ? "audit_governance_packet_smoke" : "audit_cos_packet_smoke",
+          trace_id: body.traceEnvelope.trace_id,
+          decision_id: isGovernance ? "decision_governance_packet_smoke" : "decision_cos_packet_smoke",
+          actor_id: isGovernance ? "napoleon.governance" : "napoleon.chief_of_staff",
+          authority_tier: "advisory_review",
+          approval_requirement: "chief_of_staff_and_owner_review",
+          evidence_links: [`trace:${body.traceEnvelope.trace_id}`, "harness:local"],
+        },
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        routingPerformed: false,
+        registryUpdatePerformed: false,
+        traceAppendPerformed: false,
+        governanceOverrideApplied: false,
+        appliedLocally: false,
+      });
+    },
+  });
+
+  assert.equal(result.status, "success");
+  assert.equal(result.descriptorConnection.state, "ready");
+  assert.equal(result.chiefOfStaffRequestResult.governanceDecision.outcome, "requires_review");
+  assert.equal(result.governanceEvaluationResult.governanceDecision.outcome, "requires_review");
+  assert.equal(result.chiefOfStaffRequestResult.appliedLocally, false);
+  assert.equal(result.governanceEvaluationResult.appliedLocally, false);
+  assert.equal(result.chiefOfStaffRequestResult.memoryWritePerformed, false);
+  assert.equal(result.governanceEvaluationResult.memoryWritePerformed, false);
+  assert.equal(result.chiefOfStaffRequestResult.agentDispatchPerformed, false);
+  assert.equal(result.governanceEvaluationResult.agentDispatchPerformed, false);
+  assert.equal(result.chiefOfStaffRequestResult.externalSendPerformed, false);
+  assert.equal(result.governanceEvaluationResult.externalSendPerformed, false);
+  assert.equal(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor"), true);
+  assert.equal(requestedUrls.includes("http://127.0.0.1:8787/chief-of-staff/requests"), true);
+  assert.equal(requestedUrls.includes("http://127.0.0.1:8787/governance/evaluate"), true);
 });
 
 test("smoke test compares exported Napoleon proof metadata after local harness success", async () => {
