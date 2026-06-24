@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered UI coverage proving returned capability review packet results and exported packet state clear when Napoleon endpoint context changes, keeping governed review decisions scoped to the connection that produced them.
 - Added rendered UI coverage proving evaluator validation imports and exported readiness proofs clear when Napoleon endpoint context changes, keeping evaluator target metadata scoped to the current connection context.
 - Added rendered UI coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when Napoleon connection context changes, keeping imported runtime proof metadata scoped to the current readiness context.
 - Added rendered UI coverage proving returned capability review packet results clear when the local capability ledger is cleared, keeping governed review decisions scoped to the local evidence context that produced the packet.
