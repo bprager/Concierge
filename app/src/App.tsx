@@ -411,6 +411,11 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhat\b.*\beffects?\b.*\b(blocked|allowed)\b/.test(lower) ||
     /\bwhich\b.*\beffects?\b.*\b(blocked|allowed)\b/.test(lower) ||
     /\b(blocked|allowed)\b.*\beffects?\b/.test(lower);
+  const asksAboutReturnedGovernance =
+    /\bwhat\b.*\bgovernance\b.*\b(state|outcome|decision)\b/.test(lower) ||
+    /\bwhich\b.*\bgovernance\b.*\b(state|outcome|decision)\b/.test(lower) ||
+    /\bwhat\b.*\b(state|outcome|decision)\b.*\bgovernance\b/.test(lower) ||
+    /\bgovernance\s+(state|outcome|decision)\b/.test(lower);
   const asksAboutReturnedRecommendation =
     /\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
     /\bwhat\b.*\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
@@ -429,6 +434,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     !lower.includes("napoleon") &&
     !asksAboutReturnedHandler &&
     !asksAboutReturnedEffects &&
+    !asksAboutReturnedGovernance &&
     !asksAboutReturnedRecommendation &&
     !asksAboutReturnedSelectedAgents &&
     !asksAboutNamedSelectedAgentContribution &&
@@ -439,6 +445,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
   return (
     asksAboutReturnedHandler ||
     asksAboutReturnedEffects ||
+    asksAboutReturnedGovernance ||
     asksAboutReturnedRecommendation ||
     asksAboutReturnedSelectedAgents ||
     asksAboutNamedSelectedAgentContribution ||

@@ -580,6 +580,36 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(capabilityHandlerAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(capabilityHandlerAnswerEvent).includes("Which capability handled that?"), false);
     assert.equal(JSON.stringify(capabilityHandlerAnswerEvent).includes("napoleon.chief_of_staff"), false);
+    const requestCountBeforeGovernanceStateQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeGovernanceStateQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What was the governance state?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let governanceStateAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeGovernanceStateQuestion + 1);
+      governanceStateAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(governanceStateAnswer);
+      assert.ok(governanceStateAnswer.textContent?.includes("Governance: requires_review."));
+    });
+    assert.ok(governanceStateAnswer);
+    const governanceStateAnswerText = governanceStateAnswer.textContent ?? "";
+    assert.ok(governanceStateAnswerText.includes("Handled by: Passive Brain."));
+    assert.equal(requestedUrls.length, requestCountBeforeGovernanceStateQuestion);
+    const governanceStateAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(governanceStateAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(governanceStateAnswerEvent?.attributes.targetCapabilityReturned, true);
+    assert.equal(governanceStateAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(governanceStateAnswerEvent).includes("What was the governance state?"), false);
+    assert.equal(JSON.stringify(governanceStateAnswerEvent).includes("requires_review"), false);
     const requestCountBeforeSelectedAgentsQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeSelectedAgentsQuestion = Array.from(
       document.querySelectorAll("article.assistant"),
