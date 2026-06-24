@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Live-send preflight now repeats descriptor auth failure, timeout, and HTTP discovery failure in the main blocker and next-step summaries, instead of only showing those reasons in the detailed row.
 - Hardened selected-agent attribution validation so exact returned selected-agent display names are guarded regardless of capitalization, preventing lower-case agent names from claiming findings or reports without matching contribution provenance.
 - Added descriptor-specific live voice readiness guidance so future voice setup remains blocked but names exact descriptor recovery reasons such as HTTP failure, auth failure, timeout, stale descriptor, missing descriptor, or integrity mismatch.
 - Added descriptor-specific governed handoff retry guidance so review and evidence handoff readiness names HTTP failure, auth failure, timeout, stale descriptor, missing descriptor, or integrity mismatch instead of only showing a generic descriptor preflight blocker.

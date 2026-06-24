@@ -272,6 +272,7 @@ export interface LiveSendPreflightItem {
   label: string;
   status: "ready" | "blocked" | "warning";
   detail: string;
+  descriptorFailureReason?: DescriptorFailClosedReason;
 }
 
 export interface LiveSendPreflightView {
@@ -580,8 +581,18 @@ function describePreflightBlockerSummary(items: LiveSendPreflightItem[]): string
     .find((item): item is LiveSendPreflightItem => item !== undefined);
   if (blocked) {
     if (blocked.label === "Endpoint configured") return "Main preflight blocker: configure a Napoleon endpoint.";
-    if (blocked.label === "Descriptor discovered") return "Main preflight blocker: discover a current Napoleon descriptor.";
-    if (blocked.label === "Descriptor integrity") return "Main preflight blocker: fix descriptor integrity before sending.";
+    if (blocked.label === "Descriptor discovered") {
+      const descriptorFailure = describeDescriptorFailureReason(blocked.descriptorFailureReason);
+      return descriptorFailure
+        ? `Main preflight blocker: ${descriptorFailure}.`
+        : "Main preflight blocker: discover a current Napoleon descriptor.";
+    }
+    if (blocked.label === "Descriptor integrity") {
+      const descriptorFailure = describeDescriptorFailureReason(blocked.descriptorFailureReason);
+      return descriptorFailure
+        ? `Main preflight blocker: ${descriptorFailure}.`
+        : "Main preflight blocker: fix descriptor integrity before sending.";
+    }
     if (blocked.label === "Text-turn route") return "Main preflight blocker: use a descriptor that advertises text_turn.";
     if (blocked.label === "Governance send gate") return "Main preflight blocker: local governance does not allow this send.";
     if (blocked.label === "Text ready") return "Main preflight blocker: enter text before sending.";
@@ -621,8 +632,18 @@ function describePreflightNextStepSummary(items: LiveSendPreflightItem[]): strin
     .find((item): item is LiveSendPreflightItem => item !== undefined);
   if (blocked) {
     if (blocked.label === "Endpoint configured") return "Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery.";
-    if (blocked.label === "Descriptor discovered") return "Next step: run descriptor discovery for the configured Napoleon endpoint.";
-    if (blocked.label === "Descriptor integrity") return "Next step: refresh descriptor discovery or align the expected descriptor checksum/signature.";
+    if (blocked.label === "Descriptor discovered") {
+      const descriptorFailure = describeDescriptorFailureReason(blocked.descriptorFailureReason);
+      return descriptorFailure
+        ? `Next step: resolve the ${descriptorFailure}, then refresh descriptor discovery.`
+        : "Next step: run descriptor discovery for the configured Napoleon endpoint.";
+    }
+    if (blocked.label === "Descriptor integrity") {
+      const descriptorFailure = describeDescriptorFailureReason(blocked.descriptorFailureReason);
+      return descriptorFailure
+        ? `Next step: resolve the ${descriptorFailure}, then refresh descriptor discovery.`
+        : "Next step: refresh descriptor discovery or align the expected descriptor checksum/signature.";
+    }
     if (blocked.label === "Text-turn route") return "Next step: use a Napoleon descriptor that advertises the governed text_turn route.";
     if (blocked.label === "Governance send gate") return "Next step: revise the request until local governance allows an advisory bridge send.";
     if (blocked.label === "Text ready") return "Next step: enter the text request before attempting the governed bridge send.";
@@ -939,7 +960,8 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
             ? "Napoleon descriptor discovery is stale; rediscover before attempting a live send."
             : descriptorDiscoveryBlocked
               ? `${descriptor.failClosedReason}: ${descriptor.message}`
-            : "Descriptor state is available for preflight.",
+              : "Descriptor state is available for preflight.",
+      descriptorFailureReason: descriptorDiscoveryBlocked ? descriptor.failClosedReason : undefined,
     },
     {
       label: "Descriptor integrity",
@@ -950,6 +972,7 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
           : descriptor.failClosedReason === "descriptor_invalid"
             ? descriptor.message
           : `Checksum ${descriptor.checksumState}; signature ${descriptor.signatureState}.`,
+      descriptorFailureReason: descriptorIntegrityBlocked ? descriptor.failClosedReason : undefined,
     },
     {
       label: "Text-turn route",

@@ -4734,7 +4734,7 @@ test("blocks rendered live send before fetch when descriptor discovery is stale"
     assert.ok(preflight.classList.contains("blocked"));
     assert.ok(within(preflight).getByText("Descriptor integrity"));
     assert.ok(within(preflight).getByText("Descriptor cache is stale. Checksum matched; signature valid."));
-    assert.ok(within(preflight).getByText("Next step: run descriptor discovery for the configured Napoleon endpoint."));
+    assert.ok(within(preflight).getByText("Next step: resolve the descriptor stale, then refresh descriptor discovery."));
 
     const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
     if (rehearsalCheckbox.checked) {

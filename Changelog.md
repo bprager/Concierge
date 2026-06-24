@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added descriptor-specific live-send preflight summary and next-step guidance, so auth failure, timeout, and HTTP descriptor discovery blockers are not collapsed into generic descriptor-discovery wording.
 - Hardened selected-agent attribution validation so exact returned selected-agent display names are guarded regardless of capitalization, preventing lower-case agent names from claiming findings or reports without matching contribution provenance.
 - Added descriptor-specific live voice readiness guidance, keeping live voice blocked while showing exact descriptor recovery reasons such as HTTP failure before any future voice pipeline can start.
 - Added descriptor-specific governed handoff retry guidance so memory, governance, steering, taxonomy, capability review, and observability handoff readiness names HTTP failure, auth failure, timeout, stale descriptor, missing descriptor, or integrity mismatch instead of a generic descriptor preflight blocker.

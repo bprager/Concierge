@@ -1326,30 +1326,55 @@ test("describes stale descriptor cache as a visible live send preflight blocker"
 });
 
 test("describes descriptor transport failures as visible live send preflight blockers", () => {
-  const view = describeLiveSendPreflight({
-    descriptorConnection: buildDescriptorConnectionState({
-      endpointConfigured: true,
-      descriptor: null,
-      failClosedReason: "auth_failure",
-    }),
-    inputReady: true,
-    governanceCanSendAdvisory: true,
-    rehearsalMode: false,
-    evidenceCaptureState: "passed",
-    evidenceComparisonState: "passed",
-    runtimeValidationSource: "real_runtime",
-  });
+  const cases = [
+    {
+      failClosedReason: "auth_failure" as const,
+      expectedDetail: "auth_failure",
+      expectedSummary: "Main preflight blocker: descriptor auth failure.",
+      expectedNextStep: "Next step: resolve the descriptor auth failure, then refresh descriptor discovery.",
+    },
+    {
+      failClosedReason: "bridge_timeout" as const,
+      expectedDetail: "bridge_timeout",
+      expectedSummary: "Main preflight blocker: descriptor timeout.",
+      expectedNextStep: "Next step: resolve the descriptor timeout, then refresh descriptor discovery.",
+    },
+    {
+      failClosedReason: "http_failure" as const,
+      expectedDetail: "http_failure",
+      expectedSummary: "Main preflight blocker: descriptor HTTP failure.",
+      expectedNextStep: "Next step: resolve the descriptor HTTP failure, then refresh descriptor discovery.",
+    },
+  ];
 
-  assert.equal(view.status, "blocked");
-  assert.equal(view.canAttemptLiveSend, false);
-  assert.ok(
-    view.items.some(
-      (item) =>
-        item.label === "Descriptor discovered" &&
-        item.status === "blocked" &&
-        item.detail.includes("auth_failure"),
-    ),
-  );
+  for (const scenario of cases) {
+    const view = describeLiveSendPreflight({
+      descriptorConnection: buildDescriptorConnectionState({
+        endpointConfigured: true,
+        descriptor: null,
+        failClosedReason: scenario.failClosedReason,
+      }),
+      inputReady: true,
+      governanceCanSendAdvisory: true,
+      rehearsalMode: false,
+      evidenceCaptureState: "passed",
+      evidenceComparisonState: "passed",
+      runtimeValidationSource: "real_runtime",
+    });
+
+    assert.equal(view.status, "blocked");
+    assert.equal(view.canAttemptLiveSend, false);
+    assert.equal(view.blockerSummary, scenario.expectedSummary);
+    assert.equal(view.nextStepSummary, scenario.expectedNextStep);
+    assert.ok(
+      view.items.some(
+        (item) =>
+          item.label === "Descriptor discovered" &&
+          item.status === "blocked" &&
+          item.detail.includes(scenario.expectedDetail),
+      ),
+    );
+  }
 });
 
 test("describes live send preflight blockers without granting authority", () => {
