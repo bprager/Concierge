@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local-only Napoleon contract packet exports for the current text draft, so Concierge can prepare Chief of Staff request and governance evaluation packets for `/chief-of-staff/requests` and `/governance/evaluate` without contacting Napoleon or claiming approval, memory writes, agent dispatch, routing, registry updates, trace append, external sends, governance override, or local application.
 - Added local blocked-attempt answers for follow-ups such as "Why was that blocked?", so Concierge uses only the latest fail-closed Napoleon turn metadata, avoids a new bridge request, and keeps telemetry to booleans, counts, and false side-effect flags.
 - Added local returned-proof answers for direct trace/audit follow-ups such as "What trace and audit did Napoleon return?", so Concierge uses only the current Napoleon proof, avoids a new bridge request, and keeps telemetry to booleans, counts, and false side-effect flags.
 - Added local returned-proof answers for governance-state follow-ups such as "What was the governance state?", so Concierge uses only the current Napoleon proof, avoids a new bridge request, and keeps telemetry to booleans, counts, and false side-effect flags.

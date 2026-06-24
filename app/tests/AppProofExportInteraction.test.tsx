@@ -5616,6 +5616,93 @@ test("shows named Napoleon governed targets in governed routes", async () => {
   }
 });
 
+test("exports local Chief of Staff request and governance evaluation packets without contacting Napoleon", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+  const fetchCalls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    fetchCalls.push(String(input));
+    throw new Error(`unexpected fetch: ${String(input)}`);
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+    const prompt = "Prepare a deployment summary for Napoleon";
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: prompt },
+    });
+
+    const packetPanel = view.getByLabelText("Napoleon contract packet exports");
+    const packets = within(packetPanel);
+    fireEvent.click(packets.getByRole("button", { name: "Export Chief of Staff request packet" }));
+    fireEvent.click(packets.getByRole("button", { name: "Export governance evaluation packet" }));
+
+    const chiefOfStaffPacket = JSON.parse(
+      packets.getByLabelText("Exported Chief of Staff request packet").textContent ?? "{}",
+    ) as {
+      packetType?: string;
+      bridgeTarget?: { operationId?: string; path?: string; requestKind?: string };
+      request?: { request_id?: string; profile_mode?: string; trace_id?: string };
+      boundary?: Record<string, unknown>;
+    };
+    const governancePacket = JSON.parse(
+      packets.getByLabelText("Exported governance evaluation packet").textContent ?? "{}",
+    ) as {
+      packetType?: string;
+      bridgeTarget?: { operationId?: string; path?: string; requestKind?: string };
+      request?: { request_id?: string; actor_id?: string; trace_id?: string };
+      localPreflightDecision?: { outcome?: string };
+      boundary?: Record<string, unknown>;
+    };
+
+    assert.equal(chiefOfStaffPacket.packetType, "chief_of_staff_request_handoff");
+    assert.equal(chiefOfStaffPacket.bridgeTarget?.operationId, "chief_of_staff_request");
+    assert.equal(chiefOfStaffPacket.bridgeTarget?.path, "/chief-of-staff/requests");
+    assert.equal(chiefOfStaffPacket.bridgeTarget?.requestKind, "chief_of_staff_request_handoff");
+    assert.equal(chiefOfStaffPacket.request?.request_id, "cos_turn_preflight");
+    assert.equal(chiefOfStaffPacket.request?.profile_mode, "adult_owner");
+    assert.equal(chiefOfStaffPacket.request?.trace_id, "trace_preflight");
+    assert.equal(chiefOfStaffPacket.boundary?.localExportOnly, true);
+    assert.equal(chiefOfStaffPacket.boundary?.approvalCaptured, false);
+    assert.equal(chiefOfStaffPacket.boundary?.memoryWritePerformed, false);
+    assert.equal(chiefOfStaffPacket.boundary?.agentDispatchPerformed, false);
+    assert.equal(chiefOfStaffPacket.boundary?.externalSendPerformed, false);
+    assert.equal(chiefOfStaffPacket.boundary?.routingPerformed, false);
+    assert.equal(chiefOfStaffPacket.boundary?.registryUpdatePerformed, false);
+    assert.equal(chiefOfStaffPacket.boundary?.traceAppendPerformed, false);
+    assert.equal(chiefOfStaffPacket.boundary?.appliedLocally, false);
+
+    assert.equal(governancePacket.packetType, "governance_evaluation_handoff");
+    assert.equal(governancePacket.bridgeTarget?.operationId, "governance_evaluation");
+    assert.equal(governancePacket.bridgeTarget?.path, "/governance/evaluate");
+    assert.equal(governancePacket.bridgeTarget?.requestKind, "governance_evaluation_handoff");
+    assert.equal(governancePacket.request?.request_id, "cos_turn_preflight");
+    assert.equal(governancePacket.request?.actor_id, "concierge:adult_owner");
+    assert.equal(governancePacket.request?.trace_id, "trace_preflight");
+    assert.equal(governancePacket.localPreflightDecision?.outcome, "allow_prepare_only");
+    assert.equal(governancePacket.boundary?.localExportOnly, true);
+    assert.equal(governancePacket.boundary?.governanceOverrideApplied, false);
+    assert.equal(governancePacket.boundary?.approvalCaptured, false);
+    assert.equal(governancePacket.boundary?.memoryWritePerformed, false);
+    assert.equal(governancePacket.boundary?.agentDispatchPerformed, false);
+    assert.equal(governancePacket.boundary?.externalSendPerformed, false);
+    assert.equal(governancePacket.boundary?.routingPerformed, false);
+    assert.equal(governancePacket.boundary?.registryUpdatePerformed, false);
+    assert.equal(governancePacket.boundary?.traceAppendPerformed, false);
+    assert.equal(governancePacket.boundary?.appliedLocally, false);
+
+    assert.equal(JSON.stringify(chiefOfStaffPacket).includes(prompt), false);
+    assert.equal(JSON.stringify(governancePacket).includes(prompt), false);
+    assert.deepEqual(fetchCalls, []);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows explicit core governed route boundaries in governed routes", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([
