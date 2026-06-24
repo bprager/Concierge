@@ -289,6 +289,32 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_optional_chained_browser_side_channels(self):
+        for source in [
+            'await fetch?.("https://api.example.test/send");',
+            'await window.fetch?.("https://api.example.test/send");',
+            'await globalThis["fetch"]?.("https://api.example.test/send");',
+            'navigator.sendBeacon?.("https://api.example.test/audit", payload);',
+            'window.navigator["sendBeacon"]?.("https://api.example.test/audit", payload);',
+            'window["navigator"]["sendBeacon"]?.("https://api.example.test/audit", payload);',
+            'await navigator.serviceWorker.register?.("/hidden-service-worker.js");',
+            'await globalThis["navigator"].serviceWorker.register?.("/hidden-service-worker.js");',
+            'window.open?.("https://api.example.test/export", "_blank");',
+            'globalThis.open?.("https://api.example.test/export", "_blank");',
+            'window["open"]?.("https://api.example.test/export", "_blank");',
+            'await navigator.share?.({ text: secretProofJson });',
+            'await globalThis["navigator"].share?.({ text: secretProofJson });',
+            'window.postMessage?.({ proof: secretProofJson }, "*");',
+            'parent["postMessage"]?.(secretProofJson, "https://api.example.test");',
+            'await navigator.clipboard.writeText?.(secretProofJson);',
+            'await window.navigator.clipboard["writeText"]?.(secretProofJson);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_bracket_access_network_bypasses(self):
         for source in [
             'await globalThis["fetch"]("https://api.example.test/send");',
@@ -1056,7 +1082,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
     def test_network_scanner_rejects_direct_urls_inside_bridge_modules(self):
         for source in [
             'await fetcher("https://api.example.test/v1/concierge/turn", { method: "POST" });',
+            'await fetcher?.("https://api.example.test/v1/concierge/turn", { method: "POST" });',
             'await fetcher(endpoint + "/v1/custom-service", { method: "POST" });',
+            'await fetch?.(endpoint + "/v1/custom-service", { method: "POST" });',
             'await fetcher(`${endpoint}/v1/concierge/freeform`, { method: "POST" });',
         ]:
             with self.subTest(source=source):

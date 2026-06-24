@@ -284,10 +284,13 @@ EXTERNAL_TARGET_DYNAMIC_ATTRIBUTES = (
 
 UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bfetch\s*\("),
+    re.compile(r"\bfetch\s*\?\.\s*\("),
     re.compile(r"\bfetch\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\.fetch\b"),
+    re.compile(r"\b(?:globalThis|window)\.fetch\s*\?\.\s*\("),
     re.compile(r"\b(?:globalThis|window)\.fetch\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]fetch['\"]\s*\]\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]fetch['\"]\s*\]\s*\?\.\s*\("),
     re.compile(r"\bXMLHttpRequest\b"),
     re.compile(r"\bWebSocket\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]WebSocket['\"]\s*\]\s*\("),
@@ -387,10 +390,14 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]PaymentRequest['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]PaymentRequest['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\bsendBeacon\s*\("),
+    re.compile(r"\bsendBeacon\s*\?\.\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator)\.sendBeacon\s*\?\.\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.sendBeacon\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator)\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\?\.\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\?\.\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\b(?:Worker|SharedWorker)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"](?:Worker|SharedWorker)['\"]\s*\]\s*\("),
@@ -398,20 +405,27 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bimport\s*\("),
     re.compile(r"\bimport\s+(?:[^;\n]*?\s+from\s+)?['\"](?:https?://|data:)"),
     re.compile(r"\b(?:navigator|window\.navigator)\.serviceWorker\.register\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator)\.serviceWorker\.register\s*\?\.\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.serviceWorker\.register\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]serviceWorker['\"]\s*\]\s*\[\s*['\"]register['\"]\s*\]\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]serviceWorker['\"]\s*\]\s*\[\s*['\"]register['\"]\s*\]\s*\?\.\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]serviceWorker['\"]\s*\]\s*\[\s*['\"]register['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*serviceWorker\s*\.\s*register\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*serviceWorker\s*\.\s*register\s*\?\.\s*\("),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*serviceWorker\s*\.\s*register\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(r"\bwindow\.open\s*\("),
+    re.compile(r"\bwindow\.open\s*\?\.\s*\("),
     re.compile(r"\bwindow\.open\.(?:call|apply)\s*\("),
     re.compile(r"\bwindow\s*\[\s*['\"]open['\"]\s*\]\s*\("),
+    re.compile(r"\bwindow\s*\[\s*['\"]open['\"]\s*\]\s*\?\.\s*\("),
     re.compile(r"\b(?:open|globalThis\.open)\s*\("),
+    re.compile(r"\b(?:open|globalThis\.open)\s*\?\.\s*\("),
     re.compile(r"\bglobalThis\.open\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]open['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\bglobalThis\s*\[\s*['\"]open['\"]\s*\]\s*\("),
+    re.compile(r"\bglobalThis\s*\[\s*['\"]open['\"]\s*\]\s*\?\.\s*\("),
     re.compile(r"\b(?:globalThis\.|window\.|document\.)?location\.(?:href|assign|replace)\b"),
     re.compile(r"\b(?:globalThis\.|window\.|document\.)?location\.(?:assign|replace)\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis\.|window\.|document\.)?location\s*\[\s*['\"](?:href|assign|replace)['\"]\s*\]"),
@@ -437,23 +451,33 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"]click['\"]\s*\]\s*\("),
     re.compile(r"\bHTML(?:Anchor|Button)Element\.prototype\.click\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.share\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator)\.share\s*\?\.\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.share\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]share['\"]\s*\]\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]share['\"]\s*\]\s*\?\.\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]share['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*share\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*share\s*\?\.\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*share\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\bpostMessage\s*\("),
+    re.compile(r"\bpostMessage\s*\?\.\s*\("),
+    re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$.]*\.postMessage\s*\?\.\s*\("),
     re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$.]*\.postMessage\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]postMessage['\"]\s*\]\s*\("),
+    re.compile(r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]postMessage['\"]\s*\]\s*\?\.\s*\("),
     re.compile(r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]postMessage['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\b(?:BroadcastChannel|MessageChannel)\s*\("),
     re.compile(r"\b(?:BroadcastChannel|MessageChannel|(?:globalThis|window)\.(?:BroadcastChannel|MessageChannel))\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.clipboard\.(?:read|readText|write|writeText)\s*\("),
+    re.compile(r"\b(?:navigator|window\.navigator)\.clipboard\.(?:read|readText|write|writeText)\s*\?\.\s*\("),
     re.compile(
         r"\b(?:navigator|window\.navigator)\.clipboard\.(?:read|readText|write|writeText)\.(?:call|apply)\s*\("
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator)\.clipboard\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("
+    ),
+    re.compile(
+        r"\b(?:navigator|window\.navigator)\.clipboard\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\?\.\s*\("
     ),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\.\s*(?:read|readText|write|writeText)\s*\("),
     re.compile(
@@ -632,7 +656,7 @@ BROWSER_STORAGE_PERSISTENCE_PATTERNS: list[re.Pattern[str]] = [
 ]
 
 BRIDGE_MODULE_DIRECT_TARGET_PATTERN = re.compile(
-    r"\b(?:fetcher|fetch)\s*\(\s*("
+    r"\b(?:fetcher|fetch)\s*(?:\?\.)?\s*\(\s*("
     r"['\"]https?://"
     r"|['\"][^'\"]*/v1/"
     r"|['\"][^'\"]*/chief-of-staff/"

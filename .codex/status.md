@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened repository authority-boundary validation so optional-chained browser side-channel calls and optional-chained direct URL fetches cannot bypass governed bridge, external-send, browser-context, clipboard, or service-worker guardrails.
 - Evaluator coverage now explicitly requires seasonal Conversation Capability Intelligence answers over recent and previous 28 day local metadata windows.
 - Repository authority-boundary validation now blocks mixed bracket/dot `URL.createObjectURL`, IndexedDB, Cache Storage, and cookie-write aliases so hidden executable or persistence paths cannot bypass the governed Napoleon bridge.
 - Rendered proof export coverage now verifies proof-alignment metadata for both selected-agent and target-capability-only Napoleon response proof exports and telemetry.
