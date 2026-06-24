@@ -219,6 +219,10 @@ paths:
     post:
       responses:
         "202": {description: evolution}
+  /evolution/proposals/{proposal_id}/status:
+    get:
+      responses:
+        "200": {description: evolution status}
   /agents:
     get:
       responses:
@@ -249,6 +253,7 @@ paths:
                 "/chief-of-staff/reviews/governance",
                 "/chief-of-staff/reviews/new-agent-proposals",
                 "/evolution/proposals",
+                "/evolution/proposals/{proposal_id}/status",
                 "/governance/evaluate",
                 "/observability/traces",
             ],
@@ -272,10 +277,12 @@ paths:
         self.assertNotIn("/chief-of-staff/reviews/governance", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/chief-of-staff/reviews/new-agent-proposals", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/evolution/proposals", report["napoleonReviewPathsNeedingRuntimeMapping"])
+        self.assertNotIn("/evolution/proposals/{proposal_id}/status", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/governance/evaluate", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/observability/traces", report["napoleonReviewPathsNeedingRuntimeMapping"])
         self.assertNotIn("/observability/traces", report["napoleonReviewPathsWithoutLocalAlias"])
         self.assertNotIn("/evolution/proposals", report["napoleonReviewPathsWithoutLocalAlias"])
+        self.assertNotIn("/evolution/proposals/{proposal_id}/status", report["napoleonReviewPathsWithoutLocalAlias"])
         steering_alias = next(
             alias
             for alias in report["conciergeLocalHandoffAliases"]

@@ -51,6 +51,7 @@ The Napoleon advisory harness snapshot exposes:
 - `/observability/traces`
 - `/profiles/{profile_id}`
 - `/evolution/proposals`
+- `/evolution/proposals/{proposal_id}/status`
 
 The Napoleon snapshot declares `x-napoleon-runtime-authority: false`, so the path mismatch is not an authority grant. Concierge should continue to treat local `/v1/concierge/...` paths and Napoleon runtime paths as separate named mappings, with descriptor preflight, evidence comparison, response validation, and proposal-only boundaries deciding whether a given handoff may be attempted.
 
@@ -71,6 +72,8 @@ Governance review handoff now has a named Napoleon review-path mapping. Generate
 Evolution proposal review handoff now has the same named Napoleon review-path mapping for Chief of Staff steering and taxonomy review packets. Generated Concierge-compatible endpoints, including the local harness, continue to use `/v1/concierge/chief-of-staff/steering` with the `chief_of_staff_steering_handoff` request kind. Napoleon root endpoints or explicit evolution proposal review endpoints use `/chief-of-staff/reviews/evolution-proposals` with the `evolution_proposal_review_handoff` request kind. Both paths still require descriptor preflight, Rehearsal Mode off, matching governance/trace/audit proof, and explicit false side-effect fields before Concierge displays the handoff as reviewed. The governed route panel must show that evolution application, approval capture, registry update, memory write, agent dispatch, external send, trace append, routing, and local application remain blocked Concierge effects.
 
 Evolution proposal submission now has a named Napoleon path mapping. Napoleon root endpoints or explicit evolution proposal endpoints use `/evolution/proposals` with the `evolution_proposal_submission_handoff` request kind. The handoff is proposal-only evidence for Napoleon review; Concierge still cannot apply evolution changes, write memory, update registries, capture approval, dispatch agents, send externally, append traces, route tasks, or treat the response as local authority.
+
+Evolution proposal status now has a named read-only Napoleon path mapping. Napoleon root endpoints or explicit evolution proposal status endpoints use `/evolution/proposals/{proposal_id}/status` with the `evolution_proposal_status_handoff` request kind. The refresh can update only browser-local lifecycle metadata after descriptor preflight advertises the handoff; Concierge still cannot capture approval, apply evolution, update registries, write memory, dispatch agents, send externally, append traces, route tasks, or treat the status response as local authority.
 
 Observability trace handoff now has a named Napoleon path mapping and a descriptor-gated packet sender. Napoleon root endpoints or explicit observability trace endpoints use `/observability/traces` with the `observability_trace_handoff` request kind. The handoff is retained evidence only; Concierge still cannot append Napoleon traces, capture approval, write memory, dispatch agents, route tasks, send externally, apply changes, or treat the response as audit authority. Responses that claim trace append, audit authority, or other blocked effects are contract mismatches. The governed route panel must show that trace append, audit authority, approval capture, memory write, task routing, agent dispatch, external send, and local application remain blocked Concierge effects.
 
@@ -98,6 +101,7 @@ The explicit request/review path currently mapped is:
 - `/chief-of-staff/reviews/governance`
 - `/chief-of-staff/reviews/new-agent-proposals`
 - `/evolution/proposals`
+- `/evolution/proposals/{proposal_id}/status`
 - `/governance/evaluate`
 - `/observability/traces`
 - `/agents`
