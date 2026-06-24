@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local text answers for Napoleon-required-action questions from sanitized evaluator validation imports, with count-only telemetry and no live Napoleon contact.
 - Added a focused local export for sanitized Napoleon required-action packets from evaluator validation imports, with count-only telemetry and explicit non-approval/no-side-effect boundaries.
 - Added count-only telemetry for Napoleon required-action packets during evaluator validation imports and readiness proof exports, without copying packet action IDs, packet target paths, or packet action text into telemetry.
 - Hardened evaluator validation imports so Napoleon required-action packets must be Napoleon-owned and carry explicit false side-effect boundary flags before they can appear in Text Concierge readiness evidence.

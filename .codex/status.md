@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local text answers for Napoleon-required-action questions from sanitized evaluator validation imports, so an operator can ask what Napoleon needs to fix next without triggering live Napoleon contact or leaking action IDs, target paths, or action text into telemetry.
 - Added a focused local export for sanitized Napoleon required-action packets from evaluator validation imports, so the current Napoleon-side evaluator-review blocker can be handed off without endpoint, token, prompt, response, approval, memory-write, agent-dispatch, external-send, or local-application authority.
 - Added count-only Napoleon required-action telemetry to evaluator validation imports and readiness proof exports so operators can audit that a Napoleon-side action is present without copying packet action IDs, packet target paths, or packet action text into telemetry.
 - Hardened Text Concierge evaluator validation imports so Napoleon required-action packets must be owned by Napoleon and include explicit false side-effect boundaries before they can be shown or exported as readiness evidence.

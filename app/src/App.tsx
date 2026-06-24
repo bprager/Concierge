@@ -349,6 +349,81 @@ function formatCapabilityAnswer(
   return `${answer.summary}\n\n${rows}${latestTurnEvidence}\n\nProfile scope: ${profileMode}. Evidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
 }
 
+function isNapoleonRequiredActionQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  if (!lower.includes("napoleon")) return false;
+  return (
+    /\brequired actions?\b/.test(lower) ||
+    /\bpromotion blockers?\b/.test(lower) ||
+    /\bwhat\b.*\b(needs?|must|should)\b.*\b(fix|do|add|advertise|expose|implement)\b/.test(lower) ||
+    /\bwhat\b.*\b(blocking|blocked|blocker)\b/.test(lower)
+  );
+}
+
+function formatNapoleonRequiredActionAnswer(
+  evaluatorImport: EvaluatorValidationImport | null,
+  profileMode: NapoleonProfileMode,
+): { content: string; actionCount: number; status: string; runtimeValidationSource: string } {
+  if (!evaluatorImport) {
+    return {
+      content:
+        "No Napoleon required-action evidence is currently imported. Import a sanitized real-runtime evaluator validation summary first; this answer is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, or send externally.",
+      actionCount: 0,
+      status: "not_imported",
+      runtimeValidationSource: "unavailable",
+    };
+  }
+
+  const actions = evaluatorImport.validation.napoleonRequiredActions ?? [];
+  const runtimeValidationSource = evaluatorImport.runtimeValidationSource ?? "unavailable";
+  if (!actions.length && evaluatorImport.validation.descriptorHandoffRequiredAction) {
+    return {
+      content: [
+        `Current Napoleon-side blocker from sanitized evaluator evidence: ${evaluatorImport.validation.descriptorHandoffRequiredAction}`,
+        `Evaluator status: ${evaluatorImport.validation.status}. Runtime validation source: ${runtimeValidationSource}.`,
+        `Profile scope: ${profileMode}. This is local review evidence only; Concierge did not approve, apply, write memory, dispatch agents, or send externally.`,
+      ].join("\n\n"),
+      actionCount: 0,
+      status: evaluatorImport.validation.status,
+      runtimeValidationSource,
+    };
+  }
+
+  if (!actions.length) {
+    return {
+      content: [
+        "No Napoleon required-action packet is currently present in the imported evaluator evidence.",
+        `Evaluator status: ${evaluatorImport.validation.status}. Runtime validation source: ${runtimeValidationSource}.`,
+        `Profile scope: ${profileMode}. This is local review evidence only; Concierge did not approve, apply, write memory, dispatch agents, or send externally.`,
+      ].join("\n\n"),
+      actionCount: 0,
+      status: evaluatorImport.validation.status,
+      runtimeValidationSource,
+    };
+  }
+
+  const rows = actions
+    .map((action) => {
+      const target = action.targetPath ? ` Target: ${action.targetPath}.` : "";
+      const requestKind = action.requestKind ? ` Request kind: ${action.requestKind}.` : "";
+      const required = action.requiredAction ? ` Required change: ${action.requiredAction}` : "";
+      return `- ${action.id}.${target}${requestKind}${required}`;
+    })
+    .join("\n");
+
+  return {
+    content: [
+      `Current Napoleon required actions from sanitized evaluator evidence (${actions.length}):`,
+      rows,
+      `Evaluator status: ${evaluatorImport.validation.status}. Runtime validation source: ${runtimeValidationSource}.`,
+      `Profile scope: ${profileMode}. This is local review evidence only; Concierge did not contact Napoleon for this answer, approve, apply, write memory, dispatch agents, or send externally.`,
+    ].join("\n\n"),
+    actionCount: actions.length,
+    status: evaluatorImport.validation.status,
+    runtimeValidationSource,
+  };
+}
+
 function detailValue(details: Array<{ label: string; value: string }>, label: string): string {
   return details.find((detail) => detail.label === label)?.value ?? "not returned";
 }
@@ -1938,6 +2013,50 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setInput(value);
   }
 
+  function answerNapoleonRequiredActionQuestion(content: string, traceId: string, turnId: string, activeProfileMode: NapoleonProfileMode) {
+    if (!isNapoleonRequiredActionQuestion(content)) return false;
+
+    const answer = formatNapoleonRequiredActionAnswer(evaluatorValidationImport, activeProfileMode);
+    emitEvent("napoleon_required_actions_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      evaluatorStatus: answer.status,
+      runtimeValidationSource: answer.runtimeValidationSource,
+      requiredActionCount: answer.actionCount,
+      localAnswerOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    clearNapoleonPresentation();
+    setLastBridgeFailure(null);
+    setLastReview(null);
+    clearGovernanceReviewHandoff();
+    setLastMemoryReviewState(null);
+    setLastMemoryReview(null);
+    setMemorySubmission(null);
+    setMemorySubmissionFailure(null);
+    return true;
+  }
+
   function rehearse() {
     const content = input.trim();
     if (!content) return;
@@ -1945,6 +2064,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
     const activeProfileMode = mapProfileToNapoleonMode(profile);
+    if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
     const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
       profileMode: activeProfileMode,
     });
@@ -2142,6 +2262,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const traceId = newTraceId();
       const turnId = `turn_${Date.now().toString(16)}`;
       const activeProfileMode = mapProfileToNapoleonMode(profile);
+      if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
       const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
         profileMode: activeProfileMode,
       });
