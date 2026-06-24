@@ -46,6 +46,7 @@ interface NapoleonResponseProofMetadata {
   recommendation: string;
   selectedAgents: string[];
   selectedAgentReasons: string[];
+  selectedAgentContributions: string[];
   allowedEffects: string[];
   blockedEffects: string[];
 }
@@ -131,6 +132,7 @@ function sanitizeResponseProofMetadata(metadata: NapoleonResponseProofMetadata):
     recommendation: sanitizeResponseProofString(metadata.recommendation),
     selectedAgents: sanitizeResponseProofList(metadata.selectedAgents),
     selectedAgentReasons: sanitizeResponseProofList(metadata.selectedAgentReasons),
+    selectedAgentContributions: sanitizeResponseProofList(metadata.selectedAgentContributions),
     allowedEffects: sanitizeResponseProofEffectList(metadata.allowedEffects),
     blockedEffects: sanitizeResponseProofEffectList(metadata.blockedEffects),
   };
@@ -163,6 +165,9 @@ export function buildSuccessfulNapoleonResponsePresentation(
       recommendation,
       selectedAgents: agentNames,
       selectedAgentReasons: selectedAgents.map((agent) => `${agent.displayName}: ${agent.selectionReason}`),
+      selectedAgentContributions: selectedAgents
+        .filter((agent) => agent.contributionSummary?.trim())
+        .map((agent) => `${agent.displayName}: ${agent.contributionSummary}`),
       allowedEffects: response.delegation?.allowedEffects ?? ["prepare_advisory_response"],
       blockedEffects: response.delegation?.blockedEffects ?? response.governanceDecision.blocked_effects,
     },
@@ -205,6 +210,7 @@ export function exportNapoleonResponseProofJson(
           recommendation: "unavailable",
           selectedAgents: [],
           selectedAgentReasons: [],
+          selectedAgentContributions: [],
           allowedEffects: [],
           blockedEffects: [],
         },
@@ -228,6 +234,7 @@ export function exportNapoleonResponseProofJson(
     recommendation: optionalProofDetailValue(proof, "Napoleon recommendation"),
     selectedAgents: splitList(proofDetailValue(proof, "Selected agents")),
     selectedAgentReasons: splitList(proofDetailValue(proof, "Why selected")),
+    selectedAgentContributions: [],
     allowedEffects: splitList(proofDetailValue(proof, "Allowed effects")),
     blockedEffects: splitList(proofDetailValue(proof, "Blocked effects")),
   });
@@ -255,6 +262,7 @@ export function exportNapoleonResponseProofJson(
         recommendation: metadata.recommendation,
         selectedAgents: metadata.selectedAgents,
         selectedAgentReasons: metadata.selectedAgentReasons,
+        selectedAgentContributions: metadata.selectedAgentContributions,
         allowedEffects: metadata.allowedEffects,
         blockedEffects: metadata.blockedEffects,
       },

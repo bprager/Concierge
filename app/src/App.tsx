@@ -373,10 +373,23 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhat\b.*\beffects?\b.*\b(blocked|allowed)\b/.test(lower) ||
     /\bwhich\b.*\beffects?\b.*\b(blocked|allowed)\b/.test(lower) ||
     /\b(blocked|allowed)\b.*\beffects?\b/.test(lower);
-  if (!lower.includes("napoleon") && !asksAboutReturnedHandler && !asksAboutReturnedEffects) return false;
+  const asksAboutReturnedRecommendation =
+    /\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
+    /\bwhat\b.*\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
+    /\bwhat\b.*\b(that|this|it|answer|response|reply)\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(
+      lower,
+    ) ||
+    /\b(passive brain|selected agent|agent)\b.*\b(found|finding|findings|surfaced|reported|identified|confirmed|verified|assessed|concluded|recommend|recommended|recommends|recommendation)\b/.test(
+      lower,
+    ) ||
+    /\b(what|which)\b.*\b(passive brain|selected agent|agent)\b.*\b(found|recommended|surfaced|reported)\b/.test(lower);
+  if (!lower.includes("napoleon") && !asksAboutReturnedHandler && !asksAboutReturnedEffects && !asksAboutReturnedRecommendation) {
+    return false;
+  }
   return (
     asksAboutReturnedHandler ||
     asksAboutReturnedEffects ||
+    asksAboutReturnedRecommendation ||
     /\bwho\b.*\bhandled\b/.test(lower) ||
     /\bwho\b.*\banswered\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b/.test(lower) ||
@@ -531,6 +544,8 @@ function formatNapoleonDelegationAnswer(
   allowedEffectCount: number;
   blockedEffectCount: number;
   targetCapabilityReturned: boolean;
+  recommendationReturned: boolean;
+  selectedAgentContributionCount: number;
   traceReturned: boolean;
   auditReturned: boolean;
 } {
@@ -543,6 +558,8 @@ function formatNapoleonDelegationAnswer(
       allowedEffectCount: 0,
       blockedEffectCount: 0,
       targetCapabilityReturned: false,
+      recommendationReturned: false,
+      selectedAgentContributionCount: 0,
       traceReturned: false,
       auditReturned: false,
     };
@@ -558,12 +575,19 @@ function formatNapoleonDelegationAnswer(
   const allowedEffects = metadata.allowedEffects.length ? metadata.allowedEffects.join(", ") : "not returned";
   const blockedEffects = metadata.blockedEffects.length ? metadata.blockedEffects.join(", ") : "not returned";
   const targetCapability = metadata.targetCapability || "not returned";
+  const recommendation =
+    metadata.recommendation && metadata.recommendation !== "unavailable" ? metadata.recommendation : "not returned";
+  const selectedAgentContributions = metadata.selectedAgentContributions.length
+    ? metadata.selectedAgentContributions.join("; ")
+    : "not returned";
 
   return {
     content: [
       "Latest Napoleon delegation from returned bridge proof:",
       `Handled by: ${metadata.handledBy}.`,
       `Target capability: ${targetCapability}.`,
+      `Napoleon recommendation: ${recommendation}.`,
+      `Selected-agent contribution: ${selectedAgentContributions}.`,
       `Why selected: ${whySelected}.`,
       `Allowed effects: ${allowedEffects}.`,
       `Blocked effects: ${blockedEffects}.`,
@@ -577,6 +601,8 @@ function formatNapoleonDelegationAnswer(
     allowedEffectCount: metadata.allowedEffects.length,
     blockedEffectCount: metadata.blockedEffects.length,
     targetCapabilityReturned: targetCapability !== "not returned" && targetCapability !== "unavailable",
+    recommendationReturned: recommendation !== "not returned" && recommendation !== "unavailable",
+    selectedAgentContributionCount: metadata.selectedAgentContributions.length,
     traceReturned: trace !== "not returned" && trace !== "unavailable",
     auditReturned: audit !== "not returned" && audit !== "unavailable",
   };
@@ -2432,6 +2458,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       allowedEffectCount: answer.allowedEffectCount,
       blockedEffectCount: answer.blockedEffectCount,
       targetCapabilityReturned: answer.targetCapabilityReturned,
+      recommendationReturned: answer.recommendationReturned,
+      selectedAgentContributionCount: answer.selectedAgentContributionCount,
       traceReturned: answer.traceReturned,
       auditReturned: answer.auditReturned,
       localAnswerOnly: true,

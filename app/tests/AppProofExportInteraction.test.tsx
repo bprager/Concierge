@@ -550,6 +550,39 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(naturalDelegationAnswerEvent?.attributes.selectedAgentCount, 1);
     assert.equal(naturalDelegationAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(naturalDelegationAnswerEvent).includes("Who handled that?"), false);
+    const requestCountBeforeNaturalRecommendationQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What did Napoleon recommend?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let naturalRecommendationAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      naturalRecommendationAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(naturalRecommendationAnswer);
+      assert.ok(
+        naturalRecommendationAnswer.textContent?.includes(
+          "Napoleon recommendation: keeping this as a governed review draft.",
+        ),
+      );
+    });
+    assert.ok(naturalRecommendationAnswer);
+    const naturalRecommendationAnswerText = naturalRecommendationAnswer.textContent ?? "";
+    assert.ok(naturalRecommendationAnswerText.includes("Selected-agent contribution: Passive Brain: bridge context."));
+    assert.ok(naturalRecommendationAnswerText.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
+    assert.equal(requestedUrls.length, requestCountBeforeNaturalRecommendationQuestion);
+    const naturalRecommendationAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(naturalRecommendationAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(naturalRecommendationAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(naturalRecommendationAnswerEvent?.attributes.recommendationReturned, true);
+    assert.equal(naturalRecommendationAnswerEvent?.attributes.selectedAgentContributionCount, 1);
+    assert.equal(naturalRecommendationAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(naturalRecommendationAnswerEvent).includes("What did Napoleon recommend?"), false);
+    assert.equal(JSON.stringify(naturalRecommendationAnswerEvent).includes("keeping this as a governed review draft"), false);
+    assert.equal(JSON.stringify(naturalRecommendationAnswerEvent).includes("bridge context"), false);
     const requestCountBeforeNaturalBlockedEffectsQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "What was blocked?" },

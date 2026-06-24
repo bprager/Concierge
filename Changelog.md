@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local returned-proof answers for Napoleon recommendation and selected-agent contribution follow-ups like "What did Napoleon recommend?" and "What did Passive Brain find?", keeping the answer tied to current bridge proof without a new Napoleon request or raw follow-up/proof telemetry.
 - Added local text answers for Napoleon live-send readiness questions from the current composer preflight, including blocker and next-step guidance, no bridge contact, and telemetry limited to state, booleans, counts, and false side-effect flags.
 - Added local text answers for disabled send-button questions, so Concierge explains the current preflight blocker and next step without contacting Napoleon or emitting prompt text.
 - Added local returned-proof answers for natural review-reference follow-ups like "What review reference should I use?", keeping decision, trace, and audit questions local and non-approving.
