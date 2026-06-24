@@ -24,6 +24,16 @@ class BridgeContractValidationTest(unittest.TestCase):
                     continue
                 self.assertEqual(operation["requestKind"], request_kinds[operation["path"]])
 
+    def test_text_turn_json_schema_requires_openapi_request_kind(self):
+        openapi_schema = validate_repo.load_openapi_request_schema("/v1/concierge/turn")
+        local_schema = validate_repo.load_json("schemas/concierge_text_turn.schema.json")
+
+        self.assertIn("requestKind", local_schema["required"])
+        self.assertEqual(
+            local_schema["properties"]["requestKind"]["const"],
+            openapi_schema["properties"]["requestKind"]["const"],
+        )
+
     def test_governed_bridge_operations_require_bearer_security(self):
         security = validate_repo.load_openapi_bearer_security()
         operations = validate_repo.load_bridge_operations()

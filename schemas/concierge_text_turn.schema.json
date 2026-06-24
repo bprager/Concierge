@@ -4,6 +4,7 @@
   "type": "object",
   "description": "Local Text Concierge turn envelope aligned with Napoleon Chief of Staff, governance, profile, and observability contracts.",
   "required": [
+    "requestKind",
     "traceId",
     "conversationId",
     "turnId",
@@ -19,6 +20,9 @@
     "sourceEvidence"
   ],
   "properties": {
+    "requestKind": {
+      "const": "text_turn"
+    },
     "traceId": {
       "type": "string"
     },

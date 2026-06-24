@@ -1,4 +1,5 @@
 {
+  "requestKind": "text_turn",
   "traceId": "trace_example_text_001",
   "conversationId": "conv_example_text_001",
   "turnId": "turn_example_text_001",
