@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added machine-readable Napoleon required-action packets to sanitized live-runtime validation output when a real `/cos` descriptor does not advertise the evaluator review handoff, naming the required `evaluation_review` handoff, target path, request kind, operation ID, advertising options, and false side-effect boundary.
 - Added reverse Napoleon contract-alignment reporting for named Concierge review/evidence/status targets that are absent from an inspected Napoleon runtime snapshot, keeping local generated targets from being mistaken for exposed runtime routes.
 - Added local Napoleon-compatible harness support and regression coverage for the read-only `/evolution/proposals/{proposal_id}/status` route, with explicit descriptor handoff advertising and false evolution/registry side-effect fields.
 - Clarified canonical backlog and architecture route documentation for evolution proposal status refresh, including its descriptor-gated read-only path, fail-closed profile-scope checks, and non-authorizing boundary.

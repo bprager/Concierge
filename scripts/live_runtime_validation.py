@@ -34,6 +34,28 @@ EVALUATION_REVIEW_HANDOFF_REQUIRED_ACTION = (
     "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, "
     "required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation."
 )
+EVALUATION_REVIEW_NAPOLEON_ACTION = {
+    "id": "advertise_evaluation_review_handoff",
+    "owner": "napoleon",
+    "reason": "real_runtime_promotion_blocker",
+    "handoffName": "evaluation_review",
+    "targetPath": NAPOLEON_EVALUATION_REVIEW_PATH,
+    "requestKind": "evaluation_review_handoff",
+    "operationId": "evaluation_review",
+    "advertiseUsing": [
+        "supportedHandoffs",
+        "supported_handoffs",
+        "required_for",
+        "descriptor route metadata for /chief-of-staff/reviews/evaluation",
+    ],
+    "requiredAction": EVALUATION_REVIEW_HANDOFF_REQUIRED_ACTION,
+    "sideEffectsPerformed": False,
+    "approvalCaptured": False,
+    "memoryWritePerformed": False,
+    "agentDispatchPerformed": False,
+    "externalSendPerformed": False,
+    "appliedLocally": False,
+}
 
 BOUNDARY = (
     "Live runtime validation is evidence only. It is not Napoleon approval, "
@@ -190,6 +212,12 @@ def evaluator_target_metadata(eval_endpoint: str | None) -> dict[str, Any]:
         "evaluatorAgentDispatchPerformed": False,
         "evaluatorExternalSendPerformed": False,
     }
+
+
+def napoleon_required_actions_for_evaluator_failure(failure_reason: str | None) -> list[dict[str, Any]]:
+    if failure_reason != "http_evaluator_handoff_not_advertised":
+        return []
+    return [dict(EVALUATION_REVIEW_NAPOLEON_ACTION)]
 
 
 def descriptor_payload(payload: dict[str, Any]) -> dict[str, Any]:
@@ -492,6 +520,7 @@ def write_sanitized_evaluator_failure_report(
         if failure_reason == "http_evaluator_handoff_not_advertised"
         else None
     )
+    napoleon_required_actions = napoleon_required_actions_for_evaluator_failure(failure_reason)
     path.write_text(
         json.dumps(
             {
@@ -514,6 +543,7 @@ def write_sanitized_evaluator_failure_report(
                     "descriptorHandoffSource": handoff.get("descriptorHandoffSource"),
                     "descriptorHandoffFailureReason": handoff.get("descriptorHandoffFailureReason", "none"),
                     "descriptorHandoffRequiredAction": required_action,
+                    "napoleonRequiredActions": napoleon_required_actions,
                     "authorityBoundary": "Evaluator HTTP failure evidence is sanitized and non-authorizing.",
                 },
                 "live_runtime_sanitization": {
@@ -916,6 +946,7 @@ def eval_target_summary(path: Path) -> dict[str, Any]:
         "descriptorHandoffSource": None,
         "descriptorHandoffFailureReason": "none",
         "descriptorHandoffRequiredAction": None,
+        "napoleonRequiredActions": [],
     }
     if not path.exists():
         return defaults
@@ -939,6 +970,11 @@ def eval_target_summary(path: Path) -> dict[str, Any]:
         "descriptorHandoffSource": target.get("descriptorHandoffSource"),
         "descriptorHandoffFailureReason": target.get("descriptorHandoffFailureReason") or "none",
         "descriptorHandoffRequiredAction": target.get("descriptorHandoffRequiredAction"),
+        "napoleonRequiredActions": (
+            target.get("napoleonRequiredActions")
+            if isinstance(target.get("napoleonRequiredActions"), list)
+            else []
+        ),
     }
 
 
@@ -1033,8 +1069,27 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
     artifact_privacy = summary["artifactPrivacy"]
     boundary = summary["promotionBoundary"]
     readiness = summary["promotionReadiness"]
+    napoleon_actions = summary.get("napoleonRequiredActions", [])
     blocking_reasons = readiness["blockingReasons"] or ["none"]
     checkbox = lambda checked, text: f"- [{'x' if checked else ' '}] {text}"
+    action_lines: list[str] = []
+    if napoleon_actions:
+        for action in napoleon_actions:
+            if not isinstance(action, dict):
+                continue
+            action_lines.extend([
+                f"- Action ID: `{action.get('id')}`",
+                f"- Owner: `{action.get('owner')}`",
+                f"- Handoff: `{action.get('handoffName')}`",
+                f"- Target path: `{action.get('targetPath')}`",
+                f"- Request kind: `{action.get('requestKind')}`",
+                f"- Operation ID: `{action.get('operationId')}`",
+                f"- Advertise using: {', '.join(action.get('advertiseUsing', []))}",
+                f"- Required action: {action.get('requiredAction')}",
+                f"- Side effects performed by Concierge: `{str(action.get('sideEffectsPerformed') is True).lower()}`",
+            ])
+    else:
+        action_lines.append("- none")
     return "\n".join([
         "# Live Runtime Promotion Review Record",
         "",
@@ -1068,6 +1123,10 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- Missing artifact count: `{evaluator['missing_artifact_count']}`",
         f"- Regression count: `{evaluator['regression_count']}`",
         f"- Artifact privacy audit: `{artifact_privacy['status']}`",
+        "",
+        "## Napoleon Required Actions",
+        "",
+        *action_lines,
         "",
         "## Required Checklist",
         "",
@@ -1146,6 +1205,7 @@ def write_summary(
             "appliedLocally": False,
         },
     }
+    summary["napoleonRequiredActions"] = summary["httpEvaluator"].get("napoleonRequiredActions", [])
     summary["promotionReadiness"] = promotion_readiness(summary)
     write_promotion_review(promotion_review_path, summary)
     summary["promotionReview"] = {

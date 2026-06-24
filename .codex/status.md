@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added machine-readable Napoleon required-action packets to sanitized live-runtime validation output when a real `/cos` descriptor does not advertise the evaluator review handoff, so the next Napoleon-side change is named without exposing endpoints, tokens, prompts, or granting authority.
 - Added reverse Napoleon contract-alignment reporting so named Concierge review/evidence/status targets missing from an inspected Napoleon runtime snapshot are visible as non-authorizing runtime exposure gaps.
 - Added local Napoleon-compatible harness support for the descriptor-advertised read-only evolution proposal status route, including `/evolution/proposals/{proposal_id}/status` response metadata, explicit false evolution/registry side-effect fields, and regression coverage.
 - Clarified canonical backlog and architecture documentation for the read-only evolution proposal status route, including descriptor-gated route visibility, fail-closed profile-scope handling, and the no-approval/no-evolution-application boundary.
@@ -706,7 +707,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Next 3 To 5 Priorities
 
-1. Get Napoleon to advertise and expose an evaluator HTTP handoff compatible with `make eval-http`, or provide `NAPOLEON_EVAL_ENDPOINT`; real `/cos/descriptor`, `/cos/text-turn`, `/cos/trace/{trace_id}`, and `/cos/capabilities` evidence now passes, but promotion remains blocked because the current `/cos` descriptor does not advertise evaluation review.
+1. Use the new `napoleonRequiredActions` packet from `make live-runtime-validation` to get Napoleon to advertise and expose the `evaluation_review` handoff for `/chief-of-staff/reviews/evaluation`, or provide `NAPOLEON_EVAL_ENDPOINT`; real `/cos/descriptor`, `/cos/text-turn`, `/cos/trace/{trace_id}`, and `/cos/capabilities` evidence now passes, but promotion remains blocked because the current `/cos` descriptor does not advertise evaluation review.
 2. Run `make napoleon-contract-alignment` against each new Napoleon integration OpenAPI snapshot before changing bridge paths.
 3. Run `make live-runtime-validation` against a real Napoleon runtime endpoint once the bridge paths and response shapes are aligned.
 4. Validate governance review, memory proposal, steering, and taxonomy handoffs against a real Napoleon runtime once the descriptor exposes live transport URLs and credentials.
