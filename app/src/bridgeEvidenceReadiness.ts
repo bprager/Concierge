@@ -460,6 +460,66 @@ function proofField(proof: Record<string, unknown>, path: string[]): string {
   return String(current);
 }
 
+function liveRuntimeSectionPassed(section: Record<string, unknown>): boolean {
+  return section.status === "passed";
+}
+
+function liveRuntimeSectionSideEffectClaimed(section: Record<string, unknown>): boolean {
+  const sideEffectKeys = [
+    "approvalCaptured",
+    "memoryWritePerformed",
+    "agentDispatchPerformed",
+    "externalSendPerformed",
+    "routingPerformed",
+    "registryUpdatePerformed",
+    "traceAppendPerformed",
+    "localApplicationPerformed",
+    "appliedLocally",
+  ];
+  if (sideEffectKeys.some((key) => section[key] === true)) return true;
+  const submissions = Array.isArray(section.submissions) ? section.submissions : [];
+  return submissions.some(
+    (submission) =>
+      submission &&
+      typeof submission === "object" &&
+      !Array.isArray(submission) &&
+      liveRuntimeSectionSideEffectClaimed(submission as Record<string, unknown>),
+  );
+}
+
+function liveRuntimePacketEvidencePassed(section: Record<string, unknown>): boolean {
+  const submissions = Array.isArray(section.submissions) ? section.submissions : [];
+  const targetPaths = new Set(
+    submissions
+      .filter((submission): submission is Record<string, unknown> => {
+        return Boolean(submission && typeof submission === "object" && !Array.isArray(submission));
+      })
+      .map((submission) => submission.targetPath),
+  );
+  return (
+    liveRuntimeSectionPassed(section) &&
+    section.submissionCount === 2 &&
+    targetPaths.has("/chief-of-staff/requests") &&
+    targetPaths.has("/governance/evaluate") &&
+    submissions.every((submission) => {
+      if (!submission || typeof submission !== "object" || Array.isArray(submission)) return false;
+      const record = submission as Record<string, unknown>;
+      return (
+        record.status === "passed" &&
+        record.governanceDecisionObserved === true &&
+        record.traceEnvelopeObserved === true &&
+        record.auditEnvelopeObserved === true &&
+        !liveRuntimeSectionSideEffectClaimed(record)
+      );
+    }) &&
+    !liveRuntimeSectionSideEffectClaimed(section)
+  );
+}
+
+function liveRuntimePromotionGateAccepted(gate: unknown): boolean {
+  return gate === "real_runtime_evidence_available" || gate === "ready_for_human_review";
+}
+
 export function compareBridgeReadinessProofs(
   previousJson: string | null,
   currentJson: string,
@@ -601,6 +661,7 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
   const evidence = nestedRecord(summary, "bridgeEvidence");
   const runtimeValidation = nestedRecord(summary, "runtimeValidation");
   const evaluator = nestedRecord(summary, "httpEvaluator");
+  const contractPackets = nestedRecord(summary, "contractPacketSubmissions");
   const artifactPrivacy = nestedRecord(summary, "artifactPrivacy");
   const promotionReadiness = nestedRecord(summary, "promotionReadiness");
   const boundary = nestedRecord(summary, "promotionBoundary");
@@ -612,7 +673,11 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
     "localApplicationPerformed",
     "appliedLocally",
   ];
-  const sideEffectClaimed = sideEffectKeys.some((key) => boundary[key] === true);
+  const sideEffectClaimed =
+    sideEffectKeys.some((key) => boundary[key] === true) ||
+    liveRuntimeSectionSideEffectClaimed(evidence) ||
+    liveRuntimeSectionSideEffectClaimed(evaluator) ||
+    liveRuntimeSectionSideEffectClaimed(contractPackets);
 
   if (sideEffectClaimed) {
     return {
@@ -623,11 +688,12 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
 
   if (
     runtimeValidation.source !== "real_runtime" ||
-    promotionReadiness.gate !== "real_runtime_evidence_available" ||
+    !liveRuntimePromotionGateAccepted(promotionReadiness.gate) ||
     promotionReadiness.locallySafeToConsider !== true ||
-    evaluator.status !== "passed" ||
-    artifactPrivacy.status !== "passed" ||
-    evidence.status !== "passed" ||
+    !liveRuntimeSectionPassed(evaluator) ||
+    !liveRuntimePacketEvidencePassed(contractPackets) ||
+    !liveRuntimeSectionPassed(artifactPrivacy) ||
+    !liveRuntimeSectionPassed(evidence) ||
     evidence.captureState !== "passed" ||
     evidence.comparisonState !== "passed" ||
     evidence.lastEvidenceStatus !== "success"

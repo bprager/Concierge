@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened accepted live-runtime validation summary imports so Text Concierge now requires passed governed contract-packet submission evidence for both Chief of Staff request and governance evaluation handoffs, accepts the runner's `ready_for_human_review` promotion gate, and rejects packet evidence that claims local side effects.
 - Added combined live-runtime validation for descriptor-advertised Chief of Staff request and governance evaluation packet submissions, with sanitized packet evidence, promotion gating, artifact privacy coverage, and fail-closed missing-handoff handling.
 - Expanded app-level local harness smoke coverage to submit descriptor-gated Chief of Staff request and governance evaluation packets through the governed packet path while preserving evidence-only, no-side-effect results.
 - Added evaluator coverage for governed Chief of Staff request and governance evaluation packet submissions, including descriptor/Rehearsal gates, evidence-only returned proof, stale clearing, and no-side-effect boundaries.

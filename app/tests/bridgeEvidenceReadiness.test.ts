@@ -892,11 +892,59 @@ test("imports successful live-runtime summary as accepted readiness proof metada
         status: "passed",
         targetPath: "/chief-of-staff/reviews/evaluation",
       },
+      contractPacketSubmissions: {
+        status: "passed",
+        submissionCount: 2,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        routingPerformed: false,
+        registryUpdatePerformed: false,
+        traceAppendPerformed: false,
+        appliedLocally: false,
+        submissions: [
+          {
+            status: "passed",
+            targetPath: "/chief-of-staff/requests",
+            requestKind: "chief_of_staff_request_handoff",
+            operationId: "chief_of_staff_request",
+            governanceDecisionObserved: true,
+            traceEnvelopeObserved: true,
+            auditEnvelopeObserved: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            routingPerformed: false,
+            registryUpdatePerformed: false,
+            traceAppendPerformed: false,
+            appliedLocally: false,
+          },
+          {
+            status: "passed",
+            targetPath: "/governance/evaluate",
+            requestKind: "governance_evaluation_handoff",
+            operationId: "governance_evaluation",
+            governanceDecisionObserved: true,
+            traceEnvelopeObserved: true,
+            auditEnvelopeObserved: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            routingPerformed: false,
+            registryUpdatePerformed: false,
+            traceAppendPerformed: false,
+            appliedLocally: false,
+          },
+        ],
+      },
       artifactPrivacy: {
         status: "passed",
       },
       promotionReadiness: {
-        gate: "real_runtime_evidence_available",
+        gate: "ready_for_human_review",
         locallySafeToConsider: true,
       },
       promotionBoundary: {
@@ -915,8 +963,118 @@ test("imports successful live-runtime summary as accepted readiness proof metada
     operationId: "text_turn",
     targetPath: "/cos/text-turn",
     status: "success",
-    promotionGate: "real_runtime_evidence_available",
+    promotionGate: "ready_for_human_review",
   });
+});
+
+test("rejects live-runtime summary when governed packet evidence is missing or failed", () => {
+  const missingPackets = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      runtimeValidation: { source: "real_runtime" },
+      bridgeEvidence: {
+        status: "passed",
+        lastEvidenceStatus: "success",
+        lastOperationId: "text_turn",
+        lastTargetPath: "/cos/text-turn",
+        captureState: "passed",
+        comparisonState: "passed",
+      },
+      httpEvaluator: { status: "passed" },
+      artifactPrivacy: { status: "passed" },
+      promotionReadiness: { gate: "ready_for_human_review", locallySafeToConsider: true },
+      promotionBoundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      },
+    }),
+  );
+  const failedPackets = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      runtimeValidation: { source: "real_runtime" },
+      bridgeEvidence: {
+        status: "passed",
+        lastEvidenceStatus: "success",
+        lastOperationId: "text_turn",
+        lastTargetPath: "/cos/text-turn",
+        captureState: "passed",
+        comparisonState: "passed",
+      },
+      httpEvaluator: { status: "passed" },
+      contractPacketSubmissions: {
+        status: "failed",
+        failureReason: "contract_packet_handoff_not_advertised",
+        submissionCount: 0,
+        submissions: [],
+      },
+      artifactPrivacy: { status: "passed" },
+      promotionReadiness: { gate: "ready_for_human_review", locallySafeToConsider: true },
+      promotionBoundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      },
+    }),
+  );
+
+  assert.equal(missingPackets.status, "rejected");
+  assert.ok(missingPackets.summary.includes("not a successful real-runtime proof"));
+  assert.equal(failedPackets.status, "rejected");
+  assert.ok(failedPackets.summary.includes("not a successful real-runtime proof"));
+});
+
+test("rejects live-runtime summary when governed packet evidence claims side effects", () => {
+  const imported = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      runtimeValidation: { source: "real_runtime" },
+      bridgeEvidence: {
+        status: "passed",
+        lastEvidenceStatus: "success",
+        lastOperationId: "text_turn",
+        lastTargetPath: "/cos/text-turn",
+        captureState: "passed",
+        comparisonState: "passed",
+      },
+      httpEvaluator: { status: "passed" },
+      contractPacketSubmissions: {
+        status: "passed",
+        submissionCount: 2,
+        submissions: [
+          {
+            status: "passed",
+            targetPath: "/chief-of-staff/requests",
+            governanceDecisionObserved: true,
+            traceEnvelopeObserved: true,
+            auditEnvelopeObserved: true,
+            routingPerformed: true,
+          },
+          {
+            status: "passed",
+            targetPath: "/governance/evaluate",
+            governanceDecisionObserved: true,
+            traceEnvelopeObserved: true,
+            auditEnvelopeObserved: true,
+          },
+        ],
+      },
+      artifactPrivacy: { status: "passed" },
+      promotionReadiness: { gate: "ready_for_human_review", locallySafeToConsider: true },
+      promotionBoundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      },
+    }),
+  );
+
+  assert.equal(imported.status, "rejected");
+  assert.ok(imported.summary.includes("forbidden side effect"));
 });
 
 test("rejects unsafe or non-real-runtime accepted readiness proof imports", () => {
