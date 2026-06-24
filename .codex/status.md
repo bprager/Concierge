@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added governed submission controls for current-turn Chief of Staff request and governance evaluation packets, so prepared packets can be sent to `/chief-of-staff/requests` and `/governance/evaluate` only when descriptor preflight advertises the matching handoff and Rehearsal Mode is off, while returned results remain evidence-only and non-authorizing.
 - Hardened local Napoleon contract packet exports so current-turn Chief of Staff request and governance evaluation packets clear when draft input, endpoint, bearer token, descriptor state, Rehearsal Mode, or active profile context changes.
 - Added local-only Napoleon contract packet exports for the current text draft, so Concierge can prepare Chief of Staff request and governance evaluation packets for `/chief-of-staff/requests` and `/governance/evaluate` without contacting Napoleon or claiming approval, memory writes, agent dispatch, routing, registry updates, trace append, external sends, governance override, or local application.
 - Added local blocked-attempt answers for follow-ups such as "Why was that blocked?", so Concierge uses only the latest fail-closed Napoleon turn metadata, avoids a new bridge request, and keeps telemetry to booleans, counts, and false side-effect flags.

@@ -5779,6 +5779,148 @@ test("clears local contract packet exports when bridge context changes", async (
   }
 });
 
+test("submits local contract packet exports through governed Napoleon targets when advertised", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  const postedBodies: Record<string, unknown>[] = [];
+  console.info = () => undefined;
+
+  try {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+              supportedHandoffs: ["chief_of_staff_request", "governance_evaluation"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (url.endsWith("/chief-of-staff/requests") || url.endsWith("/governance/evaluate")) {
+        const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+        postedBodies.push(body);
+        const traceEnvelope = body.traceEnvelope as { trace_id: string; parent_trace_id: string; request_id: string };
+        const isGovernance = url.endsWith("/governance/evaluate");
+        return new Response(
+          JSON.stringify({
+            text: isGovernance
+              ? "Napoleon evaluated the governance packet as review-only evidence."
+              : "Napoleon received the Chief of Staff request packet for review.",
+            governanceDecision: {
+              decision_id: isGovernance ? "decision_governance_packet_submit" : "decision_cos_request_packet_submit",
+              request_id: traceEnvelope.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: isGovernance
+                ? "Governance evaluation is evidence only."
+                : "Chief of Staff request handoff is review only.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: traceEnvelope.trace_id,
+              audit_id: isGovernance ? "audit_governance_packet_submit" : "audit_cos_request_packet_submit",
+            },
+            traceEnvelope: {
+              trace_id: traceEnvelope.trace_id,
+              parent_trace_id: traceEnvelope.parent_trace_id,
+              actor_id: isGovernance ? "napoleon.governance" : "napoleon.chief_of_staff",
+              request_id: traceEnvelope.request_id,
+              decision_id: isGovernance ? "decision_governance_packet_submit" : "decision_cos_request_packet_submit",
+              timestamp: "2026-06-24T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: isGovernance ? "audit_governance_packet_submit" : "audit_cos_request_packet_submit",
+              trace_id: traceEnvelope.trace_id,
+              decision_id: isGovernance ? "decision_governance_packet_submit" : "decision_cos_request_packet_submit",
+              actor_id: isGovernance ? "napoleon.governance" : "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: [`trace:${traceEnvelope.trace_id}`],
+            },
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            routingPerformed: false,
+            registryUpdatePerformed: false,
+            traceAppendPerformed: false,
+            governanceOverrideApplied: false,
+            appliedLocally: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response(JSON.stringify({ error: "unexpected fetch" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Prepare a bridge review request for Napoleon" },
+    });
+
+    const packetPanel = view.getByLabelText("Napoleon contract packet exports");
+    const packets = within(packetPanel);
+    await user.click(packets.getByRole("button", { name: "Export Chief of Staff request packet" }));
+    await user.click(packets.getByRole("button", { name: "Export governance evaluation packet" }));
+    await user.click(packets.getByRole("button", { name: "Send Chief of Staff request packet to Napoleon" }));
+    await user.click(packets.getByRole("button", { name: "Send governance evaluation packet to Napoleon" }));
+
+    await view.findByText("Napoleon received the Chief of Staff request packet for review.");
+    await view.findByText("Napoleon evaluated the governance packet as review-only evidence.");
+    assert.ok(view.getByText(/decision_cos_request_packet_submit/));
+    assert.ok(view.getByText(/audit_cos_request_packet_submit/));
+    assert.ok(view.getByText(/decision_governance_packet_submit/));
+    assert.ok(view.getByText(/audit_governance_packet_submit/));
+    assert.ok(view.getAllByText(/Approval captured: no/).length >= 2);
+    assert.ok(view.getAllByText(/Memory write performed: no/).length >= 2);
+    assert.ok(view.getAllByText(/Agent dispatch performed: no/).length >= 2);
+    assert.ok(view.getAllByText(/External send performed: no/).length >= 2);
+    assert.equal(postedBodies.length, 2);
+    assert.equal(postedBodies[0].requestKind, "chief_of_staff_request_handoff");
+    assert.equal(postedBodies[0].bridgeTargetPath, "/chief-of-staff/requests");
+    assert.equal(postedBodies[1].requestKind, "governance_evaluation_handoff");
+    assert.equal(postedBodies[1].bridgeTargetPath, "/governance/evaluate");
+    assert.equal(JSON.stringify(postedBodies).includes("Prepare a bridge review request for Napoleon"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows explicit core governed route boundaries in governed routes", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([

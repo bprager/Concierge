@@ -107,6 +107,13 @@ import {
   type NapoleonProfileMode,
   type MemoryProposalReviewState,
 } from "./contractBridge.js";
+import {
+  submitChiefOfStaffRequestPacket,
+  submitGovernanceEvaluationPacket,
+  type ChiefOfStaffRequestPacket,
+  type ContractPacketSubmissionResult,
+  type GovernanceEvaluationPacket,
+} from "./contractPacketSubmission.js";
 import { discoverNapoleonDescriptor } from "./descriptorDiscovery.js";
 import {
   submitGovernanceReviewForNapoleonReview,
@@ -1130,8 +1137,16 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
   const [capabilityAnswerDrilldownExportJson, setCapabilityAnswerDrilldownExportJson] = useState<string | null>(null);
+  const [chiefOfStaffRequestPacket, setChiefOfStaffRequestPacket] = useState<ChiefOfStaffRequestPacket | null>(null);
+  const [governanceEvaluationPacket, setGovernanceEvaluationPacket] = useState<GovernanceEvaluationPacket | null>(null);
   const [capabilityReviewPacketExportJson, setCapabilityReviewPacketExportJson] = useState<string | null>(null);
   const [capabilityReviewPacket, setCapabilityReviewPacket] = useState<ExportedCapabilityReviewPacket | null>(null);
+  const [chiefOfStaffRequestPacketSubmission, setChiefOfStaffRequestPacketSubmission] =
+    useState<ContractPacketSubmissionResult | null>(null);
+  const [chiefOfStaffRequestPacketFailure, setChiefOfStaffRequestPacketFailure] = useState<string | null>(null);
+  const [governanceEvaluationPacketSubmission, setGovernanceEvaluationPacketSubmission] =
+    useState<ContractPacketSubmissionResult | null>(null);
+  const [governanceEvaluationPacketFailure, setGovernanceEvaluationPacketFailure] = useState<string | null>(null);
   const [capabilityReviewPacketSubmission, setCapabilityReviewPacketSubmission] =
     useState<ChiefOfStaffSteeringSubmissionResult | null>(null);
   const [capabilityReviewPacketFailure, setCapabilityReviewPacketFailure] = useState<string | null>(null);
@@ -1216,6 +1231,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setSteeringFailure(null);
     setTaxonomyReviewSubmission(null);
     setTaxonomyReviewFailure(null);
+    setChiefOfStaffRequestPacketSubmission(null);
+    setChiefOfStaffRequestPacketFailure(null);
+    setGovernanceEvaluationPacketSubmission(null);
+    setGovernanceEvaluationPacketFailure(null);
     setCapabilityReviewPacketSubmission(null);
     setCapabilityReviewPacketFailure(null);
     setNewAgentProposalSubmission(null);
@@ -1246,8 +1265,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   }
 
   function clearContractPacketExports() {
+    setChiefOfStaffRequestPacket(null);
+    setGovernanceEvaluationPacket(null);
     setChiefOfStaffRequestPacketExportJson(null);
     setGovernanceEvaluationPacketExportJson(null);
+    setChiefOfStaffRequestPacketSubmission(null);
+    setChiefOfStaffRequestPacketFailure(null);
+    setGovernanceEvaluationPacketSubmission(null);
+    setGovernanceEvaluationPacketFailure(null);
   }
 
   function clearCapabilityReviewPacketState() {
@@ -3874,16 +3899,16 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (!currentContract) return;
 
     const operation = getNapoleonReviewOperation("chief_of_staff_request");
-    const packet = {
+    const packet: ChiefOfStaffRequestPacket = {
       schemaVersion: "concierge/napoleon-contract-packet-export/v1",
       packetType: "chief_of_staff_request_handoff",
       generatedBy: "concierge.text",
       conversationId,
       profileMode: currentContract.profileMode,
       bridgeTarget: {
-        operationId: operation.id,
-        path: operation.path,
-        requestKind: operation.requestKind,
+        operationId: "chief_of_staff_request",
+        path: "/chief-of-staff/requests",
+        requestKind: "chief_of_staff_request_handoff",
         transport: "HTTP POST",
       },
       request: currentContract.chiefOfStaffRequest,
@@ -3908,7 +3933,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       },
     };
 
+    setChiefOfStaffRequestPacket(packet);
     setChiefOfStaffRequestPacketExportJson(JSON.stringify(packet, null, 2));
+    setChiefOfStaffRequestPacketSubmission(null);
+    setChiefOfStaffRequestPacketFailure(null);
     emitEvent("chief_of_staff_request_packet_exported", {
       traceId: currentContract.traceEnvelope.trace_id,
       conversationId,
@@ -3932,16 +3960,16 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (!currentContract) return;
 
     const operation = getNapoleonReviewOperation("governance_evaluation");
-    const packet = {
+    const packet: GovernanceEvaluationPacket = {
       schemaVersion: "concierge/napoleon-contract-packet-export/v1",
       packetType: "governance_evaluation_handoff",
       generatedBy: "concierge.text",
       conversationId,
       profileMode: currentContract.profileMode,
       bridgeTarget: {
-        operationId: operation.id,
-        path: operation.path,
-        requestKind: operation.requestKind,
+        operationId: "governance_evaluation",
+        path: "/governance/evaluate",
+        requestKind: "governance_evaluation_handoff",
         transport: "HTTP POST",
       },
       request: currentContract.governanceRequest,
@@ -3968,7 +3996,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       },
     };
 
+    setGovernanceEvaluationPacket(packet);
     setGovernanceEvaluationPacketExportJson(JSON.stringify(packet, null, 2));
+    setGovernanceEvaluationPacketSubmission(null);
+    setGovernanceEvaluationPacketFailure(null);
     emitEvent("governance_evaluation_packet_exported", {
       traceId: currentContract.traceEnvelope.trace_id,
       conversationId,
@@ -3987,6 +4018,44 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       traceAppendPerformed: false,
       appliedLocally: false,
     });
+  }
+
+  async function submitChiefOfStaffRequestPacketExport() {
+    if (!chiefOfStaffRequestPacket) return;
+    try {
+      const result = await submitChiefOfStaffRequestPacket(chiefOfStaffRequestPacket, {
+        conversationId,
+        profile,
+        rehearsalMode,
+        descriptorConnection: currentDescriptorInput(),
+      });
+      setChiefOfStaffRequestPacketSubmission(result);
+      setChiefOfStaffRequestPacketFailure(null);
+    } catch (error) {
+      setChiefOfStaffRequestPacketFailure(
+        describeGovernedHandoffFailure(error, "Chief of Staff request packet handoff", "route tasks or apply effects"),
+      );
+      setChiefOfStaffRequestPacketSubmission(null);
+    }
+  }
+
+  async function submitGovernanceEvaluationPacketExport() {
+    if (!governanceEvaluationPacket) return;
+    try {
+      const result = await submitGovernanceEvaluationPacket(governanceEvaluationPacket, {
+        conversationId,
+        profile,
+        rehearsalMode,
+        descriptorConnection: currentDescriptorInput(),
+      });
+      setGovernanceEvaluationPacketSubmission(result);
+      setGovernanceEvaluationPacketFailure(null);
+    } catch (error) {
+      setGovernanceEvaluationPacketFailure(
+        describeGovernedHandoffFailure(error, "Governance evaluation packet handoff", "override governance"),
+      );
+      setGovernanceEvaluationPacketSubmission(null);
+    }
   }
 
   function createSteeringDraft() {
@@ -4552,7 +4621,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     artifactReadyDetail: "A local Chief of Staff request packet can be exported from the current text turn.",
     artifactBlockedDetail: "Enter a text request before exporting a Chief of Staff request packet.",
     readyNextStepSummary:
-      "Next step: keep this as a local packet until a governed Napoleon request handoff is available.",
+      "Next step: send only when the governed Napoleon request handoff is advertised and Rehearsal Mode is off.",
     rehearsalMode,
     requiredHandoff: "chief_of_staff_request",
   });
@@ -4564,7 +4633,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     artifactReadyDetail: "A local governance evaluation packet can be exported from the current text turn.",
     artifactBlockedDetail: "Enter a text request before exporting a governance evaluation packet.",
     readyNextStepSummary:
-      "Next step: keep this as a local packet until a governed Napoleon governance evaluation handoff is available.",
+      "Next step: send only when the governed Napoleon governance evaluation handoff is advertised and Rehearsal Mode is off.",
     rehearsalMode,
     requiredHandoff: "governance_evaluation",
   });
@@ -4821,6 +4890,54 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <dd>{row.value}</dd>
           </div>
         ))}
+      </dl>
+    );
+  }
+
+  function renderContractPacketSubmissionResponse(
+    result: ContractPacketSubmissionResult,
+    localEffects: string,
+  ) {
+    return (
+      <dl>
+        {describeGovernedReviewResponse(result, localEffects).rows.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
+        <div>
+          <dt>Approval capture boundary</dt>
+          <dd>Approval captured: no</dd>
+        </div>
+        <div>
+          <dt>Memory write boundary</dt>
+          <dd>Memory write performed: no</dd>
+        </div>
+        <div>
+          <dt>Agent dispatch boundary</dt>
+          <dd>Agent dispatch performed: no</dd>
+        </div>
+        <div>
+          <dt>External send boundary</dt>
+          <dd>External send performed: no</dd>
+        </div>
+        <div>
+          <dt>Routing boundary</dt>
+          <dd>Routing performed: no</dd>
+        </div>
+        <div>
+          <dt>Registry update boundary</dt>
+          <dd>Registry update performed: no</dd>
+        </div>
+        <div>
+          <dt>Trace append boundary</dt>
+          <dd>Trace append performed: no</dd>
+        </div>
+        <div>
+          <dt>Local application boundary</dt>
+          <dd>Applied locally: no</dd>
+        </div>
       </dl>
     );
   }
@@ -7558,13 +7675,41 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <button className="secondary" onClick={exportGovernanceEvaluationPacket} disabled={!currentContract}>
               Export governance evaluation packet
             </button>
+            <button
+              className="secondary"
+              onClick={submitChiefOfStaffRequestPacketExport}
+              disabled={!chiefOfStaffRequestPacket || !chiefOfStaffRequestHandoffReadiness.canSubmit}
+            >
+              Send Chief of Staff request packet to Napoleon
+            </button>
+            <button
+              className="secondary"
+              onClick={submitGovernanceEvaluationPacketExport}
+              disabled={!governanceEvaluationPacket || !governanceEvaluationHandoffReadiness.canSubmit}
+            >
+              Send governance evaluation packet to Napoleon
+            </button>
           </div>
           {chiefOfStaffRequestPacketExportJson ? (
             <pre aria-label="Exported Chief of Staff request packet">{chiefOfStaffRequestPacketExportJson}</pre>
           ) : null}
+          {chiefOfStaffRequestPacketFailure ? <p className="warning">{chiefOfStaffRequestPacketFailure}</p> : null}
+          {chiefOfStaffRequestPacketSubmission
+            ? renderContractPacketSubmissionResponse(
+                chiefOfStaffRequestPacketSubmission,
+                "request handed off for Napoleon review only; no task routing, trace append, registry update, approval capture, memory write, agent dispatch, external send, or local application.",
+              )
+            : null}
           {governanceEvaluationPacketExportJson ? (
             <pre aria-label="Exported governance evaluation packet">{governanceEvaluationPacketExportJson}</pre>
           ) : null}
+          {governanceEvaluationPacketFailure ? <p className="warning">{governanceEvaluationPacketFailure}</p> : null}
+          {governanceEvaluationPacketSubmission
+            ? renderContractPacketSubmissionResponse(
+                governanceEvaluationPacketSubmission,
+                "governance evaluation handed off as evidence only; no governance override, approval capture, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
+              )
+            : null}
         </section>
         <section className={`latest-napoleon-turn ${latestNapoleonTurnSummary.status}`} aria-label="Latest Napoleon turn">
           <div>
