@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added proposal-only new-agent proposal review from Capability Intelligence: the Text UI can draft/export a Napoleon-owned candidate agent packet from a capability review packet, show descriptor-gated handoff readiness, submit only to `/chief-of-staff/reviews/new-agent-proposals`, classify the send events as capability signals, and fail closed on registry update or agent activation claims.
 - Aligned descriptor discovery with the generated Napoleon review, request, governance-evaluation, evolution-submission, and new-agent-review target names so real descriptors can advertise those routes as connection metadata without granting approval, registry updates, routing, memory writes, agent dispatch, external sends, trace append, or local application.
 - Repository authority-boundary validation now rejects concatenated bracket process, memory, graph, agent, and tool aliases on arbitrary objects, closing hidden local execution, memory-write, graph-write, agent-routing, and tool-call bypass paths around Napoleon governance.
 - Rendered voice/avatar coverage now proves the current returned Napoleon proof path before export: voice shaping, avatar state, and avatar expression preserve returned bridge provenance only while the proof is current, do not make new network calls, and still report no playback, animation, agent dispatch, or local side effects.
