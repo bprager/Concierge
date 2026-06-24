@@ -694,6 +694,25 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_mixed_bracket_dot_navigator_side_channels(self):
+        for source in [
+            'await window["navigator"].clipboard.writeText(secretProofJson);',
+            'await globalThis["navigator"].clipboard.readText();',
+            'await window["navigator"].share({ text: secretProofJson });',
+            'await globalThis["navigator"].share.call(globalThis.navigator, { text: secretProofJson });',
+            'window["navigator"].serviceWorker.register("/hidden.js");',
+            'globalThis["navigator"].serviceWorker.register.call(globalThis.navigator.serviceWorker, "/hidden.js");',
+            'window["navigator"].permissions.query(opts);',
+            'globalThis["navigator"].geolocation.getCurrentPosition(cb);',
+            'window["navigator"].usb.requestDevice(opts);',
+            'globalThis["navigator"].credentials.get(opts);',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_clipboard_side_channels(self):
         for source in [
             "await navigator.clipboard.writeText(secretProofJson);",

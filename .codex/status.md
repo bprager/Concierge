@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-06-23
+Last updated: 2026-06-24
 
 ## Current Project State
 
@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened repository authority-boundary validation for mixed bracket/dot `navigator` aliases, covering clipboard, share, service-worker registration, permission, geolocation, device, and credential side channels so UI code cannot move prompts, proof data, tokens, or local-device access around the governed Napoleon bridge.
 - Added rendered coverage proving remote Napoleon governance deny failures appear in the persistent delegation panel with failure reason, returned governance state, blocked effects, next step, and no selected-agent or recommendation attribution.
 - Added persistent Napoleon delegation panel rendering and coverage for post-bridge contract mismatch and remote no-go failures, showing failure reason, governance when returned, blocked effects, and next step without selected-agent or Napoleon recommendation attribution.
 - Added specific Napoleon delegation panel next-step guidance and rendered coverage for descriptor authentication failure and descriptor timeout states, keeping selected-agent and Napoleon recommendation attribution absent while blocked effects remain visible.

@@ -326,6 +326,12 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
         r"\.\s*(?:usb|serial|hid|bluetooth|credentials)\s*"
         r"\.\s*(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\s*"
+        r"\("
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
+        r"\.\s*(?:usb|serial|hid|bluetooth|credentials)\s*"
+        r"\.\s*(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\s*"
         r"\.\s*(?:call|apply)\s*\("
     ),
     re.compile(
@@ -340,6 +346,10 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
+        r"\.\s*permissions\s*\.\s*query\s*\("
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
         r"\.\s*permissions\s*\.\s*query\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(
@@ -351,6 +361,10 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"]geolocation['\"]\s*\]"
         r"\s*\[\s*['\"](?:getCurrentPosition|watchPosition)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
+        r"\.\s*geolocation\s*\.\s*(?:getCurrentPosition|watchPosition)\s*\("
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
@@ -387,6 +401,10 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:navigator|window\.navigator)\.serviceWorker\.register\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]serviceWorker['\"]\s*\]\s*\[\s*['\"]register['\"]\s*\]\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]serviceWorker['\"]\s*\]\s*\[\s*['\"]register['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*serviceWorker\s*\.\s*register\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*serviceWorker\s*\.\s*register\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\bwindow\.open\s*\("),
     re.compile(r"\bwindow\.open\.(?:call|apply)\s*\("),
     re.compile(r"\bwindow\s*\[\s*['\"]open['\"]\s*\]\s*\("),
@@ -422,6 +440,8 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:navigator|window\.navigator)\.share\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]share['\"]\s*\]\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]share['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*share\s*\("),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*share\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\bpostMessage\s*\("),
     re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$.]*\.postMessage\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:window|parent|top|opener|globalThis)\s*\[\s*['\"]postMessage['\"]\s*\]\s*\("),
@@ -436,6 +456,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\b(?:navigator|window\.navigator)\.clipboard\s*\[\s*['\"](?:read|readText|write|writeText)['\"]\s*\]\s*\("
     ),
     re.compile(r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])\s*\[\s*['\"]clipboard['\"]\s*\]\s*\.\s*(?:read|readText|write|writeText)\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*clipboard\s*\.\s*(?:read|readText|write|writeText)\s*\("
+    ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\.\s*clipboard\s*\.\s*(?:read|readText|write|writeText)\s*\.\s*(?:call|apply)\s*\("
     ),
