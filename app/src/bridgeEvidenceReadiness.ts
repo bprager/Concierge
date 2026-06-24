@@ -29,6 +29,7 @@ export interface BridgeReadinessProofInput {
     descriptorHandoffSource?: string | null;
     descriptorHandoffFailureReason?: string;
     descriptorHandoffRequiredAction?: string;
+    napoleonRequiredActions?: NapoleonRequiredAction[];
   };
   generatedAt?: string;
   advisoryCapabilities?: {
@@ -59,6 +60,24 @@ export interface BridgeReadinessProofInput {
     approvalCaptured: false;
     externalSendPerformed: false;
   };
+}
+
+export interface NapoleonRequiredAction {
+  id: string;
+  owner: string;
+  reason?: string;
+  handoffName?: string;
+  targetPath?: string;
+  requestKind?: string;
+  operationId?: string;
+  advertiseUsing?: string[];
+  requiredAction?: string;
+  sideEffectsPerformed: false;
+  approvalCaptured: false;
+  memoryWritePerformed: false;
+  agentDispatchPerformed: false;
+  externalSendPerformed: false;
+  appliedLocally: false;
 }
 
 export interface BridgeReadinessProofChange {
@@ -199,6 +218,27 @@ function sanitizeReadinessProofString(value: string | undefined): string | undef
 
 function sanitizeReadinessProofList(values: string[]): string[] {
   return values.map((value) => sanitizeReadinessProofString(value) ?? "unavailable");
+}
+
+function sanitizeNapoleonRequiredActions(actions: NapoleonRequiredAction[] | undefined): NapoleonRequiredAction[] {
+  if (!actions?.length) return [];
+  return actions.map((action) => ({
+    id: sanitizeReadinessProofString(action.id) ?? "unavailable",
+    owner: sanitizeReadinessProofString(action.owner) ?? "unavailable",
+    ...(action.reason ? { reason: sanitizeReadinessProofString(action.reason) ?? "unavailable" } : {}),
+    ...(action.handoffName ? { handoffName: sanitizeReadinessProofString(action.handoffName) ?? "unavailable" } : {}),
+    ...(action.targetPath ? { targetPath: sanitizeReadinessProofString(action.targetPath) ?? "unavailable" } : {}),
+    ...(action.requestKind ? { requestKind: sanitizeReadinessProofString(action.requestKind) ?? "unavailable" } : {}),
+    ...(action.operationId ? { operationId: sanitizeReadinessProofString(action.operationId) ?? "unavailable" } : {}),
+    ...(action.advertiseUsing ? { advertiseUsing: sanitizeReadinessProofList(action.advertiseUsing) } : {}),
+    ...(action.requiredAction ? { requiredAction: sanitizeReadinessProofString(action.requiredAction) ?? "unavailable" } : {}),
+    sideEffectsPerformed: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    appliedLocally: false,
+  }));
 }
 
 function compareBridgeEvidence(record: BridgeContractEvidence): string | null {
@@ -349,6 +389,7 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
             sanitizeReadinessProofString(input.evaluatorValidation?.descriptorHandoffFailureReason) ?? "none",
           descriptorHandoffRequiredAction:
             sanitizeReadinessProofString(input.evaluatorValidation?.descriptorHandoffRequiredAction) ?? "none",
+          napoleonRequiredActions: sanitizeNapoleonRequiredActions(input.evaluatorValidation?.napoleonRequiredActions),
           connectionValueStored: false,
           credentialValueStored: false,
           requestPayloadStored: false,
@@ -475,6 +516,7 @@ export function compareBridgeReadinessProofs(
     { label: "Evaluator descriptor handoff advertised", path: ["runtimeValidation", "evaluator", "descriptorHandoffAdvertised"] },
     { label: "Evaluator descriptor handoff source", path: ["runtimeValidation", "evaluator", "descriptorHandoffSource"] },
     { label: "Evaluator descriptor handoff required action", path: ["runtimeValidation", "evaluator", "descriptorHandoffRequiredAction"] },
+    { label: "Evaluator Napoleon required actions", path: ["runtimeValidation", "evaluator", "napoleonRequiredActions"] },
   ];
 
   const changes = comparedFields.flatMap(({ label, path }) => {

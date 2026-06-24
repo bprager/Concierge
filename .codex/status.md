@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Preserved sanitized Napoleon required-action packets through Text Concierge evaluator validation imports, UI summaries, readiness proof exports, and proof comparisons, while rejecting required-action metadata that claims side effects.
 - Added machine-readable Napoleon required-action packets to sanitized live-runtime validation output when a real `/cos` descriptor does not advertise the evaluator review handoff, so the next Napoleon-side change is named without exposing endpoints, tokens, prompts, or granting authority.
 - Added reverse Napoleon contract-alignment reporting so named Concierge review/evidence/status targets missing from an inspected Napoleon runtime snapshot are visible as non-authorizing runtime exposure gaps.
 - Added local Napoleon-compatible harness support for the descriptor-advertised read-only evolution proposal status route, including `/evolution/proposals/{proposal_id}/status` response metadata, explicit false evolution/registry side-effect fields, and regression coverage.

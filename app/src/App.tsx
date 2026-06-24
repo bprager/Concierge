@@ -5363,6 +5363,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               {evaluatorValidationImport.validation.descriptorHandoffRequiredAction ? (
                 <span>{evaluatorValidationImport.validation.descriptorHandoffRequiredAction}</span>
               ) : null}
+              {evaluatorValidationImport.validation.napoleonRequiredActions?.length ? (
+                <span>
+                  Napoleon required actions:{" "}
+                  {evaluatorValidationImport.validation.napoleonRequiredActions.map((action) => action.id).join(", ")}
+                </span>
+              ) : null}
               <span>Sanitized local evidence only; not Napoleon approval.</span>
             </div>
           ) : null}

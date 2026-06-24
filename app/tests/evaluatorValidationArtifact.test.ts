@@ -54,6 +54,26 @@ test("accepts sanitized unadvertised evaluator handoff summary", () => {
         descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
         descriptorHandoffRequiredAction:
           "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
+        napoleonRequiredActions: [
+          {
+            id: "advertise_evaluation_review_handoff",
+            owner: "napoleon",
+            reason: "real_runtime_promotion_blocker",
+            handoffName: "evaluation_review",
+            targetPath: "/chief-of-staff/reviews/evaluation",
+            requestKind: "evaluation_review_handoff",
+            operationId: "evaluation_review",
+            advertiseUsing: ["supportedHandoffs", "required_for"],
+            requiredAction:
+              "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
+            sideEffectsPerformed: false,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            appliedLocally: false,
+          },
+        ],
         endpointHostRetained: false,
         tokenRetained: false,
         requestBodyRetained: false,
@@ -82,7 +102,63 @@ test("accepts sanitized unadvertised evaluator handoff summary", () => {
     descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
     descriptorHandoffRequiredAction:
       "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
+    napoleonRequiredActions: [
+      {
+        id: "advertise_evaluation_review_handoff",
+        owner: "napoleon",
+        reason: "real_runtime_promotion_blocker",
+        handoffName: "evaluation_review",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+        requestKind: "evaluation_review_handoff",
+        operationId: "evaluation_review",
+        advertiseUsing: ["supportedHandoffs", "required_for"],
+        requiredAction:
+          "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.",
+        sideEffectsPerformed: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      },
+    ],
   });
+});
+
+test("rejects evaluator required-action metadata that claims side effects", () => {
+  const result = parseEvaluatorValidationArtifact(
+    JSON.stringify({
+      runtimeValidation: {
+        source: "real_runtime",
+      },
+      httpEvaluator: {
+        status: "failed",
+        failureReason: "http_evaluator_handoff_not_advertised",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+        targetRequestKind: "evaluation_review_handoff",
+        targetOperationId: "evaluation_review",
+        napoleonRequiredActions: [
+          {
+            id: "advertise_evaluation_review_handoff",
+            owner: "napoleon",
+            sideEffectsPerformed: true,
+          },
+        ],
+        endpointHostRetained: false,
+        tokenRetained: false,
+        requestBodyRetained: false,
+        responseBodyRetained: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+      },
+    }),
+  );
+
+  assert.equal(result.status, "rejected");
+  assert.equal(result.validation.status, "failed");
+  assert.ok(result.validation.failureReason?.includes("invalid Napoleon required-action metadata"));
 });
 
 test("rejects malformed evaluator validation artifact", () => {

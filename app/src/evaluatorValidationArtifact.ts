@@ -1,4 +1,4 @@
-import type { BridgeReadinessProofInput } from "./bridgeEvidenceReadiness.js";
+import type { BridgeReadinessProofInput, NapoleonRequiredAction } from "./bridgeEvidenceReadiness.js";
 
 export type EvaluatorValidationStatus = "not_run" | "passed" | "failed";
 export type RuntimeValidationSource = "real_runtime" | "local_harness" | "local_simulation";
@@ -133,6 +133,54 @@ function retainedFlagReason(evaluator: Record<string, unknown>): string | null {
   return null;
 }
 
+function cleanStringList(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const cleaned = value.map((item) => cleanString(item)).filter((item): item is string => item !== undefined);
+  return cleaned.length === value.length ? cleaned : null;
+}
+
+function sanitizeNapoleonRequiredActions(value: unknown): NapoleonRequiredAction[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) return null;
+  const actions: NapoleonRequiredAction[] = [];
+  for (const item of value) {
+    const action = objectRecord(item);
+    if (!action) return null;
+    const id = cleanString(action.id);
+    const owner = cleanString(action.owner);
+    if (!id || !owner) return null;
+    const sideEffectFlags = [
+      "sideEffectsPerformed",
+      "approvalCaptured",
+      "memoryWritePerformed",
+      "agentDispatchPerformed",
+      "externalSendPerformed",
+      "appliedLocally",
+    ] as const;
+    if (sideEffectFlags.some((flag) => action[flag] === true)) return null;
+    const advertiseUsing = cleanStringList(action.advertiseUsing);
+    if (action.advertiseUsing !== undefined && advertiseUsing === null) return null;
+    actions.push({
+      id,
+      owner,
+      ...(cleanString(action.reason) ? { reason: cleanString(action.reason) } : {}),
+      ...(cleanString(action.handoffName) ? { handoffName: cleanString(action.handoffName) } : {}),
+      ...(cleanString(action.targetPath) ? { targetPath: cleanString(action.targetPath) } : {}),
+      ...(cleanString(action.requestKind) ? { requestKind: cleanString(action.requestKind) } : {}),
+      ...(cleanString(action.operationId) ? { operationId: cleanString(action.operationId) } : {}),
+      ...(advertiseUsing ? { advertiseUsing } : {}),
+      ...(cleanString(action.requiredAction) ? { requiredAction: cleanString(action.requiredAction) } : {}),
+      sideEffectsPerformed: false,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+  }
+  return actions;
+}
+
 export function parseEvaluatorValidationArtifact(
   artifactJson: string,
   options: EvaluatorValidationImportOptions = {},
@@ -190,6 +238,10 @@ export function parseEvaluatorValidationArtifact(
   const descriptorHandoffSource = cleanString(evaluator.descriptorHandoffSource);
   const descriptorHandoffFailureReason = cleanString(evaluator.descriptorHandoffFailureReason);
   const descriptorHandoffRequiredAction = cleanString(evaluator.descriptorHandoffRequiredAction);
+  const napoleonRequiredActions = sanitizeNapoleonRequiredActions(evaluator.napoleonRequiredActions);
+  if (napoleonRequiredActions === null) {
+    return rejected("Evaluator validation artifact contains invalid Napoleon required-action metadata.");
+  }
 
   return {
     status: "accepted",
@@ -214,6 +266,7 @@ export function parseEvaluatorValidationArtifact(
       ...(descriptorHandoffSource ? { descriptorHandoffSource } : {}),
       ...(descriptorHandoffFailureReason ? { descriptorHandoffFailureReason } : {}),
       ...(descriptorHandoffRequiredAction ? { descriptorHandoffRequiredAction } : {}),
+      ...(napoleonRequiredActions.length ? { napoleonRequiredActions } : {}),
     },
   };
 }

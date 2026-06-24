@@ -5810,6 +5810,30 @@ test("renders unadvertised evaluator handoff required action from validation imp
             descriptorHandoffSource: "not_advertised",
             descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
             descriptorHandoffRequiredAction: requiredAction,
+            napoleonRequiredActions: [
+              {
+                id: "advertise_evaluation_review_handoff",
+                owner: "napoleon",
+                reason: "real_runtime_promotion_blocker",
+                handoffName: "evaluation_review",
+                targetPath: "/chief-of-staff/reviews/evaluation",
+                requestKind: "evaluation_review_handoff",
+                operationId: "evaluation_review",
+                advertiseUsing: [
+                  "supportedHandoffs",
+                  "supported_handoffs",
+                  "required_for",
+                  "descriptor route metadata for /chief-of-staff/reviews/evaluation",
+                ],
+                requiredAction,
+                sideEffectsPerformed: false,
+                approvalCaptured: false,
+                memoryWritePerformed: false,
+                agentDispatchPerformed: false,
+                externalSendPerformed: false,
+                appliedLocally: false,
+              },
+            ],
             endpointHostRetained: false,
             tokenRetained: false,
             requestBodyRetained: false,
@@ -5826,6 +5850,7 @@ test("renders unadvertised evaluator handoff required action from validation imp
     await user.click(view.getByText("Import evaluator validation"));
 
     await waitFor(() => assert.ok(view.getAllByText(requiredAction).length >= 1));
+    await waitFor(() => assert.ok(view.getByText("Napoleon required actions: advertise_evaluation_review_handoff")));
     const readiness = view.getByText("Live bridge readiness").closest("section") as HTMLElement | null;
     assert.ok(readiness);
     assert.ok(within(readiness).getAllByText(requiredAction).length >= 1);
@@ -5837,6 +5862,9 @@ test("renders unadvertised evaluator handoff required action from validation imp
     await user.click(view.getByText("Export readiness proof"));
     const readinessExport = view.getByLabelText("Exported bridge readiness proof");
     assert.ok(readinessExport.textContent?.includes('"descriptorHandoffRequiredAction"'));
+    assert.ok(readinessExport.textContent?.includes('"napoleonRequiredActions"'));
+    assert.ok(readinessExport.textContent?.includes('"advertise_evaluation_review_handoff"'));
+    assert.ok(readinessExport.textContent?.includes('"sideEffectsPerformed": false'));
     assert.ok(readinessExport.textContent?.includes("supportedHandoffs"));
     assert.equal(readinessExport.textContent?.includes("127.0.0.1"), false);
   } finally {
