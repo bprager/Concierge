@@ -59,9 +59,15 @@ test("live bridge fails closed when no Napoleon endpoint is configured", async (
   );
 
   assert.equal(events[0].event, "bridge_request_started");
+  assert.equal(events[0].attributes.bridgeTargetPath, "/v1/concierge/turn");
+  assert.equal(events[0].attributes.bridgeTargetOperation, "text_turn");
+  assert.equal(events[0].attributes.bridgeTargetRequestKind, "text_turn");
   assert.equal(events.at(-1)?.event, "bridge_request_failed");
   assert.equal(events.at(-1)?.attributes.reason, "no_endpoint");
   assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/v1/concierge/turn");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "text_turn");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetRequestKind, "text_turn");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, textTurnBlockedEffects);
   assert.deepEqual((evidence[0] as { blockedEffects?: string[] }).blockedEffects, textTurnBlockedEffects);
 });
@@ -333,6 +339,13 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   assert.equal(response.requiresReview, true);
   assert.equal(response.delegation?.selectedAgents[0]?.displayName, "Passive Brain");
   assert.equal(response.delegation?.blockedEffects[0], "external_send");
+  assert.equal(events[0]?.event, "bridge_request_started");
+  assert.equal(events[0]?.attributes.bridgeTargetPath, "/v1/concierge/turn");
+  assert.equal(events[0]?.attributes.bridgeTargetOperation, "text_turn");
+  assert.equal(events[0]?.attributes.bridgeTargetRequestKind, "text_turn");
+  assert.equal(JSON.stringify(events[0]?.attributes).includes("napoleon.example"), false);
+  assert.equal(JSON.stringify(events[0]?.attributes).includes("token_live"), false);
+  assert.equal(JSON.stringify(events[0]?.attributes).includes("Draft the bridge plan"), false);
   assert.equal(events.at(-1)?.event, "bridge_request_completed");
   assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/v1/concierge/turn");
   assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "text_turn");
@@ -369,6 +382,7 @@ test("live bridge adapts Napoleon advisory harness text-turn responses without s
   let headers: Record<string, string> | undefined;
   const requestedUrls: string[] = [];
   const evidence: unknown[] = [];
+  const events: TelemetryPayload[] = [];
 
   const response = await sendToNapoleon(
     {
@@ -383,7 +397,7 @@ test("live bridge adapts Napoleon advisory harness text-turn responses without s
       getEndpoint: () => "https://napoleon.example/cos/text-turn",
       descriptorConnection: readyDescriptorConnection,
       getAuthToken: () => "token_cos_runtime",
-      emit: () => undefined,
+      emit: (event) => events.push(event),
       captureEvidence: (record) => evidence.push(record),
       fetch: async (url, init) => {
         requestedUrls.push(url);
@@ -457,6 +471,14 @@ test("live bridge adapts Napoleon advisory harness text-turn responses without s
   assert.equal(response.delegation?.selectedAgents[0]?.contributionSummary, "Found the latest bridge alignment note.");
   assert.equal(response.delegation?.selectedAgents[0]?.selectionReason, "Relevant status memory was available for review.");
   assert.equal(response.delegation?.blockedEffects.includes("external_send"), true);
+  assert.equal(events[0]?.event, "bridge_request_started");
+  assert.equal(events[0]?.attributes.bridgeTargetPath, "/cos/text-turn");
+  assert.equal(events[0]?.attributes.bridgeTargetOperation, "text_turn");
+  assert.equal(events[0]?.attributes.bridgeTargetRequestKind, "text_turn");
+  assert.equal(JSON.stringify(events[0]?.attributes).includes("napoleon.example"), false);
+  assert.equal(JSON.stringify(events[0]?.attributes).includes("token_cos_runtime"), false);
+  assert.equal(events.at(-1)?.event, "bridge_request_completed");
+  assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/cos/text-turn");
   assert.deepEqual(evidence, [
     {
       kind: "bridge_contract_evidence",

@@ -725,16 +725,12 @@ export async function sendToNapoleon(
     turnId: request.turnId,
     traceId: request.traceId,
   });
-  emitBridgeEvent(dependencies, "bridge_request_started", {
-    traceId: request.traceId,
-    profile: request.profile,
-    profileMode: contract.profileMode,
-    channel: request.channel,
-    requestId: contract.chiefOfStaffRequest.request_id,
-  });
-
   const endpoint = getConfiguredEndpoint(dependencies);
   const authToken = getConfiguredAuthToken(dependencies);
+  const advisoryHarnessTextTurnEndpoint = endpoint ? resolveAdvisoryHarnessTextTurnEndpoint(endpoint) : null;
+  const advisoryHarnessMode = Boolean(advisoryHarnessTextTurnEndpoint);
+  const textTurnOperation = getBridgeOperation("text_turn");
+  const targetPath = advisoryHarnessMode ? "/cos/text-turn" : textTurnOperation.path;
   const descriptorConnection = buildDescriptorConnectionState(
     dependencies.descriptorConnection ?? {
       endpointConfigured: Boolean(endpoint),
@@ -750,7 +746,16 @@ export async function sendToNapoleon(
     descriptorFailureReason: descriptorConnection.failClosedReason,
     profileMode: contract.profileMode,
     blockedEffects: contract.blockedEffects,
+    targetPath,
   };
+  emitBridgeEvent(dependencies, "bridge_request_started", {
+    traceId: request.traceId,
+    profile: request.profile,
+    profileMode: contract.profileMode,
+    channel: request.channel,
+    requestId: contract.chiefOfStaffRequest.request_id,
+    ...bridgeTargetTelemetryAttributes(evidenceContext),
+  });
 
   if (!endpoint) {
     failClosed(dependencies, "no_endpoint", request.traceId, contract.chiefOfStaffRequest.request_id, undefined, evidenceContext);
@@ -790,14 +795,9 @@ export async function sendToNapoleon(
     );
   }
 
-  const advisoryHarnessTextTurnEndpoint = resolveAdvisoryHarnessTextTurnEndpoint(endpoint);
-  const advisoryHarnessMode = Boolean(advisoryHarnessTextTurnEndpoint);
-  const textTurnOperation = getBridgeOperation("text_turn");
   const targetEndpoint = advisoryHarnessTextTurnEndpoint
     ? normalizeAdvisoryHarnessTextTurnEndpoint(advisoryHarnessTextTurnEndpoint)
     : resolveNapoleonBridgeOperation(endpoint, "text_turn");
-  const targetPath = advisoryHarnessMode ? "/cos/text-turn" : textTurnOperation.path;
-  evidenceContext.targetPath = targetPath;
   const fetcher = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
   let response: Awaited<ReturnType<BridgeFetch>>;
   try {

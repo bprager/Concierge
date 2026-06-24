@@ -49,7 +49,7 @@ Evaluator coverage:
 | ID | Story | Priority | Acceptance criteria | Observability |
 |---|---|---:|---|---|
 | TX-001 | Create desktop shell skeleton | P0 | Tauri app opens text interface | app_started, app_ready |
-| TX-002 | Add Napoleon bridge client | P0 | Text requests can be sent to configured Napoleon endpoint | bridge_request_started, bridge_request_completed |
+| TX-002 | Add Napoleon bridge client | P0 | Text requests can be sent to configured Napoleon endpoint; bridge start, completion, and failure telemetry carry safe named target metadata without endpoint hosts, tokens, prompts, request bodies, or response bodies | bridge_request_started, bridge_request_completed |
 | TX-003 | Add user profile resolver | P0 | Adult owner, child protected, guest, and collaborator supported in the text UI and contract mapping | identity_resolved |
 | TX-004 | Add interaction stance policy | P0 | Concierge selects stance and logs reason | stance_selected |
 | TX-005 | Add governance confirmation UI | P0 | Side effects require visible confirmation; requires_review, deny, and no_go are visible; non-authority local acknowledgement and governed review handoff cannot be mistaken for approval | governance_decision, governance_review_send_started |
