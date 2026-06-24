@@ -226,6 +226,44 @@ test("describes Napoleon delegation only from bridge-provided provenance", () =>
   assert.ok(empty.details.some((detail) => detail.label === "Proof alignment" && detail.value === "not returned"));
 });
 
+test("empty Napoleon delegation explains descriptor fail-closed connection state", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:expected",
+    actualChecksum: "sha256:actual",
+    signatureValid: false,
+  });
+
+  const view = describeDelegation(undefined, undefined, { descriptorConnection });
+
+  assert.equal(view.heading, "Napoleon delegation");
+  assert.ok(view.body.includes("blocked until descriptor discovery is valid"));
+  assert.ok(view.details.some((detail) => detail.label === "Handled by" && detail.value === "not returned"));
+  assert.ok(view.details.some((detail) => detail.label === "Selected agents" && detail.value === "not returned"));
+  assert.ok(view.details.some((detail) => detail.label === "Connection state" && detail.value === "descriptor_mismatch"));
+  assert.ok(
+    view.details.some(
+      (detail) => detail.label === "Descriptor failure" && detail.value === "descriptor signature/checksum mismatch",
+    ),
+  );
+  assert.ok(
+    view.details.some(
+      (detail) => detail.label === "Next step" && detail.value.includes("Resolve the descriptor signature or checksum mismatch"),
+    ),
+  );
+  assert.ok(view.details.some((detail) => detail.label === "Blocked effects" && detail.value.includes("memory_write")));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Authority boundary" &&
+        detail.value === "Returned bridge provenance only; not approval, memory, dispatch, external send, or local application.",
+    ),
+  );
+  assert.ok(!view.body.includes("Napoleon recommends"));
+  assert.ok(!view.body.includes("Passive Brain"));
+});
+
 test("omits empty selected-agent contribution after normalizing returned wording", () => {
   const view = describeDelegation(
     {

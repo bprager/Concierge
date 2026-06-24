@@ -3195,7 +3195,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     avatarAffectEnabled,
     rawMediaStorageEnabled,
   });
-  const napoleonDelegationView = lastNapoleonPresentation.delegation ?? describeDelegation(undefined);
+  const napoleonDelegationView =
+    lastNapoleonPresentation.delegation ?? describeDelegation(undefined, undefined, { descriptorConnection });
   const latestNapoleonTurnSummary = describeLastNapoleonTurnSummary(
     lastNapoleonPresentation.proof,
     lastNapoleonTurnFailure,

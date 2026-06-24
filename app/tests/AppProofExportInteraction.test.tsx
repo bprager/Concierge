@@ -580,6 +580,59 @@ test("exports and compares Napoleon proof through rendered app controls", async 
   }
 });
 
+test("clears accepted real-runtime readiness proof when user profile changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  const acceptedProof = JSON.stringify({
+    kind: "concierge_bridge_readiness_proof",
+    evidence: {
+      captureState: "passed",
+      comparisonState: "passed",
+      lastEvidenceStatus: "success",
+      lastOperationId: "text_turn",
+      lastTargetPath: "/v1/concierge/turn",
+    },
+    runtimeValidation: {
+      source: "real_runtime",
+      promotionGate: "real_runtime_evidence_available",
+    },
+    boundary: {
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      localApplicationPerformed: false,
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    fireEvent.change(view.getByLabelText("Accepted readiness proof"), { target: { value: acceptedProof } });
+    await user.click(view.getByRole("button", { name: "Import accepted readiness proof" }));
+
+    await waitFor(() => assert.equal(view.getAllByText("Accepted real-runtime proof").length, 2));
+    assert.ok(view.getByText("Accepted real-runtime readiness proof imported."));
+    assert.equal(view.getAllByText("success: text_turn at /v1/concierge/turn").length, 2);
+
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+
+    await waitFor(() => assert.equal(view.queryAllByText("Accepted real-runtime proof").length, 1));
+    assert.equal(view.queryByText("Accepted real-runtime readiness proof imported."), null);
+    assert.equal(view.queryAllByText("success: text_turn at /v1/concierge/turn").length, 0);
+    assert.equal((view.getByLabelText("Accepted readiness proof") as HTMLTextAreaElement).value, "");
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("live descriptor discovery alone does not export real runtime validation", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, screen, waitFor, within }, userEventModule, { App }] = await Promise.all([
@@ -2373,15 +2426,20 @@ test("shows Napoleon delegation panel before bridge provenance is returned", asy
     await delegationPanel.findByText("Napoleon delegation");
     assert.ok(
       delegationPanel.getByText(
-        "No Napoleon delegation provenance was returned, so Concierge will not attribute the answer to a capability or agent.",
+        "Napoleon delegation is blocked until descriptor discovery is valid. Concierge will not attribute the answer to a capability or agent.",
       ),
     );
     assert.ok(delegationPanel.getByText("Target capability"));
     assert.ok(delegationPanel.getByText("Handled by"));
     assert.ok(delegationPanel.getByText("Provenance source"));
     assert.ok(delegationPanel.getByText("Why selected"));
+    assert.ok(delegationPanel.getByText("Connection state"));
+    assert.ok(delegationPanel.getByText("no_endpoint"));
+    assert.ok(delegationPanel.getByText("Descriptor failure"));
+    assert.ok(delegationPanel.getByText("no endpoint"));
+    assert.ok(delegationPanel.getByText("Configure a governed Napoleon endpoint and discover the descriptor before sending."));
     assert.ok(delegationPanel.getByText("Authority boundary"));
-    assert.equal(delegationPanel.getAllByText("not returned").length, 12);
+    assert.equal(delegationPanel.getAllByText("not returned").length, 10);
     assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
     assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
   } finally {
@@ -4311,7 +4369,7 @@ test("blocks rendered live send before fetch when descriptor integrity mismatche
     fireEvent.change(view.getByLabelText("Descriptor"), { target: { value: "checksum_mismatch" } });
 
     await view.findByText("Napoleon descriptor signature or checksum mismatch detected; Concierge is fail-closed.");
-    const contractStatus = view.getByText("Connection state").closest("section") as HTMLElement;
+    const contractStatus = view.getByText("Chief of Staff").closest("section") as HTMLElement;
     assert.ok(contractStatus);
     assert.ok(within(contractStatus).getByText("descriptor_mismatch"));
     assert.ok(within(contractStatus).getByText("mismatch"));
@@ -4367,7 +4425,7 @@ test("blocks rendered live send before fetch when descriptor discovery is stale"
     fireEvent.change(view.getByLabelText("Descriptor"), { target: { value: "stale" } });
 
     await view.findByText("Napoleon descriptor discovery is stale; Concierge is fail-closed until rediscovery.");
-    const contractStatus = view.getByText("Connection state").closest("section") as HTMLElement;
+    const contractStatus = view.getByText("Chief of Staff").closest("section") as HTMLElement;
     assert.ok(contractStatus);
     assert.ok(within(contractStatus).getByText("descriptor_mismatch"));
     assert.ok(within(contractStatus).getByText("matched"));

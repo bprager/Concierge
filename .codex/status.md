@@ -10,6 +10,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added descriptor-aware empty-state details to the persistent Napoleon delegation panel, so checksum/signature mismatch and other descriptor fail-closed states show connection state, next step, and blocked effects before any returned agent provenance exists.
+- Added rendered coverage proving imported accepted real-runtime readiness proof clears when the active user profile changes, preventing adult-owner runtime proof context from remaining visible in child-protected scope.
 - Hardened repository authority-boundary validation for dynamic `object` and `embed` data targets such as `object.data = externalWidgetUrl`, `embed["data"] = buildWidgetUrl()`, and `setAttribute("data", ...)`, so UI code cannot load hidden embedded content around the governed bridge.
 - Hardened repository authority-boundary validation for dynamic external target setters such as `anchor.href = outboundUrl`, `anchor.href = buildOutboundUrl()`, `image.src = pixelUrl`, `form.action = submitUrl`, source-set setters, SVG `xlink:href`, and `setAttribute(...)` forms, so UI code cannot add hidden navigation or resource-loading side channels around the governed bridge.
 - Hardened repository authority-boundary validation for direct `globalThis.location` and mixed bracket/dot `location` navigation aliases, including `assign`/`replace` call/apply forms, so UI code cannot add navigation side channels around the governed bridge.

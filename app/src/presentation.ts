@@ -104,6 +104,7 @@ export interface DelegationFallbackProvenance {
   traceId?: string;
   auditId?: string;
   targetCapabilityLabel?: string;
+  descriptorConnection?: DescriptorConnectionState;
 }
 
 export interface NapoleonResponseProofView {
@@ -1116,6 +1117,48 @@ export function describeDelegation(
               ? "target capability shares returned trace/audit; selected-agent proof not returned"
               : "selected-agent proof not returned",
           },
+        ],
+      };
+    }
+
+    if (fallback?.descriptorConnection) {
+      const connection = fallback.descriptorConnection;
+      const failureReason = describeDescriptorFailureReason(connection.failClosedReason) || "none";
+      const nextStep = connection.canAttemptLiveBridge
+        ? "Ready for returned Napoleon delegation provenance."
+        : connection.failClosedReason === "no_endpoint"
+          ? "Configure a governed Napoleon endpoint and discover the descriptor before sending."
+          : connection.failClosedReason === "descriptor_signature_or_checksum_mismatch"
+            ? "Resolve the descriptor signature or checksum mismatch before sending."
+            : connection.failClosedReason === "descriptor_stale"
+              ? "Refresh the stale descriptor before sending."
+              : "Discover a valid Napoleon descriptor before sending.";
+      return {
+        heading: "Napoleon delegation",
+        body: connection.canAttemptLiveBridge
+          ? "No Napoleon delegation provenance has been returned yet. Concierge will wait for governed bridge provenance before naming capabilities or agents."
+          : "Napoleon delegation is blocked until descriptor discovery is valid. Concierge will not attribute the answer to a capability or agent.",
+        details: [
+          { label: "Handled by", value: "not returned" },
+          { label: "Target capability", value: "not returned" },
+          { label: "Provenance source", value: "not returned" },
+          { label: "Selected agents", value: "not returned" },
+          { label: "Why selected", value: "not returned" },
+          { label: "Allowed effects", value: "not returned" },
+          {
+            label: "Blocked effects",
+            value: connection.descriptorStatus
+              ? sanitizeVisibleProvenanceList(connection.descriptorStatus.blockedEffects)
+              : "memory_write, approval_capture, agent_dispatch, external_send",
+          },
+          { label: "Governance state", value: "not returned" },
+          { label: "Trace", value: "not returned" },
+          { label: "Audit", value: "not returned" },
+          { label: "Connection state", value: sanitizeVisibleProvenanceValue(connection.state) },
+          { label: "Descriptor failure", value: failureReason },
+          { label: "Next step", value: nextStep },
+          { label: "Authority boundary", value: authorityBoundary },
+          { label: "Proof alignment", value: "not returned" },
         ],
       };
     }
