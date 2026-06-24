@@ -5939,6 +5939,106 @@ test("blocks rendered live send before fetch when descriptor discovery times out
   }
 });
 
+test("blocks rendered live send before fetch when descriptor discovery fails over HTTP", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  const postedBodies: string[] = [];
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      requestedUrls.push(url);
+      if (init?.body) {
+        postedBodies.push(String(init.body));
+      }
+      if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+        return harnessJsonResponse(503, {
+          text: "Private upstream failure detail for http://127.0.0.1:8787 and secret_token",
+        });
+      }
+
+      assert.fail(`unexpected fetch after descriptor HTTP failure: ${url}`);
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+    await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+    await waitFor(() =>
+      assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor")),
+    );
+    const httpFailureMessages = await view.findAllByText(
+      "Napoleon descriptor discovery failed over HTTP, so Concierge is blocked from live bridge sends.",
+    );
+    assert.ok(httpFailureMessages.length > 0);
+
+    const delegationPanel = within(view.getByLabelText("Napoleon delegation"));
+    assert.ok(
+      delegationPanel.getByText(
+        "Napoleon delegation is blocked until descriptor discovery is valid. Concierge will not attribute the answer to a capability or agent.",
+      ),
+    );
+    assert.ok(delegationPanel.getByText("Connection state"));
+    assert.ok(delegationPanel.getByText("http_failure"));
+    assert.ok(delegationPanel.getByText("Descriptor failure"));
+    assert.ok(delegationPanel.getByText("descriptor HTTP failure"));
+    assert.ok(delegationPanel.getByText("Resolve the descriptor HTTP failure and rediscover the descriptor before sending."));
+    assert.ok(delegationPanel.getByText("Blocked effects"));
+    assert.ok(delegationPanel.getByText(/memory_write/));
+    assert.ok(delegationPanel.getByText(/approval_capture/));
+    assert.ok(delegationPanel.getByText(/external_send/));
+    assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
+    assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
+
+    const preflight = view.getByText("Live send preflight").closest("div")?.parentElement as HTMLElement | null;
+    assert.ok(preflight);
+    assert.ok(preflight.classList.contains("blocked"));
+    assert.ok(within(preflight).getByText("Descriptor discovered"));
+    assert.ok(
+      within(preflight).getByText(
+        "http_failure: Napoleon descriptor discovery failed over HTTP, so Concierge is blocked from live bridge sends.",
+      ),
+    );
+
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Draft a bridge readiness summary" } });
+    await waitFor(() => assert.equal(composer.value, "Draft a bridge readiness summary"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    const blockedMessages = await view.findAllByText(/Napoleon bridge blocked: http_failure/);
+    const blockedReply = blockedMessages.find((message) => message.closest("article"))?.closest("article") as HTMLElement | null;
+    assert.ok(blockedReply);
+    assert.ok(within(blockedReply).getByText("Blocked Napoleon governed bridge attempt"));
+    assert.ok(within(blockedReply).getByText("No Napoleon response was accepted; fail-closed local state only."));
+    assert.ok(within(blockedReply).getByText("Descriptor failure"));
+    assert.ok(within(blockedReply).getByText("http_failure"));
+    assert.ok(within(blockedReply).getByText("Blocked effects"));
+    assert.ok(within(blockedReply).getAllByText(/runtime_authority/).length > 0);
+    assert.equal(
+      requestedUrls.some((url) => url === "http://127.0.0.1:8787/v1/concierge/turn"),
+      false,
+    );
+    assert.equal(postedBodies.length, 0);
+    assert.equal(view.container.textContent?.includes("Private upstream failure detail"), false);
+    assert.equal(view.container.textContent?.includes("secret_token"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows fail-closed transcript metadata when Napoleon bridge times out", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

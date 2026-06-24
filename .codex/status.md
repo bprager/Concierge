@@ -11,6 +11,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Recently Completed
 
 - Hardened selected-agent attribution validation so exact returned selected-agent display names are guarded regardless of capitalization, preventing lower-case agent names from claiming findings or reports without matching contribution provenance.
+- Added rendered UI coverage proving descriptor-discovery HTTP failure is visible in the Napoleon delegation panel and live-send preflight, blocks before any text-turn fetch, and keeps private upstream response details out of the screen.
 - Added route-specific boundary and side-effect summaries for generated core bridge routes in the governed routes panel, making descriptor discovery, capability discovery, text turns, memory proposal review, and Chief of Staff steering visibly non-authorizing without exposing endpoint hosts or tokens.
 - Added explicit generated-route coverage for evaluator review and evolution proposal review handoffs, making the route panel show that those Napoleon handoffs cannot grant evaluator or release approval, apply evolution changes, capture approval, update registries, write memory, dispatch agents, send externally, append traces, route tasks, or apply changes locally.
 - Added explicit generated-route coverage for observability trace handoffs, making the route panel show that the Napoleon handoff cannot append traces, create audit authority, capture approval, write memory, route tasks, dispatch agents, send externally, or apply changes locally.
