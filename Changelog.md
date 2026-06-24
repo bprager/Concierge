@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered coverage proving returned Napoleon proof and delegation provenance clears when live descriptor discovery refreshes connection state, preventing stale descriptor-scoped proof from remaining visible after rediscovery.
 - Added evaluator coverage requiring returned Napoleon proof and delegation provenance to clear when endpoint, token, descriptor, profile, or Rehearsal context changes, preventing stale proof from remaining review-ready evidence.
 - Added first-class `missing_descriptor` governed bridge failure reporting so the transcript, telemetry, and bridge evidence distinguish an absent Napoleon descriptor from invalid or mismatched descriptors.
 - Hardened live bridge delegation validation so returned allowed effects are normalized before forbidden authority checks, preventing case or spacing variants of memory writes, agent dispatch, external sends, approval capture, or runtime authority from appearing as allowed.

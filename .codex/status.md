@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Rendered proof/delegation coverage now proves returned Napoleon provenance clears when live descriptor discovery refreshes connection state, including selected agents, target capability, selection reasons, and the last successful proof panel.
 - Evaluator coverage now requires returned Napoleon proof and delegation provenance to clear when endpoint, token, descriptor, profile, or Rehearsal context changes, so stale proof cannot remain review-ready evidence.
 - Rendered proof/delegation coverage now proves returned Napoleon provenance is cleared when endpoint or bridge-token context changes, including target capability, recommendation text, selected agents, and selection reasons.
 - Live text bridge start telemetry now includes safe named target metadata, keeping start, completion, and failure traces comparable without retaining endpoint hosts, tokens, raw prompts, request bodies, or response bodies.
