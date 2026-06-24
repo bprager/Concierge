@@ -3841,6 +3841,72 @@ test("imports sanitized evaluator validation artifact from a selected local file
   }
 });
 
+test("clears evaluator validation file import and readiness proof when Napoleon endpoint changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, waitFor, fireEvent }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+    const artifactFileInput = view.getByLabelText("Evaluator validation artifact file") as HTMLInputElement;
+    const summaryFile = new File(
+      [
+        JSON.stringify({
+          runtimeValidation: {
+            source: "real_runtime",
+          },
+          httpEvaluator: {
+            status: "passed",
+            failureReason: "none",
+            targetPath: "/chief-of-staff/reviews/evaluation",
+            targetRequestKind: "evaluation_review_handoff",
+            targetOperationId: "evaluation_review",
+            endpointHostRetained: false,
+            tokenRetained: false,
+            requestBodyRetained: false,
+            responseBodyRetained: false,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          },
+        }),
+      ],
+      "summary.json",
+      { type: "application/json" },
+    );
+
+    await user.upload(artifactFileInput, summaryFile);
+
+    await waitFor(() => assert.ok(view.getByText("Evaluator HTTP validation passed.")));
+    assert.ok(view.getByText("Selected file: summary.json"));
+
+    const artifactInput = view.getByLabelText("Evaluator validation artifact") as HTMLTextAreaElement;
+    assert.ok(artifactInput.value.includes('"httpEvaluator"'));
+
+    await user.click(view.getByText("Export readiness proof"));
+    const readinessExport = view.getByLabelText("Exported bridge readiness proof");
+    assert.ok(readinessExport.textContent?.includes('"status": "passed"'));
+    assert.ok(readinessExport.textContent?.includes('"targetPath": "/chief-of-staff/reviews/evaluation"'));
+
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), {
+      target: { value: "http://127.0.0.1:9797" },
+    });
+
+    await waitFor(() => assert.equal(artifactInput.value, ""));
+    assert.equal(view.queryByText("Selected file: summary.json"), null);
+    assert.equal(view.queryByText("Evaluator HTTP validation passed."), null);
+    assert.equal(view.queryByLabelText("Exported bridge readiness proof"), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("imports an accepted real-runtime readiness proof as sanitized local metadata", async () => {
   const dom = installDom();
   const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([
