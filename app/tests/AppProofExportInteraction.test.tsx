@@ -5859,6 +5859,16 @@ test("renders unadvertised evaluator handoff required action from validation imp
     assert.ok(preflight);
     assert.ok(within(preflight).getAllByText(requiredAction).length >= 1);
 
+    await user.click(view.getByText("Export required action packet"));
+    const requiredActionExport = view.getByLabelText("Exported Napoleon required action packet");
+    assert.ok(requiredActionExport.textContent?.includes('"kind": "concierge.napoleon-required-actions.export.v1"'));
+    assert.ok(requiredActionExport.textContent?.includes('"requiredActionCount": 1'));
+    assert.ok(requiredActionExport.textContent?.includes('"advertise_evaluation_review_handoff"'));
+    assert.ok(requiredActionExport.textContent?.includes('"/chief-of-staff/reviews/evaluation"'));
+    assert.ok(requiredActionExport.textContent?.includes('"sideEffectsPerformed": false'));
+    assert.ok(requiredActionExport.textContent?.includes('"localExportOnly": true'));
+    assert.equal(requiredActionExport.textContent?.includes("127.0.0.1"), false);
+
     await user.click(view.getByText("Export readiness proof"));
     const readinessExport = view.getByLabelText("Exported bridge readiness proof");
     assert.ok(readinessExport.textContent?.includes('"descriptorHandoffRequiredAction"'));
@@ -5872,6 +5882,11 @@ test("renders unadvertised evaluator handoff required action from validation imp
     };
     const importEvent = telemetryBuffer.events?.find((event) => event.event === "evaluator_validation_artifact_imported");
     assert.equal(importEvent?.attributes.evaluatorNapoleonRequiredActionCount, 1);
+    const requiredActionEvent = telemetryBuffer.events?.find((event) => event.event === "napoleon_required_actions_exported");
+    assert.equal(requiredActionEvent?.attributes.requiredActionCount, 1);
+    assert.equal(JSON.stringify(requiredActionEvent).includes("advertise_evaluation_review_handoff"), false);
+    assert.equal(JSON.stringify(requiredActionEvent).includes("/chief-of-staff/reviews/evaluation"), false);
+    assert.equal(JSON.stringify(requiredActionEvent).includes(requiredAction), false);
     const readinessEvent = telemetryBuffer.events?.find((event) => event.event === "bridge_readiness_proof_exported");
     assert.equal(readinessEvent?.attributes.evaluatorNapoleonRequiredActionCount, 1);
     assert.equal(JSON.stringify(readinessEvent).includes("advertise_evaluation_review_handoff"), false);

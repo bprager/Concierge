@@ -58,6 +58,7 @@ import {
   importAcceptedBridgeReadinessProof,
   type AcceptedBridgeReadinessProofImport,
   type BridgeReadinessProofComparison,
+  type NapoleonRequiredAction,
   updateBridgeEvidenceReadinessState,
 } from "./bridgeEvidenceReadiness.js";
 import {
@@ -487,6 +488,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
   const [bridgeReadinessProofComparison, setBridgeReadinessProofComparison] =
     useState<BridgeReadinessProofComparison | null>(null);
+  const [napoleonRequiredActionsExportJson, setNapoleonRequiredActionsExportJson] = useState<string | null>(null);
   const [acceptedReadinessProofInput, setAcceptedReadinessProofInput] = useState("");
   const [acceptedReadinessProofImport, setAcceptedReadinessProofImport] =
     useState<AcceptedBridgeReadinessProofImport | null>(null);
@@ -945,6 +947,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setBridgeReadinessProofComparison(null);
   }
 
+  function clearNapoleonRequiredActionsExport() {
+    setNapoleonRequiredActionsExportJson(null);
+  }
+
   function clearAcceptedReadinessProofContext() {
     setAcceptedReadinessProofInput("");
     setAcceptedReadinessProofImport(null);
@@ -956,6 +962,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setEvaluatorValidationArtifactInput("");
     setEvaluatorValidationImport(null);
     setEvaluatorValidationFileName(null);
+    clearNapoleonRequiredActionsExport();
   }
 
   function clearVoicePipelineProof() {
@@ -2773,6 +2780,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   function recordEvaluatorValidationImport(importResult: EvaluatorValidationImport, importSource: "paste" | "file") {
     const traceId = newTraceId();
     setEvaluatorValidationImport(importResult);
+    clearNapoleonRequiredActionsExport();
     clearBridgeReadinessProof();
     emitEvent("evaluator_validation_artifact_imported", {
       traceId,
@@ -2792,6 +2800,61 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       memoryWritePerformed: false,
       agentDispatchPerformed: false,
       externalSendPerformed: false,
+    });
+  }
+
+  function exportNapoleonRequiredActions() {
+    const actions = evaluatorValidationImport?.validation.napoleonRequiredActions ?? [];
+    if (!actions.length) return;
+
+    const traceId = newTraceId();
+    const exportPayload = {
+      kind: "concierge.napoleon-required-actions.export.v1",
+      generatedAt: new Date().toISOString(),
+      conversationId,
+      source: "evaluator_validation_import",
+      runtimeValidationSource: evaluatorValidationImport?.runtimeValidationSource ?? "unavailable",
+      evaluator: {
+        status: evaluatorValidationImport?.validation.status ?? "not_run",
+        failureReason: evaluatorValidationImport?.validation.failureReason ?? "none",
+        targetPath: evaluatorValidationImport?.validation.targetPath ?? "unavailable",
+        requestKind: evaluatorValidationImport?.validation.requestKind ?? "unavailable",
+        operationId: evaluatorValidationImport?.validation.operationId ?? "unavailable",
+        descriptorHandoffAdvertised:
+          evaluatorValidationImport?.validation.descriptorHandoffAdvertised ?? "unavailable",
+        descriptorHandoffSource: evaluatorValidationImport?.validation.descriptorHandoffSource ?? "unavailable",
+        descriptorHandoffFailureReason:
+          evaluatorValidationImport?.validation.descriptorHandoffFailureReason ?? "none",
+      },
+      requiredActionCount: actions.length,
+      napoleonRequiredActions: actions satisfies NapoleonRequiredAction[],
+      boundary: {
+        localExportOnly: true,
+        proposalOnly: true,
+        napoleonApprovalGranted: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      },
+    };
+    const json = JSON.stringify(exportPayload, null, 2);
+    setNapoleonRequiredActionsExportJson(json);
+    emitEvent("napoleon_required_actions_exported", {
+      traceId,
+      conversationId,
+      source: "evaluator_validation_import",
+      requiredActionCount: actions.length,
+      evaluatorHttpStatus: evaluatorValidationImport?.validation.status ?? "not_run",
+      evaluatorFailureReason: evaluatorValidationImport?.validation.failureReason ?? "none",
+      runtimeValidationSource: evaluatorValidationImport?.runtimeValidationSource ?? "unavailable",
+      localExportOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
     });
   }
 
@@ -5374,7 +5437,15 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                 </span>
               ) : null}
               <span>Sanitized local evidence only; not Napoleon approval.</span>
+              {evaluatorValidationImport.validation.napoleonRequiredActions?.length ? (
+                <button className="secondary" onClick={exportNapoleonRequiredActions}>
+                  Export required action packet
+                </button>
+              ) : null}
             </div>
+          ) : null}
+          {napoleonRequiredActionsExportJson ? (
+            <pre aria-label="Exported Napoleon required action packet">{napoleonRequiredActionsExportJson}</pre>
           ) : null}
         </div>
         <button className="secondary" onClick={exportBridgeReadinessProof}>
