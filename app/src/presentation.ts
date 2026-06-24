@@ -687,6 +687,8 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
       summary = "Napoleon descriptor discovery timed out; Concierge is blocked from live bridge sends.";
     } else if (descriptor.failClosedReason === "http_failure") {
       summary = "Napoleon descriptor discovery failed over HTTP; Concierge is blocked from live bridge sends.";
+    } else if (descriptor.failClosedReason === "descriptor_stale") {
+      summary = "Napoleon descriptor discovery is stale; Concierge is fail-closed until rediscovery.";
     } else if (integrityMismatch) {
       summary = "Napoleon descriptor signature or checksum mismatch detected; Concierge is fail-closed.";
     } else if (descriptor.failClosedReason === "no_descriptor") {

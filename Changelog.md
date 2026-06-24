@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a rendered stale-descriptor cache mode and fail-closed live-send coverage so descriptor staleness is visible in connection state, readiness, preflight, and blocked transcript metadata before any text-turn request is fetched.
 - Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when descriptor mode changes, preventing imported runtime proof context from surviving fail-closed checksum/signature states.
 - Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when the bridge token changes, preventing imported runtime proof context from crossing credential scopes.
 - Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when the active profile changes, preventing adult-owner runtime proof context from remaining visible in child-protected scope.

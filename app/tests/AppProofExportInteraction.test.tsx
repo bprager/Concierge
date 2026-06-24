@@ -4345,6 +4345,70 @@ test("blocks rendered live send before fetch when descriptor integrity mismatche
   }
 });
 
+test("blocks rendered live send before fetch when descriptor discovery is stale", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: string | URL | Request) => {
+      requestedUrls.push(String(input));
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+    fireEvent.change(view.getByLabelText("Descriptor"), { target: { value: "stale" } });
+
+    await view.findByText("Napoleon descriptor discovery is stale; Concierge is fail-closed until rediscovery.");
+    const contractStatus = view.getByText("Connection state").closest("section") as HTMLElement;
+    assert.ok(contractStatus);
+    assert.ok(within(contractStatus).getByText("descriptor_mismatch"));
+    assert.ok(within(contractStatus).getByText("matched"));
+    assert.ok(within(contractStatus).getByText("valid"));
+
+    const preflight = view.getByText("Live send preflight").closest("div")?.parentElement as HTMLElement | null;
+    assert.ok(preflight);
+    assert.ok(preflight.classList.contains("blocked"));
+    assert.ok(within(preflight).getByText("Descriptor integrity"));
+    assert.ok(within(preflight).getByText("Descriptor cache is stale. Checksum matched; signature valid."));
+    assert.ok(within(preflight).getByText("Next step: run descriptor discovery for the configured Napoleon endpoint."));
+
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Draft a bridge readiness summary" } });
+    await waitFor(() => assert.equal(composer.value, "Draft a bridge readiness summary"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    const blockedMessages = await view.findAllByText(/Napoleon bridge blocked: descriptor_mismatch/);
+    const blockedReply = blockedMessages.find((message) => message.closest("article"))?.closest("article") as HTMLElement | null;
+    assert.ok(blockedReply);
+    assert.ok(within(blockedReply).getByText("Blocked Napoleon governed bridge attempt"));
+    assert.ok(within(blockedReply).getByText("No Napoleon response was accepted; fail-closed local state only."));
+    assert.ok(within(blockedReply).getByText("descriptor_stale"));
+    assert.ok(within(blockedReply).getByText("Blocked effects"));
+    assert.ok(within(blockedReply).getAllByText(/runtime_authority/).length > 0);
+    assert.equal(
+      requestedUrls.some((url) => url === "http://127.0.0.1:8787/v1/concierge/turn"),
+      false,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("blocks rendered live send before fetch when no Napoleon endpoint is configured", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([

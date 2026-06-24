@@ -226,7 +226,7 @@ type SteeringSubmissionView = {
 
 function deriveRuntimeValidationSource(input: {
   endpoint: string;
-  descriptorMode: "discovered" | "live" | "missing" | "checksum_mismatch";
+  descriptorMode: "discovered" | "live" | "missing" | "checksum_mismatch" | "stale";
   evidenceCaptureState: "not_run" | "passed" | "failed";
   evidenceComparisonState: "not_run" | "passed" | "failed";
 }): RuntimeValidationSource | undefined {
@@ -385,7 +385,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [input, setInput] = useState("");
   const [profile, setProfile] = useState<LocalProfile>(initialProfile);
   const [rehearsalMode, setRehearsalMode] = useState(true);
-  const [descriptorMode, setDescriptorMode] = useState<"discovered" | "live" | "missing" | "checksum_mismatch">("discovered");
+  const [descriptorMode, setDescriptorMode] =
+    useState<"discovered" | "live" | "missing" | "checksum_mismatch" | "stale">("discovered");
   const [liveDescriptorInput, setLiveDescriptorInput] = useState<DescriptorConnectionInput | null>(null);
   const [descriptorDiscoveryMessage, setDescriptorDiscoveryMessage] = useState<string | null>(null);
   const [chiefOfStaffCapabilities, setChiefOfStaffCapabilities] =
@@ -581,6 +582,18 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       return {
         ...liveDescriptorInput,
         endpointConfigured: Boolean(endpoint.trim()),
+      };
+    }
+    if (descriptorMode === "stale") {
+      return {
+        endpointConfigured: Boolean(endpoint.trim()),
+        descriptor: defaultChiefOfStaffDescriptor,
+        expectedChecksum: "sha256:local-static",
+        actualChecksum: "sha256:local-static",
+        signatureValid: true,
+        discoveredAt: "2026-01-01T00:00:00.000Z",
+        maxAgeSeconds: 60,
+        now: "2026-01-01T00:02:00.000Z",
       };
     }
     if (endpoint.trim() && descriptorMode !== "checksum_mismatch") {
@@ -870,7 +883,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     }
   }
 
-  function updateDescriptorMode(value: "discovered" | "live" | "missing" | "checksum_mismatch") {
+  function updateDescriptorMode(value: "discovered" | "live" | "missing" | "checksum_mismatch" | "stale") {
     setDescriptorMode(value);
     setSteeringDraftExportJson(null);
     clearBridgeReadinessProof();
@@ -3306,6 +3319,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <option value="live">Live discovered descriptor</option>
             <option value="missing">Missing descriptor</option>
             <option value="checksum_mismatch">Checksum/signature mismatch</option>
+            <option value="stale">Stale descriptor cache</option>
           </select>
         </label>
         <button className="secondary" onClick={() => void discoverDescriptor()}>
@@ -5256,6 +5270,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                   <>
                     <dt>Profile mode</dt>
                     <dd>{m.metadata.profileMode}</dd>
+                  </>
+                ) : null}
+                {m.metadata.descriptorFailureReason ? (
+                  <>
+                    <dt>Descriptor failure</dt>
+                    <dd>{m.metadata.descriptorFailureReason}</dd>
                   </>
                 ) : null}
                 {m.metadata.decisionId ? (
