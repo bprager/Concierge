@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered coverage proving returned capability review packet results and exported packet state clear when Rehearsal Mode is enabled, preventing live review evidence from remaining visible in local-only preview mode.
 - Added rendered coverage proving returned capability review packet results and exported packet state clear when the active user profile changes, preventing stale adult-owner review decisions from crossing into child-protected scope.
 - Added rendered coverage proving returned capability review packet results and exported packet state clear when Napoleon endpoint context changes, preventing stale review decisions from crossing connection scopes.
 - Added rendered coverage proving evaluator validation imports and exported readiness proofs clear when Napoleon endpoint context changes, preventing stale evaluator target metadata from shaping current readiness displays.
