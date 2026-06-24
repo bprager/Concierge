@@ -442,11 +442,24 @@ function sanitizeCapabilityDisplayText(value: string): string {
   return trimmed;
 }
 
+function sanitizeCapabilityEffectLabel(value: string): string {
+  const trimmed = value.trim();
+  if (
+    !trimmed ||
+    trimmed.length > 64 ||
+    SENSITIVE_METADATA_PATTERN.test(trimmed) ||
+    !/^[a-z0-9][a-z0-9_.\s-]{0,63}$/i.test(trimmed)
+  ) {
+    return "redacted_label";
+  }
+  return trimmed.toLocaleLowerCase().replace(/[\s-]+/g, "_");
+}
+
 function sanitizeCapabilityLatestTurnEvidence(evidence: CapabilityLatestTurnEvidence): CapabilityLatestTurnEvidence {
   const blockedEffects = [
     ...new Set(
       evidence.blockedEffects
-        .map(sanitizeCapabilityMetadataLabel)
+        .map(sanitizeCapabilityEffectLabel)
         .filter((effect) => effect !== "redacted_label"),
     ),
   ].slice(0, 12);

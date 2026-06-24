@@ -1558,7 +1558,7 @@ test("capability answers include sanitized evidence drilldown export metadata", 
     governance: "no_go",
     trace: "trace_latest_drilldown",
     failureReason: "governance_denied",
-    blockedEffects: ["memory_write", "external_send", "token_secret"],
+    blockedEffects: [" Memory Write ", "external-send", "token_secret"],
     nextStep: "Align the bridge contract before retry.",
     boundary: "No Napoleon response was accepted; fail-closed local state only.",
     proposalOnly: true,
@@ -1578,7 +1578,7 @@ test("capability answers include sanitized evidence drilldown export metadata", 
     "not returned; bridge failed closed before response proof was accepted",
   );
   assert.equal(exported.latestTurnEvidence?.trace, "trace_latest_drilldown");
-  assert.equal(exported.latestTurnEvidence?.blockedEffects.includes("external_send"), true);
+  assert.deepEqual(exported.latestTurnEvidence?.blockedEffects, ["memory_write", "external_send"]);
   assert.equal(exported.latestTurnEvidence?.blockedEffects.includes("token_secret"), false);
   const exportedJson = JSON.stringify(exported);
   assert.equal(exportedJson.includes("raw user request must not export"), false);
@@ -1593,6 +1593,7 @@ test("capability answers include sanitized evidence drilldown export metadata", 
     packet.latestTurnEvidence?.proofAlignment,
     "not returned; bridge failed closed before response proof was accepted",
   );
+  assert.deepEqual(packet.latestTurnEvidence?.blockedEffects, ["memory_write", "external_send"]);
   assert.equal(packet.latestTurnEvidence?.proposalOnly, true);
   assert.equal(JSON.stringify(packet).includes("token_secret"), false);
 });
