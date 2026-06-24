@@ -249,6 +249,10 @@ test("successful Napoleon response proof includes returned target capability wit
   assert.equal(exported.responseProof.handledBy, "napoleon.chief_of_staff");
   assert.equal(exported.responseProof.attributionBoundary, "Returned bridge provenance only; not local authority.");
   assert.equal(exported.responseProof.targetCapability, "napoleon.chief_of_staff");
+  assert.equal(
+    (exported.responseProof as { proofAlignment?: string }).proofAlignment,
+    "target capability shares returned trace/audit; selected-agent proof not returned",
+  );
   assert.deepEqual(exported.responseProof.selectedAgents, []);
 });
 
@@ -378,6 +382,7 @@ test("exports last successful Napoleon response proof without raw text endpoint 
       status: string;
       heading: string;
       handledBy: string;
+      proofAlignment: string;
       attributionBoundary: string;
       recommendation: string;
       governance: string;
@@ -401,6 +406,7 @@ test("exports last successful Napoleon response proof without raw text endpoint 
   assert.equal(proof.generatedAt, "2026-06-13T00:00:00.000Z");
   assert.equal(proof.responseProof.status, "verified");
   assert.equal(proof.responseProof.handledBy, "Passive Brain");
+  assert.equal(proof.responseProof.proofAlignment, "same returned trace/audit as Napoleon response proof");
   assert.equal(proof.responseProof.attributionBoundary, "Returned bridge provenance only; not local authority.");
   assert.equal(proof.responseProof.recommendation, "keeping the rollout in review");
   assert.equal(proof.responseProof.traceId, "trace_response_export");
@@ -591,6 +597,7 @@ test("compares sanitized Napoleon response proof exports", () => {
   assert.equal(comparison.reviewSummary?.trace, "trace_current");
   assert.equal(comparison.reviewSummary?.blockedEffects, "agent_dispatch, memory_write");
   assert.equal(comparison.reviewSummary?.boundary, "Returned bridge provenance only; not local authority.");
+  assert.equal(comparison.reviewSummary?.proofAlignment, "same returned trace/audit as Napoleon response proof");
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Handled by"));
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Governance"));
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Selected agents"));
@@ -619,6 +626,7 @@ test("summarizes current Napoleon response proof when no previous proof is avail
   assert.equal(comparison.reviewSummary?.trace, "trace_current_review_summary");
   assert.equal(comparison.reviewSummary?.blockedEffects, "external_send, memory_write");
   assert.equal(comparison.reviewSummary?.boundary, "Returned bridge provenance only; not local authority.");
+  assert.equal(comparison.reviewSummary?.proofAlignment, "same returned trace/audit as Napoleon response proof");
   assert.deepEqual(comparison.changes, []);
 });
 

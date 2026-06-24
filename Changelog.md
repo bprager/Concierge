@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added proof-alignment metadata to sanitized Napoleon response proof exports, comparison summaries, and export telemetry so exported proof preserves selected-agent versus target-capability-only attribution boundaries.
 - Added explicit target-capability-only proof alignment to latest Napoleon turn evidence, so Capability Intelligence does not blur returned capability metadata into selected-agent proof.
 - Added selected-agent latest-turn proof alignment for capability-intelligence evidence when an accepted Napoleon bridge response has agent provenance but no recommendation provenance.
 - Added explicit attribution-source and proof-alignment fields to latest Napoleon turn evidence in capability-intelligence drilldowns and review packet exports, keeping bridge-proven contribution claims separate from local summaries.

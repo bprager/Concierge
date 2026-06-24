@@ -2585,6 +2585,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       conversationId,
       status: proof?.status ?? "not_available",
       handledBy: proofJsonValue("handledBy"),
+      proofAlignment: proofJsonValue("proofAlignment"),
       attributionBoundary: proof ? "Returned bridge provenance only; not local authority." : "unavailable",
       governance: proofDetail("Governance"),
       profileMode: proofDetail("Profile mode"),
@@ -5530,6 +5531,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                   <div>
                     <dt>Current boundary</dt>
                     <dd>{napoleonProofComparison.reviewSummary.boundary}</dd>
+                  </div>
+                  <div>
+                    <dt>Current proof alignment</dt>
+                    <dd>{napoleonProofComparison.reviewSummary.proofAlignment}</dd>
                   </div>
                 </dl>
               ) : null}

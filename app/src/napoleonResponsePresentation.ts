@@ -29,6 +29,7 @@ export interface NapoleonResponseProofReviewSummary {
   trace: string;
   blockedEffects: string;
   boundary: string;
+  proofAlignment: string;
 }
 
 export interface NapoleonResponseProofComparison {
@@ -40,6 +41,7 @@ export interface NapoleonResponseProofComparison {
 
 interface NapoleonResponseProofMetadata {
   handledBy: string;
+  proofAlignment: string;
   targetCapability: string;
   recommendation: string;
   selectedAgents: string[];
@@ -117,6 +119,7 @@ function sanitizeResponseProofList(values: string[]): string[] {
 function sanitizeResponseProofMetadata(metadata: NapoleonResponseProofMetadata): NapoleonResponseProofMetadata {
   return {
     handledBy: sanitizeResponseProofString(metadata.handledBy),
+    proofAlignment: sanitizeResponseProofString(metadata.proofAlignment),
     targetCapability: sanitizeResponseProofString(metadata.targetCapability),
     recommendation: sanitizeResponseProofString(metadata.recommendation),
     selectedAgents: sanitizeResponseProofList(metadata.selectedAgents),
@@ -135,6 +138,7 @@ export function buildSuccessfulNapoleonResponsePresentation(
   const targetCapability = response.targetAgent ?? "unavailable";
   const recommendation = response.recommendationProvenance?.summary ?? "unavailable";
   const targetCapabilityLabel = response.targetAgent ? options.capabilityLabelsById?.[response.targetAgent] : undefined;
+  const proof = describeNapoleonResponseProof(response, { targetCapabilityLabel });
 
   return {
     delegation: describeDelegation(response.delegation, response.targetAgent, {
@@ -144,9 +148,10 @@ export function buildSuccessfulNapoleonResponsePresentation(
       auditId: response.auditEnvelope.audit_id,
       targetCapabilityLabel,
     }),
-    proof: describeNapoleonResponseProof(response, { targetCapabilityLabel }),
+    proof,
     proofMetadata: {
       handledBy: agentNames.join(", ") || targetCapability || "unavailable",
+      proofAlignment: proofDetailValue(proof, "Proof alignment"),
       targetCapability,
       recommendation,
       selectedAgents: agentNames,
@@ -182,6 +187,7 @@ export function exportNapoleonResponseProofJson(
           status: "not_available",
           heading: "No successful Napoleon proof",
           handledBy: "unavailable",
+          proofAlignment: "unavailable",
           attributionBoundary: "No accepted Napoleon response provenance is available.",
           governance: "unavailable",
           profileMode: "unavailable",
@@ -210,6 +216,7 @@ export function exportNapoleonResponseProofJson(
 
   const metadata: NapoleonResponseProofMetadata = sanitizeResponseProofMetadata(state.proofMetadata ?? {
     handledBy: optionalProofDetailValue(proof, "Handled by"),
+    proofAlignment: optionalProofDetailValue(proof, "Proof alignment"),
     targetCapability: optionalProofDetailValue(proof, "Target capability"),
     recommendation: optionalProofDetailValue(proof, "Napoleon recommendation"),
     selectedAgents: splitList(proofDetailValue(proof, "Selected agents")),
@@ -230,6 +237,7 @@ export function exportNapoleonResponseProofJson(
         status: proof.status,
         heading: proof.heading,
         handledBy: metadata.handledBy,
+        proofAlignment: metadata.proofAlignment,
         attributionBoundary: "Returned bridge provenance only; not local authority.",
         governance: sanitizeResponseProofString(proofDetailValue(proof, "Governance")),
         profileMode: sanitizeResponseProofString(proofDetailValue(proof, "Profile mode")),
@@ -323,6 +331,7 @@ function buildNapoleonResponseProofReviewSummary(
     trace: proofComparisonValue(proofField(proof, ["responseProof", "traceId"])),
     blockedEffects: proofComparisonValue(proofField(proof, ["responseProof", "blockedEffects"])),
     boundary: proofComparisonValue(proofField(proof, ["responseProof", "attributionBoundary"])),
+    proofAlignment: proofComparisonValue(proofField(proof, ["responseProof", "proofAlignment"])),
   };
 }
 
@@ -360,6 +369,7 @@ export function compareNapoleonResponseProofs(
   const comparedFields: Array<{ label: string; path: string[] }> = [
     { label: "Proof status", path: ["responseProof", "status"] },
     { label: "Handled by", path: ["responseProof", "handledBy"] },
+    { label: "Proof alignment", path: ["responseProof", "proofAlignment"] },
     { label: "Attribution boundary", path: ["responseProof", "attributionBoundary"] },
     { label: "Governance", path: ["responseProof", "governance"] },
     { label: "Profile mode", path: ["responseProof", "profileMode"] },
