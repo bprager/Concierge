@@ -520,6 +520,65 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(delegationRequested?.attributes.requestKind, "text_turn");
     assert.equal(delegationRequested?.attributes.agentDispatchPerformed, false);
     assert.equal(delegationRequested?.attributes.externalSendPerformed, false);
+
+    const requestCountBeforeCurrentProofPreviews = requestedUrls.length;
+    await user.click(screen.getByRole("button", { name: "Shape sample response for voice" }));
+    await user.click(screen.getByRole("button", { name: "Prepare neutral avatar state" }));
+    await user.click(screen.getByRole("button", { name: "Map sample stance to expression" }));
+    assert.equal(requestedUrls.length, requestCountBeforeCurrentProofPreviews);
+
+    const shaping = within(screen.getByLabelText("Voice response shaping"));
+    assert.ok(shaping.getByText("Provenance state: returned_bridge"));
+    assert.ok(
+      shaping.getByText(
+        "Spoken summary: Napoleon says: Napoleon recommends keeping this as a governed review draft. Passive Brain found returned bridge context for this preview.",
+      ),
+    );
+    assert.ok(shaping.getByText("Authority boundary: Bridge-provided Napoleon provenance preserved for speech."));
+    assert.ok(shaping.getByText("Audio playback started: no"));
+    assert.ok(shaping.getByText("Agent dispatch: no"));
+
+    const avatarState = within(screen.getByLabelText("Avatar state"));
+    assert.ok(avatarState.getByText("Provenance state: returned_bridge"));
+    assert.ok(avatarState.getByText("Provenance: Bridge-provided Napoleon response"));
+    assert.ok(
+      avatarState.getByText(
+        "Authority boundary: Avatar reflects returned text provenance only; it is not Napoleon approval or an agent action.",
+      ),
+    );
+    assert.ok(avatarState.getByText("Live Napoleon contacted: no"));
+    assert.ok(avatarState.getByText("Agent dispatch: no"));
+
+    const avatarExpression = within(screen.getByLabelText("Avatar expression"));
+    assert.ok(avatarExpression.getByText("Provenance state: returned_bridge"));
+    assert.ok(avatarExpression.getByText("Avatar animation started: no"));
+    assert.ok(avatarExpression.getByText("Live Napoleon contacted: no"));
+    assert.ok(avatarExpression.getByText("Agent dispatch: no"));
+
+    const currentProofPreviewTelemetry = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const latestTelemetryEvent = (eventName: string) =>
+      [...(currentProofPreviewTelemetry.events ?? [])].reverse().find((event) => event.event === eventName);
+    const voicePreviewEvent = latestTelemetryEvent("voice_response_shaped");
+    const avatarPreviewEvent = latestTelemetryEvent("avatar_state_changed");
+    const expressionPreviewEvent = latestTelemetryEvent("avatar_expression_set");
+    assert.ok(voicePreviewEvent);
+    assert.equal(voicePreviewEvent.attributes.provenanceState, "returned_bridge");
+    assert.equal(voicePreviewEvent.attributes.bridgeProvidedProvenance, true);
+    assert.equal(voicePreviewEvent.attributes.audioPlaybackStarted, false);
+    assert.equal(voicePreviewEvent.attributes.agentDispatchPerformed, false);
+    assert.ok(avatarPreviewEvent);
+    assert.equal(avatarPreviewEvent.attributes.provenanceState, "returned_bridge");
+    assert.equal(avatarPreviewEvent.attributes.bridgeProvidedProvenance, true);
+    assert.equal(avatarPreviewEvent.attributes.liveNapoleonContacted, false);
+    assert.equal(avatarPreviewEvent.attributes.agentDispatchPerformed, false);
+    assert.ok(expressionPreviewEvent);
+    assert.equal(expressionPreviewEvent.attributes.provenanceState, "returned_bridge");
+    assert.equal(expressionPreviewEvent.attributes.bridgeProvidedProvenance, true);
+    assert.equal(expressionPreviewEvent.attributes.avatarAnimationStarted, false);
+    assert.equal(expressionPreviewEvent.attributes.agentDispatchPerformed, false);
+
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));
     await screen.findByText("No previous Napoleon response proof is available in this app session.");
     await user.click(screen.getByRole("button", { name: "Export Napoleon proof" }));
