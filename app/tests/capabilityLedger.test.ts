@@ -1552,6 +1552,8 @@ test("capability answers include sanitized evidence drilldown export metadata", 
   const answerWithTurnEvidence = withCapabilityLatestTurnEvidence(answer, {
     status: "blocked",
     summary: "Blocked bridge attempt; governance no_go.",
+    attributionSource: "fail-closed bridge metadata; no accepted delegation attribution",
+    proofAlignment: "not returned; bridge failed closed before response proof was accepted",
     handledBy: "not returned",
     governance: "no_go",
     trace: "trace_latest_drilldown",
@@ -1567,6 +1569,14 @@ test("capability answers include sanitized evidence drilldown export metadata", 
   assert.equal(exported.answerKind, "recommended_next_capabilities");
   assert.equal(exported.rows[0].scoreComponents?.frequency, 2);
   assert.equal(exported.latestTurnEvidence?.status, "blocked");
+  assert.equal(
+    exported.latestTurnEvidence?.attributionSource,
+    "fail-closed bridge metadata; no accepted delegation attribution",
+  );
+  assert.equal(
+    exported.latestTurnEvidence?.proofAlignment,
+    "not returned; bridge failed closed before response proof was accepted",
+  );
   assert.equal(exported.latestTurnEvidence?.trace, "trace_latest_drilldown");
   assert.equal(exported.latestTurnEvidence?.blockedEffects.includes("external_send"), true);
   assert.equal(exported.latestTurnEvidence?.blockedEffects.includes("token_secret"), false);
@@ -1578,6 +1588,11 @@ test("capability answers include sanitized evidence drilldown export metadata", 
 
   const packet = exportCapabilityReviewPacket(answerWithTurnEvidence, { generatedAt: "2026-06-11T12:00:00.000Z" });
   assert.equal(packet.latestTurnEvidence?.status, "blocked");
+  assert.equal(packet.latestTurnEvidence?.attributionSource, "fail-closed bridge metadata; no accepted delegation attribution");
+  assert.equal(
+    packet.latestTurnEvidence?.proofAlignment,
+    "not returned; bridge failed closed before response proof was accepted",
+  );
   assert.equal(packet.latestTurnEvidence?.proposalOnly, true);
   assert.equal(JSON.stringify(packet).includes("token_secret"), false);
 });

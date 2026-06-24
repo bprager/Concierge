@@ -1191,6 +1191,8 @@ test("capability recommendations include latest accepted Napoleon turn evidence"
     const latestEvidenceText = latestEvidenceLabel.closest("dl")?.textContent ?? "";
     assert.ok(latestEvidenceText.includes("accepted"));
     assert.ok(latestEvidenceText.includes("Passive Brain"));
+    assert.ok(latestEvidenceText.includes("Attribution: accepted Napoleon bridge response proof."));
+    assert.ok(latestEvidenceText.includes("Proof alignment: same returned trace/audit as Napoleon response proof."));
     assert.ok(latestEvidenceText.includes("requires_review"));
     assert.ok(latestEvidenceText.includes("external_send"));
     assert.equal(requestedUrls.length, fetchCountAfterLiveTurn);
@@ -1200,6 +1202,8 @@ test("capability recommendations include latest accepted Napoleon turn evidence"
     const exported = exportBlock.textContent ?? "";
     assert.ok(exported.includes('"latestTurnEvidence"'));
     assert.ok(exported.includes('"status": "accepted"'));
+    assert.ok(exported.includes('"attributionSource": "accepted Napoleon bridge response proof"'));
+    assert.ok(exported.includes('"proofAlignment": "same returned trace/audit as Napoleon response proof"'));
     assert.ok(exported.includes("Passive Brain"));
     assert.equal(exported.includes("127.0.0.1"), false);
   } finally {

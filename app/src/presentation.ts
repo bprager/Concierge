@@ -1470,6 +1470,8 @@ export function describeLastNapoleonTurnSummary(
         { label: "Trace", value: trace },
         { label: "Blocked effects", value: blockedEffects },
         { label: "Boundary", value: "No Napoleon response was accepted; fail-closed local state only." },
+        { label: "Attribution source", value: "fail-closed bridge metadata; no accepted delegation attribution" },
+        { label: "Proof alignment", value: "not returned; bridge failed closed before response proof was accepted" },
         { label: "Failure reason", value: reason },
         { label: "Descriptor", value: descriptor },
         { label: "Next step", value: nextStep },
@@ -1489,6 +1491,8 @@ export function describeLastNapoleonTurnSummary(
         { label: "Trace", value: "not returned" },
         { label: "Blocked effects", value: "not returned" },
         { label: "Boundary", value: "not returned" },
+        { label: "Attribution source", value: "not returned" },
+        { label: "Proof alignment", value: "not returned" },
       ],
     };
   }
@@ -1507,6 +1511,8 @@ export function describeLastNapoleonTurnSummary(
       { label: "Trace", value: proofDetailValue(proof, "Trace") },
       { label: "Blocked effects", value: proofDetailValue(proof, "Blocked effects") },
       { label: "Boundary", value: proofDetailValue(proof, "Attribution boundary") },
+      { label: "Attribution source", value: "accepted Napoleon bridge response proof" },
+      { label: "Proof alignment", value: proofDetailValue(proof, "Recommendation proof alignment") },
     ],
   };
 }
@@ -1531,6 +1537,8 @@ export function describeNapoleonTurnTimeline(
           { label: "Trace", value: "not returned" },
           { label: "Blocked effects", value: "not returned" },
           { label: "Boundary", value: "not returned" },
+          { label: "Attribution source", value: "not returned" },
+          { label: "Proof alignment", value: "not returned" },
           { label: "Failure reason", value: "not returned" },
           { label: "Descriptor", value: "not returned" },
           { label: "Next step", value: "not returned" },

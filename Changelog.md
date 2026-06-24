@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added explicit attribution-source and proof-alignment fields to latest Napoleon turn evidence in capability-intelligence drilldowns and review packet exports, keeping bridge-proven contribution claims separate from local summaries.
 - Added evidence-specific observability trace handoff readiness wording so the UI says sanitized trace evidence and evidence-only trace packet instead of proposal-only review draft language.
 - Added repository validation that canonical Napoleon review/evidence/submission docs mention every generated Napoleon target ID, path, and request kind, preventing governed handoff documentation drift.
 - Added capability-intelligence tracking for governed observability trace handoff send events, including `deny` and `no_go` outcomes as correct blocked safety outcomes rather than bridge repair recommendations.

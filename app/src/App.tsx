@@ -311,7 +311,11 @@ function formatCapabilityAnswer(
         .join("\n")
     : "No local signals yet.";
   const latestTurnEvidence = answer.drilldown.latestTurnEvidence
-    ? `\n\nLatest Napoleon turn evidence: ${answer.drilldown.latestTurnEvidence.summary} Next: ${answer.drilldown.latestTurnEvidence.nextStep}.`
+    ? `\n\nLatest Napoleon turn evidence: ${answer.drilldown.latestTurnEvidence.summary} Attribution: ${
+        answer.drilldown.latestTurnEvidence.attributionSource ?? "not returned"
+      }. Proof alignment: ${answer.drilldown.latestTurnEvidence.proofAlignment ?? "not returned"}. Next: ${
+        answer.drilldown.latestTurnEvidence.nextStep
+      }.`
     : "";
 
   return `${answer.summary}\n\n${rows}${latestTurnEvidence}\n\nProfile scope: ${profileMode}. Evidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
@@ -3225,6 +3229,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const evidence: CapabilityLatestTurnEvidence = {
       status: lastNapoleonTurnFailure ? "blocked" : "accepted",
       summary: latestEntry.summary,
+      attributionSource: lastNapoleonTurnFailure
+        ? "fail-closed bridge metadata; no accepted delegation attribution"
+        : "accepted Napoleon bridge response proof",
+      proofAlignment: detailValue(latestEntry.details, "Proof alignment"),
       handledBy: detailValue(latestEntry.details, "Handled by"),
       governance: detailValue(latestEntry.details, "Governance"),
       trace: detailValue(latestEntry.details, "Trace"),
@@ -5315,6 +5323,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                             {m.metadata.capabilityDrilldown.latestTurnEvidence.summary} Next:{" "}
                             {m.metadata.capabilityDrilldown.latestTurnEvidence.nextStep}. Blocked effects:{" "}
                             {m.metadata.capabilityDrilldown.latestTurnEvidence.blockedEffects.join(", ") || "none"}.
+                            Attribution:{" "}
+                            {m.metadata.capabilityDrilldown.latestTurnEvidence.attributionSource ?? "not returned"}.
+                            Proof alignment:{" "}
+                            {m.metadata.capabilityDrilldown.latestTurnEvidence.proofAlignment ?? "not returned"}.
                           </dd>
                         </dl>
                       ) : null}

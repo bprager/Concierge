@@ -185,6 +185,8 @@ export interface CapabilityAnswerRow {
 export interface CapabilityLatestTurnEvidence {
   status: "accepted" | "blocked";
   summary: string;
+  attributionSource?: string;
+  proofAlignment?: string;
   handledBy?: string;
   governance?: string;
   trace?: string;
@@ -452,6 +454,10 @@ function sanitizeCapabilityLatestTurnEvidence(evidence: CapabilityLatestTurnEvid
   return {
     status: evidence.status === "accepted" ? "accepted" : "blocked",
     summary: sanitizeCapabilityDisplayText(evidence.summary),
+    ...(evidence.attributionSource
+      ? { attributionSource: sanitizeCapabilityDisplayText(evidence.attributionSource) }
+      : {}),
+    ...(evidence.proofAlignment ? { proofAlignment: sanitizeCapabilityDisplayText(evidence.proofAlignment) } : {}),
     ...(evidence.handledBy ? { handledBy: sanitizeCapabilityDisplayText(evidence.handledBy) } : {}),
     ...(evidence.governance ? { governance: sanitizeCapabilityDisplayText(evidence.governance) } : {}),
     ...(evidence.trace ? { trace: sanitizeCapabilityDisplayText(evidence.trace) } : {}),
