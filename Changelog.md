@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when the active profile changes, preventing adult-owner runtime proof context from remaining visible in child-protected scope.
 - Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when Rehearsal Mode is enabled, keeping local-only preview mode free of imported live-runtime proof context.
 - Clarified rendered coverage that returned memory proposal and governance review results clear when Rehearsal Mode is enabled, including disabled live submit controls after the reset.
 - Added rendered coverage proving returned Chief of Staff steering review results clear when the active user profile changes, preventing adult-owner decision and audit evidence from crossing into child-protected scope.
