@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Clarified canonical backlog and architecture documentation for the read-only evolution proposal status route, including descriptor-gated route visibility, fail-closed profile-scope handling, and the no-approval/no-evolution-application boundary.
 - Added Napoleon contract-alignment coverage for the read-only evolution proposal status route, so `/evolution/proposals/{proposal_id}/status` is treated as a mapped, non-authorizing runtime path in alignment reports instead of an unmapped evolution gap.
 - Added descriptor-gated, read-only evolution proposal status refresh: the Text UI can refresh local lifecycle metadata from Napoleon's `/evolution/proposals/{proposal_id}/status` route only when the descriptor advertises `evolution_proposal_status`, uses `evolution_proposal_status_handoff`, classifies refresh telemetry as Capability Intelligence evidence, and fails closed on local evolution or side-effect claims.
 - Added local evolution proposal lifecycle tracking for Capability Intelligence submission attempts: the Text UI now records drafted, accepted-for-review, rejected, or blocked metadata-only proposal states with returned Napoleon decision/audit references when available, exports sanitized lifecycle records, and shows status refresh as unavailable until Napoleon advertises a governed status route.

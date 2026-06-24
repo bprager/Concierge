@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Clarified canonical backlog and architecture route documentation for evolution proposal status refresh, including its descriptor-gated read-only path, fail-closed profile-scope checks, and non-authorizing boundary.
 - Added Napoleon contract-alignment coverage for the read-only `/evolution/proposals/{proposal_id}/status` runtime path so the local alignment report recognizes proposal status refresh as a mapped, non-authorizing handoff.
 - Added descriptor-gated, read-only evolution proposal status refresh for `/evolution/proposals/{proposal_id}/status`, with Text UI lifecycle updates, `evolution_proposal_status_handoff` contract metadata, telemetry classification, and fail-closed rejection of local evolution or side-effect claims.
 - Added local metadata-only evolution proposal lifecycle tracking after `/evolution/proposals` intake submissions, with Text UI state/export, decision/audit references, fail-closed blocked-state records, and status-refresh-unavailable wording until Napoleon advertises a governed status route.
