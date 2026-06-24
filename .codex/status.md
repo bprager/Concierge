@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added explicit generated-route coverage for observability trace handoffs, making the route panel show that the Napoleon handoff cannot append traces, create audit authority, capture approval, write memory, route tasks, dispatch agents, send externally, or apply changes locally.
 - Added explicit generated-route coverage for governance review handoffs, making the route panel show that the Napoleon handoff cannot capture approval, override governance, write memory, dispatch agents, send externally, update registries, append traces, route tasks, or apply changes locally.
 - Added explicit generated-route coverage for Chief of Staff request handoffs, making the route panel show that the Napoleon handoff cannot route tasks, update registries, append traces, capture approval, write memory, dispatch agents, send externally, or apply changes locally.
 - Added explicit generated-route coverage for governance evaluation, making the route panel show that the Napoleon handoff cannot override governance, capture approval, write memory, dispatch agents, send externally, update registries, append traces, route tasks, or apply changes locally.

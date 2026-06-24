@@ -742,6 +742,12 @@ test("describes named Napoleon review targets with generated metadata source", (
   assert.equal(summary.label, "Observability trace handoff");
   assert.equal(summary.path, "/observability/traces");
   assert.equal(summary.requestKind, "observability_trace_handoff");
+  assert.ok(summary.boundary.includes("trace-evidence Napoleon target"));
+  assert.ok(summary.boundary.includes("trace append"));
+  assert.ok(summary.boundary.includes("audit authority"));
+  assert.ok(summary.sideEffects.includes("No trace append"));
+  assert.ok(summary.sideEffects.includes("audit authority"));
+  assert.ok(summary.sideEffects.includes("task routing"));
   assert.equal(summary.sourceSummary, "Generated from api/napoleon_bridge.openapi.yaml review/evidence metadata");
   assert.equal(summary.requiredResponseSummary.includes("traceEnvelope"), true);
   assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);

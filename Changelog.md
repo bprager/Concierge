@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added explicit generated-route coverage for observability trace handoffs showing that the Napoleon handoff cannot append traces, create audit authority, capture approval, write memory, route tasks, dispatch agents, send externally, or apply changes locally.
 - Added explicit generated-route coverage for governance review handoffs showing that the Napoleon handoff cannot capture approval, override governance, write memory, dispatch agents, send externally, update registries, append traces, route tasks, or apply changes locally.
 - Added explicit generated-route coverage for Chief of Staff request handoffs showing that the Napoleon handoff cannot route tasks, update registries, append traces, capture approval, write memory, dispatch agents, send externally, or apply changes locally.
 - Added explicit generated-route coverage for governance evaluation showing that the Napoleon handoff cannot override governance, capture approval, write memory, dispatch agents, send externally, update registries, append traces, route tasks, or apply changes locally.

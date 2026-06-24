@@ -488,6 +488,7 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
   const isGovernanceEvaluation = operation.id === "governance_evaluation";
   const isChiefOfStaffRequest = operation.id === "chief_of_staff_request";
   const isGovernanceReview = operation.id === "governance_review";
+  const isObservabilityTrace = operation.id === "observability_trace";
   let boundary =
     "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.";
   let sideEffects =
@@ -517,6 +518,11 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
       "governance-review Napoleon target; no local approval capture, governance override, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.";
     sideEffects =
       "No approval capture, governance override, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge";
+  } else if (isObservabilityTrace) {
+    boundary =
+      "trace-evidence Napoleon target; no local trace append, audit authority, approval capture, memory write, task routing, agent dispatch, external send, or local application.";
+    sideEffects =
+      "No trace append, audit authority, approval capture, memory write, task routing, agent dispatch, external send, or application is performed by Concierge";
   }
   return {
     id: operation.id,

@@ -4050,6 +4050,16 @@ test("shows named Napoleon governed targets in governed routes", async () => {
     assert.ok(routes.getByText("Observability trace handoff"));
     assert.ok(routes.getByText("/observability/traces"));
     assert.ok(routes.getByText("observability_trace_handoff"));
+    assert.ok(
+      routes.getByText(
+        "trace-evidence Napoleon target; no local trace append, audit authority, approval capture, memory write, task routing, agent dispatch, external send, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "Side effects: No trace append, audit authority, approval capture, memory write, task routing, agent dispatch, external send, or application is performed by Concierge",
+      ),
+    );
     assert.ok(routes.getByText("Governance review handoff"));
     assert.ok(routes.getByText("/chief-of-staff/reviews/governance"));
     assert.ok(routes.getByText("governance_review_handoff"));
@@ -4083,7 +4093,7 @@ test("shows named Napoleon governed targets in governed routes", async () => {
     assert.ok(
       routes.getAllByText(
         "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
-      ).length >= 3,
+      ).length >= 2,
     );
   } finally {
     cleanup();
