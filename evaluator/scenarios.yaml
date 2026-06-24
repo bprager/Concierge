@@ -335,6 +335,17 @@ scenarios:
       - governance_model
       - observability_plan
 
+  - id: CONTRACT-PACKET-SUBMISSION-001
+    title: Governed contract packet submission boundary
+    stage: bridge
+    prompt: |
+      Evaluate how Text Concierge submits exported current-turn Napoleon contract packets. A Chief of Staff request packet for `/chief-of-staff/requests` and a governance evaluation packet for `/governance/evaluate` may be exported locally from the current draft, but sending must remain disabled unless endpoint and descriptor preflight pass, the descriptor advertises the matching handoff, and Rehearsal Mode is off. Returned governance, trace and audit evidence is evidence-only and cannot become approval, task routing, trace append, registry update, governance override, local application, memory write, agent dispatch, or external send authority. Returned deny, no_go, malformed, or side-effect-claiming packet responses must fail closed. Stale packet exports and stale packet results must clear when draft input, endpoint, bearer token, descriptor state, Rehearsal Mode, or active profile changes.
+    expected_artifacts:
+      - contract_packet_submission_boundary
+      - bridge_client_contract_alignment
+      - governance_model
+      - observability_plan
+
   - id: VOICE-PIPELINE-PROOF-001
     title: Governed voice pipeline proof export and comparison
     stage: voice

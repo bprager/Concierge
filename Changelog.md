@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added evaluator coverage for governed Chief of Staff request and governance evaluation packet submissions, including descriptor/Rehearsal gates, evidence-only returned proof, stale clearing, and no-side-effect boundaries.
 - Added governed submission controls for current-turn Chief of Staff request and governance evaluation packets, requiring advertised descriptor handoffs and preserving explicit no-approval/no-side-effect result boundaries.
 - Added local-only Napoleon contract packet exports for current-turn Chief of Staff request and governance evaluation targets, with readiness summaries, safe export telemetry, and explicit false side-effect boundaries.
 - Added local blocked-attempt answers for follow-ups like "Why was that blocked?", keeping the answer tied to latest fail-closed bridge metadata without a new Napoleon request or raw failure/effect telemetry.

@@ -666,6 +666,39 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertIn("does not expose bearer tokens", checks["bridge_client_contract_alignment"]["missing_terms"])
         self.assertIn("not Napoleon approval", checks["bridge_client_contract_alignment"]["missing_terms"])
 
+    def test_contract_packet_submission_scenario_requires_descriptor_gated_evidence_only_boundary(self):
+        scenarios = {scenario["id"]: scenario for scenario in self.scenarios}
+
+        self.assertIn("CONTRACT-PACKET-SUBMISSION-001", scenarios)
+        self.assertIn(
+            "contract_packet_submission_boundary",
+            scenarios["CONTRACT-PACKET-SUBMISSION-001"]["expected_artifacts"],
+        )
+
+        incomplete_response = "Concierge exports request packets for Napoleon review."
+        checks = eval_runner.check_artifacts(
+            incomplete_response,
+            self.expected,
+            ["contract_packet_submission_boundary"],
+        )
+
+        self.assertFalse(checks["contract_packet_submission_boundary"]["found"])
+        self.assertIn("Chief of Staff request packet", checks["contract_packet_submission_boundary"]["missing_terms"])
+        self.assertIn("governance evaluation packet", checks["contract_packet_submission_boundary"]["missing_terms"])
+        self.assertIn("/chief-of-staff/requests", checks["contract_packet_submission_boundary"]["missing_terms"])
+        self.assertIn("/governance/evaluate", checks["contract_packet_submission_boundary"]["missing_terms"])
+        self.assertIn(
+            "descriptor advertises the matching handoff",
+            checks["contract_packet_submission_boundary"]["missing_terms"],
+        )
+        self.assertIn("Rehearsal Mode is off", checks["contract_packet_submission_boundary"]["missing_terms"])
+        self.assertIn("returned governance", checks["contract_packet_submission_boundary"]["missing_terms"])
+        self.assertIn("trace and audit evidence", checks["contract_packet_submission_boundary"]["missing_terms"])
+        self.assertIn("evidence-only", checks["contract_packet_submission_boundary"]["missing_terms"])
+        self.assertIn("does not route tasks", checks["contract_packet_submission_boundary"]["missing_terms"])
+        self.assertIn("does not append traces", checks["contract_packet_submission_boundary"]["missing_terms"])
+        self.assertIn("does not update registries", checks["contract_packet_submission_boundary"]["missing_terms"])
+
 
 if __name__ == "__main__":
     unittest.main()
