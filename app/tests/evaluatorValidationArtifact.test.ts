@@ -161,6 +161,83 @@ test("rejects evaluator required-action metadata that claims side effects", () =
   assert.ok(result.validation.failureReason?.includes("invalid Napoleon required-action metadata"));
 });
 
+test("rejects evaluator required-action metadata without explicit false side-effect boundaries", () => {
+  const result = parseEvaluatorValidationArtifact(
+    JSON.stringify({
+      runtimeValidation: {
+        source: "real_runtime",
+      },
+      httpEvaluator: {
+        status: "failed",
+        failureReason: "http_evaluator_handoff_not_advertised",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+        targetRequestKind: "evaluation_review_handoff",
+        targetOperationId: "evaluation_review",
+        napoleonRequiredActions: [
+          {
+            id: "advertise_evaluation_review_handoff",
+            owner: "napoleon",
+            sideEffectsPerformed: false,
+          },
+        ],
+        endpointHostRetained: false,
+        tokenRetained: false,
+        requestBodyRetained: false,
+        responseBodyRetained: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+      },
+    }),
+  );
+
+  assert.equal(result.status, "rejected");
+  assert.equal(result.validation.status, "failed");
+  assert.ok(result.validation.failureReason?.includes("invalid Napoleon required-action metadata"));
+});
+
+test("rejects evaluator required-action metadata not owned by Napoleon", () => {
+  const result = parseEvaluatorValidationArtifact(
+    JSON.stringify({
+      runtimeValidation: {
+        source: "real_runtime",
+      },
+      httpEvaluator: {
+        status: "failed",
+        failureReason: "http_evaluator_handoff_not_advertised",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+        targetRequestKind: "evaluation_review_handoff",
+        targetOperationId: "evaluation_review",
+        napoleonRequiredActions: [
+          {
+            id: "advertise_evaluation_review_handoff",
+            owner: "concierge",
+            sideEffectsPerformed: false,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            appliedLocally: false,
+          },
+        ],
+        endpointHostRetained: false,
+        tokenRetained: false,
+        requestBodyRetained: false,
+        responseBodyRetained: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+      },
+    }),
+  );
+
+  assert.equal(result.status, "rejected");
+  assert.equal(result.validation.status, "failed");
+  assert.ok(result.validation.failureReason?.includes("invalid Napoleon required-action metadata"));
+});
+
 test("rejects malformed evaluator validation artifact", () => {
   const result = parseEvaluatorValidationArtifact("{not json");
 

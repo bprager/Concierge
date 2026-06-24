@@ -149,6 +149,7 @@ function sanitizeNapoleonRequiredActions(value: unknown): NapoleonRequiredAction
     const id = cleanString(action.id);
     const owner = cleanString(action.owner);
     if (!id || !owner) return null;
+    if (owner !== "napoleon") return null;
     const sideEffectFlags = [
       "sideEffectsPerformed",
       "approvalCaptured",
@@ -157,7 +158,7 @@ function sanitizeNapoleonRequiredActions(value: unknown): NapoleonRequiredAction
       "externalSendPerformed",
       "appliedLocally",
     ] as const;
-    if (sideEffectFlags.some((flag) => action[flag] === true)) return null;
+    if (sideEffectFlags.some((flag) => action[flag] !== false)) return null;
     const advertiseUsing = cleanStringList(action.advertiseUsing);
     if (action.advertiseUsing !== undefined && advertiseUsing === null) return null;
     actions.push({

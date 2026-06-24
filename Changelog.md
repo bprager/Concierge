@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened evaluator validation imports so Napoleon required-action packets must be Napoleon-owned and carry explicit false side-effect boundary flags before they can appear in Text Concierge readiness evidence.
 - Added Text Concierge import and readiness-proof preservation for sanitized Napoleon required-action packets from live-runtime evaluator validation, with UI visibility and side-effect-claim rejection.
 - Added machine-readable Napoleon required-action packets to sanitized live-runtime validation output when a real `/cos` descriptor does not advertise the evaluator review handoff, naming the required `evaluation_review` handoff, target path, request kind, operation ID, advertising options, and false side-effect boundary.
 - Added reverse Napoleon contract-alignment reporting for named Concierge review/evidence/status targets that are absent from an inspected Napoleon runtime snapshot, keeping local generated targets from being mistaken for exposed runtime routes.

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened Text Concierge evaluator validation imports so Napoleon required-action packets must be owned by Napoleon and include explicit false side-effect boundaries before they can be shown or exported as readiness evidence.
 - Preserved sanitized Napoleon required-action packets through Text Concierge evaluator validation imports, UI summaries, readiness proof exports, and proof comparisons, while rejecting required-action metadata that claims side effects.
 - Added machine-readable Napoleon required-action packets to sanitized live-runtime validation output when a real `/cos` descriptor does not advertise the evaluator review handoff, so the next Napoleon-side change is named without exposing endpoints, tokens, prompts, or granting authority.
 - Added reverse Napoleon contract-alignment reporting so named Concierge review/evidence/status targets missing from an inspected Napoleon runtime snapshot are visible as non-authorizing runtime exposure gaps.
