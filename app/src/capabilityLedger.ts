@@ -188,6 +188,7 @@ export interface CapabilityLatestTurnEvidence {
   attributionSource?: string;
   proofAlignment?: string;
   handledBy?: string;
+  targetCapability?: string;
   governance?: string;
   trace?: string;
   failureReason?: string;
@@ -455,6 +456,15 @@ function sanitizeCapabilityEffectLabel(value: string): string {
   return trimmed.toLocaleLowerCase().replace(/[\s-]+/g, "_");
 }
 
+function sanitizeCapabilityCanonicalLabel(value: string): string {
+  const display = sanitizeCapabilityDisplayText(value);
+  if (display === "redacted" || display === "not returned" || display === "unavailable" || display === "redacted metadata") {
+    return display;
+  }
+  if (!/^[a-z0-9][a-z0-9_.\s-]{0,95}$/i.test(display)) return "redacted";
+  return display.toLocaleLowerCase().replace(/[\s-]+/g, "_");
+}
+
 function sanitizeCapabilityLatestTurnEvidence(evidence: CapabilityLatestTurnEvidence): CapabilityLatestTurnEvidence {
   const blockedEffects = [
     ...new Set(
@@ -472,9 +482,10 @@ function sanitizeCapabilityLatestTurnEvidence(evidence: CapabilityLatestTurnEvid
       : {}),
     ...(evidence.proofAlignment ? { proofAlignment: sanitizeCapabilityDisplayText(evidence.proofAlignment) } : {}),
     ...(evidence.handledBy ? { handledBy: sanitizeCapabilityDisplayText(evidence.handledBy) } : {}),
-    ...(evidence.governance ? { governance: sanitizeCapabilityDisplayText(evidence.governance) } : {}),
+    ...(evidence.targetCapability ? { targetCapability: sanitizeCapabilityCanonicalLabel(evidence.targetCapability) } : {}),
+    ...(evidence.governance ? { governance: sanitizeCapabilityCanonicalLabel(evidence.governance) } : {}),
     ...(evidence.trace ? { trace: sanitizeCapabilityDisplayText(evidence.trace) } : {}),
-    ...(evidence.failureReason ? { failureReason: sanitizeCapabilityDisplayText(evidence.failureReason) } : {}),
+    ...(evidence.failureReason ? { failureReason: sanitizeCapabilityCanonicalLabel(evidence.failureReason) } : {}),
     blockedEffects,
     nextStep: sanitizeCapabilityDisplayText(evidence.nextStep),
     boundary: sanitizeCapabilityDisplayText(evidence.boundary),

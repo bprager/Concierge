@@ -1116,7 +1116,7 @@ test("capability recommendations include latest accepted Napoleon turn evidence"
       return harnessJsonResponse(200, {
         text: "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
         profileMode: body.profileMode,
-        targetAgent: "napoleon.chief_of_staff",
+        targetAgent: "Napoleon.Capability-Answer",
         governanceDecision: {
           decision_id: `decision_${body.traceId}`,
           request_id: body.chiefOfStaffRequest.request_id,
@@ -1197,6 +1197,7 @@ test("capability recommendations include latest accepted Napoleon turn evidence"
     assert.ok(latestEvidenceText.includes("Passive Brain"));
     assert.ok(latestEvidenceText.includes("Attribution: accepted Napoleon bridge response proof."));
     assert.ok(latestEvidenceText.includes("Proof alignment: same returned trace/audit as Napoleon response proof."));
+    assert.ok(latestEvidenceText.includes("Target capability: napoleon.capability_answer."));
     assert.ok(latestEvidenceText.includes("requires_review"));
     assert.ok(latestEvidenceText.includes("external_send"));
     assert.equal(requestedUrls.length, fetchCountAfterLiveTurn);
@@ -1208,6 +1209,8 @@ test("capability recommendations include latest accepted Napoleon turn evidence"
     assert.ok(exported.includes('"status": "accepted"'));
     assert.ok(exported.includes('"attributionSource": "accepted Napoleon bridge response proof"'));
     assert.ok(exported.includes('"proofAlignment": "same returned trace/audit as Napoleon response proof"'));
+    assert.ok(exported.includes('"targetCapability": "napoleon.capability_answer"'));
+    assert.ok(exported.includes('"governance": "requires_review"'));
     assert.ok(exported.includes("Passive Brain"));
     assert.equal(exported.includes("127.0.0.1"), false);
   } finally {

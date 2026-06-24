@@ -3235,6 +3235,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         : "accepted Napoleon bridge response proof",
       proofAlignment: detailValue(latestEntry.details, "Proof alignment"),
       handledBy: detailValue(latestEntry.details, "Handled by"),
+      targetCapability:
+        lastNapoleonPresentation.proofMetadata?.targetCapability ?? detailValue(latestEntry.details, "Target capability"),
       governance: detailValue(latestEntry.details, "Governance"),
       trace: detailValue(latestEntry.details, "Trace"),
       failureReason: detailValue(latestEntry.details, "Failure reason"),
@@ -5322,7 +5324,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                           <dd>
                             {m.metadata.capabilityDrilldown.latestTurnEvidence.status}:{" "}
                             {m.metadata.capabilityDrilldown.latestTurnEvidence.summary} Next:{" "}
-                            {m.metadata.capabilityDrilldown.latestTurnEvidence.nextStep}. Blocked effects:{" "}
+                            {m.metadata.capabilityDrilldown.latestTurnEvidence.nextStep}. Target capability:{" "}
+                            {m.metadata.capabilityDrilldown.latestTurnEvidence.targetCapability ?? "not returned"}.
+                            Governance: {m.metadata.capabilityDrilldown.latestTurnEvidence.governance ?? "not returned"}.
+                            Failure reason:{" "}
+                            {m.metadata.capabilityDrilldown.latestTurnEvidence.failureReason ?? "not returned"}. Blocked effects:{" "}
                             {m.metadata.capabilityDrilldown.latestTurnEvidence.blockedEffects.join(", ") || "none"}.
                             Attribution:{" "}
                             {m.metadata.capabilityDrilldown.latestTurnEvidence.attributionSource ?? "not returned"}.

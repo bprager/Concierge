@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Capability Intelligence latest-turn evidence now carries canonical target-capability, governance, and failure-reason metadata in rendered drilldowns, exports, and review packets without turning local summaries into authority.
 - Capability Intelligence latest-turn evidence exports and review packets now canonicalize blocked-effect labels after redaction, keeping returned bridge metadata stable across casing, spaces, and hyphens.
 - Sanitized Napoleon response proof exports now canonicalize returned allowed-effect and blocked-effect labels after redaction, so casing, spaces, and hyphens do not create separate authority metadata.
 - Live bridge delegation validation now normalizes returned allowed-effect names before forbidden authority checks, so case or spacing variants of memory writes, agent dispatch, external sends, approval capture, or runtime authority fail closed before display.

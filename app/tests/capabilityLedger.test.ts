@@ -1555,9 +1555,10 @@ test("capability answers include sanitized evidence drilldown export metadata", 
     attributionSource: "fail-closed bridge metadata; no accepted delegation attribution",
     proofAlignment: "not returned; bridge failed closed before response proof was accepted",
     handledBy: "not returned",
-    governance: "no_go",
+    targetCapability: " Napoleon.Capability Answer ",
+    governance: "No-Go",
     trace: "trace_latest_drilldown",
-    failureReason: "governance_denied",
+    failureReason: "Governance-Denied",
     blockedEffects: [" Memory Write ", "external-send", "token_secret"],
     nextStep: "Align the bridge contract before retry.",
     boundary: "No Napoleon response was accepted; fail-closed local state only.",
@@ -1577,7 +1578,10 @@ test("capability answers include sanitized evidence drilldown export metadata", 
     exported.latestTurnEvidence?.proofAlignment,
     "not returned; bridge failed closed before response proof was accepted",
   );
+  assert.equal(exported.latestTurnEvidence?.targetCapability, "napoleon.capability_answer");
+  assert.equal(exported.latestTurnEvidence?.governance, "no_go");
   assert.equal(exported.latestTurnEvidence?.trace, "trace_latest_drilldown");
+  assert.equal(exported.latestTurnEvidence?.failureReason, "governance_denied");
   assert.deepEqual(exported.latestTurnEvidence?.blockedEffects, ["memory_write", "external_send"]);
   assert.equal(exported.latestTurnEvidence?.blockedEffects.includes("token_secret"), false);
   const exportedJson = JSON.stringify(exported);
@@ -1593,6 +1597,9 @@ test("capability answers include sanitized evidence drilldown export metadata", 
     packet.latestTurnEvidence?.proofAlignment,
     "not returned; bridge failed closed before response proof was accepted",
   );
+  assert.equal(packet.latestTurnEvidence?.targetCapability, "napoleon.capability_answer");
+  assert.equal(packet.latestTurnEvidence?.governance, "no_go");
+  assert.equal(packet.latestTurnEvidence?.failureReason, "governance_denied");
   assert.deepEqual(packet.latestTurnEvidence?.blockedEffects, ["memory_write", "external_send"]);
   assert.equal(packet.latestTurnEvidence?.proposalOnly, true);
   assert.equal(JSON.stringify(packet).includes("token_secret"), false);
