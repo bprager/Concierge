@@ -180,13 +180,21 @@ test("rendered proof uses discovered capability labels while exported proof keep
 
     await user.click(view.getByRole("button", { name: "Export Napoleon proof" }));
     const exported = JSON.parse(view.getByLabelText("Exported Napoleon response proof").textContent ?? "{}") as {
-      responseProof?: { handledBy?: string; targetCapability?: string };
+      responseProof?: { handledBy?: string; proofAlignment?: string; targetCapability?: string };
     };
     assert.equal(exported.responseProof?.handledBy, "napoleon.capability.answer");
+    assert.equal(
+      exported.responseProof?.proofAlignment,
+      "target capability shares returned trace/audit; selected-agent proof not returned",
+    );
     assert.equal(exported.responseProof?.targetCapability, "napoleon.capability.answer");
     const proofExportEvent = telemetryPayloads.find((payload) => payload.event === "napoleon_response_proof_exported");
     assert.ok(proofExportEvent);
     assert.equal(proofExportEvent.attributes.handledBy, "napoleon.capability.answer");
+    assert.equal(
+      proofExportEvent.attributes.proofAlignment,
+      "target capability shares returned trace/audit; selected-agent proof not returned",
+    );
   } finally {
     console.info = originalInfo;
     cleanup();

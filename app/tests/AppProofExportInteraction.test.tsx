@@ -522,6 +522,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     const exportBlock = screen.getByLabelText("Exported Napoleon response proof");
     assert.ok(exportBlock.textContent?.includes("concierge_napoleon_response_proof"));
     assert.ok(exportBlock.textContent?.includes('"handledBy": "Passive Brain"'));
+    assert.ok(exportBlock.textContent?.includes('"proofAlignment": "same returned trace/audit as Napoleon response proof"'));
     assert.ok(exportBlock.textContent?.includes('"attributionBoundary": "Returned bridge provenance only; not local authority."'));
     assert.ok(exportBlock.textContent?.includes('"selectedAgentReasons": ['));
     assert.ok(!exportBlock.textContent?.includes("Draft a bridge readiness summary"));
@@ -535,6 +536,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
       .at(-1);
     assert.equal(napoleonProofEvent?.attributes.selectedAgentCount, 1);
     assert.equal(napoleonProofEvent?.attributes.selectedAgentSelectionReasonCount, 1);
+    assert.equal(napoleonProofEvent?.attributes.proofAlignment, "same returned trace/audit as Napoleon response proof");
     assert.equal(napoleonProofEvent?.attributes.allowedEffectCount, 1);
     assert.equal(napoleonProofEvent?.attributes.blockedEffectCount, 4);
     assert.equal(napoleonProofEvent?.attributes.targetCapabilityReturned, true);
@@ -568,6 +570,8 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(proofComparisonPanel.getByText("Current trace"));
     assert.ok(proofComparisonPanel.getByText("Current blocked effects"));
     assert.ok(proofComparisonPanel.getByText("Current boundary"));
+    assert.ok(proofComparisonPanel.getByText("Current proof alignment"));
+    assert.ok(proofComparisonPanel.getByText("same returned trace/audit as Napoleon response proof"));
     assert.ok(proofComparisonPanel.getAllByText("Passive Brain").length >= 1);
     assert.ok(proofComparisonPanel.getByText("requires_review"));
     assert.ok(proofComparisonPanel.getByText(lastTextTurnTraceId));

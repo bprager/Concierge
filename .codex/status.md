@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Rendered proof export coverage now verifies proof-alignment metadata for both selected-agent and target-capability-only Napoleon response proof exports and telemetry.
 - Sanitized Napoleon response proof exports, comparison summaries, and export telemetry now preserve general proof alignment so selected-agent proof, target-capability-only metadata, and unavailable proof stay distinct outside the visible panel.
 - Capability Intelligence latest-turn evidence now preserves accepted selected-agent proof alignment to the returned Napoleon response trace/audit even when no recommendation provenance is present.
 - Capability Intelligence latest-turn evidence now preserves target-capability-only proof alignment as returned capability metadata with selected-agent proof explicitly not returned.
