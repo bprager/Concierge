@@ -100,6 +100,7 @@ import {
   mapProfileToNapoleonMode,
   transitionMemoryProposalReviewState,
   type DescriptorConnectionInput,
+  type DescriptorConnectionState,
   type GovernanceReviewState,
   type LocalProfile,
   type NapoleonProfileMode,
@@ -178,6 +179,7 @@ import {
   describeNapoleonTurnTimeline,
   describeNapoleonTranscriptMetadata,
   type LastNapoleonTurnFailureInput,
+  type LiveSendPreflightView,
   sanitizeVisibleProvenanceValue,
   summarizeRehearsalPreview,
 } from "./presentation.js";
@@ -408,6 +410,86 @@ function isNapoleonProofCurrentnessQuestion(content: string): boolean {
     /\breuse\b/.test(lower) ||
     /\btrust\b/.test(lower);
   return asksAboutProof && asksAboutCurrentness;
+}
+
+function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  if (!lower.includes("napoleon")) return false;
+  const asksAboutSending =
+    /\bsend\b/.test(lower) ||
+    /\bforward\b/.test(lower) ||
+    /\bcontact\b/.test(lower) ||
+    /\bbridge\b/.test(lower) ||
+    /\bendpoint\b/.test(lower);
+  const asksAboutReadiness =
+    /\bready\b/.test(lower) ||
+    /\breadiness\b/.test(lower) ||
+    /\bcan i\b/.test(lower) ||
+    /\bmay i\b/.test(lower) ||
+    /\bblocked?\b/.test(lower) ||
+    /\bblockers?\b/.test(lower) ||
+    /\bpreflight\b/.test(lower) ||
+    /\bwhy\b.*\bnot\b/.test(lower);
+  return asksAboutSending && asksAboutReadiness;
+}
+
+function formatNapoleonLiveSendReadinessAnswer(input: {
+  preflight: LiveSendPreflightView;
+  descriptorConnection: DescriptorConnectionState;
+  endpointConfigured: boolean;
+  rehearsalMode: boolean;
+}): {
+  content: string;
+  canAttemptLiveSend: boolean;
+  status: LiveSendPreflightView["status"];
+  descriptorState: DescriptorConnectionState["state"];
+  failClosedReason: string;
+  endpointConfigured: boolean;
+  rehearsalMode: boolean;
+  blockedEffectCount: number;
+} {
+  const blockedEffects = input.descriptorConnection.descriptorStatus?.blockedEffects ?? [
+    "runtime_authority",
+    "agent_dispatch",
+    "memory_write",
+    "approval_capture",
+    "external_send",
+  ];
+  const priorityLabels = [
+    "Endpoint configured",
+    "Descriptor discovered",
+    "Descriptor integrity",
+    "Text-turn route",
+    "Governance send gate",
+    "Allowed effects",
+    "Text ready",
+    "Rehearsal Mode",
+  ];
+  const prioritizedItems = priorityLabels
+    .map((label) => input.preflight.items.find((item) => item.label === label))
+    .filter((item): item is LiveSendPreflightView["items"][number] => Boolean(item));
+  const rows = prioritizedItems.map((item) => `${item.label}: ${item.status}. ${item.detail}`).join("\n");
+  const liveSendState = input.preflight.canAttemptLiveSend ? "ready" : "blocked";
+
+  return {
+    content: [
+      "Napoleon live send readiness from local preflight:",
+      `Live send: ${liveSendState}.`,
+      input.preflight.summary,
+      input.preflight.blockerSummary,
+      input.preflight.nextStepSummary,
+      rows,
+      input.preflight.caveat,
+      "This local answer did not contact Napoleon, approve, write memory, dispatch agents, capture approval, or send externally.",
+    ].join("\n\n"),
+    canAttemptLiveSend: input.preflight.canAttemptLiveSend,
+    status: input.preflight.status,
+    descriptorState: input.descriptorConnection.state,
+    failClosedReason: input.descriptorConnection.failClosedReason ?? "none",
+    endpointConfigured: input.endpointConfigured,
+    rehearsalMode: input.rehearsalMode,
+    blockedEffectCount: blockedEffects.length,
+  };
 }
 
 function formatNapoleonDelegationAnswer(
@@ -2255,6 +2337,56 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setInput(value);
   }
 
+  function answerNapoleonLiveSendReadinessQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isNapoleonLiveSendReadinessQuestion(content)) return false;
+
+    const answer = formatNapoleonLiveSendReadinessAnswer({
+      preflight: liveSendPreflight,
+      descriptorConnection,
+      endpointConfigured: Boolean(endpoint.trim()),
+      rehearsalMode,
+    });
+    emitEvent("napoleon_live_send_readiness_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      localAnswerOnly: true,
+      canAttemptLiveSend: answer.canAttemptLiveSend,
+      status: answer.status,
+      descriptorState: answer.descriptorState,
+      failClosedReason: answer.failClosedReason,
+      endpointConfigured: answer.endpointConfigured,
+      rehearsalMode: answer.rehearsalMode,
+      blockedEffectCount: answer.blockedEffectCount,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerNapoleonDelegationQuestion(content: string, traceId: string, turnId: string, activeProfileMode: NapoleonProfileMode) {
     if (!isNapoleonDelegationQuestion(content)) return false;
 
@@ -2441,6 +2573,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
     const activeProfileMode = mapProfileToNapoleonMode(profile);
+    if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
@@ -2642,6 +2775,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const traceId = newTraceId();
       const turnId = `turn_${Date.now().toString(16)}`;
       const activeProfileMode = mapProfileToNapoleonMode(profile);
+      if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;

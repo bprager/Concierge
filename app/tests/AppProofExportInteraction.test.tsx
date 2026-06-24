@@ -824,6 +824,72 @@ test("clears accepted real-runtime readiness proof when user profile changes", a
   }
 });
 
+test("answers Napoleon live send readiness questions locally from preflight state", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    requestedUrls.push(String(input));
+    throw new Error("live-send readiness answer must stay local");
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Can I send this to Napoleon now?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    let readinessAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      readinessAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("Napoleon live send readiness from local preflight:"),
+      ) as HTMLElement | undefined;
+      assert.ok(readinessAnswer);
+    });
+    assert.ok(readinessAnswer);
+    const readinessText = readinessAnswer.textContent ?? "";
+    assert.ok(readinessText.includes("Live send: blocked."));
+    assert.ok(readinessText.includes("Main preflight blocker: configure a Napoleon endpoint."));
+    assert.ok(
+      readinessText.includes("Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery."),
+    );
+    assert.ok(readinessText.includes("Endpoint configured: blocked"));
+    assert.ok(readinessText.includes("Rehearsal Mode: warning"));
+    assert.ok(
+      readinessText.includes(
+        "This local answer did not contact Napoleon, approve, write memory, dispatch agents, capture approval, or send externally.",
+      ),
+    );
+    assert.deepEqual(requestedUrls, []);
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const readinessEvent = telemetryBuffer.events
+      ?.filter((event) => event.event === "napoleon_live_send_readiness_answered")
+      .at(-1);
+    assert.equal(readinessEvent?.attributes.localAnswerOnly, true);
+    assert.equal(readinessEvent?.attributes.canAttemptLiveSend, false);
+    assert.equal(readinessEvent?.attributes.status, "blocked");
+    assert.equal(readinessEvent?.attributes.descriptorState, "no_endpoint");
+    assert.equal(readinessEvent?.attributes.failClosedReason, "no_endpoint");
+    assert.equal(readinessEvent?.attributes.rehearsalMode, true);
+    assert.equal(readinessEvent?.attributes.endpointConfigured, false);
+    assert.equal(readinessEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(readinessEvent).includes("127.0.0.1"), false);
+    assert.equal(JSON.stringify(readinessEvent).includes("runtime_authority"), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("live descriptor discovery alone does not export real runtime validation", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, screen, waitFor, within }, userEventModule, { App }] = await Promise.all([
