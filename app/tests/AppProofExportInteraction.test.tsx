@@ -5993,6 +5993,114 @@ test("clears returned Chief of Staff steering results when bridge token changes"
   }
 });
 
+test("clears returned Chief of Staff steering results when descriptor context changes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const body = init?.body ? JSON.parse(String(init.body)) : {};
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch"],
+              supportedHandoffs: ["text_turn", "evolution_proposal_review"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/steering")) {
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon accepted the descriptor-scoped steering draft for review.",
+            governanceDecision: {
+              decision_id: "decision_steering_descriptor_stale",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Capability changes require review before rollout.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: body.traceEnvelope.trace_id,
+              audit_id: "audit_steering_descriptor_stale",
+            },
+            traceEnvelope: {
+              trace_id: body.traceEnvelope.trace_id,
+              parent_trace_id: body.traceEnvelope.parent_trace_id,
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_steering_descriptor_stale",
+              timestamp: "2026-06-14T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_steering_descriptor_stale",
+              trace_id: body.traceEnvelope.trace_id,
+              decision_id: "decision_steering_descriptor_stale",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:steering-descriptor-stale"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+    await view.findByText("Chief of Staff steering draft");
+    await user.click(view.getByRole("button", { name: "Send steering draft to Napoleon review" }));
+
+    await view.findByText("Napoleon accepted the descriptor-scoped steering draft for review.");
+    assert.ok(view.getByText(/decision_steering_descriptor_stale/));
+    assert.ok(view.getByText(/audit_steering_descriptor_stale/));
+
+    fireEvent.change(view.getByLabelText("Descriptor"), { target: { value: "checksum_mismatch" } });
+
+    assert.ok(view.getByText("Chief of Staff steering draft"));
+    assert.equal(view.queryByText("Napoleon accepted the descriptor-scoped steering draft for review."), null);
+    assert.equal(view.queryByText(/decision_steering_descriptor_stale/), null);
+    assert.equal(view.queryByText(/audit_steering_descriptor_stale/), null);
+    assert.equal(
+      (view.getByRole("button", { name: "Send steering draft to Napoleon review" }) as HTMLButtonElement).disabled,
+      true,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("drafting Chief of Staff steering records learning-signal telemetry without raw content", async () => {
   const dom = installDom();
   const [
