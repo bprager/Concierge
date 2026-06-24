@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when descriptor mode changes, preventing imported runtime proof context from surviving fail-closed checksum/signature states.
 - Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when the bridge token changes, preventing imported runtime proof context from crossing credential scopes.
 - Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when the active profile changes, preventing adult-owner runtime proof context from remaining visible in child-protected scope.
 - Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when Rehearsal Mode is enabled, keeping local-only preview mode free of imported live-runtime proof context.
