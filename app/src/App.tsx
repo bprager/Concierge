@@ -1635,6 +1635,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearGovernedHandoffResults();
     clearTaxonomyReviewDraftState();
     clearCapabilityReviewPacketState();
+    clearContractPacketExports();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_endpoint", value.trim());
@@ -1662,6 +1663,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearGovernedHandoffResults();
     clearTaxonomyReviewDraftState();
     clearCapabilityReviewPacketState();
+    clearContractPacketExports();
     if (typeof localStorage === "undefined") return;
     if (value.trim()) {
       localStorage.setItem("napoleon_auth_token", value.trim());
@@ -1683,11 +1685,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearGovernedHandoffResults();
     clearTaxonomyReviewDraftState();
     clearCapabilityReviewPacketState();
+    clearContractPacketExports();
   }
 
   function updateRehearsalMode(enabled: boolean) {
     setRehearsalMode(enabled);
     setSteeringDraftExportJson(null);
+    clearContractPacketExports();
     if (enabled) {
       setPendingRehearsal(null);
       clearBridgeReadinessProof();

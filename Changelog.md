@@ -731,6 +731,10 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 - Added sanitized bridge evidence capture and comparison support for explicit Napoleon advisory harness `/cos/descriptor` plus `/cos/text-turn` flows without exposing endpoint hosts, request text, or tokens.
 - Started maintaining this changelog.
 
+### Changed
+
+- Hardened local Napoleon contract packet exports so they clear when draft input, endpoint, bearer token, descriptor state, Rehearsal Mode, or active profile context changes.
+
 ### Fixed
 
 - Reject live Napoleon text responses that claim memory writes, approval capture, agent dispatch, local application, or external sends even when those claims appear only in response text.

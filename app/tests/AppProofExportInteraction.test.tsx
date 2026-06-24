@@ -5703,6 +5703,82 @@ test("exports local Chief of Staff request and governance evaluation packets wit
   }
 });
 
+test("clears local contract packet exports when bridge context changes", async () => {
+  const contextChanges: Array<{
+    name: string;
+    change: (view: {
+      getByLabelText: (text: string) => HTMLElement;
+    }, fireEventApi: {
+      change: (element: Element | Node | Document | Window, init?: {}) => boolean;
+      click: (element: Element | Node | Document | Window, init?: {}) => boolean;
+    }) => void;
+  }> = [
+    {
+      name: "endpoint",
+      change: (view, fireEventApi) => {
+        fireEventApi.change(view.getByLabelText("Napoleon endpoint"), {
+          target: { value: "https://napoleon.changed.test" },
+        });
+      },
+    },
+    {
+      name: "token",
+      change: (view, fireEventApi) => {
+        fireEventApi.change(view.getByLabelText("Bridge token"), { target: { value: "rotated-token" } });
+      },
+    },
+    {
+      name: "descriptor",
+      change: (view, fireEventApi) => {
+        fireEventApi.change(view.getByLabelText("Descriptor"), { target: { value: "checksum_mismatch" } });
+      },
+    },
+    {
+      name: "rehearsal",
+      change: (view, fireEventApi) => {
+        fireEventApi.click(view.getByLabelText("Rehearsal Mode"));
+      },
+    },
+    {
+      name: "profile",
+      change: (view, fireEventApi) => {
+        fireEventApi.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+      },
+    },
+  ];
+
+  for (const contextChange of contextChanges) {
+    const domForCase = installDom();
+    const [{ cleanup, fireEvent, render, within }, { App }] = await Promise.all([
+      import("@testing-library/react"),
+      import("../src/App.js"),
+    ]);
+
+    try {
+      const view = render(<App />);
+      fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+        target: { value: `Prepare a packet before ${contextChange.name} changes` },
+      });
+
+      const packetPanel = view.getByLabelText("Napoleon contract packet exports");
+      const packets = within(packetPanel);
+      fireEvent.click(packets.getByRole("button", { name: "Export Chief of Staff request packet" }));
+      fireEvent.click(packets.getByRole("button", { name: "Export governance evaluation packet" }));
+
+      assert.ok(packets.getByLabelText("Exported Chief of Staff request packet"));
+      assert.ok(packets.getByLabelText("Exported governance evaluation packet"));
+
+      contextChange.change(view, fireEvent);
+
+      assert.equal(Boolean(packets.queryByLabelText("Exported Chief of Staff request packet")), false);
+      assert.equal(Boolean(packets.queryByLabelText("Exported governance evaluation packet")), false);
+    } finally {
+      cleanup();
+      domForCase.window.close();
+    }
+  }
+});
+
 test("shows explicit core governed route boundaries in governed routes", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([
