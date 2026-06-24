@@ -498,6 +498,46 @@ test("new-agent proposal transport failures still suggest bridge follow-up", () 
   assert.equal(signal.architectureArea, "bridge");
 });
 
+test("evolution proposal submission no-go failures are tracked as governed blocks", () => {
+  const signal = deriveCapabilitySignalFromEvent("evolution_proposal_submission_send_failed", {
+    traceId: "trace_evolution_no_go",
+    conversationId: "conv_evolution_no_go",
+    turnId: "turn_evolution_no_go",
+    profile: "adult_owner",
+    reason: "governance_no_go",
+    governanceOutcome: "no_go",
+    proposalId: "evo_capability_intelligence",
+    rawEvolutionProposal: "raw evolution proposal text",
+  });
+
+  assert.equal(signal.topicLabel, "self_evolution");
+  assert.equal(signal.intentLabel, "governed_evolution_proposal_submission");
+  assert.equal(signal.capabilityLabel, "evolution_proposal_submission");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.architectureArea, "governance_ux");
+  assert.ok(signal.details?.includes("bridge failure reason governance_no_go"));
+  assert.ok(signal.details?.includes("governance outcome no_go"));
+  assert.equal(JSON.stringify(signal).includes("raw evolution proposal text"), false);
+});
+
+test("evolution proposal submission transport failures still suggest bridge follow-up", () => {
+  const signal = deriveCapabilitySignalFromEvent("evolution_proposal_submission_send_failed", {
+    traceId: "trace_evolution_timeout",
+    conversationId: "conv_evolution_timeout",
+    turnId: "turn_evolution_timeout",
+    profile: "adult_owner",
+    reason: "bridge_timeout",
+  });
+
+  assert.equal(signal.capabilityLabel, "evolution_proposal_submission");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "bridge_failed");
+  assert.equal(signal.suggestedNextStep, "add_backlog_item");
+  assert.equal(signal.architectureArea, "bridge");
+});
+
 test("capability recommendations remain proposal-only and non-authoritative", () => {
   const signal = deriveCapabilitySignalFromEvent("memory_proposal_acknowledged_locally", {
     traceId: "trace_memory_ack",

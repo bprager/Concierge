@@ -43,6 +43,7 @@ GOVERNED_NETWORK_SOURCE_ALLOWLIST = {
     "app/src/chiefOfStaffCapabilities.ts",
     "app/src/chiefOfStaffSteering.ts",
     "app/src/descriptorDiscovery.ts",
+    "app/src/evolutionProposalSubmission.ts",
     "app/src/governanceReviewSubmission.ts",
     "app/src/memoryProposalSubmission.ts",
     "app/src/napoleonBridge.ts",

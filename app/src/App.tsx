@@ -124,6 +124,12 @@ import {
   type NewAgentProposalReviewSubmissionResult,
 } from "./newAgentProposalReviewSubmission.js";
 import {
+  buildEvolutionProposalSubmissionPacket,
+  submitEvolutionProposalToNapoleon,
+  type EvolutionProposalSubmissionPacket,
+  type EvolutionProposalSubmissionResult,
+} from "./evolutionProposalSubmission.js";
+import {
   buildMediaSessionReadinessTelemetryAttributes,
   buildMediaSessionSummary,
   type LocalMediaPermissionStatus,
@@ -499,6 +505,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [newAgentProposalSubmission, setNewAgentProposalSubmission] =
     useState<NewAgentProposalReviewSubmissionResult | null>(null);
   const [newAgentProposalFailure, setNewAgentProposalFailure] = useState<string | null>(null);
+  const [evolutionProposalSubmissionPacket, setEvolutionProposalSubmissionPacket] =
+    useState<EvolutionProposalSubmissionPacket | null>(null);
+  const [evolutionProposalSubmissionPacketExportJson, setEvolutionProposalSubmissionPacketExportJson] =
+    useState<string | null>(null);
+  const [evolutionProposalSubmission, setEvolutionProposalSubmission] =
+    useState<EvolutionProposalSubmissionResult | null>(null);
+  const [evolutionProposalSubmissionFailure, setEvolutionProposalSubmissionFailure] = useState<string | null>(null);
   const [steeringDraft, setSteeringDraft] = useState<ChiefOfStaffSteeringDraft | null>(null);
   const [steeringDraftExportJson, setSteeringDraftExportJson] = useState<string | null>(null);
   const [steeringSubmission, setSteeringSubmission] = useState<SteeringSubmissionView | null>(null);
@@ -562,6 +575,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setCapabilityReviewPacketFailure(null);
     setNewAgentProposalSubmission(null);
     setNewAgentProposalFailure(null);
+    setEvolutionProposalSubmission(null);
+    setEvolutionProposalSubmissionFailure(null);
     setObservabilityTraceHandoffResult(null);
     setObservabilityTraceHandoffFailure(null);
   }
@@ -592,6 +607,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setNewAgentProposalPacketExportJson(null);
     setNewAgentProposalSubmission(null);
     setNewAgentProposalFailure(null);
+    setEvolutionProposalSubmissionPacket(null);
+    setEvolutionProposalSubmissionPacketExportJson(null);
+    setEvolutionProposalSubmission(null);
+    setEvolutionProposalSubmissionFailure(null);
   }
 
   function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {
@@ -728,6 +747,17 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     readyNextStepSummary: "Next step: submit this proposal-only new-agent packet through the governed Napoleon bridge.",
     rehearsalMode,
     requiredHandoff: "new_agent_proposal_review",
+  });
+  const evolutionProposalSubmissionReadiness = describeGovernedHandoffReadiness({
+    label: "Evolution proposal submission",
+    descriptorConnection,
+    draftReady: Boolean(evolutionProposalSubmissionPacket),
+    artifactLabel: "Evolution proposal",
+    artifactReadyDetail: "A proposal-only evolution packet is ready for Napoleon intake.",
+    artifactBlockedDetail: "Draft an evolution proposal submission packet from a capability review packet before attempting handoff.",
+    readyNextStepSummary: "Next step: submit this proposal-only evolution packet through the governed Napoleon bridge.",
+    rehearsalMode,
+    requiredHandoff: "evolution_proposal_submission",
   });
   const latestInteractionTraceId = findLatestInteractionTraceId(browserStorage());
   const observabilityTraceHandoffReadiness = describeGovernedHandoffReadiness({
@@ -3092,6 +3122,59 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         describeGovernedHandoffFailure(error, "New-agent proposal review handoff", "activate agents or update registries"),
       );
       setNewAgentProposalSubmission(null);
+      refreshCapabilityLedgerStatus();
+    }
+  }
+
+  function draftEvolutionProposalSubmissionPacket() {
+    if (!capabilityReviewPacket) return;
+    const traceId = newTraceId();
+    const packet = buildEvolutionProposalSubmissionPacket(capabilityReviewPacket, {
+      profile,
+      traceId,
+    });
+    setEvolutionProposalSubmissionPacket(packet);
+    setEvolutionProposalSubmissionPacketExportJson(JSON.stringify(packet, null, 2));
+    setEvolutionProposalSubmission(null);
+    setEvolutionProposalSubmissionFailure(null);
+    emitEvent("evolution_proposal_submission_drafted", {
+      traceId,
+      conversationId,
+      proposalId: packet.proposalId,
+      capability: packet.evolutionProposal.change.capability,
+      profileMode: packet.profileMode,
+      proposalOnly: packet.boundary.proposalOnly,
+      submittedForNapoleonReview: packet.boundary.submittedForNapoleonReview,
+      approvalCaptured: packet.boundary.approvalCaptured,
+      memoryWritePerformed: packet.boundary.memoryWritePerformed,
+      agentDispatchPerformed: packet.boundary.agentDispatchPerformed,
+      externalSendPerformed: packet.boundary.externalSendPerformed,
+      registryUpdatePerformed: packet.boundary.registryUpdatePerformed,
+      evolutionApplied: packet.boundary.evolutionApplied,
+      appliedLocally: packet.boundary.appliedLocally,
+    });
+    refreshCapabilityLedgerStatus();
+  }
+
+  async function submitEvolutionProposalSubmissionPacket() {
+    if (!evolutionProposalSubmissionPacket) return;
+    const traceId = newTraceId();
+    try {
+      const result = await submitEvolutionProposalToNapoleon(evolutionProposalSubmissionPacket, {
+        conversationId,
+        traceId,
+        profile,
+        rehearsalMode,
+        descriptorConnection: currentDescriptorInput(),
+      });
+      setEvolutionProposalSubmission(result);
+      setEvolutionProposalSubmissionFailure(null);
+      refreshCapabilityLedgerStatus();
+    } catch (error) {
+      setEvolutionProposalSubmissionFailure(
+        describeGovernedHandoffFailure(error, "Evolution proposal submission handoff", "apply evolution changes"),
+      );
+      setEvolutionProposalSubmission(null);
       refreshCapabilityLedgerStatus();
     }
   }
@@ -5577,6 +5660,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                               setNewAgentProposalPacketExportJson(null);
                               setNewAgentProposalSubmission(null);
                               setNewAgentProposalFailure(null);
+                              setEvolutionProposalSubmissionPacket(null);
+                              setEvolutionProposalSubmissionPacketExportJson(null);
+                              setEvolutionProposalSubmission(null);
+                              setEvolutionProposalSubmissionFailure(null);
                             }}
                           >
                             Export capability review packet
@@ -5678,6 +5765,56 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                       ? renderGovernedReviewResponse(
                           newAgentProposalSubmission,
                           "not activated; no registry update; no approval captured; no memory write; no agent dispatch; no external send.",
+                        )
+                      : null}
+                  </section>
+                </>
+              ) : null}
+              <button className="secondary" onClick={draftEvolutionProposalSubmissionPacket}>
+                Draft evolution proposal submission packet
+              </button>
+              {evolutionProposalSubmissionPacketExportJson ? (
+                <>
+                  <pre aria-label="Exported evolution proposal submission packet">
+                    {evolutionProposalSubmissionPacketExportJson}
+                  </pre>
+                  <section className="evolution-proposal-submission-handoff">
+                    <section className={`send-preflight ${evolutionProposalSubmissionReadiness.status}`}>
+                      <div>
+                        <strong>{evolutionProposalSubmissionReadiness.heading}</strong>
+                        <span>{evolutionProposalSubmissionReadiness.summary}</span>
+                        <span>{evolutionProposalSubmissionReadiness.nextStepSummary}</span>
+                        <span>{evolutionProposalSubmissionReadiness.caveat}</span>
+                      </div>
+                      <dl>
+                        {evolutionProposalSubmissionReadiness.items.map((item) => (
+                          <div key={item.label}>
+                            <dt>{item.label}</dt>
+                            <dd>
+                              {item.status}: {item.detail}
+                            </dd>
+                          </div>
+                        ))}
+                        <div>
+                          <dt>Blocked effects</dt>
+                          <dd>{evolutionProposalSubmissionReadiness.blockedEffects.join(", ")}</dd>
+                        </div>
+                      </dl>
+                    </section>
+                    <button
+                      className="secondary"
+                      onClick={submitEvolutionProposalSubmissionPacket}
+                      disabled={!evolutionProposalSubmissionReadiness.canSubmit}
+                    >
+                      Send evolution proposal to Napoleon intake
+                    </button>
+                    {evolutionProposalSubmissionFailure ? (
+                      <p className="warning">{evolutionProposalSubmissionFailure}</p>
+                    ) : null}
+                    {evolutionProposalSubmission
+                      ? renderGovernedReviewResponse(
+                          evolutionProposalSubmission,
+                          "not applied; no registry update; no approval captured; no memory write; no agent dispatch; no external send.",
                         )
                       : null}
                   </section>

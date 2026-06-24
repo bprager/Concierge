@@ -86,7 +86,12 @@ export interface DescriptorConnectionState {
 export interface ChiefOfStaffRequest {
   request_id: string;
   requester: string;
-  request_type: "new_agent_proposal_review" | "evolution_proposal_review" | "governance_review" | "evaluation_review";
+  request_type:
+    | "new_agent_proposal_review"
+    | "evolution_proposal_review"
+    | "evolution_proposal_submission"
+    | "governance_review"
+    | "evaluation_review";
   profile_mode: NapoleonProfileMode;
   source_evidence: string[];
   requested_authority_tier: AuthorityTier;

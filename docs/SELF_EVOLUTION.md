@@ -54,6 +54,8 @@ The Text Concierge runtime can now derive these records from local Conversation 
 
 Chief of Staff steering drafts attach these records to evolution proposal drafts when local capability evidence supports the recommendation. Draft creation also emits local `learning_signal_recorded` telemetry from metadata-only attributes, without raw content, approval capture, memory writes, agent dispatch, external sends, or local application.
 
+Capability Intelligence review packets can now be converted into explicit evolution proposal submission packets for Napoleon's `/evolution/proposals` intake path. This is still proposal-only: Concierge can package evidence and submit it through the governed bridge when descriptor preflight advertises the handoff, but it cannot approve, apply, roll out, update registries, write memory, dispatch agents, send externally, or treat a returned response as local authority.
+
 ## 4. Change categories
 
 | Category | Example | Risk |

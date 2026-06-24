@@ -275,6 +275,26 @@ test("telemetry tracks governed new-agent proposal review signals", () => {
   assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
 });
 
+test("telemetry tracks governed evolution proposal submission signals", () => {
+  const signal = emitCapabilitySignal("evolution_proposal_submission_send_failed", {
+    traceId: "trace_evolution_governed_block",
+    conversationId: "conv_evolution_governed_block",
+    profile: "adult_owner",
+    reason: "governance_no_go",
+    governanceOutcome: "no_go",
+    rawEvolutionProposal: "must not be retained",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected governed evolution proposal submission capability signal");
+  assert.equal(signal.capabilityLabel, "evolution_proposal_submission");
+  assert.equal(signal.intentLabel, "governed_evolution_proposal_submission");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.architectureArea, "governance_ux");
+  assert.equal(JSON.stringify(signal).includes("must not be retained"), false);
+});
+
 test("telemetry emits voice capability signal for local STT completion", () => {
   const signal = emitCapabilitySignal("stt_completed", {
     traceId: "trace_stt_signal",
