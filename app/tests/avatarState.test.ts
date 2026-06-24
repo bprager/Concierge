@@ -50,6 +50,23 @@ test("does not claim Napoleon provenance when avatar input lacks bridge proof", 
   assert.equal(result.affectInferred, false);
 });
 
+test("treats stale-cleared bridge proof as local avatar preview without Napoleon provenance", () => {
+  const result = buildLocalNeutralAvatarState({
+    responseText: "Napoleon recommends applying the stale descriptor plan.",
+    stance: "direct_strategic",
+    bridgeProvidedProvenance: true,
+    provenanceState: "stale_cleared",
+  });
+
+  assert.equal(result.provenanceState, "stale_cleared");
+  assert.equal(result.provenanceLabel, "Bridge proof cleared; local preview without Napoleon provenance");
+  assert.equal(result.authorityBoundary, "Avatar proof was cleared; local preview must not claim Napoleon or delegated-agent authority.");
+  assert.equal(result.cameraCaptureStarted, false);
+  assert.equal(result.faceDetectionStarted, false);
+  assert.equal(result.affectInferred, false);
+  assert.equal(result.liveNapoleonContacted, false);
+});
+
 test("applies child protected avatar constraints without treating state as guardian approval", () => {
   const result = buildLocalNeutralAvatarState({
     responseText: "Napoleon recommends preparing the bridge rollout plan for guardian review.",
@@ -134,4 +151,19 @@ test("keeps child protected expression mapping stricter and non-authorizing", ()
   assert.equal(result.guardianApprovalCaptured, false);
   assert.equal(result.affectInferred, false);
   assert.ok(result.blockedEffects.includes("guardian_approval_capture"));
+});
+
+test("expression mapping preserves stale-cleared provenance without treating it as current bridge proof", () => {
+  const result = mapLocalAvatarExpression({
+    stance: "direct",
+    profileMode: "adult_owner",
+    bridgeProvidedProvenance: true,
+    provenanceState: "stale_cleared",
+  });
+
+  assert.equal(result.expression, "focused_neutral");
+  assert.equal(result.bridgeProvidedProvenance, false);
+  assert.equal(result.provenanceState, "stale_cleared");
+  assert.equal(result.avatarAnimationStarted, false);
+  assert.equal(result.liveNapoleonContacted, false);
 });

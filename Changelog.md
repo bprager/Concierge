@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added explicit stale-cleared provenance state for local voice shaping and avatar previews so cleared bridge proof cannot still produce Napoleon or selected-agent attribution in future voice/avatar surfaces.
 - Added rendered coverage proving returned Napoleon proof and delegation provenance clears when live descriptor rediscovery fails with auth failure, timeout, or HTTP failure, keeping stale proof out of fail-closed descriptor states.
 - Added rendered coverage proving returned Napoleon proof and delegation provenance clears when live descriptor discovery refreshes connection state, preventing stale descriptor-scoped proof from remaining visible after rediscovery.
 - Added evaluator coverage requiring returned Napoleon proof and delegation provenance to clear when endpoint, token, descriptor, profile, or Rehearsal context changes, preventing stale proof from remaining review-ready evidence.

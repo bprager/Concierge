@@ -67,6 +67,26 @@ test("removes delegated-agent finding claims from speech when bridge provenance 
   assert.equal(result.audioPlaybackStarted, false);
 });
 
+test("treats stale-cleared bridge proof as local speech without Napoleon attribution", () => {
+  const result = shapeVoiceResponseForSpeech({
+    responseText:
+      "Napoleon recommends applying the descriptor change now. Passive Brain found the stale bridge proof was enough.",
+    speakerLabel: "Napoleon",
+    bridgeProvidedProvenance: true,
+    provenanceState: "stale_cleared",
+    maxSpokenChars: 160,
+  });
+
+  assert.equal(result.provenanceState, "stale_cleared");
+  assert.equal(result.spokenText.startsWith("Napoleon says:"), false);
+  assert.equal(result.spokenText.includes("Napoleon recommends"), false);
+  assert.equal(result.spokenText.includes("Passive Brain found"), false);
+  assert.equal(result.spokenText.includes("stale bridge proof was enough"), true);
+  assert.equal(result.authorityBoundary, "Bridge proof was cleared; speech summary must not claim Napoleon or delegated-agent authority.");
+  assert.equal(result.liveNapoleonContacted, false);
+  assert.equal(result.audioPlaybackStarted, false);
+});
+
 test("applies stricter child protected voice shaping constraints", () => {
   const adult = shapeVoiceResponseForSpeech({
     responseText:

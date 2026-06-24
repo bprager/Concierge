@@ -1,9 +1,12 @@
 import type { LocalProfile } from "./contractBridge.js";
 
+export type AvatarProvenanceState = "returned_bridge" | "not_returned" | "stale_cleared";
+
 export interface LocalNeutralAvatarStateInput {
   responseText: string;
   stance: string;
   bridgeProvidedProvenance: boolean;
+  provenanceState?: AvatarProvenanceState;
   profileMode?: LocalProfile;
 }
 
@@ -18,6 +21,7 @@ export interface LocalNeutralAvatarStateResult {
   affectPolicy: "disabled";
   guardianReviewReminder: string;
   stance: string;
+  provenanceState: AvatarProvenanceState;
   provenanceLabel: string;
   authorityBoundary: string;
   cameraCaptureStarted: false;
@@ -37,6 +41,7 @@ export interface LocalAvatarExpressionInput {
   stance: string;
   profileMode?: LocalProfile;
   bridgeProvidedProvenance: boolean;
+  provenanceState?: AvatarProvenanceState;
 }
 
 export interface LocalAvatarExpressionResult {
@@ -46,6 +51,7 @@ export interface LocalAvatarExpressionResult {
   profileMode: LocalProfile;
   childProtected: boolean;
   bridgeProvidedProvenance: boolean;
+  provenanceState: AvatarProvenanceState;
   authorityBoundary: string;
   guardianReviewReminder: string;
   avatarAnimationStarted: false;
@@ -73,6 +79,14 @@ export const localAvatarExpressionSample: LocalAvatarExpressionInput = {
   bridgeProvidedProvenance: false,
 };
 
+function resolveAvatarProvenanceState(
+  bridgeProvidedProvenance: boolean,
+  provenanceState?: AvatarProvenanceState,
+): AvatarProvenanceState {
+  if (provenanceState) return provenanceState;
+  return bridgeProvidedProvenance ? "returned_bridge" : "not_returned";
+}
+
 export function buildLocalNeutralAvatarState(input: LocalNeutralAvatarStateInput): LocalNeutralAvatarStateResult {
   if (input.responseText.trim().length === 0) {
     throw new Error("avatar response text is empty");
@@ -80,6 +94,8 @@ export function buildLocalNeutralAvatarState(input: LocalNeutralAvatarStateInput
 
   const profileMode = input.profileMode ?? "adult_owner";
   const childProtected = profileMode === "child_protected";
+  const provenanceState = resolveAvatarProvenanceState(input.bridgeProvidedProvenance, input.provenanceState);
+  const bridgeProvenanceIsCurrent = provenanceState === "returned_bridge" && input.bridgeProvidedProvenance;
   const blockedEffects = [
     "camera_capture",
     "face_detection",
@@ -108,11 +124,16 @@ export function buildLocalNeutralAvatarState(input: LocalNeutralAvatarStateInput
       ? "Guardian review is required before child avatar camera or affect features."
       : "No guardian review reminder for this profile.",
     stance: input.stance.trim() || "neutral",
-    provenanceLabel: input.bridgeProvidedProvenance
+    provenanceState,
+    provenanceLabel: bridgeProvenanceIsCurrent
       ? "Bridge-provided Napoleon response"
+      : provenanceState === "stale_cleared"
+        ? "Bridge proof cleared; local preview without Napoleon provenance"
       : "Local preview without Napoleon provenance",
-    authorityBoundary: input.bridgeProvidedProvenance
+    authorityBoundary: bridgeProvenanceIsCurrent
       ? "Avatar reflects returned text provenance only; it is not Napoleon approval or an agent action."
+      : provenanceState === "stale_cleared"
+        ? "Avatar proof was cleared; local preview must not claim Napoleon or delegated-agent authority."
       : "Avatar preview must not claim Napoleon or delegated-agent authority without bridge provenance.",
     cameraCaptureStarted: false,
     faceDetectionStarted: false,
@@ -133,6 +154,7 @@ export function mapLocalAvatarExpression(input: LocalAvatarExpressionInput): Loc
   const childProtected = profileMode === "child_protected";
   const stance = input.stance.trim() || "neutral";
   const expression = expressionForStance(stance, childProtected);
+  const provenanceState = resolveAvatarProvenanceState(input.bridgeProvidedProvenance, input.provenanceState);
   const blockedEffects = [
     "avatar_animation",
     "affect_inference",
@@ -154,7 +176,8 @@ export function mapLocalAvatarExpression(input: LocalAvatarExpressionInput): Loc
     expression,
     profileMode,
     childProtected,
-    bridgeProvidedProvenance: input.bridgeProvidedProvenance,
+    bridgeProvidedProvenance: provenanceState === "returned_bridge" && input.bridgeProvidedProvenance,
+    provenanceState,
     authorityBoundary:
       "Expression reflects local stance metadata only; it is not emotion inference, approval, or agent action.",
     guardianReviewReminder: childProtected

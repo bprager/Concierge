@@ -1,7 +1,10 @@
+export type VoiceResponseProvenanceState = "returned_bridge" | "not_returned" | "stale_cleared";
+
 export interface VoiceResponseShapeInput {
   responseText: string;
   speakerLabel: string;
   bridgeProvidedProvenance: boolean;
+  provenanceState?: VoiceResponseProvenanceState;
   maxSpokenChars: number;
   profileMode?: "adult_owner" | "child_protected" | "guest" | "collaborator";
 }
@@ -16,6 +19,7 @@ export interface VoiceResponseShapeResult {
   maxSpokenCharsApplied: number;
   pacing: "standard" | "slow";
   requiresGuardianReviewReminder: boolean;
+  provenanceState: VoiceResponseProvenanceState;
   spokenText: string;
   authorityBoundary: string;
   audioPlaybackStarted: false;
@@ -69,6 +73,11 @@ function removeUnprovenAttributionClaims(text: string): string {
     .trim();
 }
 
+function resolveProvenanceState(input: VoiceResponseShapeInput): VoiceResponseProvenanceState {
+  if (input.provenanceState) return input.provenanceState;
+  return input.bridgeProvidedProvenance ? "returned_bridge" : "not_returned";
+}
+
 const baseBlockedEffects = [
   "audio_playback",
   "microphone_capture",
@@ -97,7 +106,9 @@ function blockedEffectsForProfile(profileMode: VoiceResponseShapeResult["profile
 }
 
 export function shapeVoiceResponseForSpeech(input: VoiceResponseShapeInput): VoiceResponseShapeResult {
-  const trimmedText = (input.bridgeProvidedProvenance
+  const provenanceState = resolveProvenanceState(input);
+  const bridgeProvenanceIsCurrent = provenanceState === "returned_bridge" && input.bridgeProvidedProvenance;
+  const trimmedText = (bridgeProvenanceIsCurrent
     ? input.responseText.trim()
     : removeUnprovenAttributionClaims(input.responseText)
   );
@@ -111,7 +122,7 @@ export function shapeVoiceResponseForSpeech(input: VoiceResponseShapeInput): Voi
   const profileMode = input.profileMode ?? "adult_owner";
   const childProtected = profileMode === "child_protected";
   const maxSpokenCharsApplied = childProtected ? Math.min(input.maxSpokenChars, 120) : input.maxSpokenChars;
-  const prefix = input.bridgeProvidedProvenance ? `${input.speakerLabel.trim() || "Napoleon"} says: ` : "";
+  const prefix = bridgeProvenanceIsCurrent ? `${input.speakerLabel.trim() || "Napoleon"} says: ` : "";
   const guardianReminder = childProtected ? " Please check this with your guardian review." : "";
   const bodyMax = Math.max(1, maxSpokenCharsApplied - prefix.length - guardianReminder.length);
   const spokenBody = firstSpokenSentences(trimmedText, bodyMax);
@@ -128,11 +139,14 @@ export function shapeVoiceResponseForSpeech(input: VoiceResponseShapeInput): Voi
     maxSpokenCharsApplied,
     pacing: childProtected ? "slow" : "standard",
     requiresGuardianReviewReminder: childProtected,
+    provenanceState,
     spokenText,
     authorityBoundary: childProtected
       ? "Child protected speech preview is shortened, slower, and still requires guardian/owner review; it is not Napoleon approval."
-      : input.bridgeProvidedProvenance
+      : bridgeProvenanceIsCurrent
         ? "Bridge-provided Napoleon provenance preserved for speech."
+        : provenanceState === "stale_cleared"
+          ? "Bridge proof was cleared; speech summary must not claim Napoleon or delegated-agent authority."
         : "No bridge provenance; speech summary must not claim Napoleon or delegated-agent authority.",
     audioPlaybackStarted: false,
     microphoneCaptureStarted: false,

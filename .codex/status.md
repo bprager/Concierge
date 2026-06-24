@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Local voice shaping and avatar preview helpers now carry an explicit stale-cleared provenance state, treating cleared bridge proof as local preview so future voice/avatar surfaces cannot keep Napoleon or selected-agent attribution after proof is cleared.
 - Rendered proof/delegation coverage now proves returned Napoleon provenance clears when live descriptor rediscovery fails with auth failure, timeout, or HTTP failure, keeping stale selected-agent and last-successful-proof state out of fail-closed descriptor states.
 - Rendered proof/delegation coverage now proves returned Napoleon provenance clears when live descriptor discovery refreshes connection state, including selected agents, target capability, selection reasons, and the last successful proof panel.
 - Evaluator coverage now requires returned Napoleon proof and delegation provenance to clear when endpoint, token, descriptor, profile, or Rehearsal context changes, so stale proof cannot remain review-ready evidence.
