@@ -183,6 +183,38 @@ test("telemetry emits advisory capability discovery signals without manifest det
   assert.equal(JSON.stringify([readySignal, blockedSignal]).includes("must not be retained"), false);
 });
 
+test("telemetry tracks governed review packet and taxonomy review handoff signals", () => {
+  const packetSignal = emitCapabilitySignal("capability_review_packet_send_failed", {
+    traceId: "trace_packet_governed_block",
+    conversationId: "conv_packet_governed_block",
+    profile: "adult_owner",
+    reason: "governance_denied",
+    governanceOutcome: "deny",
+    rawPacket: "must not be retained",
+  });
+  const taxonomySignal = emitCapabilitySignal("capability_taxonomy_review_send_failed", {
+    traceId: "trace_taxonomy_governed_block",
+    conversationId: "conv_taxonomy_governed_block",
+    profile: "adult_owner",
+    reason: "governance_no_go",
+    governanceOutcome: "no_go",
+    rawPacket: "must not be retained",
+  });
+
+  assert.ok(packetSignal);
+  assert.ok(taxonomySignal);
+  if (!packetSignal || !taxonomySignal) throw new Error("expected governed review handoff capability signals");
+  assert.equal(packetSignal.capabilityLabel, "capability_review_packet");
+  assert.equal(packetSignal.outcomeSignal, "blocked");
+  assert.equal(packetSignal.suggestedNextStep, "no_action");
+  assert.equal(packetSignal.architectureArea, "governance_ux");
+  assert.equal(taxonomySignal.capabilityLabel, "capability_taxonomy_review");
+  assert.equal(taxonomySignal.outcomeSignal, "blocked");
+  assert.equal(taxonomySignal.suggestedNextStep, "no_action");
+  assert.equal(taxonomySignal.architectureArea, "governance_ux");
+  assert.equal(JSON.stringify([packetSignal, taxonomySignal]).includes("must not be retained"), false);
+});
+
 test("telemetry emits voice capability signal for local STT completion", () => {
   const signal = emitCapabilitySignal("stt_completed", {
     traceId: "trace_stt_signal",

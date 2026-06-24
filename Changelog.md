@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added capability-intelligence tracking for governed capability review packet and taxonomy review handoff send events, including `deny` and `no_go` outcomes as correct blocked safety outcomes rather than bridge repair recommendations.
 - Added capability-intelligence classification for governed Chief of Staff steering `deny` and `no_go` send failures as correct blocked safety outcomes while preserving enum-only recommendation type counts.
 - Added capability-intelligence classification for remote Napoleon `deny` and `no_go` responses as correct governed bridge blocks, preventing valid governance stops from being treated as missing bridge capabilities.
 - Added outcome-specific local governance live-send preflight summaries, so `no_go` and `deny` blockers appear in the main disabled-send reason and next-step guidance before any Napoleon bridge request is attempted.

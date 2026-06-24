@@ -1810,16 +1810,35 @@ export function deriveCapabilitySignalFromEvent(
 
   if (eventName.startsWith("governance_review_send_")) {
     const failed = eventName.endsWith("_failed");
+    const governedBlock = failed && isGovernanceBlockedResponseFailure(attributes);
     return buildCapabilitySignal({
       ...base,
       topicLabel: "governance",
       intentLabel: "governed_review_handoff",
       capabilityLabel: "governance_review_handoff",
       capabilityStatus: failed ? "blocked" : "working",
-      outcomeSignal: failed ? "bridge_failed" : "review_required",
+      outcomeSignal: governedBlock ? "blocked" : failed ? "bridge_failed" : "review_required",
       confidence: failed ? 0.88 : 0.82,
-      architectureArea: failed ? "bridge" : "governance_ux",
-      suggestedNextStep: failed ? "add_backlog_item" : "needs_human_review",
+      architectureArea: governedBlock ? "governance_ux" : failed ? "bridge" : "governance_ux",
+      suggestedNextStep: governedBlock ? "no_action" : failed ? "add_backlog_item" : "needs_human_review",
+      details: governedBlock ? governanceBlockedResponseDetails(attributes) : undefined,
+    });
+  }
+
+  if (eventName.startsWith("capability_review_packet_send_")) {
+    const failed = eventName.endsWith("_failed");
+    const governedBlock = failed && isGovernanceBlockedResponseFailure(attributes);
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "capability_intelligence_review",
+      intentLabel: "governed_capability_review_handoff",
+      capabilityLabel: "capability_review_packet",
+      capabilityStatus: failed ? "blocked" : "working",
+      outcomeSignal: governedBlock ? "blocked" : failed ? "bridge_failed" : "review_required",
+      confidence: failed ? 0.86 : 0.82,
+      architectureArea: governedBlock ? "governance_ux" : failed ? "bridge" : "observability",
+      suggestedNextStep: governedBlock ? "no_action" : failed ? "add_backlog_item" : "needs_human_review",
+      details: governedBlock ? governanceBlockedResponseDetails(attributes) : undefined,
     });
   }
 
@@ -1836,6 +1855,23 @@ export function deriveCapabilitySignalFromEvent(
       confidence: failed ? 0.86 : 0.82,
       architectureArea: governedBlock ? "governance_ux" : failed ? "bridge" : "observability",
       suggestedNextStep: governedBlock ? "no_action" : failed ? "add_backlog_item" : "no_action",
+      details: governedBlock ? governanceBlockedResponseDetails(attributes) : undefined,
+    });
+  }
+
+  if (eventName.startsWith("capability_taxonomy_review_send_")) {
+    const failed = eventName.endsWith("_failed");
+    const governedBlock = failed && isGovernanceBlockedResponseFailure(attributes);
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "capability_taxonomy",
+      intentLabel: "governed_taxonomy_review_handoff",
+      capabilityLabel: "capability_taxonomy_review",
+      capabilityStatus: failed ? "blocked" : "working",
+      outcomeSignal: governedBlock ? "blocked" : failed ? "bridge_failed" : "review_required",
+      confidence: failed ? 0.86 : 0.82,
+      architectureArea: governedBlock ? "governance_ux" : failed ? "bridge" : "observability",
+      suggestedNextStep: governedBlock ? "no_action" : failed ? "add_backlog_item" : "needs_human_review",
       details: governedBlock ? governanceBlockedResponseDetails(attributes) : undefined,
     });
   }

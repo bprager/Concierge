@@ -257,6 +257,65 @@ test("remote Napoleon governance deny failures are not treated as bridge repair 
   assert.ok(signal.details?.includes("governance outcome deny"));
 });
 
+test("governed review no-go failures do not become bridge repair recommendations", () => {
+  const signal = deriveCapabilitySignalFromEvent("governance_review_send_failed", {
+    traceId: "trace_review_no_go",
+    conversationId: "conv_review_no_go",
+    turnId: "turn_review_no_go",
+    profile: "adult_owner",
+    reason: "governance_no_go",
+    governanceOutcome: "no_go",
+    blockedEffects: ["approval_capture", "memory_write"],
+  });
+
+  assert.equal(signal.topicLabel, "governance");
+  assert.equal(signal.capabilityLabel, "governance_review_handoff");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.architectureArea, "governance_ux");
+  assert.ok(signal.details?.includes("bridge failure reason governance_no_go"));
+  assert.ok(signal.details?.includes("governance outcome no_go"));
+});
+
+test("governed review transport failures still suggest bridge follow-up", () => {
+  const signal = deriveCapabilitySignalFromEvent("governance_review_send_failed", {
+    traceId: "trace_review_timeout",
+    conversationId: "conv_review_timeout",
+    turnId: "turn_review_timeout",
+    profile: "adult_owner",
+    reason: "bridge_timeout",
+  });
+
+  assert.equal(signal.capabilityLabel, "governance_review_handoff");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "bridge_failed");
+  assert.equal(signal.suggestedNextStep, "add_backlog_item");
+  assert.equal(signal.architectureArea, "bridge");
+});
+
+test("capability review packet no-go failures are tracked as governed blocks", () => {
+  const signal = deriveCapabilitySignalFromEvent("capability_review_packet_send_failed", {
+    traceId: "trace_packet_no_go",
+    conversationId: "conv_packet_no_go",
+    turnId: "turn_packet_no_go",
+    profile: "adult_owner",
+    reason: "governance_denied",
+    governanceOutcome: "deny",
+    capability: "bridge_recovery",
+  });
+
+  assert.equal(signal.topicLabel, "capability_intelligence_review");
+  assert.equal(signal.intentLabel, "governed_capability_review_handoff");
+  assert.equal(signal.capabilityLabel, "capability_review_packet");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.architectureArea, "governance_ux");
+  assert.ok(signal.details?.includes("bridge failure reason governance_denied"));
+  assert.ok(signal.details?.includes("governance outcome deny"));
+});
+
 test("Chief of Staff steering no-go failures keep enum counts without bridge repair guidance", () => {
   const signal = deriveCapabilitySignalFromEvent("capability_recommendation_send_failed", {
     traceId: "trace_steering_no_go",
@@ -295,6 +354,28 @@ test("Chief of Staff steering transport failures still suggest bridge follow-up"
   assert.equal(signal.outcomeSignal, "bridge_failed");
   assert.equal(signal.suggestedNextStep, "add_backlog_item");
   assert.equal(signal.architectureArea, "bridge");
+});
+
+test("taxonomy review no-go failures are tracked as governed blocks", () => {
+  const signal = deriveCapabilitySignalFromEvent("capability_taxonomy_review_send_failed", {
+    traceId: "trace_taxonomy_no_go",
+    conversationId: "conv_taxonomy_no_go",
+    turnId: "turn_taxonomy_no_go",
+    profile: "adult_owner",
+    reason: "governance_no_go",
+    governanceOutcome: "no_go",
+    blockedEffects: ["registry_update", "local_application"],
+  });
+
+  assert.equal(signal.topicLabel, "capability_taxonomy");
+  assert.equal(signal.intentLabel, "governed_taxonomy_review_handoff");
+  assert.equal(signal.capabilityLabel, "capability_taxonomy_review");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.architectureArea, "governance_ux");
+  assert.ok(signal.details?.includes("bridge failure reason governance_no_go"));
+  assert.ok(signal.details?.includes("governance outcome no_go"));
 });
 
 test("capability recommendations remain proposal-only and non-authoritative", () => {
