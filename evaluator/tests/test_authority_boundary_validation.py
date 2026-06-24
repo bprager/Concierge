@@ -729,10 +729,20 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'window.location["href"] = "https://api.example.test/send";',
             'document.location["href"] = "mailto:team@example.test?body=secret";',
             'window.location["href"] = outboundUrl;',
+            "globalThis.location.assign(outboundUrl);",
+            "globalThis.location.replace.call(globalThis.location, outboundUrl);",
+            'globalThis.location["assign"].call(globalThis.location, outboundUrl);',
             'window["location"]["href"] = outboundUrl;',
+            'window["location"].href = outboundUrl;',
+            'window["location"].replace(outboundUrl);',
+            'window["location"].assign.call(window.location, outboundUrl);',
             'location["assign"](outboundUrl);',
+            'location["replace"].apply(location, [outboundUrl]);',
             'window.location["replace"](outboundUrl);',
             'globalThis["location"]["assign"](outboundUrl);',
+            'globalThis["location"]["replace"].apply(globalThis.location, [outboundUrl]);',
+            'document["location"].assign(outboundUrl);',
+            'document["location"]["replace"].call(document.location, outboundUrl);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)

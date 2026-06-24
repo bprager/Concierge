@@ -391,11 +391,24 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bglobalThis\.open\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]open['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\bglobalThis\s*\[\s*['\"]open['\"]\s*\]\s*\("),
-    re.compile(r"\b(?:window\.|document\.)?location\.(?:href|assign|replace)\b"),
+    re.compile(r"\b(?:globalThis\.|window\.|document\.)?location\.(?:href|assign|replace)\b"),
+    re.compile(r"\b(?:globalThis\.|window\.|document\.)?location\.(?:assign|replace)\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis\.|window\.|document\.)?location\s*\[\s*['\"](?:href|assign|replace)['\"]\s*\]"),
+    re.compile(
+        r"\b(?:globalThis\.|window\.|document\.)?location\s*\[\s*['\"](?:assign|replace)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\b(?:window\.|document\.)?location\s*="),
     re.compile(r"\b(?:globalThis|window|document)\s*\[\s*['\"]location['\"]\s*\]\s*="),
     re.compile(r"\b(?:globalThis|window|document)\s*\[\s*['\"]location['\"]\s*\]\s*\[\s*['\"](?:href|assign|replace)['\"]\s*\]"),
+    re.compile(
+        r"\b(?:globalThis|window|document)\s*\[\s*['\"]location['\"]\s*\]\s*\.\s*(?:href|assign|replace)\b"
+    ),
+    re.compile(
+        r"\b(?:globalThis|window|document)\s*\[\s*['\"]location['\"]\s*\]\s*\[\s*['\"](?:assign|replace)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
+        r"\b(?:globalThis|window|document)\s*\[\s*['\"]location['\"]\s*\]\s*\.\s*(?:assign|replace)\s*\.\s*(?:call|apply)\s*\("
+    ),
     re.compile(r"\b(?:[A-Za-z_$][A-Za-z0-9_$]*|document\.forms\s*\[[^\]]+\])\.(?:submit|requestSubmit)\s*\("),
     re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:submit|requestSubmit)['\"]\s*\]\s*\("),
     re.compile(r"\bHTMLFormElement\.prototype\.(?:submit|requestSubmit)\.(?:call|apply)\s*\("),

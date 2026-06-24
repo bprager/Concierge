@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation for direct `globalThis.location` and mixed bracket/dot `location` navigation aliases, including `assign`/`replace` call/apply forms, so UI code cannot add navigation side channels around the governed bridge.
 - Added rendered coverage proving descriptor-discovery auth failure and timeout states expose descriptor failure metadata, block before text-turn fetch, and do not leak private transport response text.
 - Added a rendered stale-descriptor cache mode and fail-closed live-send coverage so descriptor staleness is visible in connection state, readiness, preflight, and blocked transcript metadata before any text-turn request is fetched.
 - Added rendered coverage proving accepted real-runtime readiness proof imports and derived voice pipeline proofs clear when descriptor mode changes, preventing imported runtime proof context from surviving fail-closed checksum/signature states.
