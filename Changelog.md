@@ -10,6 +10,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 - Added local text answers for Napoleon live-send readiness questions from the current composer preflight, including blocker and next-step guidance, no bridge contact, and telemetry limited to state, booleans, counts, and false side-effect flags.
 - Added local text answers for disabled send-button questions, so Concierge explains the current preflight blocker and next step without contacting Napoleon or emitting prompt text.
+- Added local returned-proof answers for natural review-reference follow-ups like "What review reference should I use?", keeping decision, trace, and audit questions local and non-approving.
 - Added local returned-proof answers for natural action-readiness follow-ups like "Can I act on that?", keeping review/approval boundary questions local and non-approving.
 - Added local returned-proof answers for natural blocked-effect follow-ups like "What was blocked?", keeping effect questions local instead of sending a new Napoleon turn.
 - Added local returned-proof answers for natural delegation follow-ups like "Who handled that?", keeping handler questions local instead of sending a new Napoleon turn.

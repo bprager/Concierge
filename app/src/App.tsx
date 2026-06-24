@@ -396,7 +396,12 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
     ) ||
     /\b(is|was)\b.*\b(that|this|it|answer|response|reply)\b.*\b(approved|reviewed|allowed|safe)\b/.test(lower) ||
     /\b(do|does)\b.*\b(that|this|it|answer|response|reply)\b.*\b(need|require)\b.*\breview\b/.test(lower);
-  if (!lower.includes("napoleon") && !asksAboutReturnedAction) return false;
+  const asksAboutReturnedReviewReference =
+    /\b(review|approval|governance)\b.*\b(reference|references|ref|refs|decision|audit|trace|id|identifier|cite|use)\b/.test(
+      lower,
+    ) ||
+    /\b(what|which)\b.*\b(reference|references|ref|refs|decision|audit|trace)\b.*\b(use|cite|review)\b/.test(lower);
+  if (!lower.includes("napoleon") && !asksAboutReturnedAction && !asksAboutReturnedReviewReference) return false;
   const asksAboutReview =
     /\breview\b/.test(lower) ||
     /\brequires?_review\b/.test(lower) ||
@@ -411,7 +416,7 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
     /\bmay i\b/.test(lower) ||
     /\bneed\b/.test(lower) ||
     /\brequire\b/.test(lower);
-  return asksAboutReturnedAction || (asksAboutReview && asksAboutActing);
+  return asksAboutReturnedAction || asksAboutReturnedReviewReference || (asksAboutReview && asksAboutActing);
 }
 
 function isNapoleonProofCurrentnessQuestion(content: string): boolean {

@@ -650,6 +650,37 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(naturalActingAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(naturalActingAnswerEvent).includes("Can I act on that?"), false);
     assert.equal(JSON.stringify(naturalActingAnswerEvent).includes("memory_write"), false);
+    assert.equal(JSON.stringify(naturalActingAnswerEvent).includes(lastTextTurnTraceId), false);
+    const requestCountBeforeNaturalReviewReferenceQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What review reference should I use?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let naturalReviewReferenceAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      naturalReviewReferenceAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon review requirement from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(naturalReviewReferenceAnswer);
+      assert.ok(naturalReviewReferenceAnswer.textContent?.includes("Decision: decision_"));
+    });
+    assert.ok(naturalReviewReferenceAnswer);
+    const naturalReviewReferenceAnswerText = naturalReviewReferenceAnswer.textContent ?? "";
+    assert.ok(naturalReviewReferenceAnswerText.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
+    assert.ok(naturalReviewReferenceAnswerText.includes("Governance: requires_review."));
+    assert.ok(naturalReviewReferenceAnswerText.includes("Review required: yes."));
+    assert.equal(requestedUrls.length, requestCountBeforeNaturalReviewReferenceQuestion);
+    const naturalReviewReferenceAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_review_requirement_answered").at(-1);
+    assert.equal(naturalReviewReferenceAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(naturalReviewReferenceAnswerEvent?.attributes.reviewRequired, true);
+    assert.equal(naturalReviewReferenceAnswerEvent?.attributes.decisionReturned, true);
+    assert.equal(naturalReviewReferenceAnswerEvent?.attributes.traceReturned, true);
+    assert.equal(naturalReviewReferenceAnswerEvent?.attributes.auditReturned, true);
+    assert.equal(naturalReviewReferenceAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(naturalReviewReferenceAnswerEvent).includes("What review reference should I use?"), false);
+    assert.equal(JSON.stringify(naturalReviewReferenceAnswerEvent).includes(lastTextTurnTraceId), false);
     const requestCountBeforeCurrentnessQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "Is the last Napoleon proof still current?" },

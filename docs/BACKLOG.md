@@ -83,7 +83,7 @@ Acceptance criteria:
 
 - `allow_prepare_only`, `requires_review`, `deny`, and `no_go` have distinct visible states.
 - Review panels show decision ID, audit ID, authority tier, approval requirement, rationale, blocked effects, and trace ID.
-- The text surface can answer review-readiness questions such as "What does Napoleon require me to review before I can act?" and natural action-readiness follow-ups such as "Can I act on that?" from the latest returned bridge proof, without contacting Napoleon or treating the answer as approval.
+- The text surface can answer review-readiness questions such as "What does Napoleon require me to review before I can act?", natural action-readiness follow-ups such as "Can I act on that?", and natural review-reference follow-ups such as "What review reference should I use?" from the latest returned bridge proof, without contacting Napoleon or treating the answer as approval.
 - Local acknowledgement may record that review was seen, but it is not Napoleon approval.
 - A live governance review packet can be submitted only through the governed Chief of Staff bridge after endpoint and descriptor preflight pass and Rehearsal Mode is off.
 - Napoleon review responses require matching governance, trace, and audit proof before Concierge displays them as reviewed.
