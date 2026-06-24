@@ -341,7 +341,7 @@ function isNapoleonDelegation(value: unknown): value is NapoleonDelegation {
 }
 
 function hasForbiddenDelegationAllowedEffects(allowedEffects: string[]): boolean {
-  return allowedEffects.some((effect) => FORBIDDEN_DELEGATION_ALLOWED_EFFECTS.has(effect));
+  return allowedEffects.some((effect) => FORBIDDEN_DELEGATION_ALLOWED_EFFECTS.has(effect.trim().toLocaleLowerCase()));
 }
 
 function advisoryHarnessClaimsRuntimeInvocation(delegationPlan: Record<string, unknown>): boolean {

@@ -3091,6 +3091,74 @@ test("live bridge fails closed when returned delegation allows forbidden side ef
   );
 });
 
+test("live bridge fails closed when returned delegation allows case-varied forbidden effects", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_case_varied_forbidden_effects",
+          conversationId: "conv_case_varied_forbidden_effects",
+          turnId: "turn_case_varied_forbidden_effects",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Prepare and remember the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Prepared through Napoleon.",
+              governanceDecision: {
+                decision_id: "decision_case_varied_forbidden_effects",
+                request_id: "cos_turn_case_varied_forbidden_effects",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "Memory writes remain blocked by Napoleon governance.",
+                blocked_effects: ["external_send", "memory_write", "agent_dispatch", "approval_capture"],
+                trace_id: "trace_case_varied_forbidden_effects",
+                audit_id: "audit_case_varied_forbidden_effects",
+              },
+              traceEnvelope: {
+                trace_id: "trace_case_varied_forbidden_effects",
+                parent_trace_id: "conv_case_varied_forbidden_effects",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_case_varied_forbidden_effects",
+                decision_id: "decision_case_varied_forbidden_effects",
+                timestamp: "2026-06-12T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_case_varied_forbidden_effects",
+                trace_id: "trace_case_varied_forbidden_effects",
+                decision_id: "decision_case_varied_forbidden_effects",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_case_varied_forbidden_effects"],
+              },
+              delegation: {
+                selectedAgents: [],
+                allowedEffects: ["prepare_advisory_response", " Memory_Write "],
+                blockedEffects: ["external_send", "agent_dispatch", "approval_capture"],
+                governanceState: "requires_review",
+                traceId: "trace_case_varied_forbidden_effects",
+                auditId: "audit_case_varied_forbidden_effects",
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
 test("live bridge fails closed when returned delegation allows agent dispatch", async () => {
   await assert.rejects(
     () =>

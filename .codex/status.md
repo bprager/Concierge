@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Live bridge delegation validation now normalizes returned allowed-effect names before forbidden authority checks, so case or spacing variants of memory writes, agent dispatch, external sends, approval capture, or runtime authority fail closed before display.
 - Live governed bridge failures now report an absent Napoleon descriptor as `missing_descriptor` in the transcript, telemetry, and bridge evidence while preserving the detailed `no_descriptor` descriptor reason.
 - Hardened repository authority-boundary validation so optional-chained media capture, device enumeration, speech, audio context, media recorder, and playback calls cannot bypass visible voice/avatar permission handlers.
 - Hardened repository authority-boundary validation so optional-chained browser side-channel calls and optional-chained direct URL fetches cannot bypass governed bridge, external-send, browser-context, clipboard, or service-worker guardrails.
