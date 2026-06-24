@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered coverage proving descriptor signature/checksum mismatch appears in the persistent Napoleon delegation panel with fail-closed connection state, next step, and blocked effects while keeping selected-agent and Napoleon recommendation attribution absent.
 - Added descriptor-aware empty-state details to the persistent Napoleon delegation panel, so checksum/signature mismatch and other descriptor fail-closed states show connection state, next step, and blocked effects before any returned agent provenance exists.
 - Added rendered coverage proving imported accepted real-runtime readiness proof clears when the active user profile changes, preventing adult-owner runtime proof context from remaining visible in child-protected scope.
 - Hardened repository authority-boundary validation for dynamic `object` and `embed` data targets such as `object.data = externalWidgetUrl`, `embed["data"] = buildWidgetUrl()`, and `setAttribute("data", ...)`, so UI code cannot load hidden embedded content around the governed bridge.

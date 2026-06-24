@@ -4375,6 +4375,24 @@ test("blocks rendered live send before fetch when descriptor integrity mismatche
     assert.ok(within(contractStatus).getByText("mismatch"));
     assert.ok(within(contractStatus).getByText("invalid"));
 
+    const delegationPanel = within(view.getByLabelText("Napoleon delegation"));
+    assert.ok(
+      delegationPanel.getByText(
+        "Napoleon delegation is blocked until descriptor discovery is valid. Concierge will not attribute the answer to a capability or agent.",
+      ),
+    );
+    assert.ok(delegationPanel.getByText("Connection state"));
+    assert.ok(delegationPanel.getByText("descriptor_mismatch"));
+    assert.ok(delegationPanel.getByText("Descriptor failure"));
+    assert.ok(delegationPanel.getByText("descriptor signature/checksum mismatch"));
+    assert.ok(delegationPanel.getByText("Resolve the descriptor signature or checksum mismatch before sending."));
+    assert.ok(delegationPanel.getByText("Blocked effects"));
+    assert.ok(delegationPanel.getByText(/memory_write/));
+    assert.ok(delegationPanel.getByText(/approval_capture/));
+    assert.ok(delegationPanel.getByText(/external_send/));
+    assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
+    assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
+
     const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
     if (rehearsalCheckbox.checked) {
       await user.click(rehearsalCheckbox);
