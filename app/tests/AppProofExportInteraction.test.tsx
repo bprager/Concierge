@@ -4820,6 +4820,77 @@ test("clears accepted real-runtime readiness proof and derived voice proof when 
   }
 });
 
+test("clears accepted real-runtime readiness proof and derived voice proof when Rehearsal Mode is enabled", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    const view = render(<App />);
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+
+    const acceptedProofInput = view.getByLabelText("Accepted readiness proof") as HTMLTextAreaElement;
+    fireEvent.change(acceptedProofInput, {
+      target: {
+        value: JSON.stringify({
+          kind: "concierge_bridge_readiness_proof",
+          version: 1,
+          evidence: {
+            captureState: "passed",
+            comparisonState: "passed",
+            lastEvidenceStatus: "success",
+            lastOperationId: "text_turn",
+            lastTargetPath: "/v1/concierge/turn",
+          },
+          runtimeValidation: {
+            source: "real_runtime",
+            promotionGate: "real_runtime_evidence_available",
+          },
+          boundary: {
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            localApplicationPerformed: false,
+            proposalOnly: true,
+          },
+        }),
+      },
+    });
+
+    await user.click(view.getByText("Import accepted readiness proof"));
+
+    await waitFor(() => assert.ok(view.getByText("Accepted real-runtime readiness proof imported.")));
+    const readiness = view.getByText("Live bridge readiness").closest("section") as HTMLElement | null;
+    assert.ok(readiness);
+    assert.ok(within(readiness).getByText("success: text_turn at /v1/concierge/turn"));
+
+    const voiceReadiness = within(view.getByLabelText("Voice readiness"));
+    assert.ok(voiceReadiness.getByText("Accepted real-runtime proof: success: text_turn at /v1/concierge/turn."));
+    await user.click(voiceReadiness.getByText("Export voice pipeline proof"));
+    assert.ok(voiceReadiness.getByLabelText("Exported voice pipeline proof").textContent?.includes('"acceptedRealRuntimeProof"'));
+
+    await user.click(rehearsalCheckbox);
+
+    assert.equal(acceptedProofInput.value, "");
+    assert.equal(view.queryByText("Accepted real-runtime readiness proof imported."), null);
+    assert.equal(view.queryByText("success: text_turn at /v1/concierge/turn"), null);
+    assert.equal(voiceReadiness.queryByText("Accepted real-runtime proof: success: text_turn at /v1/concierge/turn."), null);
+    assert.equal(voiceReadiness.queryByLabelText("Exported voice pipeline proof"), null);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("imports live-runtime validation summary as accepted readiness proof metadata", async () => {
   const dom = installDom();
   const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([
