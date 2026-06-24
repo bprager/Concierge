@@ -395,6 +395,21 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
   return asksAboutReview && asksAboutActing;
 }
 
+function isNapoleonProofCurrentnessQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  if (!lower.includes("napoleon")) return false;
+  const asksAboutProof = /\bproof\b/.test(lower) || /\bevidence\b/.test(lower) || /\bprovenance\b/.test(lower);
+  const asksAboutCurrentness =
+    /\bcurrent\b/.test(lower) ||
+    /\bstill\b/.test(lower) ||
+    /\bstale\b/.test(lower) ||
+    /\bcleared\b/.test(lower) ||
+    /\brely\b/.test(lower) ||
+    /\breuse\b/.test(lower) ||
+    /\btrust\b/.test(lower);
+  return asksAboutProof && asksAboutCurrentness;
+}
+
 function formatNapoleonDelegationAnswer(
   presentation: Parameters<typeof exportNapoleonResponseProofJson>[0],
 ): {
@@ -450,6 +465,73 @@ function formatNapoleonDelegationAnswer(
     allowedEffectCount: metadata.allowedEffects.length,
     blockedEffectCount: metadata.blockedEffects.length,
     targetCapabilityReturned: targetCapability !== "not returned" && targetCapability !== "unavailable",
+    traceReturned: trace !== "not returned" && trace !== "unavailable",
+    auditReturned: audit !== "not returned" && audit !== "unavailable",
+  };
+}
+
+type NapoleonProofClearReason =
+  | "current_proof_available"
+  | "none"
+  | "endpoint_changed"
+  | "auth_token_changed"
+  | "descriptor_state_changed"
+  | "descriptor_discovery_refreshed"
+  | "profile_changed"
+  | "rehearsal_mode_enabled"
+  | "bridge_failure"
+  | "local_state_changed";
+
+function formatNapoleonProofCurrentnessAnswer(
+  presentation: Parameters<typeof exportNapoleonResponseProofJson>[0],
+  provenanceState: VoiceResponseProvenanceState,
+  clearReason: NapoleonProofClearReason,
+): {
+  content: string;
+  currentProofAvailable: boolean;
+  selectedAgentCount: number;
+  blockedEffectCount: number;
+  traceReturned: boolean;
+  auditReturned: boolean;
+} {
+  if (!presentation.proof || !presentation.proofMetadata) {
+    return {
+      content: [
+        "Latest Napoleon proof currentness from local state:",
+        "Current returned proof available: no.",
+        `Proof state: ${provenanceState}.`,
+        `Last clear reason: ${clearReason}.`,
+        "Concierge will not reuse stale Napoleon proof after the connection, descriptor, profile, or rehearsal context changes.",
+        "This is local display of proof state only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ].join("\n\n"),
+      currentProofAvailable: false,
+      selectedAgentCount: 0,
+      blockedEffectCount: 0,
+      traceReturned: false,
+      auditReturned: false,
+    };
+  }
+
+  const proof = presentation.proof;
+  const metadata = presentation.proofMetadata;
+  const trace = detailValue(proof.details, "Trace");
+  const audit = detailValue(proof.details, "Audit");
+  const blockedEffects = metadata.blockedEffects.length ? metadata.blockedEffects.join(", ") : "not returned";
+
+  return {
+    content: [
+      "Latest Napoleon proof currentness from local state:",
+      "Current returned proof available: yes.",
+      `Proof state: ${provenanceState}.`,
+      `Handled by: ${metadata.handledBy}.`,
+      `Governance: ${detailValue(proof.details, "Governance")}.`,
+      `Blocked effects: ${blockedEffects}.`,
+      `Trace: ${trace}. Audit: ${audit}.`,
+      "This is local display of the latest returned bridge proof only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+    ].join("\n\n"),
+    currentProofAvailable: true,
+    selectedAgentCount: metadata.selectedAgents.length,
+    blockedEffectCount: metadata.blockedEffects.length,
     traceReturned: trace !== "not returned" && trace !== "unavailable",
     auditReturned: audit !== "not returned" && audit !== "unavailable",
   };
@@ -709,6 +791,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [lastNapoleonPresentation, setLastNapoleonPresentation] = useState(clearNapoleonResponsePresentation);
   const [bridgeResponseProvenanceState, setBridgeResponseProvenanceState] =
     useState<VoiceResponseProvenanceState>("not_returned");
+  const [lastNapoleonProofClearReason, setLastNapoleonProofClearReason] =
+    useState<NapoleonProofClearReason>("none");
   const [napoleonProofExportJson, setNapoleonProofExportJson] = useState<string | null>(null);
   const [napoleonProofComparison, setNapoleonProofComparison] = useState<NapoleonResponseProofComparison | null>(null);
   const [lastBridgeFailure, setLastBridgeFailure] = useState<string | null>(null);
@@ -777,10 +861,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     useState<ObservabilityTraceHandoffResult | null>(null);
   const [observabilityTraceHandoffFailure, setObservabilityTraceHandoffFailure] = useState<string | null>(null);
 
-  function clearNapoleonPresentation() {
+  function clearNapoleonPresentation(reason: NapoleonProofClearReason = "local_state_changed") {
     setBridgeResponseProvenanceState((current) =>
       lastNapoleonPresentation.proof || current === "returned_bridge" ? "stale_cleared" : current,
     );
+    if (lastNapoleonPresentation.proof || bridgeResponseProvenanceState === "returned_bridge") {
+      setLastNapoleonProofClearReason(reason);
+    }
     setLastNapoleonPresentation(clearNapoleonResponsePresentation());
     setNapoleonProofExportJson(null);
     setNapoleonProofComparison(null);
@@ -871,6 +958,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     );
     setLastNapoleonPresentation(buildSuccessfulNapoleonResponsePresentation(response, { capabilityLabelsById }));
     setBridgeResponseProvenanceState("returned_bridge");
+    setLastNapoleonProofClearReason("current_proof_available");
     setNapoleonProofExportJson(null);
     setNapoleonProofComparison(null);
     setLastBridgeFailure(null);
@@ -1225,7 +1313,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearBridgeReadinessProof();
     clearAcceptedReadinessProofContext();
     clearBridgeEvidenceReadiness();
-    clearNapoleonPresentation();
+    clearNapoleonPresentation("endpoint_changed");
     clearVisibleTurnBoundaryState();
     clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
@@ -1252,7 +1340,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearBridgeReadinessProof();
     clearAcceptedReadinessProofContext();
     clearBridgeEvidenceReadiness();
-    clearNapoleonPresentation();
+    clearNapoleonPresentation("auth_token_changed");
     clearVisibleTurnBoundaryState();
     clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
@@ -1273,7 +1361,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearBridgeReadinessProof();
     clearAcceptedReadinessProofContext();
     clearBridgeEvidenceReadiness();
-    clearNapoleonPresentation();
+    clearNapoleonPresentation("descriptor_state_changed");
     clearVisibleTurnBoundaryState();
     clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
@@ -1290,7 +1378,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       clearBridgeReadinessProof();
       clearAcceptedReadinessProofContext();
       clearBridgeEvidenceReadiness();
-      clearNapoleonPresentation();
+      clearNapoleonPresentation("rehearsal_mode_enabled");
       clearVisibleTurnBoundaryState();
       clearChiefOfStaffCapabilities();
       clearLocalReviewDrafts();
@@ -2055,7 +2143,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       clearBridgeReadinessProof();
       clearAcceptedReadinessProofContext();
       clearBridgeEvidenceReadiness();
-      clearNapoleonPresentation();
+      clearNapoleonPresentation("descriptor_discovery_refreshed");
       clearVisibleTurnBoundaryState();
       clearChiefOfStaffCapabilities();
       clearLocalReviewDrafts();
@@ -2085,7 +2173,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       clearBridgeReadinessProof();
       clearAcceptedReadinessProofContext();
       clearBridgeEvidenceReadiness();
-      clearNapoleonPresentation();
+      clearNapoleonPresentation("descriptor_discovery_refreshed");
       clearVisibleTurnBoundaryState();
       clearChiefOfStaffCapabilities();
       clearLocalReviewDrafts();
@@ -2155,7 +2243,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearBridgeEvidenceReadiness();
     clearVoicePipelineProof();
     clearLocalVoiceAndAvatarSampleResults();
-    clearNapoleonPresentation();
+    clearNapoleonPresentation("profile_changed");
     clearVisibleTurnBoundaryState();
     clearChiefOfStaffCapabilities();
     clearLocalReviewDrafts();
@@ -2252,6 +2340,56 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     return true;
   }
 
+  function answerNapoleonProofCurrentnessQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isNapoleonProofCurrentnessQuestion(content)) return false;
+
+    const answer = formatNapoleonProofCurrentnessAnswer(
+      lastNapoleonPresentation,
+      bridgeResponseProvenanceState,
+      lastNapoleonProofClearReason,
+    );
+    emitEvent("napoleon_proof_currentness_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      currentProofAvailable: answer.currentProofAvailable,
+      proofReturned: answer.currentProofAvailable,
+      provenanceState: bridgeResponseProvenanceState,
+      clearReason: lastNapoleonProofClearReason,
+      selectedAgentCount: answer.selectedAgentCount,
+      blockedEffectCount: answer.blockedEffectCount,
+      traceReturned: answer.traceReturned,
+      auditReturned: answer.auditReturned,
+      localAnswerOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerNapoleonRequiredActionQuestion(content: string, traceId: string, turnId: string, activeProfileMode: NapoleonProfileMode) {
     if (!isNapoleonRequiredActionQuestion(content)) return false;
 
@@ -2303,6 +2441,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
     const activeProfileMode = mapProfileToNapoleonMode(profile);
+    if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
@@ -2503,6 +2642,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const traceId = newTraceId();
       const turnId = `turn_${Date.now().toString(16)}`;
       const activeProfileMode = mapProfileToNapoleonMode(profile);
+      if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
@@ -2734,7 +2874,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       refreshCapabilityLedgerStatus();
       setLastBridgeFailure(describeBridgeFailure(error));
       setLastNapoleonTurnFailure(describeLastNapoleonTurnFailure(error));
-      clearNapoleonPresentation();
+      clearNapoleonPresentation("bridge_failure");
       clearGovernanceReviewHandoff();
       setMessages((m) => [
         ...m,

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local text answers for Napoleon proof-currentness questions, so the user can ask whether the latest returned proof is still current or why stale proof cannot be reused; answers stay local, expose safe clear reasons, do not contact Napoleon, and keep telemetry to state, booleans, counts, and false side-effect flags.
 - Added local text answers for Napoleon review-readiness questions from the current returned bridge proof, so the user can ask what must be reviewed before acting without extra Napoleon contact, side effects, or telemetry that copies effect labels, decision IDs, trace IDs, or audit IDs.
 - Added local text answers for Napoleon delegation and blocked-effect questions from the current returned bridge proof, with no extra Napoleon contact, no side effects, and count-only telemetry that omits returned agent names, effect labels, trace IDs, and audit IDs.
 - Added local text answers for Napoleon-required-action questions from sanitized evaluator validation imports, so an operator can ask what Napoleon needs to fix next without triggering live Napoleon contact or leaking action IDs, target paths, or action text into telemetry.

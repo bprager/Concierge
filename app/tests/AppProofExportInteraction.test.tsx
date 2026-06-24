@@ -563,6 +563,46 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(reviewAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(reviewAnswerEvent).includes("memory_write"), false);
     assert.equal(JSON.stringify(reviewAnswerEvent).includes(lastTextTurnTraceId), false);
+    const requestCountBeforeCurrentnessQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Is the last Napoleon proof still current?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let currentnessAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      currentnessAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
+      ) as HTMLElement | undefined;
+      assert.ok(currentnessAnswer);
+    });
+    assert.ok(currentnessAnswer);
+    const currentnessAnswerText = currentnessAnswer.textContent ?? "";
+    assert.ok(currentnessAnswerText.includes("Current returned proof available: yes."));
+    assert.ok(currentnessAnswerText.includes("Proof state: returned_bridge."));
+    assert.ok(currentnessAnswerText.includes("Handled by: Passive Brain."));
+    assert.ok(currentnessAnswerText.includes("Blocked effects: memory_write, approval_capture, external_send, agent_dispatch."));
+    assert.ok(currentnessAnswerText.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
+    assert.ok(
+      currentnessAnswerText.includes(
+        "This is local display of the latest returned bridge proof only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeCurrentnessQuestion);
+    const currentnessTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const currentnessEvent = currentnessTelemetryBuffer.events
+      ?.filter((event) => event.event === "napoleon_proof_currentness_answered")
+      .at(-1);
+    assert.equal(currentnessEvent?.attributes.localAnswerOnly, true);
+    assert.equal(currentnessEvent?.attributes.currentProofAvailable, true);
+    assert.equal(currentnessEvent?.attributes.provenanceState, "returned_bridge");
+    assert.equal(currentnessEvent?.attributes.clearReason, "current_proof_available");
+    assert.equal(currentnessEvent?.attributes.blockedEffectCount, 4);
+    assert.equal(currentnessEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(currentnessEvent).includes("Passive Brain"), false);
+    assert.equal(JSON.stringify(currentnessEvent).includes("memory_write"), false);
+    assert.equal(JSON.stringify(currentnessEvent).includes(lastTextTurnTraceId), false);
     const textTurnTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };
@@ -3945,6 +3985,43 @@ test("clears Napoleon proof and delegation when descriptor connection state chan
     assert.equal(view.queryByText("Last successful Napoleon proof"), null);
     assert.equal(within(delegationPanel).queryAllByText(/Passive Brain/).length, 0);
     assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
+    const requestCountBeforeClearedProofQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "Why can't you rely on the last Napoleon proof?" } });
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let clearedProofAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      clearedProofAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
+      ) as HTMLElement | undefined;
+      assert.ok(clearedProofAnswer);
+    });
+    assert.ok(clearedProofAnswer);
+    const clearedProofAnswerText = clearedProofAnswer.textContent ?? "";
+    assert.ok(clearedProofAnswerText.includes("Current returned proof available: no."));
+    assert.ok(clearedProofAnswerText.includes("Proof state: stale_cleared."));
+    assert.ok(clearedProofAnswerText.includes("Last clear reason: descriptor_state_changed."));
+    assert.ok(
+      clearedProofAnswerText.includes(
+        "Concierge will not reuse stale Napoleon proof after the connection, descriptor, profile, or rehearsal context changes.",
+      ),
+    );
+    assert.ok(
+      clearedProofAnswerText.includes(
+        "This is local display of proof state only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeClearedProofQuestion);
+    const clearedProofTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const clearedProofEvent = clearedProofTelemetryBuffer.events
+      ?.filter((event) => event.event === "napoleon_proof_currentness_answered")
+      .at(-1);
+    assert.equal(clearedProofEvent?.attributes.localAnswerOnly, true);
+    assert.equal(clearedProofEvent?.attributes.currentProofAvailable, false);
+    assert.equal(clearedProofEvent?.attributes.provenanceState, "stale_cleared");
+    assert.equal(clearedProofEvent?.attributes.clearReason, "descriptor_state_changed");
+    assert.equal(clearedProofEvent?.attributes.externalSendPerformed, false);
   } finally {
     cleanup();
     dom.window.close();
