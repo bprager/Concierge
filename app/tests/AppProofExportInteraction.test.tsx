@@ -618,6 +618,38 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(reviewAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(reviewAnswerEvent).includes("memory_write"), false);
     assert.equal(JSON.stringify(reviewAnswerEvent).includes(lastTextTurnTraceId), false);
+    const requestCountBeforeNaturalActingQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Can I act on that?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let naturalActingAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      naturalActingAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon review requirement from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(naturalActingAnswer);
+      assert.ok(naturalActingAnswer.textContent?.includes("Review required: yes."));
+    });
+    assert.ok(naturalActingAnswer);
+    const naturalActingAnswerText = naturalActingAnswer.textContent ?? "";
+    assert.ok(naturalActingAnswerText.includes("Governance: requires_review."));
+    assert.ok(
+      naturalActingAnswerText.includes(
+        "Next step: Review the returned Napoleon governance state and blocked effects before treating this as actionable.",
+      ),
+    );
+    assert.ok(naturalActingAnswerText.includes("Blocked effects: memory_write, approval_capture, external_send, agent_dispatch."));
+    assert.equal(requestedUrls.length, requestCountBeforeNaturalActingQuestion);
+    const naturalActingAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_review_requirement_answered").at(-1);
+    assert.equal(naturalActingAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(naturalActingAnswerEvent?.attributes.reviewRequired, true);
+    assert.equal(naturalActingAnswerEvent?.attributes.blockedEffectCount, 4);
+    assert.equal(naturalActingAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(naturalActingAnswerEvent).includes("Can I act on that?"), false);
+    assert.equal(JSON.stringify(naturalActingAnswerEvent).includes("memory_write"), false);
     const requestCountBeforeCurrentnessQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "Is the last Napoleon proof still current?" },

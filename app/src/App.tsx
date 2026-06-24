@@ -390,7 +390,13 @@ function isNapoleonDelegationQuestion(content: string): boolean {
 
 function isNapoleonReviewRequirementQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
-  if (!lower.includes("napoleon")) return false;
+  const asksAboutReturnedAction =
+    /\b(can|may|should)\s+i\b.*\b(act|apply|proceed|use|send|do)\b.*\b(that|this|it|answer|response|reply)\b/.test(
+      lower,
+    ) ||
+    /\b(is|was)\b.*\b(that|this|it|answer|response|reply)\b.*\b(approved|reviewed|allowed|safe)\b/.test(lower) ||
+    /\b(do|does)\b.*\b(that|this|it|answer|response|reply)\b.*\b(need|require)\b.*\breview\b/.test(lower);
+  if (!lower.includes("napoleon") && !asksAboutReturnedAction) return false;
   const asksAboutReview =
     /\breview\b/.test(lower) ||
     /\brequires?_review\b/.test(lower) ||
@@ -405,7 +411,7 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
     /\bmay i\b/.test(lower) ||
     /\bneed\b/.test(lower) ||
     /\brequire\b/.test(lower);
-  return asksAboutReview && asksAboutActing;
+  return asksAboutReturnedAction || (asksAboutReview && asksAboutActing);
 }
 
 function isNapoleonProofCurrentnessQuestion(content: string): boolean {
