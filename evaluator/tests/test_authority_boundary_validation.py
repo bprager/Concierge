@@ -1041,6 +1041,19 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'const speech = new globalThis["SpeechRecognition"]();',
             'window["speechSynthesis"]["speak"](utterance);',
             'await clip["play"]();',
+            "await navigator.mediaDevices.getUserMedia?.({ audio: true });",
+            "await navigator.mediaDevices.getDisplayMedia?.({ video: true });",
+            "await navigator.mediaDevices.enumerateDevices?.();",
+            'await navigator.mediaDevices["getUserMedia"]?.({ audio: true });',
+            'await navigator["mediaDevices"]["enumerateDevices"]?.();',
+            "const recorder = window.MediaRecorder?.(stream);",
+            'const recorder = window["MediaRecorder"]?.(stream);',
+            "const audio = window.AudioContext?.();",
+            'const audio = globalThis["AudioContext"]?.();',
+            "const speech = window.SpeechRecognition?.();",
+            'const speech = globalThis["SpeechRecognition"]?.();',
+            "await clip.play?.();",
+            'await clip["play"]?.();',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_hidden_media_or_speech_text("app/src/hiddenCapture.ts", source)
