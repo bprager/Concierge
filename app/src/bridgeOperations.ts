@@ -487,6 +487,37 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
   const isEvolutionSubmission = operation.id === "evolution_proposal_submission";
   const isGovernanceEvaluation = operation.id === "governance_evaluation";
   const isChiefOfStaffRequest = operation.id === "chief_of_staff_request";
+  const isGovernanceReview = operation.id === "governance_review";
+  let boundary =
+    "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.";
+  let sideEffects =
+    "No local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge";
+  if (isNewAgentReview) {
+    boundary =
+      "review-only Napoleon target; no local approval, agent activation, registry update, memory write, agent dispatch, external send, trace append, routing, or local application.";
+    sideEffects =
+      "No agent activation, registry update, local approval, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge";
+  } else if (isEvolutionSubmission) {
+    boundary =
+      "proposal-submission Napoleon target; no local evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or local application.";
+    sideEffects =
+      "No evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge";
+  } else if (isGovernanceEvaluation) {
+    boundary =
+      "governance-evaluation Napoleon target; no local governance override, approval capture, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.";
+    sideEffects =
+      "No governance override, approval capture, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge";
+  } else if (isChiefOfStaffRequest) {
+    boundary =
+      "request-handoff Napoleon target; no local task routing, registry update, trace append, approval capture, memory write, agent dispatch, external send, or local application.";
+    sideEffects =
+      "No task routing, registry update, trace append, approval capture, memory write, agent dispatch, external send, or application is performed by Concierge";
+  } else if (isGovernanceReview) {
+    boundary =
+      "governance-review Napoleon target; no local approval capture, governance override, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.";
+    sideEffects =
+      "No approval capture, governance override, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge";
+  }
   return {
     id: operation.id,
     operationId: operation.id,
@@ -494,25 +525,9 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
     path: operation.path,
     requestKind: operation.requestKind,
     transport: BRIDGE_OPERATION_TRANSPORT_LABELS[operation.transport],
-    boundary: isNewAgentReview
-      ? "review-only Napoleon target; no local approval, agent activation, registry update, memory write, agent dispatch, external send, trace append, routing, or local application."
-      : isEvolutionSubmission
-        ? "proposal-submission Napoleon target; no local evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or local application."
-        : isGovernanceEvaluation
-          ? "governance-evaluation Napoleon target; no local governance override, approval capture, memory write, agent dispatch, external send, registry update, trace append, routing, or local application."
-          : isChiefOfStaffRequest
-            ? "request-handoff Napoleon target; no local task routing, registry update, trace append, approval capture, memory write, agent dispatch, external send, or local application."
-        : "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
+    boundary,
     tokenHandling: "Bearer token is sent only in the Authorization header",
-    sideEffects: isNewAgentReview
-      ? "No agent activation, registry update, local approval, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge"
-      : isEvolutionSubmission
-        ? "No evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge"
-        : isGovernanceEvaluation
-          ? "No governance override, approval capture, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge"
-          : isChiefOfStaffRequest
-            ? "No task routing, registry update, trace append, approval capture, memory write, agent dispatch, external send, or application is performed by Concierge"
-        : "No local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
+    sideEffects,
     requiredResponseFields: operation.responseRequired,
     requiredResponseSummary: operation.responseRequired.join(", "),
     sourceSummary: "Generated from api/napoleon_bridge.openapi.yaml review/evidence metadata",

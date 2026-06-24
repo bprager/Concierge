@@ -811,3 +811,18 @@ test("describes Chief of Staff request without task routing authority", () => {
   assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
   assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 });
+
+test("describes governance review without approval capture authority", () => {
+  const summary = describeNapoleonReviewOperationSummary("governance_review");
+
+  assert.equal(summary.label, "Governance review handoff");
+  assert.equal(summary.path, "/chief-of-staff/reviews/governance");
+  assert.equal(summary.requestKind, "governance_review_handoff");
+  assert.ok(summary.boundary.includes("governance-review Napoleon target"));
+  assert.ok(summary.boundary.includes("approval capture"));
+  assert.ok(summary.boundary.includes("governance override"));
+  assert.ok(summary.sideEffects.includes("No approval capture"));
+  assert.ok(summary.sideEffects.includes("governance override"));
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
+});
