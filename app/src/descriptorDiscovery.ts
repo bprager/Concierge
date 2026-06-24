@@ -84,8 +84,12 @@ const GOVERNED_HANDOFF_CAPABILITIES = new Set<GovernedHandoffCapability>([
   "evaluation_review",
   "memory_proposal_review",
   "chief_of_staff_steering",
+  "chief_of_staff_request",
   "governance_review",
+  "governance_evaluation",
   "evolution_proposal_review",
+  "evolution_proposal_submission",
+  "new_agent_proposal_review",
   "taxonomy_review",
   "observability_trace",
 ]);
@@ -116,9 +120,13 @@ function supportedHandoffsFromRequiredFor(value: unknown): GovernedHandoffCapabi
   for (const item of values) {
     if (item === "evaluation_review") pushUniqueHandoff(supported, "evaluation_review");
     if (item === "governance_review") pushUniqueHandoff(supported, "governance_review");
+    if (item === "governance_evaluation") pushUniqueHandoff(supported, "governance_evaluation");
     if (item === "evolution_proposal_review") pushUniqueHandoff(supported, "evolution_proposal_review");
+    if (item === "evolution_proposal_submission") pushUniqueHandoff(supported, "evolution_proposal_submission");
+    if (item === "new_agent_proposal_review") pushUniqueHandoff(supported, "new_agent_proposal_review");
     if (item === "memory_proposal_review") pushUniqueHandoff(supported, "memory_proposal_review");
     if (item === "chief_of_staff_steering") pushUniqueHandoff(supported, "chief_of_staff_steering");
+    if (item === "chief_of_staff_request") pushUniqueHandoff(supported, "chief_of_staff_request");
     if (item === "taxonomy_review") pushUniqueHandoff(supported, "taxonomy_review");
     if (item === "observability_trace") pushUniqueHandoff(supported, "observability_trace");
   }
@@ -131,15 +139,27 @@ function supportedHandoffsFromRuntimeEndpoints(endpoints: Record<string, unknown
   if (typeof endpoints.evaluation_review === "string" || typeof endpoints.evaluation_reviews === "string") {
     pushUniqueHandoff(supported, "evaluation_review");
   }
+  if (typeof endpoints.chief_of_staff_request === "string" || typeof endpoints.chief_of_staff_requests === "string") {
+    pushUniqueHandoff(supported, "chief_of_staff_request");
+  }
   if (typeof endpoints.memory_proposal_review === "string" || typeof endpoints.memory_proposal_reviews === "string") {
     pushUniqueHandoff(supported, "memory_proposal_review");
   }
   if (typeof endpoints.chief_of_staff_steering === "string") pushUniqueHandoff(supported, "chief_of_staff_steering");
+  if (typeof endpoints.governance_evaluation === "string" || typeof endpoints.governance_evaluations === "string") {
+    pushUniqueHandoff(supported, "governance_evaluation");
+  }
   if (typeof endpoints.governance_review === "string" || typeof endpoints.governance_reviews === "string") {
     pushUniqueHandoff(supported, "governance_review");
   }
+  if (typeof endpoints.evolution_proposal_submission === "string" || typeof endpoints.evolution_proposal_submissions === "string") {
+    pushUniqueHandoff(supported, "evolution_proposal_submission");
+  }
   if (typeof endpoints.evolution_proposal_review === "string" || typeof endpoints.evolution_proposal_reviews === "string") {
     pushUniqueHandoff(supported, "evolution_proposal_review");
+  }
+  if (typeof endpoints.new_agent_proposal_review === "string" || typeof endpoints.new_agent_proposal_reviews === "string") {
+    pushUniqueHandoff(supported, "new_agent_proposal_review");
   }
   if (typeof endpoints.taxonomy_review === "string" || typeof endpoints.taxonomy_reviews === "string") {
     pushUniqueHandoff(supported, "taxonomy_review");

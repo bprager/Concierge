@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Aligned descriptor discovery with the generated Napoleon review, request, governance-evaluation, evolution-submission, and new-agent-review target names so real descriptors can advertise those routes as connection metadata without granting approval, registry updates, routing, memory writes, agent dispatch, external sends, trace append, or local application.
 - Repository authority-boundary validation now rejects concatenated bracket process, memory, graph, agent, and tool aliases on arbitrary objects, closing hidden local execution, memory-write, graph-write, agent-routing, and tool-call bypass paths around Napoleon governance.
 - Rendered voice/avatar coverage now proves the current returned Napoleon proof path before export: voice shaping, avatar state, and avatar expression preserve returned bridge provenance only while the proof is current, do not make new network calls, and still report no playback, animation, agent dispatch, or local side effects.
 - Rendered voice/avatar panels now carry current, absent, or stale-cleared bridge provenance into local voice shaping, avatar state, and avatar expression previews, visibly showing `stale_cleared` after live Napoleon proof is cleared while preventing old Napoleon or selected-agent attribution from reappearing.

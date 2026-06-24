@@ -168,13 +168,26 @@ test("descriptor discovery derives handoffs from Napoleon plural endpoint and re
         endpoints: {
           descriptor: "GET /cos/descriptor",
           text_turn: "POST /cos/text-turn",
+          chief_of_staff_requests: "/chief-of-staff/requests",
           evaluation_reviews: "/chief-of-staff/reviews/evaluation",
+          governance_evaluations: "/governance/evaluate",
           governance_reviews: "/chief-of-staff/reviews/governance",
+          evolution_proposal_submissions: "/evolution/proposals",
           evolution_proposal_reviews: "/chief-of-staff/reviews/evolution-proposals",
+          new_agent_proposal_reviews: "/chief-of-staff/reviews/new-agent-proposals",
           observability_traces: "/observability/traces",
           trace: "GET /cos/trace/{trace_id}",
         },
-        required_for: ["evaluation_review", "governance_review", "evolution_proposal_review", "observability_trace"],
+        required_for: [
+          "evaluation_review",
+          "chief_of_staff_request",
+          "governance_evaluation",
+          "governance_review",
+          "evolution_proposal_submission",
+          "evolution_proposal_review",
+          "new_agent_proposal_review",
+          "observability_trace",
+        ],
         supported_authority_tiers: ["advisory_prepare_only"],
         blocked_effects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
       }),
@@ -184,10 +197,64 @@ test("descriptor discovery derives handoffs from Napoleon plural endpoint and re
   assert.equal(result.connection.state, "ready");
   assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, [
     "evaluation_review",
+    "chief_of_staff_request",
+    "governance_evaluation",
     "governance_review",
+    "evolution_proposal_submission",
     "evolution_proposal_review",
+    "new_agent_proposal_review",
     "observability_trace",
     "text_turn",
+  ]);
+});
+
+test("descriptor discovery accepts all generated Napoleon review and submission handoff claims", async () => {
+  const result = await discoverNapoleonDescriptor({
+    getEndpoint: () => "https://napoleon.example/concierge",
+    fetch: async () => ({
+      ok: true,
+      json: async () => ({
+        descriptor: {
+          schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+          serviceId: "napoleon.chief_of_staff",
+          runtimeAuthority: false,
+          commandExecution: false,
+          cachePolicy: "fail_closed_to_review_required",
+          blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch", "external_send"],
+          supportedHandoffs: [
+            "text_turn",
+            "evaluation_review",
+            "memory_proposal_review",
+            "chief_of_staff_steering",
+            "chief_of_staff_request",
+            "governance_review",
+            "governance_evaluation",
+            "evolution_proposal_review",
+            "evolution_proposal_submission",
+            "new_agent_proposal_review",
+            "taxonomy_review",
+            "observability_trace",
+          ],
+        },
+      }),
+    }),
+  });
+
+  assert.equal(result.connection.state, "ready");
+  assert.equal(result.connection.canAttemptLiveBridge, true);
+  assert.deepEqual(result.connection.descriptorStatus?.supportedHandoffs, [
+    "text_turn",
+    "evaluation_review",
+    "memory_proposal_review",
+    "chief_of_staff_steering",
+    "chief_of_staff_request",
+    "governance_review",
+    "governance_evaluation",
+    "evolution_proposal_review",
+    "evolution_proposal_submission",
+    "new_agent_proposal_review",
+    "taxonomy_review",
+    "observability_trace",
   ]);
 });
 

@@ -102,7 +102,10 @@
               "governance_review",
               "delegation_review",
               "evaluation_review",
+              "chief_of_staff_request",
+              "governance_evaluation",
               "evolution_proposal_review",
+              "evolution_proposal_submission",
               "new_agent_proposal_review"
             ]
           }

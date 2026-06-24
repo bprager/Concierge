@@ -12,8 +12,12 @@ export type GovernedHandoffCapability =
   | "evaluation_review"
   | "memory_proposal_review"
   | "chief_of_staff_steering"
+  | "chief_of_staff_request"
   | "governance_review"
+  | "governance_evaluation"
   | "evolution_proposal_review"
+  | "evolution_proposal_submission"
+  | "new_agent_proposal_review"
   | "taxonomy_review"
   | "observability_trace";
 
@@ -263,8 +267,12 @@ const DEFAULT_SUPPORTED_HANDOFFS: GovernedHandoffCapability[] = [
   "evaluation_review",
   "memory_proposal_review",
   "chief_of_staff_steering",
+  "chief_of_staff_request",
   "governance_review",
+  "governance_evaluation",
   "evolution_proposal_review",
+  "evolution_proposal_submission",
+  "new_agent_proposal_review",
   "taxonomy_review",
   "observability_trace",
 ];

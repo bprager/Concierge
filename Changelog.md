@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Aligned descriptor-discovery handoff allowlists with the generated Napoleon review/request/governance/evolution/new-agent targets so valid advertised routes are treated as connection metadata instead of invalid descriptors.
 - Added rendered voice/avatar provenance coverage so the local voice response, avatar state, and avatar expression panels visibly report `stale_cleared` after live Napoleon proof is cleared and do not reuse Napoleon or selected-agent attribution.
 - Hardened repository authority-boundary validation for concatenated bracket process, memory, graph, agent, and tool aliases on arbitrary objects so hidden local execution, memory writes, graph writes, agent routing, or tool calls cannot bypass Napoleon governance.
 - Added rendered current-proof voice/avatar coverage so local voice response, avatar state, and avatar expression panels preserve Napoleon and selected-agent attribution only while returned bridge proof is current.
