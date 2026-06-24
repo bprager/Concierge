@@ -762,3 +762,20 @@ test("describes new agent proposal review without agent activation authority", (
   assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
   assert.equal(JSON.stringify(summary).includes("secret-token"), false);
 });
+
+test("describes evolution proposal submission without evolution application authority", () => {
+  const summary = describeNapoleonReviewOperationSummary("evolution_proposal_submission");
+
+  assert.equal(summary.label, "Evolution proposal submission");
+  assert.equal(summary.path, "/evolution/proposals");
+  assert.equal(summary.requestKind, "evolution_proposal_submission_handoff");
+  assert.ok(summary.boundary.includes("proposal-submission Napoleon target"));
+  assert.ok(summary.boundary.includes("evolution application"));
+  assert.ok(summary.boundary.includes("registry update"));
+  assert.ok(summary.boundary.includes("approval capture"));
+  assert.ok(summary.sideEffects.includes("No evolution application"));
+  assert.ok(summary.sideEffects.includes("registry update"));
+  assert.ok(summary.sideEffects.includes("approval capture"));
+  assert.equal(JSON.stringify(summary).includes("https://napoleon.example"), false);
+  assert.equal(JSON.stringify(summary).includes("secret-token"), false);
+});

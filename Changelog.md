@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added explicit generated-route coverage for evolution proposal submission showing that the Napoleon handoff is proposal-submission-only and does not apply evolution changes, update registries, capture approval, write memory, dispatch agents, send externally, append traces, route tasks, or apply changes locally.
 - Added explicit generated-route coverage for new-agent proposal review showing that the Napoleon handoff is review-only and does not activate agents, update registries, capture approval, write memory, dispatch agents, send externally, append traces, route tasks, or apply changes locally.
 - Hardened repository authority-boundary validation for mixed bracket/dot `navigator` aliases such as `window["navigator"].clipboard.writeText(...)`, `share(...)`, `serviceWorker.register(...)`, permission, geolocation, device, and credential calls, so UI code cannot move prompts, proof data, tokens, or local-device access around the governed bridge.
 - Added rendered coverage proving remote Napoleon governance deny failures appear in the persistent delegation panel with failure reason, returned governance state, blocked effects, next step, and no selected-agent or recommendation attribution.

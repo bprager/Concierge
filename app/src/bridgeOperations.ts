@@ -484,6 +484,7 @@ export function describeBridgeOperationSummary(id: BridgeOperationId): BridgeOpe
 export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperationId): BridgeOperationSummary {
   const operation = getNapoleonReviewOperation(id);
   const isNewAgentReview = operation.id === "new_agent_proposal_review";
+  const isEvolutionSubmission = operation.id === "evolution_proposal_submission";
   return {
     id: operation.id,
     operationId: operation.id,
@@ -493,11 +494,15 @@ export function describeNapoleonReviewOperationSummary(id: NapoleonReviewOperati
     transport: BRIDGE_OPERATION_TRANSPORT_LABELS[operation.transport],
     boundary: isNewAgentReview
       ? "review-only Napoleon target; no local approval, agent activation, registry update, memory write, agent dispatch, external send, trace append, routing, or local application."
-      : "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
+      : isEvolutionSubmission
+        ? "proposal-submission Napoleon target; no local evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or local application."
+        : "review-only or evidence-only Napoleon target; no local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or local application.",
     tokenHandling: "Bearer token is sent only in the Authorization header",
     sideEffects: isNewAgentReview
       ? "No agent activation, registry update, local approval, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge"
-      : "No local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
+      : isEvolutionSubmission
+        ? "No evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge"
+        : "No local approval, memory write, agent dispatch, external send, registry update, trace append, routing, or application is performed by Concierge",
     requiredResponseFields: operation.responseRequired,
     requiredResponseSummary: operation.responseRequired.join(", "),
     sourceSummary: "Generated from api/napoleon_bridge.openapi.yaml review/evidence metadata",

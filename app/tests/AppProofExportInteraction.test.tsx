@@ -4017,6 +4017,16 @@ test("shows named Napoleon governed targets in governed routes", async () => {
     assert.ok(routes.getByText("Evolution proposal submission"));
     assert.ok(routes.getByText("/evolution/proposals"));
     assert.ok(routes.getByText("evolution_proposal_submission_handoff"));
+    assert.ok(
+      routes.getByText(
+        "proposal-submission Napoleon target; no local evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or local application.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
+        "Side effects: No evolution application, registry update, approval capture, memory write, agent dispatch, external send, trace append, routing, or application is performed by Concierge",
+      ),
+    );
     assert.ok(routes.getByText("Observability trace handoff"));
     assert.ok(routes.getByText("/observability/traces"));
     assert.ok(routes.getByText("observability_trace_handoff"));
