@@ -636,6 +636,33 @@ function isNapoleonConnectionRepairQuestion(content: string): boolean {
   return asksAboutConnection && asksAboutProblem;
 }
 
+function isNapoleonDescriptorValidityQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  const asksAboutNapoleonDescriptor =
+    lower.includes("napoleon") &&
+    (/\bdescriptor\b/.test(lower) ||
+      /\bchecksum\b/.test(lower) ||
+      /\bsignature\b/.test(lower) ||
+      /\btext[- ]?turn\b/.test(lower));
+  if (!asksAboutNapoleonDescriptor) return false;
+
+  const asksAboutValidity =
+    /\bvalid\b/.test(lower) ||
+    /\bvalidity\b/.test(lower) ||
+    /\bintegrity\b/.test(lower) ||
+    /\bchecksum\b/.test(lower) ||
+    /\bsignature\b/.test(lower) ||
+    /\badvertised\b/.test(lower) ||
+    /\broute\b/.test(lower) ||
+    /\bready\b/.test(lower) ||
+    /\busable\b/.test(lower) ||
+    /\bblocking\b/.test(lower) ||
+    /\bblocked\b/.test(lower) ||
+    /\blive send\b/.test(lower);
+
+  return asksAboutValidity;
+}
+
 function isNapoleonConnectionSetupQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   if (!lower.includes("napoleon")) return false;
@@ -670,6 +697,95 @@ function normalizeConnectionRepairAction(summary: string): string {
 
 function normalizeConnectionRepairNextAction(summary: string): string {
   return summary.replace(/^Next step:\s*/i, "").replace(/\.$/, "");
+}
+
+function describeDescriptorValidityNextAction(input: {
+  descriptorConnection: DescriptorConnectionState;
+  textTurnRouteAdvertised: boolean;
+  preflight: LiveSendPreflightView;
+}): string {
+  if (input.descriptorConnection.canAttemptLiveBridge && input.textTurnRouteAdvertised) {
+    return "none";
+  }
+  switch (input.descriptorConnection.failClosedReason) {
+    case "no_endpoint":
+      return "add the governed Napoleon endpoint in settings, then run descriptor discovery";
+    case "no_descriptor":
+      return "run descriptor discovery from the configured Napoleon endpoint";
+    case "descriptor_signature_or_checksum_mismatch":
+      return "fix descriptor checksum/signature before live send";
+    case "descriptor_invalid":
+      return "rediscover a contract-only Napoleon Chief of Staff descriptor";
+    case "descriptor_stale":
+      return "rediscover the Napoleon descriptor before live send";
+    case "auth_failure":
+      return "check the local bridge token or Napoleon descriptor authentication";
+    case "bridge_timeout":
+      return "retry descriptor discovery when the Napoleon endpoint responds";
+    case "http_failure":
+      return "check the Napoleon endpoint URL and descriptor route";
+    default:
+      if (!input.textTurnRouteAdvertised) {
+        return "advertise the governed text_turn handoff in Napoleon's descriptor";
+      }
+      return normalizeConnectionRepairNextAction(input.preflight.nextStepSummary);
+  }
+}
+
+function formatNapoleonDescriptorValidityAnswer(input: {
+  preflight: LiveSendPreflightView;
+  descriptorConnection: DescriptorConnectionState;
+  endpointConfigured: boolean;
+  rehearsalMode: boolean;
+}): {
+  content: string;
+  descriptorValidForLiveSend: boolean;
+  endpointConfigured: boolean;
+  descriptorState: DescriptorConnectionState["state"];
+  checksumState: DescriptorConnectionState["checksumState"];
+  signatureState: DescriptorConnectionState["signatureState"];
+  textTurnRouteAdvertised: boolean;
+  failClosedReason: string;
+  rehearsalMode: boolean;
+  nextAction: string;
+} {
+  const textTurnRouteAdvertised = Boolean(
+    input.descriptorConnection.canAttemptLiveBridge &&
+      input.descriptorConnection.descriptorStatus?.supportedHandoffs.includes("text_turn"),
+  );
+  const descriptorValidForLiveSend = input.descriptorConnection.canAttemptLiveBridge && textTurnRouteAdvertised;
+  const failClosedReason = input.descriptorConnection.failClosedReason ?? "none";
+  const nextAction = describeDescriptorValidityNextAction({
+    descriptorConnection: input.descriptorConnection,
+    textTurnRouteAdvertised,
+    preflight: input.preflight,
+  });
+
+  return {
+    content: [
+      "Napoleon descriptor validity from local connection state:",
+      `Descriptor valid for live send: ${descriptorValidForLiveSend ? "yes" : "no"}.`,
+      `Descriptor state: ${input.descriptorConnection.state}.`,
+      `Checksum state: ${input.descriptorConnection.checksumState}.`,
+      `Signature state: ${input.descriptorConnection.signatureState}.`,
+      `Text-turn route advertised: ${textTurnRouteAdvertised ? "yes" : "no"}.`,
+      `Endpoint configured: ${input.endpointConfigured ? "yes" : "no"}.`,
+      `Rehearsal Mode: ${input.rehearsalMode ? "on" : "off"}.`,
+      `Fail-closed reason: ${failClosedReason}.`,
+      `Next local action: ${nextAction}.`,
+      "Authority boundary: local descriptor readiness only; not Napoleon approval.",
+      "This local answer did not contact Napoleon, approve, write memory, dispatch agents, capture approval, or send externally.",
+    ].join("\n\n"),
+    descriptorValidForLiveSend,
+    endpointConfigured: input.endpointConfigured,
+    descriptorState: input.descriptorConnection.state,
+    checksumState: input.descriptorConnection.checksumState,
+    signatureState: input.descriptorConnection.signatureState,
+    textTurnRouteAdvertised,
+    failClosedReason,
+    rehearsalMode: input.rehearsalMode,
+    nextAction: normalizeConnectionRepairAction(`Next step: ${nextAction}.`),
+  };
 }
 
 function formatNapoleonConnectionRepairAnswer(input: {
@@ -2877,6 +2993,58 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     return true;
   }
 
+  function answerNapoleonDescriptorValidityQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isNapoleonDescriptorValidityQuestion(content)) return false;
+
+    const answer = formatNapoleonDescriptorValidityAnswer({
+      preflight: liveSendPreflight,
+      descriptorConnection,
+      endpointConfigured: Boolean(endpoint.trim()),
+      rehearsalMode,
+    });
+    emitEvent("napoleon_descriptor_validity_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      localAnswerOnly: true,
+      descriptorValidForLiveSend: answer.descriptorValidForLiveSend,
+      endpointConfigured: answer.endpointConfigured,
+      descriptorState: answer.descriptorState,
+      checksumState: answer.checksumState,
+      signatureState: answer.signatureState,
+      textTurnRouteAdvertised: answer.textTurnRouteAdvertised,
+      failClosedReason: answer.failClosedReason,
+      rehearsalMode: answer.rehearsalMode,
+      nextAction: answer.nextAction,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerNapoleonConnectionSetupQuestion(
     content: string,
     traceId: string,
@@ -3211,6 +3379,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
     const activeProfileMode = mapProfileToNapoleonMode(profile);
+    if (answerNapoleonDescriptorValidityQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonConnectionRepairQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
@@ -3422,6 +3591,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const traceId = newTraceId();
       const turnId = `turn_${Date.now().toString(16)}`;
       const activeProfileMode = mapProfileToNapoleonMode(profile);
+      if (answerNapoleonDescriptorValidityQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonConnectionRepairQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;

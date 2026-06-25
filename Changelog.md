@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local text answers for Napoleon descriptor validity questions such as "Is the Napoleon descriptor valid?", showing descriptor state, checksum/signature state, text-turn route advertisement, fail-closed reason, and next local action without contacting Napoleon or emitting raw question text.
 - Added local text answers for Napoleon connection repair questions such as "Why can't I connect to Napoleon?", naming the current blocker and next local action without contacting Napoleon or emitting raw question text.
 - Added local text answers for Napoleon connection setup questions such as "How do I connect to Napoleon?", using the current connection guide and live-send preflight state without contacting Napoleon or emitting raw question text.
 - Added sanitized connection-guide metadata to bridge readiness proof exports, carrying the current setup step, next local action, live-send readiness, endpoint/descriptor/text-route booleans, Rehearsal Mode state, promotion gate, and false side-effect boundaries without storing endpoint values, prompts, tokens, or approval.

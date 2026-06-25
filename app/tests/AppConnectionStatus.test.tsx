@@ -237,6 +237,83 @@ test("text concierge answers Napoleon connection repair questions with blocker a
   }
 });
 
+test("text concierge answers Napoleon descriptor validity questions locally without network calls", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  let fetchCalled = false;
+
+  try {
+    globalThis.fetch = (async () => {
+      fetchCalled = true;
+      throw new Error("descriptor validity local answer must not contact Napoleon");
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+    fireEvent.change(view.getByLabelText("Descriptor"), { target: { value: "checksum_mismatch" } });
+
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Is the Napoleon descriptor valid?" } });
+    await waitFor(() => assert.equal(composer.value, "Is the Napoleon descriptor valid?"));
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    let answer: HTMLElement | undefined;
+    await waitFor(() => {
+      answer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("Napoleon descriptor validity from local connection state:")
+      ) as HTMLElement | undefined;
+      assert.ok(answer);
+    });
+    assert.ok(answer);
+    const answerText = answer.textContent ?? "";
+    assert.ok(answerText.includes("Descriptor valid for live send: no."));
+    assert.ok(answerText.includes("Descriptor state: descriptor_mismatch."));
+    assert.ok(answerText.includes("Checksum state: mismatch."));
+    assert.ok(answerText.includes("Signature state: invalid."));
+    assert.ok(answerText.includes("Text-turn route advertised: no."));
+    assert.ok(answerText.includes("Fail-closed reason: descriptor_signature_or_checksum_mismatch."));
+    assert.ok(answerText.includes("Next local action: fix descriptor checksum/signature before live send."));
+    assert.ok(answerText.includes("Authority boundary: local descriptor readiness only; not Napoleon approval."));
+    assert.ok(
+      answerText.includes(
+        "This local answer did not contact Napoleon, approve, write memory, dispatch agents, capture approval, or send externally.",
+      ),
+    );
+    assert.equal(fetchCalled, false);
+
+    fireEvent.click(view.getByRole("button", { name: "Export telemetry buffer" }));
+    const telemetryBuffer = JSON.parse(view.getByLabelText("Telemetry buffer export").textContent ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const answerEvent = telemetryBuffer.events
+      ?.filter((event) => event.event === "napoleon_descriptor_validity_answered")
+      .at(-1);
+    assert.equal(answerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(answerEvent?.attributes.descriptorValidForLiveSend, false);
+    assert.equal(answerEvent?.attributes.endpointConfigured, true);
+    assert.equal(answerEvent?.attributes.descriptorState, "descriptor_mismatch");
+    assert.equal(answerEvent?.attributes.checksumState, "mismatch");
+    assert.equal(answerEvent?.attributes.signatureState, "invalid");
+    assert.equal(answerEvent?.attributes.textTurnRouteAdvertised, false);
+    assert.equal(answerEvent?.attributes.failClosedReason, "descriptor_signature_or_checksum_mismatch");
+    assert.equal(answerEvent?.attributes.approvalCaptured, false);
+    assert.equal(answerEvent?.attributes.memoryWritePerformed, false);
+    assert.equal(answerEvent?.attributes.agentDispatchPerformed, false);
+    assert.equal(answerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(answerEvent).includes("Is the Napoleon descriptor valid?"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("connection state card shows when descriptor omits the text-turn route", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, { App }] = await Promise.all([

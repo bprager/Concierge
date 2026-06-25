@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local text answers for Napoleon descriptor validity questions, so "Is the Napoleon descriptor valid?" reports descriptor, checksum, signature, text-turn route, fail-closed reason, and next local action from local connection state without contacting Napoleon or recording raw question text.
 - Added local text answers for Napoleon connection repair questions, so "Why can't I connect to Napoleon?" names the current blocker and one next local action without contacting Napoleon or recording raw question text.
 - Added local text answers for Napoleon connection setup questions, so "How do I connect to Napoleon?" is answered from the current connection guide and live-send preflight without contacting Napoleon or recording raw question text.
 - Added sanitized connection-guide metadata to bridge readiness proof exports, so the first-run setup step, next local action, live-send readiness, connection booleans, Rehearsal Mode state, promotion gate, and false side-effect boundaries can be reviewed without storing endpoint values or treating readiness as approval.
