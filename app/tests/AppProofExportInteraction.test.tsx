@@ -10213,6 +10213,70 @@ test("Chief of Staff steering draft marks media readiness repair recommendations
   }
 });
 
+test("Chief of Staff steering draft marks descriptor readiness repair recommendations visibly", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, render },
+    userEventModule,
+    { App },
+    { emitEvent, capabilityLedger },
+    { clearCapabilityLedger },
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalInfo = console.info;
+  console.info = () => undefined;
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    emitEvent("descriptor_discovery_failed", {
+      traceId: "trace_visible_descriptor_repair",
+      conversationId: "conv_visible_descriptor_repair",
+      turnId: "turn_visible_descriptor_repair",
+      profile: "adult_owner",
+      state: "stale_descriptor",
+      checksumState: "valid",
+      signatureState: "valid",
+      descriptorFreshnessState: "stale",
+      canAttemptLiveBridge: false,
+      failClosedReason: "stale_descriptor",
+      endpoint: "https://private-napoleon.example.test/v1/concierge",
+      bearerToken: "private-token",
+    });
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+    await view.findByText("Chief of Staff steering draft");
+
+    assert.ok(view.getByText("Napoleon descriptor readiness repair"));
+    assert.ok(view.getByText(/Refresh Napoleon descriptor discovery/));
+    assert.ok(view.getByText(/descriptor freshness stale/));
+    assert.ok(view.getByText(/proposal only; no approval captured; no memory write; no agent dispatch; no external send/));
+    assert.equal(view.container.textContent?.includes("private-napoleon.example.test"), false);
+    assert.equal(view.container.textContent?.includes("private-token"), false);
+
+    await user.click(view.getByRole("button", { name: "Export steering draft" }));
+    const exportBlock = view.getByLabelText("Exported Chief of Staff steering draft");
+    assert.ok(exportBlock.textContent?.includes('"displayType": "Napoleon descriptor readiness repair"'));
+    assert.ok(exportBlock.textContent?.includes('"recommendationType": "guided_readiness_repair"'));
+    assert.ok(exportBlock.textContent?.includes('"capabilityLabel": "descriptor_discovery"'));
+    assert.ok(exportBlock.textContent?.includes("descriptor freshness stale"));
+    assert.ok(exportBlock.textContent?.includes('"learningSignalCount": 1'));
+    assert.ok(exportBlock.textContent?.includes('"proposalOnly": true'));
+    assert.equal(exportBlock.textContent?.includes("private-napoleon.example.test"), false);
+    assert.equal(exportBlock.textContent?.includes("private-token"), false);
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("exports a local Chief of Staff steering draft without sending or applying it", async () => {
   const dom = installDom();
   const [

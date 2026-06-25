@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a visible and exported `Napoleon descriptor readiness repair` label to Chief of Staff steering drafts, so descriptor repair proposals are distinguishable from generic scored recommendations before any governed handoff.
 - Added descriptor-readiness repair support to Chief of Staff steering drafts, so stale, missing, or not-timestamped descriptor evidence becomes a guided proposal-only repair draft instead of a generic recommendation.
 - Added descriptor-readiness repair recommendations to Capability Intelligence recommended-next answers, so stale, missing, or not-timestamped Napoleon descriptors can be prioritized before deeper architecture work without granting authority.
 - Added descriptor freshness state to Chief of Staff steering drafts, exports, and governed steering send telemetry, keeping proposal-only recommendations tied to current descriptor readiness.

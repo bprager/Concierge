@@ -1354,6 +1354,22 @@ function describeSteeringRecommendationTypeValue(recommendationType: SteeringRec
     : "scored capability recommendation";
 }
 
+function describeSteeringRecommendationDisplayType(draft: ReturnType<typeof draftChiefOfStaffSteering>): string {
+  if (
+    draft.recommendation.recommendationType === "guided_readiness_repair" &&
+    draft.recommendation.capabilityLabel === "descriptor_discovery"
+  ) {
+    return "Napoleon descriptor readiness repair";
+  }
+  if (
+    draft.recommendation.recommendationType === "guided_readiness_repair" &&
+    draft.recommendation.capabilityLabel.endsWith("media_session_readiness_summary")
+  ) {
+    return "Media Session readiness repair";
+  }
+  return describeSteeringRecommendationType(draft);
+}
+
 function stanceForProfile(profile: LocalProfile): { stance: string; reason: string; confidence: number } {
   if (profile === "child_protected") {
     return {
@@ -4707,6 +4723,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           exportedAt: new Date().toISOString(),
           caveat:
             "Local proposal packet only. It is not Napoleon approval and does not apply changes, write memory, dispatch agents, capture approval, or send externally.",
+          displayType: describeSteeringRecommendationDisplayType(steeringDraft),
           recommendation: steeringDraft.recommendation,
           evaluatorCaseCandidate: steeringDraft.evaluatorCaseCandidate,
           evolutionProposal: steeringDraft.evolutionProposal,
@@ -7357,6 +7374,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             </dd>
             <dt>Recommendation type</dt>
             <dd>{describeSteeringRecommendationType(steeringDraft)}</dd>
+            <dt>Repair focus</dt>
+            <dd>{describeSteeringRecommendationDisplayType(steeringDraft)}</dd>
             <dt>Rationale</dt>
             <dd>{steeringDraft.recommendation.rationale}</dd>
             <dt>Evaluator case</dt>

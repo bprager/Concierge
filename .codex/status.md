@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added visible and exported Chief of Staff steering labels for Napoleon descriptor readiness repair drafts, so stale descriptor proposals are distinguishable from generic scored recommendations while still staying proposal-only and sanitized.
 - Added descriptor-readiness repair support to Chief of Staff steering drafts, so stale, missing, or not-timestamped descriptor evidence becomes a guided proposal-only repair draft with learning-signal evidence instead of a generic recommendation.
 - Added descriptor-readiness repair recommendations to Capability Intelligence recommended-next answers, so stale, missing, or not-timestamped Napoleon descriptors can be prioritized ahead of deeper architecture work while live sends, approval capture, memory writes, agent dispatch, and external sends remain blocked.
 - Added descriptor freshness to Chief of Staff steering drafts, local draft exports, visible handoff context, and governed steering send telemetry, so recommendation review packets carry the same fresh/stale/not-timestamped descriptor readiness state without exposing endpoints, tokens, prompts, descriptor bodies, or applying proposals locally.
