@@ -265,6 +265,12 @@ export interface LiveSendPreflightInput {
     operationId: string;
     targetPath: string;
     promotionGate: string;
+    governedPacketEvidence?: {
+      status: "passed";
+      submissionCount: number;
+      chiefOfStaffRequestObserved: boolean;
+      governanceEvaluationObserved: boolean;
+    };
   };
 }
 
@@ -457,6 +463,16 @@ function describeLastRealRuntimeProof(input: {
   const operation = input.lastEvidenceOperationId?.trim() || "unknown operation";
   const targetPath = input.lastEvidenceTargetPath?.trim() || "unknown target";
   return `success: ${operation} at ${targetPath}`;
+}
+
+function describeAcceptedPacketEvidenceSuffix(proof: NonNullable<LiveSendPreflightInput["acceptedRealRuntimeProof"]>): string {
+  const packetEvidence = proof.governedPacketEvidence;
+  if (!packetEvidence) return "";
+  const observed =
+    packetEvidence.chiefOfStaffRequestObserved && packetEvidence.governanceEvaluationObserved
+      ? "Chief of Staff request and governance evaluation observed"
+      : "packet targets incomplete";
+  return ` Governed packet proof: ${packetEvidence.status}, ${packetEvidence.submissionCount} submissions, ${observed}.`;
 }
 
 function describePromotionGate(
@@ -896,7 +912,7 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
         label: "Runtime proof",
         status: runtimeProofReady ? "ready" : "blocked",
         detail: acceptedRealRuntimeProof
-          ? `Accepted real-runtime proof: ${acceptedRealRuntimeProof.status}: ${acceptedRealRuntimeProof.operationId} at ${acceptedRealRuntimeProof.targetPath}.`
+          ? `Accepted real-runtime proof: ${acceptedRealRuntimeProof.status}: ${acceptedRealRuntimeProof.operationId} at ${acceptedRealRuntimeProof.targetPath}.${describeAcceptedPacketEvidenceSuffix(acceptedRealRuntimeProof)}`
           : realRuntimeReady
             ? "Real Napoleon runtime evidence has passed for the bridge."
             : "Real Napoleon runtime proof is not available for live voice.",
@@ -1086,7 +1102,7 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
     label: "Accepted real-runtime proof",
     status: "ready",
     detail: input.acceptedRealRuntimeProof
-      ? `${input.acceptedRealRuntimeProof.status}: ${input.acceptedRealRuntimeProof.operationId} at ${input.acceptedRealRuntimeProof.targetPath}`
+      ? `${input.acceptedRealRuntimeProof.status}: ${input.acceptedRealRuntimeProof.operationId} at ${input.acceptedRealRuntimeProof.targetPath}${describeAcceptedPacketEvidenceSuffix(input.acceptedRealRuntimeProof)}`
       : "No accepted real-runtime readiness proof imported for this local review session.",
   });
   items.push({

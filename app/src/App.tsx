@@ -3832,6 +3832,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       lastOperationId: importResult.lastRealRuntimeProof?.operationId ?? "unavailable",
       lastTargetPath: importResult.lastRealRuntimeProof?.targetPath ?? "unavailable",
       promotionGate: importResult.lastRealRuntimeProof?.promotionGate ?? "unavailable",
+      governedPacketProofStatus:
+        importResult.lastRealRuntimeProof?.governedPacketEvidence?.status ?? "unavailable",
+      governedPacketSubmissionCount:
+        importResult.lastRealRuntimeProof?.governedPacketEvidence?.submissionCount ?? 0,
+      governedChiefOfStaffRequestObserved:
+        importResult.lastRealRuntimeProof?.governedPacketEvidence?.chiefOfStaffRequestObserved ?? false,
+      governedGovernanceEvaluationObserved:
+        importResult.lastRealRuntimeProof?.governedPacketEvidence?.governanceEvaluationObserved ?? false,
       approvalCaptured: false,
       memoryWritePerformed: false,
       agentDispatchPerformed: false,
@@ -6571,6 +6579,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                   {acceptedReadinessProofImport.lastRealRuntimeProof.status}:{" "}
                   {acceptedReadinessProofImport.lastRealRuntimeProof.operationId} at{" "}
                   {acceptedReadinessProofImport.lastRealRuntimeProof.targetPath}
+                </span>
+              ) : null}
+              {acceptedReadinessProofImport.lastRealRuntimeProof?.governedPacketEvidence ? (
+                <span>
+                  Governed packet proof:{" "}
+                  {acceptedReadinessProofImport.lastRealRuntimeProof.governedPacketEvidence.status},{" "}
+                  {acceptedReadinessProofImport.lastRealRuntimeProof.governedPacketEvidence.submissionCount} submissions,
+                  Chief of Staff request and governance evaluation observed.
                 </span>
               ) : null}
               <span>Sanitized local metadata only; not Napoleon approval.</span>

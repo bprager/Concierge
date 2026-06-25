@@ -49,6 +49,12 @@ export interface GovernedVoicePipelineProofInput {
     operationId: string;
     targetPath: string;
     promotionGate: string;
+    governedPacketEvidence?: {
+      status: "passed";
+      submissionCount: number;
+      chiefOfStaffRequestObserved: boolean;
+      governanceEvaluationObserved: boolean;
+    };
   };
 }
 
@@ -206,6 +212,16 @@ export function exportGovernedVoicePipelineProofJson(
               operationId: input.acceptedRealRuntimeProof.operationId,
               targetPath: input.acceptedRealRuntimeProof.targetPath,
               promotionGate: input.acceptedRealRuntimeProof.promotionGate,
+              governedPacketEvidence: input.acceptedRealRuntimeProof.governedPacketEvidence
+                ? {
+                    status: input.acceptedRealRuntimeProof.governedPacketEvidence.status,
+                    submissionCount: input.acceptedRealRuntimeProof.governedPacketEvidence.submissionCount,
+                    chiefOfStaffRequestObserved:
+                      input.acceptedRealRuntimeProof.governedPacketEvidence.chiefOfStaffRequestObserved,
+                    governanceEvaluationObserved:
+                      input.acceptedRealRuntimeProof.governedPacketEvidence.governanceEvaluationObserved,
+                  }
+                : undefined,
               localContextOnly: true,
             }
           : undefined,
@@ -307,6 +323,12 @@ function parseVoicePipelineProof(json: string): null | {
       operationId?: string;
       targetPath?: string;
       promotionGate?: string;
+      governedPacketEvidence?: {
+        status?: string;
+        submissionCount?: number;
+        chiefOfStaffRequestObserved?: boolean;
+        governanceEvaluationObserved?: boolean;
+      };
       localContextOnly?: boolean;
     };
   };
@@ -330,6 +352,12 @@ function parseVoicePipelineProof(json: string): null | {
           operationId?: string;
           targetPath?: string;
           promotionGate?: string;
+          governedPacketEvidence?: {
+            status?: string;
+            submissionCount?: number;
+            chiefOfStaffRequestObserved?: boolean;
+            governanceEvaluationObserved?: boolean;
+          };
           localContextOnly?: boolean;
         };
       };
@@ -413,10 +441,20 @@ function formatAcceptedRealRuntimeProof(
         operationId?: string;
         targetPath?: string;
         promotionGate?: string;
+        governedPacketEvidence?: {
+          status?: string;
+          submissionCount?: number;
+          chiefOfStaffRequestObserved?: boolean;
+          governanceEvaluationObserved?: boolean;
+        };
         localContextOnly?: boolean;
       }
     | undefined,
 ): string {
   if (!proof || proof.localContextOnly !== true) return "not imported";
-  return `${proof.status ?? "unknown"}:${proof.operationId ?? "unknown"}:${proof.targetPath ?? "unknown"}:${proof.promotionGate ?? "unknown"}`;
+  const packetEvidence = proof.governedPacketEvidence;
+  const packetText = packetEvidence
+    ? `:${packetEvidence.status ?? "unknown"}:${packetEvidence.submissionCount ?? "unknown"}:${packetEvidence.chiefOfStaffRequestObserved === true ? "cos_request_observed" : "cos_request_unavailable"}:${packetEvidence.governanceEvaluationObserved === true ? "governance_evaluation_observed" : "governance_evaluation_unavailable"}`
+    : "";
+  return `${proof.status ?? "unknown"}:${proof.operationId ?? "unknown"}:${proof.targetPath ?? "unknown"}:${proof.promotionGate ?? "unknown"}${packetText}`;
 }

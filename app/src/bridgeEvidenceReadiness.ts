@@ -100,6 +100,12 @@ export interface AcceptedBridgeReadinessProofImport {
     targetPath: string;
     status: "success";
     promotionGate: string;
+    governedPacketEvidence?: {
+      status: "passed";
+      submissionCount: number;
+      chiefOfStaffRequestObserved: boolean;
+      governanceEvaluationObserved: boolean;
+    };
   };
 }
 
@@ -712,6 +718,12 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
       targetPath: proofField(summary, ["bridgeEvidence", "lastTargetPath"]),
       status: "success",
       promotionGate: proofField(summary, ["promotionReadiness", "gate"]),
+      governedPacketEvidence: {
+        status: "passed",
+        submissionCount: Number(contractPackets.submissionCount),
+        chiefOfStaffRequestObserved: true,
+        governanceEvaluationObserved: true,
+      },
     },
   };
 }

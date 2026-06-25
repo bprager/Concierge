@@ -964,6 +964,12 @@ test("imports successful live-runtime summary as accepted readiness proof metada
     targetPath: "/cos/text-turn",
     status: "success",
     promotionGate: "ready_for_human_review",
+    governedPacketEvidence: {
+      status: "passed",
+      submissionCount: 2,
+      chiefOfStaffRequestObserved: true,
+      governanceEvaluationObserved: true,
+    },
   });
 });
 

@@ -7506,10 +7506,19 @@ test("imports live-runtime validation summary as accepted readiness proof metada
     const readiness = view.getByText("Live bridge readiness").closest("section") as HTMLElement | null;
     assert.ok(readiness);
     assert.ok(within(readiness).getByText("success: text_turn at /cos/text-turn"));
+    assert.ok(
+      within(readiness).getByText(
+        "Governed packet proof: passed, 2 submissions, Chief of Staff request and governance evaluation observed.",
+      ),
+    );
     assert.ok(within(readiness).getByText("Sanitized local metadata only; not Napoleon approval."));
 
     const voiceReadiness = within(view.getByLabelText("Voice readiness"));
-    assert.ok(voiceReadiness.getByText("Accepted real-runtime proof: success: text_turn at /cos/text-turn."));
+    assert.ok(
+      voiceReadiness.getByText(
+        "Accepted real-runtime proof: success: text_turn at /cos/text-turn. Governed packet proof: passed, 2 submissions, Chief of Staff request and governance evaluation observed.",
+      ),
+    );
   } finally {
     cleanup();
     dom.window.close();

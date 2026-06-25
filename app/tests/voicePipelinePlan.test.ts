@@ -66,6 +66,12 @@ test("exports a sanitized governed voice pipeline proof without raw prompt endpo
       operationId: "text_turn",
       targetPath: "/v1/concierge/turn",
       promotionGate: "real_runtime_evidence_available",
+      governedPacketEvidence: {
+        status: "passed",
+        submissionCount: 2,
+        chiefOfStaffRequestObserved: true,
+        governanceEvaluationObserved: true,
+      },
     },
   });
   const proof = JSON.parse(json) as {
@@ -85,6 +91,12 @@ test("exports a sanitized governed voice pipeline proof without raw prompt endpo
         operationId: string;
         targetPath: string;
         promotionGate: string;
+        governedPacketEvidence?: {
+          status: string;
+          submissionCount: number;
+          chiefOfStaffRequestObserved: boolean;
+          governanceEvaluationObserved: boolean;
+        };
         localContextOnly: boolean;
       };
     };
@@ -119,6 +131,12 @@ test("exports a sanitized governed voice pipeline proof without raw prompt endpo
     operationId: "text_turn",
     targetPath: "/v1/concierge/turn",
     promotionGate: "real_runtime_evidence_available",
+    governedPacketEvidence: {
+      status: "passed",
+      submissionCount: 2,
+      chiefOfStaffRequestObserved: true,
+      governanceEvaluationObserved: true,
+    },
     localContextOnly: true,
   });
   assert.equal(proof.boundary.microphoneCaptureStarted, false);
