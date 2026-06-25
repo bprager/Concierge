@@ -238,6 +238,44 @@ test("remote Napoleon governance no-go failures are not treated as missing capab
   assert.ok(signal.details?.includes("governance outcome no_go"));
 });
 
+test("evaluator imports with Napoleon required actions become sanitized runtime capability gaps", () => {
+  const signal = deriveCapabilitySignalFromEvent("evaluator_validation_artifact_imported", {
+    traceId: "trace_required_actions",
+    conversationId: "conv_required_actions",
+    turnId: "turn_required_actions",
+    profileMode: "adult_owner",
+    status: "accepted",
+    evaluatorNapoleonRequiredActionCount: 3,
+    evaluatorFailureReason: "http_evaluator_handoff_not_advertised",
+    evaluatorTargetPath: "/chief-of-staff/reviews/evaluation",
+    descriptorState: "ready",
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+  });
+
+  assert.equal(signal.topicLabel, "napoleon_runtime");
+  assert.equal(signal.intentLabel, "import_required_action_evidence");
+  assert.equal(signal.capabilityLabel, "descriptor_handoff_advertisement");
+  assert.equal(signal.capabilityStatus, "missing");
+  assert.equal(signal.outcomeSignal, "bridge_failed");
+  assert.equal(signal.architectureArea, "napoleon_runtime");
+  assert.equal(signal.suggestedNextStep, "add_backlog_item");
+  assert.deepEqual(signal.details, [
+    "required action packets 3",
+    "evaluator import status accepted",
+    "evaluator failure http_evaluator_handoff_not_advertised",
+    "target path class napoleon_review",
+    "descriptor state ready",
+    "no approval captured",
+    "no memory write performed",
+    "no agent dispatch performed",
+    "no external send performed",
+  ]);
+  assert.equal(JSON.stringify(signal).includes("/chief-of-staff/reviews/evaluation"), false);
+});
+
 test("remote Napoleon governance deny failures are not treated as bridge repair recommendations", () => {
   const signal = deriveCapabilitySignalFromEvent("response_failed", {
     traceId: "trace_remote_deny",

@@ -1733,6 +1733,33 @@ function advisoryCapabilityDiscoveryDetails(attributes: Record<string, unknown>)
   ];
 }
 
+function evaluatorTargetPathClass(attributes: Record<string, unknown>): string {
+  const targetPath = stringAttr(attributes, "evaluatorTargetPath", "not_returned");
+  if (targetPath.startsWith("/chief-of-staff/reviews/")) return "napoleon_review";
+  if (targetPath.startsWith("/chief-of-staff/")) return "chief_of_staff";
+  if (targetPath.startsWith("/governance/")) return "governance";
+  if (targetPath === "not_returned" || targetPath === "unavailable") return "not_returned";
+  return "other_named_target";
+}
+
+function evaluatorRequiredActionImportDetails(attributes: Record<string, unknown>): string[] {
+  const requiredActionCount = numberAttr(attributes, "evaluatorNapoleonRequiredActionCount", 0);
+  const importStatus = stringAttr(attributes, "status", "not_returned");
+  const evaluatorFailureReason = stringAttr(attributes, "evaluatorFailureReason", "not_returned");
+  const descriptorState = stringAttr(attributes, "descriptorState", "not_returned");
+  return [
+    `required action packets ${requiredActionCount}`,
+    `evaluator import status ${importStatus}`,
+    `evaluator failure ${evaluatorFailureReason}`,
+    `target path class ${evaluatorTargetPathClass(attributes)}`,
+    `descriptor state ${descriptorState}`,
+    attributes.approvalCaptured === false ? "no approval captured" : "approval captured reported",
+    attributes.memoryWritePerformed === false ? "no memory write performed" : "memory write reported",
+    attributes.agentDispatchPerformed === false ? "no agent dispatch performed" : "agent dispatch reported",
+    attributes.externalSendPerformed === false ? "no external send performed" : "external send reported",
+  ];
+}
+
 function isGovernanceBlockedResponseFailure(attributes: Record<string, unknown>): boolean {
   const bridgeFailureReason = stringAttr(attributes, "bridgeFailureReason", "");
   const reason = stringAttr(attributes, "reason", "");
@@ -2043,6 +2070,24 @@ export function deriveCapabilitySignalFromEvent(
       suggestedNextStep: readiness.suggestedNextStep,
       details: advisoryCapabilityDiscoveryDetails(attributes),
     });
+  }
+
+  if (eventName === "evaluator_validation_artifact_imported") {
+    const requiredActionCount = numberAttr(attributes, "evaluatorNapoleonRequiredActionCount", 0);
+    if (requiredActionCount > 0 && stringAttr(attributes, "status", "not_returned") === "accepted") {
+      return buildCapabilitySignal({
+        ...base,
+        topicLabel: "napoleon_runtime",
+        intentLabel: "import_required_action_evidence",
+        capabilityLabel: "descriptor_handoff_advertisement",
+        capabilityStatus: "missing",
+        outcomeSignal: "bridge_failed",
+        confidence: 0.88,
+        architectureArea: "napoleon_runtime",
+        suggestedNextStep: "add_backlog_item",
+        details: evaluatorRequiredActionImportDetails(attributes),
+      });
+    }
   }
 
   if (eventName === "response_failed") {

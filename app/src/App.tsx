@@ -2929,6 +2929,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         profileMode: activeProfileMode,
         kind: capabilityAnswer.kind,
         evidenceCount: capabilityAnswer.evidenceCount,
+        localAnswerOnly: true,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
       });
       setMessages((m) => [
         ...m,
@@ -3132,6 +3138,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           profileMode: activeProfileMode,
           kind: capabilityAnswer.kind,
           evidenceCount: capabilityAnswer.evidenceCount,
+          localAnswerOnly: true,
+          approvalCaptured: false,
+          memoryWritePerformed: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+          appliedLocally: false,
         });
         setMessages((m) => [
           ...m,
@@ -3764,6 +3776,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       conversationId,
       status: importResult.status,
       importSource,
+      profile,
+      profileMode: mapProfileToNapoleonMode(profile),
+      descriptorState: descriptorConnection.state,
       evaluatorHttpStatus: importResult.validation.status,
       evaluatorFailureReason: importResult.validation.failureReason ?? "none",
       evaluatorTargetPath: importResult.validation.targetPath ?? "unavailable",

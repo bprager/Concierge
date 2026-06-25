@@ -6912,6 +6912,20 @@ test("renders unadvertised evaluator handoff required action from validation imp
     });
     assert.equal(fetchCalls, 0);
 
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What part of the Concierge architecture has to be improved to fix missing capabilities?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+    await waitFor(() => {
+      const renderedText = document.body.textContent ?? "";
+      assert.ok(renderedText.includes("Architecture areas to improve for missing safe capabilities"));
+      assert.ok(renderedText.includes("napoleon_runtime"));
+      assert.ok(renderedText.includes("details required action packets 3"));
+      assert.ok(renderedText.includes("Profile scope: adult_owner"));
+      assert.ok(renderedText.includes("recommendations are proposal-only"));
+    });
+    assert.equal(fetchCalls, 0);
+
     await user.click(view.getByText("Export required action packet"));
     const requiredActionExport = view.getByLabelText("Exported Napoleon required action packet");
     assert.ok(requiredActionExport.textContent?.includes('"kind": "concierge.napoleon-required-actions.export.v1"'));
@@ -6941,6 +6955,17 @@ test("renders unadvertised evaluator handoff required action from validation imp
     };
     const importEvent = telemetryBuffer.events?.find((event) => event.event === "evaluator_validation_artifact_imported");
     assert.equal(importEvent?.attributes.evaluatorNapoleonRequiredActionCount, 3);
+    assert.equal(JSON.stringify(importEvent).includes("advertise_chief_of_staff_request_handoff"), false);
+    assert.equal(JSON.stringify(importEvent).includes("/chief-of-staff/requests"), false);
+    assert.equal(JSON.stringify(importEvent).includes(chiefOfStaffRequiredAction), false);
+    const capabilityAnswerEvent = telemetryBuffer.events?.find(
+      (event) => event.event === "capability_intelligence_answered",
+    );
+    assert.equal(capabilityAnswerEvent?.attributes.kind, "architecture_improvement_areas");
+    assert.equal(capabilityAnswerEvent?.attributes.profileMode, "adult_owner");
+    assert.equal(capabilityAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(JSON.stringify(capabilityAnswerEvent).includes("advertise_chief_of_staff_request_handoff"), false);
+    assert.equal(JSON.stringify(capabilityAnswerEvent).includes("/chief-of-staff/requests"), false);
     const requiredActionEvent = telemetryBuffer.events?.find((event) => event.event === "napoleon_required_actions_exported");
     assert.equal(requiredActionEvent?.attributes.requiredActionCount, 3);
     assert.equal(JSON.stringify(requiredActionEvent).includes("advertise_chief_of_staff_request_handoff"), false);

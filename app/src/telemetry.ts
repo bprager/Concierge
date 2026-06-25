@@ -317,6 +317,7 @@ export function emitCapabilitySignal(
     "descriptor_discovery_failed",
     "chief_of_staff_capabilities_discovered",
     "chief_of_staff_capabilities_blocked",
+    "evaluator_validation_artifact_imported",
     "response_failed",
     "response_generated",
     "avatar_state_changed",
