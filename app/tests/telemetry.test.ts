@@ -205,6 +205,7 @@ test("telemetry emits descriptor discovery capability signals without endpoint d
     state: "ready",
     checksumState: "matched",
     signatureState: "valid",
+    descriptorFreshnessState: "fresh",
     canAttemptLiveBridge: true,
     failClosedReason: "none",
     endpoint: "https://napoleon.example.test/cos/descriptor",
@@ -216,6 +217,7 @@ test("telemetry emits descriptor discovery capability signals without endpoint d
     state: "blocked",
     checksumState: "unavailable",
     signatureState: "unavailable",
+    descriptorFreshnessState: "stale",
     canAttemptLiveBridge: false,
     failClosedReason: "auth_failure",
     error: "401 from https://napoleon.example.test with secret-token",
@@ -234,6 +236,7 @@ test("telemetry emits descriptor discovery capability signals without endpoint d
     "descriptor state ready",
     "checksum matched",
     "signature valid",
+    "descriptor freshness fresh",
     "live bridge attempt allowed",
     "fail closed reason none",
   ]);
@@ -244,6 +247,7 @@ test("telemetry emits descriptor discovery capability signals without endpoint d
     "descriptor state blocked",
     "checksum unavailable",
     "signature unavailable",
+    "descriptor freshness stale",
     "live bridge attempt blocked",
     "fail closed reason auth_failure",
   ]);

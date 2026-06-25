@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added descriptor freshness state to sanitized descriptor discovery capability signals, so local Capability Intelligence can distinguish stale or not-timestamped descriptor blockers from other Napoleon connection gaps.
 - Added first-class Napoleon descriptor freshness metadata to the connection state panel and sanitized readiness proof exports, including timestamp, max age, current age, and stale/fresh/not-timestamped state without granting authority.
 - Added descriptor freshness state to local Napoleon setup, repair, descriptor-validity, and live-send readiness answers and telemetry without copying endpoint values, prompts, tokens, or descriptor bodies.
 - Added a dedicated Rehearsal Mode evaluator-case candidate panel with intent summary, expected route, governance outcome, profile mode, allowed effects, blocked effects, trace, evidence links, and an explicit draft-only boundary.

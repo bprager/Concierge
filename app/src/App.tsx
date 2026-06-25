@@ -2868,6 +2868,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         state: result.connection.state,
         checksumState: result.connection.checksumState,
         signatureState: result.connection.signatureState,
+        descriptorFreshnessState: result.connection.freshnessState,
         canAttemptLiveBridge: result.connection.canAttemptLiveBridge,
         failClosedReason: result.connection.failClosedReason ?? "none",
       });
@@ -2891,6 +2892,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         traceId: newTraceId(),
         conversationId,
         state: failedConnection.state,
+        checksumState: failedConnection.checksumState,
+        signatureState: failedConnection.signatureState,
+        descriptorFreshnessState: failedConnection.freshnessState,
+        canAttemptLiveBridge: failedConnection.canAttemptLiveBridge,
+        failClosedReason: failedConnection.failClosedReason ?? "none",
         error: String(error),
       });
     }

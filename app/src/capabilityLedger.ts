@@ -1701,11 +1701,13 @@ function descriptorDiscoveryDetails(attributes: Record<string, unknown>): string
   const state = stringAttr(attributes, "state", "unknown");
   const checksumState = stringAttr(attributes, "checksumState", "unknown");
   const signatureState = stringAttr(attributes, "signatureState", "unknown");
+  const descriptorFreshnessState = stringAttr(attributes, "descriptorFreshnessState", "not_timestamped");
   const failClosedReason = stringAttr(attributes, "failClosedReason", "none");
   return [
     `descriptor state ${state}`,
     `checksum ${checksumState}`,
     `signature ${signatureState}`,
+    `descriptor freshness ${descriptorFreshnessState}`,
     attributes.canAttemptLiveBridge === true ? "live bridge attempt allowed" : "live bridge attempt blocked",
     failClosedReason === "none" ? "fail closed reason none" : `fail closed reason ${failClosedReason}`,
   ];

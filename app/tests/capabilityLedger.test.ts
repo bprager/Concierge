@@ -335,6 +335,35 @@ test("evaluator imports with Napoleon required actions become sanitized runtime 
   assert.equal(JSON.stringify(signal).includes("/chief-of-staff/reviews/evaluation"), false);
 });
 
+test("descriptor discovery events preserve sanitized freshness details", () => {
+  const signal = deriveCapabilitySignalFromEvent("descriptor_discovery_completed", {
+    traceId: "trace_descriptor_freshness",
+    conversationId: "conv_descriptor_freshness",
+    turnId: "turn_descriptor_freshness",
+    profile: "adult_owner",
+    state: "ready",
+    checksumState: "matched",
+    signatureState: "valid",
+    descriptorFreshnessState: "fresh",
+    canAttemptLiveBridge: true,
+    failClosedReason: "none",
+    descriptorEndpoint: "https://napoleon.example.test/private-descriptor",
+    bearerToken: "secret-token",
+  });
+
+  assert.equal(signal.capabilityLabel, "descriptor_discovery");
+  assert.deepEqual(signal.details, [
+    "descriptor state ready",
+    "checksum matched",
+    "signature valid",
+    "descriptor freshness fresh",
+    "live bridge attempt allowed",
+    "fail closed reason none",
+  ]);
+  assert.equal(JSON.stringify(signal).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify(signal).includes("secret-token"), false);
+});
+
 test("remote Napoleon governance deny failures are not treated as bridge repair recommendations", () => {
   const signal = deriveCapabilitySignalFromEvent("response_failed", {
     traceId: "trace_remote_deny",
