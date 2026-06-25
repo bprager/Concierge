@@ -410,17 +410,21 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bNotification\.requestPermission\.(?:call|apply)\s*\("),
     re.compile(rf"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\[\s*['\"]requestPermission['\"]\s*\]{BROWSER_DIRECT_OR_OPTIONAL_CALL}"),
     re.compile(
+        rf"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\.\s*requestPermission{BROWSER_DIRECT_OR_OPTIONAL_CALL}"
+    ),
+    re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\.\s*requestPermission\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\[\s*['\"]requestPermission['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
-    re.compile(r"\bpushManager\.subscribe\s*\("),
+    re.compile(rf"\bpushManager\.subscribe{BROWSER_DIRECT_OR_OPTIONAL_CALL}"),
+    re.compile(rf"\b\w+(?:\.\w+)*\.pushManager\.subscribe{BROWSER_DIRECT_OR_OPTIONAL_CALL}"),
     re.compile(r"\b\w+(?:\.\w+)*\.pushManager\.subscribe\.(?:call|apply)\s*\("),
-    re.compile(r"\b\w+\s*\[\s*['\"]pushManager['\"]\s*\]\s*\[\s*['\"]subscribe['\"]\s*\]\s*\("),
+    re.compile(rf"\b\w+\s*\[\s*['\"]pushManager['\"]\s*\]\s*\[\s*['\"]subscribe['\"]\s*\]{BROWSER_DIRECT_OR_OPTIONAL_CALL}"),
     re.compile(r"\b\w+\s*\[\s*['\"]pushManager['\"]\s*\]\s*\[\s*['\"]subscribe['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
-    re.compile(r"\bPaymentRequest\s*\("),
+    re.compile(rf"\bPaymentRequest{BROWSER_DIRECT_OR_OPTIONAL_CALL}"),
     re.compile(r"\b(?:PaymentRequest|(?:globalThis|window)\.PaymentRequest)\.(?:call|apply)\s*\("),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]PaymentRequest['\"]\s*\]\s*\("),
-    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]PaymentRequest['\"]\s*\]\s*\("),
+    re.compile(rf"\b(?:globalThis|window)\s*\[\s*['\"]PaymentRequest['\"]\s*\]{BROWSER_DIRECT_OR_OPTIONAL_CALL}"),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]PaymentRequest['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\bsendBeacon\s*\("),
     re.compile(r"\bsendBeacon\s*\?\.\s*\("),
