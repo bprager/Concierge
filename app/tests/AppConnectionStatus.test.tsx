@@ -44,3 +44,48 @@ test("connection state card exposes fail-closed reason and blocked effects befor
     dom.window.close();
   }
 });
+
+test("connection state card shows when descriptor omits the text-turn route", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: string | URL | Request) => {
+      assert.equal(String(input), "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor");
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          descriptor: {
+            schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+            serviceId: "napoleon.chief_of_staff",
+            runtimeAuthority: false,
+            commandExecution: false,
+            cachePolicy: "fail_closed_to_review_required",
+            blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+            supportedHandoffs: ["evaluation_review"],
+          },
+          checksum: { expected: "sha256:connection", actual: "sha256:connection" },
+          signature: { valid: true },
+        }),
+      };
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+    fireEvent.click(view.getByRole("button", { name: "Discover descriptor" }));
+    await waitFor(() => {
+      const connection = within(view.getByLabelText("Napoleon connection state"));
+      assert.ok(connection.getByText("Text-turn route"));
+      assert.ok(connection.getByText("not advertised"));
+    });
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});

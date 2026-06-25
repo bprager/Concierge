@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a text-turn route row to the always-visible Napoleon connection state panel, so descriptors that omit the governed text route show `not advertised` before any live send attempt.
 - Added an always-visible Napoleon connection state panel label plus fail-closed reason and blocked-effect rows, so no-endpoint and descriptor-preflight blockers are inspectable before any live send attempt.
 - Added local returned-proof answers for selected-agent selection-reason follow-ups using "choose" or "pick" wording, like "Why did Napoleon choose Passive Brain?", keeping the answer tied to returned bridge provenance instead of sending a new Napoleon turn.
 - Added local returned-proof answers for selected-agent selection-reason follow-ups with a definite article, like "Why was the Passive Brain selected?", keeping the answer tied to returned bridge provenance instead of sending a new Napoleon turn.

@@ -4906,6 +4906,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const napoleonDelegationView =
     lastNapoleonPresentation.delegation ??
     describeDelegation(undefined, undefined, { descriptorConnection, failure: lastNapoleonTurnFailure });
+  const connectionTextTurnRouteStatus = !descriptorConnection.canAttemptLiveBridge
+    ? "blocked until descriptor preflight passes"
+    : descriptorStatus?.supportedHandoffs.includes("text_turn")
+      ? "advertised"
+      : "not advertised";
   const latestNapoleonTurnSummary = describeLastNapoleonTurnSummary(
     lastNapoleonPresentation.proof,
     lastNapoleonTurnFailure,
@@ -6443,6 +6448,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         <div>
           <strong>Descriptor validation</strong>
           <span>{descriptorStatus?.ready ? "valid, contract-only" : descriptorConnection.message}</span>
+        </div>
+        <div>
+          <strong>Text-turn route</strong>
+          <span>{connectionTextTurnRouteStatus}</span>
         </div>
         <div>
           <strong>Discovery source</strong>
