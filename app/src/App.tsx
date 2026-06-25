@@ -4206,6 +4206,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       descriptorState: descriptorConnection.state,
       checksumState: descriptorConnection.checksumState,
       signatureState: descriptorConnection.signatureState,
+      descriptorFreshnessState: descriptorConnection.freshnessState,
       descriptorTextTurnRouteAdvertised: Boolean(
         descriptorConnection.canAttemptLiveBridge &&
           descriptorConnection.descriptorStatus?.supportedHandoffs.includes("text_turn"),

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added descriptor freshness to sanitized bridge readiness proof export telemetry, so local proof events now preserve the same fresh/stale/not-timestamped connection state already shown in the UI and proof JSON without exposing endpoint values or descriptor bodies.
 - Added descriptor freshness to sanitized descriptor discovery capability signals, so Capability Intelligence can separate stale or not-timestamped descriptor blockers from endpoint, auth, checksum, signature, and live-send readiness gaps without retaining endpoint values or descriptor bodies.
 - Added descriptor freshness to first-class Napoleon connection state, so the UI and sanitized readiness proof exports now show descriptor timestamp, max age, current age, and fresh/stale/not-timestamped state without treating it as approval.
 - Added descriptor freshness state to local Napoleon setup, repair, descriptor-validity, and live-send readiness answers, so user-facing connection guidance and sanitized telemetry now match the first-class descriptor state without exposing endpoint values or descriptor bodies.

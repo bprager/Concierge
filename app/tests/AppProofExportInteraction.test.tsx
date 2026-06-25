@@ -2025,6 +2025,7 @@ test("readiness proof export telemetry records when descriptor omits text-turn r
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };
     const readinessEvent = telemetryBuffer.events?.find((event) => event.event === "bridge_readiness_proof_exported");
+    assert.equal(readinessEvent?.attributes.descriptorFreshnessState, "fresh");
     assert.equal(readinessEvent?.attributes.descriptorTextTurnRouteAdvertised, false);
     assert.equal(readinessEvent?.attributes.promotionGate, "blocked_until_real_runtime_evidence_passes");
   } finally {
