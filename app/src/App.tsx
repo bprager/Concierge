@@ -615,6 +615,80 @@ function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
   return asksAboutSending && asksAboutReadiness;
 }
 
+function isNapoleonConnectionSetupQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  if (!lower.includes("napoleon")) return false;
+  const asksAboutConnection =
+    /\bconnect\b/.test(lower) ||
+    /\bconnection\b/.test(lower) ||
+    /\bsetup\b/.test(lower) ||
+    /\bset up\b/.test(lower) ||
+    /\bfirst[- ]?run\b/.test(lower) ||
+    /\bconfigure\b/.test(lower) ||
+    /\bendpoint\b/.test(lower) ||
+    /\bdescriptor\b/.test(lower);
+  const asksForAction =
+    /\bhow\b/.test(lower) ||
+    /\bwhat\b.*\b(next|step|do|needed|missing)\b/.test(lower) ||
+    /\bnext\b.*\b(step|action)\b/.test(lower) ||
+    /\bwhy\b.*\b(can'?t|cannot|not)\b/.test(lower);
+  return asksAboutConnection && asksForAction;
+}
+
+function formatNapoleonConnectionSetupAnswer(input: {
+  currentStep: string;
+  preflight: LiveSendPreflightView;
+  descriptorConnection: DescriptorConnectionState;
+  endpointConfigured: boolean;
+  rehearsalMode: boolean;
+}): {
+  content: string;
+  currentStep: string;
+  liveSendReady: boolean;
+  endpointConfigured: boolean;
+  descriptorDiscovered: boolean;
+  textTurnRouteAdvertised: boolean;
+  rehearsalMode: boolean;
+  descriptorState: DescriptorConnectionState["state"];
+  failClosedReason: string;
+} {
+  const descriptorDiscovered = input.descriptorConnection.state === "ready";
+  const textTurnRouteAdvertised = Boolean(
+    input.descriptorConnection.canAttemptLiveBridge &&
+      input.descriptorConnection.descriptorStatus?.supportedHandoffs.includes("text_turn"),
+  );
+  const descriptorState = input.descriptorConnection.state;
+  const failClosedReason = input.descriptorConnection.failClosedReason ?? "none";
+  const setupRows = [
+    `Endpoint configured: ${input.endpointConfigured ? "yes" : "no"}.`,
+    `Descriptor discovered: ${descriptorDiscovered ? "yes" : "no"}.`,
+    `Text-turn route advertised: ${textTurnRouteAdvertised ? "yes" : "no"}.`,
+    `Rehearsal Mode: ${input.rehearsalMode ? "on" : "off"}.`,
+    `Descriptor state: ${descriptorState}.`,
+    `Fail-closed reason: ${failClosedReason}.`,
+  ];
+
+  return {
+    content: [
+      "Napoleon connection setup from local readiness:",
+      `Current step: ${input.currentStep}.`,
+      `Live send ready: ${input.preflight.canAttemptLiveSend ? "yes" : "no"}.`,
+      input.preflight.nextStepSummary,
+      setupRows.join("\n"),
+      "Authority boundary: local readiness only; not Napoleon approval.",
+      "This local answer did not contact Napoleon, approve, write memory, dispatch agents, capture approval, or send externally.",
+    ].join("\n\n"),
+    currentStep: input.currentStep.replaceAll(" ", "_"),
+    liveSendReady: input.preflight.canAttemptLiveSend,
+    endpointConfigured: input.endpointConfigured,
+    descriptorDiscovered,
+    textTurnRouteAdvertised,
+    rehearsalMode: input.rehearsalMode,
+    descriptorState,
+    failClosedReason,
+  };
+}
+
 function formatNapoleonLiveSendReadinessAnswer(input: {
   preflight: LiveSendPreflightView;
   descriptorConnection: DescriptorConnectionState;
@@ -2673,6 +2747,58 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearContractPacketExports();
   }
 
+  function answerNapoleonConnectionSetupQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isNapoleonConnectionSetupQuestion(content)) return false;
+
+    const answer = formatNapoleonConnectionSetupAnswer({
+      currentStep: connectionGuideStep,
+      preflight: liveSendPreflight,
+      descriptorConnection,
+      endpointConfigured: Boolean(endpoint.trim()),
+      rehearsalMode,
+    });
+    emitEvent("napoleon_connection_setup_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      localAnswerOnly: true,
+      currentStep: answer.currentStep,
+      liveSendReady: answer.liveSendReady,
+      endpointConfigured: answer.endpointConfigured,
+      descriptorDiscovered: answer.descriptorDiscovered,
+      textTurnRouteAdvertised: answer.textTurnRouteAdvertised,
+      rehearsalMode: answer.rehearsalMode,
+      descriptorState: answer.descriptorState,
+      failClosedReason: answer.failClosedReason,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerNapoleonLiveSendReadinessQuestion(
     content: string,
     traceId: string,
@@ -2955,6 +3081,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
     const activeProfileMode = mapProfileToNapoleonMode(profile);
+    if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
@@ -3164,6 +3291,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const traceId = newTraceId();
       const turnId = `turn_${Date.now().toString(16)}`;
       const activeProfileMode = mapProfileToNapoleonMode(profile);
+      if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;

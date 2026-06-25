@@ -100,6 +100,76 @@ test("connection guide shows the first-run next step before live send", async ()
   }
 });
 
+test("text concierge answers Napoleon connection setup questions locally without network calls", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  let fetchCalled = false;
+
+  try {
+    globalThis.fetch = (async () => {
+      fetchCalled = true;
+      throw new Error("connection setup local answer must not contact Napoleon");
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "How do I connect to Napoleon?" } });
+    await waitFor(() => assert.equal(composer.value, "How do I connect to Napoleon?"));
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    let answer: HTMLElement | undefined;
+    await waitFor(() => {
+      answer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("Napoleon connection setup from local readiness:")
+      ) as HTMLElement | undefined;
+      assert.ok(answer);
+    });
+    assert.ok(answer);
+    const answerText = answer.textContent ?? "";
+    assert.ok(answerText.includes("Current step: configure endpoint."));
+    assert.ok(answerText.includes("Live send ready: no."));
+    assert.ok(
+      answerText.includes("Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery."),
+    );
+    assert.ok(answerText.includes("Authority boundary: local readiness only; not Napoleon approval."));
+    assert.ok(
+      answerText.includes(
+        "This local answer did not contact Napoleon, approve, write memory, dispatch agents, capture approval, or send externally.",
+      ),
+    );
+    assert.equal(fetchCalled, false);
+
+    fireEvent.click(view.getByRole("button", { name: "Export telemetry buffer" }));
+    const telemetryBuffer = JSON.parse(view.getByLabelText("Telemetry buffer export").textContent ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const answerEvent = telemetryBuffer.events
+      ?.filter((event) => event.event === "napoleon_connection_setup_answered")
+      .at(-1);
+    assert.equal(answerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(answerEvent?.attributes.currentStep, "configure_endpoint");
+    assert.equal(answerEvent?.attributes.liveSendReady, false);
+    assert.equal(answerEvent?.attributes.endpointConfigured, false);
+    assert.equal(answerEvent?.attributes.descriptorDiscovered, false);
+    assert.equal(answerEvent?.attributes.textTurnRouteAdvertised, false);
+    assert.equal(answerEvent?.attributes.approvalCaptured, false);
+    assert.equal(answerEvent?.attributes.memoryWritePerformed, false);
+    assert.equal(answerEvent?.attributes.agentDispatchPerformed, false);
+    assert.equal(answerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(answerEvent).includes("How do I connect to Napoleon?"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("connection state card shows when descriptor omits the text-turn route", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, { App }] = await Promise.all([
