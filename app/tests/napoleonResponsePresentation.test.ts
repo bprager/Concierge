@@ -547,6 +547,45 @@ test("redacts token and secret values from Napoleon response proof exports", () 
   assert.ok(!json.toLocaleLowerCase().includes("secret"));
 });
 
+test("redacts unsafe selected-agent provenance in response proof metadata", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge rollout",
+    profile: "adult_owner",
+    conversationId: "conv_response_metadata_redaction",
+    turnId: "turn_response_metadata_redaction",
+    traceId: "trace_response_metadata_redaction",
+    governanceOutcome: "requires_review",
+  });
+  const state = buildSuccessfulNapoleonResponsePresentation({
+    text: "Prepared through Napoleon.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: true,
+    delegation: {
+      selectedAgents: [
+        {
+          agentId: "passive_brain",
+          displayName: "http://127.0.0.1/private-agent",
+          selectionReason: "Bearer token should not survive local proof metadata.",
+          contributionSummary: "Found secret runtime hint.",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["memory_write"],
+      governanceState: "requires_review",
+      traceId: "trace_response_metadata_redaction",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+
+  assert.equal(state.proofMetadata?.handledBy, "redacted");
+  assert.deepEqual(state.proofMetadata?.selectedAgents, ["redacted"]);
+  assert.deepEqual(state.proofMetadata?.selectedAgentReasons, ["redacted"]);
+  assert.deepEqual(state.proofMetadata?.selectedAgentContributions, ["redacted"]);
+});
+
 test("normalizes returned effect labels in Napoleon response proof exports", () => {
   const contract = buildTextTurnContract({
     message: "Summarize the bridge rollout",

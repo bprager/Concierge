@@ -151,6 +151,20 @@ export function buildSuccessfulNapoleonResponsePresentation(
   const targetCapabilityLabel = response.targetAgent ? options.capabilityLabelsById?.[response.targetAgent] : undefined;
   const proof = describeNapoleonResponseProof(response, { targetCapabilityLabel });
 
+  const proofMetadata = sanitizeResponseProofMetadata({
+    handledBy: agentNames.join(", ") || targetCapability || "unavailable",
+    proofAlignment: proofDetailValue(proof, "Proof alignment"),
+    targetCapability,
+    recommendation,
+    selectedAgents: agentNames,
+    selectedAgentReasons: selectedAgents.map((agent) => `${agent.displayName}: ${agent.selectionReason}`),
+    selectedAgentContributions: selectedAgents
+      .filter((agent) => agent.contributionSummary?.trim())
+      .map((agent) => `${agent.displayName}: ${agent.contributionSummary}`),
+    allowedEffects: response.delegation?.allowedEffects ?? ["prepare_advisory_response"],
+    blockedEffects: response.delegation?.blockedEffects ?? response.governanceDecision.blocked_effects,
+  });
+
   return {
     delegation: describeDelegation(response.delegation, response.targetAgent, {
       blockedEffects: response.governanceDecision.blocked_effects,
@@ -160,19 +174,7 @@ export function buildSuccessfulNapoleonResponsePresentation(
       targetCapabilityLabel,
     }),
     proof,
-    proofMetadata: {
-      handledBy: agentNames.join(", ") || targetCapability || "unavailable",
-      proofAlignment: proofDetailValue(proof, "Proof alignment"),
-      targetCapability,
-      recommendation,
-      selectedAgents: agentNames,
-      selectedAgentReasons: selectedAgents.map((agent) => `${agent.displayName}: ${agent.selectionReason}`),
-      selectedAgentContributions: selectedAgents
-        .filter((agent) => agent.contributionSummary?.trim())
-        .map((agent) => `${agent.displayName}: ${agent.contributionSummary}`),
-      allowedEffects: response.delegation?.allowedEffects ?? ["prepare_advisory_response"],
-      blockedEffects: response.delegation?.blockedEffects ?? response.governanceDecision.blocked_effects,
-    },
+    proofMetadata,
   };
 }
 
