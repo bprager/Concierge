@@ -3,6 +3,7 @@ import test from "node:test";
 import { JSDOM } from "jsdom";
 import {
   clearTelemetryBuffer,
+  capabilityLedger,
   emitCapabilitySignal,
   emitEvent,
   exportInteractionTraceJson,
@@ -119,6 +120,66 @@ test("telemetry emits sanitized bridge failure capability signals", () => {
   assert.equal(JSON.stringify(signal).includes("do not retain this prompt"), false);
   assert.equal(JSON.stringify(signal).includes("napoleon.example.test"), false);
   assert.equal(JSON.stringify(signal).includes("secret-token"), false);
+});
+
+test("response failure telemetry can skip duplicate bridge failure capability evidence", () => {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  const previousWindow = globalThis.window;
+  const previousLocalStorage = globalThis.localStorage;
+  const previousInfo = console.info;
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.localStorage = dom.window.localStorage;
+  console.info = () => undefined;
+  capabilityLedger.clear();
+  clearTelemetryBuffer(localStorage);
+
+  try {
+    const signal = emitCapabilitySignal("bridge_request_failed", {
+      traceId: "trace_bridge_duplicate",
+      conversationId: "conv_bridge_duplicate",
+      turnId: "turn_bridge_duplicate",
+      profileMode: "adult_owner",
+      reason: "missing_descriptor",
+      bridgeTargetPath: "/v1/concierge/turn",
+      bridgeTargetOperation: "text_turn",
+      bridgeTargetRequestKind: "text_turn",
+    });
+
+    assert.ok(signal);
+    emitEvent("response_failed", {
+      traceId: "trace_bridge_duplicate",
+      conversationId: "conv_bridge_duplicate",
+      turnId: "turn_bridge_duplicate",
+      profile: "adult_owner",
+      bridgeFailureReason: "missing_descriptor",
+      bridgeRequestFailureAlreadyTracked: true,
+      endpoint: "https://napoleon.example.test/v1/concierge/turn",
+      bearerToken: "secret-token",
+    });
+
+    const buffer = loadTelemetryBufferFromStorage(localStorage);
+    assert.equal(buffer.events.some((event) => event.event === "response_failed"), true);
+    assert.equal(capabilityLedger.listRecent().length, 1);
+    assert.equal(capabilityLedger.listRecent()[0].capabilityLabel, "napoleon_text_turn_bridge");
+    assert.equal(JSON.stringify(capabilityLedger.listRecent()).includes("napoleon.example.test"), false);
+    assert.equal(JSON.stringify(capabilityLedger.listRecent()).includes("secret-token"), false);
+  } finally {
+    capabilityLedger.clear();
+    console.info = previousInfo;
+    if (previousWindow === undefined) {
+      Reflect.deleteProperty(globalThis, "window");
+    } else {
+      globalThis.window = previousWindow;
+    }
+    if (previousLocalStorage === undefined) {
+      Reflect.deleteProperty(globalThis, "localStorage");
+    } else {
+      globalThis.localStorage = previousLocalStorage;
+    }
+    dom.window.close();
+  }
 });
 
 test("telemetry capability signals preserve child protected minimization", () => {

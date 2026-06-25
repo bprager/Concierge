@@ -3353,6 +3353,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               decisionId: bridgeError.decisionId,
               auditId: bridgeError.auditId,
               governanceOutcome: bridgeError.governanceOutcome,
+              bridgeRequestFailureAlreadyTracked: true,
             }
           : {}),
       });

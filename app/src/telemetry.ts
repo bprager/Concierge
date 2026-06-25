@@ -347,6 +347,7 @@ export function emitCapabilitySignal(
   const isWakeWordReadinessEvent = event === "privacy_setting_changed" && attributes.setting === "wake_word";
 
   if (!trackableEvents.has(event) && !isWakeWordReadinessEvent) return null;
+  if (event === "response_failed" && attributes.bridgeRequestFailureAlreadyTracked === true) return null;
 
   const signal = deriveCapabilitySignalFromEvent(event, attributes);
   appendCapabilitySignal(capabilityLedger, signal);

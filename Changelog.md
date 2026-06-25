@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added duplicate-safe Capability Intelligence handling for fail-closed Napoleon bridge errors, keeping the local `response_failed` telemetry event while preventing it from adding a second generic capability signal after `bridge_request_failed` has already classified the failure.
 - Added metadata-only Capability Intelligence tracking for failed governed Napoleon bridge requests, distinguishing contract/descriptor/auth/timeout/transport gaps from correct governance no-go blocks without retaining prompts, endpoints, tokens, request bodies, or response bodies.
 - Added plain-language capability answer labels for governed Napoleon text bridge successes, so working-well answers show `Napoleon text bridge` while retaining stable sanitized metadata labels for aggregation and export.
 - Added Conversation Capability Intelligence tracking for successful governed Napoleon text-turn bridge completions, so working-well and common-conversation answers can distinguish accepted Napoleon bridge turns from generic local UI responses without storing prompts, endpoints, tokens, request bodies, or response bodies.

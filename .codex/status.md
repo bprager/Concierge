@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Made fail-closed Napoleon bridge errors duplicate-safe for Capability Intelligence: `bridge_request_failed` now owns the derived capability evidence, while the follow-on `response_failed` remains local trace telemetry without adding a second generic capability row.
 - Added metadata-only Capability Intelligence tracking for failed governed Napoleon bridge requests, so contract, descriptor, auth, timeout, HTTP, and transport gaps become missing bridge capability evidence while governance `deny` and `no_go` remain correct protected blocks.
 - Added plain-language `Napoleon text bridge` display labels to Conversation Capability Intelligence working-well answers and evidence drilldowns while keeping stable sanitized metadata labels for aggregation and export.
 - Added Conversation Capability Intelligence tracking for successful governed Napoleon text-turn bridge completions, so local working-well and common-conversation answers can separate accepted Napoleon bridge turns from generic local UI responses while retaining only route-class, operation/request-kind, governance, profile, and false side-effect metadata.
