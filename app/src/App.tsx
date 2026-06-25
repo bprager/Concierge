@@ -4759,6 +4759,17 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const directSendPreflightBlocker = !rehearsalMode && !localGovernanceBlocksDirectSend
     ? liveSendPreflight.items.find((item) => item.status === "blocked")
     : undefined;
+  const connectionGuideStep = !endpoint.trim()
+    ? "configure endpoint"
+    : !descriptorConnection.canAttemptLiveBridge
+      ? "discover descriptor"
+      : !descriptorStatus?.supportedHandoffs.includes("text_turn")
+        ? "advertise text_turn"
+        : rehearsalMode
+          ? "preview locally"
+          : liveSendPreflight.canAttemptLiveSend
+            ? "ready for governed send"
+            : "complete preflight";
   const governedOperationSummaries = [
     describeBridgeOperationSummary("chief_of_staff_descriptor"),
     describeBridgeOperationSummary("chief_of_staff_capabilities"),
@@ -6492,6 +6503,25 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               "external_send",
             ]).join(", ")}
           </span>
+        </div>
+      </section>
+
+      <section className={`contract-status ${liveSendPreflight.status}`} aria-label="Napoleon connection guide">
+        <div>
+          <strong>First-run path</strong>
+          <span>{connectionGuideStep}</span>
+        </div>
+        <div>
+          <strong>Next step</strong>
+          <span>{liveSendPreflight.nextStepSummary}</span>
+        </div>
+        <div>
+          <strong>Live send ready</strong>
+          <span>Live send ready: {liveSendPreflight.canAttemptLiveSend ? "yes" : "no"}</span>
+        </div>
+        <div>
+          <strong>Authority boundary</strong>
+          <span>Authority boundary: local readiness only; not Napoleon approval.</span>
         </div>
       </section>
 

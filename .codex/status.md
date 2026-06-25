@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a first-run Napoleon connection guide that names the current setup step, next action, live-send readiness, and local-only authority boundary from the existing preflight state.
 - Added descriptor text-turn route state to the empty Napoleon delegation panel, so a descriptor that passes preflight but omits `text_turn` shows `not advertised` with a route-specific next step before live send.
 - Added a governed text-turn route row to the always-visible Napoleon connection state panel, so a descriptor that omits `text_turn` shows `not advertised` before a live send attempt.
 - Added an always-visible Napoleon connection state label plus fail-closed reason and blocked-effect rows, so no-endpoint and descriptor-preflight blockers are visible before a live send attempt or failed transcript turn.

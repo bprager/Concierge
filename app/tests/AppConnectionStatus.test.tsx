@@ -45,6 +45,28 @@ test("connection state card exposes fail-closed reason and blocked effects befor
   }
 });
 
+test("connection guide shows the first-run next step before live send", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, within }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    const view = render(<App />);
+    const guide = within(view.getByLabelText("Napoleon connection guide"));
+
+    assert.ok(guide.getByText("First-run path"));
+    assert.ok(guide.getByText("configure endpoint"));
+    assert.ok(guide.getByText("Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery."));
+    assert.ok(guide.getByText("Live send ready: no"));
+    assert.ok(guide.getByText("Authority boundary: local readiness only; not Napoleon approval."));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("connection state card shows when descriptor omits the text-turn route", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor, within }, { App }] = await Promise.all([
