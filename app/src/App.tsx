@@ -687,6 +687,15 @@ function normalizeConnectionRepairAction(summary: string): string {
   const lower = summary.toLocaleLowerCase();
   if (lower.includes("add the governed napoleon endpoint")) return "configure_endpoint";
   if (lower.includes("run descriptor discovery")) return "discover_descriptor";
+  if (lower.includes("descriptor auth") || lower.includes("authentication") || lower.includes("bridge token")) {
+    return "fix_descriptor_authentication";
+  }
+  if (lower.includes("descriptor timeout") || lower.includes("endpoint responds") || lower.includes("descriptor connectivity")) {
+    return "retry_descriptor_discovery";
+  }
+  if (lower.includes("descriptor http") || lower.includes("endpoint url") || lower.includes("descriptor route")) {
+    return "fix_descriptor_http";
+  }
   if (lower.includes("fix descriptor checksum") || lower.includes("signature")) return "fix_descriptor_integrity";
   if (lower.includes("text-turn")) return "enable_text_turn_route";
   if (lower.includes("turn off rehearsal")) return "turn_off_rehearsal_mode";

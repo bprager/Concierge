@@ -108,6 +108,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Hardened repository authority-boundary validation so optional-chained browser side-channel calls and optional-chained direct URL fetches cannot bypass governed bridge, external-send, browser-context, clipboard, or service-worker guardrails.
 - Evaluator coverage now explicitly requires seasonal Conversation Capability Intelligence answers over recent and previous 28 day local metadata windows.
 - Repository authority-boundary validation now blocks mixed bracket/dot `URL.createObjectURL`, IndexedDB, Cache Storage, and cookie-write aliases so hidden executable or persistence paths cannot bypass the governed Napoleon bridge.
+- Local Napoleon connection repair answers now classify descriptor authentication, timeout, and HTTP discovery blockers with distinct next-action telemetry labels while still avoiding raw question text, tokens, endpoints, and live bridge contact.
 - Rendered proof export coverage now verifies proof-alignment metadata for both selected-agent and target-capability-only Napoleon response proof exports and telemetry.
 - Sanitized Napoleon response proof exports, comparison summaries, and export telemetry now preserve general proof alignment so selected-agent proof, target-capability-only metadata, and unavailable proof stay distinct outside the visible panel.
 - Capability Intelligence latest-turn evidence now preserves accepted selected-agent proof alignment to the returned Napoleon response trace/audit even when no recommendation provenance is present.

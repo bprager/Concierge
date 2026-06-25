@@ -1841,6 +1841,65 @@ test("answers disabled send button questions locally from preflight state", asyn
   }
 });
 
+test("connection repair answers classify descriptor auth failure next action", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+      return harnessJsonResponse(401, { text: "Unauthorized private_token" });
+    }
+    throw new Error(`unexpected fetch after descriptor auth failure: ${url}`);
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+    await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+    await waitFor(() => {
+      assert.ok(
+        view.queryAllByText("Napoleon descriptor discovery failed authentication, so Concierge is blocked from live bridge sends.")
+          .length >= 1,
+      );
+    });
+
+    const fetchCountAfterDiscovery = requestedUrls.length;
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Why can't I connect to Napoleon?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    let repairEvent: { event: string; attributes: Record<string, unknown> } | undefined;
+    await waitFor(() => {
+      const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+        events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+      };
+      repairEvent = telemetryBuffer.events
+        ?.filter((event) => event.event === "napoleon_connection_repair_answered")
+        .at(-1);
+      assert.equal(repairEvent?.attributes.nextAction, "fix_descriptor_authentication");
+    });
+    assert.equal(requestedUrls.length, fetchCountAfterDiscovery);
+
+    assert.equal(repairEvent?.attributes.blockingReason, "auth_failure");
+    assert.equal(repairEvent?.attributes.nextAction, "fix_descriptor_authentication");
+    assert.equal(repairEvent?.attributes.localAnswerOnly, true);
+    assert.equal(repairEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(repairEvent).includes("private_token"), false);
+    assert.equal(JSON.stringify(repairEvent).includes("Why can't I connect"), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("live descriptor discovery alone does not export real runtime validation", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, screen, waitFor, within }, userEventModule, { App }] = await Promise.all([
