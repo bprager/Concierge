@@ -1005,6 +1005,8 @@ test("steering handoff posts evolution review packet without applying proposal l
   const completedEvent = events.find((event) => event.event === "capability_recommendation_send_completed");
   assert.equal(startedEvent?.attributes.recommendationType, "scored_capability_recommendation");
   assert.equal(completedEvent?.attributes.recommendationType, "scored_capability_recommendation");
+  assert.equal(startedEvent?.attributes.descriptorFreshnessState, "not_timestamped");
+  assert.equal(completedEvent?.attributes.descriptorFreshnessState, "not_timestamped");
   assert.equal(JSON.stringify(events).includes("Evolution proposals require review"), false);
   assert.equal(JSON.stringify(events).includes("trace_missing_bridge"), false);
   assert.equal(JSON.stringify(events).includes("token_steering"), false);

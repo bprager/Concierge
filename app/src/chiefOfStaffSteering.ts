@@ -20,6 +20,7 @@ import {
   type AuditEnvelope,
   type ChiefOfStaffRequest,
   type DescriptorConnectionInput,
+  type DescriptorFreshnessState,
   type DescriptorFailClosedReason,
   type GovernanceDecision,
   type GovernanceEvaluationRequest,
@@ -89,6 +90,7 @@ interface SteeringHandoffContext {
   status: "ready" | "blocked";
   summary: string;
   nextStepSummary: string;
+  descriptorFreshnessState: DescriptorFreshnessState;
   blockerLabel?: string;
   blockerDetail?: string;
   blockedEffects: string[];
@@ -139,6 +141,7 @@ interface SteeringTargetMetadata {
 
 interface SteeringFailureMetadata {
   descriptorFailureReason?: DescriptorFailClosedReason;
+  descriptorFreshnessState?: DescriptorFreshnessState;
   governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string };
   targetMetadata?: SteeringTargetMetadata;
   recommendationType?: SteeringRecommendation["recommendationType"];
@@ -202,6 +205,7 @@ function defaultHandoffContext(endpointConfigured: boolean): SteeringHandoffCont
     nextStepSummary: endpointConfigured
       ? "Next step: confirm descriptor preflight and governed handoff route readiness before sending."
       : "Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery.",
+    descriptorFreshnessState: "not_timestamped",
     blockerLabel: endpointConfigured ? undefined : "Endpoint configured",
     blockerDetail: endpointConfigured ? undefined : "No Napoleon endpoint is configured.",
     blockedEffects: ["memory_write", "approval_capture", "agent_dispatch", "external_send", "runtime_authority"],
@@ -406,7 +410,8 @@ function failSteeringClosed(
   blockedEffects: string[] = [],
   failureMetadata: SteeringFailureMetadata = {},
 ): never {
-  const { descriptorFailureReason, governanceReferences, targetMetadata, recommendationType } = failureMetadata;
+  const { descriptorFailureReason, descriptorFreshnessState, governanceReferences, targetMetadata, recommendationType } =
+    failureMetadata;
   const attributes: Record<string, unknown> = {
     traceId,
     requestId,
@@ -416,6 +421,7 @@ function failSteeringClosed(
     blockedEffects,
   };
   if (recommendationType) attributes.recommendationType = recommendationType;
+  if (descriptorFreshnessState) attributes.descriptorFreshnessState = descriptorFreshnessState;
   if (descriptorFailureReason) attributes.descriptorFailureReason = descriptorFailureReason;
   if (governanceReferences?.decisionId) attributes.decisionId = governanceReferences.decisionId;
   if (governanceReferences?.auditId) attributes.auditId = governanceReferences.auditId;
@@ -792,6 +798,7 @@ export async function submitChiefOfStaffSteeringDraft(
   const blockedEffects = ["memory_write", "agent_dispatch", "external_send", "approval_capture", "runtime_authority"];
   const recommendation = isChildProtected ? { ...draft.recommendation, childSafetyCaution: true as const } : draft.recommendation;
   const recommendationType = recommendation.recommendationType;
+  const descriptorFreshnessState = descriptorConnection.freshnessState;
   const evolutionProposal = isChildProtected
     ? {
         ...draft.evolutionProposal,
@@ -803,16 +810,19 @@ export async function submitChiefOfStaffSteeringDraft(
   if (!draftMatchesActiveProfile(draft, profileMode)) {
     failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
       recommendationType,
+      descriptorFreshnessState,
     });
   }
   if (dependencies.rehearsalMode) {
     failSteeringClosed(dependencies, "governance_no_go", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
       recommendationType,
+      descriptorFreshnessState,
     });
   }
   if (!endpoint) {
     failSteeringClosed(dependencies, "no_endpoint", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
       recommendationType,
+      descriptorFreshnessState,
     });
   }
   if (!descriptorConnection.canAttemptLiveBridge) {
@@ -827,6 +837,7 @@ export async function submitChiefOfStaffSteeringDraft(
       {
         descriptorFailureReason: descriptorConnection.failClosedReason,
         recommendationType,
+        descriptorFreshnessState,
       },
     );
   }
@@ -842,6 +853,7 @@ export async function submitChiefOfStaffSteeringDraft(
       {
         descriptorFailureReason: "descriptor_invalid",
         recommendationType,
+        descriptorFreshnessState,
       },
     );
   }
@@ -893,6 +905,7 @@ export async function submitChiefOfStaffSteeringDraft(
     requestId,
     proposalId: evolutionProposal.proposal_id,
     recommendationType,
+    descriptorFreshnessState,
     profileMode,
     ...targetMetadata,
   });
@@ -934,6 +947,7 @@ export async function submitChiefOfStaffSteeringDraft(
       {
         targetMetadata,
         recommendationType,
+        descriptorFreshnessState,
       },
     );
   }
@@ -951,6 +965,7 @@ export async function submitChiefOfStaffSteeringDraft(
       {
         targetMetadata,
         recommendationType,
+        descriptorFreshnessState,
       },
     );
   }
@@ -970,6 +985,7 @@ export async function submitChiefOfStaffSteeringDraft(
       {
         targetMetadata,
         recommendationType,
+        descriptorFreshnessState,
       },
     );
   }
@@ -993,6 +1009,7 @@ export async function submitChiefOfStaffSteeringDraft(
       {
         targetMetadata,
         recommendationType,
+        descriptorFreshnessState,
       },
     );
   }
@@ -1014,6 +1031,7 @@ export async function submitChiefOfStaffSteeringDraft(
         },
         targetMetadata,
         recommendationType,
+        descriptorFreshnessState,
       },
     );
   }
@@ -1023,6 +1041,7 @@ export async function submitChiefOfStaffSteeringDraft(
     requestId,
     proposalId: evolutionProposal.proposal_id,
     recommendationType,
+    descriptorFreshnessState,
     decisionId: payload.governanceDecision.decision_id,
     auditId: payload.auditEnvelope.audit_id,
     outcome: payload.governanceDecision.outcome,

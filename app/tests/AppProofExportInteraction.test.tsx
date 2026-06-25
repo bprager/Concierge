@@ -10265,11 +10265,17 @@ test("exports a local Chief of Staff steering draft without sending or applying 
     assert.ok(exportBlock.textContent?.includes('"evaluatorCaseCandidate"'));
     assert.ok(exportBlock.textContent?.includes('"evolutionProposal"'));
     assert.ok(exportBlock.textContent?.includes('"handoffContext"'));
+    assert.ok(exportBlock.textContent?.includes('"descriptorFreshnessState": "not_timestamped"'));
     assert.ok(exportBlock.textContent?.includes('"blockerLabel": "Endpoint configured"'));
     assert.ok(exportBlock.textContent?.includes("Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery."));
     assert.ok(exportBlock.textContent?.includes('"learningSignalCount": 1'));
     assert.equal(exportBlock.textContent?.includes("raw export steering miss"), false);
     assert.equal(exportBlock.textContent?.includes("127.0.0.1"), false);
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const exportedEvent = telemetryBuffer.events?.find((event) => event.event === "chief_of_staff_steering_draft_exported");
+    assert.equal(exportedEvent?.attributes.descriptorFreshnessState, "not_timestamped");
     assert.equal(fetchCalls, 0);
   } finally {
     globalThis.fetch = originalFetch;

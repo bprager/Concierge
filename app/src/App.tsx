@@ -4658,6 +4658,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         status: steeringDraftHandoffReadiness.status,
         summary: steeringDraftHandoffReadiness.summary,
         nextStepSummary: steeringDraftHandoffReadiness.nextStepSummary,
+        descriptorFreshnessState: descriptorConnection.freshnessState,
         blockerLabel: steeringDraftBlocker?.label,
         blockerDetail: steeringDraftBlocker?.detail,
         blockedEffects: steeringDraftHandoffReadiness.blockedEffects,
@@ -4674,6 +4675,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       capability: draft.recommendation.capabilityLabel,
       architectureArea: draft.recommendation.architectureArea,
       evidenceCount: draft.recommendation.evidenceCount,
+      descriptorFreshnessState: draft.handoffContext.descriptorFreshnessState,
       proposalOnly: draft.boundary.proposalOnly,
       approvalCaptured: draft.boundary.approvalCaptured,
       memoryWriteAllowed: draft.boundary.memoryWriteAllowed,
@@ -4724,6 +4726,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       evaluatorCaseId: steeringDraft.evaluatorCaseCandidate.caseId,
       proposalId: steeringDraft.evolutionProposal.proposal_id,
       learningSignalCount: steeringDraft.evolutionProposal.learning_signals.length,
+      descriptorFreshnessState: steeringDraft.handoffContext.descriptorFreshnessState,
       proposalOnly: steeringDraft.boundary.proposalOnly,
       approvalCaptured: steeringDraft.boundary.approvalCaptured,
       memoryWriteAllowed: steeringDraft.boundary.memoryWriteAllowed,
@@ -7386,6 +7389,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <dt>Handoff context</dt>
             <dd>
               {steeringDraft.handoffContext.status}: {steeringDraft.handoffContext.summary}{" "}
+              Descriptor freshness: {steeringDraft.handoffContext.descriptorFreshnessState}.{" "}
               {steeringDraft.handoffContext.blockerLabel
                 ? `${steeringDraft.handoffContext.blockerLabel}: ${steeringDraft.handoffContext.blockerDetail}. `
                 : ""}
