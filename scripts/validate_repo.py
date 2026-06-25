@@ -312,10 +312,15 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bXMLHttpRequest\b"),
     re.compile(r"\bWebSocket\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]WebSocket['\"]\s*\]\s*\("),
+    re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]Web['\"]\s*\+\s*['\"]Socket['\"]\s*\]\s*\("),
     re.compile(r"\bEventSource\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]EventSource['\"]\s*\]\s*\("),
+    re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]Event['\"]\s*\+\s*['\"]Source['\"]\s*\]\s*\("),
     re.compile(r"\b(?:RTCPeerConnection|webkitRTCPeerConnection|WebTransport)\s*\("),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"](?:RTCPeerConnection|webkitRTCPeerConnection|WebTransport)['\"]\s*\]\s*\("),
+    re.compile(
+        r"\bnew\s+(?:globalThis|window)\s*\[\s*(?:['\"]RTC['\"]\s*\+\s*['\"]PeerConnection['\"]|['\"]webkit['\"]\s*\+\s*['\"]RTCPeerConnection['\"]|['\"]Web['\"]\s*\+\s*['\"]Transport['\"])\s*\]\s*\("
+    ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"](?:RTCPeerConnection|webkitRTCPeerConnection|WebTransport)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
     ),

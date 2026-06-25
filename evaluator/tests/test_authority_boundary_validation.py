@@ -357,6 +357,20 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
 
+    def test_network_scanner_detects_split_string_network_constructor_aliases(self):
+        for source in [
+            'const socket = new window["Web" + "Socket"]("wss://api.example.test/live");',
+            'const events = new globalThis["Event" + "Source"]("https://api.example.test/events");',
+            'const transport = new window["Web" + "Transport"]("https://api.example.test/transport");',
+            'const peer = new globalThis["RTC" + "PeerConnection"]({ iceServers });',
+            'const legacyPeer = new window["webkit" + "RTCPeerConnection"]({ iceServers });',
+        ]:
+            with self.subTest(source=source):
+                violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
+
+                self.assertTrue(violations)
+                self.assertIn("ungoverned network call outside Napoleon bridge modules", violations[0])
+
     def test_network_scanner_detects_bracket_access_browser_side_channels(self):
         for source in [
             'window["postMessage"]({ payload }, "*");',
