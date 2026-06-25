@@ -1182,6 +1182,9 @@ export function describeDelegation(
     if (fallback?.descriptorConnection && !fallback.descriptorConnection.canAttemptLiveBridge) {
       const connection = fallback.descriptorConnection;
       const failureReason = describeDescriptorFailureReason(connection.failClosedReason) || "none";
+      const textTurnRoute = connection.descriptorStatus?.supportedHandoffs.includes("text_turn")
+        ? "advertised"
+        : "blocked";
       const nextStep = connection.canAttemptLiveBridge
         ? "Ready for returned Napoleon delegation provenance."
         : connection.failClosedReason === "no_endpoint"
@@ -1220,6 +1223,7 @@ export function describeDelegation(
           { label: "Audit", value: "not returned" },
           { label: "Connection state", value: sanitizeVisibleProvenanceValue(connection.state) },
           { label: "Descriptor failure", value: failureReason },
+          { label: "Text-turn route", value: textTurnRoute },
           { label: "Next step", value: nextStep },
           { label: "Authority boundary", value: authorityBoundary },
           { label: "Proof alignment", value: "not returned" },
@@ -1259,6 +1263,7 @@ export function describeDelegation(
 
     if (fallback?.descriptorConnection) {
       const connection = fallback.descriptorConnection;
+      const textTurnRouteAdvertised = Boolean(connection.descriptorStatus?.supportedHandoffs.includes("text_turn"));
       return {
         heading: "Napoleon delegation",
         body:
@@ -1281,7 +1286,13 @@ export function describeDelegation(
           { label: "Audit", value: "not returned" },
           { label: "Connection state", value: sanitizeVisibleProvenanceValue(connection.state) },
           { label: "Descriptor failure", value: "none" },
-          { label: "Next step", value: "Ready for returned Napoleon delegation provenance." },
+          { label: "Text-turn route", value: textTurnRouteAdvertised ? "advertised" : "not advertised" },
+          {
+            label: "Next step",
+            value: textTurnRouteAdvertised
+              ? "Ready for returned Napoleon delegation provenance."
+              : "Use a Napoleon descriptor that advertises the governed text_turn route before sending.",
+          },
           { label: "Authority boundary", value: authorityBoundary },
           { label: "Proof alignment", value: "not returned" },
         ],

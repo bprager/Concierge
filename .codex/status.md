@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added descriptor text-turn route state to the empty Napoleon delegation panel, so a descriptor that passes preflight but omits `text_turn` shows `not advertised` with a route-specific next step before live send.
 - Added a governed text-turn route row to the always-visible Napoleon connection state panel, so a descriptor that omits `text_turn` shows `not advertised` before a live send attempt.
 - Added an always-visible Napoleon connection state label plus fail-closed reason and blocked-effect rows, so no-endpoint and descriptor-preflight blockers are visible before a live send attempt or failed transcript turn.
 - Added local returned-proof handling for selected-agent selection-reason follow-ups using "choose" or "pick" wording, such as "Why did Napoleon choose Passive Brain?", so Concierge answers from returned selection proof instead of sending another bridge request or copying raw follow-up/reason text into telemetry.

@@ -264,6 +264,35 @@ test("empty Napoleon delegation explains descriptor fail-closed connection state
   assert.ok(!view.body.includes("Passive Brain"));
 });
 
+test("empty Napoleon delegation names missing descriptor text-turn route", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: {
+      ...defaultChiefOfStaffDescriptor,
+      supportedHandoffs: ["memory_proposal_review"],
+    },
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const view = describeDelegation(undefined, undefined, { descriptorConnection });
+
+  assert.equal(view.heading, "Napoleon delegation");
+  assert.ok(view.body.includes("No Napoleon delegation provenance has been returned yet"));
+  assert.ok(view.details.some((detail) => detail.label === "Connection state" && detail.value === "ready"));
+  assert.ok(view.details.some((detail) => detail.label === "Text-turn route" && detail.value === "not advertised"));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Next step" &&
+        detail.value === "Use a Napoleon descriptor that advertises the governed text_turn route before sending.",
+    ),
+  );
+  assert.ok(!view.body.includes("Napoleon recommends"));
+  assert.ok(!view.body.includes("Passive Brain"));
+});
+
 test("governed handoff readiness names descriptor HTTP failure in next step", () => {
   const descriptorConnection = buildDescriptorConnectionState({
     endpointConfigured: true,
