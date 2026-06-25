@@ -1698,6 +1698,54 @@ test("risk value scoring keeps correctly blocked unsafe requests out of implemen
   assert.equal(answer.rows.some((row) => row.label === "governance_review"), false);
 });
 
+test("recommended next answers prioritize stale descriptor readiness repair without granting authority", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("descriptor_discovery_failed", {
+      traceId: "trace_stale_descriptor",
+      conversationId: "conv_stale_descriptor",
+      turnId: "turn_stale_descriptor",
+      profile: "adult_owner",
+      state: "stale_descriptor",
+      checksumState: "valid",
+      signatureState: "valid",
+      descriptorFreshnessState: "stale",
+      canAttemptLiveBridge: false,
+      failClosedReason: "stale_descriptor",
+      endpoint: "https://napoleon.example.test/v1/concierge",
+      bearerToken: "secret-token",
+    }),
+  );
+  appendCapabilitySignal(ledger, testSignal("trace_high_risk_runtime", {
+    observedAt: "2026-06-10T12:00:00.000Z",
+    topic: "delegation",
+    capability: "napoleon_delegation",
+    status: "missing",
+    architecture: "napoleon_runtime",
+    suggestedNextStep: "create_evolution_proposal",
+  }));
+
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, undefined, {
+    now: "2026-06-11T12:00:00.000Z",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected scored recommendation answer");
+  assert.equal(answer.rows[0].label, "descriptor_discovery");
+  assert.equal(answer.rows[0].status, "blocked");
+  assert.equal(answer.rows[0].architectureArea, "bridge");
+  assert.ok(answer.rows[0].recommendation?.includes("Refresh Napoleon descriptor discovery"));
+  assert.ok(answer.rows[0].details?.includes("descriptor freshness stale"));
+  assert.ok(answer.summary.includes("descriptor readiness"));
+  assert.equal(answer.boundary.approvalCaptured, false);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+  assert.equal(JSON.stringify(answer).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify(answer).includes("secret-token"), false);
+});
+
 test("recommended next answers turn media session blocker details into a proposal-only repair recommendation", () => {
   const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
   appendCapabilitySignal(

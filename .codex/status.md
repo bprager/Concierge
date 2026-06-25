@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added descriptor-readiness repair recommendations to Capability Intelligence recommended-next answers, so stale, missing, or not-timestamped Napoleon descriptors can be prioritized ahead of deeper architecture work while live sends, approval capture, memory writes, agent dispatch, and external sends remain blocked.
 - Added descriptor freshness to Chief of Staff steering drafts, local draft exports, visible handoff context, and governed steering send telemetry, so recommendation review packets carry the same fresh/stale/not-timestamped descriptor readiness state without exposing endpoints, tokens, prompts, descriptor bodies, or applying proposals locally.
 - Added descriptor freshness to sanitized bridge readiness proof export telemetry, so local proof events now preserve the same fresh/stale/not-timestamped connection state already shown in the UI and proof JSON without exposing endpoint values or descriptor bodies.
 - Added descriptor freshness to sanitized descriptor discovery capability signals, so Capability Intelligence can separate stale or not-timestamped descriptor blockers from endpoint, auth, checksum, signature, and live-send readiness gaps without retaining endpoint values or descriptor bodies.

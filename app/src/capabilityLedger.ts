@@ -1249,10 +1249,32 @@ function recommendationExplanation(components: RecommendationScoreComponents): s
 }
 
 function proposalRecommendationForGroup(group: RecommendationGroup): string | undefined {
+  if (group.label === "descriptor_discovery" && group.architectureArea === "bridge") {
+    const details = mergeDetails(group.signals);
+    const freshnessDetail = details.find((detail) => detail.startsWith("descriptor freshness "));
+    const failClosedDetail = details.find((detail) => detail.startsWith("fail closed reason "));
+    const qualifier = [freshnessDetail, failClosedDetail].filter(Boolean).join(", ");
+    return `Refresh Napoleon descriptor discovery${qualifier ? ` for ${qualifier}` : ""} before deeper capability work, while keeping live sends, approval capture, memory writes, agent dispatch, and external sends blocked until governed descriptor preflight passes.`;
+  }
   if (!group.label.endsWith("media_session_readiness_summary")) return undefined;
   const details = mergeDetails(group.signals);
   if (details.length === 0) return undefined;
   return `Add a guided Media Session readiness repair flow for ${details.join(", ")} while keeping capture, playback, raw media storage, Napoleon contact, approval capture, memory writes, agent dispatch, and external sends blocked until explicit consent and governed bridge readiness.`;
+}
+
+function isDescriptorReadinessRepairSignal(signal: ConversationCapabilitySignal): boolean {
+  return (
+    signal.capabilityLabel === "descriptor_discovery" &&
+    signal.architectureArea === "bridge" &&
+    signal.capabilityStatus === "blocked" &&
+    (signal.details ?? []).some(
+      (detail) =>
+        detail === "descriptor freshness stale" ||
+        detail === "descriptor freshness not_timestamped" ||
+        detail === "fail closed reason no_descriptor" ||
+        detail === "fail closed reason stale_descriptor",
+    )
+  );
 }
 
 function scoredRecommendationRows(
@@ -1521,15 +1543,17 @@ export function answerCapabilityQuestion(
     const candidateSignals = signals.filter(
       (signal) =>
         signal.capabilityStatus === "missing" ||
+        isDescriptorReadinessRepairSignal(signal) ||
         (signal.capabilityStatus === "blocked" &&
           signal.capabilityLabel.endsWith("media_session_readiness_summary")) ||
         (signal.capabilityStatus === "degraded" && signal.suggestedNextStep !== "needs_human_review"),
     );
     const rows = scoredRecommendationRows(candidateSignals, windows);
+    const hasDescriptorReadinessRepair = rows.some((row) => row.label === "descriptor_discovery");
     return withCapabilityAnswerDrilldown({
       kind,
       question,
-      summary: `Recommended next capabilities by local risk/value score, proposal-only: ${describeRows(rows)}.`,
+      summary: `Recommended next capabilities by local risk/value score${hasDescriptorReadinessRepair ? " with descriptor readiness repairs separated from deeper architecture work" : ""}, proposal-only: ${describeRows(rows)}.`,
       rows,
       evidenceCount: candidateSignals.length,
       caveat: `${MISSING_PROPOSAL_CAVEAT} ${CAPABILITY_LEDGER_SCORING_CAVEAT}`,

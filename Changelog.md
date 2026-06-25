@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added descriptor-readiness repair recommendations to Capability Intelligence recommended-next answers, so stale, missing, or not-timestamped Napoleon descriptors can be prioritized before deeper architecture work without granting authority.
 - Added descriptor freshness state to Chief of Staff steering drafts, exports, and governed steering send telemetry, keeping proposal-only recommendations tied to current descriptor readiness.
 - Added descriptor freshness state to sanitized bridge readiness proof export telemetry, keeping proof events aligned with first-class descriptor connection state.
 - Added descriptor freshness state to sanitized descriptor discovery capability signals, so local Capability Intelligence can distinguish stale or not-timestamped descriptor blockers from other Napoleon connection gaps.
