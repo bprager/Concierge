@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a dedicated Rehearsal Mode evaluator-case candidate panel with intent summary, expected route, governance outcome, profile mode, allowed effects, blocked effects, trace, evidence links, and an explicit draft-only boundary.
 - Added descriptor-specific connection repair telemetry labels for descriptor authentication, timeout, and HTTP discovery failures, keeping local repair answers actionable without copying raw question text, tokens, or endpoints.
 - Added repository validation for the scheduled GitHub Actions evaluator workflow, ensuring manual dispatch, scheduled execution, stub/http evaluator paths, and the evaluator JSON artifact upload stay intact.
 - Added canonical OpenAPI generation for Napoleon metadata discovery targets (`/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}`), so agent/profile connection metadata now shares the generated bridge registry and drift validation used by governed review targets.

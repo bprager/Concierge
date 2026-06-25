@@ -187,9 +187,15 @@ export interface RehearsalPreview {
   evaluatorCaseCandidate: {
     scenarioType: "rehearsal_mode_text_turn";
     sourceRequestId: string;
+    intentSummary: string;
+    expectedRoute: string[];
+    expectedGovernanceOutcome: GovernanceOutcome;
     profileMode: NapoleonProfileMode;
     traceId: string;
+    expectedAllowedEffects: string[];
     expectedBlockedEffects: string[];
+    evidenceLinks: string[];
+    draftOnly: true;
   };
   governanceReview: GovernanceReviewState;
 }
@@ -480,6 +486,16 @@ function extractMemoryProposalValue(message: string): string {
   return trimmed;
 }
 
+function summarizeEvaluatorIntent(message: string): string {
+  const compact = message
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/https?:\/\/\S+/gi, "[redacted-url]")
+    .replace(/\b(bearer|authorization|token|secret)\s*[:=]\s*\S+/gi, "$1=[redacted]");
+  if (!compact) return "unspecified request";
+  return compact.length > 160 ? `${compact.slice(0, 157)}...` : compact;
+}
+
 export function hasMemoryProposalCandidate(message: string): boolean {
   return MEMORY_TRIGGER_PATTERN.test(message);
 }
@@ -660,10 +676,12 @@ export function buildTextTurnContract(input: TextTurnContractInput): TextTurnCon
 
 export function buildRehearsalPreview(contract: TextTurnContract, message: string): RehearsalPreview {
   const understoodRequest = message.trim();
+  const proposedNapoleonPath = ["concierge.text", "napoleon.chief_of_staff", "napoleon.governance"];
+  const allowedEffects = ["prepare_advisory_response"];
 
   return {
     understoodRequest,
-    proposedNapoleonPath: ["concierge.text", "napoleon.chief_of_staff", "napoleon.governance"],
+    proposedNapoleonPath,
     chiefOfStaffReviewPacket: {
       requestId: contract.chiefOfStaffRequest.request_id,
       requestType: contract.chiefOfStaffRequest.request_type,
@@ -672,7 +690,7 @@ export function buildRehearsalPreview(contract: TextTurnContract, message: strin
       evidenceLinks: contract.sourceEvidence,
       traceId: contract.chiefOfStaffRequest.trace_id,
     },
-    allowedEffects: ["prepare_advisory_response"],
+    allowedEffects,
     blockedEffects: contract.blockedEffects,
     approvalState: "No approval captured. External effects remain blocked.",
     memoryProposal: buildMemoryProposalReviewState(contract, message),
@@ -685,9 +703,15 @@ export function buildRehearsalPreview(contract: TextTurnContract, message: strin
     evaluatorCaseCandidate: {
       scenarioType: "rehearsal_mode_text_turn",
       sourceRequestId: contract.chiefOfStaffRequest.request_id,
+      intentSummary: summarizeEvaluatorIntent(message),
+      expectedRoute: proposedNapoleonPath,
+      expectedGovernanceOutcome: contract.governanceDecision.outcome,
       profileMode: contract.profileMode,
       traceId: contract.traceEnvelope.trace_id,
+      expectedAllowedEffects: allowedEffects,
       expectedBlockedEffects: contract.blockedEffects,
+      evidenceLinks: contract.sourceEvidence,
+      draftOnly: true,
     },
     governanceReview: buildGovernanceReviewState(contract.governanceDecision, localProfileFromNapoleonMode(contract.profileMode)),
   };

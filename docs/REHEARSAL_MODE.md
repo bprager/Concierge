@@ -30,6 +30,8 @@ A rehearsal preview includes:
 - Trace and audit identifiers.
 - Evaluator-case candidate.
 
+The evaluator-case candidate is shown as a draft review artifact. It includes the source request ID, scenario type, sanitized intent summary, expected route, expected governance outcome, profile mode, expected allowed effects, expected blocked effects, trace ID, and evidence links. It is not approval, not dispatch, not memory persistence, and not a live Napoleon send.
+
 ## Runtime Boundary
 
 Preview creation is local. It builds a text turn contract from the current typed request and displays the result. It must not call a live Napoleon endpoint.
@@ -84,7 +86,7 @@ For memory proposals, the app emits local `memory_proposal_review_created`, `mem
 
 ## Evaluator Use
 
-Rehearsal previews can seed evaluator cases because they include the request, profile mode, expected blocked effects, trace ID, and source request ID.
+Rehearsal previews can seed evaluator cases because they include the request summary, profile mode, expected route, expected governance outcome, expected allowed and blocked effects, trace ID, source request ID, and local evidence links.
 
 The evaluator includes four Rehearsal Mode scenarios:
 

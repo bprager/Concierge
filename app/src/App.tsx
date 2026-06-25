@@ -8189,12 +8189,58 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               {pendingRehearsal.preview.traceAuditPreview.traceId},{" "}
               {pendingRehearsal.preview.traceAuditPreview.auditId}
             </dd>
-            <dt>Evaluator case</dt>
-            <dd>
-              {pendingRehearsal.preview.evaluatorCaseCandidate.scenarioType},{" "}
-              {pendingRehearsal.preview.evaluatorCaseCandidate.sourceRequestId}
-            </dd>
           </dl>
+          <section className="review inline" aria-label="Rehearsal evaluator case candidate">
+            <div className="review-heading">
+              <strong>Draft evaluator case</strong>
+              <span>
+                {pendingRehearsal.preview.evaluatorCaseCandidate.scenarioType},{" "}
+                {pendingRehearsal.preview.evaluatorCaseCandidate.sourceRequestId}
+              </span>
+            </div>
+            <dl>
+              <div>
+                <dt>Intent summary</dt>
+                <dd>{pendingRehearsal.preview.evaluatorCaseCandidate.intentSummary}</dd>
+              </div>
+              <div>
+                <dt>Expected route</dt>
+                <dd>{pendingRehearsal.preview.evaluatorCaseCandidate.expectedRoute.join(" -> ")}</dd>
+              </div>
+              <div>
+                <dt>Expected governance</dt>
+                <dd>{pendingRehearsal.preview.evaluatorCaseCandidate.expectedGovernanceOutcome}</dd>
+              </div>
+              <div>
+                <dt>Profile mode</dt>
+                <dd>{pendingRehearsal.preview.evaluatorCaseCandidate.profileMode}</dd>
+              </div>
+              <div>
+                <dt>Allowed effects</dt>
+                <dd>{pendingRehearsal.preview.evaluatorCaseCandidate.expectedAllowedEffects.join(", ")}</dd>
+              </div>
+              <div>
+                <dt>Expected blocked effects</dt>
+                <dd>{pendingRehearsal.preview.evaluatorCaseCandidate.expectedBlockedEffects.join(", ")}</dd>
+              </div>
+              <div>
+                <dt>Evidence links</dt>
+                <dd>{pendingRehearsal.preview.evaluatorCaseCandidate.evidenceLinks.join(", ")}</dd>
+              </div>
+              <div>
+                <dt>Trace</dt>
+                <dd>{pendingRehearsal.preview.evaluatorCaseCandidate.traceId}</dd>
+              </div>
+              <div>
+                <dt>Boundary</dt>
+                <dd>
+                  {pendingRehearsal.preview.evaluatorCaseCandidate.draftOnly
+                    ? "Draft only; not approved, dispatched, stored, or sent."
+                    : "Unavailable"}
+                </dd>
+              </div>
+            </dl>
+          </section>
           <section className={`review inline ${pendingRehearsal.review.sendBlocked ? "blocked" : ""}`}>
             <div className="review-heading">
               <strong>{pendingRehearsal.review.heading}</strong>

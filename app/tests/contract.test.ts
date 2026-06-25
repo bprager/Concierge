@@ -156,6 +156,15 @@ test("builds a rehearsal preview from the text turn contract without granting au
   assert.equal(preview.traceAuditPreview.traceId, "trace_rehearsal");
   assert.equal(preview.evaluatorCaseCandidate.scenarioType, "rehearsal_mode_text_turn");
   assert.equal(preview.evaluatorCaseCandidate.sourceRequestId, "cos_turn_rehearsal");
+  assert.equal(preview.evaluatorCaseCandidate.intentSummary, "Send the weekly deployment summary to the team");
+  assert.deepEqual(preview.evaluatorCaseCandidate.expectedRoute, preview.proposedNapoleonPath);
+  assert.equal(preview.evaluatorCaseCandidate.expectedGovernanceOutcome, "requires_review");
+  assert.equal(preview.evaluatorCaseCandidate.profileMode, "adult_owner");
+  assert.deepEqual(preview.evaluatorCaseCandidate.expectedAllowedEffects, ["prepare_advisory_response"]);
+  assert.ok(preview.evaluatorCaseCandidate.expectedBlockedEffects.includes("external_send"));
+  assert.ok(preview.evaluatorCaseCandidate.evidenceLinks.includes("local_text_turn"));
+  assert.equal(preview.evaluatorCaseCandidate.traceId, "trace_rehearsal");
+  assert.equal(preview.evaluatorCaseCandidate.draftOnly, true);
 });
 
 test("builds review-required governance state without treating acknowledgement as approval", () => {

@@ -34,6 +34,8 @@ OpenTelemetry is the preferred standard for traces, metrics, and logs because it
 
 Capability review packet export is a local rendered artifact, not a Napoleon audit stream. It may contain sanitized answer rows, review focus, evaluator-case candidate, evolution-proposal draft, and explicit local-only boundary fields, but must not contain endpoint hosts, bearer tokens, raw prompts, request bodies, response bodies, raw audio, or raw video. Exporting it does not send it, approve it, apply it, write memory, dispatch agents, or contact Napoleon. Governed packet submission emits metadata-only send started/completed/failed events and still cannot apply changes locally. Returned packet review metadata and exported packet state are cleared when the local capability ledger is cleared, Napoleon endpoint, bridge token, or descriptor context changes, the active user profile changes, or Rehearsal Mode is enabled so stale decision or audit evidence cannot outlive the local evidence, connection, credential, descriptor, profile, or live-mode context that produced the packet.
 
+Rehearsal Mode evaluator-case candidates are rendered local draft metadata, not a Napoleon audit stream. They may show a sanitized intent summary, expected route, expected governance outcome, profile mode, allowed effects, blocked effects, trace ID, and evidence links so a human can seed evaluator coverage, but they do not approve, dispatch, write memory, send externally, or contact Napoleon.
+
 ## 3. Trace model
 
 Every user turn has:

@@ -5686,6 +5686,60 @@ test("keeps post-preview advisory send disabled while Rehearsal Mode is active",
   }
 });
 
+test("renders rehearsal evaluator-case candidate as review-ready metadata", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let fetchCalls = 0;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (_input: string | URL | Request) => {
+    fetchCalls += 1;
+    return harnessJsonResponse(500, { error: "unexpected fetch" });
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (!rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Send the weekly deployment summary to the team" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+    await view.findByText("Rehearsal only");
+
+    const evaluatorCase = view.getByLabelText("Rehearsal evaluator case candidate");
+    assert.ok(within(evaluatorCase).getByText("Draft evaluator case"));
+    assert.match(evaluatorCase.textContent ?? "", /rehearsal_mode_text_turn/);
+    assert.ok(within(evaluatorCase).getByText("Intent summary"));
+    assert.ok(within(evaluatorCase).getByText("Send the weekly deployment summary to the team"));
+    assert.ok(within(evaluatorCase).getByText("Expected route"));
+    assert.ok(within(evaluatorCase).getByText("concierge.text -> napoleon.chief_of_staff -> napoleon.governance"));
+    assert.ok(within(evaluatorCase).getByText("Expected governance"));
+    assert.ok(within(evaluatorCase).getByText("requires_review"));
+    assert.ok(within(evaluatorCase).getByText("Profile mode"));
+    assert.ok(within(evaluatorCase).getByText("adult_owner"));
+    assert.ok(within(evaluatorCase).getByText("Allowed effects"));
+    assert.ok(within(evaluatorCase).getByText("prepare_advisory_response"));
+    assert.ok(within(evaluatorCase).getByText("Expected blocked effects"));
+    assert.ok(within(evaluatorCase).getByText(/external_send/));
+    assert.ok(within(evaluatorCase).getByText("Evidence links"));
+    assert.ok(within(evaluatorCase).getByText(/local_text_turn/));
+    assert.ok(within(evaluatorCase).getByText("Trace"));
+    assert.ok(within(evaluatorCase).getByText(/trace_/));
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("explains stale rehearsal previews before allowing post-preview advisory send", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
