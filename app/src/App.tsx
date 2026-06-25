@@ -494,6 +494,9 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
     ) ||
     /\b(what|which)\b.*\b(reference|references|ref|refs|decision|audit|trace)\b.*\b(use|cite|review)\b/.test(lower);
   const asksAboutLocalSideEffectBoundary =
+    /\b(did|does|has|was|is)\b.*\bconcierge\b.*\b(approve|approved|authorize|authorized)\b.*\b(it|that|this|answer|response|reply)\b/.test(
+      lower,
+    ) ||
     /\b(did|does|has|was|is)\b.*\bconcierge\b.*\b(capture|captured)\b.*\bapproval\b/.test(lower) ||
     /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bwrite\b.*\bmemory\b/.test(lower) ||
     /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bdispatch\b.*\b(agents?|anyone|somebody|someone)\b/.test(lower) ||
@@ -501,6 +504,9 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
       lower,
     );
   const asksAboutContextualSideEffectBoundary =
+    /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\b(approve|approved|authorize|authorized)\b.*\b(that|this|it|answer|response|reply)\b/.test(
+      lower,
+    ) ||
     /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\b(capture|captured)\b.*\bapproval\b/.test(
       lower,
     ) ||
