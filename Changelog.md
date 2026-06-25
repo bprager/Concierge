@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local returned-proof answers for selected-agent selection-reason follow-ups using "choose" or "pick" wording, like "Why did Napoleon choose Passive Brain?", keeping the answer tied to returned bridge provenance instead of sending a new Napoleon turn.
 - Added local returned-proof answers for selected-agent selection-reason follow-ups with a definite article, like "Why was the Passive Brain selected?", keeping the answer tied to returned bridge provenance instead of sending a new Napoleon turn.
 - Added local returned-proof answers for selected-agent contribution follow-ups with a definite article, like "What did the Passive Brain find?", keeping the answer tied to returned bridge provenance instead of sending a new Napoleon turn.
 - Added local returned-proof answers for contextual side-effect follow-ups like "Did it write memory?", "Did it send anything?", and "Did it dispatch anyone?", keeping memory-write, approval-capture, agent-dispatch, and external-send checks local instead of sending a new Napoleon turn.

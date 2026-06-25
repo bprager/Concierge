@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local returned-proof handling for selected-agent selection-reason follow-ups using "choose" or "pick" wording, such as "Why did Napoleon choose Passive Brain?", so Concierge answers from returned selection proof instead of sending another bridge request or copying raw follow-up/reason text into telemetry.
 - Added local returned-proof handling for selected-agent selection-reason follow-ups with a definite article, such as "Why was the Passive Brain selected?", so Concierge answers from returned selection proof instead of sending another bridge request or copying raw follow-up/reason text into telemetry.
 - Added local returned-proof handling for selected-agent contribution follow-ups with a definite article, such as "What did the Passive Brain find?", so Concierge answers from returned selected-agent proof instead of sending another bridge request or copying raw follow-up/contribution text into telemetry.
 - Added local returned-proof handling for contextual side-effect follow-ups such as "Did it write memory?", "Did it send anything?", and "Did it dispatch anyone?", so Concierge answers from the latest returned review proof without another bridge request, side effects, or raw follow-up/proof telemetry.
