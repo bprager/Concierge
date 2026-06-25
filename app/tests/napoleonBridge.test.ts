@@ -1058,6 +1058,81 @@ test("live bridge fails closed when returned target capability is unsafe proof m
   assert.equal(JSON.stringify(evidence).includes("token=secret"), false);
 });
 
+test("live bridge fails closed when returned proof identifiers are unsafe proof metadata", async () => {
+  const events: TelemetryPayload[] = [];
+  const evidence: unknown[] = [];
+  const unsafeTraceId = "https://napoleon.example/traces/unsafe?token=secret";
+  const unsafeDecisionId = "https://napoleon.example/decisions/unsafe?token=secret";
+  const unsafeAuditId = "https://napoleon.example/audits/unsafe?token=secret";
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_unsafe_returned_proof_ids",
+          conversationId: "conv_unsafe_returned_proof_ids",
+          turnId: "turn_unsafe_returned_proof_ids",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Summarize the governed bridge status",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Prepared through Napoleon.",
+              profileMode: "adult_owner",
+              governanceDecision: {
+                decision_id: unsafeDecisionId,
+                request_id: "cos_turn_unsafe_returned_proof_ids",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+                trace_id: unsafeTraceId,
+                audit_id: unsafeAuditId,
+              },
+              traceEnvelope: {
+                trace_id: unsafeTraceId,
+                parent_trace_id: "conv_unsafe_returned_proof_ids",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_unsafe_returned_proof_ids",
+                decision_id: unsafeDecisionId,
+                timestamp: "2026-06-11T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: unsafeAuditId,
+                trace_id: unsafeTraceId,
+                decision_id: unsafeDecisionId,
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: [`trace:${unsafeTraceId}`],
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "bridge_request_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.equal((evidence.at(-1) as { status?: string; reason?: string }).status, "fail_closed");
+  assert.equal((evidence.at(-1) as { status?: string; reason?: string }).reason, "contract_mismatch");
+  assert.equal(JSON.stringify(evidence).includes("napoleon.example"), false);
+  assert.equal(JSON.stringify(evidence).includes("token=secret"), false);
+});
+
 test("live bridge fails closed when advisory harness text claims side effects were performed", async () => {
   const events: TelemetryPayload[] = [];
   const evidence: unknown[] = [];

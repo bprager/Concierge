@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened live bridge response validation so unsafe returned trace, audit, decision, request, and proof-link identifiers fail closed before accepted Napoleon proof metadata can retain endpoints, credentials, or raw-looking proof references.
 - Hardened live bridge response validation so unsafe returned target capability IDs fail closed before accepted Napoleon proof metadata can retain endpoints, credentials, or raw-looking capability references.
 - Hardened live bridge response validation so unsafe returned selected-agent IDs fail closed before accepted bridge evidence can retain endpoints, credentials, or raw-looking agent references.
 - Hardened live bridge response validation so returned selected-agent selection reasons and contribution summaries fail closed when they claim memory writes, approval capture, agent dispatch, external sends, local application, or other blocked effects.

@@ -274,13 +274,13 @@ function isGovernanceDecision(value: unknown): value is GovernanceDecision {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<GovernanceDecision>;
   return Boolean(
-    candidate.decision_id &&
-      candidate.request_id &&
-      candidate.outcome &&
-      candidate.authority_tier &&
-      candidate.approval_requirement &&
-      candidate.trace_id &&
-      candidate.audit_id &&
+    typeof candidate.decision_id === "string" &&
+      typeof candidate.request_id === "string" &&
+      typeof candidate.outcome === "string" &&
+      typeof candidate.authority_tier === "string" &&
+      typeof candidate.approval_requirement === "string" &&
+      typeof candidate.trace_id === "string" &&
+      typeof candidate.audit_id === "string" &&
       Array.isArray(candidate.blocked_effects),
   );
 }
@@ -368,6 +368,27 @@ function hasUnsafeSelectedAgentId(delegation: NapoleonDelegation | undefined): b
       return isUnsafeProofIdentifier(agent.agentId);
     }) ?? false
   );
+}
+
+function hasUnsafeReturnedProofIdentifier(
+  decision: GovernanceDecision,
+  traceEnvelope: TraceEnvelope,
+  auditEnvelope: AuditEnvelope,
+): boolean {
+  return [
+    decision.decision_id,
+    decision.request_id,
+    decision.trace_id,
+    decision.audit_id,
+    traceEnvelope.trace_id,
+    traceEnvelope.parent_trace_id,
+    traceEnvelope.request_id,
+    traceEnvelope.decision_id,
+    auditEnvelope.audit_id,
+    auditEnvelope.trace_id,
+    auditEnvelope.decision_id,
+    ...auditEnvelope.evidence_links,
+  ].some((identifier) => isUnsafeProofIdentifier(identifier));
 }
 
 function advisoryHarnessClaimsRuntimeInvocation(delegationPlan: Record<string, unknown>): boolean {
@@ -872,6 +893,7 @@ export async function sendToNapoleon(
     if (
       hasForbiddenTextTurnSideEffectClaim(adapted as Partial<NapoleonResponse> & Record<string, unknown>) ||
       isUnsafeProofIdentifier(adapted.targetAgent ?? "") ||
+      hasUnsafeReturnedProofIdentifier(adapted.governanceDecision, adapted.traceEnvelope, adapted.auditEnvelope) ||
       hasUnsafeSelectedAgentId(adapted.delegation) ||
       hasForbiddenDelegationTextSideEffectClaim(adapted.delegation) ||
       hasUnprovenSelectedAgentAttribution(adapted.text, adapted.delegation) ||
@@ -992,6 +1014,9 @@ export async function sendToNapoleon(
   const traceEnvelope = payload.traceEnvelope;
   const auditEnvelope = payload.auditEnvelope;
   if (!envelopesMatchDecision(decision, traceEnvelope, auditEnvelope)) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
+  if (hasUnsafeReturnedProofIdentifier(decision, traceEnvelope, auditEnvelope)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
   if (payload.profileMode !== undefined && payload.profileMode !== contract.profileMode) {

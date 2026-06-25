@@ -9807,7 +9807,7 @@ test("clears returned memory review results when bridge token changes", async ()
             profileMode: body.profileMode,
             targetAgent: "napoleon.memory",
             governanceDecision: {
-              decision_id: "decision_memory_turn_token_result",
+              decision_id: "decision_memory_turn_rotation_result",
               request_id: body.chiefOfStaffRequest.request_id,
               outcome: "requires_review",
               authority_tier: "advisory_review",
@@ -9815,24 +9815,24 @@ test("clears returned memory review results when bridge token changes", async ()
               rationale: "Memory-like requests require governed review.",
               blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
               trace_id: body.traceId,
-              audit_id: "audit_memory_turn_token_result",
+              audit_id: "audit_memory_turn_rotation_result",
             },
             traceEnvelope: {
               trace_id: body.traceId,
-              parent_trace_id: "rendered-memory-token-result",
+              parent_trace_id: "rendered_memory_rotation_result",
               actor_id: "napoleon.chief_of_staff",
               request_id: body.chiefOfStaffRequest.request_id,
-              decision_id: "decision_memory_turn_token_result",
+              decision_id: "decision_memory_turn_rotation_result",
               timestamp: "2026-06-14T00:00:00.000Z",
             },
             auditEnvelope: {
-              audit_id: "audit_memory_turn_token_result",
+              audit_id: "audit_memory_turn_rotation_result",
               trace_id: body.traceId,
-              decision_id: "decision_memory_turn_token_result",
+              decision_id: "decision_memory_turn_rotation_result",
               actor_id: "napoleon.chief_of_staff",
               authority_tier: "advisory_review",
               approval_requirement: "chief_of_staff_and_owner_review",
-              evidence_links: ["trace:memory-turn-token-result"],
+              evidence_links: ["trace:memory_turn_rotation_result"],
             },
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
@@ -9843,7 +9843,7 @@ test("clears returned memory review results when bridge token changes", async ()
           JSON.stringify({
             text: "Napoleon accepted the credential-scoped memory proposal for review.",
             governanceDecision: {
-              decision_id: "decision_memory_token_result_stale",
+              decision_id: "decision_memory_rotation_result_stale",
               request_id: body.chiefOfStaffRequest.request_id,
               outcome: "requires_review",
               authority_tier: "advisory_review",
@@ -9851,24 +9851,24 @@ test("clears returned memory review results when bridge token changes", async ()
               rationale: "Memory write remains blocked pending review.",
               blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
               trace_id: body.traceEnvelope.trace_id,
-              audit_id: "audit_memory_token_result_stale",
+              audit_id: "audit_memory_rotation_result_stale",
             },
             traceEnvelope: {
               trace_id: body.traceEnvelope.trace_id,
               parent_trace_id: body.traceEnvelope.parent_trace_id,
               actor_id: "napoleon.chief_of_staff",
               request_id: body.chiefOfStaffRequest.request_id,
-              decision_id: "decision_memory_token_result_stale",
+              decision_id: "decision_memory_rotation_result_stale",
               timestamp: "2026-06-14T00:00:00.000Z",
             },
             auditEnvelope: {
-              audit_id: "audit_memory_token_result_stale",
+              audit_id: "audit_memory_rotation_result_stale",
               trace_id: body.traceEnvelope.trace_id,
-              decision_id: "decision_memory_token_result_stale",
+              decision_id: "decision_memory_rotation_result_stale",
               actor_id: "napoleon.chief_of_staff",
               authority_tier: "advisory_review",
               approval_requirement: "chief_of_staff_and_owner_review",
-              evidence_links: ["trace:memory-token-result-stale"],
+              evidence_links: ["trace:memory_rotation_result_stale"],
             },
             memoryWritePerformed: false,
             approvalCaptured: false,
@@ -9897,14 +9897,14 @@ test("clears returned memory review results when bridge token changes", async ()
     await user.click(view.getByRole("button", { name: "Send memory proposal to Napoleon review" }));
 
     await view.findByText("Napoleon accepted the credential-scoped memory proposal for review.");
-    assert.ok(view.getByText(/decision_memory_token_result_stale/));
-    assert.ok(view.getByText(/audit_memory_token_result_stale/));
+    assert.ok(view.getByText(/decision_memory_rotation_result_stale/));
+    assert.ok(view.getByText(/audit_memory_rotation_result_stale/));
 
     fireEvent.change(view.getByLabelText("Bridge token"), { target: { value: "rotated-token" } });
 
     assert.equal(view.queryByText("Napoleon accepted the credential-scoped memory proposal for review."), null);
-    assert.equal(view.queryByText(/decision_memory_token_result_stale/), null);
-    assert.equal(view.queryByText(/audit_memory_token_result_stale/), null);
+    assert.equal(view.queryByText(/decision_memory_rotation_result_stale/), null);
+    assert.equal(view.queryByText(/audit_memory_rotation_result_stale/), null);
     assert.equal(Boolean(view.queryByRole("button", { name: "Send memory proposal to Napoleon review" })), false);
   } finally {
     globalThis.fetch = originalFetch;
@@ -10255,7 +10255,7 @@ test("clears returned governance review results when bridge token changes", asyn
             profileMode: body.profileMode,
             targetAgent: "napoleon.chief_of_staff",
             governanceDecision: {
-              decision_id: "decision_governance_turn_token_result",
+              decision_id: "decision_governance_turn_rotation_result",
               request_id: body.chiefOfStaffRequest.request_id,
               outcome: "requires_review",
               authority_tier: "advisory_review",
@@ -10263,24 +10263,24 @@ test("clears returned governance review results when bridge token changes", asyn
               rationale: "External sends require governed review.",
               blocked_effects: ["approval_capture", "memory_write", "agent_dispatch", "external_send"],
               trace_id: body.traceId,
-              audit_id: "audit_governance_turn_token_result",
+              audit_id: "audit_governance_turn_rotation_result",
             },
             traceEnvelope: {
               trace_id: body.traceId,
-              parent_trace_id: "rendered-governance-token-result",
+              parent_trace_id: "rendered_governance_rotation_result",
               actor_id: "napoleon.chief_of_staff",
               request_id: body.chiefOfStaffRequest.request_id,
-              decision_id: "decision_governance_turn_token_result",
+              decision_id: "decision_governance_turn_rotation_result",
               timestamp: "2026-06-14T00:00:00.000Z",
             },
             auditEnvelope: {
-              audit_id: "audit_governance_turn_token_result",
+              audit_id: "audit_governance_turn_rotation_result",
               trace_id: body.traceId,
-              decision_id: "decision_governance_turn_token_result",
+              decision_id: "decision_governance_turn_rotation_result",
               actor_id: "napoleon.chief_of_staff",
               authority_tier: "advisory_review",
               approval_requirement: "chief_of_staff_and_owner_review",
-              evidence_links: ["trace:governance-turn-token-result"],
+              evidence_links: ["trace:governance_turn_rotation_result"],
             },
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
@@ -10291,7 +10291,7 @@ test("clears returned governance review results when bridge token changes", asyn
           JSON.stringify({
             text: "Napoleon accepted the credential-scoped governance review packet.",
             governanceDecision: {
-              decision_id: "decision_governance_token_result_stale",
+              decision_id: "decision_governance_rotation_result_stale",
               request_id: body.chiefOfStaffRequest.request_id,
               outcome: "requires_review",
               authority_tier: "advisory_review",
@@ -10299,24 +10299,24 @@ test("clears returned governance review results when bridge token changes", asyn
               rationale: "Review acknowledgement is not approval.",
               blocked_effects: ["approval_capture", "memory_write", "agent_dispatch", "external_send"],
               trace_id: body.traceEnvelope.trace_id,
-              audit_id: "audit_governance_token_result_stale",
+              audit_id: "audit_governance_rotation_result_stale",
             },
             traceEnvelope: {
               trace_id: body.traceEnvelope.trace_id,
               parent_trace_id: body.traceEnvelope.parent_trace_id,
               actor_id: "napoleon.chief_of_staff",
               request_id: body.chiefOfStaffRequest.request_id,
-              decision_id: "decision_governance_token_result_stale",
+              decision_id: "decision_governance_rotation_result_stale",
               timestamp: "2026-06-14T00:00:00.000Z",
             },
             auditEnvelope: {
-              audit_id: "audit_governance_token_result_stale",
+              audit_id: "audit_governance_rotation_result_stale",
               trace_id: body.traceEnvelope.trace_id,
-              decision_id: "decision_governance_token_result_stale",
+              decision_id: "decision_governance_rotation_result_stale",
               actor_id: "napoleon.chief_of_staff",
               authority_tier: "advisory_review",
               approval_requirement: "chief_of_staff_and_owner_review",
-              evidence_links: ["trace:governance-token-result-stale"],
+              evidence_links: ["trace:governance_rotation_result_stale"],
             },
             appliedLocally: false,
             memoryWritePerformed: false,
@@ -10347,14 +10347,14 @@ test("clears returned governance review results when bridge token changes", asyn
     await user.click(view.getByRole("button", { name: "Send governance review to Napoleon" }));
 
     await view.findByText("Napoleon accepted the credential-scoped governance review packet.");
-    assert.ok(view.getByText(/decision_governance_token_result_stale/));
-    assert.ok(view.getByText(/audit_governance_token_result_stale/));
+    assert.ok(view.getByText(/decision_governance_rotation_result_stale/));
+    assert.ok(view.getByText(/audit_governance_rotation_result_stale/));
 
     fireEvent.change(view.getByLabelText("Bridge token"), { target: { value: "rotated-token" } });
 
     assert.equal(view.queryByText("Napoleon accepted the credential-scoped governance review packet."), null);
-    assert.equal(view.queryByText(/decision_governance_token_result_stale/), null);
-    assert.equal(view.queryByText(/audit_governance_token_result_stale/), null);
+    assert.equal(view.queryByText(/decision_governance_rotation_result_stale/), null);
+    assert.equal(view.queryByText(/audit_governance_rotation_result_stale/), null);
     assert.equal(Boolean(view.queryByRole("button", { name: "Send governance review to Napoleon" })), false);
   } finally {
     globalThis.fetch = originalFetch;
