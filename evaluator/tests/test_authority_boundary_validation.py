@@ -478,8 +478,13 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "reader.readAsDataURL(file);",
             "reader.readAsBinaryString(file);",
             'const [handle] = await window["showOpenFilePicker"]();',
+            'const [handle] = await window["show" + "OpenFilePicker"]();',
+            'const handle = await globalThis["show" + "SaveFilePicker"].call(globalThis);',
+            'const directory = await window["show" + "DirectoryPicker"].apply(window);',
             'const reader = new window["FileReader"]();',
+            'const reader = new window["File" + "Reader"]();',
             'const reader = window["FileReader"]();',
+            'const reader = globalThis["File" + "Reader"]();',
             'const reader = globalThis["FileReader"]();',
             'reader["readAsText"](file);',
         ]:
