@@ -207,6 +207,74 @@ test("steering draft carries media session repair recommendation into proposal r
   assert.equal(draft.boundary.externalSendAllowed, false);
 });
 
+test("steering draft carries descriptor readiness repair recommendation with evidence", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("descriptor_discovery_failed", {
+      traceId: "trace_stale_descriptor_steering",
+      conversationId: "conv_stale_descriptor_steering",
+      turnId: "turn_stale_descriptor_steering",
+      profile: "adult_owner",
+      state: "stale_descriptor",
+      checksumState: "valid",
+      signatureState: "valid",
+      descriptorFreshnessState: "stale",
+      canAttemptLiveBridge: false,
+      failClosedReason: "stale_descriptor",
+      endpoint: "https://napoleon.example.test/v1/concierge",
+      bearerToken: "secret-token",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_runtime_gap_descriptor_steering",
+      conversationId: "conv_runtime_gap_descriptor_steering",
+      turnId: "turn_runtime_gap_descriptor_steering",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "delegation",
+      intentLabel: "delegate_task",
+      capabilityLabel: "napoleon_delegation",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.75,
+      evidenceRefs: ["trace:trace_runtime_gap_descriptor_steering"],
+      architectureArea: "napoleon_runtime",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "create_evolution_proposal",
+    }),
+  );
+
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_descriptor_steering",
+    endpointConfigured: false,
+    profileMode: "adult_owner",
+  });
+
+  assert.equal(draft.recommendation.capabilityLabel, "descriptor_discovery");
+  assert.equal(draft.recommendation.recommendationType, "guided_readiness_repair");
+  assert.ok(draft.recommendation.rationale.includes("Refresh Napoleon descriptor discovery"));
+  assert.ok(draft.recommendation.rationale.includes("descriptor freshness stale"));
+  assert.ok(draft.evolutionProposal.summary.includes("Refresh Napoleon descriptor discovery"));
+  assert.equal(draft.evolutionProposal.change.requested_action, draft.recommendation.rationale);
+  assert.deepEqual(draft.evolutionProposal.evidence, [
+    "trace:trace_stale_descriptor_steering",
+    "event:descriptor_discovery_failed",
+  ]);
+  assert.equal(draft.evolutionProposal.learning_signals.length, 1);
+  assert.equal(draft.evolutionProposal.learning_signals[0].capability_id, "descriptor_discovery");
+  assert.equal(JSON.stringify(draft).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify(draft).includes("secret-token"), false);
+  assert.equal(draft.boundary.proposalOnly, true);
+  assert.equal(draft.boundary.approvalCaptured, false);
+  assert.equal(draft.boundary.memoryWriteAllowed, false);
+  assert.equal(draft.boundary.agentDispatchAllowed, false);
+  assert.equal(draft.boundary.externalSendAllowed, false);
+});
+
 test("steering draft uses only the active profile capability evidence", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(

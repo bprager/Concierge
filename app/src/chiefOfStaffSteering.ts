@@ -173,6 +173,13 @@ function supportsSteeringRecommendation(signal: ConversationCapabilitySignal, ro
   if (signal.capabilityStatus === "missing") return true;
   if (
     signal.capabilityStatus === "blocked" &&
+    signal.capabilityLabel === "descriptor_discovery" &&
+    signal.architectureArea === "bridge"
+  ) {
+    return true;
+  }
+  if (
+    signal.capabilityStatus === "blocked" &&
     signal.capabilityLabel.endsWith("media_session_readiness_summary")
   ) {
     return true;
@@ -184,7 +191,10 @@ function recommendationTypeForSteeringDraft(
   capabilityLabel: string,
   supportingSignals: ConversationCapabilitySignal[],
 ): SteeringRecommendation["recommendationType"] {
-  return capabilityLabel.endsWith("media_session_readiness_summary") &&
+  return (
+    capabilityLabel === "descriptor_discovery" ||
+    capabilityLabel.endsWith("media_session_readiness_summary")
+  ) &&
     supportingSignals.some((signal) => signal.capabilityStatus === "blocked")
     ? "guided_readiness_repair"
     : "scored_capability_recommendation";
