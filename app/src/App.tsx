@@ -416,6 +416,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     );
   const asksAboutReturnedEffects =
     /\bwhat\b.*\b(blocked|allowed)\b/.test(lower) ||
+    /\bwhat\b.*\bnapoleon\b.*\ballow(?:ed)?\b/.test(lower) ||
     /\bwhat\b.*\beffects?\b.*\b(blocked|allowed)\b/.test(lower) ||
     /\bwhich\b.*\beffects?\b.*\b(blocked|allowed)\b/.test(lower) ||
     /\b(blocked|allowed)\b.*\beffects?\b/.test(lower);

@@ -804,6 +804,32 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(naturalBlockedEffectsAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(naturalBlockedEffectsAnswerEvent).includes("What was blocked?"), false);
     assert.equal(JSON.stringify(naturalBlockedEffectsAnswerEvent).includes("memory_write"), false);
+    const requestCountBeforeNaturalAllowedEffectsQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What did Napoleon allow?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let naturalAllowedEffectsAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      naturalAllowedEffectsAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(naturalAllowedEffectsAnswer);
+      assert.ok(naturalAllowedEffectsAnswer.textContent?.includes("Allowed effects: prepare_advisory_response."));
+    });
+    assert.ok(naturalAllowedEffectsAnswer);
+    const naturalAllowedEffectsAnswerText = naturalAllowedEffectsAnswer.textContent ?? "";
+    assert.ok(naturalAllowedEffectsAnswerText.includes("Blocked effects: memory_write, approval_capture, external_send, agent_dispatch."));
+    assert.equal(requestedUrls.length, requestCountBeforeNaturalAllowedEffectsQuestion);
+    const naturalAllowedEffectsAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(naturalAllowedEffectsAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(naturalAllowedEffectsAnswerEvent?.attributes.allowedEffectCount, 1);
+    assert.equal(naturalAllowedEffectsAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(naturalAllowedEffectsAnswerEvent).includes("What did Napoleon allow?"), false);
+    assert.equal(JSON.stringify(naturalAllowedEffectsAnswerEvent).includes("prepare_advisory_response"), false);
+
     const requestCountBeforeReviewQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "What does Napoleon require me to review before I can act?" },

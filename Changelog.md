@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local returned-proof answers for natural allowed-effect follow-ups like "What did Napoleon allow?", keeping returned allowed effects local instead of sending a new Napoleon turn.
 - Added typo-tolerant Capability Intelligence question classification for common misspellings of conversation, capability, and implemented in local proposal-only answers.
 - Hardened accepted Napoleon response proof metadata so local delegation follow-up answers reuse redacted selected-agent, recommendation, reason, and contribution fields instead of raw returned provenance.
 - Hardened last-success Napoleon response proof exports so returned recommendation, selected-agent selection-reason, and selected-agent contribution metadata containing token or secret wording is redacted before local proof JSON is created.
