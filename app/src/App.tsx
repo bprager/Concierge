@@ -483,6 +483,9 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
     /\b(can|may|should)\s+i\b.*\b(act|apply|proceed|use|send|do)\b.*\b(that|this|it|answer|response|reply)\b/.test(
       lower,
     ) ||
+    /\b(did|does|has|was|is)\b.*\bnapoleon\b.*\b(approve|approved|review|reviewed|authorize|authorized)\b.*\b(that|this|it|answer|response|reply)\b/.test(
+      lower,
+    ) ||
     /\b(is|was)\b.*\b(that|this|it|answer|response|reply)\b.*\b(approved|reviewed|allowed|safe)\b/.test(lower) ||
     /\b(do|does)\b.*\b(that|this|it|answer|response|reply)\b.*\b(need|require)\b.*\breview\b/.test(lower);
   const asksAboutReturnedReviewReference =
