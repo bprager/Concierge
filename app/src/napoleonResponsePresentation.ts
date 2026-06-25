@@ -87,6 +87,8 @@ const FORBIDDEN_RESPONSE_PROOF_VALUE_PATTERNS = [
   /\b0\.0\.0\.0\b/,
   /\bbearer\b/i,
   /\bauthorization\b/i,
+  /\btoken\b/i,
+  /\bsecret\b/i,
 ];
 
 function proofDetailValue(proof: NapoleonResponseProofView, label: string): string {

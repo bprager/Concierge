@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened last-success Napoleon response proof exports so token or secret-bearing returned recommendation, selected-agent selection-reason, and selected-agent contribution prose is redacted before local proof JSON is created.
 - Made fail-closed Napoleon bridge errors duplicate-safe for Capability Intelligence: `bridge_request_failed` now owns the derived capability evidence, while the follow-on `response_failed` remains local trace telemetry without adding a second generic capability row.
 - Added metadata-only Capability Intelligence tracking for failed governed Napoleon bridge requests, so contract, descriptor, auth, timeout, HTTP, and transport gaps become missing bridge capability evidence while governance `deny` and `no_go` remain correct protected blocks.
 - Added plain-language `Napoleon text bridge` display labels to Conversation Capability Intelligence working-well answers and evidence drilldowns while keeping stable sanitized metadata labels for aggregation and export.

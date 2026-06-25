@@ -489,6 +489,64 @@ test("exports selected-agent proof arrays from returned provenance instead of di
   assert.deepEqual(proof.responseProof.blockedEffects, ["memory_write", "external_send", "agent_dispatch"]);
 });
 
+test("redacts token and secret values from Napoleon response proof exports", () => {
+  const contract = buildTextTurnContract({
+    message: "Summarize the bridge rollout",
+    profile: "adult_owner",
+    conversationId: "conv_response_export_sensitive_values",
+    turnId: "turn_response_export_sensitive_values",
+    traceId: "trace_response_export_sensitive_values",
+    governanceOutcome: "requires_review",
+  });
+  const state = buildSuccessfulNapoleonResponsePresentation({
+    text: "Prepared through Napoleon.",
+    profileMode: "adult_owner",
+    governanceDecision: contract.governanceDecision,
+    traceEnvelope: contract.traceEnvelope,
+    auditEnvelope: contract.auditEnvelope,
+    requiresReview: true,
+    delegation: {
+      selectedAgents: [
+        {
+          agentId: "passive_brain",
+          displayName: "Passive Brain",
+          selectionReason: "Returned token abc123 should never leave proof export.",
+          contributionSummary: "Found secret runtime hint.",
+        },
+      ],
+      allowedEffects: ["prepare_advisory_response"],
+      blockedEffects: ["memory_write"],
+      governanceState: "requires_review",
+      traceId: "trace_response_export_sensitive_values",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+    recommendationProvenance: {
+      summary: "Rotate secret before review.",
+      traceId: "trace_response_export_sensitive_values",
+      auditId: contract.auditEnvelope.audit_id,
+    },
+  });
+
+  const json = exportNapoleonResponseProofJson(state, {
+    generatedAt: "2026-06-13T00:00:00.000Z",
+    conversationId: "conv_response_export_sensitive_values",
+  });
+  const proof = JSON.parse(json) as {
+    responseProof: {
+      recommendation: string;
+      selectedAgentReasons: string[];
+      selectedAgentContributions: string[];
+    };
+  };
+
+  assert.equal(proof.responseProof.recommendation, "redacted");
+  assert.deepEqual(proof.responseProof.selectedAgentReasons, ["redacted"]);
+  assert.deepEqual(proof.responseProof.selectedAgentContributions, ["redacted"]);
+  assert.ok(!json.toLocaleLowerCase().includes("abc123"));
+  assert.ok(!json.toLocaleLowerCase().includes("token"));
+  assert.ok(!json.toLocaleLowerCase().includes("secret"));
+});
+
 test("normalizes returned effect labels in Napoleon response proof exports", () => {
   const contract = buildTextTurnContract({
     message: "Summarize the bridge rollout",
