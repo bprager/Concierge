@@ -357,11 +357,15 @@ function hasForbiddenDelegationTextSideEffectClaim(delegation: NapoleonDelegatio
   );
 }
 
+function isUnsafeProofIdentifier(value: string): boolean {
+  const identifier = value.trim();
+  return !SAFE_SELECTED_AGENT_ID_PATTERN.test(identifier) || UNSAFE_SELECTED_AGENT_ID_TEXT_PATTERN.test(identifier);
+}
+
 function hasUnsafeSelectedAgentId(delegation: NapoleonDelegation | undefined): boolean {
   return (
     delegation?.selectedAgents.some((agent) => {
-      const agentId = agent.agentId.trim();
-      return !SAFE_SELECTED_AGENT_ID_PATTERN.test(agentId) || UNSAFE_SELECTED_AGENT_ID_TEXT_PATTERN.test(agentId);
+      return isUnsafeProofIdentifier(agent.agentId);
     }) ?? false
   );
 }
@@ -867,6 +871,7 @@ export async function sendToNapoleon(
     }
     if (
       hasForbiddenTextTurnSideEffectClaim(adapted as Partial<NapoleonResponse> & Record<string, unknown>) ||
+      isUnsafeProofIdentifier(adapted.targetAgent ?? "") ||
       hasUnsafeSelectedAgentId(adapted.delegation) ||
       hasForbiddenDelegationTextSideEffectClaim(adapted.delegation) ||
       hasUnprovenSelectedAgentAttribution(adapted.text, adapted.delegation) ||
@@ -990,6 +995,9 @@ export async function sendToNapoleon(
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
   if (payload.profileMode !== undefined && payload.profileMode !== contract.profileMode) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
+  if (payload.targetAgent !== undefined && (typeof payload.targetAgent !== "string" || isUnsafeProofIdentifier(payload.targetAgent))) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
   if (hasForbiddenTextTurnSideEffectClaim(payload as Partial<NapoleonResponse> & Record<string, unknown>)) {

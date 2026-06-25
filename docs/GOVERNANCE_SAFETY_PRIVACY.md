@@ -33,6 +33,8 @@ Live bridge response validation also treats selected-agent selection reasons and
 
 Returned selected-agent IDs are evidence metadata and must remain safe bounded identifiers. Endpoint-shaped, credential-like, whitespace/slash-bearing, or raw-looking selected-agent IDs are rejected as contract mismatches before accepted bridge evidence, proof exports, or visible delegation panels can retain them.
 
+Returned target capability IDs are also evidence metadata and must remain safe bounded identifiers. Endpoint-shaped, credential-like, whitespace/slash-bearing, or raw-looking target capability IDs are rejected as contract mismatches before accepted Napoleon proof metadata, proof exports, or visible delegation panels can retain them.
+
 ## 2. Confirmation tiers
 
 | Tier | Examples | Approval |
