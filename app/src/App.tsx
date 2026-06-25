@@ -529,7 +529,6 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
 
 function isNapoleonProofCurrentnessQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
-  if (!lower.includes("napoleon")) return false;
   const asksAboutProof = /\bproof\b/.test(lower) || /\bevidence\b/.test(lower) || /\bprovenance\b/.test(lower);
   const asksAboutCurrentness =
     /\bcurrent\b/.test(lower) ||
@@ -539,6 +538,10 @@ function isNapoleonProofCurrentnessQuestion(content: string): boolean {
     /\brely\b/.test(lower) ||
     /\breuse\b/.test(lower) ||
     /\btrust\b/.test(lower);
+  const asksAboutContextualReturnedProof =
+    /\b(this|that|last|latest|returned|current)\b.*\b(proof|evidence|provenance)\b/.test(lower) ||
+    /\b(proof|evidence|provenance)\b.*\b(this|that|last|latest|returned|current)\b/.test(lower);
+  if (!lower.includes("napoleon") && !asksAboutContextualReturnedProof) return false;
   return asksAboutProof && asksAboutCurrentness;
 }
 

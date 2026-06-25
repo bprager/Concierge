@@ -1070,6 +1070,40 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(currentnessEvent).includes("Passive Brain"), false);
     assert.equal(JSON.stringify(currentnessEvent).includes("memory_write"), false);
     assert.equal(JSON.stringify(currentnessEvent).includes(lastTextTurnTraceId), false);
+
+    const requestCountBeforeNaturalCurrentnessQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Is this proof still current?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let naturalCurrentnessAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      naturalCurrentnessAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon proof currentness from local state:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(naturalCurrentnessAnswer);
+      assert.ok(naturalCurrentnessAnswer.textContent?.includes("Current returned proof available: yes."));
+    });
+    assert.ok(naturalCurrentnessAnswer);
+    const naturalCurrentnessAnswerText = naturalCurrentnessAnswer.textContent ?? "";
+    assert.ok(naturalCurrentnessAnswerText.includes("Proof state: returned_bridge."));
+    assert.ok(naturalCurrentnessAnswerText.includes("Required refresh: Current returned proof is still available for local display."));
+    assert.ok(
+      naturalCurrentnessAnswerText.includes(
+        "This is local display of the latest returned bridge proof only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeNaturalCurrentnessQuestion);
+    const naturalCurrentnessEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_proof_currentness_answered").at(-1);
+    assert.equal(naturalCurrentnessEvent?.attributes.localAnswerOnly, true);
+    assert.equal(naturalCurrentnessEvent?.attributes.currentProofAvailable, true);
+    assert.equal(naturalCurrentnessEvent?.attributes.provenanceState, "returned_bridge");
+    assert.equal(naturalCurrentnessEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(naturalCurrentnessEvent).includes("Is this proof still current?"), false);
+    assert.equal(JSON.stringify(naturalCurrentnessEvent).includes(lastTextTurnTraceId), false);
+
     const textTurnTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };
