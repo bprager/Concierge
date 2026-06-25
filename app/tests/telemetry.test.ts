@@ -33,6 +33,47 @@ test("telemetry emits capability signals for tracked text concierge events", () 
   assert.equal(signal.outcomeSignal, "answered");
 });
 
+test("telemetry emits governed bridge success capability signals without prompt endpoint or token details", () => {
+  const signal = emitCapabilitySignal("bridge_request_completed", {
+    traceId: "trace_bridge_success",
+    conversationId: "conv_bridge_success",
+    turnId: "turn_bridge_success",
+    profileMode: "adult_owner",
+    mode: "http",
+    outcome: "requires_review",
+    decisionId: "decision_bridge_success",
+    auditId: "audit_bridge_success",
+    bridgeTargetPath: "/v1/concierge/turn",
+    bridgeTargetOperation: "text_turn",
+    bridgeTargetRequestKind: "text_turn",
+    prompt: "do not retain this prompt",
+    endpoint: "https://napoleon.example.test/v1/concierge/turn",
+    bearerToken: "secret-token",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected capability signal");
+  assert.equal(signal.topicLabel, "governed_text_turn");
+  assert.equal(signal.intentLabel, "send_to_napoleon");
+  assert.equal(signal.capabilityLabel, "napoleon_text_turn_bridge");
+  assert.equal(signal.capabilityStatus, "working");
+  assert.equal(signal.outcomeSignal, "review_required");
+  assert.equal(signal.architectureArea, "bridge");
+  assert.deepEqual(signal.details, [
+    "bridge target operation text_turn",
+    "bridge request kind text_turn",
+    "bridge target path class generated_text_turn",
+    "governance outcome requires_review",
+    "no approval captured",
+    "no memory write performed",
+    "no agent dispatch performed",
+    "no external send performed",
+  ]);
+  assert.equal(JSON.stringify(signal).includes("do not retain this prompt"), false);
+  assert.equal(JSON.stringify(signal).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify(signal).includes("secret-token"), false);
+});
+
 test("telemetry capability signals preserve child protected minimization", () => {
   const signal = emitCapabilitySignal("memory_proposal_review_created", {
     traceId: "trace_child_memory_signal",

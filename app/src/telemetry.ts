@@ -318,6 +318,7 @@ export function emitCapabilitySignal(
     "chief_of_staff_capabilities_discovered",
     "chief_of_staff_capabilities_blocked",
     "evaluator_validation_artifact_imported",
+    "bridge_request_completed",
     "response_failed",
     "response_generated",
     "avatar_state_changed",

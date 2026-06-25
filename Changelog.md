@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added Conversation Capability Intelligence tracking for successful governed Napoleon text-turn bridge completions, so working-well and common-conversation answers can distinguish accepted Napoleon bridge turns from generic local UI responses without storing prompts, endpoints, tokens, request bodies, or response bodies.
 - Added Conversation Capability Intelligence tracking for accepted evaluator validation imports that contain sanitized Napoleon required-action packets, so architecture-improvement answers can surface missing Napoleon runtime descriptor handoff advertising without storing action IDs, target paths, or required-action text as capability evidence.
 - Added Text Concierge import, display, local answer, export, and readiness-proof preservation for aggregate Napoleon required-action packets from failed live-runtime validation summaries, including missing contract-packet and evaluator handoff advertisements.
 - Added machine-readable Napoleon required-action packets to live-runtime validation when real descriptors omit the `chief_of_staff_request` or `governance_evaluation` contract-packet handoffs, keeping the packet evidence sanitized, Napoleon-owned, and explicitly non-authorizing.

@@ -347,10 +347,13 @@ test("live bridge request sends contract-first payload to configured endpoint", 
   assert.equal(JSON.stringify(events[0]?.attributes).includes("token_live"), false);
   assert.equal(JSON.stringify(events[0]?.attributes).includes("Draft the bridge plan"), false);
   assert.equal(events.at(-1)?.event, "bridge_request_completed");
+  assert.equal(events.at(-1)?.attributes.profileMode, "adult_owner");
   assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/v1/concierge/turn");
   assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "text_turn");
   assert.equal(events.at(-1)?.attributes.bridgeTargetRequestKind, "text_turn");
   assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("napoleon.example"), false);
+  assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("token_live"), false);
+  assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("Draft the bridge plan"), false);
   assert.equal(evidence.length, 1);
   assert.deepEqual(evidence[0], {
     kind: "bridge_contract_evidence",
@@ -478,7 +481,11 @@ test("live bridge adapts Napoleon advisory harness text-turn responses without s
   assert.equal(JSON.stringify(events[0]?.attributes).includes("napoleon.example"), false);
   assert.equal(JSON.stringify(events[0]?.attributes).includes("token_cos_runtime"), false);
   assert.equal(events.at(-1)?.event, "bridge_request_completed");
+  assert.equal(events.at(-1)?.attributes.profileMode, "adult_owner");
   assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/cos/text-turn");
+  assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("napoleon.example"), false);
+  assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("token_cos_runtime"), false);
+  assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("Summarize the governed bridge status"), false);
   assert.deepEqual(evidence, [
     {
       kind: "bridge_contract_evidence",

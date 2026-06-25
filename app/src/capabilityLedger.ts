@@ -1760,6 +1760,35 @@ function evaluatorRequiredActionImportDetails(attributes: Record<string, unknown
   ];
 }
 
+function bridgeTargetPathClass(attributes: Record<string, unknown>): string {
+  const targetPath = stringAttr(attributes, "bridgeTargetPath", "not_returned");
+  if (targetPath === "/v1/concierge/turn") return "generated_text_turn";
+  if (targetPath === "/cos/text-turn") return "advisory_text_turn";
+  if (targetPath.startsWith("/v1/concierge/")) return "generated_concierge_bridge";
+  if (targetPath.startsWith("/chief-of-staff/")) return "chief_of_staff_handoff";
+  if (targetPath.startsWith("/governance/")) return "governance_handoff";
+  if (targetPath.startsWith("/evolution/")) return "evolution_handoff";
+  if (targetPath.startsWith("/observability/")) return "observability_handoff";
+  if (targetPath === "not_returned" || targetPath === "unavailable") return "not_returned";
+  return "other_named_bridge_target";
+}
+
+function bridgeCompletionDetails(attributes: Record<string, unknown>): string[] {
+  const operation = stringAttr(attributes, "bridgeTargetOperation", "not_returned");
+  const requestKind = stringAttr(attributes, "bridgeTargetRequestKind", "not_returned");
+  const outcome = stringAttr(attributes, "outcome", "not_returned");
+  return [
+    `bridge target operation ${operation}`,
+    `bridge request kind ${requestKind}`,
+    `bridge target path class ${bridgeTargetPathClass(attributes)}`,
+    `governance outcome ${outcome}`,
+    attributes.approvalCaptured === true ? "approval captured reported" : "no approval captured",
+    attributes.memoryWritePerformed === true ? "memory write reported" : "no memory write performed",
+    attributes.agentDispatchPerformed === true ? "agent dispatch reported" : "no agent dispatch performed",
+    attributes.externalSendPerformed === true ? "external send reported" : "no external send performed",
+  ];
+}
+
 function isGovernanceBlockedResponseFailure(attributes: Record<string, unknown>): boolean {
   const bridgeFailureReason = stringAttr(attributes, "bridgeFailureReason", "");
   const reason = stringAttr(attributes, "reason", "");
@@ -2088,6 +2117,21 @@ export function deriveCapabilitySignalFromEvent(
         details: evaluatorRequiredActionImportDetails(attributes),
       });
     }
+  }
+
+  if (eventName === "bridge_request_completed") {
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "governed_text_turn",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "napoleon_text_turn_bridge",
+      capabilityStatus: "working",
+      outcomeSignal: "review_required",
+      confidence: 0.84,
+      architectureArea: "bridge",
+      suggestedNextStep: "no_action",
+      details: bridgeCompletionDetails(attributes),
+    });
   }
 
   if (eventName === "response_failed") {

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added Conversation Capability Intelligence tracking for successful governed Napoleon text-turn bridge completions, so local working-well and common-conversation answers can separate accepted Napoleon bridge turns from generic local UI responses while retaining only route-class, operation/request-kind, governance, profile, and false side-effect metadata.
 - Added Conversation Capability Intelligence tracking for accepted evaluator validation imports with sanitized Napoleon required-action packet counts, so local architecture-improvement questions can surface missing Napoleon runtime descriptor handoff advertising without storing action IDs, target paths, or required-action text as capability evidence.
 - Added Text Concierge preservation for aggregate Napoleon required-action packets from failed live-runtime validation summaries, so local questions, visible readiness, required-action exports, and readiness-proof exports now include missing `chief_of_staff_request`, `governance_evaluation`, and `evaluation_review` advertisements when the sanitized summary provides them.
 - Added machine-readable Napoleon required-action packets for missing live-runtime `chief_of_staff_request` and `governance_evaluation` descriptor advertisements, so governed contract-packet validation now names the exact Napoleon-owned follow-up actions instead of only reporting a generic packet-handoff failure.

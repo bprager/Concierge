@@ -940,10 +940,17 @@ export async function sendToNapoleon(
     }
     emitBridgeEvent(dependencies, "bridge_request_completed", {
       traceId: request.traceId,
+      conversationId: request.conversationId,
+      turnId: request.turnId,
+      profileMode: adapted.profileMode,
       mode: "http",
       outcome: adapted.governanceDecision.outcome,
       decisionId: adapted.governanceDecision.decision_id,
       auditId: adapted.auditEnvelope.audit_id,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
       ...bridgeTargetTelemetryAttributes(evidenceContext),
     });
     captureBridgeEvidence(dependencies, {
@@ -1081,10 +1088,17 @@ export async function sendToNapoleon(
 
   emitBridgeEvent(dependencies, "bridge_request_completed", {
     traceId: request.traceId,
+    conversationId: request.conversationId,
+    turnId: request.turnId,
+    profileMode: normalized.profileMode,
     mode: "http",
     outcome: normalized.governanceDecision.outcome,
     decisionId: normalized.governanceDecision.decision_id,
     auditId: normalized.auditEnvelope.audit_id,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
     ...bridgeTargetTelemetryAttributes(evidenceContext),
   });
   captureBridgeEvidence(dependencies, {
