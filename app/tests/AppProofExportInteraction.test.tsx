@@ -10277,6 +10277,137 @@ test("Chief of Staff steering draft marks descriptor readiness repair recommenda
   }
 });
 
+test("Chief of Staff steering review result preserves descriptor repair focus visibly", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, render },
+    userEventModule,
+    { App },
+    { emitEvent, capabilityLedger },
+    { clearCapabilityLedger },
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  console.info = () => undefined;
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    emitEvent("descriptor_discovery_failed", {
+      traceId: "trace_reviewed_descriptor_repair",
+      conversationId: "conv_reviewed_descriptor_repair",
+      turnId: "turn_reviewed_descriptor_repair",
+      profile: "adult_owner",
+      state: "stale_descriptor",
+      checksumState: "valid",
+      signatureState: "valid",
+      descriptorFreshnessState: "stale",
+      canAttemptLiveBridge: false,
+      failClosedReason: "stale_descriptor",
+      endpoint: "https://private-review.example.test/v1/concierge",
+      bearerToken: "private-review-token",
+    });
+    globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const body = init?.body ? JSON.parse(String(init.body)) : {};
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/descriptor")) {
+        return new Response(
+          JSON.stringify({
+            descriptor: {
+              schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+              serviceId: "napoleon.chief_of_staff",
+              runtimeAuthority: false,
+              commandExecution: false,
+              cachePolicy: "fail_closed_to_review_required",
+              blockedEffects: ["runtime_authority", "memory_write", "agent_dispatch"],
+              supportedHandoffs: ["text_turn", "evolution_proposal_review"],
+            },
+            checksum: {
+              expected: "sha256:local-static",
+              actual: "sha256:local-static",
+            },
+            signature: {
+              valid: true,
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (String(input).endsWith("/v1/concierge/chief-of-staff/steering")) {
+        assert.equal(body.recommendation.capabilityLabel, "descriptor_discovery");
+        assert.equal(body.recommendation.recommendationType, "guided_readiness_repair");
+        assert.equal(body.boundary.proposalOnly, true);
+        assert.equal(body.boundary.agentDispatchAllowed, false);
+        return new Response(
+          JSON.stringify({
+            text: "Napoleon accepted the descriptor repair steering draft for review.",
+            governanceDecision: {
+              decision_id: "decision_reviewed_descriptor_repair",
+              request_id: body.chiefOfStaffRequest.request_id,
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Descriptor readiness changes require review before rollout.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: body.traceEnvelope.trace_id,
+              audit_id: "audit_reviewed_descriptor_repair",
+            },
+            traceEnvelope: {
+              trace_id: body.traceEnvelope.trace_id,
+              parent_trace_id: body.traceEnvelope.parent_trace_id,
+              actor_id: "napoleon.chief_of_staff",
+              request_id: body.chiefOfStaffRequest.request_id,
+              decision_id: "decision_reviewed_descriptor_repair",
+              timestamp: "2026-06-14T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_reviewed_descriptor_repair",
+              trace_id: body.traceEnvelope.trace_id,
+              decision_id: "decision_reviewed_descriptor_repair",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: ["trace:reviewed-descriptor-repair"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Use local harness" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+    await view.findByText("Chief of Staff steering draft");
+    await user.click(view.getByRole("button", { name: "Send steering draft to Napoleon review" }));
+
+    await view.findByText("Napoleon accepted the descriptor repair steering draft for review.");
+    assert.ok(view.getByText("Reviewed repair focus"));
+    assert.ok(view.getAllByText("Napoleon descriptor readiness repair").length >= 2);
+    assert.ok(view.getByText("Reviewed recommendation type"));
+    assert.ok(view.getAllByText("guided readiness repair").length >= 2);
+    assert.equal(view.container.textContent?.includes("private-review.example.test"), false);
+    assert.equal(view.container.textContent?.includes("private-review-token"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("exports a local Chief of Staff steering draft without sending or applying it", async () => {
   const dom = installDom();
   const [

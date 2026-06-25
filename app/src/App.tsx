@@ -260,6 +260,7 @@ type SteeringRecommendationType = ChiefOfStaffSteeringDraft["recommendation"]["r
 type SteeringSubmissionView = {
   result: ChiefOfStaffSteeringSubmissionResult;
   recommendationType: SteeringRecommendationType;
+  displayType: string;
 };
 
 function deriveRuntimeValidationSource(input: {
@@ -4766,6 +4767,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       setSteeringSubmission({
         result,
         recommendationType: steeringDraft.recommendation.recommendationType,
+        displayType: describeSteeringRecommendationDisplayType(steeringDraft),
       });
       setSteeringFailure(null);
       refreshCapabilityLedgerStatus();
@@ -5508,6 +5510,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         <div>
           <dt>Reviewed recommendation type</dt>
           <dd>{describeSteeringRecommendationTypeValue(submission.recommendationType)}</dd>
+        </div>
+        <div>
+          <dt>Reviewed repair focus</dt>
+          <dd>{submission.displayType}</dd>
         </div>
         {responseView.rows.map((row) => (
           <div key={row.label}>

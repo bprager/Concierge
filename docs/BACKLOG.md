@@ -941,7 +941,7 @@ Evaluator coverage:
 | SE-005 | Add rollout policy | P1 | Low-risk changes can roll out locally, high-risk changes require approval | rollout_decision_recorded |
 | SE-006 | Add rollback path | P1 | Last known good policy can be restored | rollback_completed |
 | SE-007 | Add capability recommendation handoff | P1 | Capability recommendations can become reviewed evolution proposals with evidence, evaluator cases, rollout, and rollback | capability_recommendation_created |
-| SE-008 | Add local Chief of Staff steering draft | P1 | Local capability signals can produce a proposal-only recommendation, evaluator case candidate, evolution proposal draft, descriptor freshness-aware local handoff context, and governed submission only when endpoint and descriptor preflight pass; descriptor readiness repair drafts carry stale/missing/not-timestamped descriptor evidence as guided readiness repair, are visibly and exportably labeled as Napoleon descriptor readiness repair, and Concierge never applies the proposal locally | capability_recommendation_created |
+| SE-008 | Add local Chief of Staff steering draft | P1 | Local capability signals can produce a proposal-only recommendation, evaluator case candidate, evolution proposal draft, descriptor freshness-aware local handoff context, and governed submission only when endpoint and descriptor preflight pass; descriptor readiness repair drafts carry stale/missing/not-timestamped descriptor evidence as guided readiness repair, are visibly and exportably labeled as Napoleon descriptor readiness repair before and after governed review, and Concierge never applies the proposal locally | capability_recommendation_created |
 
 ### SE-001 details
 
