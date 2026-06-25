@@ -757,6 +757,7 @@ function formatNapoleonDescriptorValidityAnswer(input: {
   failClosedReason: string;
   rehearsalMode: boolean;
   nextAction: string;
+  descriptorFreshnessState: DescriptorConnectionState["freshnessState"];
 } {
   const textTurnRouteAdvertised = Boolean(
     input.descriptorConnection.canAttemptLiveBridge &&
@@ -777,6 +778,7 @@ function formatNapoleonDescriptorValidityAnswer(input: {
       `Descriptor state: ${input.descriptorConnection.state}.`,
       `Checksum state: ${input.descriptorConnection.checksumState}.`,
       `Signature state: ${input.descriptorConnection.signatureState}.`,
+      `Descriptor freshness: ${input.descriptorConnection.freshnessState}.`,
       `Text-turn route advertised: ${textTurnRouteAdvertised ? "yes" : "no"}.`,
       `Endpoint configured: ${input.endpointConfigured ? "yes" : "no"}.`,
       `Rehearsal Mode: ${input.rehearsalMode ? "on" : "off"}.`,
@@ -794,6 +796,7 @@ function formatNapoleonDescriptorValidityAnswer(input: {
     failClosedReason,
     rehearsalMode: input.rehearsalMode,
     nextAction: normalizeConnectionRepairAction(`Next step: ${nextAction}.`),
+    descriptorFreshnessState: input.descriptorConnection.freshnessState,
   };
 }
 
@@ -811,6 +814,7 @@ function formatNapoleonConnectionRepairAnswer(input: {
   descriptorState: DescriptorConnectionState["state"];
   failClosedReason: string;
   rehearsalMode: boolean;
+  descriptorFreshnessState: DescriptorConnectionState["freshnessState"];
 } {
   const blockingReason = input.preflight.canAttemptLiveSend
     ? "none"
@@ -825,6 +829,7 @@ function formatNapoleonConnectionRepairAnswer(input: {
       `Next local action: ${nextActionLabel}.`,
       `Live send ready: ${input.preflight.canAttemptLiveSend ? "yes" : "no"}.`,
       `Descriptor state: ${input.descriptorConnection.state}.`,
+      `Descriptor freshness: ${input.descriptorConnection.freshnessState}.`,
       `Rehearsal Mode: ${input.rehearsalMode ? "on" : "off"}.`,
       input.preflight.caveat,
       "Authority boundary: local readiness guidance only; not Napoleon approval.",
@@ -837,6 +842,7 @@ function formatNapoleonConnectionRepairAnswer(input: {
     descriptorState: input.descriptorConnection.state,
     failClosedReason: input.descriptorConnection.failClosedReason ?? "none",
     rehearsalMode: input.rehearsalMode,
+    descriptorFreshnessState: input.descriptorConnection.freshnessState,
   };
 }
 
@@ -856,6 +862,7 @@ function formatNapoleonConnectionSetupAnswer(input: {
   rehearsalMode: boolean;
   descriptorState: DescriptorConnectionState["state"];
   failClosedReason: string;
+  descriptorFreshnessState: DescriptorConnectionState["freshnessState"];
 } {
   const descriptorDiscovered = input.descriptorConnection.state === "ready";
   const textTurnRouteAdvertised = Boolean(
@@ -870,6 +877,7 @@ function formatNapoleonConnectionSetupAnswer(input: {
     `Text-turn route advertised: ${textTurnRouteAdvertised ? "yes" : "no"}.`,
     `Rehearsal Mode: ${input.rehearsalMode ? "on" : "off"}.`,
     `Descriptor state: ${descriptorState}.`,
+    `Descriptor freshness: ${input.descriptorConnection.freshnessState}.`,
     `Fail-closed reason: ${failClosedReason}.`,
   ];
 
@@ -891,6 +899,7 @@ function formatNapoleonConnectionSetupAnswer(input: {
     rehearsalMode: input.rehearsalMode,
     descriptorState,
     failClosedReason,
+    descriptorFreshnessState: input.descriptorConnection.freshnessState,
   };
 }
 
@@ -905,6 +914,7 @@ function formatNapoleonLiveSendReadinessAnswer(input: {
   status: LiveSendPreflightView["status"];
   descriptorState: DescriptorConnectionState["state"];
   failClosedReason: string;
+  descriptorFreshnessState: DescriptorConnectionState["freshnessState"];
   endpointConfigured: boolean;
   rehearsalMode: boolean;
   blockedEffectCount: number;
@@ -939,6 +949,7 @@ function formatNapoleonLiveSendReadinessAnswer(input: {
       input.preflight.summary,
       input.preflight.blockerSummary,
       input.preflight.nextStepSummary,
+      `Descriptor freshness: ${input.descriptorConnection.freshnessState}.`,
       rows,
       input.preflight.caveat,
       "This local answer did not contact Napoleon, approve, write memory, dispatch agents, capture approval, or send externally.",
@@ -947,6 +958,7 @@ function formatNapoleonLiveSendReadinessAnswer(input: {
     status: input.preflight.status,
     descriptorState: input.descriptorConnection.state,
     failClosedReason: input.descriptorConnection.failClosedReason ?? "none",
+    descriptorFreshnessState: input.descriptorConnection.freshnessState,
     endpointConfigured: input.endpointConfigured,
     rehearsalMode: input.rehearsalMode,
     blockedEffectCount: blockedEffects.length,
@@ -2978,6 +2990,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       liveSendReady: answer.liveSendReady,
       endpointConfigured: answer.endpointConfigured,
       descriptorState: answer.descriptorState,
+      descriptorFreshnessState: answer.descriptorFreshnessState,
       failClosedReason: answer.failClosedReason,
       rehearsalMode: answer.rehearsalMode,
       approvalCaptured: false,
@@ -3028,6 +3041,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       descriptorState: answer.descriptorState,
       checksumState: answer.checksumState,
       signatureState: answer.signatureState,
+      descriptorFreshnessState: answer.descriptorFreshnessState,
       textTurnRouteAdvertised: answer.textTurnRouteAdvertised,
       failClosedReason: answer.failClosedReason,
       rehearsalMode: answer.rehearsalMode,
@@ -3080,6 +3094,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       liveSendReady: answer.liveSendReady,
       endpointConfigured: answer.endpointConfigured,
       descriptorDiscovered: answer.descriptorDiscovered,
+      descriptorFreshnessState: answer.descriptorFreshnessState,
       textTurnRouteAdvertised: answer.textTurnRouteAdvertised,
       rehearsalMode: answer.rehearsalMode,
       descriptorState: answer.descriptorState,
@@ -3130,6 +3145,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       canAttemptLiveSend: answer.canAttemptLiveSend,
       status: answer.status,
       descriptorState: answer.descriptorState,
+      descriptorFreshnessState: answer.descriptorFreshnessState,
       failClosedReason: answer.failClosedReason,
       endpointConfigured: answer.endpointConfigured,
       rehearsalMode: answer.rehearsalMode,

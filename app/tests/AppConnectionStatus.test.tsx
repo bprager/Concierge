@@ -138,6 +138,7 @@ test("text concierge answers Napoleon connection setup questions locally without
     const answerText = answer.textContent ?? "";
     assert.ok(answerText.includes("Current step: configure endpoint."));
     assert.ok(answerText.includes("Live send ready: no."));
+    assert.ok(answerText.includes("Descriptor freshness: not_timestamped."));
     assert.ok(
       answerText.includes("Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery."),
     );
@@ -161,6 +162,7 @@ test("text concierge answers Napoleon connection setup questions locally without
     assert.equal(answerEvent?.attributes.liveSendReady, false);
     assert.equal(answerEvent?.attributes.endpointConfigured, false);
     assert.equal(answerEvent?.attributes.descriptorDiscovered, false);
+    assert.equal(answerEvent?.attributes.descriptorFreshnessState, "not_timestamped");
     assert.equal(answerEvent?.attributes.textTurnRouteAdvertised, false);
     assert.equal(answerEvent?.attributes.approvalCaptured, false);
     assert.equal(answerEvent?.attributes.memoryWritePerformed, false);
@@ -280,6 +282,7 @@ test("text concierge answers Napoleon descriptor validity questions locally with
     assert.ok(answerText.includes("Descriptor state: descriptor_mismatch."));
     assert.ok(answerText.includes("Checksum state: mismatch."));
     assert.ok(answerText.includes("Signature state: invalid."));
+    assert.ok(answerText.includes("Descriptor freshness: not_timestamped."));
     assert.ok(answerText.includes("Text-turn route advertised: no."));
     assert.ok(answerText.includes("Fail-closed reason: descriptor_signature_or_checksum_mismatch."));
     assert.ok(answerText.includes("Next local action: fix descriptor checksum/signature before live send."));
@@ -304,6 +307,7 @@ test("text concierge answers Napoleon descriptor validity questions locally with
     assert.equal(answerEvent?.attributes.descriptorState, "descriptor_mismatch");
     assert.equal(answerEvent?.attributes.checksumState, "mismatch");
     assert.equal(answerEvent?.attributes.signatureState, "invalid");
+    assert.equal(answerEvent?.attributes.descriptorFreshnessState, "not_timestamped");
     assert.equal(answerEvent?.attributes.textTurnRouteAdvertised, false);
     assert.equal(answerEvent?.attributes.failClosedReason, "descriptor_signature_or_checksum_mismatch");
     assert.equal(answerEvent?.attributes.approvalCaptured, false);

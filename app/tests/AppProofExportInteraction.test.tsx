@@ -1756,6 +1756,7 @@ test("answers Napoleon live send readiness questions locally from preflight stat
       readinessText.includes("Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery."),
     );
     assert.ok(readinessText.includes("Endpoint configured: blocked"));
+    assert.ok(readinessText.includes("Descriptor freshness: not_timestamped."));
     assert.ok(readinessText.includes("Rehearsal Mode: warning"));
     assert.ok(
       readinessText.includes(
@@ -1774,6 +1775,7 @@ test("answers Napoleon live send readiness questions locally from preflight stat
     assert.equal(readinessEvent?.attributes.canAttemptLiveSend, false);
     assert.equal(readinessEvent?.attributes.status, "blocked");
     assert.equal(readinessEvent?.attributes.descriptorState, "no_endpoint");
+    assert.equal(readinessEvent?.attributes.descriptorFreshnessState, "not_timestamped");
     assert.equal(readinessEvent?.attributes.failClosedReason, "no_endpoint");
     assert.equal(readinessEvent?.attributes.rehearsalMode, true);
     assert.equal(readinessEvent?.attributes.endpointConfigured, false);
@@ -1821,6 +1823,7 @@ test("answers disabled send button questions locally from preflight state", asyn
     assert.ok(
       readinessText.includes("Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery."),
     );
+    assert.ok(readinessText.includes("Descriptor freshness: not_timestamped."));
     assert.equal(readinessText.includes("Preview only. No live bridge call made."), false);
     assert.deepEqual(requestedUrls, []);
 
@@ -1832,6 +1835,7 @@ test("answers disabled send button questions locally from preflight state", asyn
       .at(-1);
     assert.equal(readinessEvent?.attributes.localAnswerOnly, true);
     assert.equal(readinessEvent?.attributes.status, "blocked");
+    assert.equal(readinessEvent?.attributes.descriptorFreshnessState, "not_timestamped");
     assert.equal(readinessEvent?.attributes.failClosedReason, "no_endpoint");
     assert.equal(readinessEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(readinessEvent).includes("Why is the send button disabled?"), false);
