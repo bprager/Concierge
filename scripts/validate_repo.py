@@ -337,22 +337,22 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator)\.(?:usb|serial|hid|bluetooth|credentials)\."
-        r"(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\s*\("
+        rf"(?:requestDevice|requestPort|get|create|store|preventSilentAccess){BROWSER_DIRECT_OR_OPTIONAL_CALL}"
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator)\.(?:usb|serial|hid|bluetooth|credentials)\."
         r"(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\.(?:call|apply)\s*\("
     ),
-    re.compile(r"\b(?:navigator|window\.navigator)\.permissions\.query\s*\("),
+    re.compile(rf"\b(?:navigator|window\.navigator)\.permissions\.query{BROWSER_DIRECT_OR_OPTIONAL_CALL}"),
     re.compile(r"\b(?:navigator|window\.navigator)\.permissions\.query\.(?:call|apply)\s*\("),
-    re.compile(r"\b(?:navigator|window\.navigator)\.geolocation\.(?:getCurrentPosition|watchPosition)\s*\("),
+    re.compile(rf"\b(?:navigator|window\.navigator)\.geolocation\.(?:getCurrentPosition|watchPosition){BROWSER_DIRECT_OR_OPTIONAL_CALL}"),
     re.compile(
         r"\b(?:navigator|window\.navigator)\.geolocation\.(?:getCurrentPosition|watchPosition)\.(?:call|apply)\s*\("
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"](?:usb|serial|hid|bluetooth|credentials)['\"]\s*\]"
-        r"\s*\[\s*['\"](?:requestDevice|requestPort|get|create|store|preventSilentAccess)['\"]\s*\]\s*\("
+        rf"\s*\[\s*['\"](?:requestDevice|requestPort|get|create|store|preventSilentAccess)['\"]\s*\]{BROWSER_DIRECT_OR_OPTIONAL_CALL}"
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
@@ -362,8 +362,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
         r"\.\s*(?:usb|serial|hid|bluetooth|credentials)\s*"
-        r"\.\s*(?:requestDevice|requestPort|get|create|store|preventSilentAccess)\s*"
-        r"\("
+        rf"\.\s*(?:requestDevice|requestPort|get|create|store|preventSilentAccess){BROWSER_DIRECT_OR_OPTIONAL_CALL}"
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
@@ -374,7 +373,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"]permissions['\"]\s*\]"
-        r"\s*\[\s*['\"]query['\"]\s*\]\s*\("
+        rf"\s*\[\s*['\"]query['\"]\s*\]{BROWSER_DIRECT_OR_OPTIONAL_CALL}"
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
@@ -383,7 +382,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
-        r"\.\s*permissions\s*\.\s*query\s*\("
+        rf"\.\s*permissions\s*\.\s*query{BROWSER_DIRECT_OR_OPTIONAL_CALL}"
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
@@ -392,7 +391,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
         r"\s*\[\s*['\"]geolocation['\"]\s*\]"
-        r"\s*\[\s*['\"](?:getCurrentPosition|watchPosition)['\"]\s*\]\s*\("
+        rf"\s*\[\s*['\"](?:getCurrentPosition|watchPosition)['\"]\s*\]{BROWSER_DIRECT_OR_OPTIONAL_CALL}"
     ),
     re.compile(
         r"\b(?:navigator|window\.navigator|(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\])"
@@ -401,15 +400,15 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
-        r"\.\s*geolocation\s*\.\s*(?:getCurrentPosition|watchPosition)\s*\("
+        rf"\.\s*geolocation\s*\.\s*(?:getCurrentPosition|watchPosition){BROWSER_DIRECT_OR_OPTIONAL_CALL}"
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*"
         r"\.\s*geolocation\s*\.\s*(?:getCurrentPosition|watchPosition)\s*\.\s*(?:call|apply)\s*\("
     ),
-    re.compile(r"\bNotification\.requestPermission\s*\("),
+    re.compile(rf"\bNotification\.requestPermission{BROWSER_DIRECT_OR_OPTIONAL_CALL}"),
     re.compile(r"\bNotification\.requestPermission\.(?:call|apply)\s*\("),
-    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\[\s*['\"]requestPermission['\"]\s*\]\s*\("),
+    re.compile(rf"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\[\s*['\"]requestPermission['\"]\s*\]{BROWSER_DIRECT_OR_OPTIONAL_CALL}"),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]Notification['\"]\s*\]\s*\.\s*requestPermission\s*\.\s*(?:call|apply)\s*\("
     ),
