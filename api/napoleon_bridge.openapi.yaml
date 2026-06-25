@@ -116,6 +116,35 @@ x-concierge-napoleon-review-operations:
       - approvalCaptured
       - agentDispatchPerformed
       - externalSendPerformed
+x-concierge-napoleon-discovery-operations:
+  - id: agent_manifest_list
+    path: /agents
+    requestKind: agent_manifest_discovery
+    transport: http_get
+    responseRequired:
+      - agents
+      - runtimeAuthority
+      - agentDispatchPerformed
+      - blockedEffects
+  - id: agent_manifest
+    path: /agents/{agent_id}
+    requestKind: agent_manifest_discovery
+    transport: http_get
+    responseRequired:
+      - agentId
+      - runtimeAuthority
+      - agentDispatchPerformed
+      - blockedEffects
+  - id: profile
+    path: /profiles/{profile_id}
+    requestKind: profile_metadata_discovery
+    transport: http_get
+    responseRequired:
+      - profileId
+      - runtimeAuthority
+      - memoryWritePerformed
+      - approvalCaptured
+      - blockedEffects
 components:
   securitySchemes:
     NapoleonBearer:

@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   BRIDGE_OPERATIONS,
   GENERATED_BRIDGE_CONTRACT_SOURCE,
+  GENERATED_NAPOLEON_DISCOVERY_OPERATIONS,
   GENERATED_NAPOLEON_REVIEW_OPERATIONS,
   NAPOLEON_DISCOVERY_OPERATIONS,
   NAPOLEON_REVIEW_OPERATIONS,
@@ -112,6 +113,21 @@ test("named Napoleon review operations are generated from canonical contract met
       operation.requestKind,
     ]),
     NAPOLEON_REVIEW_OPERATIONS.map((operation) => [
+      operation.id,
+      operation.path,
+      operation.requestKind,
+    ]),
+  );
+});
+
+test("named Napoleon discovery operations are generated from canonical contract metadata", () => {
+  assert.deepEqual(
+    GENERATED_NAPOLEON_DISCOVERY_OPERATIONS.map((operation) => [
+      operation.id,
+      operation.path,
+      operation.requestKind,
+    ]),
+    NAPOLEON_DISCOVERY_OPERATIONS.map((operation) => [
       operation.id,
       operation.path,
       operation.requestKind,

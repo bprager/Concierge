@@ -143,3 +143,33 @@ export const GENERATED_NAPOLEON_REVIEW_OPERATIONS = [
     tokenPlacement: "authorization_header_only",
   },
 ] as const;
+
+export const GENERATED_NAPOLEON_DISCOVERY_OPERATIONS = [
+  {
+    id: "agent_manifest_list",
+    path: "/agents",
+    requestKind: "agent_manifest_discovery",
+    transport: "http_get",
+    responseRequired: ["agents", "runtimeAuthority", "agentDispatchPerformed", "blockedEffects"],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+  {
+    id: "agent_manifest",
+    path: "/agents/{agent_id}",
+    requestKind: "agent_manifest_discovery",
+    transport: "http_get",
+    responseRequired: ["agentId", "runtimeAuthority", "agentDispatchPerformed", "blockedEffects"],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+  {
+    id: "profile",
+    path: "/profiles/{profile_id}",
+    requestKind: "profile_metadata_discovery",
+    transport: "http_get",
+    responseRequired: ["profileId", "runtimeAuthority", "memoryWritePerformed", "approvalCaptured", "blockedEffects"],
+    governedBridgeOnly: true,
+    tokenPlacement: "authorization_header_only",
+  },
+] as const;

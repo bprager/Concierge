@@ -1,18 +1,20 @@
 import {
   GENERATED_BRIDGE_CONTRACT_SOURCE,
   GENERATED_BRIDGE_OPERATIONS,
+  GENERATED_NAPOLEON_DISCOVERY_OPERATIONS,
   GENERATED_NAPOLEON_REVIEW_OPERATIONS,
 } from "./generatedBridgeOperations.js";
 
 type GeneratedBridgeOperation = (typeof GENERATED_BRIDGE_OPERATIONS)[number];
 type GeneratedNapoleonReviewOperation = (typeof GENERATED_NAPOLEON_REVIEW_OPERATIONS)[number];
+type GeneratedNapoleonDiscoveryOperation = (typeof GENERATED_NAPOLEON_DISCOVERY_OPERATIONS)[number];
 
 export type BridgeOperationId = GeneratedBridgeOperation["id"];
 export type BridgeOperation = GeneratedBridgeOperation;
 
 export type NapoleonReviewOperationId = GeneratedNapoleonReviewOperation["id"];
 
-export type NapoleonDiscoveryOperationId = "agent_manifest_list" | "agent_manifest" | "profile";
+export type NapoleonDiscoveryOperationId = GeneratedNapoleonDiscoveryOperation["id"];
 
 export interface BridgeOperationSummary {
   id: BridgeOperationId | NapoleonReviewOperationId | "chief_of_staff_taxonomy_review";
@@ -43,68 +45,19 @@ export interface RuntimeContractAlignmentSummary {
 }
 
 type NapoleonReviewOperation = GeneratedNapoleonReviewOperation;
+type NapoleonDiscoveryOperation = GeneratedNapoleonDiscoveryOperation;
 
-interface NapoleonDiscoveryOperation {
-  id: NapoleonDiscoveryOperationId;
-  path: "/agents" | "/agents/{agent_id}" | "/profiles/{profile_id}";
-  requestKind: "agent_manifest_discovery" | "profile_metadata_discovery";
-  transport: "http_get";
-  responseRequired: readonly string[];
-  governedBridgeOnly: true;
-  tokenPlacement: "authorization_header_only";
-}
-
-export { GENERATED_BRIDGE_CONTRACT_SOURCE, GENERATED_NAPOLEON_REVIEW_OPERATIONS };
+export {
+  GENERATED_BRIDGE_CONTRACT_SOURCE,
+  GENERATED_NAPOLEON_DISCOVERY_OPERATIONS,
+  GENERATED_NAPOLEON_REVIEW_OPERATIONS,
+};
 
 export const BRIDGE_OPERATIONS: BridgeOperation[] = [...GENERATED_BRIDGE_OPERATIONS];
 
 export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [...GENERATED_NAPOLEON_REVIEW_OPERATIONS];
 
-export const NAPOLEON_DISCOVERY_OPERATIONS: NapoleonDiscoveryOperation[] = [
-  {
-    id: "agent_manifest_list",
-    path: "/agents",
-    requestKind: "agent_manifest_discovery",
-    transport: "http_get",
-    responseRequired: [
-      "agents",
-      "runtimeAuthority",
-      "agentDispatchPerformed",
-      "blockedEffects",
-    ],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "agent_manifest",
-    path: "/agents/{agent_id}",
-    requestKind: "agent_manifest_discovery",
-    transport: "http_get",
-    responseRequired: [
-      "agentId",
-      "runtimeAuthority",
-      "agentDispatchPerformed",
-      "blockedEffects",
-    ],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-  {
-    id: "profile",
-    path: "/profiles/{profile_id}",
-    requestKind: "profile_metadata_discovery",
-    transport: "http_get",
-    responseRequired: [
-      "profileId",
-      "runtimeAuthority",
-      "memoryWritePerformed",
-      "approvalCaptured",
-      "blockedEffects",
-    ],
-    governedBridgeOnly: true,
-    tokenPlacement: "authorization_header_only",
-  },
-];
+export const NAPOLEON_DISCOVERY_OPERATIONS: NapoleonDiscoveryOperation[] = [...GENERATED_NAPOLEON_DISCOVERY_OPERATIONS];
 
 export const RUNTIME_CONTRACT_ALIGNMENT_SUMMARY: RuntimeContractAlignmentSummary = {
   status: "runtime_mapped_with_local_contract_paths",

@@ -927,7 +927,7 @@ CANONICAL_NAPOLEON_REVIEW_DOCS = [
 
 
 def validate_documented_napoleon_review_operations() -> None:
-    operations = load_generated_napoleon_review_operations()
+    operations = load_generated_napoleon_review_operations() + load_generated_napoleon_discovery_operations()
     combined_text = "\n".join((ROOT / relative_path).read_text(encoding="utf-8") for relative_path in CANONICAL_NAPOLEON_REVIEW_DOCS)
     missing: list[str] = []
     for operation in operations:
@@ -939,7 +939,7 @@ def validate_documented_napoleon_review_operations() -> None:
                 missing.append(f"canonical docs do not document {field} {value}")
     if missing:
         raise SystemExit("Canonical Napoleon review operation docs are stale:\n" + "\n".join(missing))
-    print("canonical Napoleon review operation docs mention all generated review targets")
+    print("canonical Napoleon review/discovery operation docs mention all generated targets")
 
 
 def load_generated_operation_section(section_name: str) -> list[dict[str, Any]]:
@@ -979,6 +979,10 @@ def load_generated_napoleon_review_operations() -> list[dict[str, Any]]:
     return load_generated_operation_section("GENERATED_NAPOLEON_REVIEW_OPERATIONS")
 
 
+def load_generated_napoleon_discovery_operations() -> list[dict[str, Any]]:
+    return load_generated_operation_section("GENERATED_NAPOLEON_DISCOVERY_OPERATIONS")
+
+
 def validate_generated_bridge_operations() -> None:
     result = subprocess.run(
         [sys.executable, "scripts/generate_bridge_operations.py", "--check"],
@@ -1008,6 +1012,15 @@ def load_openapi_napoleon_review_operations() -> list[dict[str, Any]]:
     if not isinstance(operations, list):
         raise SystemExit("OpenAPI x-concierge-napoleon-review-operations must be a list")
     return sorted(operations, key=lambda operation: operation.get("id", ""))
+
+
+def load_openapi_napoleon_discovery_operations() -> list[dict[str, Any]]:
+    openapi = load_openapi()
+    operations = openapi.get("x-concierge-napoleon-discovery-operations", [])
+    if not isinstance(operations, list):
+        raise SystemExit("OpenAPI x-concierge-napoleon-discovery-operations must be a list")
+    order = {"agent_manifest_list": 0, "agent_manifest": 1, "profile": 2}
+    return sorted(operations, key=lambda operation: order.get(operation.get("id", ""), 99))
 
 
 def load_openapi_concierge_transports() -> dict[str, str]:
@@ -2046,6 +2059,7 @@ def validate_bridge_contract_alignment() -> None:
     validate_generated_bridge_operations()
     operations = load_bridge_operations()
     review_operations = load_generated_napoleon_review_operations()
+    discovery_operations = load_generated_napoleon_discovery_operations()
     openapi_paths = load_openapi_concierge_paths()
     registry_paths = sorted(operation.get("path") for operation in operations)
     if registry_paths != openapi_paths:
@@ -2077,11 +2091,44 @@ def validate_bridge_contract_alignment() -> None:
             "Generated Napoleon review operation metadata does not match OpenAPI extension:\n"
             f"generated={generated_review_projection}\nopenapi={openapi_review_projection}"
         )
+    openapi_discovery_operations = load_openapi_napoleon_discovery_operations()
+    generated_discovery_projection = [
+        {
+            "id": operation.get("id"),
+            "path": operation.get("path"),
+            "requestKind": operation.get("requestKind"),
+            "transport": operation.get("transport"),
+            "responseRequired": operation.get("responseRequired", []),
+        }
+        for operation in discovery_operations
+    ]
+    openapi_discovery_projection = [
+        {
+            "id": operation.get("id"),
+            "path": operation.get("path"),
+            "requestKind": operation.get("requestKind"),
+            "transport": operation.get("transport", "http_get"),
+            "responseRequired": operation.get("responseRequired", []),
+        }
+        for operation in openapi_discovery_operations
+    ]
+    if generated_discovery_projection != openapi_discovery_projection:
+        raise SystemExit(
+            "Generated Napoleon discovery operation metadata does not match OpenAPI extension:\n"
+            f"generated={generated_discovery_projection}\nopenapi={openapi_discovery_projection}"
+        )
     for operation in review_operations:
         if operation.get("governedBridgeOnly") is not True:
             raise SystemExit(f"Napoleon review operation is not governed-only: {operation['id']}")
         if operation.get("tokenPlacement") != "authorization_header_only":
             raise SystemExit(f"Napoleon review operation token placement is not header-only: {operation['id']}")
+    for operation in discovery_operations:
+        if operation.get("governedBridgeOnly") is not True:
+            raise SystemExit(f"Napoleon discovery operation is not governed-only: {operation['id']}")
+        if operation.get("transport") != "http_get":
+            raise SystemExit(f"Napoleon discovery operation is not HTTP GET: {operation['id']}")
+        if operation.get("tokenPlacement") != "authorization_header_only":
+            raise SystemExit(f"Napoleon discovery operation token placement is not header-only: {operation['id']}")
 
     request_kinds = load_openapi_request_kinds()
     transports = load_openapi_concierge_transports()
