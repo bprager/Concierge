@@ -2752,6 +2752,8 @@ test("sends exported capability review packet through governed review controls",
     await user.click(view.getByRole("button", { name: "Send capability review packet to Napoleon review" }));
 
     await view.findByText("Napoleon accepted the capability review packet for governed review.");
+    assert.ok(view.getByText("Reviewed capability focus"));
+    assert.ok(view.getByText("bridge_failure_handling"));
     assert.ok(view.getByText(/decision_capability_packet_rendered/));
     assert.ok(view.getByText(/audit_capability_packet_rendered/));
     assert.equal(postedBodies.length, 1);

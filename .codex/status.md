@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Preserved reviewed capability focus in returned capability review packet results, so Napoleon review responses remain tied to the submitted capability and architecture area without local application or side effects.
 - Preserved the Napoleon descriptor readiness repair label in returned Chief of Staff steering review results, so descriptor repair drafts remain distinguishable after governed review while still showing no local application or side effects.
 - Added visible and exported Chief of Staff steering labels for Napoleon descriptor readiness repair drafts, so stale descriptor proposals are distinguishable from generic scored recommendations while still staying proposal-only and sanitized.
 - Added descriptor-readiness repair support to Chief of Staff steering drafts, so stale, missing, or not-timestamped descriptor evidence becomes a guided proposal-only repair draft with learning-signal evidence instead of a generic recommendation.

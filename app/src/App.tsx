@@ -43,6 +43,7 @@ import {
   exportCapabilityReviewPacket,
   withCapabilityLatestTurnEvidence,
   type CapabilityLatestTurnEvidence,
+  type CapabilityReviewPacketFocus,
   type ExportedCapabilityReviewPacket,
 } from "./capabilityLedger.js";
 import {
@@ -261,6 +262,11 @@ type SteeringSubmissionView = {
   result: ChiefOfStaffSteeringSubmissionResult;
   recommendationType: SteeringRecommendationType;
   displayType: string;
+};
+
+type CapabilityReviewPacketSubmissionView = {
+  result: ChiefOfStaffSteeringSubmissionResult;
+  reviewFocus: CapabilityReviewPacketFocus;
 };
 
 function deriveRuntimeValidationSource(input: {
@@ -1529,7 +1535,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     useState<ContractPacketSubmissionResult | null>(null);
   const [governanceEvaluationPacketFailure, setGovernanceEvaluationPacketFailure] = useState<string | null>(null);
   const [capabilityReviewPacketSubmission, setCapabilityReviewPacketSubmission] =
-    useState<ChiefOfStaffSteeringSubmissionResult | null>(null);
+    useState<CapabilityReviewPacketSubmissionView | null>(null);
   const [capabilityReviewPacketFailure, setCapabilityReviewPacketFailure] = useState<string | null>(null);
   const [newAgentProposalPacket, setNewAgentProposalPacket] = useState<NewAgentProposalReviewPacket | null>(null);
   const [newAgentProposalPacketExportJson, setNewAgentProposalPacketExportJson] = useState<string | null>(null);
@@ -4879,7 +4885,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         rehearsalMode,
         descriptorConnection: currentDescriptorInput(),
       });
-      setCapabilityReviewPacketSubmission(result);
+      setCapabilityReviewPacketSubmission({
+        result,
+        reviewFocus: capabilityReviewPacket.reviewFocus,
+      });
       setCapabilityReviewPacketFailure(null);
       refreshCapabilityLedgerStatus();
     } catch (error) {
@@ -5516,6 +5525,30 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           <dd>{submission.displayType}</dd>
         </div>
         {responseView.rows.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
+
+  function renderCapabilityReviewPacketResponse(submission: CapabilityReviewPacketSubmissionView) {
+    return (
+      <dl>
+        <div>
+          <dt>Reviewed capability focus</dt>
+          <dd>{submission.reviewFocus.capabilityLabel}</dd>
+        </div>
+        <div>
+          <dt>Reviewed architecture area</dt>
+          <dd>{submission.reviewFocus.architectureArea}</dd>
+        </div>
+        {describeGovernedReviewResponse(
+          submission.result,
+          "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
+        ).rows.map((row) => (
           <div key={row.label}>
             <dt>{row.label}</dt>
             <dd>{row.value}</dd>
@@ -7837,10 +7870,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               </button>
               {capabilityReviewPacketFailure ? <p className="warning">{capabilityReviewPacketFailure}</p> : null}
               {capabilityReviewPacketSubmission
-                ? renderGovernedReviewResponse(
-                    capabilityReviewPacketSubmission,
-                    "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
-                  )
+                ? renderCapabilityReviewPacketResponse(capabilityReviewPacketSubmission)
                 : null}
               <button className="secondary" onClick={draftNewAgentProposalReviewPacket}>
                 Draft new-agent proposal review packet
