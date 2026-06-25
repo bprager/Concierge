@@ -566,6 +566,13 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(r"\bWebAssembly\.(?:compile|compileStreaming|instantiate|instantiateStreaming)\s*\("),
     re.compile(r"\bnew\s+WebAssembly\.(?:Module|Instance)\s*\("),
+    re.compile(
+        rf"\bWebAssembly\s*\[\s*{BROWSER_WEBASSEMBLY_EXECUTION_METHOD_ALIAS}\s*\]\s*\("
+    ),
+    re.compile(
+        rf"\bWebAssembly\s*\[\s*{BROWSER_WEBASSEMBLY_EXECUTION_METHOD_ALIAS}\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(r"\bnew\s+WebAssembly\s*\[\s*['\"](?:Module|Instance)['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:compile|compileStreaming|instantiate|instantiateStreaming)['\"]\s*\]\s*\("),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:compile|compileStreaming|instantiate|instantiateStreaming)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
@@ -583,6 +590,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
+    re.compile(
+        rf"\bURL\s*\[\s*{BROWSER_CREATE_OBJECT_URL_ALIAS}\s*\]\s*(?:\.\s*(?:call|apply))?\s*\("
+    ),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\.\s*createObjectURL\s*\("),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\.\s*createObjectURL\s*\.\s*(?:call|apply)\s*\("
