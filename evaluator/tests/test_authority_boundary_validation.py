@@ -29,6 +29,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         self.assertEqual(violations, [])
 
+    def test_evaluator_workflow_keeps_periodic_report_artifact_gate(self):
+        violations = validate_repo.find_evaluator_workflow_violations()
+
+        self.assertEqual(violations, [])
+
     def test_scanner_detects_direct_process_execution(self):
         for source in [
             'let child = std::process::Command::new("osascript").spawn();',

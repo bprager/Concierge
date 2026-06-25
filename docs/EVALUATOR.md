@@ -89,6 +89,8 @@ Minimum cadence:
 - Manual run after a major Napoleon change
 - Manual run after a failed production interaction
 
+Repository validation checks `.github/workflows/evaluator.yml` so the evaluator workflow keeps a manual trigger, a scheduled trigger, stub and HTTP evaluator paths, and the `concierge-evaluator-report` upload for `evaluator/reports/latest.json`.
+
 ## 8. Report fields
 
 Each report includes:

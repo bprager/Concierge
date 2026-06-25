@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added repository validation for the GitHub Actions evaluator workflow, so the weekly/manual evaluator report artifact gate cannot drift away from the documented EV-006 requirement.
 - Moved Napoleon agent/profile metadata discovery targets into the generated OpenAPI bridge registry, so `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}` now have canonical IDs, request kinds, response fields, and repository drift checks instead of living as hand-maintained UI metadata.
 - Added local text answers for Napoleon descriptor validity questions, so "Is the Napoleon descriptor valid?" reports descriptor, checksum, signature, text-turn route, fail-closed reason, and next local action from local connection state without contacting Napoleon or recording raw question text.
 - Added local text answers for Napoleon connection repair questions, so "Why can't I connect to Napoleon?" names the current blocker and one next local action without contacting Napoleon or recording raw question text.

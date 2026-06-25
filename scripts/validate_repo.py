@@ -942,6 +942,87 @@ def validate_documented_napoleon_review_operations() -> None:
     print("canonical Napoleon review/discovery operation docs mention all generated targets")
 
 
+def load_github_workflow(path: Path) -> dict[str, Any]:
+    workflow = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    if not isinstance(workflow, dict):
+        raise SystemExit(f"GitHub workflow is not an object: {path.relative_to(ROOT)}")
+    return workflow
+
+
+def workflow_triggers(workflow: dict[str, Any]) -> dict[str, Any]:
+    # PyYAML 1.1 treats GitHub Actions' "on" key as a boolean unless quoted.
+    triggers = workflow.get("on", workflow.get(True, {}))
+    return triggers if isinstance(triggers, dict) else {}
+
+
+def find_evaluator_workflow_violations() -> list[str]:
+    workflow_path = ROOT / ".github/workflows/evaluator.yml"
+    if not workflow_path.exists():
+        return ["missing .github/workflows/evaluator.yml"]
+
+    workflow = load_github_workflow(workflow_path)
+    triggers = workflow_triggers(workflow)
+    violations: list[str] = []
+    if "workflow_dispatch" not in triggers:
+        violations.append("evaluator workflow is missing manual workflow_dispatch trigger")
+    schedule = triggers.get("schedule")
+    cron_entries = [
+        entry.get("cron", "")
+        for entry in (schedule if isinstance(schedule, list) else [])
+        if isinstance(entry, dict)
+    ]
+    if not cron_entries:
+        violations.append("evaluator workflow is missing scheduled cron trigger")
+    elif not any(len(cron.split()) == 5 for cron in cron_entries):
+        violations.append("evaluator workflow scheduled trigger does not contain a valid five-field cron")
+
+    jobs = workflow.get("jobs")
+    evaluator_job = jobs.get("evaluator") if isinstance(jobs, dict) else None
+    if not isinstance(evaluator_job, dict):
+        violations.append("evaluator workflow is missing evaluator job")
+        return violations
+    steps = evaluator_job.get("steps")
+    if not isinstance(steps, list):
+        violations.append("evaluator workflow evaluator job is missing steps")
+        return violations
+
+    run_scripts = "\n".join(
+        step.get("run", "") for step in steps if isinstance(step, dict) and isinstance(step.get("run"), str)
+    )
+    if "evaluator/eval_runner.py" not in run_scripts:
+        violations.append("evaluator workflow does not run evaluator/eval_runner.py")
+    if "--mode stub" not in run_scripts:
+        violations.append("evaluator workflow does not keep a stub evaluator path")
+    if "--mode http" not in run_scripts:
+        violations.append("evaluator workflow does not keep an HTTP evaluator path")
+    if "evaluator/reports/latest.json" not in run_scripts:
+        violations.append("evaluator workflow does not write evaluator/reports/latest.json")
+
+    artifact_steps = [
+        step
+        for step in steps
+        if isinstance(step, dict) and str(step.get("uses", "")).startswith("actions/upload-artifact@")
+    ]
+    if not artifact_steps:
+        violations.append("evaluator workflow is missing report artifact upload")
+    elif not any(
+        isinstance(step.get("with"), dict)
+        and step["with"].get("name") == "concierge-evaluator-report"
+        and step["with"].get("path") == "evaluator/reports/latest.json"
+        for step in artifact_steps
+    ):
+        violations.append("evaluator workflow does not upload evaluator/reports/latest.json as concierge-evaluator-report")
+
+    return sorted(violations)
+
+
+def validate_evaluator_workflow() -> None:
+    violations = find_evaluator_workflow_violations()
+    if violations:
+        raise SystemExit("Evaluator CI workflow no longer satisfies periodic report requirements:\n" + "\n".join(violations))
+    print("evaluator CI workflow keeps scheduled report artifact gate")
+
+
 def load_generated_operation_section(section_name: str) -> list[dict[str, Any]]:
     text = (ROOT / "app/src/generatedBridgeOperations.ts").read_text(encoding="utf-8")
     section = re.search(
@@ -2185,6 +2266,7 @@ def main() -> int:
     validate_markdown_links()
     validate_documented_current_scenario_counts()
     validate_documented_napoleon_review_operations()
+    validate_evaluator_workflow()
     return 0
 
 
