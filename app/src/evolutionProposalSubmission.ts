@@ -1,5 +1,6 @@
 import type { ExportedCapabilityReviewPacket } from "./capabilityLedger.js";
 import { buildEvolutionProposalSubmissionBridgeTarget, getNapoleonReviewOperation } from "./bridgeOperations.js";
+import { hasUnsafeReturnedProofIdentifier } from "./bridgeProofValidation.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
@@ -486,6 +487,7 @@ export async function submitEvolutionProposalToNapoleon(
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasUnsafeReturnedProofIdentifier(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenEvolutionProposalSideEffectClaim(
       payload as Partial<EvolutionProposalSubmissionResult> & Record<string, unknown>,
     )

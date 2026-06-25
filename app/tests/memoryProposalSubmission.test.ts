@@ -367,6 +367,73 @@ test("memory proposal submission posts review packet without writing memory or c
   assert.equal(result.governanceDecision.outcome, "requires_review");
 });
 
+test("memory proposal submission fails closed when returned proof identifiers are unsafe metadata", async () => {
+  const review = buildReview();
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const unsafeTraceId = "https://napoleon.example/traces/memory?token=secret";
+  const unsafeDecisionId = "https://napoleon.example/decisions/memory?token=secret";
+  const unsafeAuditId = "https://napoleon.example/audits/memory?token=secret";
+
+  await assert.rejects(
+    () =>
+      submitMemoryProposalForReview(review, {
+        conversationId: "conv_memory",
+        traceId: "trace_submit_unsafe_memory_proof",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon accepted the memory proposal for governed review.",
+            governanceDecision: {
+              decision_id: unsafeDecisionId,
+              request_id: "cos_trace_submit_unsafe_memory_proof",
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Memory proposals require Napoleon review before any write.",
+              blocked_effects: ["memory_write", "approval_capture", "external_send"],
+              trace_id: unsafeTraceId,
+              audit_id: unsafeAuditId,
+            },
+            traceEnvelope: {
+              trace_id: unsafeTraceId,
+              parent_trace_id: "conv_memory",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_submit_unsafe_memory_proof",
+              decision_id: unsafeDecisionId,
+              timestamp: "2026-06-11T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: unsafeAuditId,
+              trace_id: unsafeTraceId,
+              decision_id: unsafeDecisionId,
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: [`trace:${unsafeTraceId}`],
+            },
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "memory_proposal_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.equal(JSON.stringify(events).includes("napoleon.example"), false);
+  assert.equal(JSON.stringify(events).includes("token=secret"), false);
+});
+
 test("memory proposal submission fails closed when Napoleon denies review", async () => {
   const review = buildReview();
   const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];

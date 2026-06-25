@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened governed review, packet, status, observability, and steering handoff response validation so unsafe returned trace, audit, decision, request, and proof-link identifiers fail closed before local results can retain raw proof references.
 - Hardened live bridge response validation so unsafe returned trace, audit, decision, request, and proof-link identifiers fail closed before accepted Napoleon proof metadata can retain endpoints, credentials, or raw-looking proof references.
 - Hardened live bridge response validation so unsafe returned target capability IDs fail closed before accepted Napoleon proof metadata can retain endpoints, credentials, or raw-looking capability references.
 - Hardened live bridge response validation so unsafe returned selected-agent IDs fail closed before accepted bridge evidence can retain endpoints, credentials, or raw-looking agent references.

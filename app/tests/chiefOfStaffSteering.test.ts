@@ -800,6 +800,101 @@ test("capability review packet handoff posts sanitized proposal evidence without
   );
 });
 
+test("capability review packet handoff fails closed when returned proof identifiers are unsafe metadata", async () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_capability_packet_unsafe_proof",
+      conversationId: "conv_capability_packet_unsafe_proof",
+      turnId: "turn_capability_packet_unsafe_proof",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "napoleon integration",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "bridge_failure_handling",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.9,
+      evidenceRefs: ["trace:trace_capability_packet_unsafe_proof"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, undefined, {
+    profileMode: "adult_owner",
+  });
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  const packet = exportCapabilityReviewPacket(answer, { generatedAt: "2026-06-23T00:00:00.000Z" });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const unsafeTraceId = "https://napoleon.example/traces/capability?token=secret";
+  const unsafeDecisionId = "https://napoleon.example/decisions/capability?token=secret";
+  const unsafeAuditId = "https://napoleon.example/audits/capability?token=secret";
+
+  await assert.rejects(
+    () =>
+      submitCapabilityReviewPacket(packet, {
+        conversationId: "conv_capability_packet",
+        traceId: "trace_submit_capability_packet_unsafe_proof",
+        profile: "adult_owner",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event: TelemetryPayload) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon accepted the capability review packet for governed review.",
+            governanceDecision: {
+              decision_id: unsafeDecisionId,
+              request_id: "cos_trace_submit_capability_packet_unsafe_proof",
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Capability review packets require governed review before implementation.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: unsafeTraceId,
+              audit_id: unsafeAuditId,
+            },
+            traceEnvelope: {
+              trace_id: unsafeTraceId,
+              parent_trace_id: "conv_capability_packet",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_submit_capability_packet_unsafe_proof",
+              decision_id: unsafeDecisionId,
+              timestamp: "2026-06-23T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: unsafeAuditId,
+              trace_id: unsafeTraceId,
+              decision_id: unsafeDecisionId,
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: [`trace:${unsafeTraceId}`],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "capability_review_packet_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.equal(JSON.stringify(events).includes("napoleon.example"), false);
+  assert.equal(JSON.stringify(events).includes("token=secret"), false);
+});
+
 test("steering handoff posts evolution review packet without applying proposal locally", async () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(
@@ -936,6 +1031,99 @@ test("steering handoff posts evolution review packet without applying proposal l
   assert.equal(result.approvalCaptured, false);
   assert.equal(result.externalSendPerformed, false);
   assert.equal(result.governanceDecision.outcome, "requires_review");
+});
+
+test("steering handoff fails closed when returned proof identifiers are unsafe metadata", async () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_missing_bridge_unsafe_proof",
+      conversationId: "conv_missing_bridge_unsafe_proof",
+      turnId: "turn_missing_bridge_unsafe_proof",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "napoleon integration",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "live_bridge_descriptor_discovery",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.91,
+      evidenceRefs: ["trace:trace_missing_bridge_unsafe_proof"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "create_evolution_proposal",
+    }),
+  );
+  const draft = draftChiefOfStaffSteering(ledger, {
+    conversationId: "conv_steering",
+    traceId: "trace_steering",
+    endpointConfigured: true,
+  });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const unsafeTraceId = "https://napoleon.example/traces/steering?token=secret";
+  const unsafeDecisionId = "https://napoleon.example/decisions/steering?token=secret";
+  const unsafeAuditId = "https://napoleon.example/audits/steering?token=secret";
+
+  await assert.rejects(
+    () =>
+      submitChiefOfStaffSteeringDraft(draft, {
+        conversationId: "conv_steering",
+        traceId: "trace_submit_unsafe_steering_proof",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon accepted the evolution proposal for review.",
+            governanceDecision: {
+              decision_id: unsafeDecisionId,
+              request_id: "cos_trace_submit_unsafe_steering_proof",
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              rationale: "Evolution proposals require review before implementation.",
+              blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
+              trace_id: unsafeTraceId,
+              audit_id: unsafeAuditId,
+            },
+            traceEnvelope: {
+              trace_id: unsafeTraceId,
+              parent_trace_id: "conv_steering",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_submit_unsafe_steering_proof",
+              decision_id: unsafeDecisionId,
+              timestamp: "2026-06-11T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: unsafeAuditId,
+              trace_id: unsafeTraceId,
+              decision_id: unsafeDecisionId,
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "advisory_review",
+              approval_requirement: "chief_of_staff_and_owner_review",
+              evidence_links: [`trace:${unsafeTraceId}`],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.equal(JSON.stringify(events).includes("napoleon.example"), false);
+  assert.equal(JSON.stringify(events).includes("token=secret"), false);
 });
 
 test("steering handoff maps Napoleon root endpoints to explicit evolution proposal review path", async () => {

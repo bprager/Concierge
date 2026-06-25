@@ -8,6 +8,7 @@ import {
   type RecommendationBoundary,
 } from "./capabilityLedger.js";
 import { resolveNapoleonEvolutionProposalReviewOperation } from "./bridgeEndpoint.js";
+import { hasUnsafeReturnedProofIdentifier } from "./bridgeProofValidation.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
@@ -707,6 +708,7 @@ export async function submitCapabilityReviewPacket(
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasUnsafeReturnedProofIdentifier(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenSteeringSideEffectClaim(payload as Partial<ChiefOfStaffSteeringSubmissionResult> & Record<string, unknown>)
   ) {
     failCapabilityReviewPacketClosed(dependencies, "contract_mismatch", dependencies.traceId, requestId, profileMode, undefined, blockedEffects, {
@@ -977,6 +979,7 @@ export async function submitChiefOfStaffSteeringDraft(
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasUnsafeReturnedProofIdentifier(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenSteeringSideEffectClaim(payload as Partial<ChiefOfStaffSteeringSubmissionResult> & Record<string, unknown>)
   ) {
     failSteeringClosed(

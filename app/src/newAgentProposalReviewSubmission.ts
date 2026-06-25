@@ -1,4 +1,5 @@
 import { getNapoleonReviewOperation, buildNewAgentProposalReviewBridgeTarget } from "./bridgeOperations.js";
+import { hasUnsafeReturnedProofIdentifier } from "./bridgeProofValidation.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
@@ -491,6 +492,7 @@ export async function submitNewAgentProposalForNapoleonReview(
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasUnsafeReturnedProofIdentifier(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenNewAgentProposalSideEffectClaim(
       payload as Partial<NewAgentProposalReviewSubmissionResult> & Record<string, unknown>,
     )

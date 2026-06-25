@@ -35,7 +35,7 @@ Returned selected-agent IDs are evidence metadata and must remain safe bounded i
 
 Returned target capability IDs are also evidence metadata and must remain safe bounded identifiers. Endpoint-shaped, credential-like, whitespace/slash-bearing, or raw-looking target capability IDs are rejected as contract mismatches before accepted Napoleon proof metadata, proof exports, or visible delegation panels can retain them.
 
-Returned trace, audit, decision, request, and proof-link identifiers are evidence metadata too. Endpoint-shaped, credential-like, whitespace/slash-bearing, or raw-looking proof identifiers are rejected as contract mismatches before accepted Napoleon proof metadata, proof exports, telemetry, or visible delegation panels can retain them.
+Returned trace, audit, decision, request, and proof-link identifiers are evidence metadata too. Endpoint-shaped, credential-like, whitespace/slash-bearing, or raw-looking proof identifiers are rejected as contract mismatches before accepted Napoleon proof metadata, proof exports, telemetry, or visible delegation panels can retain them. Governed review, packet, status, observability, and Chief of Staff steering handoff responses follow the same returned-proof rule before retaining local results.
 
 ## 2. Confirmation tiers
 

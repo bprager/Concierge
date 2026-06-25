@@ -1,4 +1,5 @@
 import { buildObservabilityTraceBridgeTarget, getNapoleonReviewOperation } from "./bridgeOperations.js";
+import { hasUnsafeReturnedProofIdentifier } from "./bridgeProofValidation.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
@@ -396,6 +397,11 @@ export async function submitObservabilityTraceHandoff(
     !isTraceEnvelope((payload as Record<string, unknown>).traceEnvelope) ||
     !isAuditEnvelope((payload as Record<string, unknown>).auditEnvelope) ||
     !envelopesMatchDecision(
+      (payload as { governanceDecision: GovernanceDecision }).governanceDecision,
+      (payload as { traceEnvelope: TraceEnvelope }).traceEnvelope,
+      (payload as { auditEnvelope: AuditEnvelope }).auditEnvelope,
+    ) ||
+    hasUnsafeReturnedProofIdentifier(
       (payload as { governanceDecision: GovernanceDecision }).governanceDecision,
       (payload as { traceEnvelope: TraceEnvelope }).traceEnvelope,
       (payload as { auditEnvelope: AuditEnvelope }).auditEnvelope,

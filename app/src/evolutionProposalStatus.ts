@@ -1,4 +1,5 @@
 import { buildEvolutionProposalStatusBridgeTarget, getNapoleonReviewOperation } from "./bridgeOperations.js";
+import { hasUnsafeReturnedProofIdentifier } from "./bridgeProofValidation.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
   buildDescriptorConnectionState,
@@ -309,6 +310,7 @@ export async function refreshEvolutionProposalStatusFromNapoleon(
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasUnsafeReturnedProofIdentifier(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenStatusSideEffectClaim(payload as Partial<EvolutionProposalStatusResult> & Record<string, unknown>)
   ) {
     failClosed(dependencies, "contract_mismatch", record, requestId, undefined, undefined, undefined, targetMetadata);

@@ -2719,7 +2719,7 @@ test("clears returned capability review packet results when bridge token changes
           JSON.stringify({
             text: "Napoleon accepted the token-scoped capability review packet for governed review.",
             governanceDecision: {
-              decision_id: "decision_capability_packet_token_stale",
+              decision_id: "decision_capability_packet_connection_stale",
               request_id: traceEnvelope.request_id,
               outcome: "requires_review",
               authority_tier: "advisory_review",
@@ -2727,24 +2727,24 @@ test("clears returned capability review packet results when bridge token changes
               rationale: "Capability review packets require review before implementation.",
               blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
               trace_id: traceEnvelope.trace_id,
-              audit_id: "audit_capability_packet_token_stale",
+              audit_id: "audit_capability_packet_connection_stale",
             },
             traceEnvelope: {
               trace_id: traceEnvelope.trace_id,
               parent_trace_id: traceEnvelope.parent_trace_id,
               actor_id: "napoleon.chief_of_staff",
               request_id: traceEnvelope.request_id,
-              decision_id: "decision_capability_packet_token_stale",
+              decision_id: "decision_capability_packet_connection_stale",
               timestamp: "2026-06-23T00:00:00.000Z",
             },
             auditEnvelope: {
-              audit_id: "audit_capability_packet_token_stale",
+              audit_id: "audit_capability_packet_connection_stale",
               trace_id: traceEnvelope.trace_id,
-              decision_id: "decision_capability_packet_token_stale",
+              decision_id: "decision_capability_packet_connection_stale",
               actor_id: "napoleon.chief_of_staff",
               authority_tier: "advisory_review",
               approval_requirement: "chief_of_staff_and_owner_review",
-              evidence_links: ["trace:capability-packet-token-stale"],
+              evidence_links: ["trace:capability-packet-connection-stale"],
             },
             appliedLocally: false,
             memoryWritePerformed: false,
@@ -2804,17 +2804,17 @@ test("clears returned capability review packet results when bridge token changes
     await waitFor(() => {
       const failure = view.queryByText(/Could not send capability review packet/);
       if (failure) throw new Error(failure.textContent ?? "capability review packet handoff failed");
-      assert.ok(view.queryByText(/decision_capability_packet_token_stale/));
+      assert.ok(view.queryByText(/decision_capability_packet_connection_stale/));
     });
 
-    assert.ok(view.getByText(/decision_capability_packet_token_stale/));
-    assert.ok(view.getByText(/audit_capability_packet_token_stale/));
+    assert.ok(view.getByText(/decision_capability_packet_connection_stale/));
+    assert.ok(view.getByText(/audit_capability_packet_connection_stale/));
     assert.ok(view.getByLabelText("Exported capability review packet"));
 
     fireEvent.change(view.getByLabelText("Bridge token"), { target: { value: "token-changed" } });
 
-    assert.equal(view.queryByText(/decision_capability_packet_token_stale/), null);
-    assert.equal(view.queryByText(/audit_capability_packet_token_stale/), null);
+    assert.equal(view.queryByText(/decision_capability_packet_connection_stale/), null);
+    assert.equal(view.queryByText(/audit_capability_packet_connection_stale/), null);
     assert.equal(view.queryByLabelText("Exported capability review packet"), null);
     assert.equal(Boolean(view.queryByRole("button", { name: "Send capability review packet to Napoleon review" })), false);
   } finally {
@@ -8842,7 +8842,7 @@ test("clears returned Chief of Staff steering results when bridge token changes"
           JSON.stringify({
             text: "Napoleon accepted the credential-scoped steering draft for review.",
             governanceDecision: {
-              decision_id: "decision_steering_token_stale",
+              decision_id: "decision_steering_connection_stale",
               request_id: body.chiefOfStaffRequest.request_id,
               outcome: "requires_review",
               authority_tier: "advisory_review",
@@ -8850,24 +8850,24 @@ test("clears returned Chief of Staff steering results when bridge token changes"
               rationale: "Capability changes require review before rollout.",
               blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
               trace_id: body.traceEnvelope.trace_id,
-              audit_id: "audit_steering_token_stale",
+              audit_id: "audit_steering_connection_stale",
             },
             traceEnvelope: {
               trace_id: body.traceEnvelope.trace_id,
               parent_trace_id: body.traceEnvelope.parent_trace_id,
               actor_id: "napoleon.chief_of_staff",
               request_id: body.chiefOfStaffRequest.request_id,
-              decision_id: "decision_steering_token_stale",
+              decision_id: "decision_steering_connection_stale",
               timestamp: "2026-06-14T00:00:00.000Z",
             },
             auditEnvelope: {
-              audit_id: "audit_steering_token_stale",
+              audit_id: "audit_steering_connection_stale",
               trace_id: body.traceEnvelope.trace_id,
-              decision_id: "decision_steering_token_stale",
+              decision_id: "decision_steering_connection_stale",
               actor_id: "napoleon.chief_of_staff",
               authority_tier: "advisory_review",
               approval_requirement: "chief_of_staff_and_owner_review",
-              evidence_links: ["trace:steering-token-stale"],
+              evidence_links: ["trace:steering-connection-stale"],
             },
             appliedLocally: false,
             memoryWritePerformed: false,
@@ -8889,14 +8889,14 @@ test("clears returned Chief of Staff steering results when bridge token changes"
     await user.click(view.getByRole("button", { name: "Send steering draft to Napoleon review" }));
 
     await view.findByText("Napoleon accepted the credential-scoped steering draft for review.");
-    assert.ok(view.getByText(/decision_steering_token_stale/));
-    assert.ok(view.getByText(/audit_steering_token_stale/));
+    assert.ok(view.getByText(/decision_steering_connection_stale/));
+    assert.ok(view.getByText(/audit_steering_connection_stale/));
 
     fireEvent.change(view.getByLabelText("Bridge token"), { target: { value: "rotated-token" } });
 
     assert.equal(view.queryByText("Napoleon accepted the credential-scoped steering draft for review."), null);
-    assert.equal(view.queryByText(/decision_steering_token_stale/), null);
-    assert.equal(view.queryByText(/audit_steering_token_stale/), null);
+    assert.equal(view.queryByText(/decision_steering_connection_stale/), null);
+    assert.equal(view.queryByText(/audit_steering_connection_stale/), null);
     assert.equal(Boolean(view.queryByRole("button", { name: "Send steering draft to Napoleon review" })), false);
   } finally {
     globalThis.fetch = originalFetch;
@@ -11694,7 +11694,7 @@ test("clears returned taxonomy review results when bridge token changes", async 
           JSON.stringify({
             text: "Napoleon accepted the credential-scoped taxonomy review packet for review.",
             governanceDecision: {
-              decision_id: "decision_taxonomy_token_stale",
+              decision_id: "decision_taxonomy_connection_stale",
               request_id: body.chiefOfStaffRequest.request_id,
               outcome: "requires_review",
               authority_tier: "advisory_review",
@@ -11702,24 +11702,24 @@ test("clears returned taxonomy review results when bridge token changes", async 
               rationale: "Taxonomy cleanup requires review before application.",
               blocked_effects: ["memory_write", "agent_dispatch", "external_send", "approval_capture"],
               trace_id: body.traceEnvelope.trace_id,
-              audit_id: "audit_taxonomy_token_stale",
+              audit_id: "audit_taxonomy_connection_stale",
             },
             traceEnvelope: {
               trace_id: body.traceEnvelope.trace_id,
               parent_trace_id: body.traceEnvelope.parent_trace_id,
               actor_id: "napoleon.chief_of_staff",
               request_id: body.chiefOfStaffRequest.request_id,
-              decision_id: "decision_taxonomy_token_stale",
+              decision_id: "decision_taxonomy_connection_stale",
               timestamp: "2026-06-13T00:00:00.000Z",
             },
             auditEnvelope: {
-              audit_id: "audit_taxonomy_token_stale",
+              audit_id: "audit_taxonomy_connection_stale",
               trace_id: body.traceEnvelope.trace_id,
-              decision_id: "decision_taxonomy_token_stale",
+              decision_id: "decision_taxonomy_connection_stale",
               actor_id: "napoleon.chief_of_staff",
               authority_tier: "advisory_review",
               approval_requirement: "chief_of_staff_and_owner_review",
-              evidence_links: ["trace:taxonomy-token-stale"],
+              evidence_links: ["trace:taxonomy-connection-stale"],
             },
             appliedLocally: false,
             memoryWritePerformed: false,
@@ -11740,14 +11740,14 @@ test("clears returned taxonomy review results when bridge token changes", async 
     await user.click(view.getByRole("button", { name: "Send taxonomy review to Napoleon review" }));
 
     await view.findByText("Napoleon accepted the credential-scoped taxonomy review packet for review.");
-    assert.ok(view.getByText(/decision_taxonomy_token_stale/));
-    assert.ok(view.getByText(/audit_taxonomy_token_stale/));
+    assert.ok(view.getByText(/decision_taxonomy_connection_stale/));
+    assert.ok(view.getByText(/audit_taxonomy_connection_stale/));
 
     fireEvent.change(view.getByLabelText("Bridge token"), { target: { value: "rotated-token" } });
 
     assert.equal(view.queryByText("Napoleon accepted the credential-scoped taxonomy review packet for review."), null);
-    assert.equal(view.queryByText(/decision_taxonomy_token_stale/), null);
-    assert.equal(view.queryByText(/audit_taxonomy_token_stale/), null);
+    assert.equal(view.queryByText(/decision_taxonomy_connection_stale/), null);
+    assert.equal(view.queryByText(/audit_taxonomy_connection_stale/), null);
     assert.equal(view.queryByText("Chief of Staff taxonomy review draft"), null);
     assert.equal(Boolean(view.queryByRole("button", { name: "Send taxonomy review to Napoleon review" })), false);
   } finally {
@@ -13250,11 +13250,11 @@ for (const contextChange of [
   },
   {
     name: "bridge token",
-    decisionId: "decision_trace_handoff_token_clear",
-    auditId: "audit_trace_handoff_token_clear",
-    traceId: "trace_observability_token_clear",
-    conversationId: "conv_observability_token_clear",
-    turnId: "turn_observability_token_clear",
+    decisionId: "decision_trace_handoff_connection_clear",
+    auditId: "audit_trace_handoff_connection_clear",
+    traceId: "trace_observability_connection_clear",
+    conversationId: "conv_observability_connection_clear",
+    turnId: "turn_observability_connection_clear",
     change: async (
       view: { getByLabelText: (text: string) => HTMLElement },
       fireEvent: { change: (element: Window | Document | Node | Element, init?: {}) => boolean },

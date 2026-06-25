@@ -1,6 +1,7 @@
 import type { NapoleonDelegation, NapoleonRecommendationProvenance, NapoleonRequest, NapoleonResponse } from "./types";
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import { getBridgeOperation, type BridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
+import { hasUnsafeReturnedProofIdentifier, isUnsafeProofIdentifier } from "./bridgeProofValidation.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
@@ -37,9 +38,6 @@ const FORBIDDEN_DELEGATION_ALLOWED_EFFECTS = new Set([
   "service_control",
   "task_routing",
 ]);
-
-const SAFE_SELECTED_AGENT_ID_PATTERN = /^[a-z0-9][a-z0-9_.:-]{0,95}$/i;
-const UNSAFE_SELECTED_AGENT_ID_TEXT_PATTERN = /\b(?:https?:\/\/|bearer|authorization|token|secret|password|credential)\b/i;
 
 export interface BridgeContractEvidence {
   kind: "bridge_contract_evidence";
@@ -357,38 +355,12 @@ function hasForbiddenDelegationTextSideEffectClaim(delegation: NapoleonDelegatio
   );
 }
 
-function isUnsafeProofIdentifier(value: string): boolean {
-  const identifier = value.trim();
-  return !SAFE_SELECTED_AGENT_ID_PATTERN.test(identifier) || UNSAFE_SELECTED_AGENT_ID_TEXT_PATTERN.test(identifier);
-}
-
 function hasUnsafeSelectedAgentId(delegation: NapoleonDelegation | undefined): boolean {
   return (
     delegation?.selectedAgents.some((agent) => {
       return isUnsafeProofIdentifier(agent.agentId);
     }) ?? false
   );
-}
-
-function hasUnsafeReturnedProofIdentifier(
-  decision: GovernanceDecision,
-  traceEnvelope: TraceEnvelope,
-  auditEnvelope: AuditEnvelope,
-): boolean {
-  return [
-    decision.decision_id,
-    decision.request_id,
-    decision.trace_id,
-    decision.audit_id,
-    traceEnvelope.trace_id,
-    traceEnvelope.parent_trace_id,
-    traceEnvelope.request_id,
-    traceEnvelope.decision_id,
-    auditEnvelope.audit_id,
-    auditEnvelope.trace_id,
-    auditEnvelope.decision_id,
-    ...auditEnvelope.evidence_links,
-  ].some((identifier) => isUnsafeProofIdentifier(identifier));
 }
 
 function advisoryHarnessClaimsRuntimeInvocation(delegationPlan: Record<string, unknown>): boolean {

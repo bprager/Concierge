@@ -1,5 +1,6 @@
 import { resolveNapoleonBridgeOperation } from "./bridgeEndpoint.js";
 import { getBridgeOperation } from "./bridgeOperations.js";
+import { hasUnsafeReturnedProofIdentifier } from "./bridgeProofValidation.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
@@ -436,6 +437,7 @@ export async function submitMemoryProposalForReview(
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasUnsafeReturnedProofIdentifier(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenMemoryProposalSideEffectClaim(payload as Partial<MemoryProposalSubmissionResult> & Record<string, unknown>)
   ) {
     failMemoryProposalClosed(

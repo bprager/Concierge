@@ -1,4 +1,5 @@
 import { resolveNapoleonGovernanceReviewOperation } from "./bridgeEndpoint.js";
+import { hasUnsafeReturnedProofIdentifier } from "./bridgeProofValidation.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
@@ -457,6 +458,7 @@ export async function submitGovernanceReviewForNapoleonReview(
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasUnsafeReturnedProofIdentifier(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenGovernanceReviewSideEffectClaim(payload as Partial<GovernanceReviewSubmissionResult> & Record<string, unknown>)
   ) {
     failGovernanceReviewClosed(

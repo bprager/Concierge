@@ -2,6 +2,7 @@ import {
   resolveNapoleonChiefOfStaffRequestOperation,
   resolveNapoleonGovernanceEvaluationOperation,
 } from "./bridgeEndpoint.js";
+import { hasUnsafeReturnedProofIdentifier } from "./bridgeProofValidation.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage } from "./connectionStorage.js";
 import {
@@ -429,6 +430,11 @@ async function submitPacket(
     !isTraceEnvelope((payload as Record<string, unknown>).traceEnvelope) ||
     !isAuditEnvelope((payload as Record<string, unknown>).auditEnvelope) ||
     !envelopesMatchDecision(
+      (payload as { governanceDecision: GovernanceDecision }).governanceDecision,
+      (payload as { traceEnvelope: TraceEnvelope }).traceEnvelope,
+      (payload as { auditEnvelope: AuditEnvelope }).auditEnvelope,
+    ) ||
+    hasUnsafeReturnedProofIdentifier(
       (payload as { governanceDecision: GovernanceDecision }).governanceDecision,
       (payload as { traceEnvelope: TraceEnvelope }).traceEnvelope,
       (payload as { auditEnvelope: AuditEnvelope }).auditEnvelope,

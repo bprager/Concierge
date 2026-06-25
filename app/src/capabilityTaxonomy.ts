@@ -1,4 +1,5 @@
 import { resolveNapoleonEvolutionProposalReviewOperation } from "./bridgeEndpoint.js";
+import { hasUnsafeReturnedProofIdentifier } from "./bridgeProofValidation.js";
 import { hasRequiredBridgeResponseFields } from "./bridgeResponseRequirements.js";
 import { hasForbiddenSideEffectTextClaim } from "./bridgeSideEffectClaims.js";
 import type { CapabilityArchitectureArea, ConversationCapabilitySignal, RecommendationBoundary } from "./capabilityLedger.js";
@@ -875,6 +876,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
     !isTraceEnvelope(payload.traceEnvelope) ||
     !isAuditEnvelope(payload.auditEnvelope) ||
     !envelopesMatchDecision(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
+    hasUnsafeReturnedProofIdentifier(payload.governanceDecision, payload.traceEnvelope, payload.auditEnvelope) ||
     hasForbiddenTaxonomyReviewSideEffectClaim(payload as Partial<ChiefOfStaffTaxonomyReviewSubmissionResult> & Record<string, unknown>)
   ) {
     failTaxonomyReviewClosed(

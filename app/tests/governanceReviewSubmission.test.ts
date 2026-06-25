@@ -399,6 +399,74 @@ test("governance review submission maps Napoleon root endpoint to explicit gover
   assert.equal((posted?.boundary as { approvalCaptured: boolean }).approvalCaptured, false);
 });
 
+test("governance review submission fails closed when returned proof identifiers are unsafe metadata", async () => {
+  const review = buildReview();
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const unsafeTraceId = "https://napoleon.example/traces/governance?token=secret";
+  const unsafeDecisionId = "https://napoleon.example/decisions/governance?token=secret";
+  const unsafeAuditId = "https://napoleon.example/audits/governance?token=secret";
+
+  await assert.rejects(
+    () =>
+      submitGovernanceReviewForNapoleonReview(review, {
+        conversationId: "conv_governance",
+        traceId: "trace_submit_unsafe_governance_proof",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon accepted the governance review packet.",
+            governanceDecision: {
+              decision_id: unsafeDecisionId,
+              request_id: "cos_trace_submit_unsafe_governance_proof",
+              outcome: "requires_review",
+              authority_tier: "advisory_review",
+              approval_requirement: "owner_review",
+              rationale: "Governance review requires Napoleon proof before action.",
+              blocked_effects: ["approval_capture", "memory_write", "external_send"],
+              trace_id: unsafeTraceId,
+              audit_id: unsafeAuditId,
+            },
+            traceEnvelope: {
+              trace_id: unsafeTraceId,
+              parent_trace_id: "conv_governance",
+              actor_id: "napoleon.governance",
+              request_id: "cos_trace_submit_unsafe_governance_proof",
+              decision_id: unsafeDecisionId,
+              timestamp: "2026-06-15T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: unsafeAuditId,
+              trace_id: unsafeTraceId,
+              decision_id: unsafeDecisionId,
+              actor_id: "napoleon.governance",
+              authority_tier: "advisory_review",
+              approval_requirement: "owner_review",
+              evidence_links: [`trace:${unsafeTraceId}`],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "governance_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.equal(JSON.stringify(events).includes("napoleon.example"), false);
+  assert.equal(JSON.stringify(events).includes("token=secret"), false);
+});
+
 test("governance review submission fails closed when Napoleon denies review", async () => {
   const review = buildReview();
   const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
