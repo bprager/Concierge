@@ -615,6 +615,27 @@ function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
   return asksAboutSending && asksAboutReadiness;
 }
 
+function isNapoleonConnectionRepairQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  if (!lower.includes("napoleon")) return false;
+  const asksAboutConnection =
+    /\bconnect\b/.test(lower) ||
+    /\bconnection\b/.test(lower) ||
+    /\blive send\b/.test(lower) ||
+    /\bsend\b/.test(lower) ||
+    /\bdescriptor\b/.test(lower) ||
+    /\bendpoint\b/.test(lower);
+  const asksAboutProblem =
+    /\bwhy\b.*\b(can'?t|cannot|not|blocked|failed|missing)\b/.test(lower) ||
+    /\bwhat\b.*\b(missing|blocked|failed|wrong|fix|repair)\b/.test(lower) ||
+    /\bwhat\b.*\b(next|fix|repair)\b/.test(lower) ||
+    /\bmissing\b.*\b(before|for)\b/.test(lower) ||
+    /\bblocked\b/.test(lower) ||
+    /\bfix\b/.test(lower) ||
+    /\brepair\b/.test(lower);
+  return asksAboutConnection && asksAboutProblem;
+}
+
 function isNapoleonConnectionSetupQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   if (!lower.includes("napoleon")) return false;
@@ -633,6 +654,65 @@ function isNapoleonConnectionSetupQuestion(content: string): boolean {
     /\bnext\b.*\b(step|action)\b/.test(lower) ||
     /\bwhy\b.*\b(can'?t|cannot|not)\b/.test(lower);
   return asksAboutConnection && asksForAction;
+}
+
+function normalizeConnectionRepairAction(summary: string): string {
+  const lower = summary.toLocaleLowerCase();
+  if (lower.includes("add the governed napoleon endpoint")) return "configure_endpoint";
+  if (lower.includes("run descriptor discovery")) return "discover_descriptor";
+  if (lower.includes("fix descriptor checksum") || lower.includes("signature")) return "fix_descriptor_integrity";
+  if (lower.includes("text-turn")) return "enable_text_turn_route";
+  if (lower.includes("turn off rehearsal")) return "turn_off_rehearsal_mode";
+  if (lower.includes("review local governance")) return "review_local_governance";
+  if (lower.includes("provide text")) return "enter_text";
+  return "review_preflight";
+}
+
+function normalizeConnectionRepairNextAction(summary: string): string {
+  return summary.replace(/^Next step:\s*/i, "").replace(/\.$/, "");
+}
+
+function formatNapoleonConnectionRepairAnswer(input: {
+  preflight: LiveSendPreflightView;
+  descriptorConnection: DescriptorConnectionState;
+  endpointConfigured: boolean;
+  rehearsalMode: boolean;
+}): {
+  content: string;
+  blockingReason: string;
+  nextAction: string;
+  liveSendReady: boolean;
+  endpointConfigured: boolean;
+  descriptorState: DescriptorConnectionState["state"];
+  failClosedReason: string;
+  rehearsalMode: boolean;
+} {
+  const blockingReason = input.preflight.canAttemptLiveSend
+    ? "none"
+    : input.descriptorConnection.failClosedReason ?? input.preflight.status;
+  const nextActionLabel = normalizeConnectionRepairNextAction(input.preflight.nextStepSummary);
+  const nextAction = normalizeConnectionRepairAction(input.preflight.nextStepSummary);
+
+  return {
+    content: [
+      "Napoleon connection repair from local readiness:",
+      `Blocking reason: ${blockingReason}.`,
+      `Next local action: ${nextActionLabel}.`,
+      `Live send ready: ${input.preflight.canAttemptLiveSend ? "yes" : "no"}.`,
+      `Descriptor state: ${input.descriptorConnection.state}.`,
+      `Rehearsal Mode: ${input.rehearsalMode ? "on" : "off"}.`,
+      input.preflight.caveat,
+      "Authority boundary: local readiness guidance only; not Napoleon approval.",
+      "This local answer did not contact Napoleon, approve, write memory, dispatch agents, capture approval, or send externally.",
+    ].join("\n\n"),
+    blockingReason,
+    nextAction,
+    liveSendReady: input.preflight.canAttemptLiveSend,
+    endpointConfigured: input.endpointConfigured,
+    descriptorState: input.descriptorConnection.state,
+    failClosedReason: input.descriptorConnection.failClosedReason ?? "none",
+    rehearsalMode: input.rehearsalMode,
+  };
 }
 
 function formatNapoleonConnectionSetupAnswer(input: {
@@ -2747,6 +2827,56 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     clearContractPacketExports();
   }
 
+  function answerNapoleonConnectionRepairQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isNapoleonConnectionRepairQuestion(content)) return false;
+
+    const answer = formatNapoleonConnectionRepairAnswer({
+      preflight: liveSendPreflight,
+      descriptorConnection,
+      endpointConfigured: Boolean(endpoint.trim()),
+      rehearsalMode,
+    });
+    emitEvent("napoleon_connection_repair_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      localAnswerOnly: true,
+      blockingReason: answer.blockingReason,
+      nextAction: answer.nextAction,
+      liveSendReady: answer.liveSendReady,
+      endpointConfigured: answer.endpointConfigured,
+      descriptorState: answer.descriptorState,
+      failClosedReason: answer.failClosedReason,
+      rehearsalMode: answer.rehearsalMode,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerNapoleonConnectionSetupQuestion(
     content: string,
     traceId: string,
@@ -3081,6 +3211,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const traceId = newTraceId();
     const turnId = `turn_${Date.now().toString(16)}`;
     const activeProfileMode = mapProfileToNapoleonMode(profile);
+    if (answerNapoleonConnectionRepairQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
@@ -3291,6 +3422,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const traceId = newTraceId();
       const turnId = `turn_${Date.now().toString(16)}`;
       const activeProfileMode = mapProfileToNapoleonMode(profile);
+      if (answerNapoleonConnectionRepairQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
