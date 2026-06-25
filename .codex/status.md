@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added sanitized connection-guide metadata to bridge readiness proof exports, so the first-run setup step, next local action, live-send readiness, connection booleans, Rehearsal Mode state, promotion gate, and false side-effect boundaries can be reviewed without storing endpoint values or treating readiness as approval.
 - Added a first-run Napoleon connection guide that names the current setup step, next action, live-send readiness, and local-only authority boundary from the existing preflight state.
 - Added descriptor text-turn route state to the empty Napoleon delegation panel, so a descriptor that passes preflight but omits `text_turn` shows `not advertised` with a route-specific next step before live send.
 - Added a governed text-turn route row to the always-visible Napoleon connection state panel, so a descriptor that omits `text_turn` shows `not advertised` before a live send attempt.

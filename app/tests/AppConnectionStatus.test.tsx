@@ -47,7 +47,7 @@ test("connection state card exposes fail-closed reason and blocked effects befor
 
 test("connection guide shows the first-run next step before live send", async () => {
   const dom = installDom();
-  const [{ cleanup, render, within }, { App }] = await Promise.all([
+  const [{ cleanup, fireEvent, render, within }, { App }] = await Promise.all([
     import("@testing-library/react"),
     import("../src/App.js"),
   ]);
@@ -61,6 +61,39 @@ test("connection guide shows the first-run next step before live send", async ()
     assert.ok(guide.getByText("Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery."));
     assert.ok(guide.getByText("Live send ready: no"));
     assert.ok(guide.getByText("Authority boundary: local readiness only; not Napoleon approval."));
+
+    fireEvent.click(view.getByRole("button", { name: "Export readiness proof" }));
+    const proof = JSON.parse(view.getByLabelText("Exported bridge readiness proof").textContent ?? "{}") as {
+      connectionGuide?: {
+        currentStep?: string;
+        nextLocalAction?: string;
+        liveSendReady?: boolean;
+        endpointConfigured?: boolean;
+        descriptorDiscovered?: boolean;
+        textTurnRouteAdvertised?: boolean;
+        authorityBoundary?: string;
+        approvalCaptured?: boolean;
+        memoryWritePerformed?: boolean;
+        agentDispatchPerformed?: boolean;
+        externalSendPerformed?: boolean;
+      };
+    };
+
+    assert.equal(proof.connectionGuide?.currentStep, "configure_endpoint");
+    assert.equal(
+      proof.connectionGuide?.nextLocalAction,
+      "Next step: add the governed Napoleon endpoint in settings, then run descriptor discovery.",
+    );
+    assert.equal(proof.connectionGuide?.liveSendReady, false);
+    assert.equal(proof.connectionGuide?.endpointConfigured, false);
+    assert.equal(proof.connectionGuide?.descriptorDiscovered, false);
+    assert.equal(proof.connectionGuide?.textTurnRouteAdvertised, false);
+    assert.equal(proof.connectionGuide?.authorityBoundary, "local readiness only; not Napoleon approval");
+    assert.equal(proof.connectionGuide?.approvalCaptured, false);
+    assert.equal(proof.connectionGuide?.memoryWritePerformed, false);
+    assert.equal(proof.connectionGuide?.agentDispatchPerformed, false);
+    assert.equal(proof.connectionGuide?.externalSendPerformed, false);
+    assert.equal(view.getByLabelText("Exported bridge readiness proof").textContent?.includes("127.0.0.1"), false);
   } finally {
     cleanup();
     dom.window.close();

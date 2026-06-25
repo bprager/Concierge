@@ -18,6 +18,23 @@ export interface BridgeEvidenceReadinessState {
 export interface BridgeReadinessProofInput {
   descriptorConnection: DescriptorConnectionState;
   readiness: BridgeEvidenceReadinessState;
+  connectionGuide?: {
+    currentStep: string;
+    nextLocalAction: string;
+    liveSendReady: boolean;
+    endpointConfigured: boolean;
+    descriptorDiscovered: boolean;
+    descriptorIntegrityState: string;
+    textTurnRouteAdvertised: boolean;
+    rehearsalMode: boolean;
+    runtimeValidationSource: string;
+    promotionGate?: string;
+    authorityBoundary: string;
+    approvalCaptured: false;
+    memoryWritePerformed: false;
+    agentDispatchPerformed: false;
+    externalSendPerformed: false;
+  };
   runtimeValidationSource?: "real_runtime" | "local_harness" | "local_simulation";
   evaluatorValidation?: {
     status: "not_run" | "passed" | "failed";
@@ -332,6 +349,46 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         failureReason: sanitizeReadinessProofString(input.readiness.failureReason),
         blockedEffects,
       },
+      connectionGuide: input.connectionGuide
+        ? {
+            currentStep: sanitizeReadinessProofString(input.connectionGuide.currentStep) ?? "unavailable",
+            nextLocalAction: sanitizeReadinessProofString(input.connectionGuide.nextLocalAction) ?? "unavailable",
+            liveSendReady: input.connectionGuide.liveSendReady,
+            endpointConfigured: input.connectionGuide.endpointConfigured,
+            descriptorDiscovered: input.connectionGuide.descriptorDiscovered,
+            descriptorIntegrityState:
+              sanitizeReadinessProofString(input.connectionGuide.descriptorIntegrityState) ?? "unavailable",
+            textTurnRouteAdvertised: input.connectionGuide.textTurnRouteAdvertised,
+            rehearsalMode: input.connectionGuide.rehearsalMode,
+            runtimeValidationSource:
+              sanitizeReadinessProofString(input.connectionGuide.runtimeValidationSource) ?? "unavailable",
+            promotionGate:
+              sanitizeReadinessProofString(input.connectionGuide.promotionGate) ?? promotionGateForProof(input),
+            authorityBoundary:
+              sanitizeReadinessProofString(input.connectionGuide.authorityBoundary) ??
+              "local readiness only; not Napoleon approval",
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }
+        : {
+            currentStep: "unavailable",
+            nextLocalAction: "unavailable",
+            liveSendReady: false,
+            endpointConfigured: false,
+            descriptorDiscovered: false,
+            descriptorIntegrityState: "unavailable",
+            textTurnRouteAdvertised: false,
+            rehearsalMode: false,
+            runtimeValidationSource: input.runtimeValidationSource ?? "unavailable",
+            promotionGate: promotionGateForProof(input),
+            authorityBoundary: "local readiness only; not Napoleon approval",
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          },
       advisoryCapabilities: {
         state: input.advisoryCapabilities?.state ?? "not_fetched",
         serviceId: sanitizeReadinessProofString(input.advisoryCapabilities?.serviceId ?? undefined),
@@ -569,6 +626,12 @@ export function compareBridgeReadinessProofs(
     { label: "Last operation path", path: ["evidence", "lastTargetPath"] },
     { label: "Last failure reason", path: ["evidence", "lastFailureReason"] },
     { label: "Evidence blocked effects", path: ["evidence", "blockedEffects"] },
+    { label: "Connection guide step", path: ["connectionGuide", "currentStep"] },
+    { label: "Connection guide next action", path: ["connectionGuide", "nextLocalAction"] },
+    { label: "Connection guide live-send ready", path: ["connectionGuide", "liveSendReady"] },
+    { label: "Connection guide endpoint configured", path: ["connectionGuide", "endpointConfigured"] },
+    { label: "Connection guide descriptor discovered", path: ["connectionGuide", "descriptorDiscovered"] },
+    { label: "Connection guide text-turn route advertised", path: ["connectionGuide", "textTurnRouteAdvertised"] },
     { label: "Napoleon metadata state", path: ["napoleonMetadata", "state"] },
     { label: "Napoleon metadata agent IDs", path: ["napoleonMetadata", "agentIds"] },
     { label: "Napoleon metadata profile ID", path: ["napoleonMetadata", "profileId"] },

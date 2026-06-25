@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added sanitized connection-guide metadata to bridge readiness proof exports, carrying the current setup step, next local action, live-send readiness, endpoint/descriptor/text-route booleans, Rehearsal Mode state, promotion gate, and false side-effect boundaries without storing endpoint values, prompts, tokens, or approval.
 - Added a first-run Napoleon connection guide that shows the current setup step, next action, live-send readiness, and local-only authority boundary before any governed send.
 - Added descriptor text-turn route state to the empty Napoleon delegation panel, so a valid descriptor that omits `text_turn` shows `not advertised` with a route-specific next step before any live send.
 - Added a text-turn route row to the always-visible Napoleon connection state panel, so descriptors that omit the governed text route show `not advertised` before any live send attempt.

@@ -3638,6 +3638,27 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const json = exportBridgeReadinessProofJson({
       descriptorConnection,
       readiness: bridgeEvidenceReadiness,
+      connectionGuide: {
+        currentStep: connectionGuideStep.replaceAll(" ", "_"),
+        nextLocalAction: liveSendPreflight.nextStepSummary,
+        liveSendReady: liveSendPreflight.canAttemptLiveSend,
+        endpointConfigured: endpoint.trim().length > 0,
+        descriptorDiscovered: descriptorConnection.state === "ready",
+        descriptorIntegrityState: descriptorConnection.descriptorStatus
+          ? `${descriptorConnection.checksumState}_${descriptorConnection.signatureState}`
+          : "unavailable",
+        textTurnRouteAdvertised: Boolean(
+          descriptorConnection.canAttemptLiveBridge &&
+            descriptorConnection.descriptorStatus?.supportedHandoffs.includes("text_turn"),
+        ),
+        rehearsalMode,
+        runtimeValidationSource: runtimeValidationSource ?? "unavailable",
+        authorityBoundary: "local readiness only; not Napoleon approval",
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+      },
       runtimeValidationSource,
       evaluatorValidation: evaluatorValidationImport?.validation,
       advisoryCapabilities: chiefOfStaffCapabilities

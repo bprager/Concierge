@@ -157,7 +157,19 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
     runtimeValidation: { source: string; caveat: string; promotionGate: string };
     boundary: { approvalCaptured: boolean; memoryWritePerformed: boolean; externalSendPerformed: boolean };
   };
-  const forbiddenKeys = ["endpoint", "host", "token", "message", "prompt", "requestBody", "responseBody", "responseText"];
+  const forbiddenContent = [
+    "http://",
+    "https://",
+    "localhost",
+    "127.0.0.1",
+    "bearer",
+    "authorization",
+    "token",
+    "rawPrompt",
+    "requestBody",
+    "responseBody",
+    "responseText",
+  ];
 
   assert.equal(proof.kind, "concierge_bridge_readiness_proof");
   assert.equal(proof.generatedAt, "2026-06-13T00:00:00.000Z");
@@ -175,8 +187,8 @@ test("exports sanitized bridge readiness proof without raw prompts endpoints or 
   assert.equal(proof.boundary.approvalCaptured, false);
   assert.equal(proof.boundary.memoryWritePerformed, false);
   assert.equal(proof.boundary.externalSendPerformed, false);
-  for (const key of forbiddenKeys) {
-    assert.equal(exported.includes(key), false);
+  for (const content of forbiddenContent) {
+    assert.equal(exported.toLocaleLowerCase().includes(content.toLocaleLowerCase()), false);
   }
 });
 
@@ -206,6 +218,76 @@ test("exports missing runtime source as unproven bridge readiness proof", () => 
   assert.equal(proof.runtimeValidation.source, "unavailable");
   assert.equal(proof.runtimeValidation.promotionGate, "blocked_until_real_runtime_evidence_passes");
   assert.ok(proof.runtimeValidation.caveat.includes("Real Napoleon runtime validation has not been proven"));
+});
+
+test("exports sanitized connection guide proof metadata without granting authority", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: false,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    connectionGuide: {
+      currentStep: "configure_endpoint",
+      nextLocalAction: "add the governed Napoleon endpoint in settings, then run descriptor discovery",
+      liveSendReady: false,
+      endpointConfigured: false,
+      descriptorDiscovered: false,
+      descriptorIntegrityState: "unavailable",
+      textTurnRouteAdvertised: false,
+      rehearsalMode: false,
+      runtimeValidationSource: "unavailable",
+      promotionGate: "blocked_until_real_runtime_evidence_passes",
+      authorityBoundary: "local readiness only; not Napoleon approval",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+    },
+    generatedAt: "2026-06-25T00:00:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    connectionGuide: {
+      currentStep: string;
+      nextLocalAction: string;
+      liveSendReady: boolean;
+      endpointConfigured: boolean;
+      descriptorDiscovered: boolean;
+      descriptorIntegrityState: string;
+      textTurnRouteAdvertised: boolean;
+      rehearsalMode: boolean;
+      runtimeValidationSource: string;
+      promotionGate: string;
+      authorityBoundary: string;
+      approvalCaptured: boolean;
+      memoryWritePerformed: boolean;
+      agentDispatchPerformed: boolean;
+      externalSendPerformed: boolean;
+    };
+  };
+
+  assert.equal(proof.connectionGuide.currentStep, "configure_endpoint");
+  assert.equal(
+    proof.connectionGuide.nextLocalAction,
+    "add the governed Napoleon endpoint in settings, then run descriptor discovery",
+  );
+  assert.equal(proof.connectionGuide.liveSendReady, false);
+  assert.equal(proof.connectionGuide.endpointConfigured, false);
+  assert.equal(proof.connectionGuide.descriptorDiscovered, false);
+  assert.equal(proof.connectionGuide.descriptorIntegrityState, "unavailable");
+  assert.equal(proof.connectionGuide.textTurnRouteAdvertised, false);
+  assert.equal(proof.connectionGuide.rehearsalMode, false);
+  assert.equal(proof.connectionGuide.runtimeValidationSource, "unavailable");
+  assert.equal(proof.connectionGuide.promotionGate, "blocked_until_real_runtime_evidence_passes");
+  assert.equal(proof.connectionGuide.authorityBoundary, "local readiness only; not Napoleon approval");
+  assert.equal(proof.connectionGuide.approvalCaptured, false);
+  assert.equal(proof.connectionGuide.memoryWritePerformed, false);
+  assert.equal(proof.connectionGuide.agentDispatchPerformed, false);
+  assert.equal(proof.connectionGuide.externalSendPerformed, false);
+  assert.equal(exported.includes("http://"), false);
+  assert.equal(exported.includes("token"), false);
+  assert.equal(exported.includes("prompt"), false);
 });
 
 test("exports sanitized missing evaluator route as a promotion blocker", () => {
