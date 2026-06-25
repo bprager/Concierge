@@ -195,6 +195,7 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         re.compile(
             r"\b(dispatchAgent|invokeAgent|agentRegistry|taskRouter|callTool|runTool|executeTool)\b"
             r"|\btool\.execute\s*\("
+            r"|\btools\.execute\s*\("
             r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:invoke|dispatch)['\"]\s*\+\s*['\"]Agent['\"]\s*\]\s*\("
             r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:run|call|execute)['\"]\s*\+\s*['\"]Tool['\"]\s*\]\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"]invoke['\"]\s*\+\s*['\"]Agent['\"]\s*\]\s*\("
@@ -202,6 +203,7 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
             r"|\b(?:globalThis|window)\s*\[\s*['\"]run['\"]\s*\+\s*['\"]Tool['\"]\s*\]\s*\("
             r"|\b(?:globalThis|window)\s*\[\s*['\"](?:call|execute)['\"]\s*\+\s*['\"]Tool['\"]\s*\]\s*\("
             r"|\btool\s*\[\s*['\"]execute['\"]\s*\]\s*\("
+            r"|\btools\s*\[\s*['\"]execute['\"]\s*\]\s*\("
         ),
         "direct agent or tool dispatch",
     ),
