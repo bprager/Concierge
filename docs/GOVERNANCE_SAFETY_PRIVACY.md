@@ -29,6 +29,8 @@ It may not directly:
 
 Repository validation scans Concierge runtime source for direct process execution including bracketed `.call(...)` and `.apply(...)` aliases, memory or graph access including split-string `.call(...)` / `.apply(...)` aliases, agent or tool dispatch including split-string `.call(...)` / `.apply(...)` aliases, ungoverned network calls including split-string browser worker and network constructor aliases, direct, split-string, and optional-chained WebAssembly and object URL creation aliases, optional-chained privileged browser device/permission/location/account/notification/push/payment aliases, split-string IndexedDB and Cache Storage aliases, split-string browser file picker and `FileReader` aliases, runtime dynamic module loading, and external navigation paths including browser `open(...)` aliases with literal or variable targets. The scan is a guardrail, not authority: it catches local implementation drift while Napoleon remains the only authority layer.
 
+Live bridge response validation also treats selected-agent selection reasons and contribution summaries as authority-bearing display text. If returned agent provenance claims memory writes, approval capture, agent dispatch, external sends, local application, or other blocked effects, Concierge rejects the response as a contract mismatch instead of rendering it as accepted delegation proof.
+
 ## 2. Confirmation tiers
 
 | Tier | Examples | Approval |

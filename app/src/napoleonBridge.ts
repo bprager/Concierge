@@ -344,6 +344,16 @@ function hasForbiddenDelegationAllowedEffects(allowedEffects: string[]): boolean
   return allowedEffects.some((effect) => FORBIDDEN_DELEGATION_ALLOWED_EFFECTS.has(effect.trim().toLocaleLowerCase()));
 }
 
+function hasForbiddenDelegationTextSideEffectClaim(delegation: NapoleonDelegation | undefined): boolean {
+  return (
+    delegation?.selectedAgents.some(
+      (agent) =>
+        hasForbiddenSideEffectTextClaim(agent.selectionReason) ||
+        hasForbiddenSideEffectTextClaim(agent.contributionSummary),
+    ) ?? false
+  );
+}
+
 function advisoryHarnessClaimsRuntimeInvocation(delegationPlan: Record<string, unknown>): boolean {
   const candidateAgents = Array.isArray(delegationPlan.candidate_agents) ? delegationPlan.candidate_agents : [];
   return candidateAgents.some(
@@ -845,6 +855,7 @@ export async function sendToNapoleon(
     }
     if (
       hasForbiddenTextTurnSideEffectClaim(adapted as Partial<NapoleonResponse> & Record<string, unknown>) ||
+      hasForbiddenDelegationTextSideEffectClaim(adapted.delegation) ||
       hasUnprovenSelectedAgentAttribution(adapted.text, adapted.delegation) ||
       hasUnprovenNapoleonRecommendationAttribution(
         adapted.text,
@@ -1001,6 +1012,9 @@ export async function sendToNapoleon(
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
   if (delegation && hasForbiddenDelegationAllowedEffects(delegation.allowedEffects)) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
+  if (hasForbiddenDelegationTextSideEffectClaim(delegation ?? undefined)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
   if (hasUnprovenSelectedAgentAttribution(payload.text, delegation)) {
