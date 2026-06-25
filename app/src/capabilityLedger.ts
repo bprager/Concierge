@@ -761,6 +761,8 @@ export function aggregateCapabilitySignals(
 function capabilityAnswerDisplayLabel(label: string): string | undefined {
   const displayLabels: Record<string, string> = {
     napoleon_text_turn_bridge: "Napoleon text bridge",
+    bridge_failure_handling: "Napoleon bridge failure handling",
+    governed_bridge_no_go_handling: "Napoleon no-go handling",
     descriptor_handoff_advertisement: "Napoleon descriptor handoff advertising",
     text_response_generation: "Local text response",
     rehearsal_mode: "Rehearsal Mode preview",
@@ -1812,6 +1814,40 @@ function bridgeCompletionDetails(attributes: Record<string, unknown>): string[] 
   ];
 }
 
+function bridgeFailureHttpStatusClass(attributes: Record<string, unknown>): string | null {
+  const status = numberAttr(attributes, "status", 0);
+  if (status >= 500) return "5xx";
+  if (status >= 400) return "4xx";
+  if (status >= 300) return "3xx";
+  if (status >= 200) return "2xx";
+  return null;
+}
+
+function bridgeFailureDetails(attributes: Record<string, unknown>): string[] {
+  const reason = stringAttr(attributes, "reason", stringAttr(attributes, "bridgeFailureReason", "not_returned"));
+  const operation = stringAttr(attributes, "bridgeTargetOperation", "not_returned");
+  const requestKind = stringAttr(attributes, "bridgeTargetRequestKind", "not_returned");
+  const statusClass = bridgeFailureHttpStatusClass(attributes);
+  const blockedEffects = attributes.blockedEffects;
+  const details = [
+    reason === "not_returned" ? "bridge failure reason not returned" : `bridge failure reason ${reason}`,
+    `bridge target operation ${operation}`,
+    `bridge request kind ${requestKind}`,
+    `bridge target path class ${bridgeTargetPathClass(attributes)}`,
+  ];
+  if (statusClass) details.push(`http status class ${statusClass}`);
+  if (Array.isArray(blockedEffects) && blockedEffects.length > 0) {
+    details.push(`blocked effects ${blockedEffects.length}`);
+  }
+  details.push(
+    attributes.approvalCaptured === true ? "approval captured reported" : "no approval captured",
+    attributes.memoryWritePerformed === true ? "memory write reported" : "no memory write performed",
+    attributes.agentDispatchPerformed === true ? "agent dispatch reported" : "no agent dispatch performed",
+    attributes.externalSendPerformed === true ? "external send reported" : "no external send performed",
+  );
+  return details;
+}
+
 function isGovernanceBlockedResponseFailure(attributes: Record<string, unknown>): boolean {
   const bridgeFailureReason = stringAttr(attributes, "bridgeFailureReason", "");
   const reason = stringAttr(attributes, "reason", "");
@@ -2154,6 +2190,36 @@ export function deriveCapabilitySignalFromEvent(
       architectureArea: "bridge",
       suggestedNextStep: "no_action",
       details: bridgeCompletionDetails(attributes),
+    });
+  }
+
+  if (eventName === "bridge_request_failed") {
+    if (isGovernanceBlockedResponseFailure(attributes)) {
+      return buildCapabilitySignal({
+        ...base,
+        topicLabel: "governance",
+        intentLabel: "remote_governance_block",
+        capabilityLabel: "governed_bridge_no_go_handling",
+        capabilityStatus: "blocked",
+        outcomeSignal: "blocked",
+        confidence: 0.9,
+        architectureArea: "governance_ux",
+        suggestedNextStep: "no_action",
+        details: governanceBlockedResponseDetails(attributes),
+      });
+    }
+
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "governed_text_turn",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "napoleon_text_turn_bridge",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.9,
+      architectureArea: "bridge",
+      suggestedNextStep: "write_evaluator_case",
+      details: bridgeFailureDetails(attributes),
     });
   }
 

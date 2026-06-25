@@ -238,6 +238,65 @@ test("remote Napoleon governance no-go failures are not treated as missing capab
   assert.ok(signal.details?.includes("governance outcome no_go"));
 });
 
+test("bridge request no-go failures are tracked as correct protected blocks", () => {
+  const signal = deriveCapabilitySignalFromEvent("bridge_request_failed", {
+    traceId: "trace_bridge_no_go",
+    conversationId: "conv_bridge_no_go",
+    turnId: "turn_bridge_no_go",
+    profileMode: "child_protected_user",
+    reason: "governance_no_go",
+    governanceOutcome: "no_go",
+    bridgeTargetPath: "/v1/concierge/turn",
+    bridgeTargetOperation: "text_turn",
+    bridgeTargetRequestKind: "text_turn",
+    blockedEffects: ["memory_write", "external_send"],
+  });
+
+  assert.equal(signal.profileMode, "child_protected_user");
+  assert.equal(signal.privacyClass, "child_sensitive");
+  assert.equal(signal.topicLabel, "governance");
+  assert.equal(signal.intentLabel, "remote_governance_block");
+  assert.equal(signal.capabilityLabel, "governed_bridge_no_go_handling");
+  assert.equal(signal.capabilityStatus, "blocked");
+  assert.equal(signal.outcomeSignal, "blocked");
+  assert.equal(signal.suggestedNextStep, "no_action");
+  assert.equal(signal.architectureArea, "governance_ux");
+  assert.ok(signal.details?.includes("remote governance block treated as correct safety behavior"));
+  assert.ok(signal.details?.includes("blocked effects 2"));
+});
+
+test("bridge request failures become sanitized missing text bridge capability evidence", () => {
+  const signal = deriveCapabilitySignalFromEvent("bridge_request_failed", {
+    traceId: "trace_bridge_contract_mismatch",
+    conversationId: "conv_bridge_contract_mismatch",
+    turnId: "turn_bridge_contract_mismatch",
+    profileMode: "adult_owner",
+    reason: "contract_mismatch",
+    status: 422,
+    bridgeTargetPath: "/v1/concierge/turn",
+    bridgeTargetOperation: "text_turn",
+    bridgeTargetRequestKind: "text_turn",
+    blockedEffects: ["memory_write"],
+    endpoint: "https://napoleon.example.test/v1/concierge/turn",
+    bearerToken: "secret-token",
+    prompt: "do not retain this prompt",
+  });
+
+  assert.equal(signal.topicLabel, "governed_text_turn");
+  assert.equal(signal.intentLabel, "send_to_napoleon");
+  assert.equal(signal.capabilityLabel, "napoleon_text_turn_bridge");
+  assert.equal(signal.capabilityStatus, "missing");
+  assert.equal(signal.outcomeSignal, "bridge_failed");
+  assert.equal(signal.suggestedNextStep, "write_evaluator_case");
+  assert.equal(signal.architectureArea, "bridge");
+  assert.ok(signal.details?.includes("bridge failure reason contract_mismatch"));
+  assert.ok(signal.details?.includes("bridge target path class generated_text_turn"));
+  assert.ok(signal.details?.includes("http status class 4xx"));
+  assert.equal(JSON.stringify(signal).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify(signal).includes("secret-token"), false);
+  assert.equal(JSON.stringify(signal).includes("do not retain this prompt"), false);
+});
+
 test("evaluator imports with Napoleon required actions become sanitized runtime capability gaps", () => {
   const signal = deriveCapabilitySignalFromEvent("evaluator_validation_artifact_imported", {
     traceId: "trace_required_actions",
@@ -676,7 +735,7 @@ test("answers missing or blocked capability questions separately from successful
   assert.ok(answer);
   if (!answer) throw new Error("expected capability answer");
   assert.equal(answer.kind, "missing_or_blocked_capabilities");
-  assert.ok(answer.summary.includes("bridge_failure_handling"));
+  assert.ok(answer.summary.includes("Napoleon bridge failure handling"));
   assert.ok(answer.summary.includes("governance_review"));
   assert.equal(answer.rows.some((row) => row.status === "missing" && row.label === "bridge_failure_handling"), true);
   assert.equal(answer.rows.some((row) => row.status === "blocked" && row.label === "governance_review"), true);

@@ -1745,7 +1745,7 @@ test("renders and exports sanitized capability evidence drilldowns without conta
     await user.click(view.getByRole("button", { name: "Rehearse" }));
 
     await view.findByText("Capability evidence drilldown");
-    assert.ok(view.getByText("bridge_failure_handling"));
+    assert.ok(view.getByText("Napoleon bridge failure handling"));
     assert.ok(view.getByText("bridge"));
     assert.ok(view.getByText("missing"));
     assert.ok(view.getByText("write_evaluator_case"));

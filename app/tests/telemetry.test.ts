@@ -74,6 +74,53 @@ test("telemetry emits governed bridge success capability signals without prompt 
   assert.equal(JSON.stringify(signal).includes("secret-token"), false);
 });
 
+test("telemetry emits sanitized bridge failure capability signals", () => {
+  const signal = emitCapabilitySignal("bridge_request_failed", {
+    traceId: "trace_bridge_failed",
+    conversationId: "conv_bridge_failed",
+    turnId: "turn_bridge_failed",
+    profileMode: "adult_owner",
+    reason: "contract_mismatch",
+    status: 422,
+    bridgeTargetPath: "/v1/concierge/turn",
+    bridgeTargetOperation: "text_turn",
+    bridgeTargetRequestKind: "text_turn",
+    blockedEffects: ["memory_write", "external_send"],
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    endpoint: "https://napoleon.example.test/v1/concierge/turn",
+    bearerToken: "secret-token",
+    prompt: "do not retain this prompt",
+  });
+
+  assert.ok(signal);
+  if (!signal) throw new Error("expected capability signal");
+  assert.equal(signal.topicLabel, "governed_text_turn");
+  assert.equal(signal.intentLabel, "send_to_napoleon");
+  assert.equal(signal.capabilityLabel, "napoleon_text_turn_bridge");
+  assert.equal(signal.capabilityStatus, "missing");
+  assert.equal(signal.outcomeSignal, "bridge_failed");
+  assert.equal(signal.architectureArea, "bridge");
+  assert.equal(signal.suggestedNextStep, "write_evaluator_case");
+  assert.deepEqual(signal.details, [
+    "bridge failure reason contract_mismatch",
+    "bridge target operation text_turn",
+    "bridge request kind text_turn",
+    "bridge target path class generated_text_turn",
+    "http status class 4xx",
+    "blocked effects 2",
+    "no approval captured",
+    "no memory write performed",
+    "no agent dispatch performed",
+    "no external send performed",
+  ]);
+  assert.equal(JSON.stringify(signal).includes("do not retain this prompt"), false);
+  assert.equal(JSON.stringify(signal).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify(signal).includes("secret-token"), false);
+});
+
 test("telemetry capability signals preserve child protected minimization", () => {
   const signal = emitCapabilitySignal("memory_proposal_review_created", {
     traceId: "trace_child_memory_signal",
