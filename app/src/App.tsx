@@ -493,7 +493,18 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
       lower,
     ) ||
     /\b(what|which)\b.*\b(reference|references|ref|refs|decision|audit|trace)\b.*\b(use|cite|review)\b/.test(lower);
-  if (!lower.includes("napoleon") && !asksAboutReturnedAction && !asksAboutReturnedReviewReference) return false;
+  const asksAboutLocalSideEffectBoundary =
+    /\b(did|does|has|was|is)\b.*\bconcierge\b.*\b(capture|captured)\b.*\bapproval\b/.test(lower) ||
+    /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bwrite\b.*\bmemory\b/.test(lower) ||
+    /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bdispatch\b.*\bagents?\b/.test(lower) ||
+    /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bsend\b.*\b(externally|external)\b/.test(lower);
+  if (
+    !lower.includes("napoleon") &&
+    !asksAboutReturnedAction &&
+    !asksAboutReturnedReviewReference &&
+    !asksAboutLocalSideEffectBoundary
+  )
+    return false;
   const asksAboutReview =
     /\breview\b/.test(lower) ||
     /\brequires?_review\b/.test(lower) ||
@@ -508,7 +519,12 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
     /\bmay i\b/.test(lower) ||
     /\bneed\b/.test(lower) ||
     /\brequire\b/.test(lower);
-  return asksAboutReturnedAction || asksAboutReturnedReviewReference || (asksAboutReview && asksAboutActing);
+  return (
+    asksAboutReturnedAction ||
+    asksAboutReturnedReviewReference ||
+    asksAboutLocalSideEffectBoundary ||
+    (asksAboutReview && asksAboutActing)
+  );
 }
 
 function isNapoleonProofCurrentnessQuestion(content: string): boolean {

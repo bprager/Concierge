@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local returned-proof handling for Concierge side-effect boundary follow-ups such as "Did Concierge capture approval?", so Concierge answers approval-capture, memory-write, agent-dispatch, and external-send questions from the latest returned review proof without another bridge request, side effects, or raw follow-up/proof telemetry.
 - Added local returned-proof handling for direct approval-boundary follow-ups such as "Did Napoleon approve that?", so Concierge answers from the latest returned review proof without another bridge request, side effects, or raw follow-up/proof telemetry.
 - Added local returned-proof handling for natural blocked-effect follow-ups such as "What did Napoleon block?", so Concierge answers from the latest returned Napoleon proof without another bridge request, side effects, or raw follow-up/effect telemetry.
 - Added local returned-proof handling for natural allowed-effect follow-ups such as "What did Napoleon allow?", so Concierge answers from the latest returned Napoleon proof without another bridge request, side effects, or raw follow-up/effect telemetry.
