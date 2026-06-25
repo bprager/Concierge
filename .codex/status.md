@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added typo-tolerant Capability Intelligence question classification so common misspellings of conversation, capability, and implemented still route to local proposal-only answers.
 - Hardened accepted Napoleon response proof metadata so local delegation follow-up answers reuse redacted selected-agent, recommendation, reason, and contribution fields rather than raw returned provenance.
 - Hardened last-success Napoleon response proof exports so token or secret-bearing returned recommendation, selected-agent selection-reason, and selected-agent contribution prose is redacted before local proof JSON is created.
 - Made fail-closed Napoleon bridge errors duplicate-safe for Capability Intelligence: `bridge_request_failed` now owns the derived capability evidence, while the follow-on `response_failed` remains local trace telemetry without adding a second generic capability row.

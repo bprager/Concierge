@@ -951,6 +951,28 @@ test("answers easy-to-evolve missing capability questions with deterministic pro
   assert.equal(answer.boundary.memoryWriteAllowed, false);
 });
 
+test("answers misspelled capability intelligence questions", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("response_failed", {
+      traceId: "trace_misspelled_capability",
+      conversationId: "conv_misspelled_capability",
+      turnId: "turn_misspelled_capability",
+      profile: "adult_owner",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What capabilites are missing but easy to evolve?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  assert.equal(answer.kind, "easy_to_evolve_missing_capabilities");
+  assert.equal(answer.rows[0].label, "bridge_failure_handling");
+  assert.equal(answer.boundary.proposalOnly, true);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+});
+
 test("answers architecture improvement questions from missing safe request areas", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(

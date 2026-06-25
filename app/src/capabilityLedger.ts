@@ -787,7 +787,11 @@ function sortedRows(bucket: Record<string, number>, limit = 5): CapabilityAnswer
 }
 
 function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | null {
-  const lower = question.toLowerCase();
+  const lower = question
+    .toLowerCase()
+    .replace(/\bcapabilites\b/g, "capabilities")
+    .replace(/\bconvesrations?\b/g, (match) => (match.endsWith("s") ? "conversations" : "conversation"))
+    .replace(/\bimplemnt(ed|ing)?\b/g, "implement$1");
   const asksAboutConversation = /\b(conversation|conversations|topics?)\b/.test(lower);
   const asksIncreasing = /\b(increasing|rising|growing|more common|trending up)\b/.test(lower);
   const asksWorse = /\b(worse|worsening|getting worse|regressing|increasing failures?)\b/.test(lower);
