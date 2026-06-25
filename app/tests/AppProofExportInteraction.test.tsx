@@ -804,6 +804,37 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(naturalBlockedEffectsAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(naturalBlockedEffectsAnswerEvent).includes("What was blocked?"), false);
     assert.equal(JSON.stringify(naturalBlockedEffectsAnswerEvent).includes("memory_write"), false);
+
+    const requestCountBeforeNaturalNapoleonBlockedEffectsQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What did Napoleon block?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let naturalNapoleonBlockedEffectsAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      naturalNapoleonBlockedEffectsAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(naturalNapoleonBlockedEffectsAnswer);
+      assert.ok(
+        naturalNapoleonBlockedEffectsAnswer.textContent?.includes(
+          "Blocked effects: memory_write, approval_capture, external_send, agent_dispatch.",
+        ),
+      );
+    });
+    assert.ok(naturalNapoleonBlockedEffectsAnswer);
+    const naturalNapoleonBlockedEffectsAnswerText = naturalNapoleonBlockedEffectsAnswer.textContent ?? "";
+    assert.ok(naturalNapoleonBlockedEffectsAnswerText.includes("Allowed effects: prepare_advisory_response."));
+    assert.equal(requestedUrls.length, requestCountBeforeNaturalNapoleonBlockedEffectsQuestion);
+    const naturalNapoleonBlockedEffectsAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(naturalNapoleonBlockedEffectsAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(naturalNapoleonBlockedEffectsAnswerEvent?.attributes.blockedEffectCount, 4);
+    assert.equal(naturalNapoleonBlockedEffectsAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(naturalNapoleonBlockedEffectsAnswerEvent).includes("What did Napoleon block?"), false);
+    assert.equal(JSON.stringify(naturalNapoleonBlockedEffectsAnswerEvent).includes("memory_write"), false);
+
     const requestCountBeforeNaturalAllowedEffectsQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "What did Napoleon allow?" },
