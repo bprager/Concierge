@@ -1584,6 +1584,62 @@ test("records child profile scope when answering local capability intelligence q
   }
 });
 
+test("renders governed Napoleon bridge success as a working capability answer", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render }, userEventModule, { App }, telemetry] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  let fetchCalls = 0;
+
+  try {
+    telemetry.capabilityLedger.clear();
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    telemetry.emitCapabilitySignal("bridge_request_completed", {
+      traceId: "trace_rendered_bridge_working",
+      conversationId: "conv_rendered_bridge_working",
+      turnId: "turn_rendered_bridge_working",
+      profileMode: "adult_owner",
+      outcome: "requires_review",
+      bridgeTargetPath: "/v1/concierge/turn",
+      bridgeTargetOperation: "text_turn",
+      bridgeTargetRequestKind: "text_turn",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      rawPrompt: "do not render this prompt",
+      endpoint: "https://napoleon.example.test/v1/concierge/turn",
+      bearerToken: "secret-token",
+    });
+
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What conversations are working well?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await view.findByText(/Working-well local conversation capabilities/);
+    assert.ok(view.getAllByText(/Napoleon text bridge/).length >= 1);
+    assert.equal(view.container.textContent?.includes("do not render this prompt"), false);
+    assert.equal(view.container.textContent?.includes("napoleon.example.test"), false);
+    assert.equal(view.container.textContent?.includes("secret-token"), false);
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders steering recommendation type answers without leaking telemetry content", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }, { clearCapabilityLedger }, telemetry] = await Promise.all([

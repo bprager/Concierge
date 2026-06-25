@@ -168,6 +168,7 @@ export type CapabilityQuestionKind =
 
 export interface CapabilityAnswerRow {
   label: string;
+  displayLabel?: string;
   count: number;
   status?: CapabilityStatus;
   architectureArea?: CapabilityArchitectureArea;
@@ -757,11 +758,30 @@ export function aggregateCapabilitySignals(
   return aggregate;
 }
 
+function capabilityAnswerDisplayLabel(label: string): string | undefined {
+  const displayLabels: Record<string, string> = {
+    napoleon_text_turn_bridge: "Napoleon text bridge",
+    descriptor_handoff_advertisement: "Napoleon descriptor handoff advertising",
+    text_response_generation: "Local text response",
+    rehearsal_mode: "Rehearsal Mode preview",
+  };
+  return displayLabels[label];
+}
+
+function withCapabilityAnswerDisplayLabel(row: CapabilityAnswerRow): CapabilityAnswerRow {
+  const displayLabel = capabilityAnswerDisplayLabel(row.label);
+  return displayLabel ? { ...row, displayLabel } : row;
+}
+
+function capabilityAnswerRowTitle(row: CapabilityAnswerRow): string {
+  return row.displayLabel ?? row.label;
+}
+
 function sortedRows(bucket: Record<string, number>, limit = 5): CapabilityAnswerRow[] {
   return Object.entries(bucket)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, limit)
-    .map(([label, count]) => ({ label, count }));
+    .map(([label, count]) => withCapabilityAnswerDisplayLabel({ label, count }));
 }
 
 function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | null {
@@ -804,7 +824,7 @@ function describeRows(rows: CapabilityAnswerRow[]): string {
     .map((row) => {
       const details = row.details?.length ? `: ${row.details.join(", ")}` : "";
       const recommendation = row.recommendation ? `; ${row.recommendation}` : "";
-      return `${row.label} (${row.count})${details}${recommendation}`;
+      return `${capabilityAnswerRowTitle(row)} (${row.count})${details}${recommendation}`;
     })
     .join(", ");
 }
@@ -812,7 +832,7 @@ function describeRows(rows: CapabilityAnswerRow[]): string {
 function describeTrendRows(rows: CapabilityAnswerRow[]): string {
   if (rows.length === 0) return "No local trend changes yet";
   return rows
-    .map((row) => `${row.label} (${row.count} recent, ${row.previousCount ?? 0} previous, delta ${row.delta ?? 0})`)
+    .map((row) => `${capabilityAnswerRowTitle(row)} (${row.count} recent, ${row.previousCount ?? 0} previous, delta ${row.delta ?? 0})`)
     .join(", ");
 }
 
@@ -1114,16 +1134,18 @@ function groupedRows(
   }
 
   return Object.values(grouped)
-    .map((row) => ({
-      label: row.label,
-      count: row.count,
-      status: row.status,
-      architectureArea: row.architectureArea,
-      suggestedNextStep: row.suggestedNextStep,
-      confidence: rounded(row.confidenceTotal / row.count),
-      score: rounded(row.score),
-      details: [...new Set(row.details)].slice(0, 6),
-    }))
+    .map((row) =>
+      withCapabilityAnswerDisplayLabel({
+        label: row.label,
+        count: row.count,
+        status: row.status,
+        architectureArea: row.architectureArea,
+        suggestedNextStep: row.suggestedNextStep,
+        confidence: rounded(row.confidenceTotal / row.count),
+        score: rounded(row.score),
+        details: [...new Set(row.details)].slice(0, 6),
+      }),
+    )
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || b.count - a.count || a.label.localeCompare(b.label))
     .slice(0, 5);
 }
@@ -1174,6 +1196,7 @@ function trendRows(
 
   return Object.values(rows)
     .filter((row) => (row.delta ?? 0) > 0)
+    .map(withCapabilityAnswerDisplayLabel)
     .sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0) || b.count - a.count || a.label.localeCompare(b.label))
     .slice(0, 5);
 }
@@ -1284,7 +1307,7 @@ function scoredRecommendationRows(
         ...componentsWithoutScore,
         finalPriorityScore,
       };
-      return {
+      return withCapabilityAnswerDisplayLabel({
         label: group.label,
         count: group.count,
         status: strongestComponent(group.signals, (signal) => signal.capabilityStatus),
@@ -1296,7 +1319,7 @@ function scoredRecommendationRows(
         scoreExplanation: recommendationExplanation(scoreComponents),
         recommendation: proposalRecommendationForGroup(group),
         details: mergeDetails(group.signals),
-      };
+      });
     })
     .sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || b.count - a.count || a.label.localeCompare(b.label))
     .slice(0, 5);

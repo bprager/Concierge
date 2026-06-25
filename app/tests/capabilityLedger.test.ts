@@ -792,6 +792,42 @@ test("answers working-well conversation questions from local working signals", (
   assert.equal(JSON.stringify(answer).includes("raw memory content"), false);
 });
 
+test("working-well answers display governed Napoleon bridge success in plain language", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("bridge_request_completed", {
+      traceId: "trace_bridge_working",
+      conversationId: "conv_bridge_working",
+      turnId: "turn_bridge_working",
+      profileMode: "adult_owner",
+      outcome: "requires_review",
+      bridgeTargetPath: "/v1/concierge/turn",
+      bridgeTargetOperation: "text_turn",
+      bridgeTargetRequestKind: "text_turn",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      rawPrompt: "do not retain bridge prompt",
+      endpoint: "https://napoleon.example.test/v1/concierge/turn",
+      bearerToken: "secret-token",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What conversations are working well?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  assert.equal(answer.kind, "working_well_conversations");
+  assert.equal(answer.rows[0].label, "napoleon_text_turn_bridge");
+  assert.equal(answer.rows[0].displayLabel, "Napoleon text bridge");
+  assert.ok(answer.summary.includes("Napoleon text bridge"));
+  assert.equal(JSON.stringify(answer).includes("do not retain bridge prompt"), false);
+  assert.equal(JSON.stringify(answer).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify(answer).includes("secret-token"), false);
+});
+
 test("answers easy-to-evolve missing capability questions with deterministic proposal ranking", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(

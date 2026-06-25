@@ -344,7 +344,7 @@ function formatCapabilityAnswer(
           const scoreContext = row.scoreExplanation ? `, ${row.scoreExplanation}` : "";
           const details = row.details?.length ? `, details ${row.details.join("; ")}` : "";
           const recommendation = row.recommendation ? `, recommendation ${row.recommendation}` : "";
-          return `${row.label}: ${row.count}${status}${area}${confidence}${score}${nextStep}${scoreContext}${details}${recommendation}`;
+          return `${row.displayLabel ?? row.label}: ${row.count}${status}${area}${confidence}${score}${nextStep}${scoreContext}${details}${recommendation}`;
         })
         .join("\n")
     : "No local signals yet.";
@@ -7075,7 +7075,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                       <ol>
                         {m.metadata.capabilityDrilldown.rows.map((row) => (
                           <li key={`${row.label}:${row.status ?? "none"}:${row.architectureArea ?? "none"}`}>
-                            <strong>{row.label}</strong>
+                            <strong>{row.displayLabel ?? row.label}</strong>
                             <dl>
                               <dt>Count</dt>
                               <dd>{row.count}</dd>
