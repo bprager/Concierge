@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local returned-proof handling for contextual side-effect follow-ups such as "Did it write memory?", so Concierge answers from the latest returned review proof without another bridge request, side effects, or raw follow-up/proof telemetry.
 - Added local proof-currentness handling for contextual follow-ups such as "Is this proof still current?", so Concierge answers from current returned proof state without another bridge request, side effects, or raw follow-up/proof telemetry.
 - Added local returned-proof handling for Concierge side-effect boundary follow-ups such as "Did Concierge capture approval?", so Concierge answers approval-capture, memory-write, agent-dispatch, and external-send questions from the latest returned review proof without another bridge request, side effects, or raw follow-up/proof telemetry.
 - Added local returned-proof handling for direct approval-boundary follow-ups such as "Did Napoleon approve that?", so Concierge answers from the latest returned review proof without another bridge request, side effects, or raw follow-up/proof telemetry.

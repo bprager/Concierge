@@ -966,6 +966,39 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(localApprovalCaptureAnswerEvent).includes("Did Concierge capture approval?"), false);
     assert.equal(JSON.stringify(localApprovalCaptureAnswerEvent).includes("approval_capture"), false);
 
+    const requestCountBeforeNaturalMemoryWriteQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Did it write memory?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let naturalMemoryWriteAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      naturalMemoryWriteAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon review requirement from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(naturalMemoryWriteAnswer);
+      assert.ok(naturalMemoryWriteAnswer.textContent?.includes("Blocked effects: memory_write, approval_capture, external_send, agent_dispatch."));
+    });
+    assert.ok(naturalMemoryWriteAnswer);
+    const naturalMemoryWriteAnswerText = naturalMemoryWriteAnswer.textContent ?? "";
+    assert.ok(naturalMemoryWriteAnswerText.includes("Governance: requires_review."));
+    assert.ok(
+      naturalMemoryWriteAnswerText.includes(
+        "This is local display of returned bridge proof only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeNaturalMemoryWriteQuestion);
+    const naturalMemoryWriteAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_review_requirement_answered").at(-1);
+    assert.equal(naturalMemoryWriteAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(naturalMemoryWriteAnswerEvent?.attributes.proofReturned, true);
+    assert.equal(naturalMemoryWriteAnswerEvent?.attributes.reviewRequired, true);
+    assert.equal(naturalMemoryWriteAnswerEvent?.attributes.memoryWritePerformed, false);
+    assert.equal(naturalMemoryWriteAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(naturalMemoryWriteAnswerEvent).includes("Did it write memory?"), false);
+    assert.equal(JSON.stringify(naturalMemoryWriteAnswerEvent).includes("memory_write"), false);
+
     const requestCountBeforeNaturalActingQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "Can I act on that?" },

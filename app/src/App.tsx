@@ -498,11 +498,21 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
     /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bwrite\b.*\bmemory\b/.test(lower) ||
     /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bdispatch\b.*\bagents?\b/.test(lower) ||
     /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bsend\b.*\b(externally|external)\b/.test(lower);
+  const asksAboutContextualSideEffectBoundary =
+    /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\b(capture|captured)\b.*\bapproval\b/.test(
+      lower,
+    ) ||
+    /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\bwrite\b.*\bmemory\b/.test(lower) ||
+    /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\bdispatch\b.*\bagents?\b/.test(lower) ||
+    /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\bsend\b.*\b(externally|external)\b/.test(
+      lower,
+    );
   if (
     !lower.includes("napoleon") &&
     !asksAboutReturnedAction &&
     !asksAboutReturnedReviewReference &&
-    !asksAboutLocalSideEffectBoundary
+    !asksAboutLocalSideEffectBoundary &&
+    !asksAboutContextualSideEffectBoundary
   )
     return false;
   const asksAboutReview =
@@ -523,6 +533,7 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
     asksAboutReturnedAction ||
     asksAboutReturnedReviewReference ||
     asksAboutLocalSideEffectBoundary ||
+    asksAboutContextualSideEffectBoundary ||
     (asksAboutReview && asksAboutActing)
   );
 }
