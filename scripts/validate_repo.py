@@ -424,6 +424,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\b(?:Worker|SharedWorker)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"](?:Worker|SharedWorker)['\"]\s*\]\s*\("),
+    re.compile(
+        r"\bnew\s+(?:globalThis|window)\s*\[\s*(?:['\"]Work['\"]\s*\+\s*['\"]er['\"]|['\"]Shared['\"]\s*\+\s*['\"]Worker['\"])\s*\]\s*\("
+    ),
     re.compile(r"\bimportScripts\s*\("),
     re.compile(r"\bimport\s*\("),
     re.compile(r"\bimport\s+(?:[^;\n]*?\s+from\s+)?['\"](?:https?://|data:)"),
