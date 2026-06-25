@@ -496,8 +496,10 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
   const asksAboutLocalSideEffectBoundary =
     /\b(did|does|has|was|is)\b.*\bconcierge\b.*\b(capture|captured)\b.*\bapproval\b/.test(lower) ||
     /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bwrite\b.*\bmemory\b/.test(lower) ||
-    /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bdispatch\b.*\bagents?\b/.test(lower) ||
-    /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bsend\b.*\b(externally|external)\b/.test(lower);
+    /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bdispatch\b.*\b(agents?|anyone|somebody|someone)\b/.test(lower) ||
+    /\b(did|does|has|was|is)\b.*\bconcierge\b.*\bsend\b.*\b(externally|external|anything|something|somewhere|out)\b/.test(
+      lower,
+    );
   const asksAboutContextualSideEffectBoundary =
     /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\b(capture|captured)\b.*\bapproval\b/.test(
       lower,

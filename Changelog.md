@@ -10,7 +10,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 - Added local returned-proof answers for contextual side-effect follow-ups like "Did it write memory?", "Did it send anything?", and "Did it dispatch anyone?", keeping memory-write, approval-capture, agent-dispatch, and external-send checks local instead of sending a new Napoleon turn.
 - Added local proof-currentness answers for contextual follow-ups like "Is this proof still current?", keeping returned proof checks local instead of sending a new Napoleon turn.
-- Added local returned-proof answers for Concierge side-effect boundary follow-ups like "Did Concierge capture approval?", keeping approval-capture, memory-write, agent-dispatch, and external-send questions local instead of sending a new Napoleon turn.
+- Added local returned-proof answers for Concierge side-effect boundary follow-ups like "Did Concierge capture approval?", "Did Concierge send anything?", and "Did Concierge dispatch anyone?", keeping approval-capture, memory-write, agent-dispatch, and external-send questions local instead of sending a new Napoleon turn.
 - Added local returned-proof answers for direct approval-boundary follow-ups like "Did Napoleon approve that?", keeping approval questions tied to returned review proof instead of sending a new Napoleon turn.
 - Added local returned-proof answers for natural blocked-effect follow-ups like "What did Napoleon block?", keeping returned blocked effects local instead of sending a new Napoleon turn.
 - Added local returned-proof answers for natural allowed-effect follow-ups like "What did Napoleon allow?", keeping returned allowed effects local instead of sending a new Napoleon turn.
