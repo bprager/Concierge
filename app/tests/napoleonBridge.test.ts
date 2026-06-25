@@ -898,6 +898,93 @@ test("live bridge fails closed when selected-agent finding does not match contri
   );
 });
 
+test("live bridge fails closed when returned selected-agent id is unsafe evidence", async () => {
+  const events: TelemetryPayload[] = [];
+  const evidence: unknown[] = [];
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_unsafe_selected_agent_id",
+          conversationId: "conv_unsafe_selected_agent_id",
+          turnId: "turn_unsafe_selected_agent_id",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Summarize the governed bridge status",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Passive Brain found the latest bridge rollout note.",
+              profileMode: "adult_owner",
+              governanceDecision: {
+                decision_id: "decision_unsafe_selected_agent_id",
+                request_id: "cos_turn_unsafe_selected_agent_id",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+                trace_id: "trace_unsafe_selected_agent_id",
+                audit_id: "audit_unsafe_selected_agent_id",
+              },
+              traceEnvelope: {
+                trace_id: "trace_unsafe_selected_agent_id",
+                parent_trace_id: "conv_unsafe_selected_agent_id",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_unsafe_selected_agent_id",
+                decision_id: "decision_unsafe_selected_agent_id",
+                timestamp: "2026-06-11T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_unsafe_selected_agent_id",
+                trace_id: "trace_unsafe_selected_agent_id",
+                decision_id: "decision_unsafe_selected_agent_id",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_unsafe_selected_agent_id"],
+              },
+              delegation: {
+                selectedAgents: [
+                  {
+                    agentId: "https://napoleon.example/agents/passive-brain?token=secret",
+                    displayName: "Passive Brain",
+                    selectionReason: "Relevant bridge history was found.",
+                    contributionSummary: "Found the latest bridge rollout note.",
+                  },
+                ],
+                allowedEffects: ["prepare_advisory_response"],
+                blockedEffects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+                governanceState: "requires_review",
+                traceId: "trace_unsafe_selected_agent_id",
+                auditId: "audit_unsafe_selected_agent_id",
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+
+  assert.equal(events.at(-1)?.event, "bridge_request_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "contract_mismatch");
+  assert.equal((evidence.at(-1) as { status?: string; reason?: string }).status, "fail_closed");
+  assert.equal((evidence.at(-1) as { status?: string; reason?: string }).reason, "contract_mismatch");
+  assert.equal(JSON.stringify(evidence).includes("https://napoleon.example/agents/passive-brain"), false);
+  assert.equal(JSON.stringify(evidence).includes("token=secret"), false);
+});
+
 test("live bridge fails closed when advisory harness text claims side effects were performed", async () => {
   const events: TelemetryPayload[] = [];
   const evidence: unknown[] = [];

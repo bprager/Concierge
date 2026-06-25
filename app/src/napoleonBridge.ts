@@ -38,6 +38,9 @@ const FORBIDDEN_DELEGATION_ALLOWED_EFFECTS = new Set([
   "task_routing",
 ]);
 
+const SAFE_SELECTED_AGENT_ID_PATTERN = /^[a-z0-9][a-z0-9_.:-]{0,95}$/i;
+const UNSAFE_SELECTED_AGENT_ID_TEXT_PATTERN = /\b(?:https?:\/\/|bearer|authorization|token|secret|password|credential)\b/i;
+
 export interface BridgeContractEvidence {
   kind: "bridge_contract_evidence";
   operationId: BridgeOperationId;
@@ -351,6 +354,15 @@ function hasForbiddenDelegationTextSideEffectClaim(delegation: NapoleonDelegatio
         hasForbiddenSideEffectTextClaim(agent.selectionReason) ||
         hasForbiddenSideEffectTextClaim(agent.contributionSummary),
     ) ?? false
+  );
+}
+
+function hasUnsafeSelectedAgentId(delegation: NapoleonDelegation | undefined): boolean {
+  return (
+    delegation?.selectedAgents.some((agent) => {
+      const agentId = agent.agentId.trim();
+      return !SAFE_SELECTED_AGENT_ID_PATTERN.test(agentId) || UNSAFE_SELECTED_AGENT_ID_TEXT_PATTERN.test(agentId);
+    }) ?? false
   );
 }
 
@@ -855,6 +867,7 @@ export async function sendToNapoleon(
     }
     if (
       hasForbiddenTextTurnSideEffectClaim(adapted as Partial<NapoleonResponse> & Record<string, unknown>) ||
+      hasUnsafeSelectedAgentId(adapted.delegation) ||
       hasForbiddenDelegationTextSideEffectClaim(adapted.delegation) ||
       hasUnprovenSelectedAgentAttribution(adapted.text, adapted.delegation) ||
       hasUnprovenNapoleonRecommendationAttribution(
@@ -1012,6 +1025,9 @@ export async function sendToNapoleon(
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
   if (delegation && hasForbiddenDelegationAllowedEffects(delegation.allowedEffects)) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
+  if (hasUnsafeSelectedAgentId(delegation ?? undefined)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
   if (hasForbiddenDelegationTextSideEffectClaim(delegation ?? undefined)) {

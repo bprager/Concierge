@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened live bridge response validation so unsafe returned selected-agent IDs fail closed before accepted bridge evidence can retain endpoints, credentials, or raw-looking agent references.
 - Hardened live bridge response validation so returned selected-agent selection reasons and contribution summaries fail closed when they claim memory writes, approval capture, agent dispatch, external sends, local application, or other blocked effects.
 - Hardened repository authority-boundary validation for split-string browser worker, network constructor, direct, split-string, and optional-chained WebAssembly, direct, split-string, and optional-chained object URL creation, optional-chained privileged browser device/permission/location/account/notification/push/payment aliases, IndexedDB, Cache Storage, file picker, and `FileReader` aliases, split-string memory/graph write call/apply aliases, direct `tool(s).execute(...)`, bracket-property `execute`, split-string agent/tool aliases, and tool-dispatch call/apply aliases so UI code cannot add local executable, service, persistence, file, memory, graph, agent, or tool paths beside Napoleon.
 - Added reason-specific required-refresh guidance to local Napoleon proof currentness answers so stale proof after endpoint, token, descriptor, profile, Rehearsal, or bridge-failure changes remains explainable without a new bridge request.

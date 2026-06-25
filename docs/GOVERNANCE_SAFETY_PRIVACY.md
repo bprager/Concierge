@@ -31,6 +31,8 @@ Repository validation scans Concierge runtime source for direct process executio
 
 Live bridge response validation also treats selected-agent selection reasons and contribution summaries as authority-bearing display text. If returned agent provenance claims memory writes, approval capture, agent dispatch, external sends, local application, or other blocked effects, Concierge rejects the response as a contract mismatch instead of rendering it as accepted delegation proof.
 
+Returned selected-agent IDs are evidence metadata and must remain safe bounded identifiers. Endpoint-shaped, credential-like, whitespace/slash-bearing, or raw-looking selected-agent IDs are rejected as contract mismatches before accepted bridge evidence, proof exports, or visible delegation panels can retain them.
+
 ## 2. Confirmation tiers
 
 | Tier | Examples | Approval |
