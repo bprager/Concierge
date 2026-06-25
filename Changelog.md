@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added machine-readable Napoleon required-action packets to live-runtime validation when real descriptors omit the `chief_of_staff_request` or `governance_evaluation` contract-packet handoffs, keeping the packet evidence sanitized, Napoleon-owned, and explicitly non-authorizing.
 - Hardened governed review, packet, status, observability, and steering handoff response validation so unsafe returned trace, audit, decision, request, and proof-link identifiers fail closed before local results can retain raw proof references.
 - Hardened live bridge response validation so unsafe returned trace, audit, decision, request, and proof-link identifiers fail closed before accepted Napoleon proof metadata can retain endpoints, credentials, or raw-looking proof references.
 - Hardened live bridge response validation so unsafe returned target capability IDs fail closed before accepted Napoleon proof metadata can retain endpoints, credentials, or raw-looking capability references.

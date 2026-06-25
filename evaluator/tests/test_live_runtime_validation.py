@@ -229,6 +229,31 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(summary["contractPacketSubmissions"]["submissionCount"], 0)
         self.assertEqual(packets["status"], "failed")
         self.assertEqual(packets["failureReason"], "contract_packet_handoff_not_advertised")
+        self.assertEqual(len(packets["napoleonRequiredActions"]), 2)
+        packet_action_ids = {action["id"] for action in packets["napoleonRequiredActions"]}
+        self.assertEqual(
+            packet_action_ids,
+            {
+                "advertise_chief_of_staff_request_handoff",
+                "advertise_governance_evaluation_handoff",
+            },
+        )
+        self.assertEqual(summary["contractPacketSubmissions"]["napoleonRequiredActions"], packets["napoleonRequiredActions"])
+        self.assertEqual(summary["napoleonRequiredActions"], packets["napoleonRequiredActions"])
+        for action in summary["napoleonRequiredActions"]:
+            self.assertEqual(action["owner"], "napoleon")
+            self.assertEqual(action["reason"], "real_runtime_promotion_blocker")
+            self.assertIn(action["handoffName"], {"chief_of_staff_request", "governance_evaluation"})
+            self.assertIn(action["targetPath"], {"/chief-of-staff/requests", "/governance/evaluate"})
+            self.assertIn(action["requestKind"], {"chief_of_staff_request_handoff", "governance_evaluation_handoff"})
+            self.assertIn(action["operationId"], {"chief_of_staff_request", "governance_evaluation"})
+            self.assertIn("supportedHandoffs", action["advertiseUsing"])
+            self.assertFalse(action["sideEffectsPerformed"])
+            self.assertFalse(action["approvalCaptured"])
+            self.assertFalse(action["memoryWritePerformed"])
+            self.assertFalse(action["agentDispatchPerformed"])
+            self.assertFalse(action["externalSendPerformed"])
+            self.assertFalse(action["appliedLocally"])
         self.assertFalse(packets["endpointHostRetained"])
         self.assertFalse(packets["tokenRetained"])
         self.assertFalse(packets["requestBodyRetained"])
@@ -422,8 +447,18 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(report["failureReason"], "http_evaluator_handoff_not_advertised")
         self.assertFalse(report["evaluationTarget"]["descriptorHandoffAdvertised"])
         self.assertIn("evaluation_review", summary["httpEvaluator"]["descriptorHandoffRequiredAction"])
-        self.assertEqual(len(summary["napoleonRequiredActions"]), 1)
-        napoleon_action = summary["napoleonRequiredActions"][0]
+        self.assertEqual(len(summary["napoleonRequiredActions"]), 3)
+        summary_action_ids = {action["id"] for action in summary["napoleonRequiredActions"]}
+        self.assertEqual(
+            summary_action_ids,
+            {
+                "advertise_chief_of_staff_request_handoff",
+                "advertise_governance_evaluation_handoff",
+                "advertise_evaluation_review_handoff",
+            },
+        )
+        self.assertEqual(len(report["evaluationTarget"]["napoleonRequiredActions"]), 1)
+        napoleon_action = report["evaluationTarget"]["napoleonRequiredActions"][0]
         self.assertEqual(napoleon_action["id"], "advertise_evaluation_review_handoff")
         self.assertEqual(napoleon_action["owner"], "napoleon")
         self.assertEqual(napoleon_action["handoffName"], "evaluation_review")
@@ -437,7 +472,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertFalse(napoleon_action["agentDispatchPerformed"])
         self.assertFalse(napoleon_action["externalSendPerformed"])
         self.assertFalse(napoleon_action["appliedLocally"])
-        self.assertEqual(report["evaluationTarget"]["napoleonRequiredActions"], summary["napoleonRequiredActions"])
+        self.assertIn(napoleon_action, summary["napoleonRequiredActions"])
         self.assertIn(
             "supportedHandoffs",
             report["evaluationTarget"]["descriptorHandoffRequiredAction"],

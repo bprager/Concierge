@@ -38,6 +38,14 @@ EVALUATION_REVIEW_HANDOFF_REQUIRED_ACTION = (
     "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, "
     "required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation."
 )
+CHIEF_OF_STAFF_REQUEST_HANDOFF_REQUIRED_ACTION = (
+    "Napoleon must advertise chief_of_staff_request in supportedHandoffs, supported_handoffs, "
+    "required_for, or descriptor endpoint metadata for /chief-of-staff/requests."
+)
+GOVERNANCE_EVALUATION_HANDOFF_REQUIRED_ACTION = (
+    "Napoleon must advertise governance_evaluation in supportedHandoffs, supported_handoffs, "
+    "required_for, or descriptor endpoint metadata for /governance/evaluate."
+)
 EVALUATION_REVIEW_NAPOLEON_ACTION = {
     "id": "advertise_evaluation_review_handoff",
     "owner": "napoleon",
@@ -59,6 +67,54 @@ EVALUATION_REVIEW_NAPOLEON_ACTION = {
     "agentDispatchPerformed": False,
     "externalSendPerformed": False,
     "appliedLocally": False,
+}
+CHIEF_OF_STAFF_REQUEST_NAPOLEON_ACTION = {
+    "id": "advertise_chief_of_staff_request_handoff",
+    "owner": "napoleon",
+    "reason": "real_runtime_promotion_blocker",
+    "handoffName": "chief_of_staff_request",
+    "targetPath": CHIEF_OF_STAFF_REQUEST_PATH,
+    "requestKind": "chief_of_staff_request_handoff",
+    "operationId": "chief_of_staff_request",
+    "advertiseUsing": [
+        "supportedHandoffs",
+        "supported_handoffs",
+        "required_for",
+        "descriptor route metadata for /chief-of-staff/requests",
+    ],
+    "requiredAction": CHIEF_OF_STAFF_REQUEST_HANDOFF_REQUIRED_ACTION,
+    "sideEffectsPerformed": False,
+    "approvalCaptured": False,
+    "memoryWritePerformed": False,
+    "agentDispatchPerformed": False,
+    "externalSendPerformed": False,
+    "appliedLocally": False,
+}
+GOVERNANCE_EVALUATION_NAPOLEON_ACTION = {
+    "id": "advertise_governance_evaluation_handoff",
+    "owner": "napoleon",
+    "reason": "real_runtime_promotion_blocker",
+    "handoffName": "governance_evaluation",
+    "targetPath": GOVERNANCE_EVALUATION_PATH,
+    "requestKind": "governance_evaluation_handoff",
+    "operationId": "governance_evaluation",
+    "advertiseUsing": [
+        "supportedHandoffs",
+        "supported_handoffs",
+        "required_for",
+        "descriptor route metadata for /governance/evaluate",
+    ],
+    "requiredAction": GOVERNANCE_EVALUATION_HANDOFF_REQUIRED_ACTION,
+    "sideEffectsPerformed": False,
+    "approvalCaptured": False,
+    "memoryWritePerformed": False,
+    "agentDispatchPerformed": False,
+    "externalSendPerformed": False,
+    "appliedLocally": False,
+}
+CONTRACT_PACKET_NAPOLEON_ACTIONS = {
+    "chief_of_staff_request": CHIEF_OF_STAFF_REQUEST_NAPOLEON_ACTION,
+    "governance_evaluation": GOVERNANCE_EVALUATION_NAPOLEON_ACTION,
 }
 
 BOUNDARY = (
@@ -229,6 +285,30 @@ def napoleon_required_actions_for_evaluator_failure(failure_reason: str | None) 
     if failure_reason != "http_evaluator_handoff_not_advertised":
         return []
     return [dict(EVALUATION_REVIEW_NAPOLEON_ACTION)]
+
+
+def napoleon_required_actions_for_missing_contract_handoffs(missing_handoffs: list[str]) -> list[dict[str, Any]]:
+    actions: list[dict[str, Any]] = []
+    for handoff in missing_handoffs:
+        action = CONTRACT_PACKET_NAPOLEON_ACTIONS.get(handoff)
+        if action:
+            actions.append(dict(action))
+    return actions
+
+
+def merge_napoleon_required_actions(*action_groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    merged: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for actions in action_groups:
+        for action in actions:
+            if not isinstance(action, dict):
+                continue
+            action_id = str(action.get("id") or "")
+            if not action_id or action_id in seen:
+                continue
+            seen.add(action_id)
+            merged.append(action)
+    return merged
 
 
 def descriptor_payload(payload: dict[str, Any]) -> dict[str, Any]:
@@ -1034,12 +1114,14 @@ def run_contract_packet_submissions(
                 failure_reason = "contract_packet_submission_failed"
 
         passed = failure_reason == "none" and len(submissions) == len(targets)
+        napoleon_required_actions = napoleon_required_actions_for_missing_contract_handoffs(missing_handoffs)
         evidence = {
             "kind": "governed_contract_packet_submission_evidence",
             "status": "passed" if passed else "failed",
             "failureReason": failure_reason,
             "runtimeValidationSource": runtime_validation_source,
             "descriptorHandoffStatus": handoff_status,
+            "napoleonRequiredActions": napoleon_required_actions,
             "submissionCount": len(submissions),
             "submissions": submissions,
             "endpointHostRetained": False,
@@ -1065,6 +1147,7 @@ def run_contract_packet_submissions(
             "failureReason": exc.__class__.__name__,
             "runtimeValidationSource": runtime_validation_source,
             "descriptorHandoffStatus": {},
+            "napoleonRequiredActions": [],
             "submissionCount": 0,
             "submissions": [],
             "endpointHostRetained": False,
@@ -1353,6 +1436,7 @@ def contract_packet_submission_summary(path: Path, exit_code: int | None, failur
         "path": str(path),
         "submissionCount": 0,
         "descriptorHandoffStatus": {},
+        "napoleonRequiredActions": [],
         "submissions": [],
         "endpointHostRetained": False,
         "tokenRetained": False,
@@ -1378,6 +1462,11 @@ def contract_packet_submission_summary(path: Path, exit_code: int | None, failur
         "path": str(path),
         "submissionCount": payload.get("submissionCount", 0),
         "descriptorHandoffStatus": payload.get("descriptorHandoffStatus", {}),
+        "napoleonRequiredActions": (
+            payload.get("napoleonRequiredActions")
+            if isinstance(payload.get("napoleonRequiredActions"), list)
+            else []
+        ),
         "submissions": payload.get("submissions", []),
         "endpointHostRetained": payload.get("endpointHostRetained") is True,
         "tokenRetained": payload.get("tokenRetained") is True,
@@ -1583,7 +1672,10 @@ def write_summary(
             "appliedLocally": False,
         },
     }
-    summary["napoleonRequiredActions"] = summary["httpEvaluator"].get("napoleonRequiredActions", [])
+    summary["napoleonRequiredActions"] = merge_napoleon_required_actions(
+        summary["contractPacketSubmissions"].get("napoleonRequiredActions", []),
+        summary["httpEvaluator"].get("napoleonRequiredActions", []),
+    )
     summary["promotionReadiness"] = promotion_readiness(summary)
     write_promotion_review(promotion_review_path, summary)
     summary["promotionReview"] = {
