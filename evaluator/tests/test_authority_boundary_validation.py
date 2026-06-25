@@ -512,6 +512,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'const url = globalThis["URL"]["createObjectURL"](blob);',
             'const url = window["URL"].createObjectURL(blob);',
             'const url = globalThis["URL"].createObjectURL.call(globalThis.URL, blob);',
+            'const instance = await window["Web" + "Assembly"]["instantiate"](bytes, imports);',
+            'const module = new globalThis["Web" + "Assembly"]["Module"](bytes);',
+            'const instance = window["Web" + "Assembly"]["compile"].call(window.WebAssembly, bytes);',
+            'const url = window["URL"]["create" + "ObjectURL"](blob);',
+            'const url = globalThis["UR" + "L"]["createObjectURL"].call(globalThis.URL, blob);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)

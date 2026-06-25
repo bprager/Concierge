@@ -299,6 +299,16 @@ EXTERNAL_TARGET_ATTRIBUTES = (
 EXTERNAL_TARGET_DYNAMIC_ATTRIBUTES = (
     r"href|xlink:href|xlinkHref|action|formAction|formaction|src|srcSet|srcset|imageSrcSet|imagesrcset|poster|ping"
 )
+BROWSER_WEBASSEMBLY_ALIAS = r"(?:['\"]WebAssembly['\"]|['\"]Web['\"]\s*\+\s*['\"]Assembly['\"])"
+BROWSER_WEBASSEMBLY_EXECUTION_METHOD_ALIAS = (
+    r"(?:['\"](?:compile|compileStreaming|instantiate|instantiateStreaming)['\"]|"
+    r"['\"]compile['\"]\s*\+\s*['\"]Streaming['\"]|"
+    r"['\"]instantiate['\"]\s*\+\s*['\"]Streaming['\"])"
+)
+BROWSER_URL_ALIAS = r"(?:['\"]URL['\"]|['\"]UR['\"]\s*\+\s*['\"]L['\"])"
+BROWSER_CREATE_OBJECT_URL_ALIAS = (
+    r"(?:['\"]createObjectURL['\"]|['\"]create['\"]\s*\+\s*['\"]ObjectURL['\"])"
+)
 
 UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bfetch\s*\("),
@@ -561,6 +571,15 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\b(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:compile|compileStreaming|instantiate|instantiateStreaming)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
     ),
     re.compile(r"\bnew\s+(?:globalThis|window)\s*\[\s*['\"]WebAssembly['\"]\s*\]\s*\[\s*['\"](?:Module|Instance)['\"]\s*\]\s*\("),
+    re.compile(
+        rf"\b(?:globalThis|window)\s*\[\s*{BROWSER_WEBASSEMBLY_ALIAS}\s*\]\s*\[\s*{BROWSER_WEBASSEMBLY_EXECUTION_METHOD_ALIAS}\s*\]\s*\("
+    ),
+    re.compile(
+        rf"\b(?:globalThis|window)\s*\[\s*{BROWSER_WEBASSEMBLY_ALIAS}\s*\]\s*\[\s*{BROWSER_WEBASSEMBLY_EXECUTION_METHOD_ALIAS}\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
+        rf"\bnew\s+(?:globalThis|window)\s*\[\s*{BROWSER_WEBASSEMBLY_ALIAS}\s*\]\s*\[\s*['\"](?:Module|Instance)['\"]\s*\]\s*\("
+    ),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\.createObjectURL\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:URL|window\.URL|globalThis\.URL)\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
@@ -571,6 +590,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\("),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"]URL['\"]\s*\]\s*\[\s*['\"]createObjectURL['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
+        rf"\b(?:globalThis|window)\s*\[\s*{BROWSER_URL_ALIAS}\s*\]\s*(?:\.\s*createObjectURL|\[\s*{BROWSER_CREATE_OBJECT_URL_ALIAS}\s*\])\s*(?:\.\s*(?:call|apply))?\s*\("
     ),
     re.compile(r"\b(?:indexedDB|window\.indexedDB)\.(?:open|deleteDatabase)\s*\("),
     re.compile(r"\b(?:indexedDB|window\.indexedDB)\.(?:open|deleteDatabase)\.(?:call|apply)\s*\("),
