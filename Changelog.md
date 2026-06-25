@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added reason-specific required-refresh guidance to local Napoleon proof currentness answers so stale proof after endpoint, token, descriptor, profile, Rehearsal, or bridge-failure changes remains explainable without a new bridge request.
 - Added visible accepted live-runtime governed packet proof metadata to readiness import, live-send preflight, live voice readiness, and derived voice proof exports so successful summary imports do not silently discard the Chief of Staff request and governance evaluation evidence they require.
 - Hardened accepted live-runtime validation summary imports so Text Concierge now requires passed governed contract-packet submission evidence for both Chief of Staff request and governance evaluation handoffs, accepts the runner's `ready_for_human_review` promotion gate, and rejects packet evidence that claims local side effects.
 - Added combined live-runtime validation for descriptor-advertised Chief of Staff request and governance evaluation packet submissions, with sanitized packet evidence, promotion gating, artifact privacy coverage, and fail-closed missing-handoff handling.

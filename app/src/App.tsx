@@ -796,6 +796,32 @@ type NapoleonProofClearReason =
   | "bridge_failure"
   | "local_state_changed";
 
+function describeNapoleonProofClearReasonNextStep(reason: NapoleonProofClearReason): string {
+  switch (reason) {
+    case "current_proof_available":
+      return "Current returned proof is still available for local display.";
+    case "endpoint_changed":
+      return "Rediscover the Napoleon descriptor and complete a new governed bridge turn for the new endpoint before relying on proof.";
+    case "auth_token_changed":
+      return "Rediscover the Napoleon descriptor with the current bridge token and complete a new governed bridge turn before relying on proof.";
+    case "descriptor_state_changed":
+      return "Resolve the descriptor state, rediscover a valid Napoleon descriptor, and complete a new governed bridge turn before relying on proof.";
+    case "descriptor_discovery_refreshed":
+      return "Use only proof from a governed bridge turn completed after the latest descriptor discovery refresh.";
+    case "profile_changed":
+      return "Complete a new governed bridge turn under the active profile before relying on proof.";
+    case "rehearsal_mode_enabled":
+      return "Turn Rehearsal Mode off and complete a new governed bridge turn before relying on live Napoleon proof.";
+    case "bridge_failure":
+      return "Resolve the latest bridge failure and complete a successful governed bridge turn before relying on proof.";
+    case "local_state_changed":
+      return "Complete a new governed bridge turn after the local state change before relying on proof.";
+    case "none":
+    default:
+      return "No returned proof has been accepted in this local session.";
+  }
+}
+
 function formatNapoleonProofCurrentnessAnswer(
   presentation: Parameters<typeof exportNapoleonResponseProofJson>[0],
   provenanceState: VoiceResponseProvenanceState,
@@ -815,6 +841,7 @@ function formatNapoleonProofCurrentnessAnswer(
         "Current returned proof available: no.",
         `Proof state: ${provenanceState}.`,
         `Last clear reason: ${clearReason}.`,
+        `Required refresh: ${describeNapoleonProofClearReasonNextStep(clearReason)}`,
         "Concierge will not reuse stale Napoleon proof after the connection, descriptor, profile, or rehearsal context changes.",
         "This is local display of proof state only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
       ].join("\n\n"),
@@ -837,6 +864,7 @@ function formatNapoleonProofCurrentnessAnswer(
       "Latest Napoleon proof currentness from local state:",
       "Current returned proof available: yes.",
       `Proof state: ${provenanceState}.`,
+      `Required refresh: ${describeNapoleonProofClearReasonNextStep(clearReason)}`,
       `Handled by: ${metadata.handledBy}.`,
       `Governance: ${detailValue(proof.details, "Governance")}.`,
       `Blocked effects: ${blockedEffects}.`,

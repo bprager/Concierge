@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added reason-specific required-refresh guidance to local Napoleon proof currentness answers, so stale proof after descriptor, endpoint, token, profile, Rehearsal, or bridge-failure changes explains what must be refreshed before Concierge can rely on a new returned proof.
 - Added combined live-runtime validation for descriptor-advertised Chief of Staff request and governance evaluation packet submissions, so promotion evidence now checks `/chief-of-staff/requests` and `/governance/evaluate` with sanitized governance/trace/audit proof and false side-effect boundaries.
 - Added fail-closed live-runtime evidence for missing governed contract-packet handoffs, so absent `chief_of_staff_request` or `governance_evaluation` descriptor support blocks promotion without submitting packet POSTs or retaining endpoints, tokens, request bodies, or response bodies.
 - Added evaluator scenario coverage for governed Chief of Staff request and governance evaluation packet submissions, bringing the suite to 36 scenarios and checking descriptor/Rehearsal gates, returned proof as evidence-only, stale packet clearing, and explicit no-side-effect boundaries.

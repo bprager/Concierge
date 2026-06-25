@@ -921,6 +921,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     const currentnessAnswerText = currentnessAnswer.textContent ?? "";
     assert.ok(currentnessAnswerText.includes("Current returned proof available: yes."));
     assert.ok(currentnessAnswerText.includes("Proof state: returned_bridge."));
+    assert.ok(currentnessAnswerText.includes("Required refresh: Current returned proof is still available for local display."));
     assert.ok(currentnessAnswerText.includes("Handled by: Passive Brain."));
     assert.ok(currentnessAnswerText.includes("Blocked effects: memory_write, approval_capture, external_send, agent_dispatch."));
     assert.ok(currentnessAnswerText.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
@@ -4463,6 +4464,11 @@ test("clears Napoleon proof and delegation when descriptor connection state chan
     assert.ok(clearedProofAnswerText.includes("Current returned proof available: no."));
     assert.ok(clearedProofAnswerText.includes("Proof state: stale_cleared."));
     assert.ok(clearedProofAnswerText.includes("Last clear reason: descriptor_state_changed."));
+    assert.ok(
+      clearedProofAnswerText.includes(
+        "Required refresh: Resolve the descriptor state, rediscover a valid Napoleon descriptor, and complete a new governed bridge turn before relying on proof.",
+      ),
+    );
     assert.ok(
       clearedProofAnswerText.includes(
         "Concierge will not reuse stale Napoleon proof after the connection, descriptor, profile, or rehearsal context changes.",
