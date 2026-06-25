@@ -386,10 +386,10 @@ function isNamedSelectedAgentContributionQuestion(content: string): boolean {
 function extractRequestedSelectedAgentReasonName(content: string): string | null {
   const match =
     content.match(
-      /\b[Ww]hy\s+(?:was|were)\s+([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,3})\s+selected\b/,
+      /\b[Ww]hy\s+(?:was|were)\s+(?:the\s+)?([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,3})\s+selected\b/,
     ) ??
     content.match(
-      /\b[Ww]hy\s+did\s+(?:Napoleon|the bridge|Chief of Staff)\s+select\s+([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,3})\b/,
+      /\b[Ww]hy\s+did\s+(?:Napoleon|the bridge|Chief of Staff)\s+select\s+(?:the\s+)?([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,3})\b/,
     );
   const name = match?.[1]?.trim();
   if (!name || name.toLocaleLowerCase() === "napoleon") return null;

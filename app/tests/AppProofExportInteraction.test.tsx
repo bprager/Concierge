@@ -710,6 +710,42 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(naturalSelectionReasonAnswerEvent).includes("Why was Passive Brain selected?"), false);
     assert.equal(JSON.stringify(naturalSelectionReasonAnswerEvent).includes("Passive Brain"), false);
     assert.equal(JSON.stringify(naturalSelectionReasonAnswerEvent).includes("deployment context"), false);
+    const requestCountBeforeDefiniteArticleSelectionReasonQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeDefiniteArticleSelectionReasonQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Why was the Passive Brain selected?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let definiteArticleSelectionReasonAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeDefiniteArticleSelectionReasonQuestion + 1);
+      definiteArticleSelectionReasonAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(definiteArticleSelectionReasonAnswer);
+      assert.ok(
+        definiteArticleSelectionReasonAnswer.textContent?.includes(
+          "Why selected: Passive Brain: Prior bridge context is relevant; deployment context was requested.",
+        ),
+      );
+    });
+    assert.ok(definiteArticleSelectionReasonAnswer);
+    const definiteArticleSelectionReasonAnswerText = definiteArticleSelectionReasonAnswer.textContent ?? "";
+    assert.ok(definiteArticleSelectionReasonAnswerText.includes("Handled by: Passive Brain."));
+    assert.equal(requestedUrls.length, requestCountBeforeDefiniteArticleSelectionReasonQuestion);
+    const definiteArticleSelectionReasonAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(definiteArticleSelectionReasonAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(definiteArticleSelectionReasonAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(definiteArticleSelectionReasonAnswerEvent?.attributes.selectedAgentReasonCount, 1);
+    assert.equal(definiteArticleSelectionReasonAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(definiteArticleSelectionReasonAnswerEvent).includes("Why was the Passive Brain selected?"), false);
+    assert.equal(JSON.stringify(definiteArticleSelectionReasonAnswerEvent).includes("Passive Brain"), false);
+    assert.equal(JSON.stringify(definiteArticleSelectionReasonAnswerEvent).includes("deployment context"), false);
     const requestCountBeforeNaturalRecommendationQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "What did Napoleon recommend?" },
