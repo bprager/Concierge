@@ -34,6 +34,8 @@ test("connection state card exposes fail-closed reason and blocked effects befor
     assert.ok(connection.getByText("Connection state"));
     assert.ok(connection.getByText("Fail-closed reason"));
     assert.equal(connection.getAllByText("no_endpoint").length, 2);
+    assert.ok(connection.getByText("Descriptor freshness"));
+    assert.ok(connection.getByText("not timestamped"));
     assert.ok(connection.getByText("Blocked effects"));
     assert.ok(connection.getByText(/runtime_authority/));
     assert.ok(connection.getByText(/memory_write/));
@@ -70,6 +72,7 @@ test("connection guide shows the first-run next step before live send", async ()
         liveSendReady?: boolean;
         endpointConfigured?: boolean;
         descriptorDiscovered?: boolean;
+        descriptorFreshnessState?: string;
         textTurnRouteAdvertised?: boolean;
         authorityBoundary?: string;
         approvalCaptured?: boolean;
@@ -87,6 +90,7 @@ test("connection guide shows the first-run next step before live send", async ()
     assert.equal(proof.connectionGuide?.liveSendReady, false);
     assert.equal(proof.connectionGuide?.endpointConfigured, false);
     assert.equal(proof.connectionGuide?.descriptorDiscovered, false);
+    assert.equal(proof.connectionGuide?.descriptorFreshnessState, "not_timestamped");
     assert.equal(proof.connectionGuide?.textTurnRouteAdvertised, false);
     assert.equal(proof.connectionGuide?.authorityBoundary, "local readiness only; not Napoleon approval");
     assert.equal(proof.connectionGuide?.approvalCaptured, false);

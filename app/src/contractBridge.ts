@@ -52,6 +52,7 @@ export type DescriptorConnectionStateKind =
   | "ready";
 export type DescriptorChecksumState = "not_checked" | "matched" | "mismatch";
 export type DescriptorSignatureState = "not_checked" | "valid" | "invalid";
+export type DescriptorFreshnessState = "not_timestamped" | "fresh" | "stale";
 export type DescriptorFailClosedReason =
   | "no_endpoint"
   | "no_descriptor"
@@ -79,6 +80,10 @@ export interface DescriptorConnectionState {
   descriptorStatus: DescriptorStatus | null;
   checksumState: DescriptorChecksumState;
   signatureState: DescriptorSignatureState;
+  freshnessState: DescriptorFreshnessState;
+  discoveredAt: string | null;
+  maxAgeSeconds: number | null;
+  ageSeconds: number | null;
   canAttemptLiveBridge: boolean;
   failClosedReason?: DescriptorFailClosedReason;
   message: string;
@@ -344,10 +349,25 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
   const signatureState: DescriptorSignatureState =
     input.signatureValid === undefined ? "not_checked" : input.signatureValid ? "valid" : "invalid";
   const descriptorStatus = input.descriptor ? validateChiefOfStaffDescriptor(input.descriptor) : null;
-  const descriptorFresh =
-    input.discoveredAt === undefined || input.maxAgeSeconds === undefined
-      ? true
-      : Date.parse(input.now ?? new Date().toISOString()) - Date.parse(input.discoveredAt) <= input.maxAgeSeconds * 1000;
+  const discoveredAtMs = input.discoveredAt === undefined ? Number.NaN : Date.parse(input.discoveredAt);
+  const nowMs = Date.parse(input.now ?? new Date().toISOString());
+  const hasFreshnessTimestamps =
+    input.discoveredAt !== undefined &&
+    input.maxAgeSeconds !== undefined &&
+    Number.isFinite(discoveredAtMs) &&
+    Number.isFinite(nowMs);
+  const ageSeconds = hasFreshnessTimestamps ? Math.max(0, Math.floor((nowMs - discoveredAtMs) / 1000)) : null;
+  const freshnessState: DescriptorFreshnessState = !hasFreshnessTimestamps
+    ? "not_timestamped"
+    : ageSeconds !== null && input.maxAgeSeconds !== undefined && ageSeconds <= input.maxAgeSeconds
+      ? "fresh"
+      : "stale";
+  const freshnessFields = {
+    freshnessState,
+    discoveredAt: input.discoveredAt ?? null,
+    maxAgeSeconds: input.maxAgeSeconds ?? null,
+    ageSeconds,
+  };
 
   if (!input.endpointConfigured) {
     return {
@@ -355,6 +375,7 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
       descriptorStatus,
       checksumState,
       signatureState,
+      ...freshnessFields,
       canAttemptLiveBridge: false,
       failClosedReason: "no_endpoint",
       message: "No Napoleon endpoint is configured, so Concierge cannot attempt a live bridge call.",
@@ -368,6 +389,7 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
         descriptorStatus: null,
         checksumState,
         signatureState,
+        ...freshnessFields,
         canAttemptLiveBridge: false,
         failClosedReason: "descriptor_invalid",
         message: "Chief of Staff descriptor is invalid or grants authority.",
@@ -388,6 +410,7 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
         descriptorStatus: null,
         checksumState,
         signatureState,
+        ...freshnessFields,
         canAttemptLiveBridge: false,
         failClosedReason: input.failClosedReason,
         message: messages[input.failClosedReason],
@@ -398,6 +421,7 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
       descriptorStatus: null,
       checksumState,
       signatureState,
+      ...freshnessFields,
       canAttemptLiveBridge: false,
       failClosedReason: "no_descriptor",
       message: "No Napoleon Chief of Staff descriptor has been discovered.",
@@ -410,6 +434,7 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
       descriptorStatus,
       checksumState,
       signatureState,
+      ...freshnessFields,
       canAttemptLiveBridge: false,
       failClosedReason: "descriptor_invalid",
       message: descriptorStatus.message,
@@ -422,18 +447,20 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
       descriptorStatus,
       checksumState,
       signatureState,
+      ...freshnessFields,
       canAttemptLiveBridge: false,
       failClosedReason: "descriptor_signature_or_checksum_mismatch",
       message: "Napoleon descriptor signature or checksum did not match the expected value.",
     };
   }
 
-  if (!descriptorFresh) {
+  if (freshnessState === "stale") {
     return {
       state: "descriptor_mismatch",
       descriptorStatus,
       checksumState,
       signatureState,
+      ...freshnessFields,
       canAttemptLiveBridge: false,
       failClosedReason: "descriptor_stale",
       message: "Napoleon descriptor discovery is stale, so Concierge must rediscover it before any live bridge send.",
@@ -445,6 +472,7 @@ export function buildDescriptorConnectionState(input: DescriptorConnectionInput)
     descriptorStatus,
     checksumState,
     signatureState,
+    ...freshnessFields,
     canAttemptLiveBridge: true,
     message: "Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.",
   };

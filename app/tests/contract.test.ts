@@ -43,6 +43,10 @@ test("builds first-class descriptor discovery connection states", () => {
   assert.equal(discovered.failClosedReason, undefined);
   assert.equal(discovered.checksumState, "matched");
   assert.equal(discovered.signatureState, "valid");
+  assert.equal(discovered.freshnessState, "not_timestamped");
+  assert.equal(discovered.discoveredAt, null);
+  assert.equal(discovered.maxAgeSeconds, null);
+  assert.equal(discovered.ageSeconds, null);
 
   const missing = buildDescriptorConnectionState({
     endpointConfigured: true,
@@ -101,6 +105,10 @@ test("descriptor connection fails closed when discovery cache is stale", () => {
   assert.equal(stale.state, "descriptor_mismatch");
   assert.equal(stale.canAttemptLiveBridge, false);
   assert.equal(stale.failClosedReason, "descriptor_stale");
+  assert.equal(stale.freshnessState, "stale");
+  assert.equal(stale.discoveredAt, "2026-06-16T10:00:00.000Z");
+  assert.equal(stale.maxAgeSeconds, 300);
+  assert.equal(stale.ageSeconds, 360);
   assert.match(stale.message, /stale/);
 });
 

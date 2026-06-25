@@ -4086,6 +4086,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         descriptorIntegrityState: descriptorConnection.descriptorStatus
           ? `${descriptorConnection.checksumState}_${descriptorConnection.signatureState}`
           : "unavailable",
+        descriptorFreshnessState: descriptorConnection.freshnessState,
         textTurnRouteAdvertised: Boolean(
           descriptorConnection.canAttemptLiveBridge &&
             descriptorConnection.descriptorStatus?.supportedHandoffs.includes("text_turn"),
@@ -5382,6 +5383,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     : descriptorStatus?.supportedHandoffs.includes("text_turn")
       ? "advertised"
       : "not advertised";
+  const descriptorFreshnessSummary =
+    descriptorConnection.freshnessState === "not_timestamped"
+      ? "not timestamped"
+      : `${descriptorConnection.freshnessState}; discovered ${
+          descriptorConnection.discoveredAt ?? "unavailable"
+        }; age ${descriptorConnection.ageSeconds ?? "unavailable"}s; max age ${
+          descriptorConnection.maxAgeSeconds ?? "unavailable"
+        }s`;
   const latestNapoleonTurnSummary = describeLastNapoleonTurnSummary(
     lastNapoleonPresentation.proof,
     lastNapoleonTurnFailure,
@@ -6935,6 +6944,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                 ? descriptorDiscoveryMessage ?? "live descriptor selected"
                 : "local simulation"}
           </span>
+        </div>
+        <div>
+          <strong>Descriptor freshness</strong>
+          <span>{descriptorFreshnessSummary}</span>
         </div>
         <div>
           <strong>Checksum</strong>

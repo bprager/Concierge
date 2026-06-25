@@ -235,6 +235,7 @@ test("exports sanitized connection guide proof metadata without granting authori
       endpointConfigured: false,
       descriptorDiscovered: false,
       descriptorIntegrityState: "unavailable",
+      descriptorFreshnessState: "not_timestamped",
       textTurnRouteAdvertised: false,
       rehearsalMode: false,
       runtimeValidationSource: "unavailable",
@@ -255,6 +256,7 @@ test("exports sanitized connection guide proof metadata without granting authori
       endpointConfigured: boolean;
       descriptorDiscovered: boolean;
       descriptorIntegrityState: string;
+      descriptorFreshnessState: string;
       textTurnRouteAdvertised: boolean;
       rehearsalMode: boolean;
       runtimeValidationSource: string;
@@ -276,6 +278,7 @@ test("exports sanitized connection guide proof metadata without granting authori
   assert.equal(proof.connectionGuide.endpointConfigured, false);
   assert.equal(proof.connectionGuide.descriptorDiscovered, false);
   assert.equal(proof.connectionGuide.descriptorIntegrityState, "unavailable");
+  assert.equal(proof.connectionGuide.descriptorFreshnessState, "not_timestamped");
   assert.equal(proof.connectionGuide.textTurnRouteAdvertised, false);
   assert.equal(proof.connectionGuide.rehearsalMode, false);
   assert.equal(proof.connectionGuide.runtimeValidationSource, "unavailable");
@@ -288,6 +291,38 @@ test("exports sanitized connection guide proof metadata without granting authori
   assert.equal(exported.includes("http://"), false);
   assert.equal(exported.includes("token"), false);
   assert.equal(exported.includes("prompt"), false);
+});
+
+test("exports descriptor freshness metadata in readiness proof", () => {
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:descriptor-ok",
+    actualChecksum: "sha256:descriptor-ok",
+    signatureValid: true,
+    discoveredAt: "2026-06-25T10:00:00.000Z",
+    maxAgeSeconds: 300,
+    now: "2026-06-25T10:02:00.000Z",
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: buildBridgeEvidenceReadinessState(),
+    generatedAt: "2026-06-25T10:02:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    descriptor: {
+      freshnessState?: string;
+      discoveredAt?: string | null;
+      maxAgeSeconds?: number | null;
+      ageSeconds?: number | null;
+    };
+  };
+
+  assert.equal(proof.descriptor.freshnessState, "fresh");
+  assert.equal(proof.descriptor.discoveredAt, "2026-06-25T10:00:00.000Z");
+  assert.equal(proof.descriptor.maxAgeSeconds, 300);
+  assert.equal(proof.descriptor.ageSeconds, 120);
 });
 
 test("exports sanitized missing evaluator route as a promotion blocker", () => {

@@ -25,6 +25,7 @@ export interface BridgeReadinessProofInput {
     endpointConfigured: boolean;
     descriptorDiscovered: boolean;
     descriptorIntegrityState: string;
+    descriptorFreshnessState: string;
     textTurnRouteAdvertised: boolean;
     rehearsalMode: boolean;
     runtimeValidationSource: string;
@@ -334,6 +335,10 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
         serviceId: descriptorStatus?.serviceId,
         runtimeAuthority: descriptorStatus?.runtimeAuthority ?? false,
         cachePolicy: descriptorStatus?.cachePolicy,
+        freshnessState: input.descriptorConnection.freshnessState,
+        discoveredAt: sanitizeReadinessProofString(input.descriptorConnection.discoveredAt ?? undefined) ?? null,
+        maxAgeSeconds: input.descriptorConnection.maxAgeSeconds,
+        ageSeconds: input.descriptorConnection.ageSeconds,
         supportedHandoffs: sanitizeReadinessProofList(descriptorStatus?.supportedHandoffs ?? []),
         blockedEffects: descriptorBlockedEffects,
         failClosedReason: input.descriptorConnection.failClosedReason,
@@ -358,6 +363,8 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
             descriptorDiscovered: input.connectionGuide.descriptorDiscovered,
             descriptorIntegrityState:
               sanitizeReadinessProofString(input.connectionGuide.descriptorIntegrityState) ?? "unavailable",
+            descriptorFreshnessState:
+              sanitizeReadinessProofString(input.connectionGuide.descriptorFreshnessState) ?? "unavailable",
             textTurnRouteAdvertised: input.connectionGuide.textTurnRouteAdvertised,
             rehearsalMode: input.connectionGuide.rehearsalMode,
             runtimeValidationSource:
@@ -379,6 +386,7 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
             endpointConfigured: false,
             descriptorDiscovered: false,
             descriptorIntegrityState: "unavailable",
+            descriptorFreshnessState: "unavailable",
             textTurnRouteAdvertised: false,
             rehearsalMode: false,
             runtimeValidationSource: input.runtimeValidationSource ?? "unavailable",

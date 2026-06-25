@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added descriptor freshness to first-class Napoleon connection state, so the UI and sanitized readiness proof exports now show descriptor timestamp, max age, current age, and fresh/stale/not-timestamped state without treating it as approval.
 - Added a dedicated Rehearsal Mode evaluator-case candidate panel, so local previews now show draft evaluator metadata with sanitized intent summary, expected route, governance outcome, profile mode, allowed/blocked effects, trace, evidence links, and an explicit no-approval/no-dispatch/no-memory/no-send boundary.
 - Added repository validation for the GitHub Actions evaluator workflow, so the weekly/manual evaluator report artifact gate cannot drift away from the documented EV-006 requirement.
 - Moved Napoleon agent/profile metadata discovery targets into the generated OpenAPI bridge registry, so `/agents`, `/agents/{agent_id}`, and `/profiles/{profile_id}` now have canonical IDs, request kinds, response fields, and repository drift checks instead of living as hand-maintained UI metadata.
