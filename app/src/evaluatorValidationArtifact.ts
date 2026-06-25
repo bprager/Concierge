@@ -182,6 +182,19 @@ function sanitizeNapoleonRequiredActions(value: unknown): NapoleonRequiredAction
   return actions;
 }
 
+function mergeNapoleonRequiredActions(...actionGroups: NapoleonRequiredAction[][]): NapoleonRequiredAction[] {
+  const merged: NapoleonRequiredAction[] = [];
+  const seen = new Set<string>();
+  for (const actions of actionGroups) {
+    for (const action of actions) {
+      if (seen.has(action.id)) continue;
+      seen.add(action.id);
+      merged.push(action);
+    }
+  }
+  return merged;
+}
+
 export function parseEvaluatorValidationArtifact(
   artifactJson: string,
   options: EvaluatorValidationImportOptions = {},
@@ -239,10 +252,15 @@ export function parseEvaluatorValidationArtifact(
   const descriptorHandoffSource = cleanString(evaluator.descriptorHandoffSource);
   const descriptorHandoffFailureReason = cleanString(evaluator.descriptorHandoffFailureReason);
   const descriptorHandoffRequiredAction = cleanString(evaluator.descriptorHandoffRequiredAction);
-  const napoleonRequiredActions = sanitizeNapoleonRequiredActions(evaluator.napoleonRequiredActions);
-  if (napoleonRequiredActions === null) {
+  const summaryNapoleonRequiredActions = sanitizeNapoleonRequiredActions(root.napoleonRequiredActions);
+  const evaluatorNapoleonRequiredActions = sanitizeNapoleonRequiredActions(evaluator.napoleonRequiredActions);
+  if (summaryNapoleonRequiredActions === null || evaluatorNapoleonRequiredActions === null) {
     return rejected("Evaluator validation artifact contains invalid Napoleon required-action metadata.");
   }
+  const napoleonRequiredActions = mergeNapoleonRequiredActions(
+    summaryNapoleonRequiredActions,
+    evaluatorNapoleonRequiredActions,
+  );
 
   return {
     status: "accepted",

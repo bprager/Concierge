@@ -957,7 +957,7 @@ function formatNapoleonRequiredActionAnswer(
   if (!actions.length && evaluatorImport.validation.descriptorHandoffRequiredAction) {
     return {
       content: [
-        `Current Napoleon-side blocker from sanitized evaluator evidence: ${evaluatorImport.validation.descriptorHandoffRequiredAction}`,
+        `Current Napoleon-side blocker from sanitized validation evidence: ${evaluatorImport.validation.descriptorHandoffRequiredAction}`,
         `Evaluator status: ${evaluatorImport.validation.status}. Runtime validation source: ${runtimeValidationSource}.`,
         `Profile scope: ${profileMode}. This is local review evidence only; Concierge did not approve, apply, write memory, dispatch agents, or send externally.`,
       ].join("\n\n"),
@@ -991,7 +991,7 @@ function formatNapoleonRequiredActionAnswer(
 
   return {
     content: [
-      `Current Napoleon required actions from sanitized evaluator evidence (${actions.length}):`,
+      `Current Napoleon required actions from sanitized validation evidence (${actions.length}):`,
       rows,
       `Evaluator status: ${evaluatorImport.validation.status}. Runtime validation source: ${runtimeValidationSource}.`,
       `Profile scope: ${profileMode}. This is local review evidence only; Concierge did not contact Napoleon for this answer, approve, apply, write memory, dispatch agents, or send externally.`,

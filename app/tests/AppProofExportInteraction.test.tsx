@@ -6744,6 +6744,10 @@ test("renders unadvertised evaluator handoff required action from validation imp
   const user = userEventModule.default.setup();
   const requiredAction =
     "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.";
+  const chiefOfStaffRequiredAction =
+    "Napoleon must advertise chief_of_staff_request in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/requests.";
+  const governanceRequiredAction =
+    "Napoleon must advertise governance_evaluation in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /governance/evaluate.";
   const originalFetch = globalThis.fetch;
   let fetchCalls = 0;
 
@@ -6761,6 +6765,74 @@ test("renders unadvertised evaluator handoff required action from validation imp
           runtimeValidation: {
             source: "real_runtime",
           },
+          napoleonRequiredActions: [
+            {
+              id: "advertise_chief_of_staff_request_handoff",
+              owner: "napoleon",
+              reason: "real_runtime_promotion_blocker",
+              handoffName: "chief_of_staff_request",
+              targetPath: "/chief-of-staff/requests",
+              requestKind: "chief_of_staff_request_handoff",
+              operationId: "chief_of_staff_request",
+              advertiseUsing: [
+                "supportedHandoffs",
+                "supported_handoffs",
+                "required_for",
+                "descriptor route metadata for /chief-of-staff/requests",
+              ],
+              requiredAction: chiefOfStaffRequiredAction,
+              sideEffectsPerformed: false,
+              approvalCaptured: false,
+              memoryWritePerformed: false,
+              agentDispatchPerformed: false,
+              externalSendPerformed: false,
+              appliedLocally: false,
+            },
+            {
+              id: "advertise_governance_evaluation_handoff",
+              owner: "napoleon",
+              reason: "real_runtime_promotion_blocker",
+              handoffName: "governance_evaluation",
+              targetPath: "/governance/evaluate",
+              requestKind: "governance_evaluation_handoff",
+              operationId: "governance_evaluation",
+              advertiseUsing: [
+                "supportedHandoffs",
+                "supported_handoffs",
+                "required_for",
+                "descriptor route metadata for /governance/evaluate",
+              ],
+              requiredAction: governanceRequiredAction,
+              sideEffectsPerformed: false,
+              approvalCaptured: false,
+              memoryWritePerformed: false,
+              agentDispatchPerformed: false,
+              externalSendPerformed: false,
+              appliedLocally: false,
+            },
+            {
+              id: "advertise_evaluation_review_handoff",
+              owner: "napoleon",
+              reason: "real_runtime_promotion_blocker",
+              handoffName: "evaluation_review",
+              targetPath: "/chief-of-staff/reviews/evaluation",
+              requestKind: "evaluation_review_handoff",
+              operationId: "evaluation_review",
+              advertiseUsing: [
+                "supportedHandoffs",
+                "supported_handoffs",
+                "required_for",
+                "descriptor route metadata for /chief-of-staff/reviews/evaluation",
+              ],
+              requiredAction,
+              sideEffectsPerformed: false,
+              approvalCaptured: false,
+              memoryWritePerformed: false,
+              agentDispatchPerformed: false,
+              externalSendPerformed: false,
+              appliedLocally: false,
+            },
+          ],
           httpEvaluator: {
             status: "failed",
             failureReason: "http_evaluator_handoff_not_advertised",
@@ -6811,7 +6883,13 @@ test("renders unadvertised evaluator handoff required action from validation imp
     await user.click(view.getByText("Import evaluator validation"));
 
     await waitFor(() => assert.ok(view.getAllByText(requiredAction).length >= 1));
-    await waitFor(() => assert.ok(view.getByText("Napoleon required actions: advertise_evaluation_review_handoff")));
+    await waitFor(() =>
+      assert.ok(
+        view.getByText(
+          "Napoleon required actions: advertise_chief_of_staff_request_handoff, advertise_governance_evaluation_handoff, advertise_evaluation_review_handoff",
+        ),
+      ),
+    );
     const readiness = view.getByText("Live bridge readiness").closest("section") as HTMLElement | null;
     assert.ok(readiness);
     assert.ok(within(readiness).getAllByText(requiredAction).length >= 1);
@@ -6826,7 +6904,9 @@ test("renders unadvertised evaluator handoff required action from validation imp
     await user.click(view.getByRole("button", { name: "Rehearse" }));
     await waitFor(() => {
       const renderedText = document.body.textContent ?? "";
-      assert.ok(renderedText.includes("Current Napoleon required actions from sanitized evaluator evidence (1):"));
+      assert.ok(renderedText.includes("Current Napoleon required actions from sanitized validation evidence (3):"));
+      assert.ok(renderedText.includes("advertise_chief_of_staff_request_handoff"));
+      assert.ok(renderedText.includes("advertise_governance_evaluation_handoff"));
       assert.ok(renderedText.includes("advertise_evaluation_review_handoff"));
       assert.ok(renderedText.includes("Concierge did not contact Napoleon for this answer"));
     });
@@ -6835,7 +6915,11 @@ test("renders unadvertised evaluator handoff required action from validation imp
     await user.click(view.getByText("Export required action packet"));
     const requiredActionExport = view.getByLabelText("Exported Napoleon required action packet");
     assert.ok(requiredActionExport.textContent?.includes('"kind": "concierge.napoleon-required-actions.export.v1"'));
-    assert.ok(requiredActionExport.textContent?.includes('"requiredActionCount": 1'));
+    assert.ok(requiredActionExport.textContent?.includes('"requiredActionCount": 3'));
+    assert.ok(requiredActionExport.textContent?.includes('"advertise_chief_of_staff_request_handoff"'));
+    assert.ok(requiredActionExport.textContent?.includes('"/chief-of-staff/requests"'));
+    assert.ok(requiredActionExport.textContent?.includes('"advertise_governance_evaluation_handoff"'));
+    assert.ok(requiredActionExport.textContent?.includes('"/governance/evaluate"'));
     assert.ok(requiredActionExport.textContent?.includes('"advertise_evaluation_review_handoff"'));
     assert.ok(requiredActionExport.textContent?.includes('"/chief-of-staff/reviews/evaluation"'));
     assert.ok(requiredActionExport.textContent?.includes('"sideEffectsPerformed": false'));
@@ -6846,6 +6930,8 @@ test("renders unadvertised evaluator handoff required action from validation imp
     const readinessExport = view.getByLabelText("Exported bridge readiness proof");
     assert.ok(readinessExport.textContent?.includes('"descriptorHandoffRequiredAction"'));
     assert.ok(readinessExport.textContent?.includes('"napoleonRequiredActions"'));
+    assert.ok(readinessExport.textContent?.includes('"advertise_chief_of_staff_request_handoff"'));
+    assert.ok(readinessExport.textContent?.includes('"advertise_governance_evaluation_handoff"'));
     assert.ok(readinessExport.textContent?.includes('"advertise_evaluation_review_handoff"'));
     assert.ok(readinessExport.textContent?.includes('"sideEffectsPerformed": false'));
     assert.ok(readinessExport.textContent?.includes("supportedHandoffs"));
@@ -6854,23 +6940,25 @@ test("renders unadvertised evaluator handoff required action from validation imp
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };
     const importEvent = telemetryBuffer.events?.find((event) => event.event === "evaluator_validation_artifact_imported");
-    assert.equal(importEvent?.attributes.evaluatorNapoleonRequiredActionCount, 1);
+    assert.equal(importEvent?.attributes.evaluatorNapoleonRequiredActionCount, 3);
     const requiredActionEvent = telemetryBuffer.events?.find((event) => event.event === "napoleon_required_actions_exported");
-    assert.equal(requiredActionEvent?.attributes.requiredActionCount, 1);
+    assert.equal(requiredActionEvent?.attributes.requiredActionCount, 3);
+    assert.equal(JSON.stringify(requiredActionEvent).includes("advertise_chief_of_staff_request_handoff"), false);
+    assert.equal(JSON.stringify(requiredActionEvent).includes("advertise_governance_evaluation_handoff"), false);
     assert.equal(JSON.stringify(requiredActionEvent).includes("advertise_evaluation_review_handoff"), false);
     assert.equal(JSON.stringify(requiredActionEvent).includes("/chief-of-staff/reviews/evaluation"), false);
     assert.equal(JSON.stringify(requiredActionEvent).includes(requiredAction), false);
     const requiredActionAnswerEvent = telemetryBuffer.events?.find(
       (event) => event.event === "napoleon_required_actions_answered",
     );
-    assert.equal(requiredActionAnswerEvent?.attributes.requiredActionCount, 1);
+    assert.equal(requiredActionAnswerEvent?.attributes.requiredActionCount, 3);
     assert.equal(requiredActionAnswerEvent?.attributes.localAnswerOnly, true);
     assert.equal(requiredActionAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(requiredActionAnswerEvent).includes("advertise_evaluation_review_handoff"), false);
     assert.equal(JSON.stringify(requiredActionAnswerEvent).includes("/chief-of-staff/reviews/evaluation"), false);
     assert.equal(JSON.stringify(requiredActionAnswerEvent).includes(requiredAction), false);
     const readinessEvent = telemetryBuffer.events?.find((event) => event.event === "bridge_readiness_proof_exported");
-    assert.equal(readinessEvent?.attributes.evaluatorNapoleonRequiredActionCount, 1);
+    assert.equal(readinessEvent?.attributes.evaluatorNapoleonRequiredActionCount, 3);
     assert.equal(JSON.stringify(readinessEvent).includes("advertise_evaluation_review_handoff"), false);
   } finally {
     globalThis.fetch = originalFetch;
