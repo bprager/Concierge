@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added an always-visible Napoleon connection state label plus fail-closed reason and blocked-effect rows, so no-endpoint and descriptor-preflight blockers are visible before a live send attempt or failed transcript turn.
 - Added local returned-proof handling for selected-agent selection-reason follow-ups using "choose" or "pick" wording, such as "Why did Napoleon choose Passive Brain?", so Concierge answers from returned selection proof instead of sending another bridge request or copying raw follow-up/reason text into telemetry.
 - Added local returned-proof handling for selected-agent selection-reason follow-ups with a definite article, such as "Why was the Passive Brain selected?", so Concierge answers from returned selection proof instead of sending another bridge request or copying raw follow-up/reason text into telemetry.
 - Added local returned-proof handling for selected-agent contribution follow-ups with a definite article, such as "What did the Passive Brain find?", so Concierge answers from returned selected-agent proof instead of sending another bridge request or copying raw follow-up/contribution text into telemetry.

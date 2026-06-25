@@ -6427,7 +6427,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         </div>
       </section>
 
-      <section className="contract-status">
+      <section className="contract-status" aria-label="Napoleon connection state">
         <div>
           <strong>Chief of Staff</strong>
           <span>{descriptorStatus?.serviceId ?? "not discovered"}</span>
@@ -6435,6 +6435,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         <div>
           <strong>Connection state</strong>
           <span>{descriptorConnection.state}</span>
+        </div>
+        <div>
+          <strong>Fail-closed reason</strong>
+          <span>{descriptorConnection.failClosedReason ?? "none"}</span>
         </div>
         <div>
           <strong>Descriptor validation</strong>
@@ -6467,6 +6471,18 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         <div>
           <strong>Cache policy</strong>
           <span>{descriptorStatus?.cachePolicy ?? "unavailable"}</span>
+        </div>
+        <div>
+          <strong>Blocked effects</strong>
+          <span>
+            {(descriptorStatus?.blockedEffects ?? [
+              "runtime_authority",
+              "agent_dispatch",
+              "memory_write",
+              "approval_capture",
+              "external_send",
+            ]).join(", ")}
+          </span>
         </div>
       </section>
 
