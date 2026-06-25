@@ -127,8 +127,11 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'await tools["call" + "Tool"]("calendar.lookup", payload);',
             'await tools["execute" + "Tool"](toolName, payload);',
             'await tool["execute"](payload);',
+            'await tool["execute"].apply(tool, [payload]);',
             "await tools.execute(payload);",
             'await tools["execute"](payload);',
+            "await tools.execute.call(tools, payload);",
+            'await tools["execute"].apply(tools, [payload]);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_authority_boundary_text("app/src/router.ts", source)
