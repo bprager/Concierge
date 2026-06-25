@@ -182,11 +182,11 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
         re.compile(
             r"\b(memgraph\w*|neo4j|bolt://|writeMemory|saveMemory|memoryGraph)\b"
             r"|\bgraph_write\s*\("
-            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:write|save)['\"]\s*\+\s*['\"]Memory['\"]\s*\]\s*\("
-            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"]graph['\"]\s*\+\s*['\"]_write['\"]\s*\]\s*\("
-            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"]memory['\"]\s*\+\s*['\"]Graph['\"]\s*\]\s*\("
-            r"|\b(?:globalThis|window)\s*\[\s*['\"](?:write|save)['\"]\s*\+\s*['\"]Memory['\"]\s*\]\s*\("
-            r"|\b(?:globalThis|window)\s*\[\s*['\"]graph['\"]\s*\+\s*['\"]_write['\"]\s*\]\s*\(",
+            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"](?:write|save)['\"]\s*\+\s*['\"]Memory['\"]\s*\]\s*(?:\(|\.\s*(?:call|apply)\s*\()"
+            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"]graph['\"]\s*\+\s*['\"]_write['\"]\s*\]\s*(?:\(|\.\s*(?:call|apply)\s*\()"
+            r"|\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"]memory['\"]\s*\+\s*['\"]Graph['\"]\s*\]\s*(?:\(|\.\s*(?:call|apply)\s*\()"
+            r"|\b(?:globalThis|window)\s*\[\s*['\"](?:write|save)['\"]\s*\+\s*['\"]Memory['\"]\s*\]\s*(?:\(|\.\s*(?:call|apply)\s*\()"
+            r"|\b(?:globalThis|window)\s*\[\s*['\"]graph['\"]\s*\+\s*['\"]_write['\"]\s*\]\s*(?:\(|\.\s*(?:call|apply)\s*\()",
             re.IGNORECASE,
         ),
         "direct memory or graph access",

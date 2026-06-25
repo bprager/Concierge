@@ -93,9 +93,12 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'await globalThis["save" + "Memory"](proposal);',
             'await window["graph" + "_write"](payload);',
             'await memoryClient["write" + "Memory"](proposal);',
+            'await memoryClient["write" + "Memory"].call(memoryClient, proposal);',
             'await memoryClient["save" + "Memory"](proposal);',
             'await memoryClient["memory" + "Graph"](proposal);',
+            'await memoryClient["memory" + "Graph"].apply(memoryClient, [proposal]);',
             'await graphClient["graph" + "_write"](payload);',
+            'await graphClient["graph" + "_write"].apply(graphClient, [payload]);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_authority_boundary_text("app/src/memory.ts", source)
