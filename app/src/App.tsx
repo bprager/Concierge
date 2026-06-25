@@ -503,8 +503,10 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
       lower,
     ) ||
     /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\bwrite\b.*\bmemory\b/.test(lower) ||
-    /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\bdispatch\b.*\bagents?\b/.test(lower) ||
-    /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\bsend\b.*\b(externally|external)\b/.test(
+    /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\bdispatch\b.*\b(agents?|anyone|somebody|someone)\b/.test(
+      lower,
+    ) ||
+    /\b(did|does|has|was|is)\b.*\b(that|this|it|answer|response|reply)\b.*\bsend\b.*\b(externally|external|anything|something|somewhere|out)\b/.test(
       lower,
     );
   if (

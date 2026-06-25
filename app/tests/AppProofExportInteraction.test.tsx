@@ -999,6 +999,70 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(naturalMemoryWriteAnswerEvent).includes("Did it write memory?"), false);
     assert.equal(JSON.stringify(naturalMemoryWriteAnswerEvent).includes("memory_write"), false);
 
+    const requestCountBeforeNaturalExternalSendQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Did it send anything?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let naturalExternalSendAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      naturalExternalSendAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon review requirement from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(naturalExternalSendAnswer);
+      assert.ok(naturalExternalSendAnswer.textContent?.includes("Blocked effects: memory_write, approval_capture, external_send, agent_dispatch."));
+    });
+    assert.ok(naturalExternalSendAnswer);
+    const naturalExternalSendAnswerText = naturalExternalSendAnswer.textContent ?? "";
+    assert.ok(naturalExternalSendAnswerText.includes("Governance: requires_review."));
+    assert.ok(
+      naturalExternalSendAnswerText.includes(
+        "This is local display of returned bridge proof only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeNaturalExternalSendQuestion);
+    const naturalExternalSendAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_review_requirement_answered").at(-1);
+    assert.equal(naturalExternalSendAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(naturalExternalSendAnswerEvent?.attributes.proofReturned, true);
+    assert.equal(naturalExternalSendAnswerEvent?.attributes.reviewRequired, true);
+    assert.equal(naturalExternalSendAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(naturalExternalSendAnswerEvent).includes("Did it send anything?"), false);
+    assert.equal(JSON.stringify(naturalExternalSendAnswerEvent).includes("external_send"), false);
+
+    const requestCountBeforeNaturalAgentDispatchQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Did it dispatch anyone?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let naturalAgentDispatchAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      naturalAgentDispatchAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon review requirement from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(naturalAgentDispatchAnswer);
+      assert.ok(naturalAgentDispatchAnswer.textContent?.includes("Blocked effects: memory_write, approval_capture, external_send, agent_dispatch."));
+    });
+    assert.ok(naturalAgentDispatchAnswer);
+    const naturalAgentDispatchAnswerText = naturalAgentDispatchAnswer.textContent ?? "";
+    assert.ok(naturalAgentDispatchAnswerText.includes("Governance: requires_review."));
+    assert.ok(
+      naturalAgentDispatchAnswerText.includes(
+        "This is local display of returned bridge proof only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeNaturalAgentDispatchQuestion);
+    const naturalAgentDispatchAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_review_requirement_answered").at(-1);
+    assert.equal(naturalAgentDispatchAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(naturalAgentDispatchAnswerEvent?.attributes.proofReturned, true);
+    assert.equal(naturalAgentDispatchAnswerEvent?.attributes.reviewRequired, true);
+    assert.equal(naturalAgentDispatchAnswerEvent?.attributes.agentDispatchPerformed, false);
+    assert.equal(JSON.stringify(naturalAgentDispatchAnswerEvent).includes("Did it dispatch anyone?"), false);
+    assert.equal(JSON.stringify(naturalAgentDispatchAnswerEvent).includes("agent_dispatch"), false);
+
     const requestCountBeforeNaturalActingQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "Can I act on that?" },
