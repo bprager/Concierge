@@ -1029,6 +1029,7 @@ function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInpu
   blockedEffectCount: number;
   governanceReturned: boolean;
   traceReturned: boolean;
+  auditReturned: boolean;
   descriptorFailureReturned: boolean;
 } {
   if (!failure) {
@@ -1038,6 +1039,7 @@ function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInpu
         "Failure reason: not returned.",
         "Governance: not returned.",
         "Trace: not returned.",
+        "Audit: not returned.",
         "Blocked effects: not returned.",
         "Next step: No fail-closed Napoleon bridge attempt has been recorded in this session.",
         "This is local display of blocked-attempt metadata only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
@@ -1046,6 +1048,7 @@ function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInpu
       blockedEffectCount: 0,
       governanceReturned: false,
       traceReturned: false,
+      auditReturned: false,
       descriptorFailureReturned: false,
     };
   }
@@ -1053,6 +1056,7 @@ function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInpu
   const reason = sanitizeVisibleProvenanceValue(failure.reason);
   const governance = sanitizeVisibleProvenanceValue(failure.governanceOutcome);
   const trace = sanitizeVisibleProvenanceValue(failure.traceId);
+  const audit = sanitizeVisibleProvenanceValue(failure.auditId);
   const descriptor = sanitizeVisibleProvenanceValue(failure.descriptorFailureReason);
   const blockedEffects = failure.blockedEffects?.length
     ? failure.blockedEffects.map((effect) => sanitizeVisibleProvenanceValue(effect)).join(", ")
@@ -1065,6 +1069,7 @@ function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInpu
       `Failure reason: ${reason}.`,
       `Governance: ${governance}.`,
       `Trace: ${trace}.`,
+      `Audit: ${audit}.`,
       `Descriptor: ${descriptor}.`,
       `Blocked effects: ${blockedEffects}.`,
       `Next step: ${nextStep}.`,
@@ -1075,6 +1080,7 @@ function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInpu
     blockedEffectCount: failure.blockedEffects?.length ?? 0,
     governanceReturned: governance !== "not returned" && governance !== "unavailable",
     traceReturned: trace !== "not returned" && trace !== "unavailable",
+    auditReturned: audit !== "not returned" && audit !== "unavailable",
     descriptorFailureReturned: descriptor !== "not returned" && descriptor !== "unavailable",
   };
 }
@@ -3329,6 +3335,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       blockedEffectCount: answer.blockedEffectCount,
       governanceReturned: answer.governanceReturned,
       traceReturned: answer.traceReturned,
+      auditReturned: answer.auditReturned,
       descriptorFailureReturned: answer.descriptorFailureReturned,
       localAnswerOnly: true,
       approvalCaptured: false,

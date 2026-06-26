@@ -7153,6 +7153,38 @@ test("shows fail-closed delegation metadata when Napoleon returns deny", async (
     assert.ok(delegationPanel.getByText("memory_write, approval_capture, external_send, agent_dispatch"));
     assert.equal(delegationPanel.queryByText(/Passive Brain found/), null);
     assert.equal(delegationPanel.queryByText(/Napoleon recommends/), null);
+
+    const requestCountBeforeBlockedQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "Why was that blocked?" } });
+    await waitFor(() => assert.equal(composer.value, "Why was that blocked?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let blockedAttemptAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      blockedAttemptAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest blocked Napoleon attempt:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(blockedAttemptAnswer);
+    });
+    assert.ok(blockedAttemptAnswer);
+    const blockedAttemptAnswerText = blockedAttemptAnswer.textContent ?? "";
+    assert.ok(blockedAttemptAnswerText.includes("Failure reason: governance_denied."));
+    assert.ok(blockedAttemptAnswerText.includes("Governance: deny."));
+    assert.ok(blockedAttemptAnswerText.includes("Trace: trace_"));
+    assert.ok(blockedAttemptAnswerText.includes("Audit: audit_trace_"));
+    assert.ok(blockedAttemptAnswerText.includes("No Napoleon response was accepted; fail-closed local state only."));
+    assert.equal(blockedAttemptAnswerText.includes("Napoleon denied the requested external action."), false);
+    assert.equal(requestedUrls.length, requestCountBeforeBlockedQuestion);
+    const blockedAttemptAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.failureReturned, true);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.governanceReturned, true);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.traceReturned, true);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.auditReturned, true);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(blockedAttemptAnswerEvent).includes("Why was that blocked?"), false);
+    assert.equal(JSON.stringify(blockedAttemptAnswerEvent).includes("audit_trace_"), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();
