@@ -806,6 +806,95 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(compactRationaleAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(compactRationaleAnswerEvent).includes("rationale?"), false);
     assert.equal(JSON.stringify(compactRationaleAnswerEvent).includes("Local harness requires governed review"), false);
+    const requestCountBeforeCompactRequirementQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCompactRequirementQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "requirement?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactRequirementAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCompactRequirementQuestion + 1);
+      compactRequirementAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactRequirementAnswer);
+      assert.ok(
+        compactRequirementAnswer.textContent?.includes(
+          "Approval requirement: chief_of_staff_and_owner_review.",
+        ),
+      );
+    });
+    assert.ok(compactRequirementAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeCompactRequirementQuestion);
+    const compactRequirementAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(compactRequirementAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactRequirementAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactRequirementAnswerEvent).includes("requirement?"), false);
+    assert.equal(JSON.stringify(compactRequirementAnswerEvent).includes("chief_of_staff_and_owner_review"), false);
+    const requestCountBeforeCompactReviewQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCompactReviewQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "review?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactReviewAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCompactReviewQuestion + 1);
+      compactReviewAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactReviewAnswer);
+      assert.ok(compactReviewAnswer.textContent?.includes("Governance: requires_review."));
+      assert.ok(
+        compactReviewAnswer.textContent?.includes("Approval requirement: chief_of_staff_and_owner_review."),
+      );
+    });
+    assert.ok(compactReviewAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeCompactReviewQuestion);
+    const compactReviewAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(compactReviewAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactReviewAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactReviewAnswerEvent).includes("review?"), false);
+    assert.equal(JSON.stringify(compactReviewAnswerEvent).includes("requires_review"), false);
+    const requestCountBeforeCompactGovernanceQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCompactGovernanceQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "governance?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactGovernanceAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCompactGovernanceQuestion + 1);
+      compactGovernanceAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactGovernanceAnswer);
+      assert.ok(compactGovernanceAnswer.textContent?.includes("Governance: requires_review."));
+      assert.ok(compactGovernanceAnswer.textContent?.includes("Decision: decision_"));
+    });
+    assert.ok(compactGovernanceAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeCompactGovernanceQuestion);
+    const compactGovernanceAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(compactGovernanceAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactGovernanceAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactGovernanceAnswerEvent).includes("governance?"), false);
+    assert.equal(JSON.stringify(compactGovernanceAnswerEvent).includes("decision_"), false);
     const requestCountBeforeTraceAuditQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeTraceAuditQuestion = Array.from(
       document.querySelectorAll("article.assistant"),
