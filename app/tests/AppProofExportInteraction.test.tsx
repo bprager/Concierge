@@ -5743,6 +5743,41 @@ test("clears Napoleon proof and delegation when descriptor connection state chan
     assert.equal(clearedProofEvent?.attributes.provenanceState, "stale_cleared");
     assert.equal(clearedProofEvent?.attributes.clearReason, "descriptor_state_changed");
     assert.equal(clearedProofEvent?.attributes.externalSendPerformed, false);
+    const currentnessAnswerCountBeforeCompactRecovery = Array.from(document.querySelectorAll("article.assistant")).filter(
+      (article) => article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
+    ).length;
+    fireEvent.change(composer, { target: { value: "refresh?" } });
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let compactRecoveryAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const currentnessAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
+      );
+      assert.equal(currentnessAnswers.length, currentnessAnswerCountBeforeCompactRecovery + 1);
+      compactRecoveryAnswer = currentnessAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactRecoveryAnswer);
+    });
+    assert.ok(compactRecoveryAnswer);
+    const compactRecoveryAnswerText = compactRecoveryAnswer.textContent ?? "";
+    assert.ok(compactRecoveryAnswerText.includes("Current returned proof available: no."));
+    assert.ok(compactRecoveryAnswerText.includes("Proof state: stale_cleared."));
+    assert.ok(compactRecoveryAnswerText.includes("Last clear reason: descriptor_state_changed."));
+    assert.ok(
+      compactRecoveryAnswerText.includes(
+        "Required refresh: Resolve the descriptor state, rediscover a valid Napoleon descriptor, and complete a new governed bridge turn before relying on proof.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeClearedProofQuestion);
+    const compactRecoveryTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const compactRecoveryEvent = compactRecoveryTelemetryBuffer.events
+      ?.filter((event) => event.event === "napoleon_proof_currentness_answered")
+      .at(-1);
+    assert.equal(compactRecoveryEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactRecoveryEvent?.attributes.currentProofAvailable, false);
+    assert.equal(compactRecoveryEvent?.attributes.clearReason, "descriptor_state_changed");
+    assert.equal(JSON.stringify(compactRecoveryEvent).includes("refresh?"), false);
   } finally {
     cleanup();
     dom.window.close();

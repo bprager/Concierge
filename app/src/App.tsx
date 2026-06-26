@@ -629,7 +629,11 @@ function isNapoleonProofCurrentnessQuestion(content: string): boolean {
   const compact = lower.trim();
   const asksCompactCurrentness =
     /^(?:current|status|still\s+valid|valid|live)\??$/.test(compact) ||
-    /^(?:is\s+)?(?:that|this|it)\s+(?:current|still\s+valid|valid|live)\??$/.test(compact);
+    /^(?:refresh|make\s+(?:it|this|that)\s+current)\??$/.test(compact) ||
+    /^(?:is\s+)?(?:that|this|it)\s+(?:current|still\s+valid|valid|live)\??$/.test(compact) ||
+    /^how\s+(?:do|can|should)\s+(?:i|we)\s+(?:refresh|make)\s+(?:it|this|that|the\s+proof)\s+(?:current|valid|live)\??$/.test(
+      compact,
+    );
   const asksAboutProof = /\bproof\b/.test(lower) || /\bevidence\b/.test(lower) || /\bprovenance\b/.test(lower);
   const asksAboutCurrentness =
     /\bcurrent\b/.test(lower) ||

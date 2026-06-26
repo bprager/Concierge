@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local compact stale-proof recovery follow-up handling for wording such as "refresh?", so Concierge answers from sanitized proof clear state without another bridge request or raw follow-up/provenance telemetry.
 - Added local compact Napoleon proof-comparison follow-up handling for wording such as "What changed?", so Concierge answers from sanitized same-session proof comparison metadata without another bridge request or raw follow-up/provenance telemetry.
 - Added local compact proof-currentness follow-up handling for wording such as "current?", so Concierge answers from current returned proof state without another bridge request or raw follow-up/provenance telemetry.
 - Added local compact source/proof follow-up handling for wording such as "Proof?", so Concierge answers from current returned proof without another bridge request or raw follow-up/provenance telemetry.
