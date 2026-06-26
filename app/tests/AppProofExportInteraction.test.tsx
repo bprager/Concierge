@@ -550,6 +550,36 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(naturalDelegationAnswerEvent?.attributes.selectedAgentCount, 1);
     assert.equal(naturalDelegationAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(naturalDelegationAnswerEvent).includes("Who handled that?"), false);
+    const requestCountBeforeRespondedQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeRespondedQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Who responded?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let respondedDelegationAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeRespondedQuestion + 1);
+      respondedDelegationAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(respondedDelegationAnswer);
+      assert.ok(respondedDelegationAnswer.textContent?.includes("Handled by: Passive Brain."));
+    });
+    assert.ok(respondedDelegationAnswer);
+    const respondedDelegationAnswerText = respondedDelegationAnswer.textContent ?? "";
+    assert.ok(respondedDelegationAnswerText.includes("Target capability: napoleon.chief_of_staff."));
+    assert.ok(respondedDelegationAnswerText.includes("This is local display of returned bridge provenance only"));
+    assert.equal(requestedUrls.length, requestCountBeforeRespondedQuestion);
+    const respondedDelegationAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(respondedDelegationAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(respondedDelegationAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(respondedDelegationAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(respondedDelegationAnswerEvent).includes("Who responded?"), false);
     const requestCountBeforeCapabilityHandlerQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeCapabilityHandlerQuestion = Array.from(
       document.querySelectorAll("article.assistant"),

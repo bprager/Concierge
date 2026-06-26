@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local returned-proof handling for "Who responded?" and "Who replied?", so Concierge answers from current Napoleon proof without another bridge request, side effects, or raw follow-up/provenance telemetry.
 - Added direct local Capability Intelligence handling for "What capabilities are working?" while keeping "not working" questions classified as missing or blocked, using sanitized local metadata only.
 - Added broader local Capability Intelligence typo tolerance for "conversaton" and "capabilties" question wording, keeping answers local, metadata-only, and proposal-only.
 - Added local Capability Intelligence handling for "What capabilities are working well?" so Concierge reports working capability evidence from sanitized local metadata without another Napoleon request, approval capture, memory write, agent dispatch, external send, or local application.

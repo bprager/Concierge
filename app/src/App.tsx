@@ -465,9 +465,9 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
       lower,
     );
   const asksAboutReturnedHandler =
-    /\bwho\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
-    /\bwhich\b.*\bagents?\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
-    /\b(which|what)\b.*\bcapability\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(
+    /\bwho\b.*\b(handled|answered|responded|replied)\b(?:.*\b(that|this|it|answer|response|reply)\b)?/.test(lower) ||
+    /\bwhich\b.*\bagents?\b.*\b(handled|answered|responded|replied)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
+    /\b(which|what)\b.*\bcapability\b.*\b(handled|answered|responded|replied)\b.*\b(that|this|it|answer|response|reply)\b/.test(
       lower,
     ) ||
     /\b(which|what)\b.*\bcapability\b.*\bnapoleon\b.*\b(use|used|choose|chose|select|selected|pick|picked)\b/.test(
@@ -583,6 +583,7 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutContextualSelectedAgentContribution ||
     /\bwho\b.*\bhandled\b/.test(lower) ||
     /\bwho\b.*\banswered\b/.test(lower) ||
+    /\bwho\b.*\b(responded|replied)\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b/.test(lower) ||
     /\bselected agents?\b/.test(lower) ||
     /\bdelegation\b/.test(lower) ||
