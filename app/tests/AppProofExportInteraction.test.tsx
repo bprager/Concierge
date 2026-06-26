@@ -7751,6 +7751,42 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
     assert.equal(JSON.stringify(blockedOverrideAnswerEvent).includes("can I override it?"), false);
     assert.equal(JSON.stringify(blockedOverrideAnswerEvent).includes("governance_no_go"), false);
 
+    const deniedBoundaryFollowups = ["can Napoleon override this?", "who can unblock it?"] as const;
+    for (const prompt of deniedBoundaryFollowups) {
+      const requestCountBeforeDeniedBoundaryQuestion = requestedUrls.length;
+      fireEvent.change(composer, { target: { value: prompt } });
+      await waitFor(() => assert.equal(composer.value, prompt));
+      await user.click(view.getByRole("button", { name: "Send" }));
+      let deniedBoundaryAnswer: HTMLElement | undefined;
+      await waitFor(() => {
+        deniedBoundaryAnswer = Array.from(document.querySelectorAll("article.assistant"))
+          .filter((article) => article.textContent?.includes("Latest blocked Napoleon attempt:"))
+          .at(-1) as HTMLElement | undefined;
+        assert.ok(deniedBoundaryAnswer);
+      });
+      assert.ok(deniedBoundaryAnswer);
+      const deniedBoundaryAnswerText = deniedBoundaryAnswer.textContent ?? "";
+      assert.ok(deniedBoundaryAnswerText.includes("Failure reason: governance_no_go."));
+      assert.ok(deniedBoundaryAnswerText.includes("Governance: no_go."));
+      assert.ok(
+        deniedBoundaryAnswerText.includes(
+          "Next step: Revise the request or keep it local; Napoleon governance did not allow forwarding.",
+        ),
+      );
+      assert.ok(deniedBoundaryAnswerText.includes("No Napoleon response was accepted; fail-closed local state only."));
+      assert.equal(deniedBoundaryAnswerText.includes("Napoleon refused the unsafe external action."), false);
+      assert.equal(requestedUrls.length, requestCountBeforeDeniedBoundaryQuestion);
+      const deniedBoundaryAnswerEvent = JSON.parse(
+        localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+      ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+      assert.equal(deniedBoundaryAnswerEvent?.attributes.localAnswerOnly, true);
+      assert.equal(deniedBoundaryAnswerEvent?.attributes.failureReturned, true);
+      assert.equal(deniedBoundaryAnswerEvent?.attributes.governanceReturned, true);
+      assert.equal(deniedBoundaryAnswerEvent?.attributes.externalSendPerformed, false);
+      assert.equal(JSON.stringify(deniedBoundaryAnswerEvent).includes(prompt), false);
+      assert.equal(JSON.stringify(deniedBoundaryAnswerEvent).includes("governance_no_go"), false);
+    }
+
     const requestCountBeforeNextStepQuestion = requestedUrls.length;
     fireEvent.change(composer, { target: { value: "What should I do next?" } });
     await waitFor(() => assert.equal(composer.value, "What should I do next?"));

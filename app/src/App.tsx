@@ -736,7 +736,8 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
   const asksOwner =
     /\bwho\b.*\b(owns?|should handle|fixes|repairs)\b/.test(lower) ||
     /\bwho\b.*\bshould\b.*\bfix\b/.test(lower) ||
-    /\bowner\b.*\b(fix|repair|blocker|failure)\b/.test(lower);
+    /\bwho\b.*\b(can|should|must|may)\b.*\b(unblock|clear|resolve)\b/.test(lower) ||
+    /\bowner\b.*\b(fix|repair|blocker|failure|unblock)\b/.test(lower);
   const asksOverrideBoundary =
     /^(?:can|may|should)\s+(?:i|we|concierge|napoleon)\s+override\s+(?:it|that|this|the\s+(?:block|blocker|decision|failure|no-go|no\s+go))\??$/.test(
       compact,
