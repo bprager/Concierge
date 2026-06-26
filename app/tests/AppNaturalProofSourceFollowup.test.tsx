@@ -220,6 +220,30 @@ test("rendered natural proof source follow-up answers from returned proof withou
     });
     assert.ok(evidenceAnswer);
     assert.equal(requestedUrls.filter((url) => url === "http://127.0.0.1:8787/v1/concierge/turn").length, turnRequestCount);
+
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "what proof supports that?" },
+    });
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    let proofAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      proofAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(proofAnswer);
+      assert.ok(proofAnswer.textContent?.includes(`Trace: ${acceptedTraceId}. Audit: audit_${acceptedTraceId}.`));
+      assert.ok(proofAnswer.textContent?.includes("Proof alignment: same returned trace/audit as Napoleon response proof."));
+    });
+    assert.ok(proofAnswer);
+    assert.equal(requestedUrls.filter((url) => url === "http://127.0.0.1:8787/v1/concierge/turn").length, turnRequestCount);
+    const proofAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(proofAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(proofAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(proofAnswerEvent).includes("what proof supports that?"), false);
+    assert.equal(JSON.stringify(proofAnswerEvent).includes(acceptedTraceId), false);
   } finally {
     cleanup();
     dom.window.close();
