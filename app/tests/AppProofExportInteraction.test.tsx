@@ -610,6 +610,35 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(governanceStateAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(governanceStateAnswerEvent).includes("What was the governance state?"), false);
     assert.equal(JSON.stringify(governanceStateAnswerEvent).includes("requires_review"), false);
+    const requestCountBeforeDecisionQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeDecisionQuestion = Array.from(document.querySelectorAll("article.assistant")).filter(
+      (article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+    ).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What decision did Napoleon return?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let decisionAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeDecisionQuestion + 1);
+      decisionAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(decisionAnswer);
+      assert.ok(decisionAnswer.textContent?.includes("Decision: decision_"));
+    });
+    assert.ok(decisionAnswer);
+    const decisionAnswerText = decisionAnswer.textContent ?? "";
+    assert.ok(decisionAnswerText.includes("Governance: requires_review."));
+    assert.equal(requestedUrls.length, requestCountBeforeDecisionQuestion);
+    const decisionAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(decisionAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(decisionAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(decisionAnswerEvent).includes("What decision did Napoleon return?"), false);
+    assert.equal(JSON.stringify(decisionAnswerEvent).includes("decision_"), false);
     const requestCountBeforeTraceAuditQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeTraceAuditQuestion = Array.from(
       document.querySelectorAll("article.assistant"),

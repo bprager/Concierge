@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local returned-proof answers for Napoleon decision follow-ups, so questions like "What decision did Napoleon return?" reuse the current bridge proof with governance and decision metadata instead of sending a new live request or leaking raw follow-up text.
 - Preserved reviewed taxonomy recommendation count and focus in returned Chief of Staff taxonomy review results, so Napoleon review responses remain tied to the submitted taxonomy packet without local application or side effects.
 - Preserved reviewed capability focus in returned capability review packet results, so Napoleon review responses remain tied to the submitted capability and architecture area without local application or side effects.
 - Preserved the Napoleon descriptor readiness repair label in returned Chief of Staff steering review results, so descriptor repair drafts remain distinguishable after governed review while still showing no local application or side effects.

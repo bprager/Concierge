@@ -439,6 +439,11 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhich\b.*\bgovernance\b.*\b(state|outcome|decision)\b/.test(lower) ||
     /\bwhat\b.*\b(state|outcome|decision)\b.*\bgovernance\b/.test(lower) ||
     /\bgovernance\s+(state|outcome|decision)\b/.test(lower);
+  const asksAboutReturnedDecision =
+    /\bwhat\b.*\bdecision\b.*\b(napoleon|returned|return)\b/.test(lower) ||
+    /\bnapoleon\b.*\bdecision\b.*\b(returned|return)\b/.test(lower) ||
+    /\b(returned|return)\b.*\bdecision\b/.test(lower) ||
+    /\bwhat\b.*\bdid\b.*\bnapoleon\b.*\bdecide\b/.test(lower);
   const asksAboutReturnedProofReference =
     /\b(what|which)\b.*\b(trace|audit)\b.*\b(napoleon|returned|return)\b/.test(lower) ||
     /\bnapoleon\b.*\b(trace|audit)\b.*\b(returned|return)\b/.test(lower) ||
@@ -462,6 +467,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     !asksAboutReturnedHandler &&
     !asksAboutReturnedEffects &&
     !asksAboutReturnedGovernance &&
+    !asksAboutReturnedDecision &&
     !asksAboutReturnedProofReference &&
     !asksAboutReturnedRecommendation &&
     !asksAboutReturnedSelectedAgents &&
@@ -474,6 +480,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutReturnedHandler ||
     asksAboutReturnedEffects ||
     asksAboutReturnedGovernance ||
+    asksAboutReturnedDecision ||
     asksAboutReturnedProofReference ||
     asksAboutReturnedRecommendation ||
     asksAboutReturnedSelectedAgents ||
@@ -1073,6 +1080,7 @@ function formatNapoleonDelegationAnswer(
   const requestedSelectedAgentReasonName = extractRequestedSelectedAgentReasonName(questionContent);
   const trace = detailValue(proof.details, "Trace");
   const audit = detailValue(proof.details, "Audit");
+  const decision = detailValue(proof.details, "Decision");
   const matchingSelectedAgentReasons = requestedSelectedAgentReasonName
     ? metadata.selectedAgentReasons.filter(
         (reason) =>
@@ -1116,6 +1124,7 @@ function formatNapoleonDelegationAnswer(
       `Allowed effects: ${allowedEffects}.`,
       `Blocked effects: ${blockedEffects}.`,
       `Governance: ${detailValue(proof.details, "Governance")}.`,
+      `Decision: ${decision}.`,
       `Trace: ${trace}. Audit: ${audit}.`,
       `Proof alignment: ${metadata.proofAlignment}.`,
       "This is local display of returned bridge provenance only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
