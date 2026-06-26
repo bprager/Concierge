@@ -10,7 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
-- Added compact returned-proof next-step handling for wording such as "Now what?", "What next?", and "Next step?", so Concierge answers from current Napoleon proof with advisory next-step guidance without another bridge request, approval, side effects, or raw follow-up/provenance telemetry.
+- Added compact returned-proof next-step handling plus rendered Text Concierge coverage for wording such as "Now what?", "What next?", and "Next step?", so Concierge answers from current Napoleon proof with advisory next-step guidance without another bridge request, approval, side effects, or raw follow-up/provenance telemetry.
 - Added outcome-specific returned-proof next-step guidance for `allow_prepare_only`, `requires_review`, `deny`, and `no_go`, so Concierge can answer what should happen next with a proof-scoped advisory boundary instead of a generic review hint.
 - Added local returned-proof handling for next-action follow-ups such as "What should happen next?", "What should I do next?", and "What is the next step?", so Concierge answers from current Napoleon proof with review-boundary guidance without another bridge request, approval, side effects, or raw follow-up/provenance telemetry.
 - Added local returned-proof handling for outcome follow-ups such as "What happened next?", "What happens now?", and "What was the outcome?", so Concierge answers from current Napoleon proof without another bridge request, side effects, or raw follow-up/provenance telemetry.
