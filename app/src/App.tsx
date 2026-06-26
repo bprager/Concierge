@@ -486,6 +486,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bnapoleon\b.*\b(trace|audit)\b.*\b(returned|return)\b/.test(lower) ||
     /\b(returned|return)\b.*\b(trace|audit)\b/.test(lower) ||
     /\bwhere\b.*\b(that|this|it|answer|response|reply)\b.*\b(come|came)\s+from\b/.test(lower) ||
+    /\bwhere\s+(?:is|was)\s+(?:that|this|it|the\s+(?:answer|response|reply))\s+from\b/.test(lower) ||
     /\bwhat\b.*\b(proof|evidence)\b.*\b(supports?|supported)\b.*\b(that|this|it|answer|response|reply)\b/.test(
       lower,
     ) ||
