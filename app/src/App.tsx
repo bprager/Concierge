@@ -447,7 +447,7 @@ function normalizeRequestedSelectedAgentName(value: string | undefined): string 
   return name;
 }
 
-function isNapoleonDelegationQuestion(content: string): boolean {
+export function isNapoleonDelegationQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   const asksAboutNamedSelectedAgentContribution = isNamedSelectedAgentContributionQuestion(content);
   const asksAboutNamedSelectedAgentReason = isNamedSelectedAgentReasonQuestion(content);
@@ -469,7 +469,11 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhich\b.*\bagents?\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
     /\b(which|what)\b.*\bcapability\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(
       lower,
-    );
+    ) ||
+    /\b(which|what)\b.*\bcapability\b.*\bnapoleon\b.*\b(use|used|choose|chose|select|selected|pick|picked)\b/.test(
+      lower,
+    ) ||
+    /\b(which|what)\b.*\bcapability\b.*\bdid\b.*\bnapoleon\b.*\b(use|choose|select|pick)\b/.test(lower);
   const asksAboutReturnedEffects =
     /^(?:blocked|allowed|effects?|blocked\s+effects?|allowed\s+effects?)\??$/.test(lower.trim()) ||
     /\bwhat\b.*\b(blocked|allowed)\b/.test(lower) ||

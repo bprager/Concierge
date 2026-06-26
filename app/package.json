@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "vite build",
-    "test": "tsc -p tsconfig.test.json && node --test .tmp-test/tests/*.test.js",
-    "smoke:local-harness": "tsc -p tsconfig.test.json && node --test .tmp-test/tests/localHarnessTextSmoke.test.js",
+    "test": "rm -rf .tmp-test && node --stack-size=20000 ./node_modules/typescript/lib/tsc.js -p tsconfig.test.json && node --test .tmp-test/tests/*.test.js",
+    "smoke:local-harness": "rm -rf .tmp-test && node --stack-size=20000 ./node_modules/typescript/lib/tsc.js -p tsconfig.test.json && node --test .tmp-test/tests/localHarnessTextSmoke.test.js",
     "preview": "vite preview",
     "tauri": "tauri"
   },
