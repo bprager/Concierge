@@ -1096,6 +1096,9 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(reviewAnswerText.includes("Governance: requires_review."));
     assert.ok(reviewAnswerText.includes("Review required: yes."));
     assert.ok(reviewAnswerText.includes("Decision: decision_"));
+    assert.ok(reviewAnswerText.includes("Authority tier: advisory_review."));
+    assert.ok(reviewAnswerText.includes("Approval requirement: chief_of_staff_and_owner_review."));
+    assert.ok(reviewAnswerText.includes("Rationale: Local harness requires governed review."));
     assert.ok(reviewAnswerText.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
     assert.ok(reviewAnswerText.includes("Blocked effects: memory_write, approval_capture, external_send, agent_dispatch."));
     assert.ok(
@@ -1114,8 +1117,13 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(reviewAnswerEvent?.attributes.proofReturned, true);
     assert.equal(reviewAnswerEvent?.attributes.reviewRequired, true);
     assert.equal(reviewAnswerEvent?.attributes.blockedEffectCount, 4);
+    assert.equal(reviewAnswerEvent?.attributes.authorityTierReturned, true);
+    assert.equal(reviewAnswerEvent?.attributes.approvalRequirementReturned, true);
+    assert.equal(reviewAnswerEvent?.attributes.rationaleReturned, true);
     assert.equal(reviewAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(reviewAnswerEvent).includes("memory_write"), false);
+    assert.equal(JSON.stringify(reviewAnswerEvent).includes("chief_of_staff_and_owner_review"), false);
+    assert.equal(JSON.stringify(reviewAnswerEvent).includes("Local harness requires governed review"), false);
     assert.equal(JSON.stringify(reviewAnswerEvent).includes(lastTextTurnTraceId), false);
 
     const requestCountBeforeNaturalApprovalQuestion = requestedUrls.length;

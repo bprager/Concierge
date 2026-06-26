@@ -1296,6 +1296,9 @@ function formatNapoleonReviewRequirementAnswer(
   blockedEffectCount: number;
   governanceReturned: boolean;
   decisionReturned: boolean;
+  authorityTierReturned: boolean;
+  approvalRequirementReturned: boolean;
+  rationaleReturned: boolean;
   traceReturned: boolean;
   auditReturned: boolean;
 } {
@@ -1308,6 +1311,9 @@ function formatNapoleonReviewRequirementAnswer(
       blockedEffectCount: 0,
       governanceReturned: false,
       decisionReturned: false,
+      authorityTierReturned: false,
+      approvalRequirementReturned: false,
+      rationaleReturned: false,
       traceReturned: false,
       auditReturned: false,
     };
@@ -1317,6 +1323,9 @@ function formatNapoleonReviewRequirementAnswer(
   const metadata = presentation.proofMetadata;
   const governance = detailValue(proof.details, "Governance");
   const decision = detailValue(proof.details, "Decision");
+  const authorityTier = detailValue(proof.details, "Authority tier");
+  const approvalRequirement = detailValue(proof.details, "Approval requirement");
+  const rationale = detailValue(proof.details, "Rationale");
   const trace = detailValue(proof.details, "Trace");
   const audit = detailValue(proof.details, "Audit");
   const blockedEffects = metadata.blockedEffects.length ? metadata.blockedEffects.join(", ") : "not returned";
@@ -1331,6 +1340,9 @@ function formatNapoleonReviewRequirementAnswer(
       `Governance: ${governance}.`,
       `Review required: ${reviewRequired ? "yes" : "no returned review requirement"}.`,
       `Decision: ${decision}.`,
+      `Authority tier: ${authorityTier}.`,
+      `Approval requirement: ${approvalRequirement}.`,
+      `Rationale: ${rationale}.`,
       `Trace: ${trace}. Audit: ${audit}.`,
       `Blocked effects: ${blockedEffects}.`,
       `Next step: ${nextStep}`,
@@ -1341,6 +1353,9 @@ function formatNapoleonReviewRequirementAnswer(
     blockedEffectCount: metadata.blockedEffects.length,
     governanceReturned: governance !== "not returned" && governance !== "unavailable",
     decisionReturned: decision !== "not returned" && decision !== "unavailable",
+    authorityTierReturned: authorityTier !== "not returned" && authorityTier !== "unavailable",
+    approvalRequirementReturned: approvalRequirement !== "not returned" && approvalRequirement !== "unavailable",
+    rationaleReturned: rationale !== "not returned" && rationale !== "unavailable",
     traceReturned: trace !== "not returned" && trace !== "unavailable",
     auditReturned: audit !== "not returned" && audit !== "unavailable",
   };
@@ -3380,6 +3395,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       blockedEffectCount: answer.blockedEffectCount,
       governanceReturned: answer.governanceReturned,
       decisionReturned: answer.decisionReturned,
+      authorityTierReturned: answer.authorityTierReturned,
+      approvalRequirementReturned: answer.approvalRequirementReturned,
+      rationaleReturned: answer.rationaleReturned,
       traceReturned: answer.traceReturned,
       auditReturned: answer.auditReturned,
       localAnswerOnly: true,

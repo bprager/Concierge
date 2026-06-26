@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added authority tier, approval requirement, and rationale to local Napoleon review-readiness answers, so questions about whether the user can act or what reference to use include returned review context while telemetry records only safe booleans and false side-effect flags.
 - Preserved returned audit references in the fail-closed Napoleon delegation panel, local blocked-attempt answers, and latest-turn timeline, so denied or blocked bridge attempts show failure reason, governance state, trace, audit, blocked effects, and next step, while the timeline also compares accepted and blocked audit references without inventing selected-agent attribution or sending another bridge request.
 - Added local returned-proof handling for natural source/proof/evidence follow-ups, so "where did that come from?", "what evidence supports that?", and "what proof supports that?" show the current returned trace, audit, proof alignment, and contribution proof without sending another live request or leaking raw follow-up/proof identifiers.
 - Added case-tolerant local returned-proof handling for lower-case multi-word selected-agent follow-ups, so "what did research analyst find?" and "why was research analyst selected?" filter to the named returned agent without sending another live request or leaking raw follow-up/provenance text.
