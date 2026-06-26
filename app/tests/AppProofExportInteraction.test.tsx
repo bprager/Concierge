@@ -6761,42 +6761,56 @@ test("clears Napoleon proof and delegation when descriptor connection state chan
     assert.equal(compactRecoveryEvent?.attributes.currentProofAvailable, false);
     assert.equal(compactRecoveryEvent?.attributes.clearReason, "descriptor_state_changed");
     assert.equal(JSON.stringify(compactRecoveryEvent).includes("refresh?"), false);
-    const requestCountBeforeClearedHandlerQuestion = requestedUrls.length;
-    const delegationAnswerCountBeforeClearedHandlerQuestion = Array.from(
-      document.querySelectorAll("article.assistant"),
-    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
-    fireEvent.change(composer, { target: { value: "Who handled that?" } });
-    await user.click(view.getByRole("button", { name: "Send" }));
-    let clearedHandlerAnswer: HTMLElement | undefined;
-    await waitFor(() => {
-      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
-        article.textContent?.includes("No returned Napoleon delegation proof is available in this session."),
+    for (const clearedAttributionPrompt of [
+      "Who handled that?",
+      "Which capability handled that?",
+      "Which agents were selected?",
+    ]) {
+      const requestCountBeforeClearedAttributionQuestion = requestedUrls.length;
+      const delegationAnswerCountBeforeClearedAttributionQuestion = Array.from(
+        document.querySelectorAll("article.assistant"),
+      ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+      fireEvent.change(composer, { target: { value: clearedAttributionPrompt } });
+      await user.click(view.getByRole("button", { name: "Send" }));
+      let clearedAttributionAnswer: HTMLElement | undefined;
+      await waitFor(() => {
+        const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+          article.textContent?.includes("No returned Napoleon delegation proof is available in this session."),
+        );
+        assert.equal(
+          Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+            article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+          ).length,
+          delegationAnswerCountBeforeClearedAttributionQuestion,
+        );
+        clearedAttributionAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+        assert.ok(clearedAttributionAnswer);
+      });
+      assert.ok(clearedAttributionAnswer);
+      const clearedAttributionAnswerText = clearedAttributionAnswer.textContent ?? "";
+      assert.ok(
+        clearedAttributionAnswerText.includes(
+          "Concierge will not name a handler, capability, or selected agent from local inference",
+        ),
       );
-      assert.equal(
-        Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
-          article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
-        ).length,
-        delegationAnswerCountBeforeClearedHandlerQuestion,
+      assert.ok(
+        clearedAttributionAnswerText.includes(
+          "this local answer did not contact Napoleon, approve, write memory, dispatch agents, or send externally",
+        ),
       );
-      clearedHandlerAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
-      assert.ok(clearedHandlerAnswer);
-    });
-    assert.ok(clearedHandlerAnswer);
-    const clearedHandlerAnswerText = clearedHandlerAnswer.textContent ?? "";
-    assert.ok(clearedHandlerAnswerText.includes("Concierge will not name a handler, capability, or selected agent from local inference"));
-    assert.ok(clearedHandlerAnswerText.includes("this local answer did not contact Napoleon, approve, write memory, dispatch agents, or send externally"));
-    assert.equal(clearedHandlerAnswerText.includes("Handled by: Passive Brain."), false);
-    assert.equal(clearedHandlerAnswerText.includes("Target capability: napoleon.chief_of_staff."), false);
-    assert.equal(requestedUrls.length, requestCountBeforeClearedHandlerQuestion);
-    const clearedHandlerEvent = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}").events
-      ?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered")
-      .at(-1);
-    assert.equal(clearedHandlerEvent?.attributes.localAnswerOnly, true);
-    assert.equal(clearedHandlerEvent?.attributes.proofReturned, false);
-    assert.equal(clearedHandlerEvent?.attributes.selectedAgentCount, 0);
-    assert.equal(clearedHandlerEvent?.attributes.targetCapabilityReturned, false);
-    assert.equal(clearedHandlerEvent?.attributes.externalSendPerformed, false);
-    assert.equal(JSON.stringify(clearedHandlerEvent).includes("Who handled that?"), false);
+      assert.equal(clearedAttributionAnswerText.includes("Handled by: Passive Brain."), false);
+      assert.equal(clearedAttributionAnswerText.includes("Target capability: napoleon.chief_of_staff."), false);
+      assert.equal(requestedUrls.length, requestCountBeforeClearedAttributionQuestion);
+      const clearedAttributionEvent = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}").events
+        ?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered")
+        .at(-1);
+      assert.equal(clearedAttributionEvent?.attributes.localAnswerOnly, true);
+      assert.equal(clearedAttributionEvent?.attributes.proofReturned, false);
+      assert.equal(clearedAttributionEvent?.attributes.selectedAgentCount, 0);
+      assert.equal(clearedAttributionEvent?.attributes.targetCapabilityReturned, false);
+      assert.equal(clearedAttributionEvent?.attributes.externalSendPerformed, false);
+      assert.equal(JSON.stringify(clearedAttributionEvent).includes(clearedAttributionPrompt), false);
+    }
   } finally {
     cleanup();
     dom.window.close();
