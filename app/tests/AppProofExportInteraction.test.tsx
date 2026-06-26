@@ -4753,6 +4753,21 @@ test("renders governed evolution proposal submission controls from capability re
       assert.equal(posted.includes("raw evolution packet text"), false);
       assert.equal(posted.includes("private.example"), false);
       assert.equal(posted.includes("token"), false);
+
+      const lifecycleStorageBeforeProfileChange = localStorage.getItem("concierge_evolution_proposal_lifecycle");
+      assert.ok(lifecycleStorageBeforeProfileChange);
+      assert.ok(lifecycleStorageBeforeProfileChange.includes("implemented"));
+      assert.ok(lifecycleStorageBeforeProfileChange.includes("decision_evolution_status_rendered"));
+      assert.ok(lifecycleStorageBeforeProfileChange.includes("audit_evolution_status_rendered"));
+      assert.equal(lifecycleStorageBeforeProfileChange.includes("raw evolution packet text"), false);
+      assert.equal(lifecycleStorageBeforeProfileChange.includes("private.example"), false);
+      assert.equal(lifecycleStorageBeforeProfileChange.includes("token"), false);
+      fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+      assert.equal(localStorage.getItem("concierge_evolution_proposal_lifecycle"), null);
+      assert.equal(view.queryByLabelText("Exported evolution proposal submission packet"), null);
+      assert.equal(view.queryByLabelText("Evolution proposal lifecycle"), null);
+      assert.equal(view.queryByLabelText("Exported evolution proposal lifecycle"), null);
+      assert.equal(Boolean(view.queryByRole("button", { name: "Send evolution proposal to Napoleon intake" })), false);
     } finally {
       globalThis.fetch = originalFetch;
       console.info = originalInfo;

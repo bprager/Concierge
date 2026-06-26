@@ -255,6 +255,14 @@ export function persistEvolutionProposalLifecycleRecords(
   return true;
 }
 
+export function clearEvolutionProposalLifecycleRecords(
+  storage: EvolutionProposalLifecycleStorage | null | undefined,
+): boolean {
+  if (!storage) return false;
+  storage.removeItem(EVOLUTION_PROPOSAL_LIFECYCLE_STORAGE_KEY);
+  return true;
+}
+
 export function exportEvolutionProposalLifecycleRecords(
   records: EvolutionProposalLifecycleRecord[],
   options: { generatedAt?: string } = {},

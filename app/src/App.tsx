@@ -143,6 +143,7 @@ import {
 } from "./evolutionProposalSubmission.js";
 import {
   buildDraftEvolutionProposalLifecycleRecord,
+  clearEvolutionProposalLifecycleRecords,
   exportEvolutionProposalLifecycleRecords,
   loadEvolutionProposalLifecycleRecords,
   persistEvolutionProposalLifecycleRecords,
@@ -2053,7 +2054,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setEvolutionProposalSubmission(null);
     setEvolutionProposalSubmissionFailure(null);
     setEvolutionProposalStatusFailure(null);
+    setEvolutionProposalLifecycleRecords([]);
     setEvolutionProposalLifecycleExportJson(null);
+    clearEvolutionProposalLifecycleRecords(browserStorage());
   }
 
   function setSuccessfulNapoleonPresentation(response: Parameters<typeof buildSuccessfulNapoleonResponsePresentation>[0]) {

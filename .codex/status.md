@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added stale-context clearing for browser-local evolution proposal lifecycle records, so profile, endpoint, descriptor, token, Rehearsal, or capability-review invalidation removes stored proposal lifecycle metadata along with the visible packet and lifecycle UI.
 - Consolidated rendered stale-cleared proof currentness and attribution coverage helpers, so descriptor-scoped stale-proof reset checks remain easier to extend while preserving the same no-reuse, no-side-effect, and sanitized-telemetry assertions.
 - Added rendered stale-cleared proof coverage for recommendation and contribution follow-ups after descriptor rediscovery and descriptor failure refreshes, so Concierge refuses to reuse prior Napoleon attribution across descriptor refresh paths.
 - Added rendered stale-cleared proof coverage for recommendation and contribution follow-ups after profile, endpoint, bridge-token, and Rehearsal Mode resets, so Concierge refuses to reuse prior Napoleon attribution across those context changes.
