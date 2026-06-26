@@ -17,6 +17,9 @@ test("recognizes next-action follow-ups as returned-proof delegation questions",
   assert.equal(isNapoleonDelegationQuestion("What should happen next?"), true);
   assert.equal(isNapoleonDelegationQuestion("What should I do next?"), true);
   assert.equal(isNapoleonDelegationQuestion("What is the next step?"), true);
+  assert.equal(isNapoleonDelegationQuestion("Now what?"), true);
+  assert.equal(isNapoleonDelegationQuestion("What next?"), true);
+  assert.equal(isNapoleonDelegationQuestion("Next step?"), true);
 });
 
 test("describes returned-proof next steps by governance outcome without granting approval", () => {

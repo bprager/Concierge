@@ -555,6 +555,7 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
     /^(?:what\s+should\s+happen\s+next|what\s+should\s+i\s+do\s+next|what\s+is\s+the\s+next\s+step)\??$/.test(
       compact,
     ) ||
+    /^(?:now\s+what|what\s+now|what\s+next|next|next\s+step|next\s+action)\??$/.test(compact) ||
     /\bwhat\b.*\bshould\b.*\b(happen|do)\b.*\bnext\b/.test(lower) ||
     /\bwhat\b.*\bnext\s+step\b/.test(lower);
   if (
