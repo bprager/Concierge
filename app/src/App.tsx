@@ -744,15 +744,20 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
     ) ||
     /\boverride\b.*\b(block|blocker|decision|failure|no-go|no go|denial|deny|denied)\b/.test(lower);
   const asksAppealOrReviewBoundary =
+    /^(?:appeal|appeal\s+it|appeal\s+this|appeal\s+that)\??$/.test(compact) ||
     /\bappeal\b.*\b(it|that|this|block|blocker|decision|failure|no-go|no go|denial|deny|denied)\b/.test(lower) ||
     /\bwho\b.*\b(review|reviews|reviewed)\b.*\b(it|that|this|block|blocker|decision|failure|no-go|no go|denial|deny|denied)\b/.test(
       lower,
     );
   const asksReconsiderationBoundary =
+    /^(?:reconsider|reconsider\s+it|reconsider\s+this|reconsider\s+that)\??$/.test(compact) ||
     /\bwho\b.*\b(can|may|should|must)\b.*\breconsider\b.*\b(it|that|this|block|blocker|decision|failure|no-go|no go|denial|deny|denied)?\b/.test(
       lower,
     ) || /\breconsider\b.*\b(it|that|this|block|blocker|decision|failure|no-go|no go|denial|deny|denied)\b/.test(lower);
   const asksAllowedCondition =
+    /^(?:allowed\s+how|how\s+allowed|make\s+(?:it|this|that)\s+allowed|what\s+would\s+allow\s+(?:it|this|that))\??$/.test(
+      compact,
+    ) ||
     /\bwhat\b.*\b(would|could|can|may)\b.*\bmake\b.*\b(it|that|this|request|turn|send)\b.*\ballow(?:ed)?\b/.test(
       lower,
     ) || /\bhow\b.*\b(would|could|can|may)\b.*\b(it|that|this|request|turn|send)\b.*\bbe\b.*\ballow(?:ed)?\b/.test(lower);
