@@ -1074,6 +1074,41 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(pronounSelectionReasonAnswerEvent).includes("Why that one?"), false);
     assert.equal(JSON.stringify(pronounSelectionReasonAnswerEvent).includes("Passive Brain"), false);
     assert.equal(JSON.stringify(pronounSelectionReasonAnswerEvent).includes("deployment context"), false);
+    const requestCountBeforeShortPronounSelectionReasonQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeShortPronounSelectionReasonQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "Why it?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let shortPronounSelectionReasonAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeShortPronounSelectionReasonQuestion + 1);
+      shortPronounSelectionReasonAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(shortPronounSelectionReasonAnswer);
+      assert.ok(shortPronounSelectionReasonAnswer.textContent?.includes("Handled by: Passive Brain."));
+      assert.ok(
+        shortPronounSelectionReasonAnswer.textContent?.includes(
+          "Why selected: Passive Brain: Prior bridge context is relevant; deployment context was requested.",
+        ),
+      );
+    });
+    assert.ok(shortPronounSelectionReasonAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeShortPronounSelectionReasonQuestion);
+    const shortPronounSelectionReasonAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(shortPronounSelectionReasonAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(shortPronounSelectionReasonAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(shortPronounSelectionReasonAnswerEvent?.attributes.selectedAgentReasonCount, 1);
+    assert.equal(shortPronounSelectionReasonAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(shortPronounSelectionReasonAnswerEvent).includes("Why it?"), false);
+    assert.equal(JSON.stringify(shortPronounSelectionReasonAnswerEvent).includes("Passive Brain"), false);
+    assert.equal(JSON.stringify(shortPronounSelectionReasonAnswerEvent).includes("deployment context"), false);
     const requestCountBeforePronounSelectionSourceQuestion = requestedUrls.length;
     const delegationAnswerCountBeforePronounSelectionSourceQuestion = Array.from(
       document.querySelectorAll("article.assistant"),

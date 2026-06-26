@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local short-pronoun selected-agent selection-reason follow-up coverage for wording such as "Why it?", keeping the answer tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.
 - Added local contextual selected-agent selection-reason follow-up coverage for wording such as "Why that one?", keeping the answer tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.
 - Added local contextual selected-agent selection-source follow-up coverage for wording such as "Who chose it?", keeping the answer tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.
 - Added local contextual selected-agent selection-reason follow-up coverage for wording such as "Why this agent?", keeping the answer tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.
