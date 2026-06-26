@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added case-tolerant local returned-proof handling for lower-case multi-word selected-agent follow-ups, so "what did research analyst find?" and "why was research analyst selected?" filter to the named returned agent without sending another live request or leaking raw follow-up/provenance text.
 - Added local returned-proof answers for Napoleon decision, authority-tier, approval-requirement, and rationale follow-ups, so questions like "What decision did Napoleon return?", "What authority tier did Napoleon return?", "What approval requirement did Napoleon return?", and "What rationale did Napoleon return?" reuse the current bridge proof instead of sending a new live request or leaking raw follow-up text.
 - Preserved reviewed taxonomy recommendation count and focus in returned Chief of Staff taxonomy review results, so Napoleon review responses remain tied to the submitted taxonomy packet without local application or side effects.
 - Preserved reviewed capability focus in returned capability review packet results, so Napoleon review responses remain tied to the submitted capability and architecture area without local application or side effects.

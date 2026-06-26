@@ -10,6 +10,25 @@ function harnessJsonResponse(status: number, payload: unknown) {
   };
 }
 
+function installDom() {
+  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
+    url: "http://127.0.0.1:5173/",
+  });
+  globalThis.window = dom.window as unknown as Window & typeof globalThis;
+  globalThis.document = dom.window.document;
+  globalThis.localStorage = dom.window.localStorage;
+  globalThis.localStorage.clear();
+  globalThis.HTMLElement = dom.window.HTMLElement;
+  globalThis.HTMLInputElement = dom.window.HTMLInputElement;
+  globalThis.HTMLTextAreaElement = dom.window.HTMLTextAreaElement;
+  globalThis.HTMLSelectElement = dom.window.HTMLSelectElement;
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: dom.window.navigator,
+  });
+  return dom;
+}
+
 function agentMetadataPayload() {
   return {
     agents: [
@@ -44,28 +63,9 @@ function profileMetadataPayload() {
   };
 }
 
-function installDom() {
-  const dom = new JSDOM("<!doctype html><html><body></body></html>", {
-    url: "http://127.0.0.1:5173/",
-  });
-  globalThis.window = dom.window as unknown as Window & typeof globalThis;
-  globalThis.document = dom.window.document;
-  globalThis.localStorage = dom.window.localStorage;
-  globalThis.localStorage.clear();
-  globalThis.HTMLElement = dom.window.HTMLElement;
-  globalThis.HTMLInputElement = dom.window.HTMLInputElement;
-  globalThis.HTMLTextAreaElement = dom.window.HTMLTextAreaElement;
-  globalThis.HTMLSelectElement = dom.window.HTMLSelectElement;
-  Object.defineProperty(globalThis, "navigator", {
-    configurable: true,
-    value: dom.window.navigator,
-  });
-  return dom;
-}
-
-test("rendered live send fails closed when selected-agent proof does not match returned wording", async () => {
+test("rendered lower-case selected-agent follow-up answers from returned proof without live send", async () => {
   const dom = installDom();
-  const [{ cleanup, fireEvent, render, waitFor, within }, userEventModule, { App }] = await Promise.all([
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
     import("@testing-library/react"),
     import("@testing-library/user-event"),
     import("../src/App.js"),
@@ -83,6 +83,7 @@ test("rendered live send fails closed when selected-agent proof does not match r
           runtimeAuthority: false,
           commandExecution: false,
           cachePolicy: "fail_closed_to_review_required",
+          supportedHandoffs: ["text_turn"],
           blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
         },
         checksum: { expected: "sha256:ui", actual: "sha256:ui" },
@@ -111,7 +112,7 @@ test("rendered live send fails closed when selected-agent proof does not match r
       chiefOfStaffRequest: { request_id: string };
     };
     return harnessJsonResponse(200, {
-      text: "Research Analyst found the prior rollout note.",
+      text: "Passive Brain found the prior rollout note.",
       profileMode: body.profileMode,
       governanceDecision: {
         decision_id: `decision_${body.traceId}`,
@@ -144,10 +145,16 @@ test("rendered live send fails closed when selected-agent proof does not match r
       delegation: {
         selectedAgents: [
           {
+            agentId: "napoleon.passive_brain",
+            displayName: "Passive Brain",
+            selectionReason: "Prior rollout memory was relevant.",
+            contributionSummary: "Found the prior rollout note.",
+          },
+          {
             agentId: "napoleon.research_analyst",
             displayName: "Research Analyst",
-            selectionReason: "Bridge rollout evidence needed review.",
-            contributionSummary: "Found the prior budget note.",
+            selectionReason: "Architecture evidence needed review.",
+            contributionSummary: "Found descriptor alignment risk.",
           },
         ],
         allowedEffects: ["prepare_advisory_response"],
@@ -174,25 +181,60 @@ test("rendered live send fails closed when selected-agent proof does not match r
     await user.type(view.getByPlaceholderText("Ask Napoleon through Concierge..."), "Draft a bridge readiness summary");
     await user.click(view.getByRole("button", { name: "Send" }));
 
-    await waitFor(() => assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/turn")));
-    const blockedMessages = await view.findAllByText(/contract_mismatch/);
-    assert.ok(blockedMessages.length >= 2);
-    const blockedArticle = view
-      .getAllByText(/Napoleon bridge blocked: contract_mismatch/)
-      .at(0)
-      ?.closest("article") as HTMLElement;
-    assert.ok(blockedArticle);
-    assert.ok(within(blockedArticle).getByText("Blocked Napoleon governed bridge attempt"));
-    assert.ok(within(blockedArticle).getByText("No Napoleon response was accepted; fail-closed local state only."));
-    assert.ok(within(blockedArticle).getByText("adult_owner"));
-    assert.ok(within(blockedArticle).getAllByText(/memory_write/).length >= 1);
-    assert.ok(within(blockedArticle).getAllByText(/approval_capture/).length >= 1);
-    assert.ok(within(blockedArticle).getAllByText(/external_send/).length >= 1);
-    assert.ok(within(blockedArticle).getAllByText(/agent_dispatch/).length >= 1);
-    assert.ok(view.getByText(/Live Napoleon bridge blocked: contract_mismatch/));
-    assert.equal(view.container.textContent?.includes("Research Analyst found the prior rollout note."), false);
-    assert.equal(view.container.textContent?.includes("Found the prior budget note."), false);
-    assert.equal(view.container.textContent?.includes("Last successful Napoleon proof"), false);
+    await waitFor(() => assert.ok(view.getAllByText(/Passive Brain found the prior rollout note/).length >= 1));
+    const turnRequestCount = requestedUrls.filter((url) => url === "http://127.0.0.1:8787/v1/concierge/turn").length;
+
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "what did research analyst find?" },
+    });
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    let followUpAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      followUpAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(followUpAnswer);
+      assert.ok(followUpAnswer.textContent?.includes("Selected-agent contribution: Research Analyst: Found descriptor alignment risk."));
+    });
+    assert.ok(followUpAnswer);
+    assert.equal(requestedUrls.filter((url) => url === "http://127.0.0.1:8787/v1/concierge/turn").length, turnRequestCount);
+    assert.equal(followUpAnswer.textContent?.includes("Passive Brain: Found the prior rollout note."), false);
+    const delegationAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(delegationAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(delegationAnswerEvent?.attributes.selectedAgentContributionCount, 1);
+    assert.equal(delegationAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(delegationAnswerEvent).includes("what did research analyst find?"), false);
+    assert.equal(JSON.stringify(delegationAnswerEvent).includes("Research Analyst"), false);
+    assert.equal(JSON.stringify(delegationAnswerEvent).includes("descriptor alignment risk"), false);
+
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "why was research analyst selected?" },
+    });
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    let reasonAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      reasonAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(reasonAnswer);
+      assert.ok(reasonAnswer.textContent?.includes("Why selected: Research Analyst: Architecture evidence needed review."));
+    });
+    assert.ok(reasonAnswer);
+    assert.equal(requestedUrls.filter((url) => url === "http://127.0.0.1:8787/v1/concierge/turn").length, turnRequestCount);
+    assert.equal(reasonAnswer.textContent?.includes("Passive Brain: Prior rollout memory was relevant."), false);
+    const reasonAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(reasonAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(reasonAnswerEvent?.attributes.selectedAgentReasonCount, 1);
+    assert.equal(reasonAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(reasonAnswerEvent).includes("why was research analyst selected?"), false);
+    assert.equal(JSON.stringify(reasonAnswerEvent).includes("Research Analyst"), false);
+    assert.equal(JSON.stringify(reasonAnswerEvent).includes("Architecture evidence"), false);
   } finally {
     cleanup();
     dom.window.close();

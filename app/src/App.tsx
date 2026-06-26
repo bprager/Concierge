@@ -385,9 +385,9 @@ function isNapoleonRequiredActionQuestion(content: string): boolean {
 
 function extractRequestedSelectedAgentName(content: string): string | null {
   const match = content.match(
-    /\b[Ww]hat\s+did\s+(?:the\s+)?([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,3})\s+(?:find|found|identify|identified|report|reported|surface|surfaced|confirm|confirmed|verify|verified|assess|assessed|conclude|concluded|recommend|recommended)\b/,
+    /\b[Ww]hat\s+did\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\s+(?:find|found|identify|identified|report|reported|surface|surfaced|confirm|confirmed|verify|verified|assess|assessed|conclude|concluded|recommend|recommended)\b/,
   );
-  const name = match?.[1]?.trim();
+  const name = normalizeRequestedSelectedAgentName(match?.[1]);
   if (!name || name.toLocaleLowerCase() === "napoleon") return null;
   return name;
 }
@@ -399,12 +399,12 @@ function isNamedSelectedAgentContributionQuestion(content: string): boolean {
 function extractRequestedSelectedAgentReasonName(content: string): string | null {
   const match =
     content.match(
-      /\b[Ww]hy\s+(?:was|were)\s+(?:the\s+)?([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,3})\s+selected\b/,
+      /\b[Ww]hy\s+(?:was|were)\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\s+selected\b/,
     ) ??
     content.match(
-      /\b[Ww]hy\s+did\s+(?:Napoleon|the bridge|Chief of Staff)\s+(?:select|choose|chose|pick|picked)\s+(?:the\s+)?([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,3})\b/,
+      /\b[Ww]hy\s+did\s+(?:Napoleon|the bridge|Chief of Staff)\s+(?:select|choose|chose|pick|picked)\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\b/,
     );
-  const name = match?.[1]?.trim();
+  const name = normalizeRequestedSelectedAgentName(match?.[1]);
   if (!name || name.toLocaleLowerCase() === "napoleon") return null;
   return name;
 }
@@ -415,6 +415,18 @@ function isNamedSelectedAgentReasonQuestion(content: string): boolean {
 
 function selectedAgentNameFromProofLine(proofLine: string): string {
   return proofLine.split(":")[0]?.trim() ?? "";
+}
+
+function normalizeRequestedSelectedAgentName(value: string | undefined): string | null {
+  const name = value?.trim().replace(/\s+/g, " ");
+  if (!name) return null;
+  const words = name.split(" ");
+  const hasTitleCaseWord = words.some((word) => /^[A-Z][A-Za-z0-9]*$/.test(word));
+  const hasMultiWordNameShape = words.length >= 2 && words.every((word) => /^[A-Za-z][A-Za-z0-9]*$/.test(word));
+  if (!hasTitleCaseWord && !hasMultiWordNameShape) return null;
+  const blocked = new Set(["it", "that", "this", "answer", "response", "reply", "agent", "selected agent"]);
+  if (blocked.has(name.toLocaleLowerCase())) return null;
+  return name;
 }
 
 function isNapoleonDelegationQuestion(content: string): boolean {
