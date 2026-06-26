@@ -824,6 +824,64 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(compactProofAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(compactProofAnswerEvent).includes("Proof?"), false);
     assert.equal(JSON.stringify(compactProofAnswerEvent).includes(lastTextTurnTraceId), false);
+    const requestCountBeforeCompactTraceQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCompactTraceQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "trace?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactTraceAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCompactTraceQuestion + 1);
+      compactTraceAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactTraceAnswer);
+      assert.ok(compactTraceAnswer.textContent?.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
+    });
+    assert.ok(compactTraceAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeCompactTraceQuestion);
+    const compactTraceAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(compactTraceAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactTraceAnswerEvent?.attributes.traceReturned, true);
+    assert.equal(compactTraceAnswerEvent?.attributes.auditReturned, true);
+    assert.equal(compactTraceAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactTraceAnswerEvent).includes("trace?"), false);
+    assert.equal(JSON.stringify(compactTraceAnswerEvent).includes(lastTextTurnTraceId), false);
+    const requestCountBeforeCompactAuditQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCompactAuditQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "audit?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactAuditAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCompactAuditQuestion + 1);
+      compactAuditAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactAuditAnswer);
+      assert.ok(compactAuditAnswer.textContent?.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
+    });
+    assert.ok(compactAuditAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeCompactAuditQuestion);
+    const compactAuditAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(compactAuditAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactAuditAnswerEvent?.attributes.traceReturned, true);
+    assert.equal(compactAuditAnswerEvent?.attributes.auditReturned, true);
+    assert.equal(compactAuditAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactAuditAnswerEvent).includes("audit?"), false);
+    assert.equal(JSON.stringify(compactAuditAnswerEvent).includes(lastTextTurnTraceId), false);
     const requestCountBeforeSelectedAgentsQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeSelectedAgentsQuestion = Array.from(
       document.querySelectorAll("article.assistant"),

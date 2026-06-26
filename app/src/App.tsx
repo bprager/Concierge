@@ -483,6 +483,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\b(returned|return)\b.*\brationale\b/.test(lower) ||
     /\bwhy\b.*\bdid\b.*\bnapoleon\b.*\b(decide|return)\b/.test(lower);
   const asksAboutReturnedProofReference =
+    /^(?:trace|traces|audit|audits|trace\s+and\s+audit|audit\s+and\s+trace)\??$/.test(lower.trim()) ||
     /\b(what|which)\b.*\b(trace|audit)\b.*\b(napoleon|returned|return)\b/.test(lower) ||
     /\bnapoleon\b.*\b(trace|audit)\b.*\b(returned|return)\b/.test(lower) ||
     /\b(returned|return)\b.*\b(trace|audit)\b/.test(lower) ||
