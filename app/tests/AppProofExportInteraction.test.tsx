@@ -3066,8 +3066,8 @@ test("answers contextual selected-agent source follow-ups from returned proof", 
     await view.findByText("Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.");
 
     const requestCountBeforeQuestion = requestedUrls.length;
-    fireEvent.change(composer, { target: { value: "Who picked this agent?" } });
-    await waitFor(() => assert.equal(composer.value, "Who picked this agent?"));
+    fireEvent.change(composer, { target: { value: "Who picked the agent?" } });
+    await waitFor(() => assert.equal(composer.value, "Who picked the agent?"));
     await user.click(view.getByRole("button", { name: "Send" }));
 
     let answer: HTMLElement | undefined;
@@ -3092,7 +3092,7 @@ test("answers contextual selected-agent source follow-ups from returned proof", 
     assert.equal(answerEvent?.attributes.selectedAgentCount, 1);
     assert.equal(answerEvent?.attributes.selectedAgentReasonCount, 1);
     assert.equal(answerEvent?.attributes.externalSendPerformed, false);
-    assert.equal(JSON.stringify(answerEvent).includes("Who picked this agent?"), false);
+    assert.equal(JSON.stringify(answerEvent).includes("Who picked the agent?"), false);
     assert.equal(JSON.stringify(answerEvent).includes("Passive Brain"), false);
     assert.equal(JSON.stringify(answerEvent).includes("deployment context"), false);
   } finally {

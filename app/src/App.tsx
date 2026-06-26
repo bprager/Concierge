@@ -456,7 +456,9 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhy\b.*\b(?:this|that|the)\s+(?:selected\s+)?agent\b.*\bselected\b/.test(lower) ||
     /\bwhy\s+(?:this|that)\s+one\b/.test(lower) ||
     /\bwhy\s+it\b/.test(lower);
-  const asksAboutContextualSelectedAgentSource = /\bwho\s+(?:selected|chose|picked)\s+(?:it|that|this)\b/.test(lower);
+  const asksAboutContextualSelectedAgentSource =
+    /\bwho\s+(?:selected|chose|picked)\s+(?:it|that|this)\b/.test(lower) ||
+    /\bwho\s+(?:selected|chose|picked)\s+(?:the\s+)?(?:selected\s+)?agent\b/.test(lower);
   const asksAboutContextualSelectedAgentContribution =
     /\bwhat\s+(?:did|has|have)\s+(?:it|that|this|they)\s+(?:find|found|identify|identified|report|reported|surface|surfaced|confirm|confirmed|verify|verified|assess|assessed|conclude|concluded|recommend|recommended)\b/.test(
       lower,
