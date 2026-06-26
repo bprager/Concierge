@@ -465,11 +465,13 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhat\b.*\b(state|outcome|decision)\b.*\bgovernance\b/.test(lower) ||
     /\bgovernance\s+(state|outcome|decision)\b/.test(lower);
   const asksAboutReturnedDecision =
+    /^(?:decision|decisions|decided)\??$/.test(lower.trim()) ||
     /\bwhat\b.*\bdecision\b.*\b(napoleon|returned|return)\b/.test(lower) ||
     /\bnapoleon\b.*\bdecision\b.*\b(returned|return)\b/.test(lower) ||
     /\b(returned|return)\b.*\bdecision\b/.test(lower) ||
     /\bwhat\b.*\bdid\b.*\bnapoleon\b.*\bdecide\b/.test(lower);
   const asksAboutReturnedAuthority =
+    /^(?:authority|authority\s+tier|tier)\??$/.test(lower.trim()) ||
     /\bwhat\b.*\bauthority\s+tier\b.*\b(napoleon|returned|return)\b/.test(lower) ||
     /\bnapoleon\b.*\bauthority\s+tier\b.*\b(returned|return)\b/.test(lower) ||
     /\b(returned|return)\b.*\bauthority\s+tier\b/.test(lower);
@@ -478,6 +480,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bnapoleon\b.*\bapproval\s+requirement\b.*\b(returned|return)\b/.test(lower) ||
     /\b(returned|return)\b.*\bapproval\s+requirement\b/.test(lower);
   const asksAboutReturnedRationale =
+    /^(?:rationale|reason|reasoning)\??$/.test(lower.trim()) ||
     /\bwhat\b.*\brationale\b.*\b(napoleon|returned|return)\b/.test(lower) ||
     /\bnapoleon\b.*\brationale\b.*\b(returned|return)\b/.test(lower) ||
     /\b(returned|return)\b.*\brationale\b/.test(lower) ||
