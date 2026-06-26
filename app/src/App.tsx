@@ -555,7 +555,12 @@ function isNapoleonDelegationQuestion(content: string): boolean {
 
 function isNapoleonReviewRequirementQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
+  const compact = lower.trim();
+  const asksCompactApprovalBoundary =
+    /^(?:approved|approval|authorized|reviewed|allowed|safe)\??$/.test(compact) ||
+    /^(?:did\s+(?:it|that|this)\s+)?(?:get\s+)?(?:approved|authorized|reviewed|allowed)\??$/.test(compact);
   const asksAboutReturnedAction =
+    asksCompactApprovalBoundary ||
     /\b(can|may|should)\s+i\b.*\b(act|apply|proceed|use|send|do)\b.*\b(that|this|it|answer|response|reply)\b/.test(
       lower,
     ) ||

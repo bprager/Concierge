@@ -1542,6 +1542,39 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(naturalApprovalAnswerEvent).includes("Did Napoleon approve that?"), false);
     assert.equal(JSON.stringify(naturalApprovalAnswerEvent).includes(lastTextTurnTraceId), false);
 
+    const requestCountBeforeCompactApprovalQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "approved?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactApprovalAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      compactApprovalAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon review requirement from returned bridge proof:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(compactApprovalAnswer);
+      assert.ok(compactApprovalAnswer.textContent?.includes("Review required: yes."));
+    });
+    assert.ok(compactApprovalAnswer);
+    const compactApprovalAnswerText = compactApprovalAnswer.textContent ?? "";
+    assert.ok(compactApprovalAnswerText.includes("Governance: requires_review."));
+    assert.ok(
+      compactApprovalAnswerText.includes(
+        "This is local display of returned bridge proof only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeCompactApprovalQuestion);
+    const compactApprovalAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_review_requirement_answered").at(-1);
+    assert.equal(compactApprovalAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactApprovalAnswerEvent?.attributes.proofReturned, true);
+    assert.equal(compactApprovalAnswerEvent?.attributes.reviewRequired, true);
+    assert.equal(compactApprovalAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(compactApprovalAnswerEvent?.attributes.approvalCaptured, false);
+    assert.equal(JSON.stringify(compactApprovalAnswerEvent).includes("approved?"), false);
+    assert.equal(JSON.stringify(compactApprovalAnswerEvent).includes(lastTextTurnTraceId), false);
+
     const requestCountBeforeConciergeApprovalQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "Did Concierge approve it?" },
