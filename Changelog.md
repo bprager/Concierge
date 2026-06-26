@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added standalone rendering and export for persisted browser-local evolution proposal lifecycle records, so proposal status evidence remains visible after reload without re-opening the original submission packet.
 - Added stale-context clearing for browser-local evolution proposal lifecycle records when capability review context changes, with rendered coverage proving profile changes remove the packet, lifecycle panel, lifecycle export, and stored lifecycle metadata.
 - Consolidated rendered stale-cleared proof currentness and attribution coverage helpers, keeping descriptor-scoped stale-proof assertions easier to extend without weakening no-reuse guarantees.
 - Added rendered stale-cleared proof coverage for recommendation and contribution follow-ups after descriptor rediscovery and descriptor failure refreshes, proving Concierge refuses to reuse prior Napoleon attribution across descriptor refresh paths.

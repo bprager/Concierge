@@ -4781,6 +4781,79 @@ test("renders governed evolution proposal submission controls from capability re
   await runScenario(true);
 });
 
+test("shows persisted evolution proposal lifecycle records without an open packet", async () => {
+  const dom = installDom();
+  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+
+  try {
+    localStorage.setItem(
+      "concierge_evolution_proposal_lifecycle",
+      JSON.stringify([
+        {
+          schemaVersion: "concierge.evolution-proposal-lifecycle.v1",
+          proposalId: "evo_persisted_lifecycle",
+          sourceCapabilityReviewId: "capability_review_persisted_lifecycle",
+          profileMode: "adult_owner",
+          capability: "napoleon_text_turn_bridge",
+          architectureArea: "bridge",
+          draftedAt: "2026-06-24T00:00:00.000Z",
+          submittedAt: "2026-06-24T00:01:00.000Z",
+          updatedAt: "2026-06-24T00:02:00.000Z",
+          currentLifecycleState: "accepted_for_review",
+          latestKnownOutcome: "Napoleon accepted the proposal for governed intake review.",
+          intakeDecisionId: "decision_persisted_lifecycle",
+          intakeAuditId: "audit_persisted_lifecycle",
+          intakeTraceId: "trace_persisted_lifecycle",
+          statusRefresh: {
+            available: false,
+            reason: "descriptor_status_route_not_advertised",
+            nextStep:
+              "Keep the local intake result as evidence until Napoleon advertises a governed proposal status route.",
+          },
+          nextRecommendedUserAction: "Wait for Napoleon-governed review, implementation, rollout, or rollback evidence.",
+          privacyClass: "metadata_only",
+          boundary: {
+            proposalOnly: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            registryUpdatePerformed: false,
+            evolutionApplied: false,
+            appliedLocally: false,
+          },
+        },
+      ]),
+    );
+
+    const view = render(<App />);
+    const lifecyclePanel = view.getByLabelText("Evolution proposal lifecycle");
+    assert.ok(lifecyclePanel.textContent?.includes("evo_persisted_lifecycle"));
+    assert.ok(lifecyclePanel.textContent?.includes("accepted_for_review"));
+    assert.ok(lifecyclePanel.textContent?.includes("decision_persisted_lifecycle"));
+    assert.ok(lifecyclePanel.textContent?.includes("audit_persisted_lifecycle"));
+    assert.ok(lifecyclePanel.textContent?.includes("proposal-only"));
+    assert.equal(view.queryByLabelText("Exported evolution proposal submission packet"), null);
+    assert.equal(Boolean(view.queryByRole("button", { name: "Send evolution proposal to Napoleon intake" })), false);
+
+    await user.click(view.getByRole("button", { name: "Export evolution proposal lifecycle" }));
+    const lifecycleExport = view.getByLabelText("Exported evolution proposal lifecycle");
+    assert.ok(lifecycleExport.textContent?.includes('"schemaVersion": "concierge.evolution-proposal-lifecycle-export.v1"'));
+    assert.ok(lifecycleExport.textContent?.includes('"proposalId": "evo_persisted_lifecycle"'));
+    assert.ok(lifecycleExport.textContent?.includes('"proposalOnly": true'));
+    assert.ok(lifecycleExport.textContent?.includes('"evolutionApplied": false'));
+    assert.ok(lifecycleExport.textContent?.includes('"registryUpdatePerformed": false'));
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears returned capability review packet results when local capability ledger is cleared", async () => {
   const dom = installDom();
   const [

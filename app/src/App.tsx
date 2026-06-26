@@ -6068,6 +6068,53 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     );
   }
 
+  function renderEvolutionProposalLifecyclePanel() {
+    if (!evolutionProposalLifecycleRecords.length) return null;
+
+    return (
+      <section className="evolution-proposal-lifecycle" aria-label="Evolution proposal lifecycle">
+        <div className="review-heading">
+          <strong>Evolution proposal lifecycle</strong>
+          <span>
+            Local metadata-only tracking; Napoleon remains the authority for approval, implementation, rollout, and
+            rollback.
+          </span>
+        </div>
+        <button className="secondary" onClick={exportEvolutionProposalLifecycle}>
+          Export evolution proposal lifecycle
+        </button>
+        {evolutionProposalStatusRefreshBlockedReason ? (
+          <p className="warning">{evolutionProposalStatusRefreshBlockedReason}</p>
+        ) : null}
+        {evolutionProposalStatusFailure ? <p className="warning">{evolutionProposalStatusFailure}</p> : null}
+        <dl>
+          {evolutionProposalLifecycleRecords.slice(0, 3).map((record) => (
+            <div key={record.proposalId}>
+              <dt>{record.proposalId}</dt>
+              <dd>
+                {record.currentLifecycleState}: {record.latestKnownOutcome} Decision{" "}
+                {record.intakeDecisionId ?? "not returned"}; audit {record.intakeAuditId ?? "not returned"}; status
+                refresh {record.statusRefresh.available ? "available" : `unavailable (${record.statusRefresh.reason})`}
+                ; next step {record.nextRecommendedUserAction}; boundary proposal-only, no local evolution, no registry
+                update, no approval capture.
+                <button
+                  className="secondary"
+                  onClick={() => refreshEvolutionProposalLifecycleStatus(record)}
+                  disabled={!evolutionProposalStatusRefreshAvailable}
+                >
+                  Refresh status from Napoleon
+                </button>
+              </dd>
+            </div>
+          ))}
+        </dl>
+        {evolutionProposalLifecycleExportJson ? (
+          <pre aria-label="Exported evolution proposal lifecycle">{evolutionProposalLifecycleExportJson}</pre>
+        ) : null}
+      </section>
+    );
+  }
+
   return (
     <main className="shell">
       <header>
@@ -8422,55 +8469,6 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                           "not applied; no registry update; no approval captured; no memory write; no agent dispatch; no external send.",
                         )
                       : null}
-                    {evolutionProposalLifecycleRecords.length ? (
-                      <section className="evolution-proposal-lifecycle" aria-label="Evolution proposal lifecycle">
-                        <div className="review-heading">
-                          <strong>Evolution proposal lifecycle</strong>
-                          <span>
-                            Local metadata-only tracking; Napoleon remains the authority for approval, implementation,
-                            rollout, and rollback.
-                          </span>
-                        </div>
-                        <button className="secondary" onClick={exportEvolutionProposalLifecycle}>
-                          Export evolution proposal lifecycle
-                        </button>
-                        {evolutionProposalStatusRefreshBlockedReason ? (
-                          <p className="warning">{evolutionProposalStatusRefreshBlockedReason}</p>
-                        ) : null}
-                        {evolutionProposalStatusFailure ? (
-                          <p className="warning">{evolutionProposalStatusFailure}</p>
-                        ) : null}
-                        <dl>
-                          {evolutionProposalLifecycleRecords.slice(0, 3).map((record) => (
-                            <div key={record.proposalId}>
-                              <dt>{record.proposalId}</dt>
-                              <dd>
-                                {record.currentLifecycleState}: {record.latestKnownOutcome} Decision{" "}
-                                {record.intakeDecisionId ?? "not returned"}; audit {record.intakeAuditId ?? "not returned"};
-                                status refresh{" "}
-                                {record.statusRefresh.available
-                                  ? "available"
-                                  : `unavailable (${record.statusRefresh.reason})`}
-                                ; next step {record.nextRecommendedUserAction}; boundary proposal-only, no local
-                                evolution, no registry update, no approval capture.
-                                <button
-                                  className="secondary"
-                                  onClick={() => refreshEvolutionProposalLifecycleStatus(record)}
-                                  disabled={!evolutionProposalStatusRefreshAvailable}
-                                >
-                                  Refresh status from Napoleon
-                                </button>
-                              </dd>
-                            </div>
-                          ))}
-                        </dl>
-                      </section>
-                    ) : null}
-                    {evolutionProposalLifecycleExportJson ? (
-                      <pre aria-label="Exported evolution proposal lifecycle">
-                        {evolutionProposalLifecycleExportJson}
-                      </pre>
-                    ) : null}
                   </section>
                 </>
               ) : null}
@@ -8478,6 +8476,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           ) : null}
         </>
       ) : null}
+
+      {renderEvolutionProposalLifecyclePanel()}
 
       {lastDecision ? (
         <section className="governance">
