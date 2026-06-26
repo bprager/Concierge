@@ -449,6 +449,7 @@ function normalizeRequestedSelectedAgentName(value: string | undefined): string 
 
 export function isNapoleonDelegationQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
+  const compact = lower.trim();
   const asksAboutNamedSelectedAgentContribution = isNamedSelectedAgentContributionQuestion(content);
   const asksAboutNamedSelectedAgentReason = isNamedSelectedAgentReasonQuestion(content);
   const asksAboutContextualSelectedAgentReason =
@@ -543,6 +544,13 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
     /\b(which|what)\b.*\b(selected\s+)?agents?\b.*\b(selected|chosen|picked|returned|involved)\b/.test(lower) ||
     /\b(selected\s+agents?|chosen\s+agents?)\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b.*\bselected\b/.test(lower);
+  const asksAboutReturnedOutcome =
+    /^(?:what\s+happened\s+(?:next|after\s+(?:that|this|it))|what\s+happens\s+now|what\s+was\s+the\s+(?:outcome|result))\??$/.test(
+      compact,
+    ) ||
+    /\bwhat\b.*\b(?:happened|happens)\b.*\b(?:next|now)\b/.test(lower) ||
+    /\bwhat\b.*\bhappened\b.*\bafter\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
+    /\bwhat\b.*\b(?:outcome|result)\b.*\b(?:napoleon|returned|that|this|it|answer|response|reply)\b/.test(lower);
   if (
     !lower.includes("napoleon") &&
     !asksAboutReturnedHandler &&
@@ -556,6 +564,7 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
     !asksAboutReturnedRecommendation &&
     !asksAboutReturnedContribution &&
     !asksAboutReturnedSelectedAgents &&
+    !asksAboutReturnedOutcome &&
     !asksAboutNamedSelectedAgentContribution &&
     !asksAboutNamedSelectedAgentReason &&
     !asksAboutContextualSelectedAgentReason &&
@@ -576,6 +585,7 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutReturnedRecommendation ||
     asksAboutReturnedContribution ||
     asksAboutReturnedSelectedAgents ||
+    asksAboutReturnedOutcome ||
     asksAboutNamedSelectedAgentContribution ||
     asksAboutNamedSelectedAgentReason ||
     asksAboutContextualSelectedAgentReason ||
