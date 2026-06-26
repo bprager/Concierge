@@ -1308,6 +1308,20 @@ function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInpu
   };
 }
 
+export function describeNapoleonReturnedProofNextStep(governance: string): string {
+  switch (governance) {
+    case "allow_prepare_only":
+      return "Treat this as prepared advisory output only; use returned trace and audit references for review before any external action.";
+    case "requires_review":
+      return "Review the returned Napoleon governance state and blocked effects before treating this as actionable.";
+    case "deny":
+    case "no_go":
+      return "Do not act on this response; use the returned governance, trace, audit, and blocked effects for Napoleon review or a revised request.";
+    default:
+      return "No returned review requirement is visible in the latest accepted proof, but this is still not local approval.";
+  }
+}
+
 function formatNapoleonDelegationAnswer(
   presentation: Parameters<typeof exportNapoleonResponseProofJson>[0],
   questionContent = "",
@@ -1368,10 +1382,7 @@ function formatNapoleonDelegationAnswer(
   const targetCapability = metadata.targetCapability || "not returned";
   const selectedAgents = metadata.selectedAgents.length ? metadata.selectedAgents.join(", ") : "not returned";
   const governance = detailValue(proof.details, "Governance");
-  const nextStep =
-    governance === "requires_review" || governance === "deny" || governance === "no_go"
-      ? "Review the returned Napoleon governance state and blocked effects before treating this as actionable."
-      : "No returned review requirement is visible in the latest accepted proof, but this is still not local approval.";
+  const nextStep = describeNapoleonReturnedProofNextStep(governance);
   const recommendation =
     metadata.recommendation && metadata.recommendation !== "unavailable" ? metadata.recommendation : "not returned";
   const matchingSelectedAgentContributions = requestedSelectedAgentName
@@ -1610,9 +1621,7 @@ function formatNapoleonReviewRequirementAnswer(
   const audit = detailValue(proof.details, "Audit");
   const blockedEffects = metadata.blockedEffects.length ? metadata.blockedEffects.join(", ") : "not returned";
   const reviewRequired = governance === "requires_review" || governance === "deny" || governance === "no_go";
-  const nextStep = reviewRequired
-    ? "Review the returned Napoleon governance state and blocked effects before treating this as actionable."
-    : "No returned review requirement is visible in the latest accepted proof, but this is still not local approval.";
+  const nextStep = describeNapoleonReturnedProofNextStep(governance);
 
   return {
     content: [
