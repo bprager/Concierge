@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local contextual selected-agent selection-reason follow-up coverage for wording such as "Why this agent?", keeping the answer tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.
 - Added local selected-agent selection-source follow-up coverage for wording such as "Who selected Passive Brain?", keeping the answer tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.
 - Added local selected-agent selection-reason follow-up coverage for Chief of Staff chooser wording such as "Why did the chief of staff pick Passive Brain?", keeping the answer proof-scoped and avoiding another bridge request or raw follow-up/provenance telemetry.
 - Added local selected-agent selection-reason follow-up coverage for present-perfect wording such as "Why has Research Analyst been selected?", keeping mismatched agent questions local, proof-scoped, and free of raw follow-up or returned reason text in telemetry.
