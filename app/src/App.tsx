@@ -505,6 +505,8 @@ function isNapoleonDelegationQuestion(content: string): boolean {
       lower,
     ) ||
     /\b(what|which)\b.*\b(passive brain|selected agent|agent)\b.*\b(found|recommended|surfaced|reported)\b/.test(lower);
+  const asksAboutReturnedContribution =
+    /^(?:finding|findings|contribution|contributions|found|reported|surfaced)\??$/.test(lower.trim());
   const asksAboutReturnedSelectedAgents =
     /\b(which|what)\b.*\b(selected\s+)?agents?\b.*\b(selected|chosen|picked|returned|involved)\b/.test(lower) ||
     /\b(selected\s+agents?|chosen\s+agents?)\b/.test(lower) ||
@@ -520,6 +522,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     !asksAboutReturnedRationale &&
     !asksAboutReturnedProofReference &&
     !asksAboutReturnedRecommendation &&
+    !asksAboutReturnedContribution &&
     !asksAboutReturnedSelectedAgents &&
     !asksAboutNamedSelectedAgentContribution &&
     !asksAboutNamedSelectedAgentReason &&
@@ -538,6 +541,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutReturnedRationale ||
     asksAboutReturnedProofReference ||
     asksAboutReturnedRecommendation ||
+    asksAboutReturnedContribution ||
     asksAboutReturnedSelectedAgents ||
     asksAboutNamedSelectedAgentContribution ||
     asksAboutNamedSelectedAgentReason ||

@@ -1349,6 +1349,38 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(definiteArticleAgentAnswerEvent).includes("What did the Passive Brain find?"), false);
     assert.equal(JSON.stringify(definiteArticleAgentAnswerEvent).includes("Passive Brain"), false);
     assert.equal(JSON.stringify(definiteArticleAgentAnswerEvent).includes("bridge context"), false);
+    const requestCountBeforeCompactFindingsQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCompactFindingsQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "findings?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactFindingsAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCompactFindingsQuestion + 1);
+      compactFindingsAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactFindingsAnswer);
+      assert.ok(compactFindingsAnswer.textContent?.includes("Selected-agent contribution: Passive Brain: bridge context."));
+    });
+    assert.ok(compactFindingsAnswer);
+    const compactFindingsAnswerText = compactFindingsAnswer.textContent ?? "";
+    assert.ok(compactFindingsAnswerText.includes("Handled by: Passive Brain."));
+    assert.equal(requestedUrls.length, requestCountBeforeCompactFindingsQuestion);
+    const compactFindingsAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(compactFindingsAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactFindingsAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(compactFindingsAnswerEvent?.attributes.selectedAgentContributionCount, 1);
+    assert.equal(compactFindingsAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactFindingsAnswerEvent).includes("findings?"), false);
+    assert.equal(JSON.stringify(compactFindingsAnswerEvent).includes("Passive Brain"), false);
+    assert.equal(JSON.stringify(compactFindingsAnswerEvent).includes("bridge context"), false);
     const requestCountBeforeMismatchedAgentQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeMismatchedAgentQuestion = Array.from(document.querySelectorAll("article.assistant"))
       .filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
