@@ -743,7 +743,12 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
       compact,
     ) ||
     /\boverride\b.*\b(block|blocker|decision|failure|no-go|no go|denial|deny|denied)\b/.test(lower);
-  return asksWhatHappened || asksWhatToFix || asksOwner || asksOverrideBoundary;
+  const asksAppealOrReviewBoundary =
+    /\bappeal\b.*\b(it|that|this|block|blocker|decision|failure|no-go|no go|denial|deny|denied)\b/.test(lower) ||
+    /\bwho\b.*\b(review|reviews|reviewed)\b.*\b(it|that|this|block|blocker|decision|failure|no-go|no go|denial|deny|denied)\b/.test(
+      lower,
+    );
+  return asksWhatHappened || asksWhatToFix || asksOwner || asksOverrideBoundary || asksAppealOrReviewBoundary;
 }
 
 function isNapoleonLiveSendReadinessQuestion(content: string): boolean {

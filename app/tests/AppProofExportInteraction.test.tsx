@@ -7751,7 +7751,12 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
     assert.equal(JSON.stringify(blockedOverrideAnswerEvent).includes("can I override it?"), false);
     assert.equal(JSON.stringify(blockedOverrideAnswerEvent).includes("governance_no_go"), false);
 
-    const deniedBoundaryFollowups = ["can Napoleon override this?", "who can unblock it?"] as const;
+    const deniedBoundaryFollowups = [
+      "can Napoleon override this?",
+      "who can unblock it?",
+      "can I appeal this?",
+      "who reviews this denial?",
+    ] as const;
     for (const prompt of deniedBoundaryFollowups) {
       const requestCountBeforeDeniedBoundaryQuestion = requestedUrls.length;
       fireEvent.change(composer, { target: { value: prompt } });
