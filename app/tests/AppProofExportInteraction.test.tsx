@@ -992,6 +992,38 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(mismatchedAgentAnswerEvent).includes("Research Analyst"), false);
     assert.equal(JSON.stringify(mismatchedAgentAnswerEvent).includes("Passive Brain"), false);
     assert.equal(JSON.stringify(mismatchedAgentAnswerEvent).includes("bridge context"), false);
+    const requestCountBeforeMismatchedIdentifiedQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeMismatchedIdentifiedQuestion = Array.from(document.querySelectorAll("article.assistant"))
+      .filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What has Research Analyst identified?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let mismatchedIdentifiedAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeMismatchedIdentifiedQuestion + 1);
+      mismatchedIdentifiedAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(mismatchedIdentifiedAnswer);
+      assert.ok(mismatchedIdentifiedAnswer.textContent?.includes("Selected-agent contribution: not returned for Research Analyst."));
+    });
+    assert.ok(mismatchedIdentifiedAnswer);
+    const mismatchedIdentifiedAnswerText = mismatchedIdentifiedAnswer.textContent ?? "";
+    assert.equal(mismatchedIdentifiedAnswerText.includes("Passive Brain: bridge context"), false);
+    assert.equal(requestedUrls.length, requestCountBeforeMismatchedIdentifiedQuestion);
+    const mismatchedIdentifiedAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(mismatchedIdentifiedAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(mismatchedIdentifiedAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(mismatchedIdentifiedAnswerEvent?.attributes.selectedAgentContributionCount, 0);
+    assert.equal(mismatchedIdentifiedAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(mismatchedIdentifiedAnswerEvent).includes("What has Research Analyst identified?"), false);
+    assert.equal(JSON.stringify(mismatchedIdentifiedAnswerEvent).includes("Research Analyst"), false);
+    assert.equal(JSON.stringify(mismatchedIdentifiedAnswerEvent).includes("Passive Brain"), false);
+    assert.equal(JSON.stringify(mismatchedIdentifiedAnswerEvent).includes("bridge context"), false);
     const requestCountBeforeNaturalBlockedEffectsQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
       target: { value: "What was blocked?" },

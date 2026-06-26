@@ -385,7 +385,7 @@ function isNapoleonRequiredActionQuestion(content: string): boolean {
 
 function extractRequestedSelectedAgentName(content: string): string | null {
   const match = content.match(
-    /\b[Ww]hat\s+did\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\s+(?:find|found|identify|identified|report|reported|surface|surfaced|confirm|confirmed|verify|verified|assess|assessed|conclude|concluded|recommend|recommended)\b/,
+    /\b[Ww]hat\s+(?:did|has|have)\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\s+(?:find|found|identify|identified|report|reported|surface|surfaced|confirm|confirmed|verify|verified|assess|assessed|conclude|concluded|recommend|recommended)\b/,
   );
   const name = normalizeRequestedSelectedAgentName(match?.[1]);
   if (!name || name.toLocaleLowerCase() === "napoleon") return null;

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local selected-agent contribution follow-up handling for present-perfect wording such as "What has Research Analyst identified?", so mismatched named-agent questions answer from current proof without another bridge request or raw follow-up/provenance telemetry.
 - Expanded blocked-attempt recovery handling for auth and contract blockers, so "Who should fix it?" and "What needs fixing?" use the latest local failure metadata and likely fix owner without another bridge request or raw follow-up telemetry.
 - Added blocked-attempt recovery handling for bridge failure follow-ups such as "What happened?", so descriptor timeout and related blocker answers use local failure metadata, include a conservative likely fix owner, and avoid another bridge request or raw follow-up telemetry.
 - Added blocked-attempt next-step handling after fail-closed Napoleon no-go or deny responses, so "What should I do next?" uses the latest blocked reason, governance, trace, audit, blocked effects, and next step without sending another bridge request or leaking the raw follow-up text into telemetry.
