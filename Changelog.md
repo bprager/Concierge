@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added browser-local persistence for sanitized evaluator validation required-action evidence, so Napoleon-side promotion blockers remain visible and exportable after reload until endpoint, token, descriptor, or live-mode context changes.
 - Added standalone rendering and export for persisted browser-local evolution proposal lifecycle records, so proposal status evidence remains visible after reload without re-opening the original submission packet.
 - Added stale-context clearing for browser-local evolution proposal lifecycle records when capability review context changes, with rendered coverage proving profile changes remove the packet, lifecycle panel, lifecycle export, and stored lifecycle metadata.
 - Consolidated rendered stale-cleared proof currentness and attribution coverage helpers, keeping descriptor-scoped stale-proof assertions easier to extend without weakening no-reuse guarantees.

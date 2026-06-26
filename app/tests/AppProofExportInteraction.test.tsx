@@ -9777,6 +9777,114 @@ test("renders unadvertised evaluator handoff required action from validation imp
   }
 });
 
+test("shows persisted Napoleon required-action evidence after reload without re-import", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, waitFor, fireEvent }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requiredAction =
+    "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation.";
+  const originalFetch = globalThis.fetch;
+  let fetchCalls = 0;
+
+  try {
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+    localStorage.setItem(
+      "concierge_evaluator_validation_import_v1",
+      JSON.stringify({
+        kind: "concierge.evaluator-validation-import.v1",
+        savedAt: "2026-06-26T00:00:00.000Z",
+        import: {
+          status: "accepted",
+          summary: `Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review. ${requiredAction}`,
+          runtimeValidationSource: "real_runtime",
+          validation: {
+            status: "failed",
+            failureReason: "http_evaluator_handoff_not_advertised",
+            targetPath: "/chief-of-staff/reviews/evaluation",
+            requestKind: "evaluation_review_handoff",
+            operationId: "evaluation_review",
+            descriptorHandoffAdvertised: false,
+            descriptorHandoffSource: "not_advertised",
+            descriptorHandoffFailureReason: "evaluation_handoff_not_advertised",
+            descriptorHandoffRequiredAction: requiredAction,
+            napoleonRequiredActions: [
+              {
+                id: "advertise_evaluation_review_handoff",
+                owner: "napoleon",
+                reason: "real_runtime_promotion_blocker",
+                handoffName: "evaluation_review",
+                targetPath: "/chief-of-staff/reviews/evaluation",
+                requestKind: "evaluation_review_handoff",
+                operationId: "evaluation_review",
+                advertiseUsing: [
+                  "supportedHandoffs",
+                  "supported_handoffs",
+                  "required_for",
+                  "descriptor route metadata for /chief-of-staff/reviews/evaluation",
+                ],
+                requiredAction,
+                sideEffectsPerformed: false,
+                approvalCaptured: false,
+                memoryWritePerformed: false,
+                agentDispatchPerformed: false,
+                externalSendPerformed: false,
+                appliedLocally: false,
+              },
+            ],
+          },
+        },
+        boundary: {
+          localStorageOnly: true,
+          proposalOnly: true,
+          approvalCaptured: false,
+          memoryWritePerformed: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+          appliedLocally: false,
+        },
+      }),
+    );
+
+    const view = render(<App />);
+    await waitFor(() => assert.ok(document.body.textContent?.includes("Evaluator validation import")));
+    assert.ok(document.body.textContent?.includes("Stored as browser-local sanitized validation evidence"));
+    assert.ok(document.body.textContent?.includes("Napoleon required actions: advertise_evaluation_review_handoff"));
+    assert.ok(document.body.textContent?.includes(requiredAction));
+
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What does Napoleon need to fix next?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+    await waitFor(() => {
+      const renderedText = document.body.textContent ?? "";
+      assert.ok(renderedText.includes("Current Napoleon required actions from sanitized validation evidence (1):"));
+      assert.ok(renderedText.includes("advertise_evaluation_review_handoff"));
+      assert.ok(renderedText.includes("Concierge did not contact Napoleon for this answer"));
+    });
+
+    await user.click(view.getByText("Export required action packet"));
+    const requiredActionExport = view.getByLabelText("Exported Napoleon required action packet");
+    assert.ok(requiredActionExport.textContent?.includes('"kind": "concierge.napoleon-required-actions.export.v1"'));
+    assert.ok(requiredActionExport.textContent?.includes('"requiredActionCount": 1'));
+    assert.ok(requiredActionExport.textContent?.includes('"advertise_evaluation_review_handoff"'));
+    assert.ok(requiredActionExport.textContent?.includes('"sideEffectsPerformed": false'));
+    assert.ok(requiredActionExport.textContent?.includes('"localExportOnly": true'));
+    assert.equal(requiredActionExport.textContent?.includes("127.0.0.1"), false);
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("imports sanitized evaluator validation artifact from a selected local file", async () => {
   const dom = installDom();
   const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([

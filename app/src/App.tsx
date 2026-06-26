@@ -87,7 +87,10 @@ import {
   type ChiefOfStaffCapabilityDiscoveryResult,
 } from "./chiefOfStaffCapabilities.js";
 import {
+  clearPersistedEvaluatorValidationImport,
+  loadPersistedEvaluatorValidationImport,
   parseEvaluatorValidationArtifact,
+  persistEvaluatorValidationImport,
   type EvaluatorValidationImport,
 } from "./evaluatorValidationArtifact.js";
 import { buildLearningSignalTelemetryAttributes } from "./learningSignal.js";
@@ -1885,7 +1888,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [acceptedReadinessProofImport, setAcceptedReadinessProofImport] =
     useState<AcceptedBridgeReadinessProofImport | null>(null);
   const [evaluatorValidationArtifactInput, setEvaluatorValidationArtifactInput] = useState("");
-  const [evaluatorValidationImport, setEvaluatorValidationImport] = useState<EvaluatorValidationImport | null>(null);
+  const [evaluatorValidationImport, setEvaluatorValidationImport] = useState<EvaluatorValidationImport | null>(() =>
+    loadPersistedEvaluatorValidationImport(browserStorage()),
+  );
   const [evaluatorValidationFileName, setEvaluatorValidationFileName] = useState<string | null>(null);
   const [voicePipelineProofJson, setVoicePipelineProofJson] = useState<string | null>(null);
   const [voicePipelineProofComparison, setVoicePipelineProofComparison] =
@@ -2386,6 +2391,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setEvaluatorValidationArtifactInput("");
     setEvaluatorValidationImport(null);
     setEvaluatorValidationFileName(null);
+    clearPersistedEvaluatorValidationImport(browserStorage());
     clearNapoleonRequiredActionsExport();
   }
 
@@ -4756,6 +4762,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   function recordEvaluatorValidationImport(importResult: EvaluatorValidationImport, importSource: "paste" | "file") {
     const traceId = newTraceId();
     setEvaluatorValidationImport(importResult);
+    persistEvaluatorValidationImport(browserStorage(), importResult);
     clearNapoleonRequiredActionsExport();
     clearBridgeReadinessProof();
     emitEvent("evaluator_validation_artifact_imported", {
@@ -7831,6 +7838,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <div className={`proof-comparison ${evaluatorValidationImport.status}`}>
               <strong>Evaluator validation import</strong>
               <span>{evaluatorValidationImport.summary}</span>
+              <span>
+                Stored as browser-local sanitized validation evidence until endpoint, token, descriptor, or live-mode
+                context changes; not fresh Napoleon contact.
+              </span>
               <span>
                 Status: {evaluatorValidationImport.validation.status}; target:{" "}
                 {evaluatorValidationImport.validation.targetPath ?? "unavailable"}

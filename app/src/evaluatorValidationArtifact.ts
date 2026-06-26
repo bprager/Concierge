@@ -14,6 +14,7 @@ export interface EvaluatorValidationImportOptions {
   expectedTargetPath?: string;
 }
 
+const PERSISTED_EVALUATOR_VALIDATION_IMPORT_KEY = "concierge_evaluator_validation_import_v1";
 const DEFAULT_TARGET_PATH = "/chief-of-staff/reviews/evaluation";
 
 const FORBIDDEN_ARTIFACT_KEY_NAMES = new Set([
@@ -193,6 +194,66 @@ function mergeNapoleonRequiredActions(...actionGroups: NapoleonRequiredAction[][
     }
   }
   return merged;
+}
+
+function isCleanEvaluatorValidationImport(value: unknown): value is EvaluatorValidationImport {
+  const record = objectRecord(value);
+  if (!record) return false;
+  if (record.status !== "accepted") return false;
+  if (typeof record.summary !== "string") return false;
+  if (record.runtimeValidationSource !== undefined && !cleanRuntimeSource(record.runtimeValidationSource)) return false;
+  const validation = objectRecord(record.validation);
+  if (!validation) return false;
+  if (!cleanStatus(validation.status)) return false;
+  if (!cleanString(validation.targetPath) || !cleanString(validation.requestKind) || !cleanString(validation.operationId)) {
+    return false;
+  }
+  const actions = sanitizeNapoleonRequiredActions(validation.napoleonRequiredActions);
+  if (actions === null) return false;
+  if (!actions.length && !cleanString(validation.descriptorHandoffRequiredAction)) return false;
+  return !containsForbiddenArtifactContent(record);
+}
+
+export function loadPersistedEvaluatorValidationImport(storage: Storage | null): EvaluatorValidationImport | null {
+  if (!storage) return null;
+  try {
+    const persisted = storage.getItem(PERSISTED_EVALUATOR_VALIDATION_IMPORT_KEY);
+    if (!persisted) return null;
+    const parsed = JSON.parse(persisted) as { kind?: unknown; import?: unknown };
+    if (parsed.kind !== "concierge.evaluator-validation-import.v1") return null;
+    return isCleanEvaluatorValidationImport(parsed.import) ? parsed.import : null;
+  } catch {
+    return null;
+  }
+}
+
+export function persistEvaluatorValidationImport(storage: Storage | null, importResult: EvaluatorValidationImport): void {
+  if (!storage) return;
+  if (!isCleanEvaluatorValidationImport(importResult)) {
+    storage.removeItem(PERSISTED_EVALUATOR_VALIDATION_IMPORT_KEY);
+    return;
+  }
+  storage.setItem(
+    PERSISTED_EVALUATOR_VALIDATION_IMPORT_KEY,
+    JSON.stringify({
+      kind: "concierge.evaluator-validation-import.v1",
+      savedAt: new Date().toISOString(),
+      import: importResult,
+      boundary: {
+        localStorageOnly: true,
+        proposalOnly: true,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      },
+    }),
+  );
+}
+
+export function clearPersistedEvaluatorValidationImport(storage: Storage | null): void {
+  storage?.removeItem(PERSISTED_EVALUATOR_VALIDATION_IMPORT_KEY);
 }
 
 export function parseEvaluatorValidationArtifact(

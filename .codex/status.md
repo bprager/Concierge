@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added browser-local persistence for sanitized evaluator validation required-action evidence, so Napoleon-side promotion blockers remain visible and exportable after reload until endpoint, token, descriptor, or live-mode context changes clear them.
 - Added standalone rendering and local export for persisted browser-local evolution proposal lifecycle records, so Concierge can show Napoleon-owned proposal status evidence after reload without re-opening the original submission packet.
 - Added stale-context clearing for browser-local evolution proposal lifecycle records, so profile, endpoint, descriptor, token, Rehearsal, or capability-review invalidation removes stored proposal lifecycle metadata along with the visible packet and lifecycle UI.
 - Consolidated rendered stale-cleared proof currentness and attribution coverage helpers, so descriptor-scoped stale-proof reset checks remain easier to extend while preserving the same no-reuse, no-side-effect, and sanitized-telemetry assertions.
