@@ -10630,6 +10630,39 @@ test("shows fail-closed transcript metadata when Napoleon response mismatches th
     assert.equal(blockedFixAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(blockedFixAnswerEvent).includes("What needs fixing?"), false);
     assert.equal(JSON.stringify(blockedFixAnswerEvent).includes("contract_mismatch"), false);
+
+    const blockedAnswerCountBeforeCompactFix = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+      article.textContent?.includes("Latest blocked Napoleon attempt:")
+    ).length;
+    const requestCountBeforeCompactFixQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "fix?" } });
+    await waitFor(() => assert.equal(composer.value, "fix?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let compactFixAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const blockedAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest blocked Napoleon attempt:")
+      );
+      assert.equal(blockedAnswers.length, blockedAnswerCountBeforeCompactFix + 1);
+      compactFixAnswer = blockedAnswers.at(-1) as HTMLElement | undefined;
+    });
+    assert.ok(compactFixAnswer);
+    const compactFixAnswerText = compactFixAnswer.textContent ?? "";
+    assert.ok(compactFixAnswerText.includes("Failure reason: contract_mismatch."));
+    assert.ok(compactFixAnswerText.includes("Likely fix owner: Napoleon bridge contract or descriptor publisher."));
+    assert.ok(
+      compactFixAnswerText.includes("Next step: Align the bridge contract or descriptor before attempting another live turn."),
+    );
+    assert.equal(compactFixAnswerText.includes("Napoleon wrote memory and sent the deployment summary externally."), false);
+    assert.equal(requestedUrls.length, requestCountBeforeCompactFixQuestion);
+    const compactFixAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+    assert.equal(compactFixAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactFixAnswerEvent?.attributes.failureReturned, true);
+    assert.equal(compactFixAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactFixAnswerEvent).includes("fix?"), false);
+    assert.equal(JSON.stringify(compactFixAnswerEvent).includes("contract_mismatch"), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();

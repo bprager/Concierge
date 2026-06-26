@@ -739,6 +739,7 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   const compact = lower.trim();
   const asksCompactWhy = /^(?:why|why\s+not|why\s+(?:blocked|failed|denied|stopped))\??$/.test(compact);
+  const asksCompactFix = /^(?:fix|fix\s+it|repair|resolve)\??$/.test(compact);
   const asksWhatHappened =
     asksCompactWhy ||
     /\bwhat\b.*\bhappened\b/.test(lower) ||
@@ -783,6 +784,7 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
     );
   return (
     asksWhatHappened ||
+    asksCompactFix ||
     asksWhatToFix ||
     asksOwner ||
     asksOverrideBoundary ||
