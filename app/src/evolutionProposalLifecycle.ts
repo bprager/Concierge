@@ -4,6 +4,42 @@ import type { EvolutionProposalSubmissionPacket, EvolutionProposalSubmissionResu
 
 export const EVOLUTION_PROPOSAL_LIFECYCLE_STORAGE_KEY = "concierge_evolution_proposal_lifecycle";
 const MAX_LIFECYCLE_RECORDS = 20;
+const FORBIDDEN_LIFECYCLE_KEY_NAMES = new Set(
+  [
+    "authToken",
+    "authorization",
+    "bearerToken",
+    "bearer_token",
+    "endpoint",
+    "host",
+    "message",
+    "prompt",
+    "proposalBody",
+    "proposal_body",
+    "rawPrompt",
+    "raw_prompt",
+    "requestBody",
+    "request_body",
+    "responseBody",
+    "response_body",
+    "responseText",
+    "response_text",
+    "token",
+  ].map((key) => key.toLocaleLowerCase()),
+);
+const FORBIDDEN_LIFECYCLE_NORMALIZED_KEY_NAMES = new Set(
+  [...FORBIDDEN_LIFECYCLE_KEY_NAMES].map((key) => key.replace(/[_-]/g, "")),
+);
+const FORBIDDEN_LIFECYCLE_VALUE_PATTERNS = [
+  /\bhttps?:\/\//i,
+  /\bwss?:\/\//i,
+  /\blocalhost\b/i,
+  /\b127\.0\.0\.1\b/,
+  /\b0\.0\.0\.0\b/,
+  /\bbearer\b/i,
+  /\bauthorization\b/i,
+  /\btoken\b/i,
+];
 
 export type EvolutionProposalLifecycleState =
   | "drafted"
@@ -86,6 +122,60 @@ function nowIso(now?: string): string {
 function safeMetadata(value: string, fallback: string): string {
   const trimmed = value.trim().replace(/\s+/g, " ");
   return (trimmed || fallback).slice(0, 160);
+}
+
+function objectRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
+}
+
+function isCleanString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isCleanOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || isCleanString(value);
+}
+
+function isNapoleonProfileMode(value: unknown): value is NapoleonProfileMode {
+  return value === "adult_owner" || value === "child_protected_user" || value === "guest" || value === "collaborator";
+}
+
+function isLifecycleState(value: unknown): value is EvolutionProposalLifecycleState {
+  return (
+    value === "drafted" ||
+    value === "submitted" ||
+    value === "accepted_for_review" ||
+    value === "rejected" ||
+    value === "blocked" ||
+    value === "status_refresh_unavailable" ||
+    value === "implemented" ||
+    value === "rolled_back"
+  );
+}
+
+function isLifecyclePrivacyClass(value: unknown): value is CapabilityPrivacyClass {
+  return (
+    value === "metadata_only" ||
+    value === "redacted_summary" ||
+    value === "sensitive" ||
+    value === "child_sensitive"
+  );
+}
+
+function containsForbiddenLifecycleContent(value: unknown): boolean {
+  if (typeof value === "string") {
+    return FORBIDDEN_LIFECYCLE_VALUE_PATTERNS.some((pattern) => pattern.test(value));
+  }
+  if (Array.isArray(value)) return value.some((item) => containsForbiddenLifecycleContent(item));
+  const record = objectRecord(value);
+  if (!record) return false;
+  return Object.entries(record).some(([key, nested]) => {
+    const keyName = key.toLocaleLowerCase();
+    const normalizedKeyName = keyName.replace(/[_-]/g, "");
+    if (FORBIDDEN_LIFECYCLE_KEY_NAMES.has(keyName)) return true;
+    if (FORBIDDEN_LIFECYCLE_NORMALIZED_KEY_NAMES.has(normalizedKeyName)) return true;
+    return containsForbiddenLifecycleContent(nested);
+  });
 }
 
 function baseBoundary(): EvolutionProposalLifecycleRecord["boundary"] {
@@ -218,16 +308,39 @@ export function upsertEvolutionProposalLifecycleRecord(
 }
 
 function isLifecycleRecord(value: unknown): value is EvolutionProposalLifecycleRecord {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Partial<EvolutionProposalLifecycleRecord>;
+  const candidate = objectRecord(value) as Partial<EvolutionProposalLifecycleRecord> | null;
+  if (!candidate) return false;
+  const refresh = objectRecord(candidate.statusRefresh);
   return (
     candidate.schemaVersion === "concierge.evolution-proposal-lifecycle.v1" &&
-    typeof candidate.proposalId === "string" &&
-    typeof candidate.sourceCapabilityReviewId === "string" &&
-    typeof candidate.currentLifecycleState === "string" &&
+    isCleanString(candidate.proposalId) &&
+    isCleanString(candidate.sourceCapabilityReviewId) &&
+    isNapoleonProfileMode(candidate.profileMode) &&
+    isCleanString(candidate.capability) &&
+    isCleanString(candidate.architectureArea) &&
+    isCleanString(candidate.draftedAt) &&
+    isCleanOptionalString(candidate.submittedAt) &&
+    isCleanString(candidate.updatedAt) &&
+    isLifecycleState(candidate.currentLifecycleState) &&
+    isCleanString(candidate.latestKnownOutcome) &&
+    isCleanOptionalString(candidate.intakeDecisionId) &&
+    isCleanOptionalString(candidate.intakeAuditId) &&
+    isCleanOptionalString(candidate.intakeTraceId) &&
+    refresh !== null &&
+    typeof refresh.available === "boolean" &&
+    (refresh.reason === "descriptor_status_route_not_advertised" || refresh.reason === "refreshed_via_governed_route") &&
+    isCleanString(refresh.nextStep) &&
+    isCleanString(candidate.nextRecommendedUserAction) &&
+    isLifecyclePrivacyClass(candidate.privacyClass) &&
     candidate.boundary?.proposalOnly === true &&
+    candidate.boundary.approvalCaptured === false &&
+    candidate.boundary.memoryWritePerformed === false &&
+    candidate.boundary.agentDispatchPerformed === false &&
+    candidate.boundary.externalSendPerformed === false &&
     candidate.boundary?.evolutionApplied === false &&
-    candidate.boundary?.registryUpdatePerformed === false
+    candidate.boundary?.registryUpdatePerformed === false &&
+    candidate.boundary.appliedLocally === false &&
+    !containsForbiddenLifecycleContent(candidate)
   );
 }
 

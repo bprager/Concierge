@@ -533,3 +533,47 @@ test("evolution proposal lifecycle records stay metadata-only and proposal-only"
   assert.equal(exportedJson.includes("private.example"), false);
   assert.equal(exportedJson.includes("token"), false);
 });
+
+test("persisted evolution proposal lifecycle loader rejects unsafe or authorizing records", () => {
+  const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_evolution",
+  });
+  const safeRecord = buildDraftEvolutionProposalLifecycleRecord(packet, {
+    draftedAt: "2026-06-24T00:00:00.000Z",
+  });
+  const unsafeRecords = [
+    {
+      ...safeRecord,
+      proposalId: "evo_with_endpoint",
+      latestKnownOutcome: "Status fetched from https://private.example/evolution/proposals/evo_with_endpoint/status.",
+    },
+    {
+      ...safeRecord,
+      proposalId: "evo_with_raw_body",
+      requestBody: { proposal: "raw evolution packet text" },
+    },
+    {
+      ...safeRecord,
+      proposalId: "evo_with_token",
+      nextRecommendedUserAction: "Retry with bearer token from settings.",
+    },
+    {
+      ...safeRecord,
+      proposalId: "evo_claims_evolution_applied",
+      boundary: {
+        ...safeRecord.boundary,
+        evolutionApplied: true,
+      },
+    },
+  ];
+
+  const loaded = loadEvolutionProposalLifecycleRecords({
+    getItem: () => JSON.stringify([safeRecord, ...unsafeRecords]),
+    setItem: () => undefined,
+    removeItem: () => undefined,
+  });
+
+  assert.equal(loaded.length, 1);
+  assert.equal(loaded[0]?.proposalId, safeRecord.proposalId);
+});

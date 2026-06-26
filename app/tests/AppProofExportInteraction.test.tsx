@@ -4854,6 +4854,63 @@ test("shows persisted evolution proposal lifecycle records without an open packe
   }
 });
 
+test("ignores unsafe persisted evolution proposal lifecycle records after reload", async () => {
+  const dom = installDom();
+  const [{ cleanup, render }, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("../src/App.js"),
+  ]);
+
+  try {
+    localStorage.setItem(
+      "concierge_evolution_proposal_lifecycle",
+      JSON.stringify([
+        {
+          schemaVersion: "concierge.evolution-proposal-lifecycle.v1",
+          proposalId: "evo_unsafe_lifecycle",
+          sourceCapabilityReviewId: "capability_review_unsafe_lifecycle",
+          profileMode: "adult_owner",
+          capability: "napoleon_text_turn_bridge",
+          architectureArea: "bridge",
+          draftedAt: "2026-06-24T00:00:00.000Z",
+          updatedAt: "2026-06-24T00:02:00.000Z",
+          currentLifecycleState: "accepted_for_review",
+          latestKnownOutcome: "Fetched from https://private.example/evolution/proposals/evo_unsafe_lifecycle/status.",
+          intakeDecisionId: "decision_unsafe_lifecycle",
+          intakeAuditId: "audit_unsafe_lifecycle",
+          intakeTraceId: "trace_unsafe_lifecycle",
+          statusRefresh: {
+            available: true,
+            reason: "refreshed_via_governed_route",
+            nextStep: "Use bearer token evidence to confirm status.",
+          },
+          nextRecommendedUserAction: "Use bearer token evidence to confirm status.",
+          privacyClass: "metadata_only",
+          boundary: {
+            proposalOnly: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            registryUpdatePerformed: false,
+            evolutionApplied: false,
+            appliedLocally: false,
+          },
+        },
+      ]),
+    );
+
+    const view = render(<App />);
+    assert.equal(view.queryByLabelText("Evolution proposal lifecycle"), null);
+    assert.equal(document.body.textContent?.includes("evo_unsafe_lifecycle"), false);
+    assert.equal(document.body.textContent?.includes("private.example"), false);
+    assert.equal(document.body.textContent?.includes("bearer token"), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears returned capability review packet results when local capability ledger is cleared", async () => {
   const dom = installDom();
   const [
