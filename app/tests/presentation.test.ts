@@ -606,6 +606,7 @@ test("describes Napoleon turn timeline as empty before proof or failure returns"
   assert.equal(view.entries[1].label, "Latest blocked attempt");
   assert.equal(view.entries[1].status, "not_available");
   assert.ok(view.entries[1].summary.includes("No fail-closed Napoleon bridge attempt"));
+  assert.ok(view.entries[1].details.some((detail) => detail.label === "Audit" && detail.value === "not returned"));
   assert.ok(view.entries[1].details.some((detail) => detail.label === "Failure reason" && detail.value === "not returned"));
   assert.ok(
     view.comparison.some(
@@ -665,7 +666,9 @@ test("describes Napoleon turn timeline from latest proof and fail-closed metadat
     new NapoleonBridgeError("contract_mismatch", "trace_blocked_timeline", "request_blocked_timeline", 200, [
       "memory_write",
       "external_send",
-    ]),
+    ], {
+      auditId: "audit_blocked_timeline",
+    }),
   );
   const preflight = describeLiveSendPreflight({
     descriptorConnection: buildDescriptorConnectionState({ endpointConfigured: false }),
@@ -685,6 +688,7 @@ test("describes Napoleon turn timeline from latest proof and fail-closed metadat
   assert.equal(view.entries[1].status, "blocked");
   assert.equal(view.entries[1].summary, "Blocked by contract_mismatch; governance not returned.");
   assert.ok(view.entries[1].details.some((detail) => detail.label === "Trace" && detail.value === "trace_blocked_timeline"));
+  assert.ok(view.entries[1].details.some((detail) => detail.label === "Audit" && detail.value === "audit_blocked_timeline"));
   assert.ok(view.entries[1].details.some((detail) => detail.label === "Failure reason" && detail.value === "contract_mismatch"));
   assert.ok(
     view.comparison.some(

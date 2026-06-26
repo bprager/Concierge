@@ -1502,6 +1502,7 @@ export function describeLastNapoleonTurnSummary(
     const descriptor = describeDescriptorFailureReason(failure.descriptorFailureReason) || "not returned";
     const blockedEffects = sanitizeVisibleProvenanceList(failure.blockedEffects);
     const trace = visibleReferenceValue(failure.traceId);
+    const audit = visibleReferenceValue(failure.auditId);
     const nextStep = sanitizeVisibleProvenanceValue(failure.nextStep);
 
     return {
@@ -1513,6 +1514,7 @@ export function describeLastNapoleonTurnSummary(
         { label: "Handled by", value: "not accepted" },
         { label: "Governance", value: governance },
         { label: "Trace", value: trace },
+        { label: "Audit", value: audit },
         { label: "Blocked effects", value: blockedEffects },
         { label: "Boundary", value: "No Napoleon response was accepted; fail-closed local state only." },
         { label: "Attribution source", value: "fail-closed bridge metadata; no accepted delegation attribution" },
@@ -1586,6 +1588,7 @@ export function describeNapoleonTurnTimeline(
           { label: "Handled by", value: "not returned" },
           { label: "Governance", value: "not returned" },
           { label: "Trace", value: "not returned" },
+          { label: "Audit", value: "not returned" },
           { label: "Blocked effects", value: "not returned" },
           { label: "Boundary", value: "not returned" },
           { label: "Attribution source", value: "not returned" },
