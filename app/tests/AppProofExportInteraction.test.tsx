@@ -1280,6 +1280,43 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(naturalRecommendationAnswerEvent).includes("What did Napoleon recommend?"), false);
     assert.equal(JSON.stringify(naturalRecommendationAnswerEvent).includes("keeping this as a governed review draft"), false);
     assert.equal(JSON.stringify(naturalRecommendationAnswerEvent).includes("bridge context"), false);
+    const requestCountBeforeCompactRecommendationQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCompactRecommendationQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "recommendation?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactRecommendationAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCompactRecommendationQuestion + 1);
+      compactRecommendationAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactRecommendationAnswer);
+      assert.ok(
+        compactRecommendationAnswer.textContent?.includes(
+          "Napoleon recommendation: keeping this as a governed review draft.",
+        ),
+      );
+    });
+    assert.ok(compactRecommendationAnswer);
+    const compactRecommendationAnswerText = compactRecommendationAnswer.textContent ?? "";
+    assert.ok(compactRecommendationAnswerText.includes("Selected-agent contribution: Passive Brain: bridge context."));
+    assert.equal(requestedUrls.length, requestCountBeforeCompactRecommendationQuestion);
+    const compactRecommendationAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(compactRecommendationAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactRecommendationAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(compactRecommendationAnswerEvent?.attributes.recommendationReturned, true);
+    assert.equal(compactRecommendationAnswerEvent?.attributes.selectedAgentContributionCount, 1);
+    assert.equal(compactRecommendationAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactRecommendationAnswerEvent).includes("recommendation?"), false);
+    assert.equal(JSON.stringify(compactRecommendationAnswerEvent).includes("keeping this as a governed review draft"), false);
+    assert.equal(JSON.stringify(compactRecommendationAnswerEvent).includes("bridge context"), false);
     const requestCountBeforeDefiniteArticleAgentQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeDefiniteArticleAgentQuestion = Array.from(
       document.querySelectorAll("article.assistant"),

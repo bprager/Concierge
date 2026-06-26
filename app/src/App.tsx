@@ -495,6 +495,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhere\b.*\b(proof|evidence|source|sources|provenance)\b.*\b(from|returned)\b/.test(lower) ||
     /^(?:proof|evidence|source|sources|provenance)\??$/.test(lower.trim());
   const asksAboutReturnedRecommendation =
+    /^(?:recommendation|recommendations|recommended|recommend)\??$/.test(lower.trim()) ||
     /\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
     /\bwhat\b.*\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
     /\bwhat\b.*\b(that|this|it|answer|response|reply)\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(
