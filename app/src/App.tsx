@@ -452,6 +452,11 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhat\b.*\bapproval\s+requirement\b.*\b(napoleon|returned|return)\b/.test(lower) ||
     /\bnapoleon\b.*\bapproval\s+requirement\b.*\b(returned|return)\b/.test(lower) ||
     /\b(returned|return)\b.*\bapproval\s+requirement\b/.test(lower);
+  const asksAboutReturnedRationale =
+    /\bwhat\b.*\brationale\b.*\b(napoleon|returned|return)\b/.test(lower) ||
+    /\bnapoleon\b.*\brationale\b.*\b(returned|return)\b/.test(lower) ||
+    /\b(returned|return)\b.*\brationale\b/.test(lower) ||
+    /\bwhy\b.*\bdid\b.*\bnapoleon\b.*\b(decide|return)\b/.test(lower);
   const asksAboutReturnedProofReference =
     /\b(what|which)\b.*\b(trace|audit)\b.*\b(napoleon|returned|return)\b/.test(lower) ||
     /\bnapoleon\b.*\b(trace|audit)\b.*\b(returned|return)\b/.test(lower) ||
@@ -478,6 +483,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     !asksAboutReturnedDecision &&
     !asksAboutReturnedAuthority &&
     !asksAboutReturnedApprovalRequirement &&
+    !asksAboutReturnedRationale &&
     !asksAboutReturnedProofReference &&
     !asksAboutReturnedRecommendation &&
     !asksAboutReturnedSelectedAgents &&
@@ -493,6 +499,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutReturnedDecision ||
     asksAboutReturnedAuthority ||
     asksAboutReturnedApprovalRequirement ||
+    asksAboutReturnedRationale ||
     asksAboutReturnedProofReference ||
     asksAboutReturnedRecommendation ||
     asksAboutReturnedSelectedAgents ||
@@ -1095,6 +1102,7 @@ function formatNapoleonDelegationAnswer(
   const decision = detailValue(proof.details, "Decision");
   const authorityTier = detailValue(proof.details, "Authority tier");
   const approvalRequirement = detailValue(proof.details, "Approval requirement");
+  const rationale = detailValue(proof.details, "Rationale");
   const matchingSelectedAgentReasons = requestedSelectedAgentReasonName
     ? metadata.selectedAgentReasons.filter(
         (reason) =>
@@ -1141,6 +1149,7 @@ function formatNapoleonDelegationAnswer(
       `Decision: ${decision}.`,
       `Authority tier: ${authorityTier}.`,
       `Approval requirement: ${approvalRequirement}.`,
+      `Rationale: ${rationale}.`,
       `Trace: ${trace}. Audit: ${audit}.`,
       `Proof alignment: ${metadata.proofAlignment}.`,
       "This is local display of returned bridge provenance only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",

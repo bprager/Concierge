@@ -697,6 +697,33 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(approvalRequirementAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(approvalRequirementAnswerEvent).includes("What approval requirement did Napoleon return?"), false);
     assert.equal(JSON.stringify(approvalRequirementAnswerEvent).includes("chief_of_staff_and_owner_review"), false);
+    const requestCountBeforeRationaleQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeRationaleQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What rationale did Napoleon return?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let rationaleAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeRationaleQuestion + 1);
+      rationaleAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(rationaleAnswer);
+      assert.ok(rationaleAnswer.textContent?.includes("Rationale: Local harness requires governed review."));
+    });
+    assert.ok(rationaleAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeRationaleQuestion);
+    const rationaleAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(rationaleAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(rationaleAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(rationaleAnswerEvent).includes("What rationale did Napoleon return?"), false);
+    assert.equal(JSON.stringify(rationaleAnswerEvent).includes("Local harness requires governed review"), false);
     const requestCountBeforeTraceAuditQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeTraceAuditQuestion = Array.from(
       document.querySelectorAll("article.assistant"),

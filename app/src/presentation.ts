@@ -1428,6 +1428,7 @@ export function describeNapoleonResponseProof(
         label: "Approval requirement",
         value: sanitizeVisibleProvenanceValue(response.governanceDecision.approval_requirement),
       },
+      { label: "Rationale", value: sanitizeVisibleProvenanceValue(response.governanceDecision.rationale) },
       { label: "Trace", value: sanitizeVisibleProvenanceValue(response.traceEnvelope.trace_id) },
       { label: "Audit", value: sanitizeVisibleProvenanceValue(response.auditEnvelope.audit_id) },
       { label: "Attribution boundary", value: "Returned bridge provenance only; not local authority." },

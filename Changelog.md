@@ -8,7 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
-- Added local returned-proof answers for natural Napoleon decision, authority-tier, and approval-requirement follow-ups such as "What decision did Napoleon return?", "What authority tier did Napoleon return?", and "What approval requirement did Napoleon return?", so Concierge restates returned governance proof without sending another bridge request or copying raw follow-up text into telemetry.
+- Added local returned-proof answers for natural Napoleon decision, authority-tier, approval-requirement, and rationale follow-ups such as "What decision did Napoleon return?", "What authority tier did Napoleon return?", "What approval requirement did Napoleon return?", and "What rationale did Napoleon return?", so Concierge restates returned governance proof without sending another bridge request or copying raw follow-up text into telemetry.
 - Added reviewed taxonomy recommendation count and focus metadata to returned Chief of Staff taxonomy review results, so governed review responses remain tied to the taxonomy packet that was submitted without applying edits locally.
 - Added reviewed capability focus metadata to returned capability review packet results, so governed review responses remain tied to the capability that was submitted without applying changes locally.
 - Added the `Napoleon descriptor readiness repair` label to returned Chief of Staff steering review results, so accepted or reviewed descriptor repair drafts remain distinguishable after Napoleon responds.
