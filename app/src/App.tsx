@@ -406,6 +406,9 @@ function extractRequestedSelectedAgentReasonName(content: string): string | null
     ) ??
     content.match(
       /\bwhy\s+did\s+(?:napoleon|the bridge|(?:the\s+)?chief of staff)\s+(?:select|choose|chose|pick|picked)\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\b/i,
+    ) ??
+    content.match(
+      /\bwho\s+(?:selected|chose|picked)\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\b/i,
     );
   const name = normalizeRequestedSelectedAgentName(match?.[1]);
   if (!name || name.toLocaleLowerCase() === "napoleon") return null;
