@@ -818,7 +818,7 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   if (asksCapability && asksNext) return "recommended_next_capabilities";
   if (asksCapability && asksMissingOrBlocked && asksEasyToEvolve) return "easy_to_evolve_missing_capabilities";
   if (asksArchitecture && asksMissingOrBlocked) return "architecture_improvement_areas";
-  if (asksAboutConversation && asksWorkingWell) return "working_well_conversations";
+  if ((asksAboutConversation || asksCapability) && asksWorkingWell) return "working_well_conversations";
   if (asksAboutConversation && asksCommon) return "common_conversations";
   if (asksCapability && asksMissingOrBlocked) return "missing_or_blocked_capabilities";
   return null;

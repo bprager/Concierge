@@ -867,17 +867,25 @@ test("answers working-well conversation questions from local working signals", (
   );
 
   const answer = answerCapabilityQuestion("What conversations are working well?", ledger);
+  const capabilityAnswer = answerCapabilityQuestion("What capabilities are working well?", ledger);
 
   assert.ok(answer);
+  assert.ok(capabilityAnswer);
   if (!answer) throw new Error("expected capability answer");
+  if (!capabilityAnswer) throw new Error("expected capability wording answer");
   assert.equal(answer.kind, "working_well_conversations");
+  assert.equal(capabilityAnswer.kind, "working_well_conversations");
   assert.ok(answer.summary.includes("memory_proposal_review"));
+  assert.ok(capabilityAnswer.summary.includes("memory_proposal_review"));
   assert.equal(answer.rows[0].label, "memory_proposal_review");
+  assert.equal(capabilityAnswer.rows[0].label, "memory_proposal_review");
   assert.equal(answer.rows[0].count, 2);
+  assert.equal(capabilityAnswer.rows[0].count, 2);
   assert.equal(answer.rows[0].status, "working");
   assert.equal(answer.rows[0].architectureArea, "memory_review");
   assert.ok(answer.caveat.includes("local metadata"));
   assert.equal(JSON.stringify(answer).includes("raw memory content"), false);
+  assert.equal(JSON.stringify(capabilityAnswer).includes("raw memory content"), false);
 });
 
 test("working-well answers display governed Napoleon bridge success in plain language", () => {

@@ -8,6 +8,7 @@ It should let the user ask questions such as:
 
 - What conversations are most common?
 - What conversations are working well?
+- What capabilities are working well?
 - What capabilities are missing but easy to evolve?
 - What part of the Concierge architecture must improve to fix missing capabilities?
 - What capabilities should be implemented next?
