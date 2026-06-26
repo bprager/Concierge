@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local contextual selected-agent selection-source follow-up handling for wording such as "Who chose it?", so Concierge answers from current returned proof without another bridge request or raw follow-up/provenance telemetry.
 - Added local contextual selected-agent selection-reason follow-up handling for wording such as "Why this agent?", so Concierge answers from current returned proof without another bridge request or raw follow-up/provenance telemetry.
 - Added local selected-agent selection-source follow-up handling for wording such as "Who selected Passive Brain?", so Concierge answers from current returned proof without another bridge request or raw follow-up/provenance telemetry.
 - Added local selected-agent selection-reason follow-up handling for Chief of Staff chooser wording such as "Why did the chief of staff pick Passive Brain?", so Concierge answers from current returned proof without another bridge request or raw follow-up/provenance telemetry.

@@ -442,6 +442,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
   const asksAboutContextualSelectedAgentReason =
     /\bwhy\s+(?:this|that|the)\s+(?:selected\s+)?agent\b/.test(lower) ||
     /\bwhy\b.*\b(?:this|that|the)\s+(?:selected\s+)?agent\b.*\bselected\b/.test(lower);
+  const asksAboutContextualSelectedAgentSource = /\bwho\s+(?:selected|chose|picked)\s+(?:it|that|this)\b/.test(lower);
   const asksAboutReturnedHandler =
     /\bwho\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
@@ -517,7 +518,8 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     !asksAboutReturnedSelectedAgents &&
     !asksAboutNamedSelectedAgentContribution &&
     !asksAboutNamedSelectedAgentReason &&
-    !asksAboutContextualSelectedAgentReason
+    !asksAboutContextualSelectedAgentReason &&
+    !asksAboutContextualSelectedAgentSource
   ) {
     return false;
   }
@@ -535,6 +537,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutNamedSelectedAgentContribution ||
     asksAboutNamedSelectedAgentReason ||
     asksAboutContextualSelectedAgentReason ||
+    asksAboutContextualSelectedAgentSource ||
     /\bwho\b.*\bhandled\b/.test(lower) ||
     /\bwho\b.*\banswered\b/.test(lower) ||
     /\bwhich\b.*\bagents?\b/.test(lower) ||
