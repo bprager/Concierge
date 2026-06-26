@@ -2859,6 +2859,67 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(compactDifferentComparisonAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(compactDifferentComparisonAnswerEvent).includes("different?"), false);
     assert.equal(JSON.stringify(compactDifferentComparisonAnswerEvent).includes("requires_review"), false);
+    const requestCountBeforeBareUnchangedQuestion = requestedUrls.length;
+    const proofComparisonAnswerCountBeforeBareUnchangedQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon proof comparison from local state:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "unchanged" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let bareUnchangedComparisonAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const proofComparisonAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon proof comparison from local state:"),
+      );
+      assert.equal(proofComparisonAnswers.length, proofComparisonAnswerCountBeforeBareUnchangedQuestion + 1);
+      bareUnchangedComparisonAnswer = proofComparisonAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(bareUnchangedComparisonAnswer);
+      assert.ok(bareUnchangedComparisonAnswer.textContent?.includes("Comparison status: unchanged."));
+      assert.ok(bareUnchangedComparisonAnswer.textContent?.includes("Changed fields: 0."));
+      assert.ok(bareUnchangedComparisonAnswer.textContent?.includes("Current proof alignment: same returned trace/audit as Napoleon response proof."));
+    });
+    assert.ok(bareUnchangedComparisonAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeBareUnchangedQuestion);
+    const bareUnchangedComparisonAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_proof_comparison_answered").at(-1);
+    assert.equal(bareUnchangedComparisonAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(bareUnchangedComparisonAnswerEvent?.attributes.comparisonStatus, "unchanged");
+    assert.equal(bareUnchangedComparisonAnswerEvent?.attributes.changeCount, 0);
+    assert.equal(bareUnchangedComparisonAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(bareUnchangedComparisonAnswerEvent).includes("same returned trace/audit"), false);
+    const requestCountBeforeBareSameQuestion = requestedUrls.length;
+    const proofComparisonAnswerCountBeforeBareSameQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon proof comparison from local state:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "same" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let bareSameComparisonAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const proofComparisonAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon proof comparison from local state:"),
+      );
+      assert.equal(proofComparisonAnswers.length, proofComparisonAnswerCountBeforeBareSameQuestion + 1);
+      bareSameComparisonAnswer = proofComparisonAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(bareSameComparisonAnswer);
+      assert.ok(bareSameComparisonAnswer.textContent?.includes("Comparison status: unchanged."));
+      assert.ok(bareSameComparisonAnswer.textContent?.includes("Changed fields: 0."));
+      assert.ok(bareSameComparisonAnswer.textContent?.includes("Current handled by: Passive Brain."));
+    });
+    assert.ok(bareSameComparisonAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeBareSameQuestion);
+    const bareSameComparisonAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_proof_comparison_answered").at(-1);
+    assert.equal(bareSameComparisonAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(bareSameComparisonAnswerEvent?.attributes.comparisonStatus, "unchanged");
+    assert.equal(bareSameComparisonAnswerEvent?.attributes.changeCount, 0);
+    assert.equal(bareSameComparisonAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(bareSameComparisonAnswerEvent).includes("same"), false);
+    assert.equal(JSON.stringify(bareSameComparisonAnswerEvent).includes("Passive Brain"), false);
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/turn"));
   } finally {
     cleanup();
