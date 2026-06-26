@@ -127,6 +127,7 @@ export interface LastNapoleonTurnSummaryView {
 export interface LastNapoleonTurnFailureInput {
   reason: string;
   traceId?: string;
+  auditId?: string;
   governanceOutcome?: string;
   descriptorFailureReason?: DescriptorFailClosedReason;
   blockedEffects?: string[];
@@ -410,6 +411,7 @@ export function describeLastNapoleonTurnFailure(error: unknown): LastNapoleonTur
   return {
     reason: error.reason,
     traceId: error.traceId,
+    auditId: error.auditId,
     governanceOutcome: error.governanceOutcome,
     descriptorFailureReason: error.descriptorFailureReason,
     blockedEffects: error.blockedEffects,
@@ -1235,6 +1237,7 @@ export function describeDelegation(
       const failure = fallback.failure;
       const safeBlockedEffects = sanitizeVisibleProvenanceList(failure.blockedEffects);
       const safeTraceId = sanitizeVisibleProvenanceValue(failure.traceId);
+      const safeAuditId = sanitizeVisibleProvenanceValue(failure.auditId);
       const safeGovernanceState = sanitizeVisibleProvenanceValue(failure.governanceOutcome);
       const descriptorFailure = describeDescriptorFailureReason(failure.descriptorFailureReason) || "not returned";
       return {
@@ -1251,7 +1254,7 @@ export function describeDelegation(
           { label: "Blocked effects", value: safeBlockedEffects },
           { label: "Governance state", value: safeGovernanceState },
           { label: "Trace", value: safeTraceId },
-          { label: "Audit", value: "not returned" },
+          { label: "Audit", value: safeAuditId },
           { label: "Failure reason", value: sanitizeVisibleProvenanceValue(failure.reason) },
           { label: "Descriptor failure", value: descriptorFailure },
           { label: "Next step", value: sanitizeVisibleProvenanceValue(failure.nextStep) },

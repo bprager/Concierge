@@ -293,6 +293,41 @@ test("empty Napoleon delegation names missing descriptor text-turn route", () =>
   assert.ok(!view.body.includes("Passive Brain"));
 });
 
+test("fail-closed Napoleon delegation preserves returned audit references", () => {
+  const failure = describeLastNapoleonTurnFailure(
+    new NapoleonBridgeError(
+      "governance_denied",
+      "trace_denied",
+      "request_denied",
+      200,
+      ["external_send", "memory_write"],
+      {
+        decisionId: "decision_denied",
+        auditId: "audit_denied",
+        governanceOutcome: "deny",
+      },
+    ),
+  );
+
+  const view = describeDelegation(undefined, undefined, { failure });
+
+  assert.equal(view.heading, "Napoleon delegation");
+  assert.ok(view.body.includes("failed closed before delegation provenance could be accepted"));
+  assert.ok(view.details.some((detail) => detail.label === "Trace" && detail.value === "trace_denied"));
+  assert.ok(view.details.some((detail) => detail.label === "Audit" && detail.value === "audit_denied"));
+  assert.ok(view.details.some((detail) => detail.label === "Governance state" && detail.value === "deny"));
+  assert.ok(view.details.some((detail) => detail.label === "Failure reason" && detail.value === "governance_denied"));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Next step" &&
+        detail.value === "Revise the request or keep it local; Napoleon governance did not allow forwarding.",
+    ),
+  );
+  assert.ok(!view.body.includes("Napoleon recommends"));
+  assert.ok(!view.body.includes("Passive Brain"));
+});
+
 test("governed handoff readiness names descriptor HTTP failure in next step", () => {
   const descriptorConnection = buildDescriptorConnectionState({
     endpointConfigured: true,
