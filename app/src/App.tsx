@@ -748,7 +748,28 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
     /\bwho\b.*\b(review|reviews|reviewed)\b.*\b(it|that|this|block|blocker|decision|failure|no-go|no go|denial|deny|denied)\b/.test(
       lower,
     );
-  return asksWhatHappened || asksWhatToFix || asksOwner || asksOverrideBoundary || asksAppealOrReviewBoundary;
+  const asksReconsiderationBoundary =
+    /\bwho\b.*\b(can|may|should|must)\b.*\breconsider\b.*\b(it|that|this|block|blocker|decision|failure|no-go|no go|denial|deny|denied)?\b/.test(
+      lower,
+    ) || /\breconsider\b.*\b(it|that|this|block|blocker|decision|failure|no-go|no go|denial|deny|denied)\b/.test(lower);
+  const asksAllowedCondition =
+    /\bwhat\b.*\b(would|could|can|may)\b.*\bmake\b.*\b(it|that|this|request|turn|send)\b.*\ballow(?:ed)?\b/.test(
+      lower,
+    ) || /\bhow\b.*\b(would|could|can|may)\b.*\b(it|that|this|request|turn|send)\b.*\bbe\b.*\ballow(?:ed)?\b/.test(lower);
+  const asksPermanentBlock =
+    /\b(is|was|will)\b.*\b(it|that|this|request|turn|send)\b.*\b(blocked|denied|stopped)\b.*\b(forever|permanent|always)\b/.test(
+      lower,
+    );
+  return (
+    asksWhatHappened ||
+    asksWhatToFix ||
+    asksOwner ||
+    asksOverrideBoundary ||
+    asksAppealOrReviewBoundary ||
+    asksReconsiderationBoundary ||
+    asksAllowedCondition ||
+    asksPermanentBlock
+  );
 }
 
 function isNapoleonLiveSendReadinessQuestion(content: string): boolean {

@@ -7756,6 +7756,9 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
       "who can unblock it?",
       "can I appeal this?",
       "who reviews this denial?",
+      "who can reconsider this?",
+      "what would make this allowed?",
+      "is this blocked forever?",
     ] as const;
     for (const prompt of deniedBoundaryFollowups) {
       const requestCountBeforeDeniedBoundaryQuestion = requestedUrls.length;
