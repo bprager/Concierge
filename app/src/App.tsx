@@ -562,9 +562,15 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
   const asksCompactSideEffectBoundary =
     /^(?:sent|send|sent\s+out|stored|saved|memory|remembered|dispatched|dispatch)\??$/.test(compact) ||
     /^(?:write|wrote|store|stored|save|saved)\s+memory\??$/.test(compact);
+  const asksApprovalActorBoundary =
+    /^who\s+(?:approved|reviewed|authorized)(?:\s+(?:it|that|this|answer|response|reply))?\??$/.test(compact) ||
+    /^who\s+(?:signed\s+off|gave\s+approval)(?:\s+(?:on\s+)?(?:it|that|this|answer|response|reply))?\??$/.test(
+      compact,
+    );
   const asksAboutReturnedAction =
     asksCompactApprovalBoundary ||
     asksCompactSideEffectBoundary ||
+    asksApprovalActorBoundary ||
     /\b(can|may|should)\s+i\b.*\b(act|apply|proceed|use|send|do)\b.*\b(that|this|it|answer|response|reply)\b/.test(
       lower,
     ) ||
