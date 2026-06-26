@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local blocked-attempt recovery coverage for natural auth and contract repair follow-ups such as "Who should fix it?" and "What needs fixing?", keeping answers local, owner-oriented, and free of raw follow-up text in telemetry.
 - Added local blocked-attempt recovery answers for bridge failure follow-ups such as "What happened?", including a conservative likely fix owner for timeout, authentication, descriptor, endpoint, contract, and governance blockers without sending another bridge request or exposing raw follow-up text in telemetry.
 - Added local blocked-attempt next-step answers after fail-closed Napoleon no-go or deny responses, so "What should I do next?" uses the latest blocked metadata without sending another bridge request or exposing raw follow-up text in telemetry.
 - Added local blocked-attempt answers for action/readiness follow-ups after fail-closed Napoleon no-go or deny responses, so "Can I act on that?" uses the latest blocked metadata without sending another bridge request or inventing review proof.

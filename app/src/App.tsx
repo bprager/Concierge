@@ -662,10 +662,12 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
     /\bwhy\b.*\bdid\b.*\bthat\b.*\bhappen\b/.test(lower);
   const asksWhatToFix =
     /\bwhat\b.*\b(needs?|has)\b.*\b(to be )?\b(fixed|repaired|resolved)\b/.test(lower) ||
+    /\bwhat\b.*\bneeds?\b.*\bfixing\b/.test(lower) ||
     /\bwhat\b.*\bfix\b/.test(lower) ||
     /\bwhat\b.*\brepair\b/.test(lower);
   const asksOwner =
     /\bwho\b.*\b(owns?|should handle|fixes|repairs)\b/.test(lower) ||
+    /\bwho\b.*\bshould\b.*\bfix\b/.test(lower) ||
     /\bowner\b.*\b(fix|repair|blocker|failure)\b/.test(lower);
   return asksWhatHappened || asksWhatToFix || asksOwner;
 }

@@ -8850,6 +8850,36 @@ test("blocks rendered live send before fetch when descriptor discovery auth fail
     assert.ok(authHeaders.includes("Bearer secret_token"));
     assert.equal(postedBodies.length, 0);
     assert.equal(view.container.textContent?.includes("Unauthorized secret_token"), false);
+
+    const requestCountBeforeOwnerQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "Who should fix it?" } });
+    await waitFor(() => assert.equal(composer.value, "Who should fix it?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let blockedOwnerAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      blockedOwnerAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest blocked Napoleon attempt:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(blockedOwnerAnswer);
+    });
+    assert.ok(blockedOwnerAnswer);
+    const blockedOwnerAnswerText = blockedOwnerAnswer.textContent ?? "";
+    assert.ok(blockedOwnerAnswerText.includes("Failure reason: auth_failure."));
+    assert.ok(
+      blockedOwnerAnswerText.includes(
+        "Likely fix owner: local bridge-token settings or Napoleon descriptor authentication owner.",
+      ),
+    );
+    assert.ok(blockedOwnerAnswerText.includes("No Napoleon response was accepted; fail-closed local state only."));
+    assert.equal(requestedUrls.length, requestCountBeforeOwnerQuestion);
+    const blockedOwnerAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+    assert.equal(blockedOwnerAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(blockedOwnerAnswerEvent?.attributes.failureReturned, true);
+    assert.equal(blockedOwnerAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(blockedOwnerAnswerEvent).includes("Who should fix it?"), false);
+    assert.equal(JSON.stringify(blockedOwnerAnswerEvent).includes("auth_failure"), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();
@@ -9298,6 +9328,35 @@ test("shows fail-closed transcript metadata when Napoleon response mismatches th
     assert.equal(JSON.stringify(blockedAttemptAnswerEvent).includes("Why was that blocked?"), false);
     assert.equal(JSON.stringify(blockedAttemptAnswerEvent).includes("contract_mismatch"), false);
     assert.equal(JSON.stringify(blockedAttemptAnswerEvent).includes("memory_write"), false);
+
+    const requestCountBeforeFixQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "What needs fixing?" } });
+    await waitFor(() => assert.equal(composer.value, "What needs fixing?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let blockedFixAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      blockedFixAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest blocked Napoleon attempt:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(blockedFixAnswer);
+    });
+    assert.ok(blockedFixAnswer);
+    const blockedFixAnswerText = blockedFixAnswer.textContent ?? "";
+    assert.ok(blockedFixAnswerText.includes("Failure reason: contract_mismatch."));
+    assert.ok(blockedFixAnswerText.includes("Likely fix owner: Napoleon bridge contract or descriptor publisher."));
+    assert.ok(
+      blockedFixAnswerText.includes("Next step: Align the bridge contract or descriptor before attempting another live turn."),
+    );
+    assert.equal(blockedFixAnswerText.includes("Napoleon wrote memory and sent the deployment summary externally."), false);
+    assert.equal(requestedUrls.length, requestCountBeforeFixQuestion);
+    const blockedFixAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+    assert.equal(blockedFixAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(blockedFixAnswerEvent?.attributes.failureReturned, true);
+    assert.equal(blockedFixAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(blockedFixAnswerEvent).includes("What needs fixing?"), false);
+    assert.equal(JSON.stringify(blockedFixAnswerEvent).includes("contract_mismatch"), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();
