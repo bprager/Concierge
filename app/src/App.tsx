@@ -402,6 +402,9 @@ function extractRequestedSelectedAgentReasonName(content: string): string | null
       /\b[Ww]hy\s+(?:was|were)\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\s+selected\b/,
     ) ??
     content.match(
+      /\b[Ww]hy\s+(?:has|have)\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\s+been\s+selected\b/,
+    ) ??
+    content.match(
       /\b[Ww]hy\s+did\s+(?:Napoleon|the bridge|Chief of Staff)\s+(?:select|choose|chose|pick|picked)\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\b/,
     );
   const name = normalizeRequestedSelectedAgentName(match?.[1]);
