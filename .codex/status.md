@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local compact proof-currentness follow-up handling for wording such as "current?", so Concierge answers from current returned proof state without another bridge request or raw follow-up/provenance telemetry.
 - Added local compact source/proof follow-up handling for wording such as "Proof?", so Concierge answers from current returned proof without another bridge request or raw follow-up/provenance telemetry.
 - Added local short source/proof follow-up handling for wording such as "Where is that from?" and "Which agent picked it?", so Concierge answers from current returned proof without another bridge request or raw follow-up/provenance telemetry.
 - Added local short-pronoun selected-agent selection-reason follow-up handling for wording such as "Why it?", so Concierge answers from current returned proof without another bridge request or raw follow-up/provenance telemetry.

@@ -2004,6 +2004,43 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(naturalCurrentnessEvent).includes("Is this proof still current?"), false);
     assert.equal(JSON.stringify(naturalCurrentnessEvent).includes(lastTextTurnTraceId), false);
 
+    const requestCountBeforeCompactCurrentnessQuestion = requestedUrls.length;
+    const currentnessAnswerCountBeforeCompactCurrentnessQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon proof currentness from local state:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "current?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactCurrentnessAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const currentnessAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
+      );
+      assert.equal(currentnessAnswers.length, currentnessAnswerCountBeforeCompactCurrentnessQuestion + 1);
+      compactCurrentnessAnswer = currentnessAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactCurrentnessAnswer);
+      assert.ok(compactCurrentnessAnswer.textContent?.includes("Current returned proof available: yes."));
+      assert.ok(compactCurrentnessAnswer.textContent?.includes("Proof state: returned_bridge."));
+      assert.ok(compactCurrentnessAnswer.textContent?.includes(`Trace: ${lastTextTurnTraceId}. Audit: audit_${lastTextTurnTraceId}.`));
+      assert.ok(
+        compactCurrentnessAnswer.textContent?.includes(
+          "This is local display of the latest returned bridge proof only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+        ),
+      );
+    });
+    assert.ok(compactCurrentnessAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeCompactCurrentnessQuestion);
+    const compactCurrentnessEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_proof_currentness_answered").at(-1);
+    assert.equal(compactCurrentnessEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactCurrentnessEvent?.attributes.currentProofAvailable, true);
+    assert.equal(compactCurrentnessEvent?.attributes.provenanceState, "returned_bridge");
+    assert.equal(compactCurrentnessEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactCurrentnessEvent).includes("current?"), false);
+    assert.equal(JSON.stringify(compactCurrentnessEvent).includes(lastTextTurnTraceId), false);
+
     const textTurnTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local compact proof-currentness follow-up coverage for wording such as "current?", keeping proof-state answers tied to returned bridge proof without another Napoleon request or raw follow-up/provenance telemetry.
 - Added local compact source/proof follow-up coverage for wording such as "Proof?", keeping answers tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.
 - Added local short source/proof follow-up coverage for wording such as "Where is that from?" and "Which agent picked it?", keeping answers tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.
 - Added local short-pronoun selected-agent selection-reason follow-up coverage for wording such as "Why it?", keeping the answer tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.

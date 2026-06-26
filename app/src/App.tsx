@@ -626,6 +626,10 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
 
 function isNapoleonProofCurrentnessQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
+  const compact = lower.trim();
+  const asksCompactCurrentness =
+    /^(?:current|status|still\s+valid|valid|live)\??$/.test(compact) ||
+    /^(?:is\s+)?(?:that|this|it)\s+(?:current|still\s+valid|valid|live)\??$/.test(compact);
   const asksAboutProof = /\bproof\b/.test(lower) || /\bevidence\b/.test(lower) || /\bprovenance\b/.test(lower);
   const asksAboutCurrentness =
     /\bcurrent\b/.test(lower) ||
@@ -638,6 +642,7 @@ function isNapoleonProofCurrentnessQuestion(content: string): boolean {
   const asksAboutContextualReturnedProof =
     /\b(this|that|last|latest|returned|current)\b.*\b(proof|evidence|provenance)\b/.test(lower) ||
     /\b(proof|evidence|provenance)\b.*\b(this|that|last|latest|returned|current)\b/.test(lower);
+  if (asksCompactCurrentness) return true;
   if (!lower.includes("napoleon") && !asksAboutContextualReturnedProof) return false;
   return asksAboutProof && asksAboutCurrentness;
 }
