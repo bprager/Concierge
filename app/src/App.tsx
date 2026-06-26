@@ -430,7 +430,19 @@ function normalizeRequestedSelectedAgentName(value: string | undefined): string 
   const hasTitleCaseWord = words.some((word) => /^[A-Z][A-Za-z0-9]*$/.test(word));
   const hasMultiWordNameShape = words.length >= 2 && words.every((word) => /^[A-Za-z][A-Za-z0-9]*$/.test(word));
   if (!hasTitleCaseWord && !hasMultiWordNameShape) return null;
-  const blocked = new Set(["it", "that", "this", "answer", "response", "reply", "agent", "selected agent"]);
+  const blocked = new Set([
+    "it",
+    "that",
+    "this",
+    "answer",
+    "response",
+    "reply",
+    "agent",
+    "selected agent",
+    "this agent",
+    "that agent",
+    "the agent",
+  ]);
   if (blocked.has(name.toLocaleLowerCase())) return null;
   return name;
 }

@@ -2959,6 +2959,149 @@ test("exports and compares Napoleon proof through rendered app controls", async 
   }
 });
 
+test("answers contextual selected-agent source follow-ups from returned proof", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  const originalFetch = globalThis.fetch;
+
+  try {
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      requestedUrls.push(url);
+      if (url === "http://127.0.0.1:8787/v1/concierge/chief-of-staff/descriptor") {
+        return harnessJsonResponse(200, {
+          descriptor: {
+            schemaVersion: "napoleon/concierge/chief-of-staff-service/v1",
+            serviceId: "napoleon.chief_of_staff",
+            runtimeAuthority: false,
+            commandExecution: false,
+            cachePolicy: "fail_closed_to_review_required",
+            blockedEffects: ["runtime_authority", "memory_write", "approval_capture", "external_send"],
+          },
+          checksum: { expected: "sha256:ui", actual: "sha256:ui" },
+          signature: { valid: true },
+        });
+      }
+
+      assert.equal(url, "http://127.0.0.1:8787/v1/concierge/turn");
+      const body = JSON.parse(String(init?.body ?? "{}")) as {
+        traceId: string;
+        profileMode: string;
+        chiefOfStaffRequest: { request_id: string };
+      };
+      return harnessJsonResponse(200, {
+        text: "Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
+        profileMode: body.profileMode,
+        governanceDecision: {
+          decision_id: `decision_${body.traceId}`,
+          request_id: body.chiefOfStaffRequest.request_id,
+          outcome: "requires_review",
+          authority_tier: "advisory_review",
+          approval_requirement: "chief_of_staff_and_owner_review",
+          rationale: "Local harness requires governed review.",
+          blocked_effects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+          trace_id: body.traceId,
+          audit_id: `audit_${body.traceId}`,
+        },
+        traceEnvelope: {
+          trace_id: body.traceId,
+          parent_trace_id: "local_harness",
+          actor_id: "napoleon.local_harness",
+          request_id: body.chiefOfStaffRequest.request_id,
+          decision_id: `decision_${body.traceId}`,
+          timestamp: "2026-06-12T00:00:00.000Z",
+        },
+        auditEnvelope: {
+          audit_id: `audit_${body.traceId}`,
+          trace_id: body.traceId,
+          decision_id: `decision_${body.traceId}`,
+          actor_id: "napoleon.local_harness",
+          authority_tier: "advisory_review",
+          approval_requirement: "chief_of_staff_and_owner_review",
+          evidence_links: [`trace:${body.traceId}`, "harness:local"],
+        },
+        delegation: {
+          selectedAgents: [
+            {
+              agentId: "passive_brain",
+              displayName: "Passive Brain",
+              selectionReason: "Prior bridge context is relevant; deployment context was requested.",
+              contributionSummary: "bridge context",
+            },
+          ],
+          allowedEffects: ["prepare_advisory_response"],
+          blockedEffects: ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+          governanceState: "requires_review",
+          traceId: body.traceId,
+          auditId: `audit_${body.traceId}`,
+        },
+        recommendationProvenance: {
+          summary: "keeping this as a governed review draft",
+          traceId: body.traceId,
+          auditId: `audit_${body.traceId}`,
+        },
+      });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    fireEvent.change(view.getByLabelText("Napoleon endpoint"), { target: { value: "http://127.0.0.1:8787" } });
+    await user.click(view.getByRole("button", { name: "Discover descriptor" }));
+    await view.findByText("Napoleon Chief of Staff descriptor is discovered, valid, and contract-only.");
+
+    const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
+    if (rehearsalCheckbox.checked) {
+      await user.click(rehearsalCheckbox);
+    }
+    await waitFor(() => assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false));
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Draft a bridge readiness summary" } });
+    await waitFor(() => assert.equal(composer.value, "Draft a bridge readiness summary"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    await view.findByText("Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.");
+
+    const requestCountBeforeQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "Who picked this agent?" } });
+    await waitFor(() => assert.equal(composer.value, "Who picked this agent?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+
+    let answer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      answer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(answer);
+      assert.ok(answer.textContent?.includes("Handled by: Passive Brain."));
+      assert.ok(
+        answer.textContent?.includes(
+          "Why selected: Passive Brain: Prior bridge context is relevant; deployment context was requested.",
+        ),
+      );
+    });
+    assert.equal(requestedUrls.length, requestCountBeforeQuestion);
+    const answerEvent = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}").events
+      ?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered")
+      .at(-1);
+    assert.equal(answerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(answerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(answerEvent?.attributes.selectedAgentReasonCount, 1);
+    assert.equal(answerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(answerEvent).includes("Who picked this agent?"), false);
+    assert.equal(JSON.stringify(answerEvent).includes("Passive Brain"), false);
+    assert.equal(JSON.stringify(answerEvent).includes("deployment context"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears accepted real-runtime readiness proof when user profile changes", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
