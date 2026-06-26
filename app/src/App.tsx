@@ -567,10 +567,19 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
     /^who\s+(?:signed\s+off|gave\s+approval)(?:\s+(?:on\s+)?(?:it|that|this|answer|response|reply))?\??$/.test(
       compact,
     );
+  const asksApprovalReadinessBoundary =
+    /^who\s+(?:can|may|should|must)\s+(?:approve|review|authorize)(?:\s+(?:it|that|this|answer|response|reply))?\??$/.test(
+      compact,
+    ) ||
+    /^what\s+approval\s+(?:is\s+)?(?:missing|required|needed)\??$/.test(compact) ||
+    /^(?:can|may|should)\s+i\s+(?:treat|consider|use)\s+(?:it|that|this|answer|response|reply)\s+as\s+(?:approved|authorized|reviewed|allowed)\??$/.test(
+      compact,
+    );
   const asksAboutReturnedAction =
     asksCompactApprovalBoundary ||
     asksCompactSideEffectBoundary ||
     asksApprovalActorBoundary ||
+    asksApprovalReadinessBoundary ||
     /\b(can|may|should)\s+i\b.*\b(act|apply|proceed|use|send|do)\b.*\b(that|this|it|answer|response|reply)\b/.test(
       lower,
     ) ||
