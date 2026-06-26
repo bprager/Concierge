@@ -248,6 +248,97 @@ async function assertClearedProofAttributionFollowups({
   }
 }
 
+async function assertClearedProofCurrentnessFollowups({
+  composer,
+  expectedClearReason,
+  expectedRequiredRefresh,
+  fireEvent,
+  getSendButton,
+  requestedUrls,
+  user,
+  waitFor,
+}: {
+  composer: HTMLTextAreaElement;
+  expectedClearReason: string;
+  expectedRequiredRefresh: string;
+  fireEvent: { change: (element: Element, event?: {}) => boolean };
+  getSendButton: () => Element;
+  requestedUrls: string[];
+  user: { click: (element: Element) => Promise<unknown> };
+  waitFor: (callback: () => void) => Promise<unknown>;
+}) {
+  const requestCountBeforeClearedProofQuestion = requestedUrls.length;
+  fireEvent.change(composer, { target: { value: "Why can't you rely on the last Napoleon proof?" } });
+  await user.click(getSendButton());
+  let clearedProofAnswer: HTMLElement | undefined;
+  await waitFor(() => {
+    clearedProofAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+      article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
+    ) as HTMLElement | undefined;
+    assert.ok(clearedProofAnswer);
+  });
+  assert.ok(clearedProofAnswer);
+  const clearedProofAnswerText = clearedProofAnswer.textContent ?? "";
+  assert.ok(clearedProofAnswerText.includes("Current returned proof available: no."));
+  assert.ok(clearedProofAnswerText.includes("Proof state: stale_cleared."));
+  assert.ok(clearedProofAnswerText.includes(`Last clear reason: ${expectedClearReason}.`));
+  assert.ok(clearedProofAnswerText.includes(`Required refresh: ${expectedRequiredRefresh}`));
+  assert.ok(
+    clearedProofAnswerText.includes(
+      "Concierge will not reuse stale Napoleon proof after the connection, descriptor, profile, or rehearsal context changes.",
+    ),
+  );
+  assert.ok(
+    clearedProofAnswerText.includes(
+      "This is local display of proof state only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+    ),
+  );
+  assert.equal(requestedUrls.length, requestCountBeforeClearedProofQuestion);
+  const clearedProofTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+    events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+  };
+  const clearedProofEvent = clearedProofTelemetryBuffer.events
+    ?.filter((event) => event.event === "napoleon_proof_currentness_answered")
+    .at(-1);
+  assert.equal(clearedProofEvent?.attributes.localAnswerOnly, true);
+  assert.equal(clearedProofEvent?.attributes.currentProofAvailable, false);
+  assert.equal(clearedProofEvent?.attributes.provenanceState, "stale_cleared");
+  assert.equal(clearedProofEvent?.attributes.clearReason, expectedClearReason);
+  assert.equal(clearedProofEvent?.attributes.externalSendPerformed, false);
+
+  const currentnessAnswerCountBeforeCompactRecovery = Array.from(document.querySelectorAll("article.assistant")).filter(
+    (article) => article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
+  ).length;
+  fireEvent.change(composer, { target: { value: "refresh?" } });
+  await user.click(getSendButton());
+  let compactRecoveryAnswer: HTMLElement | undefined;
+  await waitFor(() => {
+    const currentnessAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+      article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
+    );
+    assert.equal(currentnessAnswers.length, currentnessAnswerCountBeforeCompactRecovery + 1);
+    compactRecoveryAnswer = currentnessAnswers.at(-1) as HTMLElement | undefined;
+    assert.ok(compactRecoveryAnswer);
+  });
+  assert.ok(compactRecoveryAnswer);
+  const compactRecoveryAnswerText = compactRecoveryAnswer.textContent ?? "";
+  assert.ok(compactRecoveryAnswerText.includes("Current returned proof available: no."));
+  assert.ok(compactRecoveryAnswerText.includes("Proof state: stale_cleared."));
+  assert.ok(compactRecoveryAnswerText.includes(`Last clear reason: ${expectedClearReason}.`));
+  assert.ok(compactRecoveryAnswerText.includes(`Required refresh: ${expectedRequiredRefresh}`));
+  assert.equal(requestedUrls.length, requestCountBeforeClearedProofQuestion);
+  const compactRecoveryTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+    events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+  };
+  const compactRecoveryEvent = compactRecoveryTelemetryBuffer.events
+    ?.filter((event) => event.event === "napoleon_proof_currentness_answered")
+    .at(-1);
+  assert.equal(compactRecoveryEvent?.attributes.localAnswerOnly, true);
+  assert.equal(compactRecoveryEvent?.attributes.currentProofAvailable, false);
+  assert.equal(compactRecoveryEvent?.attributes.clearReason, expectedClearReason);
+  assert.equal(JSON.stringify(compactRecoveryEvent).includes("refresh?"), false);
+}
+
 test("exports and compares Napoleon proof through rendered app controls", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, screen, waitFor, within }, userEventModule, { App }] = await Promise.all([
@@ -6779,137 +6870,25 @@ test("clears Napoleon proof and delegation when descriptor connection state chan
     assert.equal(view.queryByText("Last successful Napoleon proof"), null);
     assert.equal(within(delegationPanel).queryAllByText(/Passive Brain/).length, 0);
     assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
-    const requestCountBeforeClearedProofQuestion = requestedUrls.length;
-    fireEvent.change(composer, { target: { value: "Why can't you rely on the last Napoleon proof?" } });
-    await user.click(view.getByRole("button", { name: "Send" }));
-    let clearedProofAnswer: HTMLElement | undefined;
-    await waitFor(() => {
-      clearedProofAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
-        article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
-      ) as HTMLElement | undefined;
-      assert.ok(clearedProofAnswer);
+    await assertClearedProofCurrentnessFollowups({
+      composer,
+      expectedClearReason: "descriptor_state_changed",
+      expectedRequiredRefresh:
+        "Resolve the descriptor state, rediscover a valid Napoleon descriptor, and complete a new governed bridge turn before relying on proof.",
+      fireEvent,
+      getSendButton: () => view.getByRole("button", { name: "Send" }),
+      requestedUrls,
+      user,
+      waitFor,
     });
-    assert.ok(clearedProofAnswer);
-    const clearedProofAnswerText = clearedProofAnswer.textContent ?? "";
-    assert.ok(clearedProofAnswerText.includes("Current returned proof available: no."));
-    assert.ok(clearedProofAnswerText.includes("Proof state: stale_cleared."));
-    assert.ok(clearedProofAnswerText.includes("Last clear reason: descriptor_state_changed."));
-    assert.ok(
-      clearedProofAnswerText.includes(
-        "Required refresh: Resolve the descriptor state, rediscover a valid Napoleon descriptor, and complete a new governed bridge turn before relying on proof.",
-      ),
-    );
-    assert.ok(
-      clearedProofAnswerText.includes(
-        "Concierge will not reuse stale Napoleon proof after the connection, descriptor, profile, or rehearsal context changes.",
-      ),
-    );
-    assert.ok(
-      clearedProofAnswerText.includes(
-        "This is local display of proof state only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
-      ),
-    );
-    assert.equal(requestedUrls.length, requestCountBeforeClearedProofQuestion);
-    const clearedProofTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
-      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
-    };
-    const clearedProofEvent = clearedProofTelemetryBuffer.events
-      ?.filter((event) => event.event === "napoleon_proof_currentness_answered")
-      .at(-1);
-    assert.equal(clearedProofEvent?.attributes.localAnswerOnly, true);
-    assert.equal(clearedProofEvent?.attributes.currentProofAvailable, false);
-    assert.equal(clearedProofEvent?.attributes.provenanceState, "stale_cleared");
-    assert.equal(clearedProofEvent?.attributes.clearReason, "descriptor_state_changed");
-    assert.equal(clearedProofEvent?.attributes.externalSendPerformed, false);
-    const currentnessAnswerCountBeforeCompactRecovery = Array.from(document.querySelectorAll("article.assistant")).filter(
-      (article) => article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
-    ).length;
-    fireEvent.change(composer, { target: { value: "refresh?" } });
-    await user.click(view.getByRole("button", { name: "Send" }));
-    let compactRecoveryAnswer: HTMLElement | undefined;
-    await waitFor(() => {
-      const currentnessAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
-        article.textContent?.includes("Latest Napoleon proof currentness from local state:"),
-      );
-      assert.equal(currentnessAnswers.length, currentnessAnswerCountBeforeCompactRecovery + 1);
-      compactRecoveryAnswer = currentnessAnswers.at(-1) as HTMLElement | undefined;
-      assert.ok(compactRecoveryAnswer);
+    await assertClearedProofAttributionFollowups({
+      composer,
+      fireEvent,
+      getSendButton: () => view.getByRole("button", { name: "Send" }),
+      requestedUrls,
+      user,
+      waitFor,
     });
-    assert.ok(compactRecoveryAnswer);
-    const compactRecoveryAnswerText = compactRecoveryAnswer.textContent ?? "";
-    assert.ok(compactRecoveryAnswerText.includes("Current returned proof available: no."));
-    assert.ok(compactRecoveryAnswerText.includes("Proof state: stale_cleared."));
-    assert.ok(compactRecoveryAnswerText.includes("Last clear reason: descriptor_state_changed."));
-    assert.ok(
-      compactRecoveryAnswerText.includes(
-        "Required refresh: Resolve the descriptor state, rediscover a valid Napoleon descriptor, and complete a new governed bridge turn before relying on proof.",
-      ),
-    );
-    assert.equal(requestedUrls.length, requestCountBeforeClearedProofQuestion);
-    const compactRecoveryTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
-      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
-    };
-    const compactRecoveryEvent = compactRecoveryTelemetryBuffer.events
-      ?.filter((event) => event.event === "napoleon_proof_currentness_answered")
-      .at(-1);
-    assert.equal(compactRecoveryEvent?.attributes.localAnswerOnly, true);
-    assert.equal(compactRecoveryEvent?.attributes.currentProofAvailable, false);
-    assert.equal(compactRecoveryEvent?.attributes.clearReason, "descriptor_state_changed");
-    assert.equal(JSON.stringify(compactRecoveryEvent).includes("refresh?"), false);
-    for (const clearedAttributionPrompt of [
-      "Who handled that?",
-      "Which capability handled that?",
-      "Which agents were selected?",
-      "What did Napoleon recommend?",
-      "What did the Passive Brain find?",
-    ]) {
-      const requestCountBeforeClearedAttributionQuestion = requestedUrls.length;
-      const delegationAnswerCountBeforeClearedAttributionQuestion = Array.from(
-        document.querySelectorAll("article.assistant"),
-      ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
-      fireEvent.change(composer, { target: { value: clearedAttributionPrompt } });
-      await user.click(view.getByRole("button", { name: "Send" }));
-      let clearedAttributionAnswer: HTMLElement | undefined;
-      await waitFor(() => {
-        const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
-          article.textContent?.includes("No returned Napoleon delegation proof is available in this session."),
-        );
-        assert.equal(
-          Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
-            article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
-          ).length,
-          delegationAnswerCountBeforeClearedAttributionQuestion,
-        );
-        clearedAttributionAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
-        assert.ok(clearedAttributionAnswer);
-      });
-      assert.ok(clearedAttributionAnswer);
-      const clearedAttributionAnswerText = clearedAttributionAnswer.textContent ?? "";
-      assert.ok(
-        clearedAttributionAnswerText.includes(
-          "Concierge will not name a handler, capability, or selected agent from local inference",
-        ),
-      );
-      assert.ok(
-        clearedAttributionAnswerText.includes(
-          "this local answer did not contact Napoleon, approve, write memory, dispatch agents, or send externally",
-        ),
-      );
-      assert.equal(clearedAttributionAnswerText.includes("Handled by: Passive Brain."), false);
-      assert.equal(clearedAttributionAnswerText.includes("Target capability: napoleon.chief_of_staff."), false);
-      assert.equal(clearedAttributionAnswerText.includes("Napoleon recommendation:"), false);
-      assert.equal(clearedAttributionAnswerText.includes("Selected-agent contribution:"), false);
-      assert.equal(requestedUrls.length, requestCountBeforeClearedAttributionQuestion);
-      const clearedAttributionEvent = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}").events
-        ?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered")
-        .at(-1);
-      assert.equal(clearedAttributionEvent?.attributes.localAnswerOnly, true);
-      assert.equal(clearedAttributionEvent?.attributes.proofReturned, false);
-      assert.equal(clearedAttributionEvent?.attributes.selectedAgentCount, 0);
-      assert.equal(clearedAttributionEvent?.attributes.targetCapabilityReturned, false);
-      assert.equal(clearedAttributionEvent?.attributes.externalSendPerformed, false);
-      assert.equal(JSON.stringify(clearedAttributionEvent).includes(clearedAttributionPrompt), false);
-    }
   } finally {
     cleanup();
     dom.window.close();

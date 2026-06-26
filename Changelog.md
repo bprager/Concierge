@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Consolidated rendered stale-cleared proof currentness and attribution coverage helpers, keeping descriptor-scoped stale-proof assertions easier to extend without weakening no-reuse guarantees.
 - Added rendered stale-cleared proof coverage for recommendation and contribution follow-ups after descriptor rediscovery and descriptor failure refreshes, proving Concierge refuses to reuse prior Napoleon attribution across descriptor refresh paths.
 - Added rendered stale-cleared proof coverage for recommendation and contribution follow-ups after profile, endpoint, bridge-token, and Rehearsal Mode resets, proving Concierge refuses to reuse prior Napoleon attribution across those context changes.
 - Added rendered stale-cleared proof coverage for handler, capability, selected-agent, recommendation, and contribution follow-ups, proving Concierge refuses to reuse prior Napoleon attribution after descriptor-scoped proof is cleared.

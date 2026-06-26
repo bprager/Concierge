@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Consolidated rendered stale-cleared proof currentness and attribution coverage helpers, so descriptor-scoped stale-proof reset checks remain easier to extend while preserving the same no-reuse, no-side-effect, and sanitized-telemetry assertions.
 - Added rendered stale-cleared proof coverage for recommendation and contribution follow-ups after descriptor rediscovery and descriptor failure refreshes, so Concierge refuses to reuse prior Napoleon attribution across descriptor refresh paths.
 - Added rendered stale-cleared proof coverage for recommendation and contribution follow-ups after profile, endpoint, bridge-token, and Rehearsal Mode resets, so Concierge refuses to reuse prior Napoleon attribution across those context changes.
 - Added rendered stale-cleared proof coverage for handler, capability, selected-agent, recommendation, and contribution follow-ups, so Concierge refuses to reuse prior Napoleon attribution after descriptor-scoped proof is cleared.
