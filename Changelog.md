@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local blocked-attempt answers for action/readiness follow-ups after fail-closed Napoleon no-go or deny responses, so "Can I act on that?" uses the latest blocked metadata without sending another bridge request or inventing review proof.
 - Added authority tier, approval requirement, and rationale to local Napoleon review-readiness answers, so action/readiness follow-ups show the returned review context without sending another bridge request or copying those returned values into telemetry.
 - Added returned audit references to the fail-closed Napoleon delegation panel, blocked-attempt answers, and latest-turn timeline, so denied or blocked bridge attempts show the current failure reason, governance state, trace, audit, blocked effects, and next step, while the timeline also compares accepted and blocked audit references without inventing delegation attribution or sending another bridge request.
 - Added local returned-proof answers for natural source, proof, and evidence follow-ups such as "where did that come from?", "what evidence supports that?", and "what proof supports that?", so Concierge shows the current returned trace, audit, proof alignment, and contribution proof without sending another bridge request or emitting raw follow-up/proof identifiers in telemetry.

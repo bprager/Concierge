@@ -3337,7 +3337,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     turnId: string,
     activeProfileMode: NapoleonProfileMode,
   ) {
-    if (!isNapoleonBlockedAttemptQuestion(content)) return false;
+    const shouldAnswerFromBlockedAttempt =
+      isNapoleonBlockedAttemptQuestion(content) ||
+      (!lastNapoleonPresentation.proof &&
+        Boolean(lastNapoleonTurnFailure) &&
+        isNapoleonReviewRequirementQuestion(content));
+    if (!shouldAnswerFromBlockedAttempt) return false;
 
     const answer = formatNapoleonBlockedAttemptAnswer(lastNapoleonTurnFailure);
     emitEvent("napoleon_blocked_attempt_answered", {

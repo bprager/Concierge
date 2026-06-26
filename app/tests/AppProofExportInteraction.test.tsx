@@ -7043,6 +7043,35 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
     assert.equal(capabilitySignal.attributes.suggestedNextStep, "no_action");
     assert.equal(capabilitySignal.attributes.architectureArea, "governance_ux");
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/turn"));
+
+    const requestCountBeforeActingQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "Can I act on that?" } });
+    await waitFor(() => assert.equal(composer.value, "Can I act on that?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let blockedActionAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      blockedActionAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest blocked Napoleon attempt:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(blockedActionAnswer);
+    });
+    assert.ok(blockedActionAnswer);
+    const blockedActionAnswerText = blockedActionAnswer.textContent ?? "";
+    assert.ok(blockedActionAnswerText.includes("Failure reason: governance_no_go."));
+    assert.ok(blockedActionAnswerText.includes("Governance: no_go."));
+    assert.ok(blockedActionAnswerText.includes("Next step: Revise the request or keep it local; Napoleon governance did not allow forwarding."));
+    assert.ok(blockedActionAnswerText.includes("No Napoleon response was accepted; fail-closed local state only."));
+    assert.equal(blockedActionAnswerText.includes("Napoleon refused the unsafe external action."), false);
+    assert.equal(requestedUrls.length, requestCountBeforeActingQuestion);
+    const blockedActionAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+    assert.equal(blockedActionAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(blockedActionAnswerEvent?.attributes.failureReturned, true);
+    assert.equal(blockedActionAnswerEvent?.attributes.governanceReturned, true);
+    assert.equal(blockedActionAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(blockedActionAnswerEvent).includes("Can I act on that?"), false);
+    assert.equal(JSON.stringify(blockedActionAnswerEvent).includes("governance_no_go"), false);
   } finally {
     console.info = originalInfo;
     cleanup();
