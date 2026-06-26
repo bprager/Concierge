@@ -1536,6 +1536,7 @@ export function describeLastNapoleonTurnSummary(
         { label: "Handled by", value: "not returned" },
         { label: "Governance", value: "not returned" },
         { label: "Trace", value: "not returned" },
+        { label: "Audit", value: "not returned" },
         { label: "Blocked effects", value: "not returned" },
         { label: "Boundary", value: "not returned" },
         { label: "Attribution source", value: "not returned" },
@@ -1562,6 +1563,7 @@ export function describeLastNapoleonTurnSummary(
       { label: "Handled by", value: handledBy },
       { label: "Governance", value: governance },
       { label: "Trace", value: proofDetailValue(proof, "Trace") },
+      { label: "Audit", value: proofDetailValue(proof, "Audit") },
       { label: "Blocked effects", value: proofDetailValue(proof, "Blocked effects") },
       { label: "Boundary", value: proofDetailValue(proof, "Attribution boundary") },
       { label: "Attribution source", value: "accepted Napoleon bridge response proof" },
@@ -1616,6 +1618,10 @@ export function describeNapoleonTurnTimeline(
         {
           label: "Trace change",
           value: `${timelineDetailValue(successful, "Trace")} -> ${timelineDetailValue(blocked, "Trace")}`,
+        },
+        {
+          label: "Audit change",
+          value: `${timelineDetailValue(successful, "Audit")} -> ${timelineDetailValue(blocked, "Audit")}`,
         },
         {
           label: "Blocked effects now",

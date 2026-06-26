@@ -684,6 +684,7 @@ test("describes Napoleon turn timeline from latest proof and fail-closed metadat
   assert.equal(view.entries[0].status, "available");
   assert.equal(view.entries[0].summary, "Handled by Passive Brain; governance allow_prepare_only.");
   assert.ok(view.entries[0].details.some((detail) => detail.label === "Trace" && detail.value === "trace_turn_timeline"));
+  assert.ok(view.entries[0].details.some((detail) => detail.label === "Audit" && detail.value === contract.auditEnvelope.audit_id));
   assert.equal(view.entries[1].label, "Latest blocked attempt");
   assert.equal(view.entries[1].status, "blocked");
   assert.equal(view.entries[1].summary, "Blocked by contract_mismatch; governance not returned.");
@@ -710,6 +711,11 @@ test("describes Napoleon turn timeline from latest proof and fail-closed metadat
   assert.ok(
     view.comparison.some(
       (detail) => detail.label === "Trace change" && detail.value === "trace_turn_timeline -> trace_blocked_timeline",
+    ),
+  );
+  assert.ok(
+    view.comparison.some(
+      (detail) => detail.label === "Audit change" && detail.value === `${contract.auditEnvelope.audit_id} -> audit_blocked_timeline`,
     ),
   );
   assert.ok(

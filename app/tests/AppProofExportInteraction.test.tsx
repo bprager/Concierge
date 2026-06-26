@@ -9357,7 +9357,8 @@ test("shows active profile boundary when Napoleon response tries to drift profil
     assert.ok(within(turnTimeline).getByText("Why blocked"));
     assert.ok(within(turnTimeline).getByText("contract_mismatch; No Napoleon response was accepted; fail-closed local state only."));
     assert.ok(within(turnTimeline).getByText("Governance change"));
-    assert.ok(within(turnTimeline).getByText("not returned -> not returned"));
+    assert.ok(within(turnTimeline).getByText("Audit change"));
+    assert.ok(within(turnTimeline).getAllByText("not returned -> not returned").length >= 2);
     assert.ok(within(turnTimeline).getByText("Blocked effects now"));
     const responseFailed = telemetryPayloads.find((payload) => payload.event === "response_failed");
     assert.ok(responseFailed);
