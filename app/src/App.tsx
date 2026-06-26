@@ -441,7 +441,8 @@ function isNapoleonDelegationQuestion(content: string): boolean {
   const asksAboutNamedSelectedAgentReason = isNamedSelectedAgentReasonQuestion(content);
   const asksAboutContextualSelectedAgentReason =
     /\bwhy\s+(?:this|that|the)\s+(?:selected\s+)?agent\b/.test(lower) ||
-    /\bwhy\b.*\b(?:this|that|the)\s+(?:selected\s+)?agent\b.*\bselected\b/.test(lower);
+    /\bwhy\b.*\b(?:this|that|the)\s+(?:selected\s+)?agent\b.*\bselected\b/.test(lower) ||
+    /\bwhy\s+(?:this|that)\s+one\b/.test(lower);
   const asksAboutContextualSelectedAgentSource = /\bwho\s+(?:selected|chose|picked)\s+(?:it|that|this)\b/.test(lower);
   const asksAboutReturnedHandler =
     /\bwho\b.*\b(handled|answered)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
