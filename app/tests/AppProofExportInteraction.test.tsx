@@ -7614,6 +7614,34 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
     assert.equal(compactBlockedNextStepAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(compactBlockedNextStepAnswerEvent).includes("what now?"), false);
     assert.equal(JSON.stringify(compactBlockedNextStepAnswerEvent).includes("governance_no_go"), false);
+
+    const requestCountBeforeCompactWhyQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "why?" } });
+    await waitFor(() => assert.equal(composer.value, "why?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let compactBlockedWhyAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      compactBlockedWhyAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest blocked Napoleon attempt:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(compactBlockedWhyAnswer);
+    });
+    assert.ok(compactBlockedWhyAnswer);
+    const compactBlockedWhyAnswerText = compactBlockedWhyAnswer.textContent ?? "";
+    assert.ok(compactBlockedWhyAnswerText.includes("Failure reason: governance_no_go."));
+    assert.ok(compactBlockedWhyAnswerText.includes("Governance: no_go."));
+    assert.ok(compactBlockedWhyAnswerText.includes("No Napoleon response was accepted; fail-closed local state only."));
+    assert.equal(compactBlockedWhyAnswerText.includes("Napoleon refused the unsafe external action."), false);
+    assert.equal(requestedUrls.length, requestCountBeforeCompactWhyQuestion);
+    const compactBlockedWhyAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+    assert.equal(compactBlockedWhyAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactBlockedWhyAnswerEvent?.attributes.failureReturned, true);
+    assert.equal(compactBlockedWhyAnswerEvent?.attributes.governanceReturned, true);
+    assert.equal(compactBlockedWhyAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactBlockedWhyAnswerEvent).includes("why?"), false);
+    assert.equal(JSON.stringify(compactBlockedWhyAnswerEvent).includes("governance_no_go"), false);
   } finally {
     console.info = originalInfo;
     cleanup();

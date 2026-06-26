@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local compact blocked-attempt recovery follow-up handling for wording such as "why?", so Concierge explains the latest fail-closed Napoleon attempt from local metadata without another bridge request or raw follow-up telemetry.
 - Added local compact blocked-attempt next-step follow-up handling for wording such as "what now?", so Concierge answers from latest fail-closed Napoleon attempt metadata without another bridge request or raw follow-up telemetry.
 - Added local compact live-send readiness follow-up handling for wording such as "ready now?", so Concierge answers from local preflight without a bridge request, rehearsal preview, or raw follow-up telemetry.
 - Added local compact stale-proof recovery follow-up handling for wording such as "refresh?", so Concierge answers from sanitized proof clear state without another bridge request or raw follow-up/provenance telemetry.
