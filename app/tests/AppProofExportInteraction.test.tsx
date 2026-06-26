@@ -12480,6 +12480,9 @@ test("submits a taxonomy review draft through rendered governed controls", async
     await user.click(view.getByRole("button", { name: "Send taxonomy review to Napoleon review" }));
 
     await view.findByText("Napoleon accepted the taxonomy review packet for review.");
+    assert.ok(view.getByText("Reviewed taxonomy recommendations"));
+    assert.ok(view.getByText("Reviewed taxonomy focus"));
+    assert.ok(view.getAllByText(/taxonomy recommendation\(s\)$/).length >= 1);
     assert.ok(view.getByText(/decision_taxonomy_rendered/));
     assert.ok(view.getByText(/audit_taxonomy_rendered/));
     assert.ok(view.getByText("memory_write, agent_dispatch, external_send, approval_capture"));

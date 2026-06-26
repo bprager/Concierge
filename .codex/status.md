@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-06-25
+Last updated: 2026-06-26
 
 ## Current Project State
 
@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Preserved reviewed taxonomy recommendation count and focus in returned Chief of Staff taxonomy review results, so Napoleon review responses remain tied to the submitted taxonomy packet without local application or side effects.
 - Preserved reviewed capability focus in returned capability review packet results, so Napoleon review responses remain tied to the submitted capability and architecture area without local application or side effects.
 - Preserved the Napoleon descriptor readiness repair label in returned Chief of Staff steering review results, so descriptor repair drafts remain distinguishable after governed review while still showing no local application or side effects.
 - Added visible and exported Chief of Staff steering labels for Napoleon descriptor readiness repair drafts, so stale descriptor proposals are distinguishable from generic scored recommendations while still staying proposal-only and sanitized.

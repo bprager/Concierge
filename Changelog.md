@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added reviewed taxonomy recommendation count and focus metadata to returned Chief of Staff taxonomy review results, so governed review responses remain tied to the taxonomy packet that was submitted without applying edits locally.
 - Added reviewed capability focus metadata to returned capability review packet results, so governed review responses remain tied to the capability that was submitted without applying changes locally.
 - Added the `Napoleon descriptor readiness repair` label to returned Chief of Staff steering review results, so accepted or reviewed descriptor repair drafts remain distinguishable after Napoleon responds.
 - Added a visible and exported `Napoleon descriptor readiness repair` label to Chief of Staff steering drafts, so descriptor repair proposals are distinguishable from generic scored recommendations before any governed handoff.

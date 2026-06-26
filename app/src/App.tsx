@@ -269,6 +269,12 @@ type CapabilityReviewPacketSubmissionView = {
   reviewFocus: CapabilityReviewPacketFocus;
 };
 
+type TaxonomyReviewSubmissionView = {
+  result: ChiefOfStaffTaxonomyReviewSubmissionResult;
+  recommendationCount: number;
+  reviewFocus: string;
+};
+
 function deriveRuntimeValidationSource(input: {
   endpoint: string;
   descriptorMode: "discovered" | "live" | "missing" | "checksum_mismatch" | "stale";
@@ -1377,6 +1383,13 @@ function describeSteeringRecommendationDisplayType(draft: ReturnType<typeof draf
   return describeSteeringRecommendationType(draft);
 }
 
+function describeTaxonomyReviewFocus(draft: ChiefOfStaffTaxonomyReviewDraft): string {
+  const [firstRecommendation] = draft.recommendations;
+  if (!firstRecommendation) return "0 taxonomy recommendation(s)";
+  const target = firstRecommendation.targetLabel ? ` into ${firstRecommendation.targetLabel}` : "";
+  return `${firstRecommendation.action} ${firstRecommendation.dimension} ${firstRecommendation.sourceLabel}${target}`;
+}
+
 function stanceForProfile(profile: LocalProfile): { stance: string; reason: string; confidence: number } {
   if (profile === "child_protected") {
     return {
@@ -1566,7 +1579,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [taxonomyMergeTarget, setTaxonomyMergeTarget] = useState("");
   const [taxonomyReviewDraft, setTaxonomyReviewDraft] = useState<ChiefOfStaffTaxonomyReviewDraft | null>(null);
   const [taxonomyReviewSubmission, setTaxonomyReviewSubmission] =
-    useState<ChiefOfStaffTaxonomyReviewSubmissionResult | null>(null);
+    useState<TaxonomyReviewSubmissionView | null>(null);
   const [taxonomyReviewFailure, setTaxonomyReviewFailure] = useState<string | null>(null);
   const [observabilityTraceHandoffResult, setObservabilityTraceHandoffResult] =
     useState<ObservabilityTraceHandoffResult | null>(null);
@@ -4862,7 +4875,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         rehearsalMode,
         descriptorConnection: currentDescriptorInput(),
       });
-      setTaxonomyReviewSubmission(result);
+      setTaxonomyReviewSubmission({
+        result,
+        recommendationCount: taxonomyReviewDraft.recommendations.length,
+        reviewFocus: describeTaxonomyReviewFocus(taxonomyReviewDraft),
+      });
       setTaxonomyReviewFailure(null);
       refreshCapabilityLedgerStatus();
     } catch (error) {
@@ -5544,6 +5561,30 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         <div>
           <dt>Reviewed architecture area</dt>
           <dd>{submission.reviewFocus.architectureArea}</dd>
+        </div>
+        {describeGovernedReviewResponse(
+          submission.result,
+          "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
+        ).rows.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
+
+  function renderTaxonomyReviewResponse(submission: TaxonomyReviewSubmissionView) {
+    return (
+      <dl>
+        <div>
+          <dt>Reviewed taxonomy recommendations</dt>
+          <dd>{submission.recommendationCount} taxonomy recommendation(s)</dd>
+        </div>
+        <div>
+          <dt>Reviewed taxonomy focus</dt>
+          <dd>{submission.reviewFocus}</dd>
         </div>
         {describeGovernedReviewResponse(
           submission.result,
@@ -7637,12 +7678,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             Send taxonomy review to Napoleon review
           </button>
           {taxonomyReviewFailure ? <p className="warning">{taxonomyReviewFailure}</p> : null}
-          {taxonomyReviewSubmission
-            ? renderGovernedReviewResponse(
-                taxonomyReviewSubmission,
-                "not applied; no memory write; no approval captured; no agent dispatch; no external send.",
-              )
-            : null}
+          {taxonomyReviewSubmission ? renderTaxonomyReviewResponse(taxonomyReviewSubmission) : null}
         </section>
       ) : null}
 
