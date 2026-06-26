@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local compact blocked-attempt next-step follow-up coverage for wording such as "what now?", keeping recovery guidance tied to fail-closed Napoleon attempt metadata without another bridge request or raw follow-up telemetry.
 - Added local compact live-send readiness follow-up coverage for wording such as "ready now?", keeping answers tied to local preflight without a Napoleon request, rehearsal preview, or raw follow-up telemetry.
 - Added local compact stale-proof recovery follow-up coverage for wording such as "refresh?", keeping recovery guidance tied to sanitized proof clear state without another Napoleon request or raw follow-up/provenance telemetry.
 - Added local compact Napoleon proof-comparison follow-up coverage for wording such as "What changed?", keeping answers tied to sanitized same-session proof comparison metadata without another Napoleon request or raw follow-up/provenance telemetry.

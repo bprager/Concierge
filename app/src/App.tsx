@@ -683,7 +683,11 @@ function isNapoleonBlockedAttemptQuestion(content: string): boolean {
 
 function isNapoleonBlockedAttemptNextStepQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
+  const compact = lower.trim();
+  const asksCompactNextStep =
+    /^(?:what\s+now|now\s+what|what\s+next|next|next\s+step|next\s+move|next\s+action)\??$/.test(compact);
   const asksForNextStep =
+    asksCompactNextStep ||
     /\bwhat\b.*\b(should|can|may)\b.*\b(i|we)\b.*\b(do|try)\b.*\bnext\b/.test(lower) ||
     /\bwhat'?s\b.*\bnext\b/.test(lower) ||
     /\bnext\b.*\b(step|action|move)\b/.test(lower) ||
