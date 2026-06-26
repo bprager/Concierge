@@ -751,6 +751,7 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
     /\bwhat\b.*\bfix\b/.test(lower) ||
     /\bwhat\b.*\brepair\b/.test(lower);
   const asksOwner =
+    /^(?:owner|unblock|unblocker)\??$/.test(compact) ||
     /\bwho\b.*\b(owns?|should handle|fixes|repairs)\b/.test(lower) ||
     /\bwho\b.*\bshould\b.*\bfix\b/.test(lower) ||
     /\bwho\b.*\b(can|should|must|may)\b.*\b(unblock|clear|resolve)\b/.test(lower) ||
@@ -779,6 +780,7 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
       lower,
     ) || /\bhow\b.*\b(would|could|can|may)\b.*\b(it|that|this|request|turn|send)\b.*\bbe\b.*\ballow(?:ed)?\b/.test(lower);
   const asksPermanentBlock =
+    /^(?:forever|permanent|always|blocked\s+forever|permanently\s+blocked)\??$/.test(compact) ||
     /\b(is|was|will)\b.*\b(it|that|this|request|turn|send)\b.*\b(blocked|denied|stopped)\b.*\b(forever|permanent|always)\b/.test(
       lower,
     );
