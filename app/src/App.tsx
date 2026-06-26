@@ -472,7 +472,12 @@ function isNapoleonDelegationQuestion(content: string): boolean {
   const asksAboutReturnedProofReference =
     /\b(what|which)\b.*\b(trace|audit)\b.*\b(napoleon|returned|return)\b/.test(lower) ||
     /\bnapoleon\b.*\b(trace|audit)\b.*\b(returned|return)\b/.test(lower) ||
-    /\b(returned|return)\b.*\b(trace|audit)\b/.test(lower);
+    /\b(returned|return)\b.*\b(trace|audit)\b/.test(lower) ||
+    /\bwhere\b.*\b(that|this|it|answer|response|reply)\b.*\b(come|came)\s+from\b/.test(lower) ||
+    /\bwhat\b.*\bevidence\b.*\b(supports?|supported)\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
+    /\bwhich\b.*\b(source|sources|proof|evidence)\b.*\b(said|supports?|supported|returned)\b/.test(lower) ||
+    /\bshow\b.*\b(proof|evidence|source|sources|provenance)\b/.test(lower) ||
+    /\bwhere\b.*\b(proof|evidence|source|sources|provenance)\b.*\b(from|returned)\b/.test(lower);
   const asksAboutReturnedRecommendation =
     /\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
     /\bwhat\b.*\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||

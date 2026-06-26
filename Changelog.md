@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local returned-proof answers for natural source and evidence follow-ups such as "where did that come from?" and "what evidence supports that?", so Concierge shows the current returned trace, audit, proof alignment, and contribution proof without sending another bridge request or emitting raw follow-up/proof identifiers in telemetry.
 - Added case-tolerant local returned-proof answers for multi-word selected-agent follow-ups such as "what did research analyst find?" and "why was research analyst selected?", so Concierge filters to the named returned agent without sending another bridge request or emitting raw follow-up/provenance text in telemetry.
 - Added local returned-proof answers for natural Napoleon decision, authority-tier, approval-requirement, and rationale follow-ups such as "What decision did Napoleon return?", "What authority tier did Napoleon return?", "What approval requirement did Napoleon return?", and "What rationale did Napoleon return?", so Concierge restates returned governance proof without sending another bridge request or copying raw follow-up text into telemetry.
 - Added reviewed taxonomy recommendation count and focus metadata to returned Chief of Staff taxonomy review results, so governed review responses remain tied to the taxonomy packet that was submitted without applying edits locally.
