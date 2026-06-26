@@ -711,12 +711,17 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
 
 function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
+  const compact = lower.trim();
+  const asksCompactLiveReadiness =
+    /^(?:ready|ready\s+now|live|why\s+not\s+live|why\s+not\s+send|blocked|send)\??$/.test(compact) ||
+    /^(?:can|may|should)\s+(?:i|we)\s+(?:send|go\s+live|contact\s+napoleon)\s*(?:now)?\??$/.test(compact);
   const asksAboutSendButton =
     /\bsend button\b/.test(lower) ||
     /\blive send button\b/.test(lower) ||
     /\bsend control\b/.test(lower) ||
     /\bsend\b.*\b(disabled|blocked|unavailable|greyed|grayed)\b/.test(lower) ||
     /\b(disabled|blocked|unavailable|greyed|grayed)\b.*\bsend\b/.test(lower);
+  if (asksCompactLiveReadiness) return true;
   if (!lower.includes("napoleon") && !asksAboutSendButton) return false;
   const asksAboutSending =
     asksAboutSendButton ||

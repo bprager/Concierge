@@ -9098,6 +9098,37 @@ test("blocks rendered live send before fetch when endpoint changes without live 
     assert.ok(preflight.classList.contains("blocked"));
     assert.ok(within(preflight).getByText("Descriptor discovered"));
     assert.ok(within(preflight).getByText("No Napoleon Chief of Staff descriptor has been discovered."));
+    const requestCountBeforeCompactReadinessQuestion = requestedUrls.length;
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), { target: { value: "ready now?" } });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+    let compactReadinessAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      compactReadinessAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Napoleon live send readiness from local preflight:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(compactReadinessAnswer);
+    });
+    assert.ok(compactReadinessAnswer);
+    const compactReadinessAnswerText = compactReadinessAnswer.textContent ?? "";
+    assert.ok(compactReadinessAnswerText.includes("Live send: blocked."));
+    assert.ok(compactReadinessAnswerText.includes("Descriptor discovered: blocked. No Napoleon Chief of Staff descriptor has been discovered."));
+    assert.ok(
+      compactReadinessAnswerText.includes(
+        "This local answer did not contact Napoleon, approve, write memory, dispatch agents, capture approval, or send externally.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeCompactReadinessQuestion);
+    const compactReadinessTelemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const compactReadinessEvent = compactReadinessTelemetryBuffer.events
+      ?.filter((event) => event.event === "napoleon_live_send_readiness_answered")
+      .at(-1);
+    assert.equal(compactReadinessEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactReadinessEvent?.attributes.canAttemptLiveSend, false);
+    assert.equal(compactReadinessEvent?.attributes.descriptorState, "missing_descriptor");
+    assert.equal(compactReadinessEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactReadinessEvent).includes("ready now?"), false);
 
     const rehearsalCheckbox = view.getByLabelText("Rehearsal Mode") as HTMLInputElement;
     if (rehearsalCheckbox.checked) {
