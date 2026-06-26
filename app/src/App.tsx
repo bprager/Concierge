@@ -452,6 +452,7 @@ function isNapoleonDelegationQuestion(content: string): boolean {
       lower,
     );
   const asksAboutReturnedEffects =
+    /^(?:blocked|allowed|effects?|blocked\s+effects?|allowed\s+effects?)\??$/.test(lower.trim()) ||
     /\bwhat\b.*\b(blocked|allowed)\b/.test(lower) ||
     /\bwhat\b.*\bnapoleon\b.*\ballow(?:ed)?\b/.test(lower) ||
     /\bwhat\b.*\bnapoleon\b.*\bblock(?:ed)?\b/.test(lower) ||
@@ -786,7 +787,7 @@ function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   const compact = lower.trim();
   const asksCompactLiveReadiness =
-    /^(?:ready|ready\s+now|live|why\s+not\s+live|why\s+not\s+send|blocked|send)\??$/.test(compact) ||
+    /^(?:ready|ready\s+now|live|why\s+not\s+live|why\s+not\s+send|send)\??$/.test(compact) ||
     /^(?:can|may|should)\s+(?:i|we)\s+(?:send|go\s+live|contact\s+napoleon)\s*(?:now)?\??$/.test(compact);
   const asksAboutSendButton =
     /\bsend button\b/.test(lower) ||
