@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Added local Capability Intelligence support for direct "What capabilities are working?" wording, while keeping "not working" questions on the missing/blocked path.
+- Added broader typo tolerance for local Capability Intelligence questions such as "conversaton" and "capabilties", preserving proposal-only metadata answers.
 - Added local Capability Intelligence support for "What capabilities are working well?" wording, using the existing metadata-only working capability evidence without another Napoleon request or side effects.
 - Hardened repository authority-boundary validation for bracketed programmatic DOM click call/apply aliases such as `anchor["click"].call(...)` and `button["click"].apply(...)`, closing another hidden navigation or form-submit bypass path around the governed Napoleon bridge.
 - Added local compact side-effect follow-up coverage for wording such as "sent?", "memory?", "stored?", and "dispatched?", keeping answers tied to returned bridge proof without another Napoleon request, approval capture, memory write, agent dispatch, external send, or raw follow-up/provenance telemetry.

@@ -1009,13 +1009,25 @@ test("answers misspelled capability intelligence questions", () => {
   );
 
   const answer = answerCapabilityQuestion("What capabilites are missing but easy to evolve?", ledger);
+  const conversationTypoAnswer = answerCapabilityQuestion("What conversaton is most common?", ledger);
+  const capabilityTypoAnswer = answerCapabilityQuestion("What capabilties are missing but easy to evolve?", ledger);
 
   assert.ok(answer);
+  assert.ok(conversationTypoAnswer);
+  assert.ok(capabilityTypoAnswer);
   if (!answer) throw new Error("expected capability answer");
+  if (!conversationTypoAnswer) throw new Error("expected typo-tolerant conversation answer");
+  if (!capabilityTypoAnswer) throw new Error("expected typo-tolerant capability answer");
   assert.equal(answer.kind, "easy_to_evolve_missing_capabilities");
   assert.equal(answer.rows[0].label, "bridge_failure_handling");
   assert.equal(answer.boundary.proposalOnly, true);
   assert.equal(answer.boundary.externalSendAllowed, false);
+  assert.equal(conversationTypoAnswer.kind, "common_conversations");
+  assert.equal(conversationTypoAnswer.boundary.proposalOnly, true);
+  assert.equal(conversationTypoAnswer.boundary.externalSendAllowed, false);
+  assert.equal(capabilityTypoAnswer.kind, "easy_to_evolve_missing_capabilities");
+  assert.equal(capabilityTypoAnswer.rows[0].label, "bridge_failure_handling");
+  assert.equal(capabilityTypoAnswer.boundary.externalSendAllowed, false);
 });
 
 test("answers architecture improvement questions from missing safe request areas", () => {
