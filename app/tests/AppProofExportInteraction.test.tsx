@@ -6765,6 +6765,8 @@ test("clears Napoleon proof and delegation when descriptor connection state chan
       "Who handled that?",
       "Which capability handled that?",
       "Which agents were selected?",
+      "What did Napoleon recommend?",
+      "What did the Passive Brain find?",
     ]) {
       const requestCountBeforeClearedAttributionQuestion = requestedUrls.length;
       const delegationAnswerCountBeforeClearedAttributionQuestion = Array.from(
@@ -6800,6 +6802,8 @@ test("clears Napoleon proof and delegation when descriptor connection state chan
       );
       assert.equal(clearedAttributionAnswerText.includes("Handled by: Passive Brain."), false);
       assert.equal(clearedAttributionAnswerText.includes("Target capability: napoleon.chief_of_staff."), false);
+      assert.equal(clearedAttributionAnswerText.includes("Napoleon recommendation:"), false);
+      assert.equal(clearedAttributionAnswerText.includes("Selected-agent contribution:"), false);
       assert.equal(requestedUrls.length, requestCountBeforeClearedAttributionQuestion);
       const clearedAttributionEvent = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}").events
         ?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered")
