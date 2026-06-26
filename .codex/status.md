@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local compact side-effect follow-up handling for wording such as "sent?", "memory?", "stored?", and "dispatched?", so Concierge answers from current returned review proof without another bridge request, approval capture, memory write, agent dispatch, external send, or raw follow-up/provenance telemetry.
 - Added local compact approval-boundary follow-up handling for wording such as "approved?", so Concierge answers from current returned review proof without another bridge request, approval capture, or raw follow-up/provenance telemetry.
 - Added local compact blocked-attempt recovery follow-up handling for wording such as "why?", so Concierge explains the latest fail-closed Napoleon attempt from local metadata without another bridge request or raw follow-up telemetry.
 - Added local compact blocked-attempt next-step follow-up handling for wording such as "what now?", so Concierge answers from latest fail-closed Napoleon attempt metadata without another bridge request or raw follow-up telemetry.
