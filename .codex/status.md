@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened repository authority-boundary validation for bracketed programmatic DOM click call/apply aliases such as `anchor["click"].call(...)` and `button["click"].apply(...)`, so hidden navigation or form-submit side channels remain blocked around the governed Napoleon bridge.
 - Added local compact side-effect follow-up handling for wording such as "sent?", "memory?", "stored?", and "dispatched?", so Concierge answers from current returned review proof without another bridge request, approval capture, memory write, agent dispatch, external send, or raw follow-up/provenance telemetry.
 - Added local compact approval-actor follow-up handling for wording such as "who approved?", "who reviewed?", and "who authorized it?", so Concierge answers from current returned review proof without another bridge request, approval capture, or raw follow-up/provenance telemetry.
 - Added local compact approval-readiness follow-up handling for wording such as "who can approve?", "what approval is missing?", and "can I treat this as approved?", so Concierge answers from current returned review proof without another bridge request, approval capture, or raw follow-up/provenance telemetry.

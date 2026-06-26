@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened repository authority-boundary validation for bracketed programmatic DOM click call/apply aliases such as `anchor["click"].call(...)` and `button["click"].apply(...)`, closing another hidden navigation or form-submit bypass path around the governed Napoleon bridge.
 - Added local compact side-effect follow-up coverage for wording such as "sent?", "memory?", "stored?", and "dispatched?", keeping answers tied to returned bridge proof without another Napoleon request, approval capture, memory write, agent dispatch, external send, or raw follow-up/provenance telemetry.
 - Added local compact approval-actor follow-up coverage for wording such as "who approved?", "who reviewed?", and "who authorized it?", keeping review answers tied to returned bridge proof without another Napoleon request, approval capture, or raw follow-up/provenance telemetry.
 - Added local compact approval-readiness follow-up coverage for wording such as "who can approve?", "what approval is missing?", and "can I treat this as approved?", keeping answers tied to returned bridge proof without another Napoleon request, approval capture, or raw follow-up/provenance telemetry.

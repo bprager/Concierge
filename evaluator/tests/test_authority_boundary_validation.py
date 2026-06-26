@@ -965,6 +965,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             "downloadLink.click();",
             "submitButton.click();",
             'anchor["click"]();',
+            'anchor["click"].call(anchor);',
+            'submitButton["click"].apply(submitButton);',
             "HTMLAnchorElement.prototype.click.call(anchor);",
             "HTMLAnchorElement.prototype.click.apply(anchor);",
             "HTMLButtonElement.prototype.click.call(submitButton);",

@@ -489,6 +489,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bHTMLFormElement\.prototype\.(?:submit|requestSubmit)\.(?:call|apply)\s*\("),
     re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$]*\.click\s*\("),
     re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"]click['\"]\s*\]\s*\("),
+    re.compile(r"\b[A-Za-z_$][A-Za-z0-9_$]*\s*\[\s*['\"]click['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
     re.compile(r"\bHTML(?:Anchor|Button)Element\.prototype\.click\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.share\s*\("),
     re.compile(r"\b(?:navigator|window\.navigator)\.share\s*\?\.\s*\("),
