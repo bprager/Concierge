@@ -492,7 +492,8 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     ) ||
     /\bwhich\b.*\b(source|sources|proof|evidence)\b.*\b(said|supports?|supported|returned)\b/.test(lower) ||
     /\bshow\b.*\b(proof|evidence|source|sources|provenance)\b/.test(lower) ||
-    /\bwhere\b.*\b(proof|evidence|source|sources|provenance)\b.*\b(from|returned)\b/.test(lower);
+    /\bwhere\b.*\b(proof|evidence|source|sources|provenance)\b.*\b(from|returned)\b/.test(lower) ||
+    /^(?:proof|evidence|source|sources|provenance)\??$/.test(lower.trim());
   const asksAboutReturnedRecommendation =
     /\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
     /\bwhat\b.*\bnapoleon\b.*\b(recommend|recommended|recommends|recommendation)\b/.test(lower) ||
