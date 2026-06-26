@@ -1423,6 +1423,11 @@ export function describeNapoleonResponseProof(
       { label: "Governance", value: sanitizeVisibleProvenanceValue(response.governanceDecision.outcome) },
       { label: "Profile mode", value: sanitizeVisibleProvenanceValue(response.profileMode) },
       { label: "Decision", value: sanitizeVisibleProvenanceValue(response.governanceDecision.decision_id) },
+      { label: "Authority tier", value: sanitizeVisibleProvenanceValue(response.governanceDecision.authority_tier) },
+      {
+        label: "Approval requirement",
+        value: sanitizeVisibleProvenanceValue(response.governanceDecision.approval_requirement),
+      },
       { label: "Trace", value: sanitizeVisibleProvenanceValue(response.traceEnvelope.trace_id) },
       { label: "Audit", value: sanitizeVisibleProvenanceValue(response.auditEnvelope.audit_id) },
       { label: "Attribution boundary", value: "Returned bridge provenance only; not local authority." },

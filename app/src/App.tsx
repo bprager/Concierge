@@ -444,6 +444,14 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     /\bnapoleon\b.*\bdecision\b.*\b(returned|return)\b/.test(lower) ||
     /\b(returned|return)\b.*\bdecision\b/.test(lower) ||
     /\bwhat\b.*\bdid\b.*\bnapoleon\b.*\bdecide\b/.test(lower);
+  const asksAboutReturnedAuthority =
+    /\bwhat\b.*\bauthority\s+tier\b.*\b(napoleon|returned|return)\b/.test(lower) ||
+    /\bnapoleon\b.*\bauthority\s+tier\b.*\b(returned|return)\b/.test(lower) ||
+    /\b(returned|return)\b.*\bauthority\s+tier\b/.test(lower);
+  const asksAboutReturnedApprovalRequirement =
+    /\bwhat\b.*\bapproval\s+requirement\b.*\b(napoleon|returned|return)\b/.test(lower) ||
+    /\bnapoleon\b.*\bapproval\s+requirement\b.*\b(returned|return)\b/.test(lower) ||
+    /\b(returned|return)\b.*\bapproval\s+requirement\b/.test(lower);
   const asksAboutReturnedProofReference =
     /\b(what|which)\b.*\b(trace|audit)\b.*\b(napoleon|returned|return)\b/.test(lower) ||
     /\bnapoleon\b.*\b(trace|audit)\b.*\b(returned|return)\b/.test(lower) ||
@@ -468,6 +476,8 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     !asksAboutReturnedEffects &&
     !asksAboutReturnedGovernance &&
     !asksAboutReturnedDecision &&
+    !asksAboutReturnedAuthority &&
+    !asksAboutReturnedApprovalRequirement &&
     !asksAboutReturnedProofReference &&
     !asksAboutReturnedRecommendation &&
     !asksAboutReturnedSelectedAgents &&
@@ -481,6 +491,8 @@ function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutReturnedEffects ||
     asksAboutReturnedGovernance ||
     asksAboutReturnedDecision ||
+    asksAboutReturnedAuthority ||
+    asksAboutReturnedApprovalRequirement ||
     asksAboutReturnedProofReference ||
     asksAboutReturnedRecommendation ||
     asksAboutReturnedSelectedAgents ||
@@ -1081,6 +1093,8 @@ function formatNapoleonDelegationAnswer(
   const trace = detailValue(proof.details, "Trace");
   const audit = detailValue(proof.details, "Audit");
   const decision = detailValue(proof.details, "Decision");
+  const authorityTier = detailValue(proof.details, "Authority tier");
+  const approvalRequirement = detailValue(proof.details, "Approval requirement");
   const matchingSelectedAgentReasons = requestedSelectedAgentReasonName
     ? metadata.selectedAgentReasons.filter(
         (reason) =>
@@ -1125,6 +1139,8 @@ function formatNapoleonDelegationAnswer(
       `Blocked effects: ${blockedEffects}.`,
       `Governance: ${detailValue(proof.details, "Governance")}.`,
       `Decision: ${decision}.`,
+      `Authority tier: ${authorityTier}.`,
+      `Approval requirement: ${approvalRequirement}.`,
       `Trace: ${trace}. Audit: ${audit}.`,
       `Proof alignment: ${metadata.proofAlignment}.`,
       "This is local display of returned bridge provenance only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",

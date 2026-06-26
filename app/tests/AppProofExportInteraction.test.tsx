@@ -639,6 +639,64 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(decisionAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(decisionAnswerEvent).includes("What decision did Napoleon return?"), false);
     assert.equal(JSON.stringify(decisionAnswerEvent).includes("decision_"), false);
+    const requestCountBeforeAuthorityQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeAuthorityQuestion = Array.from(document.querySelectorAll("article.assistant")).filter(
+      (article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+    ).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What authority tier did Napoleon return?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let authorityAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeAuthorityQuestion + 1);
+      authorityAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(authorityAnswer);
+      assert.ok(authorityAnswer.textContent?.includes("Authority tier: advisory_review."));
+    });
+    assert.ok(authorityAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeAuthorityQuestion);
+    const authorityAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(authorityAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(authorityAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(authorityAnswerEvent).includes("What authority tier did Napoleon return?"), false);
+    assert.equal(JSON.stringify(authorityAnswerEvent).includes("advisory_review"), false);
+    const requestCountBeforeApprovalRequirementQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeApprovalRequirementQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What approval requirement did Napoleon return?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let approvalRequirementAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeApprovalRequirementQuestion + 1);
+      approvalRequirementAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(approvalRequirementAnswer);
+      assert.ok(
+        approvalRequirementAnswer.textContent?.includes(
+          "Approval requirement: chief_of_staff_and_owner_review.",
+        ),
+      );
+    });
+    assert.ok(approvalRequirementAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeApprovalRequirementQuestion);
+    const approvalRequirementAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(approvalRequirementAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(approvalRequirementAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(approvalRequirementAnswerEvent).includes("What approval requirement did Napoleon return?"), false);
+    assert.equal(JSON.stringify(approvalRequirementAnswerEvent).includes("chief_of_staff_and_owner_review"), false);
     const requestCountBeforeTraceAuditQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeTraceAuditQuestion = Array.from(
       document.querySelectorAll("article.assistant"),
