@@ -694,7 +694,7 @@ function isNapoleonProofCurrentnessQuestion(content: string): boolean {
 function isNapoleonProofComparisonQuestion(content: string): boolean {
   const compact = content.toLocaleLowerCase().trim();
   return (
-    /^(?:what\s+changed|what\s+is\s+different|what's\s+different|same\s+as\s+before|same\?|unchanged\?)\??$/.test(
+    /^(?:what\s+changed|changed|what\s+is\s+different|what's\s+different|different|same\s+as\s+before|same\?|unchanged\?)\??$/.test(
       compact,
     ) ||
     /^(?:did|does)\s+(?:that|this|it|the\s+proof)\s+(?:change|stay\s+the\s+same)\??$/.test(compact)
