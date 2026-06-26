@@ -7039,6 +7039,14 @@ test("clears Napoleon proof and delegation when descriptor discovery refreshes c
     assert.equal(within(delegationPanel).queryByText("napoleon.chief_of_staff"), null);
     assert.equal(within(delegationPanel).queryAllByText(/Refreshed descriptor-scoped prior context is relevant/).length, 0);
     assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
+    await assertClearedProofAttributionFollowups({
+      composer,
+      fireEvent,
+      getSendButton: () => view.getByRole("button", { name: "Send" }),
+      requestedUrls,
+      user,
+      waitFor,
+    });
 
     const requestCountBeforeLocalPreviews = requestedUrls.length;
     await user.click(view.getByRole("button", { name: "Shape sample response for voice" }));
@@ -7259,6 +7267,14 @@ for (const descriptorFailure of [
       assert.equal(view.container.textContent?.includes("stale_descriptor_secret"), false);
       assert.equal(view.container.textContent?.includes("Private descriptor timeout detail"), false);
       assert.equal(view.container.textContent?.includes("Private upstream descriptor outage"), false);
+      await assertClearedProofAttributionFollowups({
+        composer,
+        fireEvent,
+        getSendButton: () => view.getByRole("button", { name: "Send" }),
+        requestedUrls,
+        user,
+        waitFor,
+      });
     } finally {
       cleanup();
       dom.window.close();
