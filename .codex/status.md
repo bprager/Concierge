@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered stale-cleared proof coverage for recommendation and contribution follow-ups after profile, endpoint, bridge-token, and Rehearsal Mode resets, so Concierge refuses to reuse prior Napoleon attribution across those context changes.
 - Added rendered stale-cleared proof coverage for handler, capability, selected-agent, recommendation, and contribution follow-ups, so Concierge refuses to reuse prior Napoleon attribution after descriptor-scoped proof is cleared.
 - Added compact returned-proof next-step handling plus rendered Text Concierge coverage for each prompt variant "Now what?", "What next?", and "Next step?", so Concierge answers from current Napoleon proof with advisory next-step guidance without another bridge request, approval, side effects, or raw follow-up/provenance telemetry.
 - Added outcome-specific returned-proof next-step guidance for `allow_prepare_only`, `requires_review`, `deny`, and `no_go`, so Concierge can answer what should happen next with a proof-scoped advisory boundary instead of a generic review hint.

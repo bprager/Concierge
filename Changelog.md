@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered stale-cleared proof coverage for recommendation and contribution follow-ups after profile, endpoint, bridge-token, and Rehearsal Mode resets, proving Concierge refuses to reuse prior Napoleon attribution across those context changes.
 - Added rendered stale-cleared proof coverage for handler, capability, selected-agent, recommendation, and contribution follow-ups, proving Concierge refuses to reuse prior Napoleon attribution after descriptor-scoped proof is cleared.
 - Added compact local returned-proof next-step follow-ups such as "Now what?", "What next?", and "Next step?", with rendered Text Concierge coverage for each prompt proving answers stay tied to current Napoleon proof without another bridge request or side effects.
 - Added outcome-specific local returned-proof next-step guidance for `allow_prepare_only`, `requires_review`, `deny`, and `no_go` governance states, keeping the answer advisory and non-authorizing.

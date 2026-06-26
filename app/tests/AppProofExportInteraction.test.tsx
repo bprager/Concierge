@@ -177,6 +177,77 @@ function installDom() {
   return dom;
 }
 
+async function assertClearedProofAttributionFollowups({
+  composer,
+  fireEvent,
+  getSendButton,
+  requestedUrls,
+  user,
+  waitFor,
+}: {
+  composer: HTMLTextAreaElement;
+  fireEvent: { change: (element: Element, event?: {}) => boolean };
+  getSendButton: () => Element;
+  requestedUrls: string[];
+  user: { click: (element: Element) => Promise<unknown> };
+  waitFor: (callback: () => void) => Promise<unknown>;
+}) {
+  for (const clearedAttributionPrompt of [
+    "Who handled that?",
+    "Which capability handled that?",
+    "Which agents were selected?",
+    "What did Napoleon recommend?",
+    "What did the Passive Brain find?",
+  ]) {
+    const requestCountBeforeClearedAttributionQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeClearedAttributionQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(composer, { target: { value: clearedAttributionPrompt } });
+    await user.click(getSendButton());
+    let clearedAttributionAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("No returned Napoleon delegation proof is available in this session."),
+      );
+      assert.equal(
+        Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+          article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+        ).length,
+        delegationAnswerCountBeforeClearedAttributionQuestion,
+      );
+      clearedAttributionAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(clearedAttributionAnswer);
+    });
+    assert.ok(clearedAttributionAnswer);
+    const clearedAttributionAnswerText = clearedAttributionAnswer.textContent ?? "";
+    assert.ok(
+      clearedAttributionAnswerText.includes(
+        "Concierge will not name a handler, capability, or selected agent from local inference",
+      ),
+    );
+    assert.ok(
+      clearedAttributionAnswerText.includes(
+        "this local answer did not contact Napoleon, approve, write memory, dispatch agents, or send externally",
+      ),
+    );
+    assert.equal(clearedAttributionAnswerText.includes("Handled by: Passive Brain."), false);
+    assert.equal(clearedAttributionAnswerText.includes("Target capability: napoleon.chief_of_staff."), false);
+    assert.equal(clearedAttributionAnswerText.includes("Napoleon recommendation:"), false);
+    assert.equal(clearedAttributionAnswerText.includes("Selected-agent contribution:"), false);
+    assert.equal(requestedUrls.length, requestCountBeforeClearedAttributionQuestion);
+    const clearedAttributionEvent = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}").events
+      ?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered")
+      .at(-1);
+    assert.equal(clearedAttributionEvent?.attributes.localAnswerOnly, true);
+    assert.equal(clearedAttributionEvent?.attributes.proofReturned, false);
+    assert.equal(clearedAttributionEvent?.attributes.selectedAgentCount, 0);
+    assert.equal(clearedAttributionEvent?.attributes.targetCapabilityReturned, false);
+    assert.equal(clearedAttributionEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(clearedAttributionEvent).includes(clearedAttributionPrompt), false);
+  }
+}
+
 test("exports and compares Napoleon proof through rendered app controls", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, screen, waitFor, within }, userEventModule, { App }] = await Promise.all([
@@ -6260,6 +6331,14 @@ test("clears Napoleon proof and delegation when user profile changes", async () 
     assert.equal(view.queryByText("Last successful Napoleon proof"), null);
     assert.equal(within(delegationPanel).queryAllByText(/Passive Brain/).length, 0);
     assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
+    await assertClearedProofAttributionFollowups({
+      composer,
+      fireEvent,
+      getSendButton: () => view.getByRole("button", { name: "Send" }),
+      requestedUrls,
+      user,
+      waitFor,
+    });
   } finally {
     cleanup();
     dom.window.close();
@@ -6444,6 +6523,14 @@ test("clears Napoleon proof and delegation when bridge connection settings chang
     assert.equal(within(delegationPanel).queryByText("napoleon.chief_of_staff"), null);
     assert.equal(within(delegationPanel).queryAllByText(/Connection-scoped prior context is relevant/).length, 0);
     assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
+    await assertClearedProofAttributionFollowups({
+      composer,
+      fireEvent,
+      getSendButton: () => view.getByRole("button", { name: "Send" }),
+      requestedUrls,
+      user,
+      waitFor,
+    });
   } finally {
     cleanup();
     dom.window.close();
@@ -6568,6 +6655,14 @@ test("clears Napoleon proof and delegation when bridge token changes", async () 
     assert.equal(within(delegationPanel).queryByText("napoleon.chief_of_staff"), null);
     assert.equal(within(delegationPanel).queryAllByText(/Passive Brain: redacted/).length, 0);
     assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
+    await assertClearedProofAttributionFollowups({
+      composer,
+      fireEvent,
+      getSendButton: () => view.getByRole("button", { name: "Send" }),
+      requestedUrls,
+      user,
+      waitFor,
+    });
   } finally {
     cleanup();
     dom.window.close();
@@ -7283,6 +7378,16 @@ test("clears Napoleon proof and delegation when Rehearsal Mode is enabled", asyn
     assert.equal(view.queryByText("Last successful Napoleon proof"), null);
     assert.equal(within(delegationPanel).queryAllByText(/Passive Brain/).length, 0);
     assert.ok(within(delegationPanel).getAllByText("not returned").length > 0);
+    await user.click(rehearsalCheckbox);
+    await waitFor(() => assert.equal(rehearsalCheckbox.checked, false));
+    await assertClearedProofAttributionFollowups({
+      composer,
+      fireEvent,
+      getSendButton: () => view.getByRole("button", { name: "Send" }),
+      requestedUrls,
+      user,
+      waitFor,
+    });
   } finally {
     cleanup();
     dom.window.close();
