@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local compact Napoleon proof-comparison follow-up coverage for wording such as "What changed?", keeping answers tied to sanitized same-session proof comparison metadata without another Napoleon request or raw follow-up/provenance telemetry.
 - Added local compact proof-currentness follow-up coverage for wording such as "current?", keeping proof-state answers tied to returned bridge proof without another Napoleon request or raw follow-up/provenance telemetry.
 - Added local compact source/proof follow-up coverage for wording such as "Proof?", keeping answers tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.
 - Added local short source/proof follow-up coverage for wording such as "Where is that from?" and "Which agent picked it?", keeping answers tied to returned proof and avoiding another bridge request or raw follow-up/provenance telemetry.

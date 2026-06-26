@@ -2202,6 +2202,41 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.ok(proofComparisonPanel.getByText(lastTextTurnTraceId));
     assert.ok(proofComparisonPanel.getByText("agent_dispatch, approval_capture, external_send, memory_write"));
     assert.ok(proofComparisonPanel.getByText("Returned bridge provenance only; not local authority."));
+    const requestCountBeforeProofComparisonQuestion = requestedUrls.length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What changed?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let proofComparisonAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      proofComparisonAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest Napoleon proof comparison from local state:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(proofComparisonAnswer);
+      assert.ok(proofComparisonAnswer.textContent?.includes("Comparison status: unchanged."));
+      assert.ok(proofComparisonAnswer.textContent?.includes("Changed fields: 0."));
+      assert.ok(proofComparisonAnswer.textContent?.includes("Current handled by: Passive Brain."));
+      assert.ok(proofComparisonAnswer.textContent?.includes("Current governance: requires_review."));
+      assert.ok(proofComparisonAnswer.textContent?.includes(`Current trace: ${lastTextTurnTraceId}.`));
+      assert.ok(
+        proofComparisonAnswer.textContent?.includes(
+          "This is local display of sanitized proof comparison metadata only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+        ),
+      );
+    });
+    assert.ok(proofComparisonAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeProofComparisonQuestion);
+    const proofComparisonAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_proof_comparison_answered").at(-1);
+    assert.equal(proofComparisonAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(proofComparisonAnswerEvent?.attributes.comparisonStatus, "unchanged");
+    assert.equal(proofComparisonAnswerEvent?.attributes.changeCount, 0);
+    assert.equal(proofComparisonAnswerEvent?.attributes.reviewSummaryReturned, true);
+    assert.equal(proofComparisonAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(proofComparisonAnswerEvent).includes("What changed?"), false);
+    assert.equal(JSON.stringify(proofComparisonAnswerEvent).includes("Passive Brain"), false);
+    assert.equal(JSON.stringify(proofComparisonAnswerEvent).includes(lastTextTurnTraceId), false);
     assert.ok(requestedUrls.includes("http://127.0.0.1:8787/v1/concierge/turn"));
   } finally {
     cleanup();

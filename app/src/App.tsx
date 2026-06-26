@@ -647,6 +647,16 @@ function isNapoleonProofCurrentnessQuestion(content: string): boolean {
   return asksAboutProof && asksAboutCurrentness;
 }
 
+function isNapoleonProofComparisonQuestion(content: string): boolean {
+  const compact = content.toLocaleLowerCase().trim();
+  return (
+    /^(?:what\s+changed|what\s+is\s+different|what's\s+different|same\s+as\s+before|same\?|unchanged\?)\??$/.test(
+      compact,
+    ) ||
+    /^(?:did|does)\s+(?:that|this|it|the\s+proof)\s+(?:change|stay\s+the\s+same)\??$/.test(compact)
+  );
+}
+
 function isNapoleonBlockedAttemptQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   const asksAboutBlockedAttempt =
@@ -1356,6 +1366,57 @@ function formatNapoleonProofCurrentnessAnswer(
     blockedEffectCount: metadata.blockedEffects.length,
     traceReturned: trace !== "not returned" && trace !== "unavailable",
     auditReturned: audit !== "not returned" && audit !== "unavailable",
+  };
+}
+
+function formatNapoleonProofComparisonAnswer(comparison: NapoleonResponseProofComparison | null): {
+  content: string;
+  comparisonStatus: NapoleonResponseProofComparison["status"] | "not_available";
+  changeCount: number;
+  reviewSummaryReturned: boolean;
+} {
+  if (!comparison) {
+    return {
+      content: [
+        "Latest Napoleon proof comparison from local state:",
+        "Comparison status: not_available.",
+        "Changed fields: 0.",
+        "No Napoleon response proof comparison is available in this app session. Export the current Napoleon proof twice, or compare after the returned proof changes, before asking what changed.",
+        "This is local display of sanitized proof comparison metadata only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      ].join("\n\n"),
+      comparisonStatus: "not_available",
+      changeCount: 0,
+      reviewSummaryReturned: false,
+    };
+  }
+
+  const reviewSummary = comparison.reviewSummary
+    ? [
+        `Current handled by: ${comparison.reviewSummary.handledBy}.`,
+        `Current governance: ${comparison.reviewSummary.governance}.`,
+        `Current trace: ${comparison.reviewSummary.trace}.`,
+        `Current blocked effects: ${comparison.reviewSummary.blockedEffects}.`,
+        `Current boundary: ${comparison.reviewSummary.boundary}.`,
+        `Current proof alignment: ${comparison.reviewSummary.proofAlignment}.`,
+      ]
+    : ["Current proof review summary: not returned."];
+  const changedFields = comparison.changes.length
+    ? comparison.changes.map((change) => change.label).join(", ")
+    : "none.";
+
+  return {
+    content: [
+      "Latest Napoleon proof comparison from local state:",
+      `Comparison status: ${comparison.status}.`,
+      `Summary: ${comparison.summary}`,
+      `Changed fields: ${comparison.changes.length}.`,
+      `Changed field names: ${changedFields}`,
+      ...reviewSummary,
+      "This is local display of sanitized proof comparison metadata only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+    ].join("\n\n"),
+    comparisonStatus: comparison.status,
+    changeCount: comparison.changes.length,
+    reviewSummaryReturned: Boolean(comparison.reviewSummary),
   };
 }
 
@@ -3552,6 +3613,47 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     return true;
   }
 
+  function answerNapoleonProofComparisonQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isNapoleonProofComparisonQuestion(content)) return false;
+
+    const answer = formatNapoleonProofComparisonAnswer(napoleonProofComparison);
+    emitEvent("napoleon_proof_comparison_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      comparisonStatus: answer.comparisonStatus,
+      changeCount: answer.changeCount,
+      reviewSummaryReturned: answer.reviewSummaryReturned,
+      localAnswerOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerNapoleonRequiredActionQuestion(content: string, traceId: string, turnId: string, activeProfileMode: NapoleonProfileMode) {
     if (!isNapoleonRequiredActionQuestion(content)) return false;
 
@@ -3608,6 +3710,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
+    if (answerNapoleonProofComparisonQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
@@ -3820,6 +3923,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
+      if (answerNapoleonProofComparisonQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
