@@ -654,6 +654,22 @@ function isNapoleonBlockedAttemptNextStepQuestion(content: string): boolean {
   return asksForNextStep;
 }
 
+function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  const asksWhatHappened =
+    /\bwhat\b.*\bhappened\b/.test(lower) ||
+    /\bwhat\b.*\bwent\b.*\bwrong\b/.test(lower) ||
+    /\bwhy\b.*\bdid\b.*\bthat\b.*\bhappen\b/.test(lower);
+  const asksWhatToFix =
+    /\bwhat\b.*\b(needs?|has)\b.*\b(to be )?\b(fixed|repaired|resolved)\b/.test(lower) ||
+    /\bwhat\b.*\bfix\b/.test(lower) ||
+    /\bwhat\b.*\brepair\b/.test(lower);
+  const asksOwner =
+    /\bwho\b.*\b(owns?|should handle|fixes|repairs)\b/.test(lower) ||
+    /\bowner\b.*\b(fix|repair|blocker|failure)\b/.test(lower);
+  return asksWhatHappened || asksWhatToFix || asksOwner;
+}
+
 function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   const asksAboutSendButton =
@@ -1033,6 +1049,25 @@ function formatNapoleonLiveSendReadinessAnswer(input: {
   };
 }
 
+function describeBlockedAttemptFixOwner(failure: LastNapoleonTurnFailureInput): string {
+  const reason = failure.descriptorFailureReason ?? failure.reason;
+  if (reason === "auth_failure") return "local bridge-token settings or Napoleon descriptor authentication owner";
+  if (reason === "bridge_timeout") return "Napoleon service availability or descriptor endpoint owner";
+  if (reason === "http_failure") return "Napoleon endpoint routing or service owner";
+  if (
+    reason === "contract_mismatch" ||
+    reason === "descriptor_mismatch" ||
+    reason === "descriptor_signature_or_checksum_mismatch" ||
+    reason === "descriptor_invalid"
+  ) {
+    return "Napoleon bridge contract or descriptor publisher";
+  }
+  if (reason === "missing_descriptor" || reason === "no_descriptor") return "Napoleon descriptor publisher";
+  if (reason === "no_endpoint") return "local Concierge connection settings owner";
+  if (failure.governanceOutcome === "deny" || failure.governanceOutcome === "no_go") return "Napoleon governance review owner";
+  return "Concierge/Napoleon bridge operator";
+}
+
 function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInput | null): {
   content: string;
   failureReturned: boolean;
@@ -1072,6 +1107,7 @@ function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInpu
     ? failure.blockedEffects.map((effect) => sanitizeVisibleProvenanceValue(effect)).join(", ")
     : "not returned";
   const nextStep = sanitizeVisibleProvenanceValue(failure.nextStep);
+  const fixOwner = describeBlockedAttemptFixOwner(failure);
 
   return {
     content: [
@@ -1082,6 +1118,7 @@ function formatNapoleonBlockedAttemptAnswer(failure: LastNapoleonTurnFailureInpu
       `Audit: ${audit}.`,
       `Descriptor: ${descriptor}.`,
       `Blocked effects: ${blockedEffects}.`,
+      `Likely fix owner: ${fixOwner}.`,
       `Next step: ${nextStep}.`,
       "No Napoleon response was accepted; fail-closed local state only.",
       "This is local display of blocked-attempt metadata only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
@@ -3350,6 +3387,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const shouldAnswerFromBlockedAttempt =
       isNapoleonBlockedAttemptQuestion(content) ||
       (Boolean(lastNapoleonTurnFailure) && isNapoleonBlockedAttemptNextStepQuestion(content)) ||
+      (Boolean(lastNapoleonTurnFailure) && isNapoleonBlockedAttemptRecoveryQuestion(content)) ||
       (!lastNapoleonPresentation.proof &&
         Boolean(lastNapoleonTurnFailure) &&
         isNapoleonReviewRequirementQuestion(content));

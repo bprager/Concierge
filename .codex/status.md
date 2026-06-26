@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added blocked-attempt recovery handling for bridge failure follow-ups such as "What happened?", so descriptor timeout and related blocker answers use local failure metadata, include a conservative likely fix owner, and avoid another bridge request or raw follow-up telemetry.
 - Added blocked-attempt next-step handling after fail-closed Napoleon no-go or deny responses, so "What should I do next?" uses the latest blocked reason, governance, trace, audit, blocked effects, and next step without sending another bridge request or leaking the raw follow-up text into telemetry.
 - Added blocked-attempt handling for action/readiness follow-ups after fail-closed Napoleon no-go or deny responses, so "Can I act on that?" uses the latest blocked reason, governance, trace, audit, blocked effects, and next step without sending another bridge request or inventing accepted review proof.
 - Added authority tier, approval requirement, and rationale to local Napoleon review-readiness answers, so questions about whether the user can act or what reference to use include returned review context while telemetry records only safe booleans and false side-effect flags.

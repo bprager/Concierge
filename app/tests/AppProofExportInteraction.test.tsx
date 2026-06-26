@@ -8944,6 +8944,34 @@ test("blocks rendered live send before fetch when descriptor discovery times out
       false,
     );
     assert.equal(view.container.textContent?.includes("Private descriptor timeout detail"), false);
+
+    const requestCountBeforeWhatHappened = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "What happened?" } });
+    await waitFor(() => assert.equal(composer.value, "What happened?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let blockedAttemptAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      blockedAttemptAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest blocked Napoleon attempt:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(blockedAttemptAnswer);
+    });
+    assert.ok(blockedAttemptAnswer);
+    const blockedAttemptAnswerText = blockedAttemptAnswer.textContent ?? "";
+    assert.ok(blockedAttemptAnswerText.includes("Failure reason: bridge_timeout."));
+    assert.ok(
+      blockedAttemptAnswerText.includes("Likely fix owner: Napoleon service availability or descriptor endpoint owner."),
+    );
+    assert.ok(blockedAttemptAnswerText.includes("No Napoleon response was accepted; fail-closed local state only."));
+    assert.equal(requestedUrls.length, requestCountBeforeWhatHappened);
+    const blockedAttemptAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.failureReturned, true);
+    assert.equal(blockedAttemptAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(blockedAttemptAnswerEvent).includes("What happened?"), false);
+    assert.equal(JSON.stringify(blockedAttemptAnswerEvent).includes("bridge_timeout"), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();
