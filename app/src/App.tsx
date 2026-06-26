@@ -737,7 +737,12 @@ function isNapoleonBlockedAttemptRecoveryQuestion(content: string): boolean {
     /\bwho\b.*\b(owns?|should handle|fixes|repairs)\b/.test(lower) ||
     /\bwho\b.*\bshould\b.*\bfix\b/.test(lower) ||
     /\bowner\b.*\b(fix|repair|blocker|failure)\b/.test(lower);
-  return asksWhatHappened || asksWhatToFix || asksOwner;
+  const asksOverrideBoundary =
+    /^(?:can|may|should)\s+(?:i|we|concierge|napoleon)\s+override\s+(?:it|that|this|the\s+(?:block|blocker|decision|failure|no-go|no\s+go))\??$/.test(
+      compact,
+    ) ||
+    /\boverride\b.*\b(block|blocker|decision|failure|no-go|no go|denial|deny|denied)\b/.test(lower);
+  return asksWhatHappened || asksWhatToFix || asksOwner || asksOverrideBoundary;
 }
 
 function isNapoleonLiveSendReadinessQuestion(content: string): boolean {

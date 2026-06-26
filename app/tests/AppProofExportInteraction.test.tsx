@@ -7722,6 +7722,35 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
     assert.equal(JSON.stringify(blockedActionAnswerEvent).includes("Can I act on that?"), false);
     assert.equal(JSON.stringify(blockedActionAnswerEvent).includes("governance_no_go"), false);
 
+    const requestCountBeforeOverrideQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "can I override it?" } });
+    await waitFor(() => assert.equal(composer.value, "can I override it?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let blockedOverrideAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      blockedOverrideAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest blocked Napoleon attempt:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(blockedOverrideAnswer);
+    });
+    assert.ok(blockedOverrideAnswer);
+    const blockedOverrideAnswerText = blockedOverrideAnswer.textContent ?? "";
+    assert.ok(blockedOverrideAnswerText.includes("Failure reason: governance_no_go."));
+    assert.ok(blockedOverrideAnswerText.includes("Governance: no_go."));
+    assert.ok(blockedOverrideAnswerText.includes("Next step: Revise the request or keep it local; Napoleon governance did not allow forwarding."));
+    assert.ok(blockedOverrideAnswerText.includes("No Napoleon response was accepted; fail-closed local state only."));
+    assert.equal(blockedOverrideAnswerText.includes("Napoleon refused the unsafe external action."), false);
+    assert.equal(requestedUrls.length, requestCountBeforeOverrideQuestion);
+    const blockedOverrideAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+    assert.equal(blockedOverrideAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(blockedOverrideAnswerEvent?.attributes.failureReturned, true);
+    assert.equal(blockedOverrideAnswerEvent?.attributes.governanceReturned, true);
+    assert.equal(blockedOverrideAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(blockedOverrideAnswerEvent).includes("can I override it?"), false);
+    assert.equal(JSON.stringify(blockedOverrideAnswerEvent).includes("governance_no_go"), false);
+
     const requestCountBeforeNextStepQuestion = requestedUrls.length;
     fireEvent.change(composer, { target: { value: "What should I do next?" } });
     await waitFor(() => assert.equal(composer.value, "What should I do next?"));
