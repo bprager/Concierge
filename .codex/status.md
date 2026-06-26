@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added blocked-attempt next-step handling after fail-closed Napoleon no-go or deny responses, so "What should I do next?" uses the latest blocked reason, governance, trace, audit, blocked effects, and next step without sending another bridge request or leaking the raw follow-up text into telemetry.
 - Added blocked-attempt handling for action/readiness follow-ups after fail-closed Napoleon no-go or deny responses, so "Can I act on that?" uses the latest blocked reason, governance, trace, audit, blocked effects, and next step without sending another bridge request or inventing accepted review proof.
 - Added authority tier, approval requirement, and rationale to local Napoleon review-readiness answers, so questions about whether the user can act or what reference to use include returned review context while telemetry records only safe booleans and false side-effect flags.
 - Preserved returned audit references in the fail-closed Napoleon delegation panel, local blocked-attempt answers, and latest-turn timeline, so denied or blocked bridge attempts show failure reason, governance state, trace, audit, blocked effects, and next step, while the timeline also compares accepted and blocked audit references without inventing selected-agent attribution or sending another bridge request.

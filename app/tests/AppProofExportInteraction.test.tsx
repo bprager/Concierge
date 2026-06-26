@@ -7072,6 +7072,32 @@ test("shows fail-closed transcript metadata when Napoleon returns no-go", async 
     assert.equal(blockedActionAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(blockedActionAnswerEvent).includes("Can I act on that?"), false);
     assert.equal(JSON.stringify(blockedActionAnswerEvent).includes("governance_no_go"), false);
+
+    const requestCountBeforeNextStepQuestion = requestedUrls.length;
+    fireEvent.change(composer, { target: { value: "What should I do next?" } });
+    await waitFor(() => assert.equal(composer.value, "What should I do next?"));
+    await user.click(view.getByRole("button", { name: "Send" }));
+    let blockedNextStepAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      blockedNextStepAnswer = Array.from(document.querySelectorAll("article.assistant"))
+        .filter((article) => article.textContent?.includes("Latest blocked Napoleon attempt:"))
+        .at(-1) as HTMLElement | undefined;
+      assert.ok(blockedNextStepAnswer);
+    });
+    assert.ok(blockedNextStepAnswer);
+    const blockedNextStepAnswerText = blockedNextStepAnswer.textContent ?? "";
+    assert.ok(blockedNextStepAnswerText.includes("Next step: Revise the request or keep it local; Napoleon governance did not allow forwarding."));
+    assert.ok(blockedNextStepAnswerText.includes("No Napoleon response was accepted; fail-closed local state only."));
+    assert.equal(blockedNextStepAnswerText.includes("Napoleon refused the unsafe external action."), false);
+    assert.equal(requestedUrls.length, requestCountBeforeNextStepQuestion);
+    const blockedNextStepAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_blocked_attempt_answered").at(-1);
+    assert.equal(blockedNextStepAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(blockedNextStepAnswerEvent?.attributes.failureReturned, true);
+    assert.equal(blockedNextStepAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(blockedNextStepAnswerEvent).includes("What should I do next?"), false);
+    assert.equal(JSON.stringify(blockedNextStepAnswerEvent).includes("governance_no_go"), false);
   } finally {
     console.info = originalInfo;
     cleanup();

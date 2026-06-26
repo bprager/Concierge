@@ -644,6 +644,16 @@ function isNapoleonBlockedAttemptQuestion(content: string): boolean {
   return asksAboutBlockedAttempt || asksAboutNapoleonBlockedAttempt;
 }
 
+function isNapoleonBlockedAttemptNextStepQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  const asksForNextStep =
+    /\bwhat\b.*\b(should|can|may)\b.*\b(i|we)\b.*\b(do|try)\b.*\bnext\b/.test(lower) ||
+    /\bwhat'?s\b.*\bnext\b/.test(lower) ||
+    /\bnext\b.*\b(step|action|move)\b/.test(lower) ||
+    /\bhow\b.*\b(do|can|should)\b.*\b(i|we)\b.*\b(fix|resolve|recover|proceed)\b/.test(lower);
+  return asksForNextStep;
+}
+
 function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   const asksAboutSendButton =
@@ -3339,6 +3349,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   ) {
     const shouldAnswerFromBlockedAttempt =
       isNapoleonBlockedAttemptQuestion(content) ||
+      (Boolean(lastNapoleonTurnFailure) && isNapoleonBlockedAttemptNextStepQuestion(content)) ||
       (!lastNapoleonPresentation.proof &&
         Boolean(lastNapoleonTurnFailure) &&
         isNapoleonReviewRequirementQuestion(content));
