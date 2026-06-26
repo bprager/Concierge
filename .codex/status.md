@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local returned-proof handling for next-action follow-ups such as "What should happen next?", "What should I do next?", and "What is the next step?", so Concierge answers from current Napoleon proof with review-boundary guidance without another bridge request, approval, side effects, or raw follow-up/provenance telemetry.
 - Added local returned-proof handling for outcome follow-ups such as "What happened next?", "What happens now?", and "What was the outcome?", so Concierge answers from current Napoleon proof without another bridge request, side effects, or raw follow-up/provenance telemetry.
 - Added local returned-proof handling for "Who responded?" and "Who replied?", so Concierge answers from current Napoleon proof without another bridge request, side effects, or raw follow-up/provenance telemetry.
 - Added direct local Capability Intelligence handling for "What capabilities are working?" while keeping "not working" questions classified as missing or blocked, using sanitized local metadata only.

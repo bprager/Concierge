@@ -551,6 +551,12 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhat\b.*\b(?:happened|happens)\b.*\b(?:next|now)\b/.test(lower) ||
     /\bwhat\b.*\bhappened\b.*\bafter\b.*\b(that|this|it|answer|response|reply)\b/.test(lower) ||
     /\bwhat\b.*\b(?:outcome|result)\b.*\b(?:napoleon|returned|that|this|it|answer|response|reply)\b/.test(lower);
+  const asksAboutReturnedNextAction =
+    /^(?:what\s+should\s+happen\s+next|what\s+should\s+i\s+do\s+next|what\s+is\s+the\s+next\s+step)\??$/.test(
+      compact,
+    ) ||
+    /\bwhat\b.*\bshould\b.*\b(happen|do)\b.*\bnext\b/.test(lower) ||
+    /\bwhat\b.*\bnext\s+step\b/.test(lower);
   if (
     !lower.includes("napoleon") &&
     !asksAboutReturnedHandler &&
@@ -565,6 +571,7 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
     !asksAboutReturnedContribution &&
     !asksAboutReturnedSelectedAgents &&
     !asksAboutReturnedOutcome &&
+    !asksAboutReturnedNextAction &&
     !asksAboutNamedSelectedAgentContribution &&
     !asksAboutNamedSelectedAgentReason &&
     !asksAboutContextualSelectedAgentReason &&
@@ -586,6 +593,7 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
     asksAboutReturnedContribution ||
     asksAboutReturnedSelectedAgents ||
     asksAboutReturnedOutcome ||
+    asksAboutReturnedNextAction ||
     asksAboutNamedSelectedAgentContribution ||
     asksAboutNamedSelectedAgentReason ||
     asksAboutContextualSelectedAgentReason ||
@@ -1359,6 +1367,11 @@ function formatNapoleonDelegationAnswer(
   const blockedEffects = metadata.blockedEffects.length ? metadata.blockedEffects.join(", ") : "not returned";
   const targetCapability = metadata.targetCapability || "not returned";
   const selectedAgents = metadata.selectedAgents.length ? metadata.selectedAgents.join(", ") : "not returned";
+  const governance = detailValue(proof.details, "Governance");
+  const nextStep =
+    governance === "requires_review" || governance === "deny" || governance === "no_go"
+      ? "Review the returned Napoleon governance state and blocked effects before treating this as actionable."
+      : "No returned review requirement is visible in the latest accepted proof, but this is still not local approval.";
   const recommendation =
     metadata.recommendation && metadata.recommendation !== "unavailable" ? metadata.recommendation : "not returned";
   const matchingSelectedAgentContributions = requestedSelectedAgentName
@@ -1385,11 +1398,12 @@ function formatNapoleonDelegationAnswer(
       `Why selected: ${whySelected}.`,
       `Allowed effects: ${allowedEffects}.`,
       `Blocked effects: ${blockedEffects}.`,
-      `Governance: ${detailValue(proof.details, "Governance")}.`,
+      `Governance: ${governance}.`,
       `Decision: ${decision}.`,
       `Authority tier: ${authorityTier}.`,
       `Approval requirement: ${approvalRequirement}.`,
       `Rationale: ${rationale}.`,
+      `Next step: ${nextStep}`,
       `Trace: ${trace}. Audit: ${audit}.`,
       `Proof alignment: ${metadata.proofAlignment}.`,
       "This is local display of returned bridge provenance only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local returned-proof support for next-action follow-ups such as "What should happen next?", "What should I do next?", and "What is the next step?", keeping review guidance tied to current Napoleon proof without another bridge request or side effects.
 - Added local returned-proof support for outcome follow-ups such as "What happened next?", "What happens now?", and "What was the outcome?", keeping answers tied to current Napoleon proof without another bridge request or side effects.
 - Added local returned-proof support for "Who responded?" and "Who replied?" wording, keeping handler answers tied to current Napoleon proof without another bridge request or side effects.
 - Added local Capability Intelligence support for direct "What capabilities are working?" wording, while keeping "not working" questions on the missing/blocked path.
