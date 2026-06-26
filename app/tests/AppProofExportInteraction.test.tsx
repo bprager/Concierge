@@ -1610,6 +1610,38 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(compactFindingsAnswerEvent).includes("findings?"), false);
     assert.equal(JSON.stringify(compactFindingsAnswerEvent).includes("Passive Brain"), false);
     assert.equal(JSON.stringify(compactFindingsAnswerEvent).includes("bridge context"), false);
+    const requestCountBeforeContextualFindingsQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeContextualFindingsQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What did it find?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let contextualFindingsAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeContextualFindingsQuestion + 1);
+      contextualFindingsAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(contextualFindingsAnswer);
+      assert.ok(contextualFindingsAnswer.textContent?.includes("Selected-agent contribution: Passive Brain: bridge context."));
+    });
+    assert.ok(contextualFindingsAnswer);
+    const contextualFindingsAnswerText = contextualFindingsAnswer.textContent ?? "";
+    assert.ok(contextualFindingsAnswerText.includes("Handled by: Passive Brain."));
+    assert.equal(requestedUrls.length, requestCountBeforeContextualFindingsQuestion);
+    const contextualFindingsAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(contextualFindingsAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(contextualFindingsAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(contextualFindingsAnswerEvent?.attributes.selectedAgentContributionCount, 1);
+    assert.equal(contextualFindingsAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(contextualFindingsAnswerEvent).includes("What did it find?"), false);
+    assert.equal(JSON.stringify(contextualFindingsAnswerEvent).includes("Passive Brain"), false);
+    assert.equal(JSON.stringify(contextualFindingsAnswerEvent).includes("bridge context"), false);
     const requestCountBeforeMismatchedAgentQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeMismatchedAgentQuestion = Array.from(document.querySelectorAll("article.assistant"))
       .filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
