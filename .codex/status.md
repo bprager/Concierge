@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added direct local Capability Intelligence handling for "What capabilities are working?" while keeping "not working" questions classified as missing or blocked, using sanitized local metadata only.
 - Added local Capability Intelligence handling for "What capabilities are working well?" so Concierge reports working capability evidence from sanitized local metadata without another Napoleon request, approval capture, memory write, agent dispatch, external send, or local application.
 - Hardened repository authority-boundary validation for bracketed programmatic DOM click call/apply aliases such as `anchor["click"].call(...)` and `button["click"].apply(...)`, so hidden navigation or form-submit side channels remain blocked around the governed Napoleon bridge.
 - Added local compact side-effect follow-up handling for wording such as "sent?", "memory?", "stored?", and "dispatched?", so Concierge answers from current returned review proof without another bridge request, approval capture, memory write, agent dispatch, external send, or raw follow-up/provenance telemetry.

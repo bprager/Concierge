@@ -152,7 +152,7 @@ User value: The user can ask Concierge where it is useful, where it is failing, 
 
 Acceptance criteria:
 
-- Concierge can answer common, working-well conversation or capability, missing/blocked, easy-to-evolve, architecture-area, recommended-next, steering recommendation type, increasing, worsening, recent, weekly-change, and seasonal-change capability questions from local aggregate signals, including common misspellings of conversation, capability, and implemented in those questions.
+- Concierge can answer common, working or working-well conversation/capability, missing/blocked, easy-to-evolve, architecture-area, recommended-next, steering recommendation type, increasing, worsening, recent, weekly-change, and seasonal-change capability questions from local aggregate signals, including common misspellings of conversation, capability, and implemented in those questions.
 - Easy-to-evolve and recommended-next answers use deterministic local ranking from count, confidence, capability status, architecture area, and suggested next step; recommended-next answers can separate stale, missing, or not-timestamped descriptor readiness repair from deeper architecture work without granting live-send authority.
 - Recommended-next answers can propose a guided Media Session readiness repair flow from fixed local microphone, camera, and playback blocker details without treating ordinary correctly blocked unsafe requests as implementation recommendations.
 - Answers include counts or evidence strength, confidence, architecture area, and key caveats.
