@@ -563,8 +563,10 @@ function isNapoleonReviewRequirementQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   const compact = lower.trim();
   const asksCompactApprovalBoundary =
-    /^(?:approved|approval|authorized|reviewed|allowed|safe)\??$/.test(compact) ||
-    /^(?:did\s+(?:it|that|this)\s+)?(?:get\s+)?(?:approved|authorized|reviewed|allowed)\??$/.test(compact);
+    /^(?:approved|approval|authorized|reviewed|safe)\??$/.test(compact) ||
+    /^(?:did\s+(?:it|that|this)\s+)?(?:get\s+)?(?:approved|authorized|reviewed)\??$/.test(compact) ||
+    /^(?:did\s+(?:it|that|this)\s+)(?:get\s+)?allowed\??$/.test(compact) ||
+    /^get\s+allowed\??$/.test(compact);
   const asksCompactSideEffectBoundary =
     /^(?:sent|send|sent\s+out|stored|saved|memory|remembered|dispatched|dispatch)\??$/.test(compact) ||
     /^(?:write|wrote|store|stored|save|saved)\s+memory\??$/.test(compact);

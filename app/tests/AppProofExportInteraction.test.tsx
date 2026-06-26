@@ -1508,6 +1508,75 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(compactBlockedEffectsAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(compactBlockedEffectsAnswerEvent).includes("blocked?"), false);
     assert.equal(JSON.stringify(compactBlockedEffectsAnswerEvent).includes("memory_write"), false);
+    const requestCountBeforeCompactAllowedEffectsQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCompactAllowedEffectsQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "allowed?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactAllowedEffectsAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCompactAllowedEffectsQuestion + 1);
+      compactAllowedEffectsAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactAllowedEffectsAnswer);
+      assert.ok(compactAllowedEffectsAnswer.textContent?.includes("Allowed effects: prepare_advisory_response."));
+    });
+    assert.ok(compactAllowedEffectsAnswer);
+    const compactAllowedEffectsAnswerText = compactAllowedEffectsAnswer.textContent ?? "";
+    assert.ok(
+      compactAllowedEffectsAnswerText.includes(
+        "Blocked effects: memory_write, approval_capture, external_send, agent_dispatch.",
+      ),
+    );
+    assert.equal(requestedUrls.length, requestCountBeforeCompactAllowedEffectsQuestion);
+    const compactAllowedEffectsAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(compactAllowedEffectsAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactAllowedEffectsAnswerEvent?.attributes.allowedEffectCount, 1);
+    assert.equal(compactAllowedEffectsAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactAllowedEffectsAnswerEvent).includes("allowed?"), false);
+    assert.equal(JSON.stringify(compactAllowedEffectsAnswerEvent).includes("prepare_advisory_response"), false);
+    const requestCountBeforeCompactEffectsQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCompactEffectsQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "effects?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactEffectsAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCompactEffectsQuestion + 1);
+      compactEffectsAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactEffectsAnswer);
+      assert.ok(compactEffectsAnswer.textContent?.includes("Allowed effects: prepare_advisory_response."));
+      assert.ok(
+        compactEffectsAnswer.textContent?.includes(
+          "Blocked effects: memory_write, approval_capture, external_send, agent_dispatch.",
+        ),
+      );
+    });
+    assert.ok(compactEffectsAnswer);
+    assert.equal(requestedUrls.length, requestCountBeforeCompactEffectsQuestion);
+    const compactEffectsAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(compactEffectsAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactEffectsAnswerEvent?.attributes.allowedEffectCount, 1);
+    assert.equal(compactEffectsAnswerEvent?.attributes.blockedEffectCount, 4);
+    assert.equal(compactEffectsAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactEffectsAnswerEvent).includes("effects?"), false);
+    assert.equal(JSON.stringify(compactEffectsAnswerEvent).includes("memory_write"), false);
+    assert.equal(JSON.stringify(compactEffectsAnswerEvent).includes("prepare_advisory_response"), false);
 
     const requestCountBeforeNaturalNapoleonBlockedEffectsQuestion = requestedUrls.length;
     fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
