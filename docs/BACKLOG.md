@@ -432,6 +432,7 @@ Acceptance criteria:
 - An explicit microphone permission action emits `mic_permission_requested` and `mic_permission_result`.
 - If permission is granted, Concierge immediately stops the permission stream and still reports voice capture as stopped until voice mode is implemented.
 - Text Concierge shows a live voice readiness gate that lists microphone, descriptor, runtime-proof, Rehearsal Mode, and voice-pipeline blockers.
+- Text Concierge can answer live voice readiness questions such as "Why can't live voice start?" from the same local gate, without starting capture or playback, contacting Napoleon, writing memory, capturing approval, dispatching agents, sending externally, or retaining raw question text in telemetry.
 - Descriptor failures in the live voice readiness gate show one next local repair action, while keeping live voice blocked and non-authorizing.
 - Missing real Napoleon runtime proof is a live voice blocker, not a warning state; a sanitized accepted real-runtime readiness proof may satisfy the runtime-proof row as local review context only.
 - The live voice readiness gate remains blocked even when microphone permission is granted until the governed voice pipeline exists.

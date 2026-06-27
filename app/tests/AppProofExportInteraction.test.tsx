@@ -18956,6 +18956,71 @@ test("keeps voice capture blocked until explicit microphone permission is grante
   }
 });
 
+test("answers live voice readiness questions locally without starting voice", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
+  console.info = (...args: unknown[]) => {
+    if (args[0] === "[concierge.telemetry]" && typeof args[1] === "object" && args[1]) {
+      telemetryPayloads.push(args[1] as { event: string; attributes: Record<string, unknown> });
+    }
+  };
+  let permissionRequests = 0;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+
+  try {
+    const view = render(<App />);
+
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Why can't live voice start?" } });
+    await waitFor(() => assert.equal(composer.value, "Why can't live voice start?"));
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await waitFor(() => assert.ok(document.body.textContent?.includes("Live voice readiness from local preflight:")));
+    assert.ok(document.body.textContent?.includes("Live voice: blocked."));
+    assert.ok(document.body.textContent?.includes("Live voice is blocked because the governed voice pipeline is not implemented."));
+    assert.ok(document.body.textContent?.includes("Voice pipeline: blocked."));
+    assert.ok(document.body.textContent?.includes("not Napoleon approval"));
+    assert.ok(document.body.textContent?.includes("not microphone consent"));
+    assert.ok(document.body.textContent?.includes("not a live voice start command"));
+    assert.equal(permissionRequests, 0);
+
+    const answerEvent = telemetryPayloads.find((payload) => payload.event === "live_voice_readiness_answered");
+    assert.ok(answerEvent);
+    assert.equal(answerEvent.attributes.localAnswerOnly, true);
+    assert.equal(answerEvent.attributes.canStartLiveVoice, false);
+    assert.equal(answerEvent.attributes.voicePipelineImplemented, false);
+    assert.equal(answerEvent.attributes.microphoneCaptureStarted, false);
+    assert.equal(answerEvent.attributes.audioPlaybackStarted, false);
+    assert.equal(answerEvent.attributes.liveNapoleonContacted, false);
+    assert.equal(answerEvent.attributes.approvalCaptured, false);
+    assert.equal(answerEvent.attributes.memoryWritePerformed, false);
+    assert.equal(answerEvent.attributes.agentDispatchPerformed, false);
+    assert.equal(answerEvent.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(answerEvent).includes("Why can't live voice start?"), false);
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears voice pipeline proof when user profile changes", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, within }, userEventModule, { App }] = await Promise.all([

@@ -212,6 +212,7 @@ import {
   describeNapoleonTranscriptMetadata,
   type LastNapoleonTurnFailureInput,
   type LiveSendPreflightView,
+  type LiveVoiceReadinessView,
   sanitizeVisibleProvenanceValue,
   summarizeRehearsalPreview,
 } from "./presentation.js";
@@ -946,6 +947,20 @@ function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
   return asksAboutPromotionReadiness || (asksAboutSending && asksAboutReadiness);
 }
 
+function isLiveVoiceReadinessQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  const asksAboutVoice = /\blive voice\b/.test(lower) || /\bvoice mode\b/.test(lower) || /\bvoice\b/.test(lower);
+  const asksAboutReadiness =
+    /\bready\b/.test(lower) ||
+    /\breadiness\b/.test(lower) ||
+    /\bstart\b/.test(lower) ||
+    /\bblocked?\b/.test(lower) ||
+    /\bblockers?\b/.test(lower) ||
+    /\bwhy\b.*\b(can'?t|cannot|not)\b/.test(lower) ||
+    /\bwhat\b.*\b(missing|needed|next|fix)\b/.test(lower);
+  return asksAboutVoice && asksAboutReadiness;
+}
+
 function isNapoleonConnectionRepairQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   if (!lower.includes("napoleon")) return false;
@@ -1294,6 +1309,43 @@ function formatNapoleonLiveSendReadinessAnswer(input: {
     endpointConfigured: input.endpointConfigured,
     rehearsalMode: input.rehearsalMode,
     blockedEffectCount: blockedEffects.length,
+  };
+}
+
+function formatLiveVoiceReadinessAnswer(readiness: LiveVoiceReadinessView): {
+  content: string;
+  canStartLiveVoice: boolean;
+  status: LiveVoiceReadinessView["status"];
+  blockedEffectCount: number;
+  microphoneReady: boolean;
+  descriptorReady: boolean;
+  runtimeProofReady: boolean;
+  rehearsalModeReady: boolean;
+  voicePipelineImplemented: boolean;
+} {
+  const findStatus = (label: string) => readiness.items.find((item) => item.label === label)?.status;
+  const rows = readiness.items.map((item) => `${item.label}: ${item.status}. ${item.detail}`).join("\n");
+  const voicePipelineStatus = findStatus("Voice pipeline");
+
+  return {
+    content: [
+      "Live voice readiness from local preflight:",
+      `Live voice: ${readiness.status}.`,
+      readiness.summary,
+      readiness.nextStepSummary,
+      rows,
+      `Blocked effects: ${readiness.blockedEffects.join(", ")}.`,
+      readiness.caveat,
+      "This local answer did not start microphone capture, play audio, contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+    ].join("\n\n"),
+    canStartLiveVoice: readiness.canStartLiveVoice,
+    status: readiness.status,
+    blockedEffectCount: readiness.blockedEffects.length,
+    microphoneReady: findStatus("Microphone setting") === "ready" && findStatus("Microphone permission") === "ready",
+    descriptorReady: findStatus("Descriptor preflight") === "ready",
+    runtimeProofReady: findStatus("Runtime proof") === "ready",
+    rehearsalModeReady: findStatus("Rehearsal Mode") === "ready",
+    voicePipelineImplemented: voicePipelineStatus === "ready",
   };
 }
 
@@ -3695,6 +3747,56 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     return true;
   }
 
+  function answerLiveVoiceReadinessQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isLiveVoiceReadinessQuestion(content)) return false;
+
+    const answer = formatLiveVoiceReadinessAnswer(liveVoiceReadiness);
+    emitEvent("live_voice_readiness_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      localAnswerOnly: true,
+      canStartLiveVoice: answer.canStartLiveVoice,
+      status: answer.status,
+      microphoneReady: answer.microphoneReady,
+      descriptorReady: answer.descriptorReady,
+      runtimeProofReady: answer.runtimeProofReady,
+      rehearsalModeReady: answer.rehearsalModeReady,
+      voicePipelineImplemented: answer.voicePipelineImplemented,
+      blockedEffectCount: answer.blockedEffectCount,
+      microphoneCaptureStarted: false,
+      audioPlaybackStarted: false,
+      rawAudioStored: false,
+      liveNapoleonContacted: false,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerNapoleonDelegationQuestion(content: string, traceId: string, turnId: string, activeProfileMode: NapoleonProfileMode) {
     if (!isNapoleonDelegationQuestion(content)) return false;
 
@@ -4035,6 +4137,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (answerNapoleonDescriptorValidityQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonConnectionRepairQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
+    if (answerLiveVoiceReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonProofComparisonQuestion(content, traceId, turnId, activeProfileMode)) return;
@@ -4249,6 +4352,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       if (answerNapoleonDescriptorValidityQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonConnectionRepairQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
+      if (answerLiveVoiceReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonProofComparisonQuestion(content, traceId, turnId, activeProfileMode)) return;
