@@ -436,3 +436,14 @@ scenarios:
       - conversation_capability_intelligence
       - observability_plan
       - governance_model
+
+  - id: NAPOLEON-REQUIRED-ACTION-CHILD-MINIMIZATION-001
+    title: Child-protected Napoleon required-action answer minimization
+    stage: bridge
+    prompt: |
+      Evaluate the Text Concierge local answer for child-protected questions such as "What does Napoleon need to expose next?" when local contract-alignment or sanitized evaluator evidence contains Napoleon-owned required actions. The child-protected answer must minimize details to required-action count, evidence source, active child profile scope, trusted adult/operator repair guidance, and a non-authorizing boundary. It must not expose action IDs, target paths, request kinds, operation IDs, highest-priority values, or required-action text. The answer must not contact Napoleon, must not make a bridge request, must not capture approval, write memory, dispatch agents, send externally, apply locally, or treat local evidence as Napoleon approval. Telemetry must remain count-only and profile-scoped.
+    expected_artifacts:
+      - child_required_action_minimization
+      - observability_plan
+      - governance_model
+      - child_safety_policy
