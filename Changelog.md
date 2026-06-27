@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added contract-alignment documentation coverage that requires the current Napoleon alignment finding to list every generated Concierge bridge path, including advisory capability discovery, and refreshed the 2026-06-27 `mimir` snapshot note around the remaining Napoleon-owned status-target gap.
 - Added local Text Concierge answers for Napoleon capability discovery questions such as "What can Napoleon do right now?", using already-discovered advisory capability/agent metadata without another bridge request and with count-only telemetry.
 - Added broader local Capability Intelligence typo tolerance for "implmented" next-capability questions, preserving proposal-only metadata answers.
 - Added local Text Concierge answers for Napoleon metadata discovery questions such as "Which Napoleon agents are currently available?", using already-discovered agent/profile metadata without another bridge request and with count-only telemetry.

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Rechecked the `mimir` Napoleon Concierge integration OpenAPI snapshot and updated contract-alignment traceability so the current finding lists every generated Concierge bridge path, including advisory capability discovery, while preserving `expose_evolution_proposal_status_runtime_target` as the single Napoleon-owned runtime exposure gap and confirming there are no unmapped Napoleon runtime paths.
 - Added local Text Concierge answers for Napoleon capability discovery questions such as "What can Napoleon do right now?", so already-discovered advisory capability and agent metadata can be summarized without a new bridge request, routing, registry update, agent dispatch, approval capture, memory write, external send, or local application.
 - Added broader local Capability Intelligence typo tolerance for "implmented" next-capability questions, so Concierge still returns proposal-only implementation recommendations from sanitized local metadata without contacting Napoleon or causing side effects.
 - Added local Text Concierge answers for Napoleon metadata discovery questions, so already-discovered agent/profile metadata can be summarized without a new bridge request, registry update, agent dispatch, approval capture, memory write, external send, or local application.

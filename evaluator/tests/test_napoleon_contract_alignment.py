@@ -224,6 +224,20 @@ paths:
             ],
         )
 
+    def test_current_alignment_finding_lists_generated_concierge_paths(self):
+        doc = Path("docs/NAPOLEON_CONTRACT_ALIGNMENT.md").read_text(encoding="utf-8")
+
+        for path in [
+            "/v1/concierge/chief-of-staff/capabilities",
+            "/v1/concierge/chief-of-staff/descriptor",
+            "/v1/concierge/chief-of-staff/steering",
+            "/v1/concierge/evaluate",
+            "/v1/concierge/memory-proposals",
+            "/v1/concierge/turn",
+        ]:
+            with self.subTest(path=path):
+                self.assertIn(f"- `{path}`", doc)
+
     def test_classifies_advisory_runtime_and_unmapped_review_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp)

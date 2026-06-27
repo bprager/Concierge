@@ -30,6 +30,7 @@ The Napoleon snapshot inspected from `bernd@mimir:~/Projects/Napoleon/docs/conci
 
 Concierge currently exposes governed bridge operations under:
 
+- `/v1/concierge/chief-of-staff/capabilities`
 - `/v1/concierge/chief-of-staff/descriptor`
 - `/v1/concierge/chief-of-staff/steering`
 - `/v1/concierge/evaluate`
@@ -57,6 +58,8 @@ The Napoleon advisory harness snapshot exposes:
 The alignment report now also emits a Napoleon-owned required action:
 
 - `expose_evolution_proposal_status_runtime_target`: expose and advertise the read-only `evolution_proposal_status` runtime target at `/evolution/proposals/{proposal_id}/status` with `evolution_proposal_status_handoff` before Concierge can refresh proposal status against live Napoleon.
+
+The latest 2026-06-27 recheck against that snapshot still reports no unmapped Napoleon runtime paths; the remaining gap is this single named Concierge status target missing from the Napoleon snapshot, not a permission to infer or call an unadvertised path.
 
 Text Concierge can answer Napoleon required-action questions and export a focused local required-action packet from this local contract-alignment evidence when no evaluator validation import is present. For example, "What does Napoleon need to expose next?" returns the current Napoleon-owned action, contract-alignment status, and non-authority boundary, and the export keeps the same source and false side-effect flags without contacting Napoleon or treating the answer as approval, runtime validation, free-form path permission, memory permission, agent dispatch, external send, or local application.
 
