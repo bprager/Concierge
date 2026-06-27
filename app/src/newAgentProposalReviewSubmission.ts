@@ -448,6 +448,7 @@ export async function submitNewAgentProposalForNapoleonReview(
         handoffKind: "new_agent_proposal_review_handoff",
         bridgeTargetPath: target.path,
         bridgeTargetOperation: target.operationId,
+        bridgeTargetRequestKind: target.requestKind,
         profileMode: packet.profileMode,
         descriptorStatus: descriptorConnection.descriptorStatus,
         descriptorConnection,

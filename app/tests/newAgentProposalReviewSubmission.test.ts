@@ -268,6 +268,7 @@ test("new-agent proposal review sends the governed packet to the explicit Napole
   assert.equal(requestedUrl, "https://napoleon.example/chief-of-staff/reviews/new-agent-proposals");
   assert.equal(requestedBody.requestKind, "new_agent_proposal_review_handoff");
   assert.equal(requestedBody.bridgeTargetOperation, "new_agent_proposal_review");
+  assert.equal(requestedBody.bridgeTargetRequestKind, "new_agent_proposal_review_handoff");
   assert.equal((requestedBody.newAgentProposal as { boundary: { proposalOnly: boolean } }).boundary.proposalOnly, true);
   assert.equal(result.agentActivated, false);
   assert.equal(result.registryUpdatePerformed, false);

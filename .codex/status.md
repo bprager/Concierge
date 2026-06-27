@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered governed submission proof for new-agent proposal review packets, so the Text UI now verifies the Napoleon review handoff carries path, operation, and request-kind metadata while showing no activation, no registry update, no approval capture, no memory write, no agent dispatch, and no external send.
 - Added rendered Text Concierge proof for new-agent proposal review packet drafts, so Capability Intelligence exports now show the governed Napoleon review target, remain proposal-only and sanitized, keep send disabled without a governed endpoint, and visibly block agent activation and registry updates.
 - Added local Capability Intelligence answers for "What capabilities are improving?", comparing recent working evidence with previous missing, blocked, or degraded evidence for the same capability while preserving proposal-only, local-only boundaries.
 - Added rendered Text Concierge coverage for "What capabilities are improving?", proving the local answer shows trend evidence without raw content, private endpoint text, Napoleon contact, approval capture, memory writes, agent dispatch, or external sends.
