@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added built-in runtime contract required-action warnings to live bridge readiness and live-send preflight, so `expose_evolution_proposal_status_runtime_target` stays visible as Napoleon-owned promotion work even when descriptor, bridge evidence, and evaluator checks otherwise pass.
 - Added local Text Concierge answers for review-history questions, so the app can summarize sanitized governed review and proposal lifecycle records by profile without contacting Napoleon or treating the records as approval, memory write, agent dispatch, external send, registry update, activation, evolution application, or local application.
 - Added a local review history panel and sanitized export for governed review results plus new-agent and evolution proposal lifecycle records, keeping the view metadata-only and preserving blocked approval, memory write, agent dispatch, external send, registry update, activation, evolution application, and local application boundaries.
 - Added local Text UI lifecycle tracking for new-agent proposal review packets, including sanitized drafted, sent-for-review, review-returned, and fail-closed records, export support, profile/context clearing, and explicit no activation, no registry update, no approval capture, no memory write, no agent dispatch, no external send, and no local application boundaries.

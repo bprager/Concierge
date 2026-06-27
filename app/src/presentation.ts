@@ -11,6 +11,7 @@ import type {
 import { descriptorSupportsGovernedHandoff } from "./contractBridge.js";
 import type { ConciergeMessage, NapoleonDelegation, NapoleonResponse } from "./types.js";
 import { NapoleonBridgeError } from "./napoleonBridge.js";
+import { RUNTIME_CONTRACT_ALIGNMENT_SUMMARY } from "./bridgeOperations.js";
 
 export interface GovernanceDecisionViewInput {
   outcome: GovernanceOutcome;
@@ -554,6 +555,14 @@ function describePromotionBlockers(input: {
     );
   }
 
+  if (RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.length > 0) {
+    for (const action of RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions) {
+      blockers.push(
+        `Napoleon runtime required action ${action.id}: expose ${action.path} for ${action.requestKind}.`,
+      );
+    }
+  }
+
   if (input.lastEvidenceStatus === "fail_closed") {
     blockers.push(
       input.lastFailureReason
@@ -563,6 +572,21 @@ function describePromotionBlockers(input: {
   }
 
   return blockers;
+}
+
+function describeRuntimeContractAlignment(): string {
+  const actionCount = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.length;
+  if (actionCount === 0) {
+    return `${RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status}; source contract_alignment; no Napoleon-owned runtime required actions. ${RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.boundary}`;
+  }
+  return `${RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status}; source contract_alignment; ${actionCount} Napoleon-owned runtime required action${actionCount === 1 ? "" : "s"}. ${RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.boundary}`;
+}
+
+function describeRuntimeRequiredAction(): string {
+  const action = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions[0];
+  if (!action) return "not returned";
+  const remaining = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.length - 1;
+  return `${action.id}: expose ${action.path} for ${action.requestKind} (${action.operationId})${remaining > 0 ? `; ${remaining} more` : ""}`;
 }
 
 function describeEvaluatorHttpDetail(input: {
@@ -599,7 +623,16 @@ function describePreflightBlockerSummary(items: LiveSendPreflightItem[]): string
     "Text ready",
     "Allowed effects",
   ];
-  const warningPriority = ["Rehearsal Mode", "Evidence capture", "Evidence comparison", "Runtime validation", "Evaluator HTTP", "Promotion gate"];
+  const warningPriority = [
+    "Rehearsal Mode",
+    "Evidence capture",
+    "Evidence comparison",
+    "Runtime validation",
+    "Evaluator HTTP",
+    "Runtime contract alignment",
+    "Runtime required action",
+    "Promotion gate",
+  ];
   const blocked = blockedPriority
     .map((label) => items.find((item) => item.label === label && item.status === "blocked"))
     .find((item): item is LiveSendPreflightItem => item !== undefined);
@@ -638,6 +671,9 @@ function describePreflightBlockerSummary(items: LiveSendPreflightItem[]): string
         ? "Main preflight warning: Napoleon has not advertised evaluator review for promotion evidence."
         : "Main preflight warning: evaluator HTTP mode has not passed.";
     }
+    if (warning.label === "Runtime contract alignment" || warning.label === "Runtime required action") {
+      return "Main preflight warning: runtime contract alignment has Napoleon-owned required actions.";
+    }
     if (warning.label === "Promotion gate") return "Main preflight warning: promotion evidence is incomplete.";
     return `Main preflight warning: ${warning.label.toLowerCase()} needs review.`;
   }
@@ -654,7 +690,16 @@ function describePreflightNextStepSummary(items: LiveSendPreflightItem[]): strin
     "Text ready",
     "Allowed effects",
   ];
-  const warningPriority = ["Rehearsal Mode", "Evidence capture", "Evidence comparison", "Runtime validation", "Evaluator HTTP", "Promotion gate"];
+  const warningPriority = [
+    "Rehearsal Mode",
+    "Evidence capture",
+    "Evidence comparison",
+    "Runtime validation",
+    "Evaluator HTTP",
+    "Runtime contract alignment",
+    "Runtime required action",
+    "Promotion gate",
+  ];
   const blocked = blockedPriority
     .map((label) => items.find((item) => item.label === label && item.status === "blocked"))
     .find((item): item is LiveSendPreflightItem => item !== undefined);
@@ -693,6 +738,9 @@ function describePreflightNextStepSummary(items: LiveSendPreflightItem[]): strin
         ? "Next step: have Napoleon advertise and expose evaluation review, or import an explicit evaluator endpoint proof."
         : "Next step: run evaluator HTTP validation against the configured Napoleon endpoint.";
     }
+    if (warning.label === "Runtime contract alignment" || warning.label === "Runtime required action") {
+      return "Next step: have Napoleon expose the named runtime target before treating this as promotion-ready.";
+    }
     if (warning.label === "Promotion gate") return "Next step: complete the remaining runtime and evaluator evidence before promotion.";
     return `Next step: review ${warning.label.toLowerCase()} before treating the bridge as promotion-ready.`;
   }
@@ -723,12 +771,23 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
   const evaluatorValidationStatus = input.evaluatorValidationStatus ?? "not_run";
   const evaluatorNotPassed = evaluatorValidationStatus === "failed" || evaluatorValidationStatus === "not_run";
   const evaluatorPromotionBlocked = runtimeValidationSource === "real_runtime" && !evidencePending && evaluatorNotPassed;
+  const runtimeContractRequiredActionCount = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.length;
+  const runtimeContractPromotionBlocked =
+    runtimeValidationSource === "real_runtime" &&
+    !evidencePending &&
+    evaluatorValidationStatus === "passed" &&
+    runtimeContractRequiredActionCount > 0;
   const lastSendFailedClosed = input.lastEvidenceStatus === "fail_closed";
   const textTurnRouteReady = descriptorSupportsGovernedHandoff(descriptor, "text_turn");
   const canSendLive = descriptor.canAttemptLiveBridge && textTurnRouteReady && !evidenceFailed;
   const status: LiveBridgeReadinessView["status"] = !canSendLive
     ? "blocked"
-    : evidencePending || evaluatorPromotionBlocked || lastSendFailedClosed || localOnlyValidation || runtimeValidationMissing
+    : evidencePending ||
+        evaluatorPromotionBlocked ||
+        runtimeContractPromotionBlocked ||
+        lastSendFailedClosed ||
+        localOnlyValidation ||
+        runtimeValidationMissing
       ? "warning"
       : "ready";
 
@@ -764,6 +823,9 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
         : input.evaluatorFailureReason === "http_evaluator_route_not_found"
         ? "Real Napoleon text bridge evidence passes, but the evaluator route is not available for promotion evidence."
         : "Real Napoleon text bridge evidence passes, but evaluator HTTP mode has not passed for promotion evidence.";
+  } else if (runtimeContractPromotionBlocked) {
+    summary =
+      "Real Napoleon text bridge and evaluator evidence pass, but runtime contract alignment still has Napoleon-owned required actions.";
   } else if (localOnlyValidation && !evidencePending) {
     summary =
       "Local harness or simulation checks pass, but real Napoleon runtime validation has not been proven in this UI session.";
@@ -825,6 +887,14 @@ export function describeLiveBridgeReadiness(input: LiveBridgeReadinessInput): Li
       {
         label: "Evaluator required action",
         value: input.evaluatorDescriptorHandoffRequiredAction ?? "not returned",
+      },
+      {
+        label: "Runtime contract alignment",
+        value: describeRuntimeContractAlignment(),
+      },
+      {
+        label: "Runtime required action",
+        value: describeRuntimeRequiredAction(),
       },
       { label: "Evaluator target", value: input.evaluatorTargetPath ?? "not returned" },
       { label: "Promotion gate", value: describePromotionGate(runtimeValidationSource, evidencePending, evaluatorValidationStatus) },
@@ -957,6 +1027,13 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
     evidenceCaptureReady &&
     evidenceComparisonReady &&
     (evaluatorValidationStatus === "failed" || evaluatorValidationStatus === "not_run");
+  const runtimeContractRequiredActionCount = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.length;
+  const runtimeContractPromotionBlocked =
+    realRuntimeReady &&
+    evidenceCaptureReady &&
+    evidenceComparisonReady &&
+    evaluatorValidationStatus === "passed" &&
+    runtimeContractRequiredActionCount > 0;
   const descriptorDiscoveryBlocked =
     descriptor.failClosedReason === "no_descriptor" ||
     descriptor.failClosedReason === "descriptor_stale" ||
@@ -1099,6 +1176,18 @@ export function describeLiveSendPreflight(input: LiveSendPreflightInput): LiveSe
       label: "Evaluator target",
       status: evaluatorPromotionBlocked ? "warning" : "ready",
       detail: input.evaluatorTargetPath,
+    });
+  }
+  items.push({
+    label: "Runtime contract alignment",
+    status: runtimeContractPromotionBlocked ? "warning" : "ready",
+    detail: describeRuntimeContractAlignment(),
+  });
+  if (runtimeContractRequiredActionCount > 0) {
+    items.push({
+      label: "Runtime required action",
+      status: runtimeContractPromotionBlocked ? "warning" : "ready",
+      detail: describeRuntimeRequiredAction(),
     });
   }
   items.push({

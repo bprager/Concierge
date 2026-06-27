@@ -28,6 +28,7 @@ import {
   describeNapoleonResponseProof,
   summarizeRehearsalPreview,
 } from "../src/presentation.js";
+import { RUNTIME_CONTRACT_ALIGNMENT_SUMMARY } from "../src/bridgeOperations.js";
 import { NapoleonBridgeError } from "../src/napoleonBridge.js";
 
 test("summarizes prepare-only governance decisions without implying authority", () => {
@@ -988,7 +989,7 @@ test("describes live bridge readiness as blocked when no endpoint is configured"
   ]);
 });
 
-test("describes live bridge readiness as ready only when descriptor and evidence checks pass", () => {
+test("describes live bridge readiness as promotion warning when runtime contract actions remain", () => {
   const view = describeLiveBridgeReadiness({
     descriptorConnection: buildDescriptorConnectionState({
       endpointConfigured: true,
@@ -1006,9 +1007,9 @@ test("describes live bridge readiness as ready only when descriptor and evidence
     lastEvidenceTargetPath: "/v1/concierge/turn",
   });
 
-  assert.equal(view.status, "ready");
+  assert.equal(view.status, "warning");
   assert.equal(view.canSendLive, true);
-  assert.ok(view.summary.includes("ready for a governed live text turn"));
+  assert.ok(view.summary.includes("runtime contract alignment still has Napoleon-owned required actions"));
   assert.ok(view.details.some((detail) => detail.label === "Descriptor" && detail.value.includes("ready")));
   assert.ok(view.details.some((detail) => detail.label === "Checksum" && detail.value === "matched"));
   assert.ok(view.details.some((detail) => detail.label === "Evidence comparison" && detail.value.includes("Passed")));
@@ -1019,7 +1020,7 @@ test("describes live bridge readiness as ready only when descriptor and evidence
     ),
   );
   assert.ok(view.details.some((detail) => detail.label === "Promotion gate" && detail.value === "real runtime evidence available"));
-  assert.deepEqual(view.promotionBlockers, []);
+  assert.ok(view.promotionBlockers.some((blocker) => blocker.includes("expose_evolution_proposal_status_runtime_target")));
   assert.ok(view.caveat.includes("does not grant memory writes"));
 });
 
@@ -1208,6 +1209,49 @@ test("describes unadvertised evaluator handoff as a real-runtime promotion block
         detail.value.includes("supportedHandoffs"),
     ),
   );
+});
+
+test("describes built-in runtime contract required actions in live bridge readiness", () => {
+  const requiredAction = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions[0];
+  assert.ok(requiredAction);
+
+  const view = describeLiveBridgeReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+    evaluatorValidationStatus: "passed",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canSendLive, true);
+  assert.ok(view.summary.includes("runtime contract alignment still has Napoleon-owned required actions"));
+  assert.ok(view.promotionBlockers.some((blocker) => blocker.includes(requiredAction.id)));
+  assert.ok(view.promotionBlockers.some((blocker) => blocker.includes(requiredAction.path)));
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Runtime contract alignment" &&
+        detail.value.includes("runtime_mapping_gaps_present") &&
+        detail.value.includes("contract_alignment"),
+    ),
+  );
+  assert.ok(
+    view.details.some(
+      (detail) =>
+        detail.label === "Runtime required action" &&
+        detail.value.includes(requiredAction.id) &&
+        detail.value.includes(requiredAction.path) &&
+        detail.value.includes(requiredAction.requestKind),
+    ),
+  );
+  assert.ok(view.caveat.includes("not Napoleon approval"));
 });
 
 test("describes live bridge readiness as blocked when descriptor lacks text-turn route", () => {
@@ -1644,7 +1688,7 @@ test("describes allowed advisory effect in live send preflight", () => {
   );
 });
 
-test("describes live send preflight as ready only for governed bridge attempt", () => {
+test("describes live send preflight as warning while runtime contract actions remain", () => {
   const view = describeLiveSendPreflight({
     descriptorConnection: buildDescriptorConnectionState({
       endpointConfigured: true,
@@ -1662,12 +1706,18 @@ test("describes live send preflight as ready only for governed bridge attempt", 
     evaluatorValidationStatus: "passed",
   });
 
-  assert.equal(view.status, "ready");
+  assert.equal(view.status, "warning");
   assert.equal(view.canAttemptLiveSend, true);
   assert.ok(view.summary.includes("governed bridge attempt"));
-  assert.equal(view.blockerSummary, "No live-send blockers detected from current local preflight.");
-  assert.equal(view.nextStepSummary, "Next step: send through the governed Napoleon bridge when you are ready.");
-  assert.ok(view.items.every((item: { status: string }) => item.status === "ready"));
+  assert.equal(
+    view.blockerSummary,
+    "Main preflight warning: runtime contract alignment has Napoleon-owned required actions.",
+  );
+  assert.equal(
+    view.nextStepSummary,
+    "Next step: have Napoleon expose the named runtime target before treating this as promotion-ready.",
+  );
+  assert.ok(view.items.some((item) => item.label === "Runtime required action" && item.status === "warning"));
   assert.ok(view.caveat.includes("does not write memory"));
   assert.ok(view.caveat.includes("does not dispatch agents"));
 });
@@ -1755,6 +1805,58 @@ test("describes unadvertised evaluator handoff as a promotion warning in live se
         item.label === "Evaluator required action" &&
         item.status === "warning" &&
         item.detail.includes("supportedHandoffs"),
+    ),
+  );
+});
+
+test("describes built-in runtime contract required actions in live send preflight", () => {
+  const requiredAction = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions[0];
+  assert.ok(requiredAction);
+
+  const view = describeLiveSendPreflight({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: defaultChiefOfStaffDescriptor,
+      expectedChecksum: "sha256:contract",
+      actualChecksum: "sha256:contract",
+      signatureValid: true,
+    }),
+    inputReady: true,
+    governanceCanSendAdvisory: true,
+    rehearsalMode: false,
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+    evaluatorValidationStatus: "passed",
+  });
+
+  assert.equal(view.status, "warning");
+  assert.equal(view.canAttemptLiveSend, true);
+  assert.equal(
+    view.blockerSummary,
+    "Main preflight warning: runtime contract alignment has Napoleon-owned required actions.",
+  );
+  assert.equal(
+    view.nextStepSummary,
+    "Next step: have Napoleon expose the named runtime target before treating this as promotion-ready.",
+  );
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Runtime required action" &&
+        item.status === "warning" &&
+        item.detail.includes(requiredAction.id) &&
+        item.detail.includes(requiredAction.path) &&
+        item.detail.includes(requiredAction.requestKind),
+    ),
+  );
+  assert.ok(
+    view.items.some(
+      (item) =>
+        item.label === "Runtime contract alignment" &&
+        item.status === "warning" &&
+        item.detail.includes("contract_alignment") &&
+        item.detail.includes("not Napoleon approval"),
     ),
   );
 });
