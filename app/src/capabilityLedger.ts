@@ -162,6 +162,7 @@ export type CapabilityQuestionKind =
   | "steering_recommendation_types"
   | "increasing_conversations"
   | "worsening_missing_capabilities"
+  | "improving_capabilities"
   | "recent_working_capabilities"
   | "weekly_changes"
   | "seasonal_changes";
@@ -797,6 +798,7 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   const asksAboutConversation = /\b(conversation|conversations|topics?)\b/.test(lower);
   const asksIncreasing = /\b(increasing|rising|growing|more common|trending up)\b/.test(lower);
   const asksWorse = /\b(worse|worsening|getting worse|regressing|increasing failures?)\b/.test(lower);
+  const asksImproving = /\b(improving|getting better|better|recovering|recoveries|fixed|fewer failures?)\b/.test(lower);
   const asksRecent = /\b(recent|recently|this week|week|changed|changing)\b/.test(lower);
   const asksSeasonal = /\b(seasonal|season|monthly|month|28 days|four weeks|quarterly|longer term)\b/.test(lower);
   const asksCommon = /\b(common|most|frequent|popular)\b/.test(lower);
@@ -815,6 +817,7 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   if (asksSteeringRecommendationTypes) return "steering_recommendation_types";
   if (asksAboutConversation && asksIncreasing) return "increasing_conversations";
   if (asksCapability && asksMissingOrBlocked && asksWorse) return "worsening_missing_capabilities";
+  if (asksCapability && asksImproving) return "improving_capabilities";
   if (asksWorked && asksRecent) return "recent_working_capabilities";
   if (asksRecent && /\b(changed|changing|this week|week)\b/.test(lower)) return "weekly_changes";
   if (asksCapability && asksNext) return "recommended_next_capabilities";
@@ -1211,6 +1214,20 @@ function trendRows(
     .slice(0, 5);
 }
 
+function improvingCapabilityRows(windows: ReturnType<typeof trendWindows>): CapabilityAnswerRow[] {
+  const recentWorking = windows.recent.filter((signal) => signal.capabilityStatus === "working");
+  const previousProblem = windows.previous.filter(
+    (signal) =>
+      signal.capabilityStatus === "missing" ||
+      signal.capabilityStatus === "degraded" ||
+      signal.capabilityStatus === "blocked",
+  );
+  return trendRows(recentWorking, previousProblem, (signal) => signal.capabilityLabel, {
+    includeStatus: true,
+    includeArchitectureArea: true,
+  }).filter((row) => (row.previousCount ?? 0) > 0);
+}
+
 interface RecommendationGroup {
   label: string;
   key: string;
@@ -1404,6 +1421,26 @@ export function answerCapabilityQuestion(
       caveat: `${CAPABILITY_LEDGER_TREND_CAVEAT} Recommendations are proposal-only.`,
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
     }, [...recentMissing, ...previousMissing], drilldownProfileMode);
+  }
+
+  if (kind === "improving_capabilities") {
+    const previousProblem = windows.previous.filter(
+      (signal) =>
+        signal.capabilityStatus === "missing" ||
+        signal.capabilityStatus === "degraded" ||
+        signal.capabilityStatus === "blocked",
+    );
+    const recentWorking = windows.recent.filter((signal) => signal.capabilityStatus === "working");
+    const rows = improvingCapabilityRows(windows);
+    return withCapabilityAnswerDrilldown({
+      kind,
+      question,
+      summary: `Local capabilities getting better over recent 7 days vs previous 7 days: ${describeTrendRows(rows)}.`,
+      rows,
+      evidenceCount: recentWorking.length + previousProblem.length,
+      caveat: `${CAPABILITY_LEDGER_TREND_CAVEAT} Improvements are local metadata signals, not approval to change behavior.`,
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    }, [...recentWorking, ...previousProblem], drilldownProfileMode);
   }
 
   if (kind === "recent_working_capabilities") {

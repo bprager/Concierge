@@ -1516,6 +1516,48 @@ test("trend answers identify missing capabilities getting worse without granting
   assert.equal(answer.boundary.externalSendAllowed, false);
 });
 
+test("trend answers identify capabilities getting better without granting authority", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
+  appendCapabilitySignal(ledger, testSignal("trace_prior_missing", {
+    observedAt: "2026-05-30T12:00:00.000Z",
+    capability: "bridge_failure_handling",
+    status: "missing",
+    architecture: "bridge",
+    suggestedNextStep: "write_evaluator_case",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_working_1", {
+    observedAt: "2026-06-07T12:00:00.000Z",
+    capability: "bridge_failure_handling",
+    status: "working",
+    architecture: "bridge",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_recent_working_2", {
+    observedAt: "2026-06-08T12:00:00.000Z",
+    capability: "bridge_failure_handling",
+    status: "working",
+    architecture: "bridge",
+  }));
+
+  const answer = answerCapabilityQuestion("What capabilities are improving?", ledger, undefined, {
+    now: "2026-06-11T12:00:00.000Z",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected improving trend answer");
+  assert.equal(answer.kind, "improving_capabilities");
+  assert.equal(answer.rows[0].label, "bridge_failure_handling");
+  assert.equal(answer.rows[0].displayLabel, "Napoleon bridge failure handling");
+  assert.equal(answer.rows[0].status, "working");
+  assert.equal(answer.rows[0].count, 2);
+  assert.equal(answer.rows[0].previousCount, 1);
+  assert.equal(answer.rows[0].delta, 1);
+  assert.ok(answer.summary.includes("getting better"));
+  assert.equal(answer.boundary.approvalCaptured, false);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+});
+
 test("recent working answers use the recent trend window", () => {
   const ledger = createCapabilityLedger({ now: () => new Date("2026-06-11T12:00:00.000Z") });
   appendCapabilitySignal(ledger, testSignal("trace_old_working", {
