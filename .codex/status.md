@@ -855,6 +855,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Local avatar work now includes an Avatar Renderer readiness panel that prepares renderer preflight metadata with explicit no-agent-dispatch state from the loaded model without allocating a canvas, starting a render loop, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
 - Added richer local Capability Intelligence next-work answers for "What should we implement next?", returning top-three proposal-only candidates with one best tradeoff, implementation size, coverage need, privacy impact, and governance impact without contacting Napoleon.
+- Added richer local Capability Intelligence architecture-improvement answers, returning one best tradeoff area with repair focus, needed coverage, privacy impact, and governance impact while keeping raw evidence out of telemetry and avoiding Napoleon contact.
 
 ## Next 3 To 5 Priorities
 

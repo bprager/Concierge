@@ -1095,6 +1095,99 @@ test("answers architecture improvement questions from missing safe request areas
   assert.ok(answer.caveat.includes("Correctly blocked unsafe requests are excluded"));
 });
 
+test("architecture improvement answers identify a best tradeoff with repair guidance", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-25T12:00:00.000Z") });
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_arch_runtime_one",
+      conversationId: "conv_arch_runtime",
+      turnId: "turn_arch_runtime_one",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "napoleon_runtime",
+      intentLabel: "import_required_action_evidence",
+      capabilityLabel: "descriptor_handoff_advertisement",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.9,
+      evidenceRefs: ["trace:trace_arch_runtime_one"],
+      architectureArea: "napoleon_runtime",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "add_backlog_item",
+      rawMessage: "raw required action details must not be retained",
+      details: ["required action packets 3"],
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_arch_runtime_two",
+      conversationId: "conv_arch_runtime",
+      turnId: "turn_arch_runtime_two",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "napoleon_runtime",
+      intentLabel: "import_required_action_evidence",
+      capabilityLabel: "descriptor_handoff_advertisement",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.86,
+      evidenceRefs: ["trace:trace_arch_runtime_two"],
+      architectureArea: "napoleon_runtime",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "add_backlog_item",
+      rawMessage: "https://private.example.test/runtime",
+      details: ["target path class napoleon review"],
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_arch_bridge",
+      conversationId: "conv_arch_bridge",
+      turnId: "turn_arch_bridge",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "governed_text_turn",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "bridge_failure_handling",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.78,
+      evidenceRefs: ["trace:trace_arch_bridge"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion(
+    "What part of the Concierge architecture has to be improved to fix missing capabilities?",
+    ledger,
+    undefined,
+    { now: "2026-06-25T12:00:00.000Z", profileMode: "adult_owner" },
+  );
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected architecture answer");
+  assert.equal(answer.kind, "architecture_improvement_areas");
+  assert.equal(answer.rows[0].label, "napoleon_runtime");
+  assert.equal(answer.rows[0].details?.some((detail) => detail.startsWith("best tradeoff ")), true);
+  assert.equal(answer.rows[0].details?.includes("fix target descriptor or runtime advertisement"), true);
+  assert.equal(answer.rows[0].details?.includes("needed coverage evaluator and descriptor contract coverage"), true);
+  assert.equal(answer.rows[0].details?.includes("privacy impact metadata only"), true);
+  assert.equal(answer.rows[0].details?.includes("governance impact preserve Napoleon as authority"), true);
+  assert.ok(answer.summary.includes("Best tradeoff: Napoleon runtime"));
+  assert.ok(answer.summary.includes("proposal-only"));
+  assert.equal(answer.boundary.proposalOnly, true);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+  assert.equal(JSON.stringify(answer).includes("raw required action details"), false);
+  assert.equal(JSON.stringify(answer).includes("private.example.test"), false);
+});
+
 test("answers next capability recommendation questions without granting authority", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(

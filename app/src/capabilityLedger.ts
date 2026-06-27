@@ -765,6 +765,17 @@ function capabilityAnswerDisplayLabel(label: string): string | undefined {
     bridge_failure_handling: "Napoleon bridge failure handling",
     governed_bridge_no_go_handling: "Napoleon no-go handling",
     descriptor_handoff_advertisement: "Napoleon descriptor handoff advertising",
+    text_ui: "Text UI",
+    bridge: "Governed bridge",
+    governance_ux: "Governance UX",
+    memory_review: "Memory review",
+    settings_privacy: "Settings and privacy",
+    observability: "Observability",
+    evaluator: "Evaluator",
+    voice: "Voice",
+    avatar: "Avatar",
+    napoleon_runtime: "Napoleon runtime",
+    agent_registry: "Agent registry",
     text_response_generation: "Local text response",
     rehearsal_mode: "Rehearsal Mode preview",
   };
@@ -824,9 +835,9 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   if (asksCapability && asksImproving) return "improving_capabilities";
   if (asksWorked && asksRecent) return "recent_working_capabilities";
   if (asksRecent && /\b(changed|changing|this week|week)\b/.test(lower)) return "weekly_changes";
-  if ((asksCapability && asksNext) || asksPlainNextWork) return "recommended_next_capabilities";
   if (asksCapability && asksMissingOrBlocked && asksEasyToEvolve) return "easy_to_evolve_missing_capabilities";
-  if (asksArchitecture && asksMissingOrBlocked) return "architecture_improvement_areas";
+  if (asksArchitecture && (asksMissingOrBlocked || asksNext)) return "architecture_improvement_areas";
+  if ((asksCapability && asksNext) || asksPlainNextWork) return "recommended_next_capabilities";
   if ((asksAboutConversation || asksCapability) && (asksWorkingWell || (asksCapability && asksWorked && !asksMissingOrBlocked))) {
     return "working_well_conversations";
   }
@@ -1344,6 +1355,64 @@ function planningDetailsForRecommendedRows(rows: CapabilityAnswerRow[]): Capabil
   }));
 }
 
+function architectureRepairFocus(area: string): string {
+  if (area === "napoleon_runtime") return "target descriptor or runtime advertisement";
+  if (area === "bridge") return "governed bridge transport and fail closed handling";
+  if (area === "evaluator") return "evaluator scenario and artifact coverage";
+  if (area === "observability") return "metadata trace and export coverage";
+  if (area === "memory_review") return "proposal-only memory review handoff";
+  if (area === "agent_registry") return "advisory capability discovery metadata";
+  if (area === "governance_ux") return "visible blocked-effect and review-state handling";
+  if (area === "settings_privacy") return "local consent and readiness controls";
+  if (area === "voice" || area === "avatar") return "local media boundary readiness";
+  return "local interaction surface";
+}
+
+function architectureCoverageNeed(area: string): string {
+  if (area === "napoleon_runtime") return "evaluator and descriptor contract coverage";
+  if (area === "bridge") return "bridge contract and fail closed coverage";
+  if (area === "evaluator") return "evaluator fixture and regression coverage";
+  if (area === "observability") return "telemetry export and sanitization coverage";
+  if (area === "memory_review") return "proposal packet and governed handoff coverage";
+  if (area === "governance_ux") return "no-go and blocked-effect UI coverage";
+  if (area === "voice" || area === "avatar" || area === "settings_privacy") {
+    return "local privacy and media boundary coverage";
+  }
+  return "unit and rendered app coverage";
+}
+
+function architecturePrivacyImpact(area: string): string {
+  if (area === "voice" || area === "avatar" || area === "settings_privacy") {
+    return "raw media and consent metadata require minimization";
+  }
+  if (area === "memory_review") return "memory proposal metadata only";
+  return "metadata only";
+}
+
+function architectureGovernanceImpact(area: string): string {
+  if (area === "napoleon_runtime" || area === "bridge" || area === "agent_registry") {
+    return "preserve Napoleon as authority";
+  }
+  if (area === "governance_ux") return "make no-go and blocked effects visible";
+  if (area === "memory_review") return "proposal only no memory writes";
+  return "proposal only no side effects";
+}
+
+function planningDetailsForArchitectureRows(rows: CapabilityAnswerRow[]): CapabilityAnswerRow[] {
+  return rows.map((row, index) => ({
+    ...row,
+    details: [
+      ...(row.details?.slice(0, 1) ?? []),
+      ...(index === 0 ? [`best tradeoff ${row.label}`] : []),
+      `fix ${architectureRepairFocus(row.label)}`,
+      `needed coverage ${architectureCoverageNeed(row.label)}`,
+      `privacy impact ${architecturePrivacyImpact(row.label)}`,
+      `governance impact ${architectureGovernanceImpact(row.label)}`,
+      ...(row.details?.slice(1) ?? []),
+    ].slice(0, 10),
+  }));
+}
+
 function isDescriptorReadinessRepairSignal(signal: ConversationCapabilitySignal): boolean {
   return (
     signal.capabilityLabel === "descriptor_discovery" &&
@@ -1623,17 +1692,20 @@ export function answerCapabilityQuestion(
   }
 
   if (kind === "architecture_improvement_areas") {
-    const rows = groupedRows(
+    const rows = planningDetailsForArchitectureRows(groupedRows(
       missingSafeRequests,
       (signal) => signal.architectureArea,
       (signal) => signal.architectureArea,
       (signal) => 1 + signal.confidence,
       {},
-    );
+    ));
+    const bestTradeoff = rows[0]
+      ? `${capabilityAnswerRowTitle(rows[0])} (${rows[0].label})`
+      : "No local architecture candidate yet";
     return withCapabilityAnswerDrilldown({
       kind,
       question,
-      summary: `Architecture areas to improve for missing safe capabilities: ${describeRows(rows)}.`,
+      summary: `Architecture areas to improve for missing safe capabilities. Best tradeoff: ${bestTradeoff}. proposal-only: ${describeRows(rows)}.`,
       rows,
       evidenceCount: missingSafeRequests.length,
       caveat: `${MISSING_PROPOSAL_CAVEAT} Correctly blocked unsafe requests are excluded from architecture-fix ranking.`,

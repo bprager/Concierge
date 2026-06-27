@@ -4333,6 +4333,134 @@ test("renders next implementation recommendations as local top-three planning ad
   }
 });
 
+test("renders architecture improvement answers with best-tradeoff repair guidance", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, fireEvent, render, waitFor },
+    userEventModule,
+    { App },
+    { appendCapabilitySignal, buildCapabilitySignal, clearCapabilityLedger },
+    telemetry,
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/capabilityLedger.js"),
+    import("../src/telemetry.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  let fetchCalls = 0;
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    appendCapabilitySignal(
+      telemetry.capabilityLedger,
+      buildCapabilitySignal({
+        traceId: "trace_ui_arch_runtime_one",
+        conversationId: "conv_ui_arch",
+        turnId: "turn_ui_arch_runtime_one",
+        profileMode: "adult_owner",
+        channel: "text",
+        topicLabel: "napoleon_runtime",
+        intentLabel: "import_required_action_evidence",
+        capabilityLabel: "descriptor_handoff_advertisement",
+        capabilityStatus: "missing",
+        outcomeSignal: "bridge_failed",
+        confidence: 0.9,
+        evidenceRefs: ["trace:trace_ui_arch_runtime_one"],
+        architectureArea: "napoleon_runtime",
+        privacyClass: "metadata_only",
+        suggestedNextStep: "add_backlog_item",
+        details: ["required action packets 3"],
+        rawMessage: "raw architecture failure text must not render",
+      }),
+    );
+    appendCapabilitySignal(
+      telemetry.capabilityLedger,
+      buildCapabilitySignal({
+        traceId: "trace_ui_arch_runtime_two",
+        conversationId: "conv_ui_arch",
+        turnId: "turn_ui_arch_runtime_two",
+        profileMode: "adult_owner",
+        channel: "text",
+        topicLabel: "napoleon_runtime",
+        intentLabel: "import_required_action_evidence",
+        capabilityLabel: "descriptor_handoff_advertisement",
+        capabilityStatus: "missing",
+        outcomeSignal: "bridge_failed",
+        confidence: 0.86,
+        evidenceRefs: ["trace:trace_ui_arch_runtime_two"],
+        architectureArea: "napoleon_runtime",
+        privacyClass: "metadata_only",
+        suggestedNextStep: "add_backlog_item",
+        rawMessage: "https://private.example.test/architecture",
+      }),
+    );
+
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What part of the Concierge architecture should improve next?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await waitFor(() => {
+      const renderedText = document.body.textContent ?? "";
+      assert.ok(renderedText.includes("Architecture areas to improve for missing safe capabilities"));
+      assert.ok(renderedText.includes("Best tradeoff: Napoleon runtime"));
+      assert.ok(renderedText.includes("fix target descriptor or runtime advertisement"));
+      assert.ok(renderedText.includes("needed coverage evaluator and descriptor contract coverage"));
+      assert.ok(renderedText.includes("privacy impact metadata only"));
+      assert.ok(renderedText.includes("governance impact preserve Napoleon as authority"));
+      assert.ok(renderedText.includes("Profile scope: adult_owner"));
+      assert.ok(renderedText.includes("recommendations are proposal-only"));
+      assert.equal(renderedText.includes("raw architecture failure text"), false);
+      assert.equal(renderedText.includes("private.example.test"), false);
+    });
+
+    const answered = await waitFor(() => {
+      const payload = telemetryPayloads.find((event) => event.event === "capability_intelligence_answered");
+      assert.ok(payload);
+      return payload;
+    });
+    assert.equal(answered.attributes.kind, "architecture_improvement_areas");
+    assert.equal(answered.attributes.profileMode, "adult_owner");
+    assert.equal(answered.attributes.localAnswerOnly, true);
+    assert.equal(answered.attributes.approvalCaptured, false);
+    assert.equal(answered.attributes.memoryWritePerformed, false);
+    assert.equal(answered.attributes.agentDispatchPerformed, false);
+    assert.equal(answered.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(answered).includes("trace_ui_arch_runtime_one"), false);
+    assert.equal(JSON.stringify(answered).includes("private.example"), false);
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders steering recommendation type answers without leaking telemetry content", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }, { clearCapabilityLedger }, telemetry] = await Promise.all([
