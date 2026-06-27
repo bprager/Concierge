@@ -1933,6 +1933,38 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(JSON.stringify(compactFindingsAnswerEvent).includes("findings?"), false);
     assert.equal(JSON.stringify(compactFindingsAnswerEvent).includes("Passive Brain"), false);
     assert.equal(JSON.stringify(compactFindingsAnswerEvent).includes("bridge context"), false);
+    const requestCountBeforeCompactConfirmedQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeCompactConfirmedQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "confirmed?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let compactConfirmedAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeCompactConfirmedQuestion + 1);
+      compactConfirmedAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(compactConfirmedAnswer);
+      assert.ok(compactConfirmedAnswer.textContent?.includes("Selected-agent contribution: Passive Brain: bridge context."));
+    });
+    assert.ok(compactConfirmedAnswer);
+    const compactConfirmedAnswerText = compactConfirmedAnswer.textContent ?? "";
+    assert.ok(compactConfirmedAnswerText.includes("Handled by: Passive Brain."));
+    assert.equal(requestedUrls.length, requestCountBeforeCompactConfirmedQuestion);
+    const compactConfirmedAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(compactConfirmedAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(compactConfirmedAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(compactConfirmedAnswerEvent?.attributes.selectedAgentContributionCount, 1);
+    assert.equal(compactConfirmedAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(compactConfirmedAnswerEvent).includes("confirmed?"), false);
+    assert.equal(JSON.stringify(compactConfirmedAnswerEvent).includes("Passive Brain"), false);
+    assert.equal(JSON.stringify(compactConfirmedAnswerEvent).includes("bridge context"), false);
     const requestCountBeforeContextualFindingsQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeContextualFindingsQuestion = Array.from(
       document.querySelectorAll("article.assistant"),

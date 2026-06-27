@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added compact selected-agent contribution follow-up handling for wording such as "confirmed?", so Concierge answers from current returned Napoleon proof without another bridge request or raw follow-up/provenance telemetry.
 - Added live-runtime promotion-readiness blocking for Napoleon-owned required actions, so validation summaries cannot mark promotion locally safe while `napoleonRequiredActions` such as `expose_evolution_proposal_status_runtime_target` remain.
 - Added descriptor-specific latest-turn repair guidance for invalid, stale, and HTTP-failed Napoleon descriptors, so blocked attempt summaries point back to descriptor discovery instead of generic bridge-contract repair.
 - Added local evolution-proposal status answers for questions such as "What is the status of my evolution proposal?", using sanitized lifecycle metadata without contacting Napoleon or treating proposal status as approval or implementation.
