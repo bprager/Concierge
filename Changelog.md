@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local Text Concierge answers for built-in contract-alignment Napoleon required actions, so questions like "What does Napoleon need to expose next?" can surface `expose_evolution_proposal_status_runtime_target` without importing evaluator evidence or contacting Napoleon.
 - Added the current Napoleon runtime mapping gap and required-action count to the governed routes panel, so the app now shows `expose_evolution_proposal_status_runtime_target` as Napoleon-owned follow-up work instead of presenting runtime contract alignment as complete.
 - Added machine-readable Napoleon required-action output to contract-alignment reports when named Concierge review/evidence/status targets are absent from an inspected Napoleon runtime snapshot.
 - Added `bridge-operations-check` to the default `make check` pipeline, so stale generated bridge operation metadata fails validation against the canonical OpenAPI contract.

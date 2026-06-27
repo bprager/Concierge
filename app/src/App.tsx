@@ -382,8 +382,7 @@ function isNapoleonRequiredActionQuestion(content: string): boolean {
   return (
     /\brequired actions?\b/.test(lower) ||
     /\bpromotion blockers?\b/.test(lower) ||
-    /\bwhat\b.*\b(needs?|must|should)\b.*\b(fix|do|add|advertise|expose|implement)\b/.test(lower) ||
-    /\bwhat\b.*\b(blocking|blocked|blocker)\b/.test(lower)
+    /\bwhat\b.*\b(needs?|must|should)\b.*\b(fix|do|add|advertise|expose|implement)\b/.test(lower)
   );
 }
 
@@ -1660,6 +1659,30 @@ function formatNapoleonRequiredActionAnswer(
   profileMode: NapoleonProfileMode,
 ): { content: string; actionCount: number; status: string; runtimeValidationSource: string } {
   if (!evaluatorImport) {
+    const contractActions = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions;
+    if (contractActions.length) {
+      const rows = contractActions
+        .map((action) => {
+          const required = action.blockingLivePromotion
+            ? ` Required change: Napoleon must expose and advertise ${action.operationId} at ${action.path} before Concierge can refresh this capability against live Napoleon.`
+            : "";
+          return `- ${action.id}. Target: ${action.path}. Request kind: ${action.requestKind}.${required}`;
+        })
+        .join("\n");
+
+      return {
+        content: [
+          `Current Napoleon required actions from local contract-alignment evidence (${contractActions.length}):`,
+          rows,
+          `Contract alignment status: ${RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status}. Runtime validation source: contract_alignment.`,
+          `Profile scope: ${profileMode}. This is local contract metadata only; Concierge did not contact Napoleon for this answer, and this is not Napoleon approval, runtime validation, free-form paths permission, memory permission, agent dispatch, external send, or local application.`,
+        ].join("\n\n"),
+        actionCount: contractActions.length,
+        status: RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status,
+        runtimeValidationSource: "contract_alignment",
+      };
+    }
+
     return {
       content:
         "No Napoleon required-action evidence is currently imported. Import a sanitized real-runtime evaluator validation summary first; this answer is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, or send externally.",
@@ -3879,8 +3902,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (answerNapoleonProofComparisonQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
-    if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
+    if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
     const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
       profileMode: activeProfileMode,
     });
@@ -4092,8 +4115,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       if (answerNapoleonProofComparisonQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
-      if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
+      if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
       const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
         profileMode: activeProfileMode,
       });

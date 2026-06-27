@@ -8651,6 +8651,61 @@ test("shows runtime contract alignment status in governed routes", async () => {
   }
 });
 
+test("answers Napoleon contract-alignment required actions without imported evaluator evidence", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  let fetchCalls = 0;
+
+  try {
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    const fetchCallsBeforeQuestion = fetchCalls;
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What does Napoleon need to expose next?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await waitFor(() => {
+      const renderedText = document.body.textContent ?? "";
+      assert.ok(renderedText.includes("Current Napoleon required actions from local contract-alignment evidence (1):"));
+      assert.ok(renderedText.includes("expose_evolution_proposal_status_runtime_target"));
+      assert.ok(renderedText.includes("/evolution/proposals/{proposal_id}/status"));
+      assert.ok(renderedText.includes("evolution_proposal_status_handoff"));
+      assert.ok(renderedText.includes("Concierge did not contact Napoleon for this answer"));
+      assert.ok(renderedText.includes("not Napoleon approval"));
+    });
+    assert.equal(fetchCalls, fetchCallsBeforeQuestion);
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const requiredActionAnswerEvent = telemetryBuffer.events?.find(
+      (event) => event.event === "napoleon_required_actions_answered",
+    );
+    assert.equal(requiredActionAnswerEvent?.attributes.requiredActionCount, 1);
+    assert.equal(requiredActionAnswerEvent?.attributes.evaluatorStatus, "runtime_mapping_gaps_present");
+    assert.equal(requiredActionAnswerEvent?.attributes.runtimeValidationSource, "contract_alignment");
+    assert.equal(requiredActionAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(requiredActionAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(requiredActionAnswerEvent).includes("expose_evolution_proposal_status_runtime_target"), false);
+    assert.equal(JSON.stringify(requiredActionAnswerEvent).includes("/evolution/proposals"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows transport token and side-effect boundaries for named Napoleon routes", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([
