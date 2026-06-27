@@ -4,9 +4,11 @@ import type { NapoleonProfileMode } from "./contractBridge.js";
 export interface NapoleonRequiredActionPriority {
   id: string;
   reason: string;
+  handoffName?: string;
   targetPath?: string;
   requestKind?: string;
   operationId?: string;
+  advertiseUsing: string[];
   blockingLivePromotion: true;
   sideEffectsPerformed: false;
   approvalCaptured: false;
@@ -67,9 +69,11 @@ export function prioritizeNapoleonRequiredAction(
   return {
     id: action.id,
     reason: priorityReason(action, actions.length),
+    ...(action.handoffName ? { handoffName: action.handoffName } : {}),
     ...(action.targetPath ? { targetPath: action.targetPath } : {}),
     ...(action.requestKind ? { requestKind: action.requestKind } : {}),
     ...(action.operationId ? { operationId: action.operationId } : {}),
+    advertiseUsing: action.advertiseUsing ?? [],
     blockingLivePromotion: true,
     sideEffectsPerformed: false,
     approvalCaptured: false,
@@ -86,7 +90,11 @@ export function formatNapoleonRequiredActionPriority(
   if (!priority) return "Highest priority Napoleon fix: none.";
   const target = priority.targetPath ? ` Target: ${priority.targetPath}.` : "";
   const requestKind = priority.requestKind ? ` Request kind: ${priority.requestKind}.` : "";
-  return `Highest priority Napoleon fix: ${priority.id}.${target}${requestKind} ${priority.reason}`;
+  const operation = priority.operationId ? ` Operation: ${priority.operationId}.` : "";
+  const advertiseUsing = priority.advertiseUsing.length
+    ? ` Advertise using: ${priority.advertiseUsing.join(", ")}.`
+    : "";
+  return `Highest priority Napoleon fix: ${priority.id}.${target}${requestKind}${operation}${advertiseUsing} ${priority.reason}`;
 }
 
 export function formatMinimizedNapoleonRequiredActionAnswer(input: {

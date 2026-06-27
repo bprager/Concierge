@@ -435,6 +435,7 @@ test("smoke tests adult required-action prioritization from local harness runtim
           targetPath: "/chief-of-staff/reviews/evaluation",
           requestKind: "evaluation_review_handoff",
           operationId: "evaluation_review",
+          advertiseUsing: ["supportedHandoffs", "required_for"],
           requiredAction: "Napoleon must advertise evaluation_review before promotion.",
           sideEffectsPerformed: false,
           approvalCaptured: false,
@@ -469,10 +470,15 @@ test("smoke tests adult required-action prioritization from local harness runtim
   assert.equal(result.answer.highestPriorityAction?.id, "advertise_evaluation_review_handoff");
   assert.equal(result.answer.highestPriorityAction?.targetPath, "/chief-of-staff/reviews/evaluation");
   assert.equal(result.answer.highestPriorityAction?.requestKind, "evaluation_review_handoff");
+  assert.equal(result.answer.missingHandoffTarget?.handoffName, "evaluation_review");
+  assert.equal(result.answer.missingHandoffTarget?.operationId, "evaluation_review");
+  assert.equal(result.answer.missingHandoffTarget?.advertiseUsing.join(", "), "supportedHandoffs, required_for");
   assert.ok(result.answer.content.includes("Current Napoleon required actions from local harness runtime evidence (2):"));
   assert.ok(result.answer.content.includes("Highest priority Napoleon fix: advertise_evaluation_review_handoff."));
   assert.ok(result.answer.content.includes("Target: /chief-of-staff/reviews/evaluation."));
   assert.ok(result.answer.content.includes("Request kind: evaluation_review_handoff."));
+  assert.ok(result.answer.content.includes("Operation: evaluation_review."));
+  assert.ok(result.answer.content.includes("Advertise using: supportedHandoffs, required_for."));
   assert.ok(result.answer.content.includes("not Napoleon approval"));
   assert.equal(result.sideEffects.localAnswerOnly, true);
   assert.equal(result.sideEffects.approvalCaptured, false);

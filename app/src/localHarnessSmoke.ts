@@ -133,6 +133,7 @@ export interface LocalHarnessAdultRequiredActionAnswer {
   status: string;
   runtimeValidationSource: string;
   highestPriorityAction: NapoleonRequiredActionPriority | null;
+  missingHandoffTarget: NapoleonRequiredActionPriority | null;
 }
 
 export interface LocalHarnessAdultRequiredActionSmokeResult {
@@ -300,6 +301,7 @@ export function runLocalHarnessAdultRequiredActionSmoke(
       status: artifact.validation.status,
       runtimeValidationSource: artifact.runtimeValidationSource ?? "unavailable",
       highestPriorityAction: priority,
+      missingHandoffTarget: priority,
     },
     sideEffects: {
       localAnswerOnly: true,

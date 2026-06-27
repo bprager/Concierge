@@ -11217,7 +11217,7 @@ test("renders unadvertised evaluator handoff required action from validation imp
     );
     assert.ok(
       view.getByText(
-        "Highest priority Napoleon fix: advertise_evaluation_review_handoff. Target: /chief-of-staff/reviews/evaluation. Request kind: evaluation_review_handoff. Fix this first because live promotion still cannot prove evaluator review against Napoleon until this handoff is advertised.",
+        "Highest priority Napoleon fix: advertise_evaluation_review_handoff. Target: /chief-of-staff/reviews/evaluation. Request kind: evaluation_review_handoff. Operation: evaluation_review. Advertise using: supportedHandoffs, supported_handoffs, required_for, descriptor route metadata for /chief-of-staff/reviews/evaluation. Fix this first because live promotion still cannot prove evaluator review against Napoleon until this handoff is advertised.",
       ),
     );
     const readiness = view.getByText("Live bridge readiness").closest("section") as HTMLElement | null;
@@ -11236,6 +11236,8 @@ test("renders unadvertised evaluator handoff required action from validation imp
       const renderedText = document.body.textContent ?? "";
       assert.ok(renderedText.includes("Current Napoleon required actions from sanitized validation evidence (3):"));
       assert.ok(renderedText.includes("Highest priority Napoleon fix: advertise_evaluation_review_handoff"));
+      assert.ok(renderedText.includes("Operation: evaluation_review."));
+      assert.ok(renderedText.includes("Advertise using: supportedHandoffs, supported_handoffs, required_for"));
       assert.ok(renderedText.includes("live promotion still cannot prove evaluator review"));
       assert.ok(renderedText.includes("advertise_chief_of_staff_request_handoff"));
       assert.ok(renderedText.includes("advertise_governance_evaluation_handoff"));
