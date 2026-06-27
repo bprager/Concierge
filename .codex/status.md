@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local Text Concierge answers for live avatar readiness questions such as "Why can't live avatar start?", so Concierge reuses local model, renderer, camera, and profile preflight state without loading a model, preparing renderer readiness, allocating a canvas, starting a render loop, requesting camera permission, starting capture, running perception, contacting Napoleon, capturing approval, writing memory, dispatching agents, sending externally, or retaining the raw question in telemetry.
 - Added local Text Concierge answers for live voice readiness questions such as "Why can't live voice start?", so Concierge reuses the blocked voice readiness gate without starting microphone capture, playing audio, contacting Napoleon, capturing approval, writing memory, dispatching agents, sending externally, or retaining the raw question in telemetry.
 - Added compact selected-agent contribution follow-up handling for "confirmed?", so Concierge answers from current returned Napoleon proof without another bridge request, side effects, or raw follow-up/provenance telemetry.
 - Added live-runtime promotion-readiness blocking for retained Napoleon-owned required actions, so validation summaries stay promotion-blocked while actions such as `expose_evolution_proposal_status_runtime_target` remain unresolved even if the other runtime checks pass.

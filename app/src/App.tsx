@@ -961,6 +961,27 @@ function isLiveVoiceReadinessQuestion(content: string): boolean {
   return asksAboutVoice && asksAboutReadiness;
 }
 
+function isLiveAvatarReadinessQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  const asksAboutAvatar =
+    /\blive avatar\b/.test(lower) ||
+    /\bavatar mode\b/.test(lower) ||
+    /\bavatar renderer\b/.test(lower) ||
+    /\bavatar rendering\b/.test(lower) ||
+    /\bavatar\b/.test(lower);
+  const asksAboutReadiness =
+    /\bready\b/.test(lower) ||
+    /\breadiness\b/.test(lower) ||
+    /\bstart\b/.test(lower) ||
+    /\brender\b/.test(lower) ||
+    /\brendering\b/.test(lower) ||
+    /\bblocked?\b/.test(lower) ||
+    /\bblockers?\b/.test(lower) ||
+    /\bwhy\b.*\b(can'?t|cannot|not)\b/.test(lower) ||
+    /\bwhat\b.*\b(missing|needed|next|fix)\b/.test(lower);
+  return asksAboutAvatar && asksAboutReadiness;
+}
+
 function isNapoleonConnectionRepairQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   if (!lower.includes("napoleon")) return false;
@@ -1346,6 +1367,76 @@ function formatLiveVoiceReadinessAnswer(readiness: LiveVoiceReadinessView): {
     runtimeProofReady: findStatus("Runtime proof") === "ready",
     rehearsalModeReady: findStatus("Rehearsal Mode") === "ready",
     voicePipelineImplemented: voicePipelineStatus === "ready",
+  };
+}
+
+function formatLiveAvatarReadinessAnswer(input: {
+  model: LocalAvatarModelReferenceResult | null;
+  renderer: LocalAvatarRendererReadinessResult | null;
+  cameraEnabled: boolean;
+  cameraPermissionStatus: LocalMediaPermissionStatus;
+  profileMode: NapoleonProfileMode;
+}): {
+  content: string;
+  modelLoaded: boolean;
+  rendererReadinessPrepared: boolean;
+  rendererReady: boolean;
+  cameraReady: boolean;
+  childProtected: boolean;
+  blockedEffectCount: number;
+} {
+  const defaultBlockedEffects = [
+    "renderer_start",
+    "render_loop",
+    "canvas_allocation",
+    "camera_capture",
+    "face_detection",
+    "affect_inference",
+    "live_napoleon_contact",
+    "memory_write",
+    "approval_capture",
+    "external_send",
+    "agent_dispatch",
+  ];
+  const blockedEffects = input.renderer?.blockedEffects ?? input.model?.blockedEffects ?? defaultBlockedEffects;
+  const cameraReady = input.cameraEnabled && input.cameraPermissionStatus === "granted";
+  const cameraSummary = !input.cameraEnabled
+    ? "Camera capture blocked: camera setting is off."
+    : input.cameraPermissionStatus !== "granted"
+      ? "Camera capture blocked: OS camera permission is not granted."
+      : "Camera capture ready but stopped; live avatar mode is not active.";
+  const childProtected =
+    input.profileMode === "child_protected_user" || input.renderer?.childProtected === true || input.model?.childProtected === true;
+  const rendererSummary =
+    input.renderer === null
+      ? "Renderer readiness not prepared."
+      : `Renderer readiness prepared for ${input.renderer.modelDisplayName}; renderer start, render loop, and canvas allocation are still blocked.`;
+  const modelSummary =
+    input.model === null
+      ? "Avatar model not loaded."
+      : `Avatar model loaded locally: ${input.model.displayName} (${input.model.modelFormat}).`;
+  const guardianSummary = childProtected
+    ? "Child protected mode keeps live avatar rendering, camera, and affect paths blocked pending guardian-appropriate review; this answer does not capture guardian approval."
+    : "No guardian approval is captured by this local readiness answer.";
+
+  return {
+    content: [
+      "Live avatar readiness from local preflight:",
+      "Live avatar: blocked.",
+      modelSummary,
+      rendererSummary,
+      cameraSummary,
+      guardianSummary,
+      `Blocked effects: ${blockedEffects.join(", ")}.`,
+      "This local answer did not load a model, prepare renderer readiness, allocate a canvas, start a render loop, request camera permission, start camera capture, run perception, contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+      "It is not Napoleon approval, not guardian approval, not camera consent, and not a live avatar start command.",
+    ].join("\n\n"),
+    modelLoaded: input.model !== null,
+    rendererReadinessPrepared: input.renderer !== null,
+    rendererReady: input.renderer?.rendererReady === true,
+    cameraReady,
+    childProtected,
+    blockedEffectCount: blockedEffects.length,
   };
 }
 
@@ -3797,6 +3888,67 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     return true;
   }
 
+  function answerLiveAvatarReadinessQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isLiveAvatarReadinessQuestion(content)) return false;
+
+    const answer = formatLiveAvatarReadinessAnswer({
+      model: avatarModelResult,
+      renderer: avatarRendererReadinessResult,
+      cameraEnabled,
+      cameraPermissionStatus,
+      profileMode: activeProfileMode,
+    });
+    emitEvent("live_avatar_readiness_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      localAnswerOnly: true,
+      modelLoaded: answer.modelLoaded,
+      rendererReadinessPrepared: answer.rendererReadinessPrepared,
+      rendererReady: answer.rendererReady,
+      cameraReady: answer.cameraReady,
+      childProtected: answer.childProtected,
+      blockedEffectCount: answer.blockedEffectCount,
+      modelLoadedByQuestion: false,
+      rendererReadinessPreparedByQuestion: false,
+      rendererStarted: false,
+      renderLoopStarted: false,
+      canvasAllocated: false,
+      cameraPermissionRequested: false,
+      cameraCaptureStarted: false,
+      faceDetectionStarted: false,
+      affectInferred: false,
+      liveNapoleonContacted: false,
+      guardianApprovalCaptured: false,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerNapoleonDelegationQuestion(content: string, traceId: string, turnId: string, activeProfileMode: NapoleonProfileMode) {
     if (!isNapoleonDelegationQuestion(content)) return false;
 
@@ -4138,6 +4290,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (answerNapoleonConnectionRepairQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerLiveVoiceReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
+    if (answerLiveAvatarReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonProofComparisonQuestion(content, traceId, turnId, activeProfileMode)) return;
@@ -4353,6 +4506,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       if (answerNapoleonConnectionRepairQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonConnectionSetupQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerLiveVoiceReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
+      if (answerLiveAvatarReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonLiveSendReadinessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonProofCurrentnessQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonProofComparisonQuestion(content, traceId, turnId, activeProfileMode)) return;

@@ -717,6 +717,7 @@ Acceptance criteria:
 
 - Text Concierge exposes a local avatar renderer readiness panel.
 - Renderer readiness can be prepared from loaded avatar model metadata.
+- Text Concierge can answer live avatar readiness questions such as "Why can't live avatar start?" from local model, renderer, camera, and profile preflight state, without loading a model, preparing renderer readiness, allocating a canvas, starting a render loop, requesting camera permission, starting capture, running perception, contacting Napoleon, writing memory, capturing approval, dispatching agents, sending externally, or retaining raw question text in telemetry.
 - Preparing readiness does not allocate a canvas, start a render loop, start animation, request camera permission, start camera capture, run face detection, infer affect, contact Napoleon, write memory, capture approval, dispatch agents, or send externally.
 - `avatar_renderer_readiness_prepared` includes local-readiness marker, renderer-ready marker, false renderer-started/render-loop/canvas flags, model display name, model format, profile mode, child-protected marker, false capture/face/affect/live-Napoleon-contact flags, guardian-approval-captured false, agent-dispatch-performed false, and blocked effects.
 - Child protected renderer readiness shows guardian-review wording and must not treat readiness as guardian approval.

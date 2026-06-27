@@ -20139,6 +20139,98 @@ test("prepares avatar renderer readiness without starting rendering camera or Na
   }
 });
 
+test("answers live avatar readiness questions locally without starting rendering camera or Napoleon contact", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  let permissionRequests = 0;
+  let fetchCalls = 0;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const originalInfo = console.info;
+  Object.defineProperty(globalThis.navigator, "mediaDevices", {
+    configurable: true,
+    value: {
+      getUserMedia: async () => {
+        permissionRequests += 1;
+        return {
+          getTracks: () => [{ stop: () => undefined }],
+        };
+      },
+    },
+  });
+  Object.defineProperty(globalThis, "fetch", {
+    configurable: true,
+    value: async () => {
+      fetchCalls += 1;
+      throw new Error("avatar readiness answer must stay local");
+    },
+  });
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    const view = render(<App />);
+
+    const composer = view.getByPlaceholderText("Ask Napoleon through Concierge...") as HTMLTextAreaElement;
+    fireEvent.change(composer, { target: { value: "Why can't live avatar start?" } });
+    await waitFor(() => assert.equal(composer.value, "Why can't live avatar start?"));
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await waitFor(() => assert.ok(document.body.textContent?.includes("Live avatar readiness from local preflight:")));
+    assert.ok(document.body.textContent?.includes("Live avatar: blocked."));
+    assert.ok(document.body.textContent?.includes("Avatar model not loaded."));
+    assert.ok(document.body.textContent?.includes("Renderer readiness not prepared."));
+    assert.ok(document.body.textContent?.includes("Camera capture blocked: camera setting is off."));
+    assert.ok(document.body.textContent?.includes("not Napoleon approval"));
+    assert.ok(document.body.textContent?.includes("not camera consent"));
+    assert.ok(document.body.textContent?.includes("not a live avatar start command"));
+    assert.equal(permissionRequests, 0);
+    assert.equal(fetchCalls, 0);
+
+    const answerEvent = telemetryPayloads.find((payload) => payload.event === "live_avatar_readiness_answered");
+    assert.ok(answerEvent);
+    assert.equal(answerEvent.attributes.localAnswerOnly, true);
+    assert.equal(answerEvent.attributes.modelLoaded, false);
+    assert.equal(answerEvent.attributes.rendererReadinessPrepared, false);
+    assert.equal(answerEvent.attributes.rendererReady, false);
+    assert.equal(answerEvent.attributes.cameraReady, false);
+    assert.equal(answerEvent.attributes.modelLoadedByQuestion, false);
+    assert.equal(answerEvent.attributes.rendererReadinessPreparedByQuestion, false);
+    assert.equal(answerEvent.attributes.rendererStarted, false);
+    assert.equal(answerEvent.attributes.renderLoopStarted, false);
+    assert.equal(answerEvent.attributes.canvasAllocated, false);
+    assert.equal(answerEvent.attributes.cameraPermissionRequested, false);
+    assert.equal(answerEvent.attributes.cameraCaptureStarted, false);
+    assert.equal(answerEvent.attributes.faceDetectionStarted, false);
+    assert.equal(answerEvent.attributes.affectInferred, false);
+    assert.equal(answerEvent.attributes.liveNapoleonContacted, false);
+    assert.equal(answerEvent.attributes.guardianApprovalCaptured, false);
+    assert.equal(answerEvent.attributes.approvalCaptured, false);
+    assert.equal(answerEvent.attributes.memoryWritePerformed, false);
+    assert.equal(answerEvent.attributes.agentDispatchPerformed, false);
+    assert.equal(answerEvent.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(answerEvent).includes("Why can't live avatar start?"), false);
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("maps avatar stance to expression metadata without animation or emotion inference", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, userEventModule, { App }] = await Promise.all([
