@@ -300,6 +300,7 @@ export function emitCapabilitySignal(
     "new_agent_proposal_review_send_failed",
     "new_agent_proposal_lifecycle_recorded",
     "new_agent_proposal_lifecycle_exported",
+    "local_review_history_exported",
     "evolution_proposal_submission_drafted",
     "evolution_proposal_submission_send_started",
     "evolution_proposal_submission_send_completed",

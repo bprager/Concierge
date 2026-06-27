@@ -2119,6 +2119,20 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "local_review_history_exported") {
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "governance",
+      intentLabel: "inspect_local_review_history",
+      capabilityLabel: "local_review_history",
+      capabilityStatus: "working",
+      outcomeSignal: "answered",
+      confidence: 0.82,
+      architectureArea: "observability",
+      suggestedNextStep: "no_action",
+    });
+  }
+
   if (
     eventName === "evolution_proposal_submission_drafted" ||
     eventName.startsWith("evolution_proposal_submission_send_") ||

@@ -157,6 +157,11 @@ import {
   type EvolutionProposalSubmissionResult,
 } from "./evolutionProposalSubmission.js";
 import {
+  buildLocalReviewHistoryEntries,
+  exportLocalReviewHistoryEntries,
+  type GovernedReviewHistorySource,
+} from "./localReviewHistory.js";
+import {
   buildDraftEvolutionProposalLifecycleRecord,
   clearEvolutionProposalLifecycleRecords,
   exportEvolutionProposalLifecycleRecords,
@@ -1984,6 +1989,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     loadEvolutionProposalLifecycleRecords(browserStorage()),
   );
   const [evolutionProposalLifecycleExportJson, setEvolutionProposalLifecycleExportJson] = useState<string | null>(null);
+  const [localReviewHistoryExportJson, setLocalReviewHistoryExportJson] = useState<string | null>(null);
   const [steeringDraft, setSteeringDraft] = useState<ChiefOfStaffSteeringDraft | null>(null);
   const [steeringDraftExportJson, setSteeringDraftExportJson] = useState<string | null>(null);
   const [chiefOfStaffRequestPacketExportJson, setChiefOfStaffRequestPacketExportJson] = useState<string | null>(null);
@@ -2061,6 +2067,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setEvolutionProposalStatusFailure(null);
     setObservabilityTraceHandoffResult(null);
     setObservabilityTraceHandoffFailure(null);
+    setLocalReviewHistoryExportJson(null);
   }
 
   function clearProfileScopedCapabilityDrafts() {
@@ -2111,6 +2118,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setEvolutionProposalStatusFailure(null);
     setEvolutionProposalLifecycleRecords([]);
     setEvolutionProposalLifecycleExportJson(null);
+    setLocalReviewHistoryExportJson(null);
     clearEvolutionProposalLifecycleRecords(browserStorage());
   }
 
@@ -5448,6 +5456,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       return next;
     });
     setEvolutionProposalLifecycleExportJson(null);
+    setLocalReviewHistoryExportJson(null);
   }
 
   function exportEvolutionProposalLifecycle() {
@@ -5468,6 +5477,117 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     });
   }
 
+  function governedReviewHistorySource(
+    entryType: GovernedReviewHistorySource["entryType"],
+    title: string,
+    subjectId: string,
+    result:
+      | {
+          governanceDecision: { decision_id: string; outcome: string };
+          auditEnvelope: { audit_id: string };
+          traceEnvelope: { trace_id: string; timestamp?: string };
+        }
+      | null,
+  ): GovernedReviewHistorySource | null {
+    if (!result) return null;
+    return {
+      entryType,
+      title,
+      subjectId,
+      status: result.governanceDecision.outcome,
+      latestKnownOutcome: `${title} returned governed review metadata; Concierge did not apply side effects.`,
+      profileMode: mapProfileToNapoleonMode(profile),
+      decisionId: result.governanceDecision.decision_id,
+      auditId: result.auditEnvelope.audit_id,
+      traceId: result.traceEnvelope.trace_id,
+      updatedAt: result.traceEnvelope.timestamp,
+      privacyClass: "metadata_only",
+    };
+  }
+
+  const localReviewHistoryEntries = buildLocalReviewHistoryEntries({
+    governedReviews: [
+      governedReviewHistorySource(
+        "governance_review",
+        "Governance review",
+        "governance-review:latest",
+        governanceReviewSubmission,
+      ),
+      governedReviewHistorySource("memory_proposal", "Memory proposal", "memory-proposal:latest", memorySubmission),
+      governedReviewHistorySource(
+        "chief_of_staff_request",
+        "Chief of Staff request packet",
+        "chief-of-staff-request:latest",
+        chiefOfStaffRequestPacketSubmission,
+      ),
+      governedReviewHistorySource(
+        "governance_evaluation",
+        "Governance evaluation packet",
+        "governance-evaluation:latest",
+        governanceEvaluationPacketSubmission,
+      ),
+      governedReviewHistorySource(
+        "steering_review",
+        "Chief of Staff steering review",
+        "steering-review:latest",
+        steeringSubmission?.result ?? null,
+      ),
+      governedReviewHistorySource(
+        "taxonomy_review",
+        "Taxonomy review",
+        "taxonomy-review:latest",
+        taxonomyReviewSubmission?.result ?? null,
+      ),
+      governedReviewHistorySource(
+        "capability_review_packet",
+        "Capability review packet",
+        "capability-review-packet:latest",
+        capabilityReviewPacketSubmission?.result ?? null,
+      ),
+      governedReviewHistorySource(
+        "new_agent_proposal",
+        "New-agent proposal",
+        "new-agent-proposal:latest",
+        newAgentProposalSubmission,
+      ),
+      governedReviewHistorySource(
+        "evolution_proposal",
+        "Evolution proposal",
+        "evolution-proposal:latest",
+        evolutionProposalSubmission,
+      ),
+      governedReviewHistorySource(
+        "observability_trace",
+        "Observability trace handoff",
+        "observability-trace:latest",
+        observabilityTraceHandoffResult,
+      ),
+    ].filter((source): source is GovernedReviewHistorySource => source !== null),
+    newAgentProposalLifecycleRecords,
+    evolutionProposalLifecycleRecords,
+  });
+
+  function exportLocalReviewHistory() {
+    const exported = exportLocalReviewHistoryEntries(localReviewHistoryEntries);
+    setLocalReviewHistoryExportJson(JSON.stringify(exported, null, 2));
+    emitEvent("local_review_history_exported", {
+      traceId: newTraceId(),
+      conversationId,
+      recordCount: localReviewHistoryEntries.length,
+      proposalOnly: true,
+      localReviewOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      registryUpdatePerformed: false,
+      agentActivated: false,
+      evolutionApplied: false,
+      appliedLocally: false,
+    });
+    refreshCapabilityLedgerStatus();
+  }
+
   function rememberNewAgentProposalLifecycle(record: NewAgentProposalLifecycleRecord) {
     setNewAgentProposalLifecycleRecords((current) => {
       const next = upsertNewAgentProposalLifecycleRecord(current, record);
@@ -5475,6 +5595,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       return next;
     });
     setNewAgentProposalLifecycleExportJson(null);
+    setLocalReviewHistoryExportJson(null);
   }
 
   function emitNewAgentProposalLifecycleRecorded(traceId: string, record: NewAgentProposalLifecycleRecord) {
@@ -6235,6 +6356,51 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           <dd>Applied locally: no</dd>
         </div>
       </dl>
+    );
+  }
+
+  function renderLocalReviewHistoryPanel() {
+    if (!localReviewHistoryEntries.length) return null;
+
+    return (
+      <section className="local-review-history" aria-label="Local review history">
+        <div className="review-heading">
+          <strong>Local review history</strong>
+          <span>
+            Local metadata-only review history; not Napoleon approval, not activation, not memory, not dispatch, and
+            not an external send.
+          </span>
+        </div>
+        <button className="secondary" onClick={exportLocalReviewHistory}>
+          Export local review history
+        </button>
+        <dl>
+          {localReviewHistoryEntries.slice(0, 6).map((entry) => (
+            <div key={`${entry.entryType}:${entry.subjectId}:${entry.updatedAt ?? ""}`}>
+              <dt>{entry.title}</dt>
+              <dd>
+                {entry.subjectId}: {entry.status}. {entry.latestKnownOutcome}{" "}
+                {entry.subjectId.endsWith(":latest") ? (
+                  <>
+                    Review references {entry.decisionId ? "returned" : "not returned"}; audit{" "}
+                    {entry.auditId ? "returned" : "not returned"}; trace {entry.traceId ? "returned" : "not returned"};
+                  </>
+                ) : (
+                  <>
+                    Decision {entry.decisionId ?? "not returned"}; audit {entry.auditId ?? "not returned"}; trace{" "}
+                    {entry.traceId ?? "not returned"};
+                  </>
+                )}{" "}
+                boundary local-only, proposal-only, no approval capture, no memory write, no agent dispatch, no external
+                send, no registry update, not activated, no evolution applied, no local application.
+              </dd>
+            </div>
+          ))}
+        </dl>
+        {localReviewHistoryExportJson ? (
+          <pre aria-label="Exported local review history">{localReviewHistoryExportJson}</pre>
+        ) : null}
+      </section>
     );
   }
 
@@ -8708,6 +8874,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         </>
       ) : null}
 
+      {renderLocalReviewHistoryPanel()}
       {renderNewAgentProposalLifecyclePanel()}
       {renderEvolutionProposalLifecyclePanel()}
 

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a local review history panel and sanitized export for governed review results plus new-agent and evolution proposal lifecycle records, keeping the view metadata-only and preserving blocked approval, memory write, agent dispatch, external send, registry update, activation, evolution application, and local application boundaries.
 - Added local Text UI lifecycle tracking for new-agent proposal review packets, including sanitized drafted, sent-for-review, review-returned, and fail-closed records, export support, profile/context clearing, and explicit no activation, no registry update, no approval capture, no memory write, no agent dispatch, no external send, and no local application boundaries.
 - Added rendered governed submission proof for new-agent proposal review packets, so the Text UI now verifies the Napoleon review handoff carries path, operation, and request-kind metadata while showing no activation, no registry update, no approval capture, no memory write, no agent dispatch, and no external send.
 - Added rendered Text Concierge proof for new-agent proposal review packet drafts, so Capability Intelligence exports now show the governed Napoleon review target, remain proposal-only and sanitized, keep send disabled without a governed endpoint, and visibly block agent activation and registry updates.

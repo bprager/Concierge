@@ -5368,6 +5368,125 @@ test("shows persisted evolution proposal lifecycle records without an open packe
   }
 });
 
+test("shows sanitized local review history from persisted lifecycle records", async () => {
+  const dom = installDom();
+  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalInfo = console.info;
+  console.info = () => undefined;
+
+  try {
+    localStorage.setItem(
+      "concierge_new_agent_proposal_lifecycle",
+      JSON.stringify([
+        {
+          schemaVersion: "concierge.new-agent-proposal-lifecycle.v1",
+          proposalId: "agent-proposal-history-1",
+          proposedAgentId: "agent.history.navigator",
+          profileMode: "adult_owner",
+          capability: "Local review history",
+          architectureArea: "concierge_interface",
+          draftedAt: "2026-06-25T00:00:00.000Z",
+          sentAt: "2026-06-25T00:01:00.000Z",
+          reviewedAt: "2026-06-25T00:02:00.000Z",
+          updatedAt: "2026-06-25T00:02:00.000Z",
+          currentLifecycleState: "review_returned",
+          latestKnownOutcome: "Napoleon returned governed review metadata.",
+          reviewDecisionId: "decision_agent_history",
+          reviewAuditId: "audit_agent_history",
+          reviewTraceId: "trace_agent_history",
+          nextRecommendedUserAction: "Wait for Napoleon-governed approval or rejection evidence.",
+          privacyClass: "metadata_only",
+          boundary: {
+            proposalOnly: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            registryUpdatePerformed: false,
+            agentActivated: false,
+            appliedLocally: false,
+          },
+        },
+      ]),
+    );
+    localStorage.setItem(
+      "concierge_evolution_proposal_lifecycle",
+      JSON.stringify([
+        {
+          schemaVersion: "concierge.evolution-proposal-lifecycle.v1",
+          proposalId: "evolution-proposal-history-1",
+          sourceCapabilityReviewId: "capability-review-history-1",
+          profileMode: "adult_owner",
+          capability: "Local review history",
+          architectureArea: "observability",
+          draftedAt: "2026-06-25T00:03:00.000Z",
+          submittedAt: "2026-06-25T00:04:00.000Z",
+          updatedAt: "2026-06-25T00:04:00.000Z",
+          currentLifecycleState: "accepted_for_review",
+          latestKnownOutcome: "Napoleon accepted the proposal for governed intake review.",
+          intakeDecisionId: "decision_evolution_history",
+          intakeAuditId: "audit_evolution_history",
+          intakeTraceId: "trace_evolution_history",
+          statusRefresh: {
+            available: false,
+            reason: "descriptor_status_route_not_advertised",
+            nextStep: "Keep local intake result as evidence until Napoleon advertises status.",
+          },
+          nextRecommendedUserAction: "Wait for Napoleon-governed review evidence.",
+          privacyClass: "metadata_only",
+          boundary: {
+            proposalOnly: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            registryUpdatePerformed: false,
+            evolutionApplied: false,
+            appliedLocally: false,
+          },
+        },
+      ]),
+    );
+
+    const view = render(<App />);
+    const historyPanel = view.getByLabelText("Local review history");
+
+    assert.ok(historyPanel.textContent?.includes("metadata-only"));
+    assert.ok(historyPanel.textContent?.includes("not Napoleon approval"));
+    assert.ok(historyPanel.textContent?.includes("New-agent proposal"));
+    assert.ok(historyPanel.textContent?.includes("Evolution proposal"));
+    assert.ok(historyPanel.textContent?.includes("decision_agent_history"));
+    assert.ok(historyPanel.textContent?.includes("audit_evolution_history"));
+    assert.ok(historyPanel.textContent?.includes("no approval capture"));
+    assert.ok(historyPanel.textContent?.includes("no memory write"));
+    assert.ok(historyPanel.textContent?.includes("no agent dispatch"));
+    assert.ok(historyPanel.textContent?.includes("no external send"));
+    assert.ok(historyPanel.textContent?.includes("not activated"));
+    assert.ok(historyPanel.textContent?.includes("no evolution applied"));
+
+    await user.click(view.getByRole("button", { name: "Export local review history" }));
+    const exportBlock = view.getByLabelText("Exported local review history");
+    assert.ok(exportBlock.textContent?.includes('"schemaVersion": "concierge.local-review-history-export.v1"'));
+    assert.ok(exportBlock.textContent?.includes('"entryType": "new_agent_proposal"'));
+    assert.ok(exportBlock.textContent?.includes('"entryType": "evolution_proposal"'));
+    assert.ok(exportBlock.textContent?.includes('"approvalCaptured": false'));
+    assert.ok(exportBlock.textContent?.includes('"agentDispatchPerformed": false'));
+    assert.ok(exportBlock.textContent?.includes('"externalSendPerformed": false'));
+    assert.equal(exportBlock.textContent?.includes("raw"), false);
+    assert.equal(exportBlock.textContent?.includes("private.example"), false);
+    assert.equal(exportBlock.textContent?.includes("token"), false);
+  } finally {
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("ignores unsafe persisted evolution proposal lifecycle records after reload", async () => {
   const dom = installDom();
   const [{ cleanup, render }, { App }] = await Promise.all([
