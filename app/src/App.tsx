@@ -5459,6 +5459,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       },
       requiredActionCount: actions.length,
       highestPriorityAction: priority,
+      missingHandoffTarget: priority,
       napoleonRequiredActions: actions,
       boundary: {
         localExportOnly: true,

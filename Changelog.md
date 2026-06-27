@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a top-level `missingHandoffTarget` to focused Napoleon required-action exports, mirroring the highest-priority sanitized required action so Napoleon maintainers can consume the target metadata without parsing prose or telemetry.
 - Added local harness smoke coverage for adult/operator Napoleon required-action answers from sanitized runtime evidence, proving highest-priority fix guidance plus reusable missing-handoff target metadata without raw action text or side effects.
 - Added local harness smoke coverage for child-protected Napoleon required-action answers from sanitized runtime evidence, proving count/source/profile-only output with no route/action details or side effects.
 - Added evaluator scenario coverage for child-protected Napoleon required-action answers, requiring count/source-only minimization, adult/operator repair guidance, no route/action specifics, and no Napoleon contact or side effects.

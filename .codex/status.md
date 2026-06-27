@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a top-level `missingHandoffTarget` to focused Napoleon required-action packet exports, mirroring the sanitized highest-priority Napoleon-owned required action for operator handoff while keeping telemetry count-only and preserving approval, memory write, agent dispatch, external send, and local application boundaries.
 - Added local harness smoke coverage for adult/operator Napoleon required-action answers from sanitized runtime evidence, proving highest-priority fix guidance, reusable missing-handoff target metadata, no raw action text, no endpoint/token/body retention, and no side effects.
 - Added local harness smoke coverage for child-protected Napoleon required-action answers from sanitized runtime evidence, proving count/source/profile-only guidance, trusted adult/operator repair wording, no route/action specifics, no highest-priority details, and no side effects.
 - Added evaluator scenario coverage for child-protected Napoleon required-action answers, requiring count/source/profile-only local guidance, trusted adult/operator repair wording, no route/action specifics, no Napoleon contact, and no side effects.

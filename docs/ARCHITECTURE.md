@@ -237,6 +237,8 @@ Reusable local bridge fixtures live in `app/src/napoleonBridgeFixtures.ts`. They
 
 The adult and child Chief of Staff steering request artifacts must also carry schema-shaped metadata-only learning signals that match the selected capability, request trace, active profile, child minimization rules where applicable, and proposal-only governance boundary.
 
+Focused Napoleon required-action exports carry `missingHandoffTarget` as the same sanitized object as the deterministic `highestPriorityAction`. This gives Napoleon maintainers a machine-readable missing handoff target while preserving the same local-only, non-authorizing, no-side-effect, and count-only telemetry boundaries as the surrounding required-action packet export.
+
 The local bridge harness includes browser CORS preflight headers so the rendered Text Concierge shell can exercise the local endpoint preset during manual validation. This does not make the harness a real Napoleon runtime, does not grant authority, and does not change the governed bridge contract.
 
 ```plantuml

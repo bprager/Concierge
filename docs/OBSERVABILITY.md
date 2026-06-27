@@ -407,3 +407,5 @@ Alert conditions:
 - Telemetry redaction failure
 - Camera or mic active without visible UI state
 - Regression from previous evaluator run
+
+Required-action export telemetry must stay count-only even when the focused export JSON carries a `missingHandoffTarget`. That field mirrors the sanitized `highestPriorityAction` for local operator handoff only; telemetry must not copy its IDs, paths, action text, handoff names, request kinds, operation IDs, or advertise-using values.

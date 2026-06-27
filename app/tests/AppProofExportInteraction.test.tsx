@@ -11265,7 +11265,13 @@ test("renders unadvertised evaluator handoff required action from validation imp
     assert.ok(requiredActionExport.textContent?.includes('"kind": "concierge.napoleon-required-actions.export.v1"'));
     assert.ok(requiredActionExport.textContent?.includes('"requiredActionCount": 3'));
     assert.ok(requiredActionExport.textContent?.includes('"highestPriorityAction"'));
+    assert.ok(requiredActionExport.textContent?.includes('"missingHandoffTarget"'));
     assert.ok(requiredActionExport.textContent?.includes('"id": "advertise_evaluation_review_handoff"'));
+    assert.ok(requiredActionExport.textContent?.includes('"handoffName": "evaluation_review"'));
+    assert.ok(requiredActionExport.textContent?.includes('"operationId": "evaluation_review"'));
+    assert.ok(requiredActionExport.textContent?.includes('"advertiseUsing"'));
+    assert.ok(requiredActionExport.textContent?.includes('"supportedHandoffs"'));
+    assert.ok(requiredActionExport.textContent?.includes('"required_for"'));
     assert.ok(requiredActionExport.textContent?.includes('"blockingLivePromotion": true'));
     assert.ok(requiredActionExport.textContent?.includes('"advertise_chief_of_staff_request_handoff"'));
     assert.ok(requiredActionExport.textContent?.includes('"/chief-of-staff/requests"'));
