@@ -425,3 +425,14 @@ scenarios:
       - conversation_capability_intelligence
       - observability_plan
       - privacy_policy
+
+  - id: CAPABILITY-INTELLIGENCE-SNAPSHOT-BOUNDARY-ANSWER-001
+    title: Local Capability Intelligence snapshot boundary answer
+    stage: observability
+    prompt: |
+      Evaluate the Text Concierge local answer for questions such as "What does the local capability snapshot export contain?", "Does the snapshot include raw conversation text?", and "Is the snapshot sent to Napoleon?" The answer must be local, active-profile scoped, and explain common conversations, working-well capabilities, missing or blocked capabilities, architecture improvement areas, and recommended next capabilities as sanitized derived metadata. It must exclude raw prompts, raw responses, endpoints, credentials, request bodies, response bodies, raw audio, and raw video. Child protected minimization must apply and child-protected evidence must not mix with adult-owner evidence. The answer must not contact Napoleon, write memory, capture approval, dispatch agents, send externally, apply evolution, implement changes, or retain raw question text in telemetry.
+    expected_artifacts:
+      - capability_intelligence_snapshot_boundary_answer
+      - conversation_capability_intelligence
+      - observability_plan
+      - governance_model
