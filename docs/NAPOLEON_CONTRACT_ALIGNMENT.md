@@ -22,10 +22,11 @@ The report is local evidence only. It does not contact Napoleon, approve a runti
 - `napoleonReviewPathsNeedingRuntimeMapping` lists Napoleon review, governance, observability, and evolution paths that still need explicit bridge-client mapping or a Napoleon-side `/v1/concierge/...` equivalent before Concierge should send to them.
 - `napoleonReviewPathsWithoutLocalAlias` lists contract paths that do not even have a current local handoff alias.
 - `conciergeReviewPathsMissingFromNapoleonRuntime` and `conciergeReviewOperationsMissingFromNapoleonRuntime` list named Concierge Napoleon targets that are generated locally but absent from the inspected Napoleon snapshot; these are runtime exposure gaps, not permission to fall back to free-form paths.
+- `napoleonRequiredActions` turns those missing named targets into Napoleon-owned required actions with the expected operation, target path, request kind, live-promotion blocking state, and non-authority boundary.
 
 ## Current Finding
 
-The Napoleon snapshot inspected from `bernd@mimir:~/Projects/Napoleon/docs/concierge-integration/apis/concierge-integration.openapi.yaml` is not path-identical with Concierge's generated bridge registry. The currently inspected snapshot maps all Napoleon-only runtime paths that Concierge knows how to use, but it does not yet expose Concierge's named read-only `evolution_proposal_status` target for `/evolution/proposals/{proposal_id}/status`. In machine-readable report terms, `aligned` remains false because the literal path sets differ, `runtimeAligned` remains false until that Concierge-side target is present in the Napoleon snapshot, and `alignmentStatus` is `runtime_mapping_gaps_present`.
+The Napoleon snapshot inspected from `bernd@mimir:~/Projects/Napoleon/docs/concierge-integration/apis/concierge-integration.openapi.yaml` is not path-identical with Concierge's generated bridge registry. The snapshot verified on 2026-06-27 maps all Napoleon-only runtime paths that Concierge knows how to use, but it does not yet expose Concierge's named read-only `evolution_proposal_status` target for `/evolution/proposals/{proposal_id}/status`. In machine-readable report terms, `aligned` remains false because the literal path sets differ, `runtimeAligned` remains false until that Concierge-side target is present in the Napoleon snapshot, and `alignmentStatus` is `runtime_mapping_gaps_present`.
 
 Concierge currently exposes governed bridge operations under:
 
@@ -52,6 +53,12 @@ The Napoleon advisory harness snapshot exposes:
 - `/observability/traces`
 - `/profiles/{profile_id}`
 - `/evolution/proposals`
+
+The alignment report now also emits a Napoleon-owned required action:
+
+- `expose_evolution_proposal_status_runtime_target`: expose and advertise the read-only `evolution_proposal_status` runtime target at `/evolution/proposals/{proposal_id}/status` with `evolution_proposal_status_handoff` before Concierge can refresh proposal status against live Napoleon.
+
+That action blocks live promotion for proposal-status refresh only. It does not authorize Concierge to use free-form paths, capture approval, apply evolution, update registries, write memory, dispatch agents, send externally, append traces, route tasks, or treat proposal status as local authority.
 
 The Napoleon snapshot declares `x-napoleon-runtime-authority: false`, so the path mismatch is not an authority grant. Concierge should continue to treat local `/v1/concierge/...` paths and Napoleon runtime paths as separate named mappings, with descriptor preflight, evidence comparison, response validation, and proposal-only boundaries deciding whether a given handoff may be attempted.
 

@@ -90,6 +90,17 @@ LOCAL_HANDOFF_ALIAS_CANDIDATES = [
     },
 ]
 
+BLOCKED_REVIEW_TARGET_EFFECTS = [
+    "capture approval",
+    "apply evolution",
+    "write memory",
+    "dispatch agents",
+    "send externally",
+    "update registries",
+    "append traces",
+    "treat proposal status as local authority",
+]
+
 
 def load_yaml(path: Path) -> dict[str, Any]:
     value = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -141,6 +152,46 @@ def concierge_review_operations_missing_from_napoleon(
     return sorted(missing, key=lambda item: (item["path"], item["id"]))
 
 
+def napoleon_required_actions_for_missing_concierge_review_operations(
+    operations: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    actions: list[dict[str, Any]] = []
+    for operation in operations:
+        operation_id = operation["id"]
+        path = operation["path"]
+        request_kind = operation["requestKind"]
+        action_id = f"expose_{operation_id}_runtime_target"
+        actions.append(
+            {
+                "id": action_id,
+                "owner": "napoleon_runtime",
+                "operationId": operation_id,
+                "path": path,
+                "requestKind": request_kind,
+                "requiredAction": (
+                    f"Expose and advertise the read-only {operation_id} runtime target at {path} before "
+                    "Concierge can refresh proposal status against live Napoleon."
+                    if operation_id == "evolution_proposal_status"
+                    else f"Expose and advertise the {operation_id} runtime target at {path} before Concierge can "
+                    "use that named live Napoleon handoff."
+                ),
+                "reason": "named_concierge_review_target_missing_from_napoleon_snapshot",
+                "blockingLivePromotion": True,
+                "boundary": (
+                    "Concierge must not fall back to free-form paths, "
+                    + ", ".join(BLOCKED_REVIEW_TARGET_EFFECTS[:-1])
+                    + f", or {BLOCKED_REVIEW_TARGET_EFFECTS[-1]}."
+                ),
+                "sideEffectsPerformed": False,
+                "approvalCaptured": False,
+                "memoryWritePerformed": False,
+                "agentDispatchPerformed": False,
+                "externalSendPerformed": False,
+            }
+        )
+    return sorted(actions, key=lambda item: (item["path"], item["operationId"]))
+
+
 def local_handoff_aliases(concierge_paths: set[str], napoleon_paths: set[str]) -> list[dict[str, Any]]:
     aliases: list[dict[str, Any]] = []
     for alias in LOCAL_HANDOFF_ALIAS_CANDIDATES:
@@ -188,6 +239,9 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
     supported_discovery_runtime_paths = present_paths(napoleon_set, SUPPORTED_DISCOVERY_RUNTIME_PATHS)
     concierge_review_operations_missing = concierge_review_operations_missing_from_napoleon(concierge, napoleon_set)
     concierge_review_paths_missing = sorted({operation["path"] for operation in concierge_review_operations_missing})
+    napoleon_required_actions = napoleon_required_actions_for_missing_concierge_review_operations(
+        concierge_review_operations_missing
+    )
     aliases = local_handoff_aliases(concierge_set, napoleon_set)
     alias_covered_paths = {
         path
@@ -249,6 +303,7 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
         "napoleonDiscoveryPathsNeedingRuntimeMapping": discovery_paths_needing_runtime_mapping,
         "conciergeReviewPathsMissingFromNapoleonRuntime": concierge_review_paths_missing,
         "conciergeReviewOperationsMissingFromNapoleonRuntime": concierge_review_operations_missing,
+        "napoleonRequiredActions": napoleon_required_actions,
         "napoleonRuntimeAuthority": napoleon.get("x-napoleon-runtime-authority"),
         "nonAuthorityBoundary": "alignment_check_only",
         "sideEffectsPerformed": False,

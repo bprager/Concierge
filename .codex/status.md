@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added `napoleonRequiredActions` to `make napoleon-contract-alignment` for missing named Concierge review/evidence/status targets; the current `mimir` OpenAPI snapshot now reports Napoleon-owned action `expose_evolution_proposal_status_runtime_target` for `/evolution/proposals/{proposal_id}/status`, with live promotion blocked for proposal-status refresh until Napoleon exposes and advertises that target.
 - Added the generated bridge operation freshness check to the default `make check` pipeline, so OpenAPI-to-client drift now fails the normal validation path.
 - Extended live Napoleon response validation so handled-response capability claims such as "Napoleon handled the response through Passive Brain" fail closed unless returned target-capability or selected-agent provenance supports that attribution.
 - Hardened live Napoleon response validation so target-capability usage claims such as "Napoleon used Passive Brain" fail closed unless the returned target capability or selected-agent provenance supports that attribution.
@@ -845,11 +846,11 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Next 3 To 5 Priorities
 
-1. Use the new `napoleonRequiredActions` packet from `make live-runtime-validation` to get Napoleon to advertise and expose the `evaluation_review` handoff for `/chief-of-staff/reviews/evaluation`, or provide `NAPOLEON_EVAL_ENDPOINT`; real `/cos/descriptor`, `/cos/text-turn`, `/cos/trace/{trace_id}`, and `/cos/capabilities` evidence now passes, but promotion remains blocked because the current `/cos` descriptor does not advertise evaluation review.
-2. Run `make napoleon-contract-alignment` against each new Napoleon integration OpenAPI snapshot before changing bridge paths.
-3. Run `make live-runtime-validation` against a real Napoleon runtime endpoint once the bridge paths and response shapes are aligned.
-4. Validate governance review, memory proposal, steering, and taxonomy handoffs against a real Napoleon runtime once the descriptor exposes live transport URLs and credentials.
-5. Add governed application flow for reviewed taxonomy changes once Napoleon exposes an explicit approval/application endpoint.
+1. Use `make napoleon-contract-alignment` output to get Napoleon to expose and advertise `evolution_proposal_status` at `/evolution/proposals/{proposal_id}/status`; the current `mimir` OpenAPI snapshot still lacks that read-only status target.
+2. Use the new `napoleonRequiredActions` packet from `make live-runtime-validation` to get Napoleon to advertise and expose the `evaluation_review` handoff for `/chief-of-staff/reviews/evaluation`, or provide `NAPOLEON_EVAL_ENDPOINT`; real `/cos/descriptor`, `/cos/text-turn`, `/cos/trace/{trace_id}`, and `/cos/capabilities` evidence now passes, but promotion remains blocked because the current `/cos` descriptor does not advertise evaluation review.
+3. Run `make napoleon-contract-alignment` against each new Napoleon integration OpenAPI snapshot before changing bridge paths.
+4. Run `make live-runtime-validation` against a real Napoleon runtime endpoint once the bridge paths and response shapes are aligned.
+5. Validate governance review, memory proposal, steering, and taxonomy handoffs against a real Napoleon runtime once the descriptor exposes live transport URLs and credentials.
 
 ## Useful Validation Commands
 

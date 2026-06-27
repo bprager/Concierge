@@ -194,6 +194,35 @@ paths:
                 }
             ],
         )
+        self.assertEqual(
+            report["napoleonRequiredActions"],
+            [
+                {
+                    "id": "expose_evolution_proposal_status_runtime_target",
+                    "owner": "napoleon_runtime",
+                    "operationId": "evolution_proposal_status",
+                    "path": "/evolution/proposals/{proposal_id}/status",
+                    "requestKind": "evolution_proposal_status_handoff",
+                    "requiredAction": (
+                        "Expose and advertise the read-only evolution_proposal_status runtime target at "
+                        "/evolution/proposals/{proposal_id}/status before Concierge can refresh proposal status "
+                        "against live Napoleon."
+                    ),
+                    "reason": "named_concierge_review_target_missing_from_napoleon_snapshot",
+                    "blockingLivePromotion": True,
+                    "boundary": (
+                        "Concierge must not fall back to free-form paths, capture approval, apply evolution, "
+                        "write memory, dispatch agents, send externally, update registries, append traces, or "
+                        "treat proposal status as local authority."
+                    ),
+                    "sideEffectsPerformed": False,
+                    "approvalCaptured": False,
+                    "memoryWritePerformed": False,
+                    "agentDispatchPerformed": False,
+                    "externalSendPerformed": False,
+                }
+            ],
+        )
 
     def test_classifies_advisory_runtime_and_unmapped_review_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -327,6 +356,7 @@ paths:
         self.assertEqual(report["napoleonDiscoveryPathsNeedingRuntimeMapping"], [])
         self.assertEqual(report["conciergeReviewPathsMissingFromNapoleonRuntime"], [])
         self.assertEqual(report["conciergeReviewOperationsMissingFromNapoleonRuntime"], [])
+        self.assertEqual(report["napoleonRequiredActions"], [])
         self.assertTrue(report["runtimeAligned"])
         self.assertEqual(report["alignmentStatus"], "runtime_mapped_with_local_contract_paths")
         self.assertEqual(report["unmappedNapoleonRuntimePaths"], [])
