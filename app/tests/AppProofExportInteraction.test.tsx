@@ -4043,6 +4043,151 @@ test("renders governed Napoleon bridge success as a working capability answer", 
   }
 });
 
+test("renders improving capability trend answers without contacting Napoleon", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, fireEvent, render, waitFor },
+    userEventModule,
+    { App },
+    { appendCapabilitySignal, buildCapabilitySignal, clearCapabilityLedger },
+    telemetry,
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/capabilityLedger.js"),
+    import("../src/telemetry.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  let fetchCalls = 0;
+  const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    appendCapabilitySignal(
+      telemetry.capabilityLedger,
+      buildCapabilitySignal({
+        traceId: "trace_ui_improving_prior",
+        conversationId: "conv_ui_improving",
+        turnId: "turn_ui_improving_prior",
+        profileMode: "adult_owner",
+        channel: "text",
+        topicLabel: "governed_text_turn",
+        intentLabel: "send_to_napoleon",
+        capabilityLabel: "bridge_failure_handling",
+        capabilityStatus: "missing",
+        outcomeSignal: "bridge_failed",
+        confidence: 0.82,
+        evidenceRefs: ["trace:trace_ui_improving_prior"],
+        architectureArea: "bridge",
+        privacyClass: "metadata_only",
+        suggestedNextStep: "write_evaluator_case",
+        observedAt: daysAgo(10),
+        rawMessage: "raw prior failure text must not render",
+      }),
+    );
+    appendCapabilitySignal(
+      telemetry.capabilityLedger,
+      buildCapabilitySignal({
+        traceId: "trace_ui_improving_recent_one",
+        conversationId: "conv_ui_improving",
+        turnId: "turn_ui_improving_recent_one",
+        profileMode: "adult_owner",
+        channel: "text",
+        topicLabel: "governed_text_turn",
+        intentLabel: "send_to_napoleon",
+        capabilityLabel: "bridge_failure_handling",
+        capabilityStatus: "working",
+        outcomeSignal: "answered",
+        confidence: 0.84,
+        evidenceRefs: ["trace:trace_ui_improving_recent_one"],
+        architectureArea: "bridge",
+        privacyClass: "metadata_only",
+        suggestedNextStep: "no_action",
+        observedAt: daysAgo(2),
+        rawMessage: "raw recent success text must not render",
+      }),
+    );
+    appendCapabilitySignal(
+      telemetry.capabilityLedger,
+      buildCapabilitySignal({
+        traceId: "trace_ui_improving_recent_two",
+        conversationId: "conv_ui_improving",
+        turnId: "turn_ui_improving_recent_two",
+        profileMode: "adult_owner",
+        channel: "text",
+        topicLabel: "governed_text_turn",
+        intentLabel: "send_to_napoleon",
+        capabilityLabel: "bridge_failure_handling",
+        capabilityStatus: "working",
+        outcomeSignal: "answered",
+        confidence: 0.86,
+        evidenceRefs: ["trace:trace_ui_improving_recent_two"],
+        architectureArea: "bridge",
+        privacyClass: "metadata_only",
+        suggestedNextStep: "no_action",
+        observedAt: daysAgo(1),
+        rawMessage: "https://private.example.test/concierge",
+      }),
+    );
+
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What capabilities are improving?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    const answer = await view.findByText(/Local capabilities getting better/);
+    const answerText = answer.closest("article")?.textContent ?? "";
+    assert.ok(answerText.includes("Napoleon bridge failure handling"));
+    assert.ok(answerText.includes("2 recent, 1 previous, delta 1"));
+    assert.ok(answerText.includes("Profile scope: adult_owner"));
+    assert.ok(answerText.includes("proposal-only"));
+    assert.equal(answerText.includes("raw prior failure text"), false);
+    assert.equal(answerText.includes("raw recent success text"), false);
+    assert.equal(answerText.includes("private.example.test"), false);
+
+    const answered = await waitFor(() => {
+      const payload = telemetryPayloads.find((event) => event.event === "capability_intelligence_answered");
+      assert.ok(payload);
+      return payload;
+    });
+    assert.equal(answered.attributes.kind, "improving_capabilities");
+    assert.equal(answered.attributes.localAnswerOnly, true);
+    assert.equal(answered.attributes.approvalCaptured, false);
+    assert.equal(answered.attributes.memoryWritePerformed, false);
+    assert.equal(answered.attributes.agentDispatchPerformed, false);
+    assert.equal(answered.attributes.externalSendPerformed, false);
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders steering recommendation type answers without leaking telemetry content", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }, { clearCapabilityLedger }, telemetry] = await Promise.all([
