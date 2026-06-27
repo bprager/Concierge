@@ -854,6 +854,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - Local avatar work now includes a metadata-only VRM model reference loader and Avatar Model panel that validates the local model reference with explicit no-agent-dispatch state, without starting rendering, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - Local avatar work now includes an Avatar Renderer readiness panel that prepares renderer preflight metadata with explicit no-agent-dispatch state from the loaded model without allocating a canvas, starting a render loop, camera capture, perception, Napoleon contact, approval capture, guardian approval capture, memory writes, agent dispatch, or external sends.
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
+- Added richer local Capability Intelligence next-work answers for "What should we implement next?", returning top-three proposal-only candidates with one best tradeoff, implementation size, coverage need, privacy impact, and governance impact without contacting Napoleon.
 
 ## Next 3 To 5 Priorities
 

@@ -809,6 +809,10 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   const asksEasyToEvolve = /\b(easy|easiest|evolve|evolution|small)\b/.test(lower);
   const asksArchitecture = /\b(architecture|part|area|component|improved|improve|fix)\b/.test(lower);
   const asksNext = /\b(implement|implemented|next|recommend|recommended|prioritize|priority)\b/.test(lower);
+  const asksPlainNextWork =
+    /\bwhat\b.*\b(should|could)\b.*\b(implement|build|work on|prioritize)\b/.test(lower) ||
+    /\bwhat\b.*\b(after this|next)\b/.test(lower) ||
+    /\bhighest[- ]value\b.*\b(missing|next|capability)\b/.test(lower);
   const asksSteeringRecommendationTypes =
     /\b(steering|chief of staff|chief-of-staff)\b/.test(lower) &&
     /\b(recommendation type|recommendation types|types?|categories|category)\b/.test(lower);
@@ -820,7 +824,7 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   if (asksCapability && asksImproving) return "improving_capabilities";
   if (asksWorked && asksRecent) return "recent_working_capabilities";
   if (asksRecent && /\b(changed|changing|this week|week)\b/.test(lower)) return "weekly_changes";
-  if (asksCapability && asksNext) return "recommended_next_capabilities";
+  if ((asksCapability && asksNext) || asksPlainNextWork) return "recommended_next_capabilities";
   if (asksCapability && asksMissingOrBlocked && asksEasyToEvolve) return "easy_to_evolve_missing_capabilities";
   if (asksArchitecture && asksMissingOrBlocked) return "architecture_improvement_areas";
   if ((asksAboutConversation || asksCapability) && (asksWorkingWell || (asksCapability && asksWorked && !asksMissingOrBlocked))) {
@@ -1283,6 +1287,63 @@ function proposalRecommendationForGroup(group: RecommendationGroup): string | un
   return `Add a guided Media Session readiness repair flow for ${details.join(", ")} while keeping capture, playback, raw media storage, Napoleon contact, approval capture, memory writes, agent dispatch, and external sends blocked until explicit consent and governed bridge readiness.`;
 }
 
+function implementationSizeForRow(row: CapabilityAnswerRow): "small" | "medium" | "large" {
+  const effort = row.scoreComponents?.implementationEffort ?? 3;
+  const risk =
+    (row.scoreComponents?.governanceRisk ?? 0) +
+    (row.scoreComponents?.privacyRisk ?? 0) +
+    (row.scoreComponents?.childSafetyRisk ?? 0) +
+    (row.scoreComponents?.authorityExpansionRisk ?? 0);
+  if (effort <= 1.5 && risk <= 3) return "small";
+  if (effort <= 3 && risk <= 7) return "medium";
+  return "large";
+}
+
+function coverageNeedForRow(row: CapabilityAnswerRow): string {
+  if (row.suggestedNextStep === "write_evaluator_case") return "evaluator and rendered app coverage";
+  if (row.architectureArea === "bridge") return "bridge contract and fail closed coverage";
+  if (row.architectureArea === "voice" || row.architectureArea === "avatar") return "local privacy and media boundary coverage";
+  if (row.architectureArea === "observability") return "metadata export and telemetry coverage";
+  return "unit and rendered app coverage";
+}
+
+function privacyImpactForRow(row: CapabilityAnswerRow): string {
+  if ((row.scoreComponents?.childSafetyRisk ?? 0) > 0) return "child sensitive metadata only";
+  if ((row.scoreComponents?.privacyRisk ?? 0) >= 3) return "sensitive metadata requires minimization";
+  if (row.architectureArea === "voice" || row.architectureArea === "avatar") return "raw media must stay local and off by default";
+  return "metadata only";
+}
+
+function governanceImpactForRow(row: CapabilityAnswerRow): string {
+  if ((row.scoreComponents?.authorityExpansionRisk ?? 0) >= 3) return "high authority review before implementation";
+  if (row.architectureArea === "bridge" || row.architectureArea === "governance_ux") {
+    return "preserve fail closed napoleon review";
+  }
+  return "proposal only no side effects";
+}
+
+function whyRecommendationMatters(row: CapabilityAnswerRow): string {
+  if (row.status === "missing") return "safe request path is missing or failing";
+  if (row.status === "degraded") return "capability is present but unreliable";
+  if (row.status === "blocked") return "guided repair can remove a local blocker";
+  return "local evidence indicates user value";
+}
+
+function planningDetailsForRecommendedRows(rows: CapabilityAnswerRow[]): CapabilityAnswerRow[] {
+  return rows.slice(0, 3).map((row, index) => ({
+    ...row,
+    details: [
+      ...(index === 0 ? [`best tradeoff ${row.label}`] : []),
+      `why ${whyRecommendationMatters(row)}`,
+      `implementation size ${implementationSizeForRow(row)}`,
+      `test coverage ${coverageNeedForRow(row)}`,
+      `privacy impact ${privacyImpactForRow(row)}`,
+      `governance impact ${governanceImpactForRow(row)}`,
+      ...(row.details ?? []),
+    ].slice(0, 10),
+  }));
+}
+
 function isDescriptorReadinessRepairSignal(signal: ConversationCapabilitySignal): boolean {
   return (
     signal.capabilityLabel === "descriptor_discovery" &&
@@ -1589,12 +1650,13 @@ export function answerCapabilityQuestion(
           signal.capabilityLabel.endsWith("media_session_readiness_summary")) ||
         (signal.capabilityStatus === "degraded" && signal.suggestedNextStep !== "needs_human_review"),
     );
-    const rows = scoredRecommendationRows(candidateSignals, windows);
+    const rows = planningDetailsForRecommendedRows(scoredRecommendationRows(candidateSignals, windows));
     const hasDescriptorReadinessRepair = rows.some((row) => row.label === "descriptor_discovery");
+    const bestTradeoff = rows[0] ? capabilityAnswerRowTitle(rows[0]) : "No local candidate yet";
     return withCapabilityAnswerDrilldown({
       kind,
       question,
-      summary: `Recommended next capabilities by local risk/value score${hasDescriptorReadinessRepair ? " with descriptor readiness repairs separated from deeper architecture work" : ""}, proposal-only: ${describeRows(rows)}.`,
+      summary: `Recommended next capabilities by local risk/value score. Top 3${hasDescriptorReadinessRepair ? " with descriptor readiness repairs separated from deeper architecture work" : ""}. Best tradeoff: ${bestTradeoff}. proposal-only: ${describeRows(rows)}.`,
       rows,
       evidenceCount: candidateSignals.length,
       caveat: `${MISSING_PROPOSAL_CAVEAT} ${CAPABILITY_LEDGER_SCORING_CAVEAT}`,

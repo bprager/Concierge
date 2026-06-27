@@ -1842,11 +1842,15 @@ test("recommended next answers turn media session blocker details into a proposa
   assert.equal(answer.kind, "recommended_next_capabilities");
   assert.equal(answer.rows[0].label, "media_session_readiness_summary");
   assert.equal(answer.rows[0].status, "blocked");
-  assert.deepEqual(answer.rows[0].details, [
-    "microphone permission needed",
-    "camera blocked",
-    "playback ready",
-  ]);
+  assert.ok(answer.rows[0].details?.some((detail) => detail.startsWith("best tradeoff ")));
+  assert.ok(answer.rows[0].details?.includes("why guided repair can remove a local blocker"));
+  assert.ok(answer.rows[0].details?.includes("implementation size medium"));
+  assert.ok(answer.rows[0].details?.includes("test coverage unit and rendered app coverage"));
+  assert.ok(answer.rows[0].details?.includes("privacy impact metadata only"));
+  assert.ok(answer.rows[0].details?.includes("governance impact proposal only no side effects"));
+  assert.ok(answer.rows[0].details?.includes("microphone permission needed"));
+  assert.ok(answer.rows[0].details?.includes("camera blocked"));
+  assert.ok(answer.rows[0].details?.includes("playback ready"));
   assert.ok(answer.rows[0].recommendation?.includes("guided Media Session readiness repair"));
   assert.ok(answer.rows[0].recommendation?.includes("microphone permission needed"));
   assert.ok(answer.rows[0].recommendation?.includes("camera blocked"));
@@ -1985,6 +1989,70 @@ test("capability answers include sanitized evidence drilldown export metadata", 
   assert.deepEqual(packet.latestTurnEvidence?.blockedEffects, ["memory_write", "external_send"]);
   assert.equal(packet.latestTurnEvidence?.proposalOnly, true);
   assert.equal(JSON.stringify(packet).includes("token_secret"), false);
+});
+
+test("recommended-next answers return top three planning candidates with one best tradeoff", () => {
+  const ledger = createCapabilityLedger({ now: () => new Date("2026-06-24T12:00:00.000Z") });
+  appendCapabilitySignal(ledger, testSignal("trace_plan_bridge_1", {
+    capability: "bridge_failure_handling",
+    status: "missing",
+    architecture: "bridge",
+    suggestedNextStep: "write_evaluator_case",
+    observedAt: "2026-06-24T10:00:00.000Z",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_plan_bridge_2", {
+    capability: "bridge_failure_handling",
+    status: "missing",
+    architecture: "bridge",
+    suggestedNextStep: "write_evaluator_case",
+    observedAt: "2026-06-24T11:00:00.000Z",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_plan_observability", {
+    capability: "capability_review_packet",
+    status: "missing",
+    architecture: "observability",
+    suggestedNextStep: "create_evolution_proposal",
+    observedAt: "2026-06-24T09:00:00.000Z",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_plan_voice", {
+    capability: "voice_turn_rehearsal",
+    status: "degraded",
+    architecture: "voice",
+    suggestedNextStep: "add_backlog_item",
+    observedAt: "2026-06-24T08:00:00.000Z",
+  }));
+  appendCapabilitySignal(ledger, testSignal("trace_plan_avatar", {
+    capability: "avatar_state_preview",
+    status: "missing",
+    architecture: "avatar",
+    suggestedNextStep: "add_backlog_item",
+    observedAt: "2026-06-24T07:00:00.000Z",
+  }));
+
+  const answer = answerCapabilityQuestion("What should we implement next?", ledger, undefined, {
+    now: "2026-06-24T12:00:00.000Z",
+    profileMode: "adult_owner",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected recommendation answer");
+  assert.equal(answer.kind, "recommended_next_capabilities");
+  assert.ok(answer.rows.length <= 3);
+  assert.equal(answer.rows[0].details?.some((detail) => detail.startsWith("best tradeoff ")), true);
+  assert.equal(answer.rows[0].details?.some((detail) => detail.startsWith("why ")), true);
+  assert.equal(answer.rows[0].details?.some((detail) => detail.startsWith("implementation size ")), true);
+  assert.equal(answer.rows[0].details?.some((detail) => detail.startsWith("test coverage ")), true);
+  assert.equal(answer.rows[0].details?.some((detail) => detail.startsWith("privacy impact ")), true);
+  assert.equal(answer.rows[0].details?.some((detail) => detail.startsWith("governance impact ")), true);
+  assert.ok(answer.summary.includes("Best tradeoff:"));
+  assert.ok(answer.summary.includes("Top 3"));
+  assert.equal(answer.boundary.proposalOnly, true);
+  assert.equal(answer.boundary.approvalCaptured, false);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+  assert.equal(JSON.stringify(answer).includes("trace_plan_bridge_1"), true);
+  assert.equal(JSON.stringify(answer).includes("private.example"), false);
 });
 
 test("capability review packet export is sanitized local proposal evidence", () => {
