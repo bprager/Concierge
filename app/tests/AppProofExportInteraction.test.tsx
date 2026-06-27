@@ -8699,6 +8699,31 @@ test("answers Napoleon contract-alignment required actions without imported eval
     assert.equal(requiredActionAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(requiredActionAnswerEvent).includes("expose_evolution_proposal_status_runtime_target"), false);
     assert.equal(JSON.stringify(requiredActionAnswerEvent).includes("/evolution/proposals"), false);
+
+    await user.click(view.getByText("Export required action packet"));
+    const requiredActionExport = view.getByLabelText("Exported Napoleon required action packet");
+    const exported = JSON.parse(requiredActionExport.textContent ?? "{}") as {
+      kind?: string;
+      source?: string;
+      runtimeValidationSource?: string;
+      requiredActionCount?: number;
+      napoleonRequiredActions?: Array<{ id?: string; targetPath?: string; requestKind?: string }>;
+      boundary?: Record<string, boolean>;
+    };
+    assert.equal(exported.kind, "concierge.napoleon-required-actions.export.v1");
+    assert.equal(exported.source, "contract_alignment");
+    assert.equal(exported.runtimeValidationSource, "contract_alignment");
+    assert.equal(exported.requiredActionCount, 1);
+    assert.equal(exported.napoleonRequiredActions?.[0]?.id, "expose_evolution_proposal_status_runtime_target");
+    assert.equal(exported.napoleonRequiredActions?.[0]?.targetPath, "/evolution/proposals/{proposal_id}/status");
+    assert.equal(exported.napoleonRequiredActions?.[0]?.requestKind, "evolution_proposal_status_handoff");
+    assert.equal(exported.boundary?.localExportOnly, true);
+    assert.equal(exported.boundary?.napoleonApprovalGranted, false);
+    assert.equal(exported.boundary?.memoryWritePerformed, false);
+    assert.equal(exported.boundary?.agentDispatchPerformed, false);
+    assert.equal(exported.boundary?.externalSendPerformed, false);
+    assert.equal(requiredActionExport.textContent?.includes("127.0.0.1"), false);
+    assert.equal(requiredActionExport.textContent?.includes("secret-token"), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();

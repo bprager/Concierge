@@ -58,7 +58,7 @@ The alignment report now also emits a Napoleon-owned required action:
 
 - `expose_evolution_proposal_status_runtime_target`: expose and advertise the read-only `evolution_proposal_status` runtime target at `/evolution/proposals/{proposal_id}/status` with `evolution_proposal_status_handoff` before Concierge can refresh proposal status against live Napoleon.
 
-Text Concierge can answer Napoleon required-action questions from this local contract-alignment evidence when no evaluator validation import is present. For example, "What does Napoleon need to expose next?" returns the current Napoleon-owned action, contract-alignment status, and non-authority boundary without contacting Napoleon or treating the answer as approval, runtime validation, free-form path permission, memory permission, agent dispatch, external send, or local application.
+Text Concierge can answer Napoleon required-action questions and export a focused local required-action packet from this local contract-alignment evidence when no evaluator validation import is present. For example, "What does Napoleon need to expose next?" returns the current Napoleon-owned action, contract-alignment status, and non-authority boundary, and the export keeps the same source and false side-effect flags without contacting Napoleon or treating the answer as approval, runtime validation, free-form path permission, memory permission, agent dispatch, external send, or local application.
 
 That action blocks live promotion for proposal-status refresh only. It does not authorize Concierge to use free-form paths, capture approval, apply evolution, update registries, write memory, dispatch agents, send externally, append traces, route tasks, or treat proposal status as local authority.
 

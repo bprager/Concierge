@@ -4812,8 +4812,53 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     });
   }
 
+  function getCurrentNapoleonRequiredActionsExport(): {
+    source: "evaluator_validation_import" | "contract_alignment";
+    runtimeValidationSource: string;
+    evaluatorStatus: string;
+    evaluatorFailureReason: string;
+    actions: NapoleonRequiredAction[];
+  } {
+    const importedActions = evaluatorValidationImport?.validation.napoleonRequiredActions ?? [];
+    if (importedActions.length) {
+      return {
+        source: "evaluator_validation_import",
+        runtimeValidationSource: evaluatorValidationImport?.runtimeValidationSource ?? "unavailable",
+        evaluatorStatus: evaluatorValidationImport?.validation.status ?? "not_run",
+        evaluatorFailureReason: evaluatorValidationImport?.validation.failureReason ?? "none",
+        actions: importedActions,
+      };
+    }
+
+    return {
+      source: "contract_alignment",
+      runtimeValidationSource: "contract_alignment",
+      evaluatorStatus: RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status,
+      evaluatorFailureReason: "none",
+      actions: RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.map((action) => ({
+        id: action.id,
+        owner: action.owner,
+        reason: "missing_named_concierge_runtime_target",
+        handoffName: action.operationId,
+        targetPath: action.path,
+        requestKind: action.requestKind,
+        operationId: action.operationId,
+        requiredAction: action.blockingLivePromotion
+          ? `Napoleon must expose and advertise ${action.operationId} at ${action.path} before Concierge can refresh this capability against live Napoleon.`
+          : `Napoleon should expose and advertise ${action.operationId} at ${action.path}.`,
+        sideEffectsPerformed: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      })),
+    };
+  }
+
   function exportNapoleonRequiredActions() {
-    const actions = evaluatorValidationImport?.validation.napoleonRequiredActions ?? [];
+    const actionExport = getCurrentNapoleonRequiredActionsExport();
+    const actions = actionExport.actions;
     if (!actions.length) return;
 
     const traceId = newTraceId();
@@ -4821,11 +4866,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       kind: "concierge.napoleon-required-actions.export.v1",
       generatedAt: new Date().toISOString(),
       conversationId,
-      source: "evaluator_validation_import",
-      runtimeValidationSource: evaluatorValidationImport?.runtimeValidationSource ?? "unavailable",
+      source: actionExport.source,
+      runtimeValidationSource: actionExport.runtimeValidationSource,
       evaluator: {
-        status: evaluatorValidationImport?.validation.status ?? "not_run",
-        failureReason: evaluatorValidationImport?.validation.failureReason ?? "none",
+        status: actionExport.evaluatorStatus,
+        failureReason: actionExport.evaluatorFailureReason,
         targetPath: evaluatorValidationImport?.validation.targetPath ?? "unavailable",
         requestKind: evaluatorValidationImport?.validation.requestKind ?? "unavailable",
         operationId: evaluatorValidationImport?.validation.operationId ?? "unavailable",
@@ -4836,7 +4881,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           evaluatorValidationImport?.validation.descriptorHandoffFailureReason ?? "none",
       },
       requiredActionCount: actions.length,
-      napoleonRequiredActions: actions satisfies NapoleonRequiredAction[],
+      napoleonRequiredActions: actions,
       boundary: {
         localExportOnly: true,
         proposalOnly: true,
@@ -4853,11 +4898,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     emitEvent("napoleon_required_actions_exported", {
       traceId,
       conversationId,
-      source: "evaluator_validation_import",
+      source: actionExport.source,
       requiredActionCount: actions.length,
-      evaluatorHttpStatus: evaluatorValidationImport?.validation.status ?? "not_run",
-      evaluatorFailureReason: evaluatorValidationImport?.validation.failureReason ?? "none",
-      runtimeValidationSource: evaluatorValidationImport?.runtimeValidationSource ?? "unavailable",
+      evaluatorHttpStatus: actionExport.evaluatorStatus,
+      evaluatorFailureReason: actionExport.evaluatorFailureReason,
+      runtimeValidationSource: actionExport.runtimeValidationSource,
       localExportOnly: true,
       approvalCaptured: false,
       memoryWritePerformed: false,
@@ -7890,6 +7935,22 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                   Export required action packet
                 </button>
               ) : null}
+            </div>
+          ) : null}
+          {!evaluatorValidationImport && RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.length ? (
+            <div className="proof-comparison warning">
+              <strong>Local contract-alignment required actions</strong>
+              <span>
+                Napoleon required actions:{" "}
+                {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.map((action) => action.id).join(", ")}
+              </span>
+              <span>
+                Source: contract alignment; local metadata only; not Napoleon approval, runtime validation, free-form
+                path permission, memory permission, agent dispatch, external send, or local application.
+              </span>
+              <button className="secondary" onClick={exportNapoleonRequiredActions}>
+                Export required action packet
+              </button>
             </div>
           ) : null}
           {napoleonRequiredActionsExportJson ? (
