@@ -1,4 +1,9 @@
-import { NAPOLEON_REVIEW_OPERATIONS, getBridgeOperation, type BridgeOperationId } from "./bridgeOperations.js";
+import {
+  NAPOLEON_REVIEW_OPERATIONS,
+  RUNTIME_CONTRACT_ALIGNMENT_SUMMARY,
+  getBridgeOperation,
+  type BridgeOperationId,
+} from "./bridgeOperations.js";
 import { descriptorSupportsGovernedHandoff, type DescriptorConnectionState } from "./contractBridge.js";
 import type { BridgeContractEvidence } from "./napoleonBridge.js";
 import type { LiveBridgeEvidenceState } from "./presentation.js";
@@ -192,6 +197,9 @@ function promotionGateForProof(input: BridgeReadinessProofInput): string {
   if (evaluatorStatus === "failed" || evaluatorStatus === "not_run") {
     return "blocked_until_evaluator_http_passes";
   }
+  if (runtimeContractRequiredActions(input).length > 0) {
+    return "blocked_until_runtime_contract_actions_cleared";
+  }
   return "real_runtime_evidence_available";
 }
 
@@ -263,6 +271,41 @@ function sanitizeNapoleonRequiredActions(actions: NapoleonRequiredAction[] | und
     externalSendPerformed: false,
     appliedLocally: false,
   }));
+}
+
+function runtimeContractRequiredActions(input: BridgeReadinessProofInput): NapoleonRequiredAction[] {
+  const importedActions = input.evaluatorValidation?.napoleonRequiredActions ?? [];
+  if (importedActions.length > 0) return importedActions;
+
+  if (input.runtimeValidationSource !== "real_runtime") return [];
+  if (!descriptorSupportsGovernedHandoff(input.descriptorConnection, "text_turn")) return [];
+  if (input.readiness.captureState !== "passed" || input.readiness.comparisonState !== "passed") return [];
+  if (input.evaluatorValidation?.status !== "passed") return [];
+
+  return RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.map((action) => ({
+    id: action.id,
+    owner: action.owner,
+    reason: "missing_named_concierge_runtime_target",
+    handoffName: action.operationId,
+    targetPath: action.path,
+    requestKind: action.requestKind,
+    operationId: action.operationId,
+    requiredAction: action.blockingLivePromotion
+      ? `Napoleon must expose and advertise ${action.operationId} at ${action.path} before Concierge can refresh this capability against live Napoleon.`
+      : `Napoleon should expose and advertise ${action.operationId} at ${action.path}.`,
+    sideEffectsPerformed: false,
+    approvalCaptured: false,
+    memoryWritePerformed: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    appliedLocally: false,
+  }));
+}
+
+function runtimeRequiredActionSource(input: BridgeReadinessProofInput): string {
+  if ((input.evaluatorValidation?.napoleonRequiredActions ?? []).length > 0) return "evaluator_validation";
+  if (runtimeContractRequiredActions(input).length > 0) return "contract_alignment";
+  return "none";
 }
 
 function compareBridgeEvidence(record: BridgeContractEvidence): string | null {
@@ -460,7 +503,8 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
             sanitizeReadinessProofString(input.evaluatorValidation?.descriptorHandoffFailureReason) ?? "none",
           descriptorHandoffRequiredAction:
             sanitizeReadinessProofString(input.evaluatorValidation?.descriptorHandoffRequiredAction) ?? "none",
-          napoleonRequiredActions: sanitizeNapoleonRequiredActions(input.evaluatorValidation?.napoleonRequiredActions),
+          requiredActionSource: runtimeRequiredActionSource(input),
+          napoleonRequiredActions: sanitizeNapoleonRequiredActions(runtimeContractRequiredActions(input)),
           connectionValueStored: false,
           credentialValueStored: false,
           requestPayloadStored: false,

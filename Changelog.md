@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Added richer local architecture-improvement Capability Intelligence answers that identify the best tradeoff area, explain the repair focus, and show needed coverage, privacy impact, and governance impact without contacting Napoleon.
+- Added built-in runtime contract required-action packets to sanitized bridge readiness proof exports, keeping `expose_evolution_proposal_status_runtime_target` promotion-blocking in exported evidence even after real-runtime and evaluator checks pass.
 - Added built-in runtime contract required-action warnings to live bridge readiness and live-send preflight, so `expose_evolution_proposal_status_runtime_target` remains visible as Napoleon-owned promotion work even when evaluator validation has passed.
 - Added richer local "what should we implement next?" Capability Intelligence answers that recognize plain next-work wording, rank the top three local candidates, call out one best tradeoff, and show implementation size, test coverage, privacy impact, and governance impact without contacting Napoleon.
 - Added local Text Concierge answers for review-history questions such as "What reviews are waiting on Napoleon?", using sanitized local review metadata without contacting Napoleon or treating review records as approval, memory, dispatch, external send, registry update, activation, evolution application, or local application.

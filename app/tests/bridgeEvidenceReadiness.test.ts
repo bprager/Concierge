@@ -7,6 +7,7 @@ import {
   importAcceptedBridgeReadinessProof,
   updateBridgeEvidenceReadinessState,
 } from "../src/bridgeEvidenceReadiness.js";
+import { RUNTIME_CONTRACT_ALIGNMENT_SUMMARY } from "../src/bridgeOperations.js";
 import { buildDescriptorConnectionState, defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
 import type { BridgeContractEvidence } from "../src/napoleonBridge.js";
 
@@ -469,6 +470,74 @@ test("keeps readiness proof promotion blocked until evaluator HTTP passes", () =
 
   assert.equal(proof.runtimeValidation.evaluator.status, "not_run");
   assert.equal(proof.runtimeValidation.promotionGate, "blocked_until_evaluator_http_passes");
+});
+
+test("exports built-in runtime contract required actions in readiness proof", () => {
+  const requiredAction = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions[0];
+  assert.ok(requiredAction);
+  const state = updateBridgeEvidenceReadinessState(buildBridgeEvidenceReadinessState(), {
+    ...validEvidence,
+    status: "success",
+    provenanceVerified: true,
+  });
+  const descriptorConnection = buildDescriptorConnectionState({
+    endpointConfigured: true,
+    descriptor: defaultChiefOfStaffDescriptor,
+    expectedChecksum: "sha256:contract",
+    actualChecksum: "sha256:contract",
+    signatureValid: true,
+  });
+
+  const exported = exportBridgeReadinessProofJson({
+    descriptorConnection,
+    readiness: state,
+    runtimeValidationSource: "real_runtime",
+    evaluatorValidation: {
+      status: "passed",
+      failureReason: "none",
+      targetPath: "/chief-of-staff/reviews/evaluation",
+      requestKind: "evaluation_review_handoff",
+      operationId: "evaluation_review",
+    },
+    generatedAt: "2026-06-13T00:00:00.000Z",
+  });
+  const proof = JSON.parse(exported) as {
+    runtimeValidation: {
+      source: string;
+      promotionGate: string;
+      evaluator: {
+        status: string;
+        requiredActionSource?: string;
+        napoleonRequiredActions: Array<{
+          id: string;
+          owner: string;
+          targetPath: string;
+          requestKind: string;
+          operationId: string;
+          approvalCaptured: boolean;
+          memoryWritePerformed: boolean;
+          agentDispatchPerformed: boolean;
+          externalSendPerformed: boolean;
+          appliedLocally: boolean;
+        }>;
+      };
+    };
+  };
+
+  assert.equal(proof.runtimeValidation.source, "real_runtime");
+  assert.equal(proof.runtimeValidation.evaluator.status, "passed");
+  assert.equal(proof.runtimeValidation.promotionGate, "blocked_until_runtime_contract_actions_cleared");
+  assert.equal(proof.runtimeValidation.evaluator.requiredActionSource, "contract_alignment");
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.id, requiredAction.id);
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.owner, "napoleon_runtime");
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.targetPath, requiredAction.path);
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.requestKind, requiredAction.requestKind);
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.operationId, requiredAction.operationId);
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.approvalCaptured, false);
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.memoryWritePerformed, false);
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.agentDispatchPerformed, false);
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.externalSendPerformed, false);
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.appliedLocally, false);
 });
 
 test("keeps readiness proof promotion blocked when descriptor lacks text-turn route", () => {
