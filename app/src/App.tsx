@@ -137,6 +137,10 @@ import {
   prioritizeNapoleonRequiredAction,
 } from "./napoleonRequiredActions.js";
 import {
+  formatNapoleonMetadataAnswer,
+  isNapoleonMetadataQuestion,
+} from "./napoleonMetadataAnswer.js";
+import {
   buildNewAgentProposalReviewPacket,
   submitNewAgentProposalForNapoleonReview,
   type NewAgentProposalReviewPacket,
@@ -4247,6 +4251,45 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     return true;
   }
 
+  function answerNapoleonMetadataQuestion(content: string, traceId: string, turnId: string, activeProfileMode: NapoleonProfileMode) {
+    if (!isNapoleonMetadataQuestion(content)) return false;
+
+    const answer = formatNapoleonMetadataAnswer(chiefOfStaffCapabilities);
+    emitEvent("napoleon_metadata_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      metadataReturned: answer.metadataReturned,
+      agentCount: answer.agentCount,
+      profileMetadataReturned: answer.profileMetadataReturned,
+      blockedEffectCount: answer.blockedEffectCount,
+      responseSideEffectClaimCount: answer.responseSideEffectClaimCount,
+      localAnswerOnly: true,
+      registryUpdatePerformed: false,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    return true;
+  }
+
   function answerLocalReviewHistoryStatusQuestion(
     content: string,
     traceId: string,
@@ -4318,6 +4361,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
+    if (answerNapoleonMetadataQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerLocalReviewHistoryStatusQuestion(content, traceId, turnId, activeProfileMode)) return;
     const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
@@ -4534,6 +4578,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
+      if (answerNapoleonMetadataQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerLocalReviewHistoryStatusQuestion(content, traceId, turnId, activeProfileMode)) return;
       const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
