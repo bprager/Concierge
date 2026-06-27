@@ -452,6 +452,8 @@ const SELECTED_AGENT_ATTRIBUTION_VERBS = [
 ];
 
 const SELECTED_AGENT_ATTRIBUTION_VERB_PATTERN = SELECTED_AGENT_ATTRIBUTION_VERBS.map(escapeRegExp).join("|");
+const TARGET_CAPABILITY_ATTRIBUTION_PATTERN =
+  /\bNapoleon\s+(?:used|uses|selected|chose|picked|routed\s+to|delegated\s+to|handled\s+(?:this|that|it)?\s*(?:through|with|by)?)\s+(?:the\s+)?([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,4})\b/g;
 
 function normalizeAttributionText(value: string): string {
   return attributionTokens(value).join(" ");
@@ -514,6 +516,30 @@ function hasUnprovenSelectedAgentAttribution(text: string | undefined, delegatio
     const agent = delegation?.selectedAgents.find((candidate) => candidate.displayName === displayName);
     return !agent?.contributionSummary || !contributionMatchesFindingClaim(agent.contributionSummary, claim);
   });
+}
+
+function targetCapabilityMatchesClaim(targetCapability: string | undefined, claim: string): boolean {
+  if (!targetCapability) return false;
+  const normalizedTarget = normalizeAttributionText(targetCapability.replace(/[._-]+/g, " "));
+  const normalizedClaim = normalizeAttributionText(claim);
+  if (!normalizedTarget || !normalizedClaim) return false;
+  return normalizedTarget.includes(normalizedClaim) || normalizedClaim.includes(normalizedTarget);
+}
+
+function hasUnprovenTargetCapabilityAttribution(
+  text: string | undefined,
+  targetCapability: string | undefined,
+  delegation: NapoleonDelegation | undefined,
+): boolean {
+  if (!text) return false;
+  for (const match of text.matchAll(TARGET_CAPABILITY_ATTRIBUTION_PATTERN)) {
+    const claim = match[1]?.trim();
+    if (!claim) continue;
+    const selectedAgentMatches =
+      delegation?.selectedAgents.some((agent) => targetCapabilityMatchesClaim(agent.displayName, claim)) ?? false;
+    if (!targetCapabilityMatchesClaim(targetCapability, claim) && !selectedAgentMatches) return true;
+  }
+  return false;
 }
 
 function recommendationMatchesProvenance(
@@ -1046,6 +1072,9 @@ export async function sendToNapoleon(
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
   if (hasUnprovenSelectedAgentAttribution(payload.text, delegation)) {
+    failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
+  }
+  if (hasUnprovenTargetCapabilityAttribution(payload.text, payload.targetAgent, delegation)) {
     failClosed(dependencies, "contract_mismatch", request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
   const recommendationProvenance =

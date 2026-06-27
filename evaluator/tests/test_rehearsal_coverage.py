@@ -425,8 +425,10 @@ class RehearsalCoverageTest(unittest.TestCase):
         self.assertFalse(checks["bridge_response_authority_provenance"]["found"])
         self.assertIn("invented Napoleon recommendation", checks["bridge_response_authority_provenance"]["missing_terms"])
         self.assertIn("invented selected-agent finding", checks["bridge_response_authority_provenance"]["missing_terms"])
+        self.assertIn("invented target-capability usage", checks["bridge_response_authority_provenance"]["missing_terms"])
         self.assertIn("matching recommendation provenance", checks["bridge_response_authority_provenance"]["missing_terms"])
         self.assertIn("matching delegation contribution", checks["bridge_response_authority_provenance"]["missing_terms"])
+        self.assertIn("target-capability provenance", checks["bridge_response_authority_provenance"]["missing_terms"])
         self.assertIn("fails closed as contract mismatch", checks["bridge_response_authority_provenance"]["missing_terms"])
         self.assertIn("does not execute claimed side effects", checks["bridge_response_authority_provenance"]["missing_terms"])
 
