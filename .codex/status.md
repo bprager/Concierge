@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened accepted readiness proof imports so only successful real-runtime governed text-turn evidence can become local Napoleon conversation proof context; unrelated bridge-operation successes are rejected and remain non-authorizing.
 - Hardened browser-local evolution proposal lifecycle reloads so unsafe endpoint/token/raw-body metadata or authorizing side-effect claims are ignored instead of rendered as persisted Napoleon evidence.
 - Added browser-local persistence for sanitized evaluator validation required-action evidence, so Napoleon-side promotion blockers remain visible and exportable after reload until endpoint, token, descriptor, or live-mode context changes clear them.
 - Added standalone rendering and local export for persisted browser-local evolution proposal lifecycle records, so Concierge can show Napoleon-owned proposal status evidence after reload without re-opening the original submission packet.

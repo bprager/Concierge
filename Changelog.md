@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened accepted readiness proof imports so successful real-runtime proof metadata is accepted only when it proves the governed text-turn route, preventing unrelated bridge successes from becoming local Napoleon conversation proof.
 - Added stricter reload validation for browser-local evolution proposal lifecycle records, so unsafe endpoint/token/raw-body metadata or authorizing side-effect claims are ignored instead of rendered as persisted Napoleon evidence.
 - Added browser-local persistence for sanitized evaluator validation required-action evidence, so Napoleon-side promotion blockers remain visible and exportable after reload until endpoint, token, descriptor, or live-mode context changes.
 - Added standalone rendering and export for persisted browser-local evolution proposal lifecycle records, so proposal status evidence remains visible after reload without re-opening the original submission packet.

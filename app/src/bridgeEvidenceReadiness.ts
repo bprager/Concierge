@@ -591,6 +591,10 @@ function liveRuntimePromotionGateAccepted(gate: unknown): boolean {
   return gate === "real_runtime_evidence_available" || gate === "ready_for_human_review";
 }
 
+function isAcceptedTextTurnRuntimeEvidence(operationId: string, targetPath: string): boolean {
+  return operationId === "text_turn" && (targetPath === getBridgeOperation("text_turn").path || targetPath === "/cos/text-turn");
+}
+
 export function compareBridgeReadinessProofs(
   previousJson: string | null,
   currentJson: string,
@@ -702,6 +706,9 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
       };
     }
 
+    const operationId = proofField(proof, ["evidence", "lastOperationId"]);
+    const targetPath = proofField(proof, ["evidence", "lastTargetPath"]);
+
     if (
       runtimeValidation.source !== "real_runtime" ||
       runtimeValidation.promotionGate !== "real_runtime_evidence_available" ||
@@ -715,12 +722,20 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
       };
     }
 
+    if (!isAcceptedTextTurnRuntimeEvidence(operationId, targetPath)) {
+      return {
+        status: "rejected",
+        summary:
+          "Accepted readiness proof import rejected because it is not successful text-turn runtime evidence.",
+      };
+    }
+
     return {
       status: "accepted",
       summary: "Accepted real-runtime readiness proof imported.",
       lastRealRuntimeProof: {
-        operationId: proofField(proof, ["evidence", "lastOperationId"]),
-        targetPath: proofField(proof, ["evidence", "lastTargetPath"]),
+        operationId,
+        targetPath,
         status: "success",
         promotionGate: proofField(proof, ["runtimeValidation", "promotionGate"]),
       },
@@ -763,6 +778,9 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
     };
   }
 
+  const operationId = proofField(summary, ["bridgeEvidence", "lastOperationId"]);
+  const targetPath = proofField(summary, ["bridgeEvidence", "lastTargetPath"]);
+
   if (
     runtimeValidation.source !== "real_runtime" ||
     !liveRuntimePromotionGateAccepted(promotionReadiness.gate) ||
@@ -781,12 +799,19 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
     };
   }
 
+  if (!isAcceptedTextTurnRuntimeEvidence(operationId, targetPath)) {
+    return {
+      status: "rejected",
+      summary: "Accepted readiness proof import rejected because it is not successful text-turn runtime evidence.",
+    };
+  }
+
   return {
     status: "accepted",
     summary: "Accepted live-runtime validation summary imported.",
     lastRealRuntimeProof: {
-      operationId: proofField(summary, ["bridgeEvidence", "lastOperationId"]),
-      targetPath: proofField(summary, ["bridgeEvidence", "lastTargetPath"]),
+      operationId,
+      targetPath,
       status: "success",
       promotionGate: proofField(summary, ["promotionReadiness", "gate"]),
       governedPacketEvidence: {

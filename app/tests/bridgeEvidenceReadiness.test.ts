@@ -991,6 +991,40 @@ test("imports only accepted real-runtime readiness proof metadata", () => {
   });
 });
 
+test("rejects accepted readiness proof when successful bridge evidence is not a text turn", () => {
+  const accepted = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      kind: "concierge_bridge_readiness_proof",
+      version: 1,
+      evidence: {
+        captureState: "passed",
+        comparisonState: "passed",
+        lastEvidenceStatus: "success",
+        lastOperationId: "memory_proposal_review",
+        lastTargetPath: "/v1/concierge/memory/proposals/review",
+      },
+      runtimeValidation: {
+        source: "real_runtime",
+        promotionGate: "real_runtime_evidence_available",
+      },
+      boundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        localApplicationPerformed: false,
+      },
+    }),
+  );
+
+  assert.equal(accepted.status, "rejected");
+  assert.equal(
+    accepted.summary,
+    "Accepted readiness proof import rejected because it is not successful text-turn runtime evidence.",
+  );
+  assert.equal(accepted.lastRealRuntimeProof, undefined);
+});
+
 test("imports successful live-runtime summary as accepted readiness proof metadata", () => {
   const accepted = importAcceptedBridgeReadinessProof(
     JSON.stringify({
@@ -1088,6 +1122,97 @@ test("imports successful live-runtime summary as accepted readiness proof metada
       governanceEvaluationObserved: true,
     },
   });
+});
+
+test("rejects live-runtime summary when successful bridge evidence is not a text turn", () => {
+  const accepted = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      runtimeValidation: {
+        source: "real_runtime",
+      },
+      bridgeEvidence: {
+        status: "passed",
+        lastEvidenceStatus: "success",
+        lastOperationId: "memory_proposal_review",
+        lastTargetPath: "/v1/concierge/memory/proposals/review",
+        captureState: "passed",
+        comparisonState: "passed",
+      },
+      httpEvaluator: {
+        status: "passed",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+      },
+      contractPacketSubmissions: {
+        status: "passed",
+        submissionCount: 2,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        routingPerformed: false,
+        registryUpdatePerformed: false,
+        traceAppendPerformed: false,
+        appliedLocally: false,
+        submissions: [
+          {
+            status: "passed",
+            targetPath: "/chief-of-staff/requests",
+            requestKind: "chief_of_staff_request_handoff",
+            operationId: "chief_of_staff_request",
+            governanceDecisionObserved: true,
+            traceEnvelopeObserved: true,
+            auditEnvelopeObserved: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            routingPerformed: false,
+            registryUpdatePerformed: false,
+            traceAppendPerformed: false,
+            appliedLocally: false,
+          },
+          {
+            status: "passed",
+            targetPath: "/governance/evaluate",
+            requestKind: "governance_evaluation_handoff",
+            operationId: "governance_evaluation",
+            governanceDecisionObserved: true,
+            traceEnvelopeObserved: true,
+            auditEnvelopeObserved: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            routingPerformed: false,
+            registryUpdatePerformed: false,
+            traceAppendPerformed: false,
+            appliedLocally: false,
+          },
+        ],
+      },
+      artifactPrivacy: {
+        status: "passed",
+      },
+      promotionReadiness: {
+        gate: "ready_for_human_review",
+        locallySafeToConsider: true,
+      },
+      promotionBoundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      },
+    }),
+  );
+
+  assert.equal(accepted.status, "rejected");
+  assert.equal(
+    accepted.summary,
+    "Accepted readiness proof import rejected because it is not successful text-turn runtime evidence.",
+  );
+  assert.equal(accepted.lastRealRuntimeProof, undefined);
 });
 
 test("rejects live-runtime summary when governed packet evidence is missing or failed", () => {
