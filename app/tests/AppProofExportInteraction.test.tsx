@@ -8629,17 +8629,18 @@ test("shows runtime contract alignment status in governed routes", async () => {
 
     assert.ok(
       routes.getByText(
-        "Contract alignment: Runtime mapped; exact Concierge and Napoleon path sets differ. Status: runtime_mapped_with_local_contract_paths. Unmapped Napoleon runtime paths: 0.",
+        "Contract alignment: Runtime mapping gap: Napoleon has not exposed every named Concierge review/evidence/status target. Status: runtime_mapping_gaps_present. Unmapped Napoleon runtime paths: 0. Napoleon required actions: 1.",
       ),
     );
     assert.ok(
       routes.getByText(
-        "Concierge keeps local /v1/concierge/... packaging paths while named Napoleon /cos, review, evidence, and metadata targets are explicitly mapped.",
+        "Concierge keeps local /v1/concierge/... packaging paths while named Napoleon /cos, review, evidence, and metadata targets are explicitly mapped; current Napoleon snapshot still lacks evolution_proposal_status at /evolution/proposals/{proposal_id}/status.",
       ),
     );
+    assert.ok(routes.getByText("Required action: expose_evolution_proposal_status_runtime_target"));
     assert.ok(
       routes.getByText(
-        "Local contract metadata only; this is not Napoleon approval, runtime validation, memory permission, agent dispatch, external send, or local application.",
+        "Local contract metadata only; this is not Napoleon approval, runtime validation, free-form paths permission, memory permission, agent dispatch, external send, or local application.",
       ),
     );
     assert.equal(routesPanel.textContent?.includes("127.0.0.1"), false);

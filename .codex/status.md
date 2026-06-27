@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Updated the governed routes panel so it now mirrors the current `mimir` contract mapping gap, shows runtime contract alignment as incomplete, and lists Napoleon-owned action `expose_evolution_proposal_status_runtime_target` for `/evolution/proposals/{proposal_id}/status` without granting approval, runtime validation, free-form path use, memory writes, agent dispatch, external sends, or local application.
 - Added `napoleonRequiredActions` to `make napoleon-contract-alignment` for missing named Concierge review/evidence/status targets; the current `mimir` OpenAPI snapshot now reports Napoleon-owned action `expose_evolution_proposal_status_runtime_target` for `/evolution/proposals/{proposal_id}/status`, with live promotion blocked for proposal-status refresh until Napoleon exposes and advertises that target.
 - Added the generated bridge operation freshness check to the default `make check` pipeline, so OpenAPI-to-client drift now fails the normal validation path.
 - Extended live Napoleon response validation so handled-response capability claims such as "Napoleon handled the response through Passive Brain" fail closed unless returned target-capability or selected-agent provenance supports that attribution.

@@ -7686,9 +7686,15 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           <span>
             Contract alignment: {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.summary} Status:{" "}
             {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status}. Unmapped Napoleon runtime paths:{" "}
-            {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.unmappedNapoleonRuntimePaths.length}.
+            {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.unmappedNapoleonRuntimePaths.length}. Napoleon required actions:{" "}
+            {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.length}.
           </span>
           <span>{RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.detail}</span>
+          {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.map((action) => (
+            <span key={action.id}>
+              Required action: {action.id}
+            </span>
+          ))}
           <span>{RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.boundary}</span>
         </div>
         <dl>

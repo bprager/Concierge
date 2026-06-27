@@ -753,12 +753,23 @@ test("describes Chief of Staff steering without local evolution or routing autho
 
 test("describes runtime contract alignment without treating path drift as authority", () => {
   assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.aligned, false);
-  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.runtimeAligned, true);
-  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status, "runtime_mapped_with_local_contract_paths");
+  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.runtimeAligned, false);
+  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status, "runtime_mapping_gaps_present");
   assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.unmappedNapoleonRuntimePaths.length, 0);
-  assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.summary, /Runtime mapped/);
+  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.length, 1);
+  assert.equal(
+    RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions[0]?.id,
+    "expose_evolution_proposal_status_runtime_target",
+  );
+  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions[0]?.owner, "napoleon_runtime");
+  assert.equal(
+    RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions[0]?.path,
+    "/evolution/proposals/{proposal_id}/status",
+  );
+  assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.summary, /Runtime mapping gap/);
   assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.detail, /local \/v1\/concierge/);
   assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.boundary, /not Napoleon approval/);
+  assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.boundary, /free-form paths/);
   assert.equal(JSON.stringify(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY).includes("https://napoleon.example"), false);
   assert.equal(JSON.stringify(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY).includes("secret-token"), false);
 });

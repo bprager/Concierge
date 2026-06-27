@@ -35,12 +35,20 @@ export interface BridgeOperationSummary {
 }
 
 export interface RuntimeContractAlignmentSummary {
-  status: "runtime_mapped_with_local_contract_paths";
+  status: "runtime_mapped_with_local_contract_paths" | "runtime_mapping_gaps_present";
   aligned: false;
-  runtimeAligned: true;
+  runtimeAligned: boolean;
   summary: string;
   detail: string;
   unmappedNapoleonRuntimePaths: readonly string[];
+  napoleonRequiredActions: readonly {
+    id: string;
+    owner: "napoleon_runtime";
+    operationId: NapoleonReviewOperationId;
+    path: string;
+    requestKind: NapoleonReviewOperation["requestKind"];
+    blockingLivePromotion: boolean;
+  }[];
   boundary: string;
 }
 
@@ -60,15 +68,25 @@ export const NAPOLEON_REVIEW_OPERATIONS: NapoleonReviewOperation[] = [...GENERAT
 export const NAPOLEON_DISCOVERY_OPERATIONS: NapoleonDiscoveryOperation[] = [...GENERATED_NAPOLEON_DISCOVERY_OPERATIONS];
 
 export const RUNTIME_CONTRACT_ALIGNMENT_SUMMARY: RuntimeContractAlignmentSummary = {
-  status: "runtime_mapped_with_local_contract_paths",
+  status: "runtime_mapping_gaps_present",
   aligned: false,
-  runtimeAligned: true,
-  summary: "Runtime mapped; exact Concierge and Napoleon path sets differ.",
+  runtimeAligned: false,
+  summary: "Runtime mapping gap: Napoleon has not exposed every named Concierge review/evidence/status target.",
   detail:
-    "Concierge keeps local /v1/concierge/... packaging paths while named Napoleon /cos, review, evidence, and metadata targets are explicitly mapped.",
+    "Concierge keeps local /v1/concierge/... packaging paths while named Napoleon /cos, review, evidence, and metadata targets are explicitly mapped; current Napoleon snapshot still lacks evolution_proposal_status at /evolution/proposals/{proposal_id}/status.",
   unmappedNapoleonRuntimePaths: [],
+  napoleonRequiredActions: [
+    {
+      id: "expose_evolution_proposal_status_runtime_target",
+      owner: "napoleon_runtime",
+      operationId: "evolution_proposal_status",
+      path: "/evolution/proposals/{proposal_id}/status",
+      requestKind: "evolution_proposal_status_handoff",
+      blockingLivePromotion: true,
+    },
+  ],
   boundary:
-    "Local contract metadata only; this is not Napoleon approval, runtime validation, memory permission, agent dispatch, external send, or local application.",
+    "Local contract metadata only; this is not Napoleon approval, runtime validation, free-form paths permission, memory permission, agent dispatch, external send, or local application.",
 };
 
 export function getBridgeOperation(id: BridgeOperationId): BridgeOperation {
