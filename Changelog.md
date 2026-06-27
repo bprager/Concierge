@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added evaluator scenario coverage for unresolved read-only evolution proposal status states, keeping `under_review`, `stale`, `unavailable`, and `unknown` non-authorizing.
 - Added support for Napoleon-reported evolution proposal status states `under_review`, `stale`, `unavailable`, and `unknown`, preserving them in local lifecycle records without granting approval or applying changes.
 - Added `napoleonRequiredActionCount` and `blockingLivePromotion` to the app's built-in runtime-contract summary and sanitized readiness proof exports.
 - Added top-level `napoleonRequiredActionCount` and `blockingLivePromotion` fields to Napoleon contract-alignment reports, so promotion gates can consume Napoleon-owned runtime blockers directly.

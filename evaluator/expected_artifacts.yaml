@@ -25,6 +25,26 @@ artifacts:
     required_terms: ["phase", "gate", "rollout"]
   self_evolution_policy:
     required_terms: ["self-evolution", "proposal", "approval", "rollback"]
+  evolution_proposal_status_boundary:
+    required_terms:
+      - "evolution proposal status"
+      - "under_review"
+      - "stale"
+      - "unavailable"
+      - "unknown"
+      - "read-only"
+      - "descriptor-advertised"
+      - "status refresh"
+      - "tracking metadata"
+      - "unresolved"
+      - "not Napoleon approval"
+      - "does not apply evolution"
+      - "does not update registries"
+      - "does not write memory"
+      - "does not capture approval"
+      - "does not dispatch agents"
+      - "does not send externally"
+      - "does not apply locally"
   failure_analysis:
     required_terms: ["failure", "risk", "mitigation"]
   revised_design:

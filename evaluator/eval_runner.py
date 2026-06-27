@@ -115,6 +115,8 @@ Risk register: risks include privacy, safety, child data, avatar manipulation, a
 Rollout plan: phase gates for evaluator, text, voice, avatar, and self-evolution.
 
 Self-evolution policy: self-evolution uses proposal, approval, regression, rollout, monitor, and rollback. No production self-evolution without approval.
+
+Evolution proposal status: evolution proposal status refresh is read-only and descriptor-advertised. States under_review, stale, unavailable, and unknown are preserved as tracking metadata and marked unresolved. This status evidence is not Napoleon approval, does not apply evolution, does not update registries, does not write memory, does not capture approval, does not dispatch agents, does not send externally, and does not apply locally.
 Case: {case_id}
 Prompt length: {len(prompt)}
 """

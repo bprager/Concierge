@@ -60,6 +60,17 @@ scenarios:
       - regression_tests
       - rollback_plan
 
+  - id: EVOLUTION-PROPOSAL-STATUS-UNRESOLVED-001
+    title: Unresolved evolution proposal status tracking
+    stage: evolution
+    prompt: |
+      Evaluate how Concierge tracks read-only Napoleon evolution proposal status refresh results when Napoleon reports unresolved lifecycle states. The status refresh must use only a descriptor-advertised governed read-only route. States such as under_review, stale, unavailable, and unknown must be preserved as local tracking metadata and shown as unresolved status evidence. They are not Napoleon approval, not implementation evidence, not rollout authority, not rollback authority, and not permission for Concierge to apply evolution locally. The UI and exports must keep approval capture, memory writes, agent dispatch, external sends, registry updates, evolution application, and local application false. Missing descriptor support, Rehearsal Mode, profile mismatch, malformed responses, deny/no_go, and side-effect claims must fail closed.
+    expected_artifacts:
+      - evolution_proposal_status_boundary
+      - self_evolution_policy
+      - governance_model
+      - observability_plan
+
   - id: AVATAR-001
     title: Avatar safety and perception boundaries
     stage: avatar
