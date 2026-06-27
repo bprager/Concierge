@@ -1,4 +1,5 @@
 import type { NapoleonRequiredAction } from "./bridgeEvidenceReadiness.js";
+import type { NapoleonProfileMode } from "./contractBridge.js";
 
 export interface NapoleonRequiredActionPriority {
   id: string;
@@ -13,6 +14,13 @@ export interface NapoleonRequiredActionPriority {
   agentDispatchPerformed: false;
   externalSendPerformed: false;
   appliedLocally: false;
+}
+
+export interface MinimizedNapoleonRequiredActionAnswer {
+  content: string;
+  actionCount: number;
+  status: string;
+  runtimeValidationSource: string;
 }
 
 function priorityRank(action: NapoleonRequiredAction): number {
@@ -79,4 +87,24 @@ export function formatNapoleonRequiredActionPriority(
   const target = priority.targetPath ? ` Target: ${priority.targetPath}.` : "";
   const requestKind = priority.requestKind ? ` Request kind: ${priority.requestKind}.` : "";
   return `Highest priority Napoleon fix: ${priority.id}.${target}${requestKind} ${priority.reason}`;
+}
+
+export function formatMinimizedNapoleonRequiredActionAnswer(input: {
+  actionCount: number;
+  status: string;
+  runtimeValidationSource: string;
+  sourceLabel: string;
+  profileMode: NapoleonProfileMode;
+}): MinimizedNapoleonRequiredActionAnswer {
+  return {
+    content: [
+      `Napoleon has ${input.actionCount} required action${input.actionCount === 1 ? "" : "s"} from ${input.sourceLabel}.`,
+      "Child protected summary: a trusted adult/operator needs to fix a Napoleon runtime connection before this can be used live.",
+      `Evaluator status: ${input.status}. Runtime validation source: ${input.runtimeValidationSource}.`,
+      `Profile scope: ${input.profileMode}. This is minimized child-protected local review evidence only; Concierge did not contact Napoleon for this answer, and it is not Napoleon approval, not local approval, not implementation, not memory, not agent dispatch, and not external send authority.`,
+    ].join("\n\n"),
+    actionCount: input.actionCount,
+    status: input.status,
+    runtimeValidationSource: input.runtimeValidationSource,
+  };
 }

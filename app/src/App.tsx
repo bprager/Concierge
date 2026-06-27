@@ -134,6 +134,7 @@ import {
   type ObservabilityTraceHandoffResult,
 } from "./observabilityTraceHandoff.js";
 import {
+  formatMinimizedNapoleonRequiredActionAnswer,
   formatNapoleonRequiredActionPriority,
   prioritizeNapoleonRequiredAction,
 } from "./napoleonRequiredActions.js";
@@ -1892,12 +1893,13 @@ function formatNapoleonRequiredActionAnswer(
     runtimeValidationSource: string,
     sourceLabel: string,
   ) => ({
-    content: [
-      `Napoleon has ${actionCount} required action${actionCount === 1 ? "" : "s"} from ${sourceLabel}.`,
-      "Child protected summary: a trusted adult/operator needs to fix a Napoleon runtime connection before this can be used live.",
-      `Evaluator status: ${status}. Runtime validation source: ${runtimeValidationSource}.`,
-      `Profile scope: ${profileMode}. This is minimized child-protected local review evidence only; Concierge did not contact Napoleon for this answer, and it is not Napoleon approval, not local approval, not implementation, not memory, not agent dispatch, and not external send authority.`,
-    ].join("\n\n"),
+    ...formatMinimizedNapoleonRequiredActionAnswer({
+      actionCount,
+      status,
+      runtimeValidationSource,
+      sourceLabel,
+      profileMode,
+    }),
     actionCount,
     status,
     runtimeValidationSource,

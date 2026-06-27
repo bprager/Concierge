@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { runLocalHarnessContractPacketSmoke, runLocalHarnessTextSmoke } from "../src/localHarnessSmoke.js";
+import {
+  runLocalHarnessChildRequiredActionSmoke,
+  runLocalHarnessContractPacketSmoke,
+  runLocalHarnessTextSmoke,
+} from "../src/localHarnessSmoke.js";
 
 function harnessJsonResponse(status: number, payload: unknown) {
   return {
@@ -329,6 +333,74 @@ test("smoke test compares exported Napoleon proof metadata after local harness s
   assert.ok(!result.proofExportJson.includes("Draft a bridge readiness summary"));
   assert.ok(!result.proofExportJson.includes("127.0.0.1"));
   assert.ok(!result.proofExportJson.includes("Napoleon recommends keeping this as a governed review draft"));
+});
+
+test("smoke tests child protected required-action minimization from local harness runtime evidence", async () => {
+  const result = runLocalHarnessChildRequiredActionSmoke({
+    runtimeSummaryJson: JSON.stringify({
+      runtimeValidation: {
+        source: "local_harness",
+      },
+      napoleonRequiredActions: [
+        {
+          id: "advertise_evaluation_review_handoff",
+          owner: "napoleon",
+          reason: "real_runtime_promotion_blocker",
+          handoffName: "evaluation_review",
+          targetPath: "/chief-of-staff/reviews/evaluation",
+          requestKind: "evaluation_review_handoff",
+          operationId: "evaluation_review",
+          advertiseUsing: ["supportedHandoffs", "required_for"],
+          requiredAction:
+            "Napoleon must advertise evaluation_review in supportedHandoffs before Concierge can promote live.",
+          sideEffectsPerformed: false,
+          approvalCaptured: false,
+          memoryWritePerformed: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+          appliedLocally: false,
+        },
+      ],
+      httpEvaluator: {
+        status: "failed",
+        failureReason: "http_evaluator_handoff_not_advertised",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+        targetRequestKind: "evaluation_review_handoff",
+        targetOperationId: "evaluation_review",
+        endpointHostRetained: false,
+        tokenRetained: false,
+        requestBodyRetained: false,
+        responseBodyRetained: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+      },
+    }),
+    profile: "child_protected_user",
+  });
+
+  assert.equal(result.status, "success");
+  assert.equal(result.answer.actionCount, 1);
+  assert.equal(result.answer.runtimeValidationSource, "local_harness");
+  assert.ok(result.answer.content.includes("Napoleon has 1 required action from local harness runtime evidence."));
+  assert.ok(result.answer.content.includes("trusted adult/operator"));
+  assert.ok(result.answer.content.includes("Profile scope: child_protected_user."));
+  assert.ok(result.answer.content.includes("not Napoleon approval"));
+  assert.equal(result.sideEffects.localAnswerOnly, true);
+  assert.equal(result.sideEffects.approvalCaptured, false);
+  assert.equal(result.sideEffects.memoryWritePerformed, false);
+  assert.equal(result.sideEffects.agentDispatchPerformed, false);
+  assert.equal(result.sideEffects.externalSendPerformed, false);
+  assert.equal(result.sideEffects.appliedLocally, false);
+
+  const serialized = JSON.stringify(result);
+  assert.equal(serialized.includes("advertise_evaluation_review_handoff"), false);
+  assert.equal(serialized.includes("/chief-of-staff/reviews/evaluation"), false);
+  assert.equal(serialized.includes("evaluation_review_handoff"), false);
+  assert.equal(serialized.includes("evaluation_review"), false);
+  assert.equal(serialized.includes("Napoleon must advertise"), false);
+  assert.equal(serialized.includes("highestPriorityAction"), false);
 });
 
 test("smoke test rejects a local harness text response that claims forbidden side effects", async () => {

@@ -4,7 +4,12 @@ import {
   type BridgeEvidenceReadinessState,
 } from "./bridgeEvidenceReadiness.js";
 import { discoverNapoleonDescriptor } from "./descriptorDiscovery.js";
+import { parseEvaluatorValidationArtifact } from "./evaluatorValidationArtifact.js";
 import { NapoleonBridgeError, sendToNapoleon, type BridgeContractEvidence } from "./napoleonBridge.js";
+import {
+  formatMinimizedNapoleonRequiredActionAnswer,
+  type MinimizedNapoleonRequiredActionAnswer,
+} from "./napoleonRequiredActions.js";
 import {
   buildSuccessfulNapoleonResponsePresentation,
   compareNapoleonResponseProofs,
@@ -94,6 +99,29 @@ export interface LocalHarnessContractPacketSmokeFailureResult {
   failureMessage: string;
 }
 
+export interface LocalHarnessChildRequiredActionSmokeInput {
+  runtimeSummaryJson: string;
+  profile: "child_protected_user";
+}
+
+export interface LocalHarnessChildRequiredActionSmokeResult {
+  status: "success";
+  answer: MinimizedNapoleonRequiredActionAnswer;
+  sideEffects: {
+    localAnswerOnly: true;
+    approvalCaptured: false;
+    memoryWritePerformed: false;
+    agentDispatchPerformed: false;
+    externalSendPerformed: false;
+    appliedLocally: false;
+  };
+}
+
+export interface LocalHarnessChildRequiredActionSmokeFailureResult {
+  status: "rejected";
+  summary: string;
+}
+
 export async function runLocalHarnessTextSmoke(
   input: LocalHarnessTextSmokeInput,
 ): Promise<LocalHarnessTextSmokeResult | LocalHarnessTextSmokeFailureResult> {
@@ -171,6 +199,45 @@ export async function runLocalHarnessTextSmoke(
     secondProofComparison,
     readiness,
     liveBridgeReadiness,
+  };
+}
+
+export function runLocalHarnessChildRequiredActionSmoke(
+  input: LocalHarnessChildRequiredActionSmokeInput,
+): LocalHarnessChildRequiredActionSmokeResult | LocalHarnessChildRequiredActionSmokeFailureResult {
+  const artifact = parseEvaluatorValidationArtifact(input.runtimeSummaryJson);
+  if (artifact.status !== "accepted") {
+    return {
+      status: "rejected",
+      summary: artifact.summary,
+    };
+  }
+
+  const actionCount =
+    artifact.validation.napoleonRequiredActions?.length ??
+    (artifact.validation.descriptorHandoffRequiredAction ? 1 : 0);
+  const sourceLabel =
+    artifact.runtimeValidationSource === "local_harness"
+      ? "local harness runtime evidence"
+      : "sanitized validation evidence";
+
+  return {
+    status: "success",
+    answer: formatMinimizedNapoleonRequiredActionAnswer({
+      actionCount,
+      status: artifact.validation.status,
+      runtimeValidationSource: artifact.runtimeValidationSource ?? "unavailable",
+      sourceLabel,
+      profileMode: input.profile,
+    }),
+    sideEffects: {
+      localAnswerOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    },
   };
 }
 
