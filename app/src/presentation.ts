@@ -32,6 +32,34 @@ function describeDescriptorFailureReason(reason: DescriptorFailClosedReason | un
   return "";
 }
 
+function describeLiveVoiceDescriptorFailureNextStep(reason: DescriptorFailClosedReason | undefined): string {
+  if (reason === "no_endpoint") {
+    return "Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery.";
+  }
+  if (reason === "no_descriptor") {
+    return "Next step: discover the Napoleon Chief of Staff descriptor for the configured endpoint.";
+  }
+  if (reason === "descriptor_signature_or_checksum_mismatch") {
+    return "Next step: resolve the descriptor signature or checksum mismatch, then rediscover the descriptor.";
+  }
+  if (reason === "descriptor_stale") {
+    return "Next step: refresh the stale Napoleon descriptor before attempting live voice.";
+  }
+  if (reason === "auth_failure") {
+    return "Next step: update the Napoleon bridge token or endpoint credentials, then rediscover the descriptor.";
+  }
+  if (reason === "bridge_timeout") {
+    return "Next step: restore descriptor connectivity or retry after Napoleon responds, then rediscover the descriptor.";
+  }
+  if (reason === "http_failure") {
+    return "Next step: resolve the descriptor HTTP failure, then rediscover the descriptor.";
+  }
+  if (reason === "descriptor_invalid") {
+    return "Next step: replace the descriptor with an authority-safe Napoleon Chief of Staff descriptor.";
+  }
+  return "Next step: keep live voice blocked until consent, descriptor, real-runtime proof, and the governed voice pipeline exist.";
+}
+
 function describeBridgeDescriptorDetail(error: NapoleonBridgeError): string {
   const detail = describeDescriptorFailureReason(error.descriptorFailureReason);
   return detail ? ` Descriptor: ${detail}.` : "";
@@ -314,6 +342,7 @@ export interface LiveVoiceReadinessView {
   status: "blocked" | "warning";
   canStartLiveVoice: false;
   summary: string;
+  nextStepSummary: string;
   caveat: string;
   blockedEffects: string[];
   items: LiveSendPreflightItem[];
@@ -933,8 +962,15 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
   const runtimeProofReady = realRuntimeReady || Boolean(acceptedRealRuntimeProof);
   const descriptorReady = input.descriptorConnection.canAttemptLiveBridge;
   const descriptorFailureReason = describeDescriptorFailureReason(input.descriptorConnection.failClosedReason);
+  const descriptorFailureNextStep = describeLiveVoiceDescriptorFailureNextStep(
+    input.descriptorConnection.failClosedReason,
+  );
   const descriptorBlockedDetail = descriptorFailureReason
-    ? `Napoleon descriptor blocks live voice: ${descriptorFailureReason}. Refresh descriptor discovery after resolving this blocker.`
+    ? `Napoleon descriptor blocks live voice: ${
+        input.descriptorConnection.failClosedReason === "auth_failure"
+          ? "descriptor authentication failure"
+          : descriptorFailureReason
+      }. ${descriptorFailureNextStep}`
     : `Napoleon descriptor blocks live voice: ${input.descriptorConnection.state}.`;
   const childProtected = input.profileMode === "child_protected_user";
   const blockedEffects = [
@@ -954,6 +990,9 @@ export function describeLiveVoiceReadiness(input: LiveVoiceReadinessInput): Live
     status: "blocked",
     canStartLiveVoice: false,
     summary: "Live voice is blocked because the governed voice pipeline is not implemented.",
+    nextStepSummary: descriptorReady
+      ? "Next step: keep live voice blocked until consent, real-runtime proof, and the governed voice pipeline exist."
+      : descriptorFailureNextStep,
     caveat: childProtected
       ? "This voice readiness gate is not Napoleon approval, not microphone consent, not guardian approval, not permission to speak externally, and not a live voice start command."
       : "This voice readiness gate is not Napoleon approval, not microphone consent, not permission to speak externally, and not a live voice start command.",

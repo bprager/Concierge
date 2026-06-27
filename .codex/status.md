@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a visible next-step summary to live voice readiness descriptor blockers, so auth, timeout, HTTP, stale, missing, and integrity failures remain blocked while pointing to a specific local repair action.
 - Added built-in runtime contract required-action packets to sanitized bridge readiness proof exports, so exported proof evidence now keeps `expose_evolution_proposal_status_runtime_target` as a Napoleon-owned promotion blocker after real-runtime bridge and evaluator checks pass.
 - Added built-in runtime contract required-action warnings to live bridge readiness and live-send preflight, so `expose_evolution_proposal_status_runtime_target` stays visible as Napoleon-owned promotion work even when descriptor, bridge evidence, and evaluator checks otherwise pass.
 - Added local Text Concierge answers for review-history questions, so the app can summarize sanitized governed review and proposal lifecycle records by profile without contacting Napoleon or treating the records as approval, memory write, agent dispatch, external send, registry update, activation, evolution application, or local application.

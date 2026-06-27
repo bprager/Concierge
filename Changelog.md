@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a visible next-step summary to live voice readiness descriptor blockers, so auth, timeout, HTTP, stale, missing, and integrity failures stay blocked while pointing to the specific local repair action.
 - Added richer local architecture-improvement Capability Intelligence answers that identify the best tradeoff area, explain the repair focus, and show needed coverage, privacy impact, and governance impact without contacting Napoleon.
 - Added built-in runtime contract required-action packets to sanitized bridge readiness proof exports, keeping `expose_evolution_proposal_status_runtime_target` promotion-blocking in exported evidence even after real-runtime and evaluator checks pass.
 - Added built-in runtime contract required-action warnings to live bridge readiness and live-send preflight, so `expose_evolution_proposal_status_runtime_target` remains visible as Napoleon-owned promotion work even when evaluator validation has passed.

@@ -1354,10 +1354,42 @@ test("describes descriptor HTTP failure as a live voice blocker", () => {
         item.label === "Descriptor preflight" &&
         item.status === "blocked" &&
         item.detail.includes("descriptor HTTP failure") &&
-        item.detail.includes("Refresh descriptor discovery"),
+        item.detail.includes("resolve the descriptor HTTP failure"),
     ),
   );
   assert.ok(view.items.some((item: { label: string; status: string }) => item.label === "Voice pipeline" && item.status === "blocked"));
+});
+
+test("describes a specific live voice descriptor repair next step", () => {
+  const view = describeLiveVoiceReadiness({
+    descriptorConnection: buildDescriptorConnectionState({
+      endpointConfigured: true,
+      descriptor: null,
+      failClosedReason: "auth_failure",
+    }),
+    microphoneEnabled: true,
+    microphonePermissionStatus: "granted",
+    evidenceCaptureState: "passed",
+    evidenceComparisonState: "passed",
+    runtimeValidationSource: "real_runtime",
+    rehearsalMode: false,
+  });
+
+  assert.equal(view.status, "blocked");
+  assert.equal(view.canStartLiveVoice, false);
+  assert.equal(
+    view.nextStepSummary,
+    "Next step: update the Napoleon bridge token or endpoint credentials, then rediscover the descriptor.",
+  );
+  assert.ok(
+    view.items.some(
+      (item: { label: string; status: string; detail: string }) =>
+        item.label === "Descriptor preflight" &&
+        item.status === "blocked" &&
+        item.detail.includes("descriptor authentication failure") &&
+        item.detail.includes("update the Napoleon bridge token or endpoint credentials"),
+    ),
+  );
 });
 
 test("describes accepted real runtime proof in live voice readiness without starting voice", () => {

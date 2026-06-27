@@ -6819,6 +6819,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         <div>
           <strong>{liveVoiceReadiness.heading}</strong>
           <span>{liveVoiceReadiness.summary}</span>
+          <span>{liveVoiceReadiness.nextStepSummary}</span>
           <span>{liveVoiceReadiness.caveat}</span>
         </div>
         {liveVoiceReadiness.items.map((item) => (
