@@ -176,6 +176,7 @@ import {
 import {
   buildDraftEvolutionProposalLifecycleRecord,
   clearEvolutionProposalLifecycleRecords,
+  describeEvolutionProposalLifecycleState,
   exportEvolutionProposalLifecycleRecords,
   loadEvolutionProposalLifecycleRecords,
   persistEvolutionProposalLifecycleRecords,
@@ -183,7 +184,6 @@ import {
   updateEvolutionProposalLifecycleAfterSubmission,
   updateEvolutionProposalLifecycleFromStatus,
   upsertEvolutionProposalLifecycleRecord,
-  type EvolutionProposalLifecycleState,
   type EvolutionProposalLifecycleRecord,
 } from "./evolutionProposalLifecycle.js";
 import { refreshEvolutionProposalStatusFromNapoleon } from "./evolutionProposalStatus.js";
@@ -280,13 +280,6 @@ import {
 } from "./wakeWordReadiness.js";
 
 const conversationId = `conv_${Date.now().toString(16)}`;
-const unresolvedEvolutionProposalLifecycleStates = new Set<EvolutionProposalLifecycleState>([
-  "unknown",
-  "under_review",
-  "stale",
-  "unavailable",
-]);
-
 function storedBoolean(key: string, fallback: boolean): boolean {
   if (typeof localStorage === "undefined") return fallback;
   const value = localStorage.getItem(key);
@@ -6888,13 +6881,6 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   function renderEvolutionProposalLifecyclePanel() {
     if (!evolutionProposalLifecycleRecords.length) return null;
 
-    function evolutionProposalLifecycleStateLabel(record: EvolutionProposalLifecycleRecord): string {
-      if (!unresolvedEvolutionProposalLifecycleStates.has(record.currentLifecycleState)) {
-        return record.currentLifecycleState;
-      }
-      return `${record.currentLifecycleState} (unresolved tracking-only status)`;
-    }
-
     return (
       <section className="evolution-proposal-lifecycle" aria-label="Evolution proposal lifecycle">
         <div className="review-heading">
@@ -6916,7 +6902,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <div key={record.proposalId}>
               <dt>{record.proposalId}</dt>
               <dd>
-                {evolutionProposalLifecycleStateLabel(record)}: {record.latestKnownOutcome} Decision{" "}
+                {describeEvolutionProposalLifecycleState(record.currentLifecycleState)}: {record.latestKnownOutcome} Decision{" "}
                 {record.intakeDecisionId ?? "not returned"}; audit {record.intakeAuditId ?? "not returned"}; status
                 refresh {record.statusRefresh.available ? "available" : `unavailable (${record.statusRefresh.reason})`}
                 ; next step {record.nextRecommendedUserAction}; boundary proposal-only, no local evolution, no registry

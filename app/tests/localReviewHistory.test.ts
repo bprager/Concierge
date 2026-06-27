@@ -159,6 +159,8 @@ test("answers unresolved evolution proposal lifecycle wording from local metadat
   if (!answer) throw new Error("expected stale evolution proposal status answer");
   assert.equal(answer.evidenceCount, 1);
   assert.ok(answer.summary.includes("stale"));
+  assert.ok(answer.summary.includes("unresolved tracking-only status"));
   assert.equal(answer.rows[0].subjectId, "evolution-proposal-stale-status");
+  assert.equal(answer.rows[0].status, "stale (unresolved tracking-only status)");
   assert.equal(answer.boundary.evolutionApplied, false);
 });

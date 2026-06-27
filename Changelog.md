@@ -8,7 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
-- Added visible Text UI labeling for unresolved read-only evolution proposal lifecycle states, so `under_review`, `stale`, `unavailable`, and `unknown` render as tracking-only status rather than approval or implementation.
+- Added visible Text UI and local review-history answer labeling for unresolved read-only evolution proposal lifecycle states, so `under_review`, `stale`, `unavailable`, and `unknown` render as tracking-only status rather than approval or implementation.
 - Added evaluator scenario coverage for unresolved read-only evolution proposal status states, keeping `under_review`, `stale`, `unavailable`, and `unknown` non-authorizing.
 - Added support for Napoleon-reported evolution proposal status states `under_review`, `stale`, `unavailable`, and `unknown`, preserving them in local lifecycle records without granting approval or applying changes.
 - Added `napoleonRequiredActionCount` and `blockingLivePromotion` to the app's built-in runtime-contract summary and sanitized readiness proof exports.

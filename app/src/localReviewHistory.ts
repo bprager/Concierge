@@ -1,6 +1,9 @@
 import type { CapabilityPrivacyClass } from "./capabilityLedger.js";
 import type { NapoleonProfileMode } from "./contractBridge.js";
-import type { EvolutionProposalLifecycleRecord } from "./evolutionProposalLifecycle.js";
+import {
+  describeEvolutionProposalLifecycleState,
+  type EvolutionProposalLifecycleRecord,
+} from "./evolutionProposalLifecycle.js";
 import type { NewAgentProposalLifecycleRecord } from "./newAgentProposalLifecycle.js";
 
 export type LocalReviewHistoryEntryType =
@@ -172,7 +175,7 @@ function evolutionProposalEntry(record: EvolutionProposalLifecycleRecord): Local
     title: "Evolution proposal",
     subjectId: safeText(record.proposalId, "evolution-proposal:unknown"),
     profileMode: record.profileMode,
-    status: record.currentLifecycleState,
+    status: describeEvolutionProposalLifecycleState(record.currentLifecycleState),
     latestKnownOutcome: safeText(record.latestKnownOutcome, "Evolution proposal metadata is available."),
     ...(optionalSafeText(record.intakeDecisionId) ? { decisionId: optionalSafeText(record.intakeDecisionId) } : {}),
     ...(optionalSafeText(record.intakeAuditId) ? { auditId: optionalSafeText(record.intakeAuditId) } : {}),

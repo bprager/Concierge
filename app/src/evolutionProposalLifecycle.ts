@@ -89,6 +89,18 @@ export interface EvolutionProposalLifecycleRecord {
   };
 }
 
+const UNRESOLVED_EVOLUTION_PROPOSAL_LIFECYCLE_STATES = new Set<EvolutionProposalLifecycleState>([
+  "unknown",
+  "under_review",
+  "stale",
+  "unavailable",
+]);
+
+export function describeEvolutionProposalLifecycleState(state: EvolutionProposalLifecycleState): string {
+  if (!UNRESOLVED_EVOLUTION_PROPOSAL_LIFECYCLE_STATES.has(state)) return state;
+  return `${state} (unresolved tracking-only status)`;
+}
+
 export interface EvolutionProposalLifecycleExport {
   schemaVersion: "concierge.evolution-proposal-lifecycle-export.v1";
   generatedAt: string;
