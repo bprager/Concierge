@@ -10,6 +10,7 @@ import {
   deriveCapabilitySignalFromEvent,
   exportCapabilityAnswerDrilldown,
   exportCapabilityReviewPacket,
+  exportCapabilityTrendSnapshot,
   withCapabilityLatestTurnEvidence,
   deserializeCapabilityLedger,
   exportCapabilityLedger,
@@ -736,6 +737,67 @@ test("answers common conversation questions from local aggregates", () => {
   assert.ok(answer.caveat.includes("local metadata"));
   assert.equal(answer.boundary.proposalOnly, true);
   assert.equal(JSON.stringify(answer).includes("raw deployment content"), false);
+});
+
+test("exports a local capability trend snapshot without raw content or authority", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    testSignal("trace_snapshot_common", {
+      observedAt: "2026-06-26T12:00:00.000Z",
+      topic: "deployment",
+      capability: "release_summary",
+      status: "working",
+      architecture: "text_ui",
+      rawMessage: "raw deployment release content",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    testSignal("trace_snapshot_missing", {
+      observedAt: "2026-06-26T13:00:00.000Z",
+      topic: "bridge",
+      capability: "napoleon_text_turn_bridge",
+      status: "missing",
+      architecture: "bridge",
+      suggestedNextStep: "write_evaluator_case",
+      rawMessage: "send this private prompt to Napoleon",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    testSignal("trace_snapshot_common_again", {
+      observedAt: "2026-06-26T14:00:00.000Z",
+      topic: "deployment",
+      capability: "release_summary",
+      status: "working",
+      architecture: "text_ui",
+    }),
+  );
+
+  const snapshot = exportCapabilityTrendSnapshot(ledger, {
+    generatedAt: "2026-06-27T00:00:00.000Z",
+    now: "2026-06-27T00:00:00.000Z",
+    profileMode: "adult_owner",
+  });
+
+  assert.equal(snapshot.schemaVersion, "concierge.capability-trend-snapshot.export.v1");
+  assert.equal(snapshot.profileMode, "adult_owner");
+  assert.equal(snapshot.evidenceCount, 3);
+  assert.equal(snapshot.sections.common.rows[0].label, "deployment");
+  assert.equal(snapshot.sections.workingWell.rows[0].label, "release_summary");
+  assert.equal(snapshot.sections.missingOrBlocked.rows[0].label, "napoleon_text_turn_bridge");
+  assert.equal(snapshot.sections.architectureAreas.rows[0].label, "bridge");
+  assert.equal(snapshot.sections.recommendedNext.rows[0].label, "napoleon_text_turn_bridge");
+  assert.equal(snapshot.boundary.proposalOnly, true);
+  assert.equal(snapshot.boundary.approvalCaptured, false);
+  assert.equal(snapshot.boundary.memoryWriteAllowed, false);
+  assert.equal(snapshot.boundary.agentDispatchAllowed, false);
+  assert.equal(snapshot.boundary.externalSendAllowed, false);
+  assert.ok(snapshot.privacyCaveat.includes("Raw user text"));
+  assert.ok(snapshot.authorityCaveat.includes("not Napoleon approval"));
+  assert.equal(JSON.stringify(snapshot).includes("raw deployment release content"), false);
+  assert.equal(JSON.stringify(snapshot).includes("private prompt"), false);
 });
 
 test("answers missing or blocked capability questions separately from successful safety blocks", () => {

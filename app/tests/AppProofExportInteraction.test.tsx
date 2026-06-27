@@ -3948,35 +3948,71 @@ test("readiness proof export telemetry records when descriptor omits text-turn r
 
 test("capability ledger export and clear telemetry stays proposal-only without agent dispatch", async () => {
   const dom = installDom();
-  const [{ cleanup, render }, userEventModule, { App }] = await Promise.all([
+  const [{ cleanup, render }, userEventModule, { App }, { emitEvent, capabilityLedger }, { clearCapabilityLedger }] = await Promise.all([
     import("@testing-library/react"),
     import("@testing-library/user-event"),
     import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
   ]);
   const user = userEventModule.default.setup();
 
   try {
+    clearCapabilityLedger(capabilityLedger);
+    emitEvent("response_failed", {
+      traceId: "trace_snapshot_export_ui",
+      conversationId: "conv_snapshot_export_ui",
+      turnId: "turn_snapshot_export_ui",
+      profile: "adult_owner",
+    });
+
     const view = render(<App />);
 
     await user.click(view.getByRole("button", { name: "Export local capability metadata" }));
     await view.findByLabelText("Exported local capability metadata");
+    await user.click(view.getByRole("button", { name: "Export local capability snapshot" }));
+    const snapshot = await view.findByLabelText("Exported local capability snapshot");
+    const parsedSnapshot = JSON.parse(snapshot.textContent ?? "{}") as {
+      schemaVersion?: string;
+      evidenceCount?: number;
+      sections?: { missingOrBlocked?: { rows?: Array<{ label?: string }> } };
+      boundary?: {
+        approvalCaptured?: boolean;
+        memoryWriteAllowed?: boolean;
+        agentDispatchAllowed?: boolean;
+        externalSendAllowed?: boolean;
+      };
+    };
+    assert.equal(parsedSnapshot.schemaVersion, "concierge.capability-trend-snapshot.export.v1");
+    assert.equal(parsedSnapshot.evidenceCount, 1);
+    assert.equal(parsedSnapshot.sections?.missingOrBlocked?.rows?.[0]?.label, "bridge_failure_handling");
+    assert.equal(parsedSnapshot.boundary?.approvalCaptured, false);
+    assert.equal(parsedSnapshot.boundary?.memoryWriteAllowed, false);
+    assert.equal(parsedSnapshot.boundary?.agentDispatchAllowed, false);
+    assert.equal(parsedSnapshot.boundary?.externalSendAllowed, false);
     await user.click(view.getByRole("button", { name: "Clear local capability ledger" }));
 
     const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };
     const exportEvent = telemetryBuffer.events?.find((event) => event.event === "capability_ledger_exported");
+    const snapshotEvent = telemetryBuffer.events?.find((event) => event.event === "capability_trend_snapshot_exported");
     const clearEvent = telemetryBuffer.events?.find((event) => event.event === "capability_ledger_cleared");
 
     assert.equal(exportEvent?.attributes.approvalCaptured, false);
     assert.equal(exportEvent?.attributes.memoryWritePerformed, false);
     assert.equal(exportEvent?.attributes.agentDispatchPerformed, false);
     assert.equal(exportEvent?.attributes.externalSendPerformed, false);
+    assert.equal(snapshotEvent?.attributes.approvalCaptured, false);
+    assert.equal(snapshotEvent?.attributes.memoryWritePerformed, false);
+    assert.equal(snapshotEvent?.attributes.agentDispatchPerformed, false);
+    assert.equal(snapshotEvent?.attributes.externalSendPerformed, false);
     assert.equal(clearEvent?.attributes.approvalCaptured, false);
     assert.equal(clearEvent?.attributes.memoryWritePerformed, false);
     assert.equal(clearEvent?.attributes.agentDispatchPerformed, false);
     assert.equal(clearEvent?.attributes.externalSendPerformed, false);
   } finally {
+    clearCapabilityLedger(capabilityLedger);
     cleanup();
     dom.window.close();
   }

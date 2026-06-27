@@ -41,6 +41,7 @@ import {
   answerCapabilityQuestion,
   exportCapabilityAnswerDrilldown,
   exportCapabilityReviewPacket,
+  exportCapabilityTrendSnapshot,
   withCapabilityLatestTurnEvidence,
   type CapabilityLatestTurnEvidence,
   type CapabilityReviewPacketFocus,
@@ -2173,6 +2174,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [memorySubmissionFailure, setMemorySubmissionFailure] = useState<string | null>(null);
   const [capabilitySignalCount, setCapabilitySignalCount] = useState(() => capabilityLedger.listRecent().length);
   const [capabilityExportJson, setCapabilityExportJson] = useState<string | null>(null);
+  const [capabilityTrendSnapshotExportJson, setCapabilityTrendSnapshotExportJson] = useState<string | null>(null);
   const [capabilityAnswerDrilldownExportJson, setCapabilityAnswerDrilldownExportJson] = useState<string | null>(null);
   const [chiefOfStaffRequestPacket, setChiefOfStaffRequestPacket] = useState<ChiefOfStaffRequestPacket | null>(null);
   const [governanceEvaluationPacket, setGovernanceEvaluationPacket] = useState<GovernanceEvaluationPacket | null>(null);
@@ -3635,6 +3637,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setProfile(value);
     setPendingRehearsal(null);
     setCapabilityExportJson(null);
+    setCapabilityTrendSnapshotExportJson(null);
     setCapabilityAnswerDrilldownExportJson(null);
     clearCapabilityReviewPacketState();
     setTelemetryBufferExportJson(null);
@@ -5030,6 +5033,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const traceId = newTraceId();
     clearPersistedCapabilityLedger(browserStorage(), capabilityLedger, capabilityTaxonomy);
     setCapabilityExportJson(null);
+    setCapabilityTrendSnapshotExportJson(null);
     setCapabilityTaxonomy(createCapabilityTaxonomy());
     setSelectedTaxonomyLabel("");
     setTaxonomyRenameValue("");
@@ -5063,6 +5067,26 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       traceId,
       conversationId,
       evidenceCount: capabilityLedger.listRecent().length,
+      storage: "local_browser",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+    });
+  }
+
+  function exportCapabilitySnapshot() {
+    const traceId = newTraceId();
+    const snapshot = exportCapabilityTrendSnapshot(capabilityLedger, {
+      profileMode: profile,
+      taxonomy: capabilityTaxonomy,
+    });
+    setCapabilityTrendSnapshotExportJson(JSON.stringify(snapshot, null, 2));
+    emitEvent("capability_trend_snapshot_exported", {
+      traceId,
+      conversationId,
+      evidenceCount: snapshot.evidenceCount,
+      profileMode: snapshot.profileMode,
       storage: "local_browser",
       approvalCaptured: false,
       memoryWritePerformed: false,
@@ -8797,6 +8821,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           <button className="secondary" onClick={exportCapabilityHistory}>
             Export local capability metadata
           </button>
+          <button className="secondary" onClick={exportCapabilitySnapshot}>
+            Export local capability snapshot
+          </button>
           <button className="secondary" onClick={clearCapabilityHistory}>
             Clear local capability ledger
           </button>
@@ -8806,6 +8833,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         </div>
         {capabilityExportJson ? (
           <pre aria-label="Exported local capability metadata">{capabilityExportJson}</pre>
+        ) : null}
+        {capabilityTrendSnapshotExportJson ? (
+          <pre aria-label="Exported local capability snapshot">{capabilityTrendSnapshotExportJson}</pre>
         ) : null}
       </section>
 

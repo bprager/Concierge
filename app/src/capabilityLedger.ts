@@ -239,6 +239,33 @@ export interface ExportedCapabilityAnswerDrilldown {
   authorityCaveat: string;
 }
 
+export interface CapabilityTrendSnapshotSection {
+  kind: CapabilityQuestionKind;
+  summary: string;
+  evidenceCount: number;
+  rows: CapabilityAnswerRow[];
+  caveat: string;
+}
+
+export interface ExportedCapabilityTrendSnapshot {
+  schemaVersion: "concierge.capability-trend-snapshot.export.v1";
+  generatedAt: string;
+  profileMode: NapoleonProfileMode | "all_profiles";
+  evidenceCount: number;
+  sections: {
+    common: CapabilityTrendSnapshotSection;
+    workingWell: CapabilityTrendSnapshotSection;
+    missingOrBlocked: CapabilityTrendSnapshotSection;
+    architectureAreas: CapabilityTrendSnapshotSection;
+    recommendedNext: CapabilityTrendSnapshotSection;
+  };
+  boundary: RecommendationBoundary;
+  privacyCaveat: string;
+  authorityCaveat: string;
+  trendCaveat: string;
+  scoringCaveat: string;
+}
+
 export interface CapabilityReviewPacketFocus {
   capabilityLabel: string;
   status: CapabilityStatus | "unknown";
@@ -333,6 +360,10 @@ const CAPABILITY_REVIEW_PACKET_PRIVACY_CAVEAT =
   "Local sanitized capability evidence only. Raw user text, endpoints, credentials, request bodies, response bodies, raw audio, and raw video are excluded.";
 const CAPABILITY_REVIEW_PACKET_AUTHORITY_CAVEAT =
   "This packet is prepared for possible future governed Napoleon review only. It is not sent by export, not approval, not memory, not agent dispatch, not local application, and not an external send.";
+const CAPABILITY_TREND_SNAPSHOT_PRIVACY_CAVEAT =
+  "Local sanitized capability metadata only. Raw user text, endpoints, credentials, request bodies, response bodies, raw audio, and raw video are excluded.";
+const CAPABILITY_TREND_SNAPSHOT_AUTHORITY_CAVEAT =
+  "This snapshot is local inspection evidence only. It is not Napoleon approval, does not implement changes, does not write memory, does not capture approval, does not dispatch agents, and does not send externally.";
 
 const DEFAULT_MAX_SIGNALS = 250;
 const DEFAULT_MAX_AGE_DAYS = 90;
@@ -964,6 +995,71 @@ export function exportCapabilityAnswerDrilldown(
     boundary: answer.drilldown.boundary,
     privacyCaveat: answer.drilldown.privacyCaveat,
     authorityCaveat: answer.drilldown.authorityCaveat,
+  };
+}
+
+function capabilityTrendSnapshotSection(answer: CapabilityQuestionAnswer | null, fallbackKind: CapabilityQuestionKind): CapabilityTrendSnapshotSection {
+  if (!answer) {
+    return {
+      kind: fallbackKind,
+      summary: "No local capability snapshot evidence yet.",
+      evidenceCount: 0,
+      rows: [],
+      caveat: LOCAL_PROPOSAL_CAVEAT,
+    };
+  }
+
+  return {
+    kind: answer.kind,
+    summary: answer.summary,
+    evidenceCount: answer.evidenceCount,
+    rows: answer.kind === "recommended_next_capabilities" ? answer.rows.slice(0, 3) : answer.rows,
+    caveat: answer.caveat,
+  };
+}
+
+export function exportCapabilityTrendSnapshot(
+  ledger: CapabilityLedger,
+  options: {
+    generatedAt?: string;
+    now?: string | Date;
+    profileMode?: LocalProfile | NapoleonProfileMode;
+    taxonomy?: CapabilityTaxonomy;
+  } = {},
+): ExportedCapabilityTrendSnapshot {
+  const activeProfileMode = options.profileMode ? normalizeProfileMode(options.profileMode) : null;
+  const evidenceCount = ledger
+    .listRecent()
+    .filter((signal) => !activeProfileMode || signal.profileMode === activeProfileMode).length;
+  const answerOptions = { now: options.now ?? options.generatedAt, profileMode: options.profileMode };
+  const common = answerCapabilityQuestion("What conversations are most common?", ledger, options.taxonomy, answerOptions);
+  const workingWell = answerCapabilityQuestion("What conversations are working well?", ledger, options.taxonomy, answerOptions);
+  const missingOrBlocked = answerCapabilityQuestion("What capabilities are missing or blocked?", ledger, options.taxonomy, answerOptions);
+  const architectureAreas = answerCapabilityQuestion(
+    "What part of the Concierge architecture should improve next?",
+    ledger,
+    options.taxonomy,
+    answerOptions,
+  );
+  const recommendedNext = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, options.taxonomy, answerOptions);
+
+  return {
+    schemaVersion: "concierge.capability-trend-snapshot.export.v1",
+    generatedAt: options.generatedAt ?? new Date().toISOString(),
+    profileMode: activeProfileMode ?? "all_profiles",
+    evidenceCount,
+    sections: {
+      common: capabilityTrendSnapshotSection(common, "common_conversations"),
+      workingWell: capabilityTrendSnapshotSection(workingWell, "working_well_conversations"),
+      missingOrBlocked: capabilityTrendSnapshotSection(missingOrBlocked, "missing_or_blocked_capabilities"),
+      architectureAreas: capabilityTrendSnapshotSection(architectureAreas, "architecture_improvement_areas"),
+      recommendedNext: capabilityTrendSnapshotSection(recommendedNext, "recommended_next_capabilities"),
+    },
+    boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    privacyCaveat: CAPABILITY_TREND_SNAPSHOT_PRIVACY_CAVEAT,
+    authorityCaveat: CAPABILITY_TREND_SNAPSHOT_AUTHORITY_CAVEAT,
+    trendCaveat: CAPABILITY_LEDGER_TREND_CAVEAT,
+    scoringCaveat: CAPABILITY_LEDGER_SCORING_CAVEAT,
   };
 }
 
