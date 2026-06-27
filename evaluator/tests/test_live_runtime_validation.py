@@ -686,6 +686,40 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertNotIn(base_url, json.dumps(summary))
         self.assertIn("http_evaluator_status", stdout.getvalue())
 
+    def test_promotion_readiness_blocks_on_napoleon_required_actions(self):
+        summary = {
+            "runtimeValidation": {"source": "real_runtime"},
+            "bridgeEvidence": {"status": "passed"},
+            "capabilityDiscovery": {"status": "passed"},
+            "contractPacketSubmissions": {"status": "passed"},
+            "httpEvaluator": {"status": "passed", "failureReason": "none"},
+            "artifactPrivacy": {"status": "passed"},
+            "napoleonRequiredActions": [
+                {
+                    "id": "expose_evolution_proposal_status_runtime_target",
+                    "owner": "napoleon_runtime",
+                    "targetPath": "/evolution/proposals/{proposal_id}/status",
+                    "requestKind": "evolution_proposal_status_handoff",
+                    "operationId": "evolution_proposal_status",
+                    "sideEffectsPerformed": False,
+                    "approvalCaptured": False,
+                    "memoryWritePerformed": False,
+                    "agentDispatchPerformed": False,
+                    "externalSendPerformed": False,
+                    "appliedLocally": False,
+                },
+            ],
+        }
+
+        readiness = live_runtime_validation.promotion_readiness(summary)
+
+        self.assertFalse(readiness["locallySafeToConsider"])
+        self.assertEqual(readiness["gate"], "blocked_until_runtime_contract_actions_cleared")
+        self.assertIn(
+            "Napoleon-owned required actions remain before promotion.",
+            readiness["blockingReasons"],
+        )
+
     def test_records_http_evaluator_failure_without_traceback_or_endpoint_retention(self):
         with local_bridge_harness.running_harness() as base_url:
             with tempfile.TemporaryDirectory() as tmpdir:

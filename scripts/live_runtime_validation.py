@@ -1505,12 +1505,23 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
         (packets["status"] == "passed", "Governed contract packet submission validation did not pass."),
         (evaluator["status"] == "passed", evaluator_blocker),
         (artifact_privacy["status"] == "passed", "Artifact privacy audit did not pass."),
+        (
+            len(summary.get("napoleonRequiredActions", [])) == 0,
+            "Napoleon-owned required actions remain before promotion.",
+        ),
     ]
     blocking_reasons = [reason for passed, reason in checks if not passed]
     locally_safe = not blocking_reasons
+    gate = "ready_for_human_review"
+    if not locally_safe:
+        gate = (
+            "blocked_until_runtime_contract_actions_cleared"
+            if blocking_reasons == ["Napoleon-owned required actions remain before promotion."]
+            else "blocked_until_real_runtime_evidence_passes"
+        )
     return {
         "locallySafeToConsider": locally_safe,
-        "gate": "ready_for_human_review" if locally_safe else "blocked_until_real_runtime_evidence_passes",
+        "gate": gate,
         "blockingReasons": blocking_reasons,
         "boundary": "Readiness is local evidence only; human review and any required Napoleon or release approval are still required.",
     }
