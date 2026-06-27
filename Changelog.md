@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added `bridge-operations-check` to the default `make check` pipeline, so stale generated bridge operation metadata fails validation against the canonical OpenAPI contract.
 - Extended live Napoleon response validation to reject unproven "handled the response through ..." capability attribution unless returned target-capability or selected-agent provenance supports it.
 - Hardened live Napoleon response validation so text that claims Napoleon used, selected, routed to, delegated to, or handled a response through a capability or agent fails closed unless the returned target capability or selected-agent provenance supports that claim.
 - Hardened accepted readiness proof imports so pasted readiness proof must carry ready descriptor evidence with matched checksum, valid signature, live-bridge readiness, and advertised `text_turn` support before it can become local Napoleon conversation proof context.

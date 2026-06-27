@@ -1,6 +1,6 @@
-.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment generate-bridge-operations eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
+.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment generate-bridge-operations bridge-operations-check eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
 
-check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare schema-check app-test app-smoke app-build tauri-check
+check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare bridge-operations-check schema-check app-test app-smoke app-build tauri-check
 
 eval:
 	uv run --with PyYAML --with requests --with jsonschema python evaluator/eval_runner.py --mode stub --out evaluator/reports/latest.json
@@ -34,6 +34,9 @@ napoleon-contract-alignment:
 
 generate-bridge-operations:
 	uv run --with PyYAML python scripts/generate_bridge_operations.py
+
+bridge-operations-check:
+	uv run --with PyYAML python scripts/generate_bridge_operations.py --check
 
 eval-http:
 	uv run --with PyYAML --with requests --with jsonschema python evaluator/eval_runner.py --mode http --endpoint $$NAPOLEON_EVAL_ENDPOINT --out evaluator/reports/latest.json
