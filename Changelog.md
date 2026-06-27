@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added Napoleon runtime bridge fixtures for denied effects, child-profile review, memory-proposal review, and evolution-recommendation review, with tests proving they remain fail-closed or manual-review-only without side effects.
 - Added child-protected coverage for local live avatar readiness answers, making guardian-review blocking explicit without capturing guardian approval, requesting camera permission, starting capture, contacting Napoleon, or causing side effects.
 - Added local Text Concierge answers for live avatar readiness questions such as "Why can't live avatar start?", reusing local model, renderer, camera, and profile preflight state without loading a model, preparing renderer readiness, requesting camera permission, starting rendering or capture, contacting Napoleon, approving, writing memory, dispatching agents, or sending externally.
 - Added local Text Concierge answers for live voice readiness questions such as "Why can't live voice start?", reusing the voice readiness gate without starting capture, playing audio, contacting Napoleon, approving, writing memory, dispatching agents, or sending externally.

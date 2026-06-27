@@ -1,3 +1,4 @@
+import type { GovernanceDecision, NapoleonProfileMode } from "./contractBridge.js";
 import type { NapoleonResponse } from "./types.js";
 
 type FixtureFetchResponse = {
@@ -20,6 +21,78 @@ export type NapoleonBridgeFixture =
   | {
       kind: "timeout";
     };
+
+const blockedRuntimeEffects = [
+  "runtime_write",
+  "graph_write",
+  "memory_write",
+  "external_send",
+  "service_control",
+  "approval_capture",
+  "remediation",
+  "credential_access",
+  "nats_discovery_publication",
+  "scheduler_change",
+  "command_execution",
+  "task_dispatch",
+  "agent_dispatch",
+  "runtime_authority",
+];
+
+function fixtureResponse(input: {
+  text: string;
+  profileMode: NapoleonProfileMode;
+  traceId: string;
+  auditId: string;
+  decisionId: string;
+  outcome: GovernanceDecision["outcome"];
+  approvalRequirement: GovernanceDecision["approval_requirement"];
+  rationale: string;
+  evidenceLink: string;
+  targetAgent?: string;
+  stance?: string;
+}): NapoleonResponse & Record<string, unknown> {
+  return {
+    text: input.text,
+    profileMode: input.profileMode,
+    governanceDecision: {
+      decision_id: input.decisionId,
+      request_id: "cos_turn_fixture",
+      outcome: input.outcome,
+      authority_tier: "prepare_only",
+      approval_requirement: input.approvalRequirement,
+      rationale: input.rationale,
+      blocked_effects: blockedRuntimeEffects,
+      trace_id: input.traceId,
+      audit_id: input.auditId,
+    },
+    traceEnvelope: {
+      trace_id: input.traceId,
+      parent_trace_id: "conv_fixture",
+      actor_id: "napoleon.chief_of_staff",
+      request_id: "cos_turn_fixture",
+      decision_id: input.decisionId,
+      timestamp: "2026-06-11T00:00:00.000Z",
+    },
+    auditEnvelope: {
+      audit_id: input.auditId,
+      trace_id: input.traceId,
+      decision_id: input.decisionId,
+      actor_id: "napoleon.chief_of_staff",
+      authority_tier: "prepare_only",
+      approval_requirement: input.approvalRequirement,
+      evidence_links: [`trace:${input.traceId}`, input.evidenceLink],
+    },
+    requiresReview: input.outcome === "requires_review" || input.outcome === "no_go",
+    targetAgent: input.targetAgent ?? "napoleon.chief_of_staff",
+    stance: input.stance ?? "direct_strategic",
+    memoryWritePerformed: false,
+    approvalCaptured: false,
+    agentDispatchPerformed: false,
+    externalSendPerformed: false,
+    appliedLocally: false,
+  };
+}
 
 export const napoleonBridgeFixtures = {
   delegatedSuccess: {
@@ -91,6 +164,77 @@ export const napoleonBridgeFixtures = {
     status: 200,
     payload: {
       text: "This fixture intentionally omits governanceDecision.",
+    },
+  },
+  deniedAction: {
+    kind: "response",
+    status: 200,
+    payload: fixtureResponse({
+      text: "Napoleon blocked the requested effect before any runtime action.",
+      profileMode: "adult_owner",
+      traceId: "trace_fixture_denied_action",
+      auditId: "audit_fixture_denied_action",
+      decisionId: "decision_fixture_denied_action",
+      outcome: "deny",
+      approvalRequirement: "chief_of_staff_and_owner_review",
+      rationale: "A blocked effect such as graph_write was requested.",
+      evidenceLink: "fixture:denied_action",
+    }),
+  },
+  memoryProposal: {
+    kind: "response",
+    status: 200,
+    payload: {
+      ...fixtureResponse({
+        text: "Napoleon prepared a memory proposal for manual review only.",
+        profileMode: "adult_owner",
+        traceId: "trace_fixture_memory_proposal",
+        auditId: "audit_fixture_memory_proposal",
+        decisionId: "decision_fixture_memory_proposal",
+        outcome: "requires_review",
+        approvalRequirement: "explicit_owner_approval",
+        rationale: "Memory proposal review is required before any memory write.",
+        evidenceLink: "fixture:memory_proposal",
+        targetAgent: "napoleon.memory_review",
+      }),
+      memoryProposalStatus: "manual_review_required",
+      writeRequested: false,
+      writeAuthorized: false,
+    },
+  },
+  childProfile: {
+    kind: "response",
+    status: 200,
+    payload: fixtureResponse({
+      text: "Napoleon requires guardian appropriate review before continuing.",
+      profileMode: "child_protected_user",
+      traceId: "trace_fixture_child_profile",
+      auditId: "audit_fixture_child_profile",
+      decisionId: "decision_fixture_child_profile",
+      outcome: "deny",
+      approvalRequirement: "guardian_and_owner_review",
+      rationale: "Child protected requests require manual guardian appropriate review.",
+      evidenceLink: "fixture:child_profile",
+    }),
+  },
+  evolutionRecommendation: {
+    kind: "response",
+    status: 200,
+    payload: {
+      ...fixtureResponse({
+        text: "Napoleon prepared an evolution recommendation for manual review only.",
+        profileMode: "adult_owner",
+        traceId: "trace_fixture_evolution_recommendation",
+        auditId: "audit_fixture_evolution_recommendation",
+        decisionId: "decision_fixture_evolution_recommendation",
+        outcome: "requires_review",
+        approvalRequirement: "chief_of_staff_and_owner_review",
+        rationale: "Evolution recommendations must stay proposal only until governed review completes.",
+        evidenceLink: "fixture:evolution_recommendation",
+        targetAgent: "napoleon.evolution_review",
+      }),
+      evolutionProposalStatus: "manual_review_required",
+      registryUpdatePerformed: false,
     },
   },
   timeout: {
