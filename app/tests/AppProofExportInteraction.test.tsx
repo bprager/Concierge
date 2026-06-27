@@ -9867,6 +9867,8 @@ test("answers Napoleon contract-alignment required actions without imported eval
     await waitFor(() => {
       const renderedText = document.body.textContent ?? "";
       assert.ok(renderedText.includes("Current Napoleon required actions from local contract-alignment evidence (1):"));
+      assert.ok(renderedText.includes("Highest priority Napoleon fix: expose_evolution_proposal_status_runtime_target"));
+      assert.ok(renderedText.includes("Concierge cannot refresh proposal status against live Napoleon"));
       assert.ok(renderedText.includes("expose_evolution_proposal_status_runtime_target"));
       assert.ok(renderedText.includes("/evolution/proposals/{proposal_id}/status"));
       assert.ok(renderedText.includes("evolution_proposal_status_handoff"));
@@ -9896,6 +9898,7 @@ test("answers Napoleon contract-alignment required actions without imported eval
       source?: string;
       runtimeValidationSource?: string;
       requiredActionCount?: number;
+      highestPriorityAction?: { id?: string; targetPath?: string; requestKind?: string; blockingLivePromotion?: boolean };
       napoleonRequiredActions?: Array<{ id?: string; targetPath?: string; requestKind?: string }>;
       boundary?: Record<string, boolean>;
     };
@@ -9903,6 +9906,10 @@ test("answers Napoleon contract-alignment required actions without imported eval
     assert.equal(exported.source, "contract_alignment");
     assert.equal(exported.runtimeValidationSource, "contract_alignment");
     assert.equal(exported.requiredActionCount, 1);
+    assert.equal(exported.highestPriorityAction?.id, "expose_evolution_proposal_status_runtime_target");
+    assert.equal(exported.highestPriorityAction?.targetPath, "/evolution/proposals/{proposal_id}/status");
+    assert.equal(exported.highestPriorityAction?.requestKind, "evolution_proposal_status_handoff");
+    assert.equal(exported.highestPriorityAction?.blockingLivePromotion, true);
     assert.equal(exported.napoleonRequiredActions?.[0]?.id, "expose_evolution_proposal_status_runtime_target");
     assert.equal(exported.napoleonRequiredActions?.[0]?.targetPath, "/evolution/proposals/{proposal_id}/status");
     assert.equal(exported.napoleonRequiredActions?.[0]?.requestKind, "evolution_proposal_status_handoff");
@@ -11009,6 +11016,11 @@ test("renders unadvertised evaluator handoff required action from validation imp
         ),
       ),
     );
+    assert.ok(
+      view.getByText(
+        "Highest priority Napoleon fix: advertise_evaluation_review_handoff. Target: /chief-of-staff/reviews/evaluation. Request kind: evaluation_review_handoff. Fix this first because live promotion still cannot prove evaluator review against Napoleon until this handoff is advertised.",
+      ),
+    );
     const readiness = view.getByText("Live bridge readiness").closest("section") as HTMLElement | null;
     assert.ok(readiness);
     assert.ok(within(readiness).getAllByText(requiredAction).length >= 1);
@@ -11024,6 +11036,8 @@ test("renders unadvertised evaluator handoff required action from validation imp
     await waitFor(() => {
       const renderedText = document.body.textContent ?? "";
       assert.ok(renderedText.includes("Current Napoleon required actions from sanitized validation evidence (3):"));
+      assert.ok(renderedText.includes("Highest priority Napoleon fix: advertise_evaluation_review_handoff"));
+      assert.ok(renderedText.includes("live promotion still cannot prove evaluator review"));
       assert.ok(renderedText.includes("advertise_chief_of_staff_request_handoff"));
       assert.ok(renderedText.includes("advertise_governance_evaluation_handoff"));
       assert.ok(renderedText.includes("advertise_evaluation_review_handoff"));
@@ -11049,6 +11063,9 @@ test("renders unadvertised evaluator handoff required action from validation imp
     const requiredActionExport = view.getByLabelText("Exported Napoleon required action packet");
     assert.ok(requiredActionExport.textContent?.includes('"kind": "concierge.napoleon-required-actions.export.v1"'));
     assert.ok(requiredActionExport.textContent?.includes('"requiredActionCount": 3'));
+    assert.ok(requiredActionExport.textContent?.includes('"highestPriorityAction"'));
+    assert.ok(requiredActionExport.textContent?.includes('"id": "advertise_evaluation_review_handoff"'));
+    assert.ok(requiredActionExport.textContent?.includes('"blockingLivePromotion": true'));
     assert.ok(requiredActionExport.textContent?.includes('"advertise_chief_of_staff_request_handoff"'));
     assert.ok(requiredActionExport.textContent?.includes('"/chief-of-staff/requests"'));
     assert.ok(requiredActionExport.textContent?.includes('"advertise_governance_evaluation_handoff"'));
@@ -11190,6 +11207,11 @@ test("shows persisted Napoleon required-action evidence after reload without re-
     await waitFor(() => assert.ok(document.body.textContent?.includes("Evaluator validation import")));
     assert.ok(document.body.textContent?.includes("Stored as browser-local sanitized validation evidence"));
     assert.ok(document.body.textContent?.includes("Napoleon required actions: advertise_evaluation_review_handoff"));
+    assert.ok(
+      document.body.textContent?.includes(
+        "Highest priority Napoleon fix: advertise_evaluation_review_handoff. Target: /chief-of-staff/reviews/evaluation. Request kind: evaluation_review_handoff.",
+      ),
+    );
     assert.ok(document.body.textContent?.includes(requiredAction));
 
     fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
@@ -11199,6 +11221,7 @@ test("shows persisted Napoleon required-action evidence after reload without re-
     await waitFor(() => {
       const renderedText = document.body.textContent ?? "";
       assert.ok(renderedText.includes("Current Napoleon required actions from sanitized validation evidence (1):"));
+      assert.ok(renderedText.includes("Highest priority Napoleon fix: advertise_evaluation_review_handoff"));
       assert.ok(renderedText.includes("advertise_evaluation_review_handoff"));
       assert.ok(renderedText.includes("Concierge did not contact Napoleon for this answer"));
     });
@@ -11207,6 +11230,7 @@ test("shows persisted Napoleon required-action evidence after reload without re-
     const requiredActionExport = view.getByLabelText("Exported Napoleon required action packet");
     assert.ok(requiredActionExport.textContent?.includes('"kind": "concierge.napoleon-required-actions.export.v1"'));
     assert.ok(requiredActionExport.textContent?.includes('"requiredActionCount": 1'));
+    assert.ok(requiredActionExport.textContent?.includes('"highestPriorityAction"'));
     assert.ok(requiredActionExport.textContent?.includes('"advertise_evaluation_review_handoff"'));
     assert.ok(requiredActionExport.textContent?.includes('"sideEffectsPerformed": false'));
     assert.ok(requiredActionExport.textContent?.includes('"localExportOnly": true'));

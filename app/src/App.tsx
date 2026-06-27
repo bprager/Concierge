@@ -133,6 +133,10 @@ import {
   type ObservabilityTraceHandoffResult,
 } from "./observabilityTraceHandoff.js";
 import {
+  formatNapoleonRequiredActionPriority,
+  prioritizeNapoleonRequiredAction,
+} from "./napoleonRequiredActions.js";
+import {
   buildNewAgentProposalReviewPacket,
   submitNewAgentProposalForNapoleonReview,
   type NewAgentProposalReviewPacket,
@@ -1878,6 +1882,21 @@ function formatNapoleonRequiredActionAnswer(
   if (!evaluatorImport) {
     const contractActions = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions;
     if (contractActions.length) {
+      const sanitizedContractActions: NapoleonRequiredAction[] = contractActions.map((action) => ({
+        id: action.id,
+        owner: action.owner,
+        reason: "missing_named_concierge_runtime_target",
+        handoffName: action.operationId,
+        targetPath: action.path,
+        requestKind: action.requestKind,
+        operationId: action.operationId,
+        sideEffectsPerformed: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      }));
       const rows = contractActions
         .map((action) => {
           const required = action.blockingLivePromotion
@@ -1890,6 +1909,7 @@ function formatNapoleonRequiredActionAnswer(
       return {
         content: [
           `Current Napoleon required actions from local contract-alignment evidence (${contractActions.length}):`,
+          formatNapoleonRequiredActionPriority(prioritizeNapoleonRequiredAction(sanitizedContractActions)),
           rows,
           `Contract alignment status: ${RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status}. Runtime validation source: contract_alignment.`,
           `Profile scope: ${profileMode}. This is local contract metadata only; Concierge did not contact Napoleon for this answer, and this is not Napoleon approval, runtime validation, free-form paths permission, memory permission, agent dispatch, external send, or local application.`,
@@ -1949,6 +1969,7 @@ function formatNapoleonRequiredActionAnswer(
   return {
     content: [
       `Current Napoleon required actions from sanitized validation evidence (${actions.length}):`,
+      formatNapoleonRequiredActionPriority(prioritizeNapoleonRequiredAction(actions)),
       rows,
       `Evaluator status: ${evaluatorImport.validation.status}. Runtime validation source: ${runtimeValidationSource}.`,
       `Profile scope: ${profileMode}. This is local review evidence only; Concierge did not contact Napoleon for this answer, approve, apply, write memory, dispatch agents, or send externally.`,
@@ -5258,6 +5279,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const actionExport = getCurrentNapoleonRequiredActionsExport();
     const actions = actionExport.actions;
     if (!actions.length) return;
+    const priority = prioritizeNapoleonRequiredAction(actions);
 
     const traceId = newTraceId();
     const exportPayload = {
@@ -5279,6 +5301,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           evaluatorValidationImport?.validation.descriptorHandoffFailureReason ?? "none",
       },
       requiredActionCount: actions.length,
+      highestPriorityAction: priority,
       napoleonRequiredActions: actions,
       boundary: {
         localExportOnly: true,
@@ -8588,6 +8611,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                   {evaluatorValidationImport.validation.napoleonRequiredActions.map((action) => action.id).join(", ")}
                 </span>
               ) : null}
+              {evaluatorValidationImport.validation.napoleonRequiredActions?.length ? (
+                <span>
+                  {formatNapoleonRequiredActionPriority(
+                    prioritizeNapoleonRequiredAction(evaluatorValidationImport.validation.napoleonRequiredActions),
+                  )}
+                </span>
+              ) : null}
               <span>Sanitized local evidence only; not Napoleon approval.</span>
               {evaluatorValidationImport.validation.napoleonRequiredActions?.length ? (
                 <button className="secondary" onClick={exportNapoleonRequiredActions}>
@@ -8602,6 +8632,27 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
               <span>
                 Napoleon required actions:{" "}
                 {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.map((action) => action.id).join(", ")}
+              </span>
+              <span>
+                {formatNapoleonRequiredActionPriority(
+                  prioritizeNapoleonRequiredAction(
+                    RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.map((action) => ({
+                      id: action.id,
+                      owner: action.owner,
+                      reason: "missing_named_concierge_runtime_target",
+                      handoffName: action.operationId,
+                      targetPath: action.path,
+                      requestKind: action.requestKind,
+                      operationId: action.operationId,
+                      sideEffectsPerformed: false,
+                      approvalCaptured: false,
+                      memoryWritePerformed: false,
+                      agentDispatchPerformed: false,
+                      externalSendPerformed: false,
+                      appliedLocally: false,
+                    })),
+                  ),
+                )}
               </span>
               <span>
                 Source: contract alignment; local metadata only; not Napoleon approval, runtime validation, free-form
