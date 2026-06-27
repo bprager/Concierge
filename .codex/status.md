@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added an operator-visible sanitized preflight path to the no-endpoint `make live-runtime-validation` failure message, preserving the fail-closed result while making the missing Napoleon runtime validation artifact easy to inspect.
 - Added local returned-proof handling for "What did Napoleon say?" and "What was Napoleon's answer?", so Concierge can restate the current sanitized Napoleon bridge answer without another request, side effects, or raw follow-up/response telemetry.
 - Added a visible next-step summary to live voice readiness descriptor blockers, so auth, timeout, HTTP, stale, missing, and integrity failures remain blocked while pointing to a specific local repair action.
 - Added built-in runtime contract required-action packets to sanitized bridge readiness proof exports, so exported proof evidence now keeps `expose_evolution_proposal_status_runtime_target` as a Napoleon-owned promotion blocker after real-runtime bridge and evaluator checks pass.

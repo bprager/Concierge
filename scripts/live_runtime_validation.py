@@ -1717,10 +1717,11 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         out_dir = Path(args.out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         clear_runtime_artifacts(out_dir)
-        write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint, endpoint_resolution)
+        preflight_path = out_dir / "preflight.json"
+        write_preflight(preflight_path, bridge_endpoint, eval_endpoint, endpoint_resolution)
         print(
             "live runtime validation requires --bridge-endpoint, NAPOLEON_BRIDGE_ENDPOINT, "
-            "or NAPOLEON_EVAL_ENDPOINT",
+            f"or NAPOLEON_EVAL_ENDPOINT; sanitized preflight written to {preflight_path}",
             file=sys.stderr,
         )
         return 2

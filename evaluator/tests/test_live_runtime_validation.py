@@ -750,6 +750,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             preflight = json.loads((Path(tmpdir) / "preflight.json").read_text(encoding="utf-8"))
             self.assertEqual(exit_code, 2)
             self.assertIn("NAPOLEON_BRIDGE_ENDPOINT", stderr.getvalue())
+            self.assertIn(str(Path(tmpdir) / "preflight.json"), stderr.getvalue())
             self.assertEqual(preflight["status"], "blocked")
             self.assertEqual(preflight["reason"], "missing_bridge_endpoint")
             self.assertIn("NAPOLEON_BRIDGE_ENDPOINT", preflight["missingConfiguration"])
