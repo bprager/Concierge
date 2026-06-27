@@ -512,6 +512,7 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
       lower,
     ) ||
     /\b(which|what)\b.*\bcapability\b.*\bdid\b.*\bnapoleon\b.*\b(use|choose|select|pick)\b/.test(lower);
+  const asksAboutReturnedResponseText = isNapoleonReturnedResponseTextQuestion(content);
   const asksAboutReturnedEffects =
     /^(?:blocked|allowed|effects?|blocked\s+effects?|allowed\s+effects?)\??$/.test(lower.trim()) ||
     /\bwhat\b.*\b(blocked|allowed)\b/.test(lower) ||
@@ -598,6 +599,7 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
   if (
     !lower.includes("napoleon") &&
     !asksAboutReturnedHandler &&
+    !asksAboutReturnedResponseText &&
     !asksAboutReturnedEffects &&
     !asksAboutReturnedGovernance &&
     !asksAboutReturnedDecision &&
@@ -620,6 +622,7 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
   }
   return (
     asksAboutReturnedHandler ||
+    asksAboutReturnedResponseText ||
     asksAboutReturnedEffects ||
     asksAboutReturnedGovernance ||
     asksAboutReturnedDecision ||
@@ -646,6 +649,18 @@ export function isNapoleonDelegationQuestion(content: string): boolean {
     /\bwhat\b.*\beffects?\b.*\b(blocked|allowed)\b/.test(lower) ||
     /\bblocked effects?\b/.test(lower) ||
     /\ballowed effects?\b/.test(lower)
+  );
+}
+
+function isNapoleonReturnedResponseTextQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  const compact = lower.trim();
+  return (
+    /^(?:what\s+did\s+napoleon\s+say|what\s+was\s+napoleon'?s\s+(?:answer|response|reply)|napoleon'?s\s+(?:answer|response|reply))\??$/.test(
+      compact,
+    ) ||
+    /\bwhat\b.*\bnapoleon\b.*\b(said|say|answered|responded|replied)\b/.test(lower) ||
+    /\bwhat\b.*\b(last|latest|returned)\b.*\bnapoleon\b.*\b(answer|response|reply)\b/.test(lower)
   );
 }
 
@@ -1403,6 +1418,9 @@ function formatNapoleonDelegationAnswer(
 
   const proof = presentation.proof;
   const metadata = presentation.proofMetadata;
+  const returnedText =
+    presentation.returnedText && presentation.returnedText !== "unavailable" ? presentation.returnedText : proof.summary;
+  const shouldShowReturnedText = isNapoleonReturnedResponseTextQuestion(questionContent);
   const requestedSelectedAgentName = extractRequestedSelectedAgentName(questionContent);
   const requestedSelectedAgentReasonName = extractRequestedSelectedAgentReasonName(questionContent);
   const trace = detailValue(proof.details, "Trace");
@@ -1444,27 +1462,30 @@ function formatNapoleonDelegationAnswer(
       ? `not returned for ${requestedSelectedAgentName}`
       : "not returned";
 
+  const content = [
+    "Latest Napoleon delegation from returned bridge proof:",
+    ...(shouldShowReturnedText ? [`Napoleon said: ${returnedText}.`] : []),
+    `Handled by: ${metadata.handledBy}.`,
+    `Target capability: ${targetCapability}.`,
+    `Selected agents: ${selectedAgents}.`,
+    `Napoleon recommendation: ${recommendation}.`,
+    `Selected-agent contribution: ${selectedAgentContributions}.`,
+    `Why selected: ${whySelected}.`,
+    `Allowed effects: ${allowedEffects}.`,
+    `Blocked effects: ${blockedEffects}.`,
+    `Governance: ${governance}.`,
+    `Decision: ${decision}.`,
+    `Authority tier: ${authorityTier}.`,
+    `Approval requirement: ${approvalRequirement}.`,
+    `Rationale: ${rationale}.`,
+    `Next step: ${nextStep}`,
+    `Trace: ${trace}. Audit: ${audit}.`,
+    `Proof alignment: ${metadata.proofAlignment}.`,
+    "This is local display of returned bridge provenance only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
+  ];
+
   return {
-    content: [
-      "Latest Napoleon delegation from returned bridge proof:",
-      `Handled by: ${metadata.handledBy}.`,
-      `Target capability: ${targetCapability}.`,
-      `Selected agents: ${selectedAgents}.`,
-      `Napoleon recommendation: ${recommendation}.`,
-      `Selected-agent contribution: ${selectedAgentContributions}.`,
-      `Why selected: ${whySelected}.`,
-      `Allowed effects: ${allowedEffects}.`,
-      `Blocked effects: ${blockedEffects}.`,
-      `Governance: ${governance}.`,
-      `Decision: ${decision}.`,
-      `Authority tier: ${authorityTier}.`,
-      `Approval requirement: ${approvalRequirement}.`,
-      `Rationale: ${rationale}.`,
-      `Next step: ${nextStep}`,
-      `Trace: ${trace}. Audit: ${audit}.`,
-      `Proof alignment: ${metadata.proofAlignment}.`,
-      "This is local display of returned bridge provenance only; Concierge did not contact Napoleon, approve, write memory, dispatch agents, or send externally.",
-    ].join("\n\n"),
+    content: content.join("\n\n"),
     proofReturned: true,
     selectedAgentCount: metadata.selectedAgents.length,
     allowedEffectCount: metadata.allowedEffects.length,

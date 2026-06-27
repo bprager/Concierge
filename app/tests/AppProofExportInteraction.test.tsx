@@ -742,6 +742,42 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(respondedDelegationAnswerEvent?.attributes.selectedAgentCount, 1);
     assert.equal(respondedDelegationAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(respondedDelegationAnswerEvent).includes("Who responded?"), false);
+    const requestCountBeforeNapoleonSaidQuestion = requestedUrls.length;
+    const delegationAnswerCountBeforeNapoleonSaidQuestion = Array.from(
+      document.querySelectorAll("article.assistant"),
+    ).filter((article) => article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:")).length;
+    fireEvent.change(screen.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What did Napoleon say?" },
+    });
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    let napoleonSaidDelegationAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      const delegationAnswers = Array.from(document.querySelectorAll("article.assistant")).filter((article) =>
+        article.textContent?.includes("Latest Napoleon delegation from returned bridge proof:"),
+      );
+      assert.equal(delegationAnswers.length, delegationAnswerCountBeforeNapoleonSaidQuestion + 1);
+      napoleonSaidDelegationAnswer = delegationAnswers.at(-1) as HTMLElement | undefined;
+      assert.ok(napoleonSaidDelegationAnswer);
+      assert.ok(
+        napoleonSaidDelegationAnswer.textContent?.includes(
+          "Napoleon said: Napoleon recommends keeping this as a governed review draft. Passive Brain found bridge context.",
+        ),
+      );
+    });
+    assert.ok(napoleonSaidDelegationAnswer);
+    const napoleonSaidDelegationAnswerText = napoleonSaidDelegationAnswer.textContent ?? "";
+    assert.ok(napoleonSaidDelegationAnswerText.includes("Handled by: Passive Brain."));
+    assert.ok(napoleonSaidDelegationAnswerText.includes("Governance: requires_review."));
+    assert.ok(napoleonSaidDelegationAnswerText.includes("This is local display of returned bridge provenance only"));
+    assert.equal(requestedUrls.length, requestCountBeforeNapoleonSaidQuestion);
+    const napoleonSaidDelegationAnswerEvent = JSON.parse(
+      localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}",
+    ).events?.filter((event: { event: string }) => event.event === "napoleon_delegation_answered").at(-1);
+    assert.equal(napoleonSaidDelegationAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(napoleonSaidDelegationAnswerEvent?.attributes.selectedAgentCount, 1);
+    assert.equal(napoleonSaidDelegationAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(napoleonSaidDelegationAnswerEvent).includes("What did Napoleon say?"), false);
+    assert.equal(JSON.stringify(napoleonSaidDelegationAnswerEvent).includes("Napoleon recommends keeping this"), false);
     const requestCountBeforeOutcomeQuestion = requestedUrls.length;
     const delegationAnswerCountBeforeOutcomeQuestion = Array.from(
       document.querySelectorAll("article.assistant"),

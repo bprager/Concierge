@@ -6,6 +6,7 @@ export interface NapoleonResponsePresentationState {
   delegation: DelegationView | null;
   proof: NapoleonResponseProofView | null;
   proofMetadata?: NapoleonResponseProofMetadata;
+  returnedText?: string;
 }
 
 export interface NapoleonResponsePresentationOptions {
@@ -175,6 +176,7 @@ export function buildSuccessfulNapoleonResponsePresentation(
     }),
     proof,
     proofMetadata,
+    returnedText: sanitizeResponseProofString(response.text),
   };
 }
 
