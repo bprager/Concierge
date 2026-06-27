@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added broader local Capability Intelligence typo tolerance for "implmented" next-capability questions, preserving proposal-only metadata answers.
 - Added local Text Concierge answers for Napoleon metadata discovery questions such as "Which Napoleon agents are currently available?", using already-discovered agent/profile metadata without another bridge request and with count-only telemetry.
 - Added Napoleon runtime bridge fixtures for denied effects, child-profile review, memory-proposal review, and evolution-recommendation review, with tests proving they remain fail-closed or manual-review-only without side effects.
 - Added child-protected coverage for local live avatar readiness answers, making guardian-review blocking explicit without capturing guardian approval, requesting camera permission, starting capture, contacting Napoleon, or causing side effects.

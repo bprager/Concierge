@@ -805,7 +805,7 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
     .replace(/\b(?:convesrations?|conversatons?|converstations?)\b/g, (match) =>
       match.endsWith("s") ? "conversations" : "conversation",
     )
-    .replace(/\bimplemnt(ed|ing)?\b/g, "implement$1");
+    .replace(/\b(?:implemnt|implment)(ed|ing)?\b/g, "implement$1");
   const asksAboutConversation = /\b(conversation|conversations|topics?)\b/.test(lower);
   const asksIncreasing = /\b(increasing|rising|growing|more common|trending up)\b/.test(lower);
   const asksWorse = /\b(worse|worsening|getting worse|regressing|increasing failures?)\b/.test(lower);

@@ -1011,6 +1011,7 @@ test("answers misspelled capability intelligence questions", () => {
   const answer = answerCapabilityQuestion("What capabilites are missing but easy to evolve?", ledger);
   const conversationTypoAnswer = answerCapabilityQuestion("What conversaton is most common?", ledger);
   const capabilityTypoAnswer = answerCapabilityQuestion("What capabilties are missing but easy to evolve?", ledger);
+  const implementedTypoAnswer = answerCapabilityQuestion("What capabilites should be implmented?", ledger);
 
   assert.ok(answer);
   assert.ok(conversationTypoAnswer);
@@ -1018,6 +1019,7 @@ test("answers misspelled capability intelligence questions", () => {
   if (!answer) throw new Error("expected capability answer");
   if (!conversationTypoAnswer) throw new Error("expected typo-tolerant conversation answer");
   if (!capabilityTypoAnswer) throw new Error("expected typo-tolerant capability answer");
+  if (!implementedTypoAnswer) throw new Error("expected typo-tolerant implemented answer");
   assert.equal(answer.kind, "easy_to_evolve_missing_capabilities");
   assert.equal(answer.rows[0].label, "bridge_failure_handling");
   assert.equal(answer.boundary.proposalOnly, true);
@@ -1028,6 +1030,9 @@ test("answers misspelled capability intelligence questions", () => {
   assert.equal(capabilityTypoAnswer.kind, "easy_to_evolve_missing_capabilities");
   assert.equal(capabilityTypoAnswer.rows[0].label, "bridge_failure_handling");
   assert.equal(capabilityTypoAnswer.boundary.externalSendAllowed, false);
+  assert.equal(implementedTypoAnswer.kind, "recommended_next_capabilities");
+  assert.equal(implementedTypoAnswer.rows[0].label, "bridge_failure_handling");
+  assert.equal(implementedTypoAnswer.boundary.externalSendAllowed, false);
 });
 
 test("answers architecture improvement questions from missing safe request areas", () => {
