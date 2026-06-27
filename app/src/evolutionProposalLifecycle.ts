@@ -42,12 +42,16 @@ const FORBIDDEN_LIFECYCLE_VALUE_PATTERNS = [
 ];
 
 export type EvolutionProposalLifecycleState =
+  | "unknown"
   | "drafted"
   | "submitted"
   | "accepted_for_review"
+  | "under_review"
   | "rejected"
   | "blocked"
   | "status_refresh_unavailable"
+  | "unavailable"
+  | "stale"
   | "implemented"
   | "rolled_back";
 
@@ -142,12 +146,16 @@ function isNapoleonProfileMode(value: unknown): value is NapoleonProfileMode {
 
 function isLifecycleState(value: unknown): value is EvolutionProposalLifecycleState {
   return (
+    value === "unknown" ||
     value === "drafted" ||
     value === "submitted" ||
     value === "accepted_for_review" ||
+    value === "under_review" ||
     value === "rejected" ||
     value === "blocked" ||
     value === "status_refresh_unavailable" ||
+    value === "unavailable" ||
+    value === "stale" ||
     value === "implemented" ||
     value === "rolled_back"
   );
@@ -291,6 +299,8 @@ export function updateEvolutionProposalLifecycleFromStatus(
     nextRecommendedUserAction:
       result.lifecycleState === "implemented" || result.lifecycleState === "rolled_back"
         ? "Review Napoleon's implementation, rollout, or rollback evidence before relying on the change."
+        : result.lifecycleState === "stale" || result.lifecycleState === "unavailable" || result.lifecycleState === "unknown"
+          ? "Treat the proposal status as unresolved and refresh only through Napoleon-governed status evidence."
         : "Continue tracking through Napoleon-governed status evidence.",
     privacyClass: "metadata_only",
     boundary: baseBoundary(),

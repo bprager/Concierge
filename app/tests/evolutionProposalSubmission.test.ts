@@ -444,6 +444,41 @@ test("evolution proposal status refresh uses read-only Napoleon status path and 
   assert.equal(refreshed.boundary.appliedLocally, false);
 });
 
+test("evolution proposal status refresh preserves non-terminal Napoleon lifecycle states", async () => {
+  const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_evolution",
+  });
+  const record = buildDraftEvolutionProposalLifecycleRecord(packet);
+
+  for (const lifecycleState of ["under_review", "stale", "unavailable", "unknown"] as const) {
+    const result = await refreshEvolutionProposalStatusFromNapoleon(record, {
+      conversationId: "conv_evolution",
+      traceId: `trace_status_${lifecycleState}`,
+      getEndpoint: () => "https://napoleon.example",
+      descriptorConnection: readyDescriptorConnection,
+      fetch: async () => ({
+        ok: true,
+        status: 200,
+        json: async () =>
+          buildStatusResponse(`trace_status_${lifecycleState}`, `cos_trace_status_${lifecycleState}`, {
+            lifecycleState,
+            latestKnownOutcome: `Napoleon reports the proposal is ${lifecycleState}.`,
+          }),
+      }),
+    });
+    const refreshed = updateEvolutionProposalLifecycleFromStatus(record, result, {
+      updatedAt: "2026-06-24T00:06:00.000Z",
+    });
+
+    assert.equal(result.lifecycleState, lifecycleState);
+    assert.equal(refreshed.currentLifecycleState, lifecycleState);
+    assert.equal(refreshed.latestKnownOutcome, `Napoleon reports the proposal is ${lifecycleState}.`);
+    assert.equal(refreshed.boundary.evolutionApplied, false);
+    assert.equal(refreshed.boundary.registryUpdatePerformed, false);
+  }
+});
+
 test("evolution proposal status refresh rejects response-side evolution claims", async () => {
   const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
     profile: "adult_owner",

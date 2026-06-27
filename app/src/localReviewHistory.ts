@@ -213,7 +213,7 @@ function isLocalReviewHistoryQuestion(question: string): boolean {
   const lower = question.toLowerCase();
   const asksAboutProposalLifecycle =
     /\b(proposal|proposals|lifecycle|lifecycles)\b/.test(lower) &&
-    /\b(status|statuses|state|waiting|pending|returned|current|recent|accepted|rejected|blocked|implemented|rolled\s+back|rollback|what|which|where)\b/.test(
+    /\b(status|statuses|state|waiting|pending|returned|current|recent|accepted|under\s+review|rejected|blocked|stale|unavailable|unknown|implemented|rolled\s+back|rollback|what|which|where)\b/.test(
       lower,
     );
   return (

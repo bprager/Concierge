@@ -113,3 +113,52 @@ test("answers direct evolution proposal status questions from local lifecycle me
   assert.equal(answer.boundary.evolutionApplied, false);
   assert.equal(answer.boundary.appliedLocally, false);
 });
+
+test("answers unresolved evolution proposal lifecycle wording from local metadata", () => {
+  const entries = buildLocalReviewHistoryEntries({
+    evolutionProposalLifecycleRecords: [
+      {
+        schemaVersion: "concierge.evolution-proposal-lifecycle.v1",
+        proposalId: "evolution-proposal-stale-status",
+        sourceCapabilityReviewId: "capability-review-stale-status",
+        profileMode: "adult_owner",
+        capability: "Proposal stale status question answering",
+        architectureArea: "observability",
+        draftedAt: "2026-06-25T00:03:00.000Z",
+        submittedAt: "2026-06-25T00:04:00.000Z",
+        updatedAt: "2026-06-25T00:05:00.000Z",
+        currentLifecycleState: "stale",
+        latestKnownOutcome: "Napoleon reports this proposal status is stale.",
+        intakeDecisionId: "decision_evolution_stale_status",
+        intakeAuditId: "audit_evolution_stale_status",
+        intakeTraceId: "trace_evolution_stale_status",
+        statusRefresh: {
+          available: true,
+          reason: "refreshed_via_governed_route",
+          nextStep: "Refresh through Napoleon-governed status evidence.",
+        },
+        nextRecommendedUserAction: "Treat status as unresolved until Napoleon returns fresh status evidence.",
+        privacyClass: "metadata_only",
+        boundary: {
+          proposalOnly: true,
+          approvalCaptured: false,
+          memoryWritePerformed: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+          registryUpdatePerformed: false,
+          evolutionApplied: false,
+          appliedLocally: false,
+        },
+      },
+    ],
+  });
+
+  const answer = answerLocalReviewHistoryQuestion("stale proposals?", entries, "adult_owner");
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected stale evolution proposal status answer");
+  assert.equal(answer.evidenceCount, 1);
+  assert.ok(answer.summary.includes("stale"));
+  assert.equal(answer.rows[0].subjectId, "evolution-proposal-stale-status");
+  assert.equal(answer.boundary.evolutionApplied, false);
+});

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added support for Napoleon-reported evolution proposal status states `under_review`, `stale`, `unavailable`, and `unknown`, preserving them in local lifecycle records without granting approval or applying changes.
 - Added `napoleonRequiredActionCount` and `blockingLivePromotion` to the app's built-in runtime-contract summary and sanitized readiness proof exports.
 - Added top-level `napoleonRequiredActionCount` and `blockingLivePromotion` fields to Napoleon contract-alignment reports, so promotion gates can consume Napoleon-owned runtime blockers directly.
 - Added contract-alignment documentation coverage that requires the current Napoleon alignment finding to list every generated Concierge bridge path, including advisory capability discovery, and refreshed the 2026-06-27 `mimir` snapshot note around the remaining Napoleon-owned status-target gap.

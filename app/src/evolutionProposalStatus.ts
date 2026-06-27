@@ -130,12 +130,16 @@ function isAuditEnvelope(value: unknown): value is AuditEnvelope {
 
 function isLifecycleState(value: unknown): value is EvolutionProposalLifecycleState {
   return (
+    value === "unknown" ||
     value === "drafted" ||
     value === "submitted" ||
     value === "accepted_for_review" ||
+    value === "under_review" ||
     value === "rejected" ||
     value === "blocked" ||
     value === "status_refresh_unavailable" ||
+    value === "unavailable" ||
+    value === "stale" ||
     value === "implemented" ||
     value === "rolled_back"
   );

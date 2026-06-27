@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added support for Napoleon-reported evolution proposal status states `under_review`, `stale`, `unavailable`, and `unknown`, preserving them as sanitized local lifecycle metadata while keeping approval capture, memory writes, agent dispatch, external sends, registry updates, evolution application, and local application blocked.
 - Carried the Napoleon contract-alignment summary fields into the app's built-in runtime-contract summary, governed route rendering, and sanitized readiness proof exports, deriving the proof count/blocking state from the same sanitized Napoleon-owned required-action packets.
 - Added machine-readable Napoleon contract-alignment summary fields for required-action count and live-promotion blocking state, so the current `expose_evolution_proposal_status_runtime_target` gap can be consumed directly by operator panels, CI checks, and promotion gates without inferring from the detailed action list.
 - Rechecked the `mimir` Napoleon Concierge integration OpenAPI snapshot and updated contract-alignment traceability so the current finding lists every generated Concierge bridge path, including advisory capability discovery, while preserving `expose_evolution_proposal_status_runtime_target` as the single Napoleon-owned runtime exposure gap and confirming there are no unmapped Napoleon runtime paths.
