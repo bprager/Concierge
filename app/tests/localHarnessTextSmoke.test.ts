@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  runLocalHarnessAdultRequiredActionSmoke,
   runLocalHarnessChildRequiredActionSmoke,
   runLocalHarnessContractPacketSmoke,
   runLocalHarnessTextSmoke,
@@ -401,6 +402,89 @@ test("smoke tests child protected required-action minimization from local harnes
   assert.equal(serialized.includes("evaluation_review"), false);
   assert.equal(serialized.includes("Napoleon must advertise"), false);
   assert.equal(serialized.includes("highestPriorityAction"), false);
+});
+
+test("smoke tests adult required-action prioritization from local harness runtime evidence", async () => {
+  const result = runLocalHarnessAdultRequiredActionSmoke({
+    runtimeSummaryJson: JSON.stringify({
+      runtimeValidation: {
+        source: "local_harness",
+      },
+      napoleonRequiredActions: [
+        {
+          id: "advertise_governance_evaluation_handoff",
+          owner: "napoleon",
+          reason: "real_runtime_promotion_blocker",
+          handoffName: "governance_evaluation",
+          targetPath: "/governance/evaluate",
+          requestKind: "governance_evaluation_handoff",
+          operationId: "governance_evaluation",
+          requiredAction: "Napoleon must advertise governance_evaluation before promotion.",
+          sideEffectsPerformed: false,
+          approvalCaptured: false,
+          memoryWritePerformed: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+          appliedLocally: false,
+        },
+        {
+          id: "advertise_evaluation_review_handoff",
+          owner: "napoleon",
+          reason: "real_runtime_promotion_blocker",
+          handoffName: "evaluation_review",
+          targetPath: "/chief-of-staff/reviews/evaluation",
+          requestKind: "evaluation_review_handoff",
+          operationId: "evaluation_review",
+          requiredAction: "Napoleon must advertise evaluation_review before promotion.",
+          sideEffectsPerformed: false,
+          approvalCaptured: false,
+          memoryWritePerformed: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+          appliedLocally: false,
+        },
+      ],
+      httpEvaluator: {
+        status: "failed",
+        failureReason: "http_evaluator_handoff_not_advertised",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+        targetRequestKind: "evaluation_review_handoff",
+        targetOperationId: "evaluation_review",
+        endpointHostRetained: false,
+        tokenRetained: false,
+        requestBodyRetained: false,
+        responseBodyRetained: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+      },
+    }),
+    profile: "adult_owner",
+  });
+
+  assert.equal(result.status, "success");
+  assert.equal(result.answer.actionCount, 2);
+  assert.equal(result.answer.runtimeValidationSource, "local_harness");
+  assert.equal(result.answer.highestPriorityAction?.id, "advertise_evaluation_review_handoff");
+  assert.equal(result.answer.highestPriorityAction?.targetPath, "/chief-of-staff/reviews/evaluation");
+  assert.equal(result.answer.highestPriorityAction?.requestKind, "evaluation_review_handoff");
+  assert.ok(result.answer.content.includes("Current Napoleon required actions from local harness runtime evidence (2):"));
+  assert.ok(result.answer.content.includes("Highest priority Napoleon fix: advertise_evaluation_review_handoff."));
+  assert.ok(result.answer.content.includes("Target: /chief-of-staff/reviews/evaluation."));
+  assert.ok(result.answer.content.includes("Request kind: evaluation_review_handoff."));
+  assert.ok(result.answer.content.includes("not Napoleon approval"));
+  assert.equal(result.sideEffects.localAnswerOnly, true);
+  assert.equal(result.sideEffects.approvalCaptured, false);
+  assert.equal(result.sideEffects.memoryWritePerformed, false);
+  assert.equal(result.sideEffects.agentDispatchPerformed, false);
+  assert.equal(result.sideEffects.externalSendPerformed, false);
+  assert.equal(result.sideEffects.appliedLocally, false);
+
+  const serialized = JSON.stringify(result);
+  assert.equal(serialized.includes("Napoleon must advertise"), false);
+  assert.equal(serialized.includes("endpointHostRetained"), false);
+  assert.equal(serialized.includes("tokenRetained"), false);
 });
 
 test("smoke test rejects a local harness text response that claims forbidden side effects", async () => {

@@ -8,7 +8,10 @@ import { parseEvaluatorValidationArtifact } from "./evaluatorValidationArtifact.
 import { NapoleonBridgeError, sendToNapoleon, type BridgeContractEvidence } from "./napoleonBridge.js";
 import {
   formatMinimizedNapoleonRequiredActionAnswer,
+  formatNapoleonRequiredActionPriority,
+  prioritizeNapoleonRequiredAction,
   type MinimizedNapoleonRequiredActionAnswer,
+  type NapoleonRequiredActionPriority,
 } from "./napoleonRequiredActions.js";
 import {
   buildSuccessfulNapoleonResponsePresentation,
@@ -104,23 +107,46 @@ export interface LocalHarnessChildRequiredActionSmokeInput {
   profile: "child_protected_user";
 }
 
+export interface LocalHarnessAdultRequiredActionSmokeInput {
+  runtimeSummaryJson: string;
+  profile: "adult_owner";
+}
+
+export interface LocalHarnessRequiredActionSideEffects {
+  localAnswerOnly: true;
+  approvalCaptured: false;
+  memoryWritePerformed: false;
+  agentDispatchPerformed: false;
+  externalSendPerformed: false;
+  appliedLocally: false;
+}
+
 export interface LocalHarnessChildRequiredActionSmokeResult {
   status: "success";
   answer: MinimizedNapoleonRequiredActionAnswer;
-  sideEffects: {
-    localAnswerOnly: true;
-    approvalCaptured: false;
-    memoryWritePerformed: false;
-    agentDispatchPerformed: false;
-    externalSendPerformed: false;
-    appliedLocally: false;
-  };
+  sideEffects: LocalHarnessRequiredActionSideEffects;
+}
+
+export interface LocalHarnessAdultRequiredActionAnswer {
+  content: string;
+  actionCount: number;
+  status: string;
+  runtimeValidationSource: string;
+  highestPriorityAction: NapoleonRequiredActionPriority | null;
+}
+
+export interface LocalHarnessAdultRequiredActionSmokeResult {
+  status: "success";
+  answer: LocalHarnessAdultRequiredActionAnswer;
+  sideEffects: LocalHarnessRequiredActionSideEffects;
 }
 
 export interface LocalHarnessChildRequiredActionSmokeFailureResult {
   status: "rejected";
   summary: string;
 }
+
+export type LocalHarnessAdultRequiredActionSmokeFailureResult = LocalHarnessChildRequiredActionSmokeFailureResult;
 
 export async function runLocalHarnessTextSmoke(
   input: LocalHarnessTextSmokeInput,
@@ -230,6 +256,51 @@ export function runLocalHarnessChildRequiredActionSmoke(
       sourceLabel,
       profileMode: input.profile,
     }),
+    sideEffects: {
+      localAnswerOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      appliedLocally: false,
+    },
+  };
+}
+
+export function runLocalHarnessAdultRequiredActionSmoke(
+  input: LocalHarnessAdultRequiredActionSmokeInput,
+): LocalHarnessAdultRequiredActionSmokeResult | LocalHarnessAdultRequiredActionSmokeFailureResult {
+  const artifact = parseEvaluatorValidationArtifact(input.runtimeSummaryJson);
+  if (artifact.status !== "accepted") {
+    return {
+      status: "rejected",
+      summary: artifact.summary,
+    };
+  }
+
+  const actions = artifact.validation.napoleonRequiredActions ?? [];
+  const sourceLabel =
+    artifact.runtimeValidationSource === "local_harness"
+      ? "local harness runtime evidence"
+      : "sanitized validation evidence";
+  const priority = prioritizeNapoleonRequiredAction(actions);
+
+  return {
+    status: "success",
+    answer: {
+      content: [
+        `Current Napoleon required actions from ${sourceLabel} (${actions.length}):`,
+        formatNapoleonRequiredActionPriority(priority),
+        `Evaluator status: ${artifact.validation.status}. Runtime validation source: ${
+          artifact.runtimeValidationSource ?? "unavailable"
+        }.`,
+        `Profile scope: ${input.profile}. This is local operator evidence only; Concierge did not contact Napoleon for this answer, and it is not Napoleon approval, not local approval, not implementation, not memory, not agent dispatch, and not external send authority.`,
+      ].join("\n\n"),
+      actionCount: actions.length,
+      status: artifact.validation.status,
+      runtimeValidationSource: artifact.runtimeValidationSource ?? "unavailable",
+      highestPriorityAction: priority,
+    },
     sideEffects: {
       localAnswerOnly: true,
       approvalCaptured: false,
