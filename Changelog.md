@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local Text Concierge answers for Capability Intelligence snapshot export boundary questions, explaining active-profile scope, sanitized sections, excluded raw data, child minimization, and no Napoleon contact or side effects.
 - Added a local Capability Intelligence snapshot export in the Text UI, summarizing common, working, missing, architecture, and recommended-next capability evidence without raw content or authority.
 - Added evaluator scenario coverage for the local Capability Intelligence snapshot export, preserving active-profile scope, child minimization, sanitized JSON, and proposal-only boundaries.
 - Added visible Text UI and local review-history answer labeling for unresolved read-only evolution proposal lifecycle states, so `under_review`, `stale`, `unavailable`, and `unknown` render as tracking-only status rather than approval or implementation.

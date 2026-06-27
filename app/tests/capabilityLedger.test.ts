@@ -1436,6 +1436,67 @@ test("does not answer unrelated questions as capability intelligence queries", (
   assert.equal(answer, null);
 });
 
+test("answers capability snapshot export boundary questions with child profile minimization", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_adult_snapshot",
+      conversationId: "conv_snapshot_boundary",
+      turnId: "turn_adult_snapshot",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "operations",
+      intentLabel: "status",
+      capabilityLabel: "adult_snapshot_context",
+      capabilityStatus: "working",
+      outcomeSignal: "answered",
+      confidence: 0.9,
+      evidenceRefs: ["trace:trace_adult_snapshot"],
+      architectureArea: "observability",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "no_action",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_child_snapshot",
+      conversationId: "conv_snapshot_boundary",
+      turnId: "turn_child_snapshot",
+      profileMode: "child_protected_user",
+      channel: "text",
+      topicLabel: "school",
+      intentLabel: "help",
+      capabilityLabel: "child_snapshot_context",
+      capabilityStatus: "missing",
+      outcomeSignal: "blocked",
+      confidence: 0.9,
+      evidenceRefs: ["trace:trace_child_snapshot"],
+      architectureArea: "text_ui",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "needs_human_review",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What does the local capability snapshot export contain?", ledger, undefined, {
+    profileMode: "child_protected_user",
+  });
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected snapshot boundary answer");
+  assert.equal(answer.kind, "snapshot_export_boundary");
+  assert.equal(answer.evidenceCount, 1);
+  assert.ok(answer.summary.includes("Local Capability Intelligence snapshot export"));
+  assert.ok(answer.caveat.includes("Child protected mode keeps this scope minimized"));
+  assert.equal(JSON.stringify(answer).includes("adult_snapshot_context"), false);
+  assert.equal(JSON.stringify(answer).includes("child_snapshot_context"), false);
+  assert.equal(answer.boundary.approvalCaptured, false);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+});
+
 test("serializes capability ledger as versioned metadata without raw user text", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(

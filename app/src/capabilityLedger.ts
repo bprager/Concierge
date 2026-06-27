@@ -165,7 +165,8 @@ export type CapabilityQuestionKind =
   | "improving_capabilities"
   | "recent_working_capabilities"
   | "weekly_changes"
-  | "seasonal_changes";
+  | "seasonal_changes"
+  | "snapshot_export_boundary";
 
 export interface CapabilityAnswerRow {
   label: string;
@@ -855,10 +856,14 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
     /\bwhat\b.*\b(should|could)\b.*\b(implement|build|work on|prioritize)\b/.test(lower) ||
     /\bwhat\b.*\b(after this|next)\b/.test(lower) ||
     /\bhighest[- ]value\b.*\b(missing|next|capability)\b/.test(lower);
+  const asksSnapshotExportBoundary =
+    /\b(snapshot|export)\b/.test(lower) &&
+    /\b(capability|capabilities|conversation|conversations|contain|contains|include|includes|excluded?|sent|napoleon|raw|do|does|can|can't|cannot)\b/.test(lower);
   const asksSteeringRecommendationTypes =
     /\b(steering|chief of staff|chief-of-staff)\b/.test(lower) &&
     /\b(recommendation type|recommendation types|types?|categories|category)\b/.test(lower);
 
+  if (asksSnapshotExportBoundary) return "snapshot_export_boundary";
   if (asksSeasonal) return "seasonal_changes";
   if (asksSteeringRecommendationTypes) return "steering_recommendation_types";
   if (asksAboutConversation && asksIncreasing) return "increasing_conversations";
@@ -1617,6 +1622,57 @@ export function answerCapabilityQuestion(
   const aggregate = aggregateCapabilitySignals(rawSignals, taxonomy);
   const windows = trendWindows(signals, options.now);
   const drilldownProfileMode = activeProfileMode ?? "all_profiles";
+
+  if (kind === "snapshot_export_boundary") {
+    const childCaveat =
+      activeProfileMode === "child_protected_user"
+        ? " Child protected mode keeps this scope minimized and must not mix child-profile evidence into adult or profile-wide conclusions."
+        : "";
+    const rows: CapabilityAnswerRow[] = [
+      {
+        label: "common_conversations",
+        displayLabel: "common conversations",
+        count: signals.length,
+        details: ["snapshot section", "sanitized derived metadata"],
+      },
+      {
+        label: "working_well_capabilities",
+        displayLabel: "working-well capabilities",
+        count: signals.filter((signal) => signal.capabilityStatus === "working").length,
+        status: "working",
+        details: ["snapshot section", "sanitized derived metadata"],
+      },
+      {
+        label: "missing_or_blocked_capabilities",
+        displayLabel: "missing or blocked capabilities",
+        count: signals.filter((signal) => signal.capabilityStatus === "missing" || signal.capabilityStatus === "blocked")
+          .length,
+        details: ["snapshot section", "sanitized derived metadata"],
+      },
+      {
+        label: "architecture_improvement_areas",
+        displayLabel: "architecture improvement areas",
+        count: Object.keys(aggregate.byArchitectureArea).length,
+        details: ["snapshot section", "proposal-only repair focus"],
+      },
+      {
+        label: "recommended_next_capabilities",
+        displayLabel: "recommended next capabilities",
+        count: signals.filter((signal) => signal.suggestedNextStep !== "no_action").length,
+        details: ["snapshot section", "proposal-only local guidance"],
+      },
+    ];
+    return withCapabilityAnswerDrilldown({
+      kind,
+      question,
+      summary:
+        "Local Capability Intelligence snapshot export: active profile scoped sanitized derived metadata for common conversations, working-well capabilities, missing or blocked capabilities, architecture improvement areas, and recommended next capabilities.",
+      rows,
+      evidenceCount: signals.length,
+      caveat: `${CAPABILITY_TREND_SNAPSHOT_PRIVACY_CAVEAT} The snapshot does not contact Napoleon and remains local inspection evidence only. It does not capture approval, write memory, dispatch agents, send externally, apply evolution, or implement capability changes. Recommendations are proposal-only local guidance. raw prompts, raw responses, endpoints, credentials, request bodies, response bodies, raw audio, and raw video are excluded.${childCaveat}`,
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    }, signals, drilldownProfileMode);
+  }
 
   if (kind === "increasing_conversations") {
     const rows = trendRows(windows.recent, windows.previous, (signal) => signal.topicLabel);

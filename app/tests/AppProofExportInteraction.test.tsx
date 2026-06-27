@@ -4149,6 +4149,69 @@ test("records child profile scope when answering local capability intelligence q
   }
 });
 
+test("answers local capability snapshot export boundary questions without contacting Napoleon", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const requestedUrls: string[] = [];
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    requestedUrls.push(String(input));
+    throw new Error("capability snapshot boundary answer must stay local");
+  }) as typeof fetch;
+
+  try {
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What does the local capability snapshot export contain?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    let snapshotAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      snapshotAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("Local Capability Intelligence snapshot export:"),
+      ) as HTMLElement | undefined;
+      assert.ok(snapshotAnswer);
+    });
+    assert.ok(snapshotAnswer);
+    const answerText = snapshotAnswer.textContent ?? "";
+    assert.ok(answerText.includes("active profile"));
+    assert.ok(answerText.includes("common conversations"));
+    assert.ok(answerText.includes("working-well capabilities"));
+    assert.ok(answerText.includes("missing or blocked capabilities"));
+    assert.ok(answerText.includes("architecture improvement areas"));
+    assert.ok(answerText.includes("recommended next capabilities"));
+    assert.ok(answerText.includes("sanitized derived metadata"));
+    assert.ok(answerText.includes("raw prompts, raw responses, endpoints, credentials, request bodies, response bodies, raw audio, and raw video are excluded"));
+    assert.ok(answerText.includes("does not contact Napoleon"));
+    assert.ok(answerText.includes("does not approve, implement, write memory, dispatch agents, or send externally"));
+    assert.deepEqual(requestedUrls, []);
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const answered = telemetryBuffer.events
+      ?.filter((event) => event.event === "capability_intelligence_answered")
+      .at(-1);
+    assert.equal(answered?.attributes.kind, "snapshot_export_boundary");
+    assert.equal(answered?.attributes.profileMode, "adult_owner");
+    assert.equal(answered?.attributes.localAnswerOnly, true);
+    assert.equal(answered?.attributes.approvalCaptured, false);
+    assert.equal(answered?.attributes.memoryWritePerformed, false);
+    assert.equal(answered?.attributes.agentDispatchPerformed, false);
+    assert.equal(answered?.attributes.externalSendPerformed, false);
+    assert.equal(answered?.attributes.appliedLocally, false);
+    assert.equal(JSON.stringify(answered).includes("What does the local capability snapshot"), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders governed Napoleon bridge success as a working capability answer", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render }, userEventModule, { App }, telemetry] = await Promise.all([

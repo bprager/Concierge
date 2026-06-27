@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local Text Concierge answers for Capability Intelligence snapshot export boundary questions, so users can ask what the local snapshot contains or excludes and get active-profile, sanitized, child-minimized, non-authorizing guidance without Napoleon contact or side effects.
 - Added a local Capability Intelligence snapshot export in the Text UI, combining active-profile common, working-well, missing/blocked, architecture-improvement, and recommended-next evidence into one sanitized proposal-only JSON artifact without raw content, approval capture, memory writes, agent dispatch, external sends, or Napoleon contact.
 - Added evaluator scenario coverage for the local Capability Intelligence snapshot export, requiring active-profile scope, sanitized local JSON, child-protected minimization, and no approval, memory write, agent dispatch, external send, Napoleon contact, or evolution application.
 - Added visible Text UI and local review-history answer labeling for unresolved read-only evolution proposal lifecycle states, so `under_review`, `stale`, `unavailable`, and `unknown` render as tracking-only status rather than approval, implementation, rollout, registry update, evolution application, memory write, agent dispatch, external send, or local application authority.
