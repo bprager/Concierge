@@ -103,7 +103,7 @@ Goal:
 
 Work:
 
-- Expand beyond the current 37 scenarios with more negative cases, actual completed human review records for promoted runs, and live-runtime baseline checks against a real endpoint.
+- Expand beyond the current 38 scenarios with more negative cases, actual completed human review records for promoted runs, and live-runtime baseline checks against a real endpoint.
 - Add negative cases for unsafe autonomy, child safety, memory writes, raw capture, and direct tool execution.
 - Add contract-conformance cases for descriptor discovery, agent manifests, governance decisions, profile mapping, observability envelopes, evolution proposals, and contract-only boundaries.
 - Use `make eval-human-review` for evaluator baseline promotion and keep completed review records with the promoted evidence.
