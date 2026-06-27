@@ -2230,6 +2230,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     readyNextStepSummary: "Next step: submit this proposal-only new-agent packet through the governed Napoleon bridge.",
     rehearsalMode,
     requiredHandoff: "new_agent_proposal_review",
+    blockedEffects: newAgentProposalPacket?.blockedEffects,
   });
   const evolutionProposalSubmissionReadiness = describeGovernedHandoffReadiness({
     label: "Evolution proposal submission",

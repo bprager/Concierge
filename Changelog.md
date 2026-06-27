@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered Text Concierge coverage for new-agent proposal review packet drafts, proving the visible export names the governed Napoleon review target, stays proposal-only and sanitized, shows agent activation and registry update as blocked, and does not contact Napoleon when no endpoint is configured.
 - Added local Capability Intelligence support for "What capabilities are improving?", comparing recent working metadata against prior missing, blocked, or degraded evidence without granting authority.
 - Added rendered Text Concierge coverage for "What capabilities are improving?", proving the local answer stays sanitized, proposal-only, and does not contact Napoleon.
 - Added local live-send blocker answers for direct questions such as "What is blocking live send?", keeping the answer tied to current preflight state without contacting Napoleon or emitting raw question text in telemetry.

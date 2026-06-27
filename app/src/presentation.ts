@@ -328,6 +328,7 @@ export interface GovernedHandoffReadinessInput {
   readyNextStepSummary?: string;
   rehearsalMode?: boolean;
   requiredHandoff?: GovernedHandoffCapability;
+  blockedEffects?: string[];
 }
 
 export interface GovernedHandoffReadinessView {
@@ -1691,13 +1692,15 @@ export function describeGovernedHandoffReadiness(
   input: GovernedHandoffReadinessInput,
 ): GovernedHandoffReadinessView {
   const descriptor = input.descriptorConnection;
-  const blockedEffects = descriptor.descriptorStatus?.blockedEffects ?? [
-    "runtime_authority",
-    "agent_dispatch",
-    "memory_write",
-    "approval_capture",
-    "external_send",
-  ];
+  const blockedEffects =
+    input.blockedEffects ??
+    descriptor.descriptorStatus?.blockedEffects ?? [
+      "runtime_authority",
+      "agent_dispatch",
+      "memory_write",
+      "approval_capture",
+      "external_send",
+    ];
   const endpointReady = descriptor.failClosedReason !== "no_endpoint";
   const descriptorReady =
     descriptor.failClosedReason === "no_endpoint"

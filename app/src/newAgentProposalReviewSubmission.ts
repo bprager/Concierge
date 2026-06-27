@@ -32,6 +32,9 @@ type NewAgentProposalReviewFetch = (
 export interface NewAgentProposalReviewPacket {
   schemaVersion: "concierge.new-agent-proposal-review.v1";
   requestKind: "new_agent_proposal_review_handoff";
+  bridgeTargetPath: "/chief-of-staff/reviews/new-agent-proposals";
+  bridgeTargetOperation: "new_agent_proposal_review";
+  bridgeTargetRequestKind: "new_agent_proposal_review_handoff";
   proposalId: string;
   profileMode: NapoleonProfileMode;
   proposedAgent: {
@@ -135,6 +138,7 @@ export function buildNewAgentProposalReviewPacket(
   capabilityReviewPacket: ExportedCapabilityReviewPacket,
   options: { profile?: LocalProfile | NapoleonProfileMode; traceId: string },
 ): NewAgentProposalReviewPacket {
+  const target = getNapoleonReviewOperation("new_agent_proposal_review");
   const profileMode = normalizeProfileMode(options.profile);
   const capability = safeText(capabilityReviewPacket.reviewFocus.capabilityLabel, "proposed capability");
   const architectureArea = safeText(capabilityReviewPacket.reviewFocus.architectureArea, "unknown");
@@ -146,6 +150,9 @@ export function buildNewAgentProposalReviewPacket(
   return {
     schemaVersion: "concierge.new-agent-proposal-review.v1",
     requestKind: "new_agent_proposal_review_handoff",
+    bridgeTargetPath: target.path as "/chief-of-staff/reviews/new-agent-proposals",
+    bridgeTargetOperation: target.id as "new_agent_proposal_review",
+    bridgeTargetRequestKind: target.requestKind as "new_agent_proposal_review_handoff",
     proposalId: `new_agent_${capabilityId}_${options.traceId}`,
     profileMode,
     proposedAgent: {

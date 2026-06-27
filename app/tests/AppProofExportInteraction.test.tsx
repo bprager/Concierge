@@ -4546,6 +4546,101 @@ test("exports a sanitized local capability review packet from capability answers
   }
 });
 
+test("renders proposal-only new-agent review packet drafts from capability review packets", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, fireEvent, render },
+    userEventModule,
+    { App },
+    { emitEvent, capabilityLedger },
+    { clearCapabilityLedger },
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalInfo = console.info;
+  const originalFetch = globalThis.fetch;
+  let fetchCalls = 0;
+  console.info = () => undefined;
+
+  try {
+    clearCapabilityLedger(capabilityLedger);
+    globalThis.fetch = (async () => {
+      fetchCalls += 1;
+      return new Response(JSON.stringify({ error: "unexpected fetch" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as typeof fetch;
+
+    emitEvent("response_failed", {
+      traceId: "trace_new_agent_packet_ui",
+      conversationId: "conv_new_agent_packet_ui",
+      turnId: "turn_new_agent_packet_ui",
+      profile: "adult_owner",
+      rawMessage: "raw new agent packet text private.example token must not appear",
+      endpoint: "https://private.example.test/new-agent",
+    });
+
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What capabilities should be implemented next?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await view.findByText(/Recommended next capabilities by local risk\/value score/);
+    await user.click(view.getByRole("button", { name: "Export capability review packet" }));
+    await user.click(view.getByRole("button", { name: "Draft new-agent proposal review packet" }));
+
+    const exportBlock = view.getByLabelText("Exported new-agent proposal review packet");
+    const exported = exportBlock.textContent ?? "";
+    assert.ok(exported.includes('"schemaVersion": "concierge.new-agent-proposal-review.v1"'));
+    assert.ok(exported.includes('"requestKind": "new_agent_proposal_review_handoff"'));
+    assert.ok(exported.includes('"bridgeTargetOperation": "new_agent_proposal_review"'));
+    assert.ok(exported.includes('"bridgeTargetPath": "/chief-of-staff/reviews/new-agent-proposals"'));
+    assert.ok(exported.includes('"activationRequested": false'));
+    assert.ok(exported.includes('"registryUpdateRequested": false'));
+    assert.ok(exported.includes('"proposalOnly": true'));
+    assert.ok(exported.includes('"agentActivated": false'));
+    assert.ok(exported.includes('"registryUpdatePerformed": false'));
+    assert.ok(exported.includes('"approvalCaptured": false'));
+    assert.ok(exported.includes('"memoryWritePerformed": false'));
+    assert.ok(exported.includes('"agentDispatchPerformed": false'));
+    assert.ok(exported.includes('"externalSendPerformed": false'));
+    assert.equal(exported.includes("raw new agent packet text"), false);
+    assert.equal(exported.includes("private.example"), false);
+    assert.equal(exported.includes("token"), false);
+
+    const handoffPanel = exportBlock.parentElement?.querySelector(".new-agent-proposal-handoff") as HTMLElement | null;
+    assert.ok(handoffPanel);
+    assert.ok(handoffPanel.textContent?.includes("New-agent proposal review"));
+    assert.ok(handoffPanel.textContent?.includes("blocked: No Napoleon endpoint is configured."));
+    assert.ok(
+      handoffPanel.textContent?.includes(
+        "Next step: add the governed Napoleon endpoint in settings, then refresh descriptor discovery.",
+      ),
+    );
+    assert.ok(handoffPanel.textContent?.includes("Blocked effects"));
+    assert.ok(handoffPanel.textContent?.includes("agent_activation"));
+    assert.ok(handoffPanel.textContent?.includes("registry_update"));
+    assert.equal(
+      (view.getByRole("button", { name: "Send new-agent proposal to Napoleon review" }) as HTMLButtonElement)
+        .disabled,
+      true,
+    );
+    assert.equal(fetchCalls, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("sends exported capability review packet through governed review controls", async () => {
   const dom = installDom();
   const [
