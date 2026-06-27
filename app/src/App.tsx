@@ -1886,9 +1886,34 @@ function formatNapoleonRequiredActionAnswer(
   evaluatorImport: EvaluatorValidationImport | null,
   profileMode: NapoleonProfileMode,
 ): { content: string; actionCount: number; status: string; runtimeValidationSource: string } {
+  const childProtectedRequiredActionAnswer = (
+    actionCount: number,
+    status: string,
+    runtimeValidationSource: string,
+    sourceLabel: string,
+  ) => ({
+    content: [
+      `Napoleon has ${actionCount} required action${actionCount === 1 ? "" : "s"} from ${sourceLabel}.`,
+      "Child protected summary: a trusted adult/operator needs to fix a Napoleon runtime connection before this can be used live.",
+      `Evaluator status: ${status}. Runtime validation source: ${runtimeValidationSource}.`,
+      `Profile scope: ${profileMode}. This is minimized child-protected local review evidence only; Concierge did not contact Napoleon for this answer, and it is not Napoleon approval, not local approval, not implementation, not memory, not agent dispatch, and not external send authority.`,
+    ].join("\n\n"),
+    actionCount,
+    status,
+    runtimeValidationSource,
+  });
+
   if (!evaluatorImport) {
     const contractActions = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions;
     if (contractActions.length) {
+      if (profileMode === "child_protected_user") {
+        return childProtectedRequiredActionAnswer(
+          contractActions.length,
+          RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status,
+          "contract_alignment",
+          "local contract-alignment evidence",
+        );
+      }
       const sanitizedContractActions: NapoleonRequiredAction[] = contractActions.map((action) => ({
         id: action.id,
         owner: action.owner,
@@ -1939,6 +1964,14 @@ function formatNapoleonRequiredActionAnswer(
   const actions = evaluatorImport.validation.napoleonRequiredActions ?? [];
   const runtimeValidationSource = evaluatorImport.runtimeValidationSource ?? "unavailable";
   if (!actions.length && evaluatorImport.validation.descriptorHandoffRequiredAction) {
+    if (profileMode === "child_protected_user") {
+      return childProtectedRequiredActionAnswer(
+        1,
+        evaluatorImport.validation.status,
+        runtimeValidationSource,
+        "sanitized validation evidence",
+      );
+    }
     return {
       content: [
         `Current Napoleon-side blocker from sanitized validation evidence: ${evaluatorImport.validation.descriptorHandoffRequiredAction}`,
@@ -1962,6 +1995,15 @@ function formatNapoleonRequiredActionAnswer(
       status: evaluatorImport.validation.status,
       runtimeValidationSource,
     };
+  }
+
+  if (profileMode === "child_protected_user") {
+    return childProtectedRequiredActionAnswer(
+      actions.length,
+      evaluatorImport.validation.status,
+      runtimeValidationSource,
+      "sanitized validation evidence",
+    );
   }
 
   const rows = actions

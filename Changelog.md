@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added child-protected minimization for local Napoleon required-action answers, hiding route/action specifics while preserving count, source, and non-authorizing boundary.
 - Added evaluator scenario coverage for local Capability Intelligence snapshot-boundary answers, requiring active-profile scope, sanitized derived metadata, child minimization, and no Napoleon contact or side effects.
 - Added local Text Concierge answers for Capability Intelligence snapshot export boundary questions, explaining active-profile scope, sanitized sections, excluded raw data, child minimization, and no Napoleon contact or side effects.
 - Added a local Capability Intelligence snapshot export in the Text UI, summarizing common, working, missing, architecture, and recommended-next capability evidence without raw content or authority.

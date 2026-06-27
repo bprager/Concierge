@@ -10062,6 +10062,70 @@ test("answers Napoleon contract-alignment required actions without imported eval
   }
 });
 
+test("minimizes Napoleon required-action answer details for child protected profile", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  let fetchCalls = 0;
+
+  try {
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    const view = render(<App initialProfile="child_protected" />);
+    const fetchCallsBeforeQuestion = fetchCalls;
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What does Napoleon need to expose next?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await waitFor(() => {
+      const assistantMessages = [...document.querySelectorAll("section.messages article.assistant")];
+      const latestAnswer = assistantMessages.at(-1) as HTMLElement | undefined;
+      assert.ok(latestAnswer);
+      const answerText = latestAnswer.textContent ?? "";
+      assert.ok(answerText.includes("Napoleon has 1 required action from local contract-alignment evidence."));
+      assert.ok(
+        answerText.includes(
+          "Child protected summary: a trusted adult/operator needs to fix a Napoleon runtime connection before this can be used live.",
+        ),
+      );
+      assert.ok(answerText.includes("Profile scope: child_protected_user."));
+      assert.ok(answerText.includes("Concierge did not contact Napoleon for this answer"));
+      assert.ok(answerText.includes("not Napoleon approval"));
+      assert.equal(answerText.includes("expose_evolution_proposal_status_runtime_target"), false);
+      assert.equal(answerText.includes("/evolution/proposals/{proposal_id}/status"), false);
+      assert.equal(answerText.includes("evolution_proposal_status_handoff"), false);
+      assert.equal(answerText.includes("Required change:"), false);
+    });
+    assert.equal(fetchCalls, fetchCallsBeforeQuestion);
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const requiredActionAnswerEvent = telemetryBuffer.events?.find(
+      (event) => event.event === "napoleon_required_actions_answered",
+    );
+    assert.equal(requiredActionAnswerEvent?.attributes.profileMode, "child_protected_user");
+    assert.equal(requiredActionAnswerEvent?.attributes.requiredActionCount, 1);
+    assert.equal(requiredActionAnswerEvent?.attributes.localAnswerOnly, true);
+    assert.equal(requiredActionAnswerEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(requiredActionAnswerEvent).includes("expose_evolution_proposal_status_runtime_target"), false);
+    assert.equal(JSON.stringify(requiredActionAnswerEvent).includes("/evolution/proposals"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("shows transport token and side-effect boundaries for named Napoleon routes", async () => {
   const dom = installDom();
   const [{ cleanup, render, within }, { App }] = await Promise.all([

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added child-protected minimization for local Napoleon required-action answers, so child-profile questions show only count, source, trusted adult/operator repair guidance, profile scope, and non-authorizing boundaries without action IDs, target paths, request kinds, or action text.
 - Added evaluator scenario coverage for local Capability Intelligence snapshot-boundary answers, requiring active-profile scope, sanitized derived metadata, child-protected minimization, no Napoleon contact, no side effects, and no raw-question telemetry retention.
 - Added local Text Concierge answers for Capability Intelligence snapshot export boundary questions, so users can ask what the local snapshot contains or excludes and get active-profile, sanitized, child-minimized, non-authorizing guidance without Napoleon contact or side effects.
 - Added a local Capability Intelligence snapshot export in the Text UI, combining active-profile common, working-well, missing/blocked, architecture-improvement, and recommended-next evidence into one sanitized proposal-only JSON artifact without raw content, approval capture, memory writes, agent dispatch, external sends, or Napoleon contact.
