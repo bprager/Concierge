@@ -6,7 +6,7 @@ Concierge is a local desktop front-end plus a governed Napoleon bridge.
 
 The front-end owns interaction capture and presentation. Napoleon owns orchestration, governance, memory, and agent delegation.
 
-The Text UI can aggregate local review history from already-sanitized governed review results and proposal lifecycle records. This history is an inspection surface only: it does not become Napoleon approval, does not write memory, does not dispatch agents, does not send externally, does not update registries, does not activate agents, and does not apply evolution locally.
+The Text UI can aggregate local review history from already-sanitized governed review results and proposal lifecycle records, and can answer local review-history questions from that metadata. This history is an inspection surface only: it does not become Napoleon approval, does not write memory, does not dispatch agents, does not send externally, does not update registries, does not activate agents, and does not apply evolution locally.
 
 ## 2. System diagram
 

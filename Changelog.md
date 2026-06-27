@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local Text Concierge answers for review-history questions such as "What reviews are waiting on Napoleon?", using sanitized local review metadata without contacting Napoleon or treating review records as approval, memory, dispatch, external send, registry update, activation, evolution application, or local application.
 - Added a local review history panel and sanitized export that aggregates governed review results plus new-agent and evolution proposal lifecycle records as metadata-only evidence, while keeping Napoleon approval, memory writes, agent dispatch, external sends, registry updates, activation, evolution application, and local application blocked.
 - Added local new-agent proposal lifecycle tracking in the Text UI, with sanitized draft, sent-for-review, review-returned, and fail-closed records that stay proposal-only and keep agent activation, registry update, approval capture, memory write, agent dispatch, external send, and local application blocked.
 - Added rendered Text Concierge coverage for successful new-agent proposal review submission, proving the governed handoff body carries path, operation, and request-kind metadata while preserving proposal-only no-activation and no-registry-update boundaries.

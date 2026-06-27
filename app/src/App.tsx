@@ -157,9 +157,11 @@ import {
   type EvolutionProposalSubmissionResult,
 } from "./evolutionProposalSubmission.js";
 import {
+  answerLocalReviewHistoryQuestion,
   buildLocalReviewHistoryEntries,
   exportLocalReviewHistoryEntries,
   type GovernedReviewHistorySource,
+  type LocalReviewHistoryAnswer,
 } from "./localReviewHistory.js";
 import {
   buildDraftEvolutionProposalLifecycleRecord,
@@ -391,6 +393,21 @@ function formatCapabilityAnswer(
     : "";
 
   return `${answer.summary}\n\n${rows}${latestTurnEvidence}\n\nProfile scope: ${profileMode}. Evidence: ${answer.evidenceCount} local signals. ${answer.caveat} This is a local summary only and does not approve, implement, write memory, dispatch agents, or send externally.`;
+}
+
+function formatLocalReviewHistoryAnswer(answer: LocalReviewHistoryAnswer, profileMode: NapoleonProfileMode): string {
+  const rows = answer.rows.length
+    ? answer.rows
+        .map((row) => {
+          const decision = row.decisionId ? `, decision ${row.decisionId}` : ", decision not returned";
+          const audit = row.auditId ? `, audit ${row.auditId}` : ", audit not returned";
+          const trace = row.traceId ? `, trace ${row.traceId}` : ", trace not returned";
+          return `${row.title}: ${row.status}${decision}${audit}${trace}. ${row.latestKnownOutcome}`;
+        })
+        .join("\n")
+    : "No local review records yet.";
+
+  return `${answer.summary}\n\n${rows}\n\nProfile scope: ${profileMode}. Evidence: ${answer.evidenceCount} local review records. ${answer.caveat} This is a local review-history summary only and does not approve, apply, write memory, dispatch agents, send externally, update registries, activate agents, or apply evolution.`;
 }
 
 function isNapoleonRequiredActionQuestion(content: string): boolean {
@@ -3923,6 +3940,59 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     return true;
   }
 
+  function answerLocalReviewHistoryStatusQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    const answer = answerLocalReviewHistoryQuestion(content, localReviewHistoryEntries, activeProfileMode);
+    if (!answer) return false;
+
+    emitEvent("local_review_history_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      recordCount: answer.evidenceCount,
+      localAnswerOnly: true,
+      localReviewOnly: true,
+      proposalOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      registryUpdatePerformed: false,
+      agentActivated: false,
+      evolutionApplied: false,
+      appliedLocally: false,
+    });
+    refreshCapabilityLedgerStatus();
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: formatLocalReviewHistoryAnswer(answer, activeProfileMode),
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    clearNapoleonPresentation();
+    setLastBridgeFailure(null);
+    setLastReview(null);
+    clearGovernanceReviewHandoff();
+    setLastMemoryReviewState(null);
+    setLastMemoryReview(null);
+    setMemorySubmission(null);
+    setMemorySubmissionFailure(null);
+    return true;
+  }
+
   function rehearse() {
     const content = input.trim();
     if (!content) return;
@@ -3940,6 +4010,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
+    if (answerLocalReviewHistoryStatusQuestion(content, traceId, turnId, activeProfileMode)) return;
     const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
       profileMode: activeProfileMode,
     });
@@ -4153,6 +4224,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonDelegationQuestion(content, traceId, turnId, activeProfileMode)) return;
+      if (answerLocalReviewHistoryStatusQuestion(content, traceId, turnId, activeProfileMode)) return;
       const capabilityAnswer = answerCapabilityQuestion(content, capabilityLedger, capabilityTaxonomy, {
         profileMode: activeProfileMode,
       });

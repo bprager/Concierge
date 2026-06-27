@@ -2133,6 +2133,21 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
+  if (eventName === "local_review_history_answered") {
+    return buildCapabilitySignal({
+      ...base,
+      topicLabel: "governance",
+      intentLabel: "answer_local_review_history",
+      capabilityLabel: "local_review_history",
+      capabilityStatus: "working",
+      outcomeSignal: "answered",
+      confidence: 0.84,
+      architectureArea: "observability",
+      suggestedNextStep: "no_action",
+      details: [`review records ${numberAttr(attributes, "recordCount", 0)}`],
+    });
+  }
+
   if (
     eventName === "evolution_proposal_submission_drafted" ||
     eventName.startsWith("evolution_proposal_submission_send_") ||

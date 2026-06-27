@@ -53,6 +53,28 @@ export interface LocalReviewHistoryExport {
   entries: LocalReviewHistoryEntry[];
 }
 
+export interface LocalReviewHistoryAnswerRow {
+  entryType: LocalReviewHistoryEntryType;
+  title: string;
+  subjectId: string;
+  status: string;
+  latestKnownOutcome: string;
+  decisionId?: string;
+  auditId?: string;
+  traceId?: string;
+  updatedAt?: string;
+}
+
+export interface LocalReviewHistoryAnswer {
+  kind: "local_review_history";
+  question: string;
+  summary: string;
+  rows: LocalReviewHistoryAnswerRow[];
+  evidenceCount: number;
+  caveat: string;
+  boundary: LocalReviewHistoryBoundary;
+}
+
 export interface GovernedReviewHistorySource {
   entryType: LocalReviewHistoryEntryType;
   title: string;
@@ -184,5 +206,48 @@ export function exportLocalReviewHistoryEntries(
     authorityCaveat:
       "This is not Napoleon approval. Concierge did not write memory, capture approval, dispatch agents, send externally, update registries, activate agents, apply evolution, or apply changes locally.",
     entries: entries.slice(0, MAX_LOCAL_REVIEW_HISTORY_ENTRIES),
+  };
+}
+
+function isLocalReviewHistoryQuestion(question: string): boolean {
+  const lower = question.toLowerCase();
+  return (
+    /\b(review|reviews|reviewed|audit|audits|decision|decisions|approval|approvals)\b/.test(lower) &&
+    /\b(history|status|statuses|waiting|pending|returned|current|recent|what|which|where)\b/.test(lower)
+  );
+}
+
+export function answerLocalReviewHistoryQuestion(
+  question: string,
+  entries: LocalReviewHistoryEntry[],
+  profileMode?: NapoleonProfileMode,
+): LocalReviewHistoryAnswer | null {
+  if (!isLocalReviewHistoryQuestion(question)) return null;
+
+  const scopedEntries = entries.filter((entry) => !profileMode || !entry.profileMode || entry.profileMode === profileMode);
+  const rows = scopedEntries.slice(0, 8).map((entry) => ({
+    entryType: entry.entryType,
+    title: entry.title,
+    subjectId: entry.subjectId,
+    status: entry.status,
+    latestKnownOutcome: entry.latestKnownOutcome,
+    ...(entry.decisionId ? { decisionId: entry.decisionId } : {}),
+    ...(entry.auditId ? { auditId: entry.auditId } : {}),
+    ...(entry.traceId ? { traceId: entry.traceId } : {}),
+    ...(entry.updatedAt ? { updatedAt: entry.updatedAt } : {}),
+  }));
+  const rowSummary = rows.length
+    ? rows.map((row) => `${row.title} ${row.status}`).join(", ")
+    : "No local review records for this profile";
+
+  return {
+    kind: "local_review_history",
+    question,
+    summary: `Local review history for ${profileMode ?? "all profiles"}: ${rowSummary}.`,
+    rows,
+    evidenceCount: scopedEntries.length,
+    caveat:
+      "Based on local metadata-only review records. It may miss cleared records, other devices, disabled telemetry periods, and Napoleon-side review state not returned through the governed bridge.",
+    boundary: baseBoundary(),
   };
 }

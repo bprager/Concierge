@@ -5487,6 +5487,146 @@ test("shows sanitized local review history from persisted lifecycle records", as
   }
 });
 
+test("answers local review history questions without contacting Napoleon", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  let fetchCalls = 0;
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+    localStorage.setItem(
+      "concierge_new_agent_proposal_lifecycle",
+      JSON.stringify([
+        {
+          schemaVersion: "concierge.new-agent-proposal-lifecycle.v1",
+          proposalId: "agent-proposal-history-question",
+          proposedAgentId: "agent.history.question",
+          profileMode: "adult_owner",
+          capability: "Local review history question answering",
+          architectureArea: "concierge_interface",
+          draftedAt: "2026-06-25T00:00:00.000Z",
+          sentAt: "2026-06-25T00:01:00.000Z",
+          reviewedAt: "2026-06-25T00:02:00.000Z",
+          updatedAt: "2026-06-25T00:02:00.000Z",
+          currentLifecycleState: "review_returned",
+          latestKnownOutcome: "Napoleon returned governed review metadata.",
+          reviewDecisionId: "decision_agent_history_question",
+          reviewAuditId: "audit_agent_history_question",
+          reviewTraceId: "trace_agent_history_question",
+          nextRecommendedUserAction: "Wait for Napoleon-governed approval or rejection evidence.",
+          privacyClass: "metadata_only",
+          boundary: {
+            proposalOnly: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            registryUpdatePerformed: false,
+            agentActivated: false,
+            appliedLocally: false,
+          },
+        },
+      ]),
+    );
+    localStorage.setItem(
+      "concierge_evolution_proposal_lifecycle",
+      JSON.stringify([
+        {
+          schemaVersion: "concierge.evolution-proposal-lifecycle.v1",
+          proposalId: "evolution-proposal-history-question",
+          sourceCapabilityReviewId: "capability-review-history-question",
+          profileMode: "adult_owner",
+          capability: "Local review history question answering",
+          architectureArea: "observability",
+          draftedAt: "2026-06-25T00:03:00.000Z",
+          submittedAt: "2026-06-25T00:04:00.000Z",
+          updatedAt: "2026-06-25T00:04:00.000Z",
+          currentLifecycleState: "accepted_for_review",
+          latestKnownOutcome: "Napoleon accepted the proposal for governed intake review.",
+          intakeDecisionId: "decision_evolution_history_question",
+          intakeAuditId: "audit_evolution_history_question",
+          intakeTraceId: "trace_evolution_history_question",
+          statusRefresh: {
+            available: false,
+            reason: "descriptor_status_route_not_advertised",
+            nextStep: "Keep local intake result as evidence until Napoleon advertises status.",
+          },
+          nextRecommendedUserAction: "Wait for Napoleon-governed review evidence.",
+          privacyClass: "metadata_only",
+          boundary: {
+            proposalOnly: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            registryUpdatePerformed: false,
+            evolutionApplied: false,
+            appliedLocally: false,
+          },
+        },
+      ]),
+    );
+
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What reviews are waiting on Napoleon?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await waitFor(() => {
+      const text = document.body.textContent ?? "";
+      assert.ok(text.includes("Local review history"));
+      assert.ok(text.includes("New-agent proposal"));
+      assert.ok(text.includes("review_returned"));
+      assert.ok(text.includes("Evolution proposal"));
+      assert.ok(text.includes("accepted_for_review"));
+      assert.ok(text.includes("decision_agent_history_question"));
+      assert.ok(text.includes("audit_evolution_history_question"));
+      assert.ok(text.includes("This is a local review-history summary only"));
+      assert.ok(text.includes("does not approve, apply, write memory, dispatch agents, send externally, update registries, activate agents, or apply evolution"));
+    });
+    assert.equal(fetchCalls, 0);
+    const answered = telemetryPayloads.find((event) => event.event === "local_review_history_answered");
+    assert.ok(answered);
+    assert.equal(answered.attributes.profileMode, "adult_owner");
+    assert.equal(answered.attributes.localAnswerOnly, true);
+    assert.equal(answered.attributes.approvalCaptured, false);
+    assert.equal(answered.attributes.memoryWritePerformed, false);
+    assert.equal(answered.attributes.agentDispatchPerformed, false);
+    assert.equal(answered.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(answered).includes("decision_agent_history_question"), false);
+    assert.equal(JSON.stringify(answered).includes("audit_evolution_history_question"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("ignores unsafe persisted evolution proposal lifecycle records after reload", async () => {
   const dom = installDom();
   const [{ cleanup, render }, { App }] = await Promise.all([
