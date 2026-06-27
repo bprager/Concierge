@@ -9818,7 +9818,7 @@ test("shows runtime contract alignment status in governed routes", async () => {
 
     assert.ok(
       routes.getByText(
-        "Contract alignment: Runtime mapping gap: Napoleon has not exposed every named Concierge review/evidence/status target. Status: runtime_mapping_gaps_present. Unmapped Napoleon runtime paths: 0. Napoleon required actions: 1.",
+        "Contract alignment: Runtime mapping gap: Napoleon has not exposed every named Concierge review/evidence/status target. Status: runtime_mapping_gaps_present. Unmapped Napoleon runtime paths: 0. Napoleon required actions: 1. Blocking live promotion: yes.",
       ),
     );
     assert.ok(

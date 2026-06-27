@@ -135,6 +135,16 @@ test("named Napoleon discovery operations are generated from canonical contract 
   );
 });
 
+test("runtime contract alignment summary exposes top-level promotion blocker fields", () => {
+  const summary = RUNTIME_CONTRACT_ALIGNMENT_SUMMARY as typeof RUNTIME_CONTRACT_ALIGNMENT_SUMMARY & {
+    napoleonRequiredActionCount?: number;
+    blockingLivePromotion?: boolean;
+  };
+
+  assert.equal(summary.napoleonRequiredActionCount, summary.napoleonRequiredActions.length);
+  assert.equal(summary.blockingLivePromotion, true);
+});
+
 test("OpenAPI descriptor connection enums match runtime fail-closed states", () => {
   const expectedStates = [
     "no_endpoint",

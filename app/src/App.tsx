@@ -8526,7 +8526,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             Contract alignment: {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.summary} Status:{" "}
             {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status}. Unmapped Napoleon runtime paths:{" "}
             {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.unmappedNapoleonRuntimePaths.length}. Napoleon required actions:{" "}
-            {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.length}.
+            {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActionCount}. Blocking live promotion:{" "}
+            {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.blockingLivePromotion ? "yes" : "no"}.
           </span>
           <span>{RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.detail}</span>
           {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.map((action) => (

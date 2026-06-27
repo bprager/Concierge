@@ -93,6 +93,7 @@ export interface NapoleonRequiredAction {
   targetPath?: string;
   requestKind?: string;
   operationId?: string;
+  blockingLivePromotion?: boolean;
   advertiseUsing?: string[];
   requiredAction?: string;
   sideEffectsPerformed: false;
@@ -262,6 +263,7 @@ function sanitizeNapoleonRequiredActions(actions: NapoleonRequiredAction[] | und
     ...(action.targetPath ? { targetPath: sanitizeReadinessProofString(action.targetPath) ?? "unavailable" } : {}),
     ...(action.requestKind ? { requestKind: sanitizeReadinessProofString(action.requestKind) ?? "unavailable" } : {}),
     ...(action.operationId ? { operationId: sanitizeReadinessProofString(action.operationId) ?? "unavailable" } : {}),
+    ...(typeof action.blockingLivePromotion === "boolean" ? { blockingLivePromotion: action.blockingLivePromotion } : {}),
     ...(action.advertiseUsing ? { advertiseUsing: sanitizeReadinessProofList(action.advertiseUsing) } : {}),
     ...(action.requiredAction ? { requiredAction: sanitizeReadinessProofString(action.requiredAction) ?? "unavailable" } : {}),
     sideEffectsPerformed: false,
@@ -290,6 +292,7 @@ function runtimeContractRequiredActions(input: BridgeReadinessProofInput): Napol
     targetPath: action.path,
     requestKind: action.requestKind,
     operationId: action.operationId,
+    blockingLivePromotion: action.blockingLivePromotion,
     requiredAction: action.blockingLivePromotion
       ? `Napoleon must expose and advertise ${action.operationId} at ${action.path} before Concierge can refresh this capability against live Napoleon.`
       : `Napoleon should expose and advertise ${action.operationId} at ${action.path}.`,
@@ -362,6 +365,7 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
   const descriptorStatus = input.descriptorConnection.descriptorStatus;
   const blockedEffects = sanitizeReadinessProofList(input.readiness.lastBlockedEffects ?? descriptorStatus?.blockedEffects ?? []);
   const descriptorBlockedEffects = sanitizeReadinessProofList(descriptorStatus?.blockedEffects ?? []);
+  const napoleonRequiredActions = sanitizeNapoleonRequiredActions(runtimeContractRequiredActions(input));
 
   return JSON.stringify(
     {
@@ -504,7 +508,9 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
           descriptorHandoffRequiredAction:
             sanitizeReadinessProofString(input.evaluatorValidation?.descriptorHandoffRequiredAction) ?? "none",
           requiredActionSource: runtimeRequiredActionSource(input),
-          napoleonRequiredActions: sanitizeNapoleonRequiredActions(runtimeContractRequiredActions(input)),
+          napoleonRequiredActionCount: napoleonRequiredActions.length,
+          blockingLivePromotion: napoleonRequiredActions.some((action) => action.blockingLivePromotion === true),
+          napoleonRequiredActions,
           connectionValueStored: false,
           credentialValueStored: false,
           requestPayloadStored: false,

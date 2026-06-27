@@ -41,6 +41,8 @@ export interface RuntimeContractAlignmentSummary {
   summary: string;
   detail: string;
   unmappedNapoleonRuntimePaths: readonly string[];
+  napoleonRequiredActionCount: number;
+  blockingLivePromotion: boolean;
   napoleonRequiredActions: readonly {
     id: string;
     owner: "napoleon_runtime";
@@ -75,6 +77,8 @@ export const RUNTIME_CONTRACT_ALIGNMENT_SUMMARY: RuntimeContractAlignmentSummary
   detail:
     "Concierge keeps local /v1/concierge/... packaging paths while named Napoleon /cos, review, evidence, and metadata targets are explicitly mapped; current Napoleon snapshot still lacks evolution_proposal_status at /evolution/proposals/{proposal_id}/status.",
   unmappedNapoleonRuntimePaths: [],
+  napoleonRequiredActionCount: 1,
+  blockingLivePromotion: true,
   napoleonRequiredActions: [
     {
       id: "expose_evolution_proposal_status_runtime_target",

@@ -507,6 +507,8 @@ test("exports built-in runtime contract required actions in readiness proof", ()
       promotionGate: string;
       evaluator: {
         status: string;
+        napoleonRequiredActionCount?: number;
+        blockingLivePromotion?: boolean;
         requiredActionSource?: string;
         napoleonRequiredActions: Array<{
           id: string;
@@ -527,6 +529,8 @@ test("exports built-in runtime contract required actions in readiness proof", ()
   assert.equal(proof.runtimeValidation.source, "real_runtime");
   assert.equal(proof.runtimeValidation.evaluator.status, "passed");
   assert.equal(proof.runtimeValidation.promotionGate, "blocked_until_runtime_contract_actions_cleared");
+  assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActionCount, 1);
+  assert.equal(proof.runtimeValidation.evaluator.blockingLivePromotion, true);
   assert.equal(proof.runtimeValidation.evaluator.requiredActionSource, "contract_alignment");
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.id, requiredAction.id);
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.owner, "napoleon_runtime");
