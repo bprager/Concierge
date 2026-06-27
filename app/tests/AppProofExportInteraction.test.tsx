@@ -5986,6 +5986,30 @@ test("answers local review history questions without contacting Napoleon", async
     assert.equal(answered.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(answered).includes("decision_agent_history_question"), false);
     assert.equal(JSON.stringify(answered).includes("audit_evolution_history_question"), false);
+
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What is the status of my evolution proposal?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await waitFor(() => {
+      const text = document.body.textContent ?? "";
+      assert.ok(text.includes("Evolution proposal"));
+      assert.ok(text.includes("accepted_for_review"));
+      assert.ok(text.includes("Napoleon accepted the proposal for governed intake review."));
+      assert.ok(text.includes("This is a local review-history summary only"));
+    });
+    assert.equal(fetchCalls, 0);
+    const proposalStatusAnswered = telemetryPayloads
+      .filter((event) => event.event === "local_review_history_answered")
+      .at(-1);
+    assert.ok(proposalStatusAnswered);
+    assert.equal(proposalStatusAnswered.attributes.localAnswerOnly, true);
+    assert.equal(proposalStatusAnswered.attributes.profileMode, "adult_owner");
+    assert.equal(proposalStatusAnswered.attributes.evolutionApplied, false);
+    assert.equal(proposalStatusAnswered.attributes.appliedLocally, false);
+    assert.equal(JSON.stringify(proposalStatusAnswered).includes("What is the status of my evolution proposal?"), false);
+    assert.equal(JSON.stringify(proposalStatusAnswered).includes("decision_evolution_history_question"), false);
   } finally {
     globalThis.fetch = originalFetch;
     console.info = originalInfo;

@@ -211,9 +211,15 @@ export function exportLocalReviewHistoryEntries(
 
 function isLocalReviewHistoryQuestion(question: string): boolean {
   const lower = question.toLowerCase();
+  const asksAboutProposalLifecycle =
+    /\b(proposal|proposals|lifecycle|lifecycles)\b/.test(lower) &&
+    /\b(status|statuses|state|waiting|pending|returned|current|recent|accepted|rejected|blocked|implemented|rolled\s+back|rollback|what|which|where)\b/.test(
+      lower,
+    );
   return (
+    asksAboutProposalLifecycle ||
     /\b(review|reviews|reviewed|audit|audits|decision|decisions|approval|approvals)\b/.test(lower) &&
-    /\b(history|status|statuses|waiting|pending|returned|current|recent|what|which|where)\b/.test(lower)
+      /\b(history|status|statuses|waiting|pending|returned|current|recent|what|which|where)\b/.test(lower)
   );
 }
 

@@ -58,3 +58,58 @@ test("answers local review history questions from sanitized metadata only", () =
   assert.equal(JSON.stringify(answer).includes("private.example"), false);
   assert.equal(JSON.stringify(answer).includes("token secret"), false);
 });
+
+test("answers direct evolution proposal status questions from local lifecycle metadata", () => {
+  const entries = buildLocalReviewHistoryEntries({
+    evolutionProposalLifecycleRecords: [
+      {
+        schemaVersion: "concierge.evolution-proposal-lifecycle.v1",
+        proposalId: "evolution-proposal-status-question",
+        sourceCapabilityReviewId: "capability-review-status-question",
+        profileMode: "adult_owner",
+        capability: "Proposal status question answering",
+        architectureArea: "observability",
+        draftedAt: "2026-06-25T00:03:00.000Z",
+        submittedAt: "2026-06-25T00:04:00.000Z",
+        updatedAt: "2026-06-25T00:04:00.000Z",
+        currentLifecycleState: "accepted_for_review",
+        latestKnownOutcome: "Napoleon accepted the proposal for governed intake review.",
+        intakeDecisionId: "decision_evolution_status_question",
+        intakeAuditId: "audit_evolution_status_question",
+        intakeTraceId: "trace_evolution_status_question",
+        statusRefresh: {
+          available: false,
+          reason: "descriptor_status_route_not_advertised",
+          nextStep: "Keep local intake result as evidence until Napoleon advertises status.",
+        },
+        nextRecommendedUserAction: "Wait for Napoleon-governed review evidence.",
+        privacyClass: "metadata_only",
+        boundary: {
+          proposalOnly: true,
+          approvalCaptured: false,
+          memoryWritePerformed: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+          registryUpdatePerformed: false,
+          evolutionApplied: false,
+          appliedLocally: false,
+        },
+      },
+    ],
+  });
+
+  const answer = answerLocalReviewHistoryQuestion("What is the status of my evolution proposal?", entries, "adult_owner");
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected evolution proposal status answer");
+  assert.equal(answer.kind, "local_review_history");
+  assert.equal(answer.evidenceCount, 1);
+  assert.ok(answer.summary.includes("Evolution proposal"));
+  assert.ok(answer.summary.includes("accepted_for_review"));
+  assert.equal(answer.rows[0].entryType, "evolution_proposal");
+  assert.equal(answer.rows[0].subjectId, "evolution-proposal-status-question");
+  assert.equal(answer.rows[0].latestKnownOutcome, "Napoleon accepted the proposal for governed intake review.");
+  assert.equal(answer.boundary.proposalOnly, true);
+  assert.equal(answer.boundary.evolutionApplied, false);
+  assert.equal(answer.boundary.appliedLocally, false);
+});
