@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local promotion-readiness answers for questions such as "Why is this not promotion-ready?", reusing the current live-send preflight and promotion-gate state without contacting Napoleon or recording raw question text.
 - Added a live-runtime validation no-endpoint message that points to the sanitized `preflight.json` artifact, so missing Napoleon endpoint configuration still leaves an operator-visible validation breadcrumb without retaining endpoints, tokens, prompts, or response bodies.
 - Added local returned-proof answer-text follow-ups such as "What did Napoleon say?" and "What was Napoleon's answer?", keeping the answer tied to the current sanitized bridge proof without another Napoleon request or raw follow-up/response telemetry.
 - Added a visible next-step summary to live voice readiness descriptor blockers, so auth, timeout, HTTP, stale, missing, and integrity failures stay blocked while pointing to the specific local repair action.

@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local promotion-readiness answers for questions such as "Why is this not promotion-ready?", so Concierge summarizes current preflight and promotion-gate state without contacting Napoleon or storing the raw question in telemetry.
 - Added an operator-visible sanitized preflight path to the no-endpoint `make live-runtime-validation` failure message, preserving the fail-closed result while making the missing Napoleon runtime validation artifact easy to inspect.
 - Added local returned-proof handling for "What did Napoleon say?" and "What was Napoleon's answer?", so Concierge can restate the current sanitized Napoleon bridge answer without another request, side effects, or raw follow-up/response telemetry.
 - Added a visible next-step summary to live voice readiness descriptor blockers, so auth, timeout, HTTP, stale, missing, and integrity failures remain blocked while pointing to a specific local repair action.

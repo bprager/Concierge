@@ -913,8 +913,16 @@ function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
       /\bblockers?\b/.test(lower) ||
       /\bwhy\b.*\bblocked\b/.test(lower) ||
       /\bwhy\b.*\bnot\b/.test(lower));
+  const asksAboutPromotionReadiness =
+    /\bpromotion[- ]?ready\b/.test(lower) ||
+    /\bready\b.*\bpromotion\b/.test(lower) ||
+    /\bpromote\b/.test(lower) ||
+    /\bpromotion\b.*\b(blocked|blocker|blocking|ready|readiness|gate)\b/.test(lower) ||
+    /\bwhy\b.*\bnot\b.*\bpromotion\b/.test(lower);
   if (asksCompactLiveReadiness) return true;
-  if (!lower.includes("napoleon") && !asksAboutSendButton && !asksAboutLiveSendBlocker) return false;
+  if (!lower.includes("napoleon") && !asksAboutSendButton && !asksAboutLiveSendBlocker && !asksAboutPromotionReadiness) {
+    return false;
+  }
   const asksAboutSending =
     asksAboutSendButton ||
     /\bsend\b/.test(lower) ||
@@ -933,7 +941,7 @@ function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
     /\bblockers?\b/.test(lower) ||
     /\bpreflight\b/.test(lower) ||
     /\bwhy\b.*\bnot\b/.test(lower);
-  return asksAboutSending && asksAboutReadiness;
+  return asksAboutPromotionReadiness || (asksAboutSending && asksAboutReadiness);
 }
 
 function isNapoleonConnectionRepairQuestion(content: string): boolean {
@@ -1255,6 +1263,7 @@ function formatNapoleonLiveSendReadinessAnswer(input: {
     "Governance send gate",
     "Allowed effects",
     "Text ready",
+    "Promotion gate",
     "Rehearsal Mode",
   ];
   const prioritizedItems = priorityLabels
