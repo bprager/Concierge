@@ -857,8 +857,15 @@ function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
     /\bsend control\b/.test(lower) ||
     /\bsend\b.*\b(disabled|blocked|unavailable|greyed|grayed)\b/.test(lower) ||
     /\b(disabled|blocked|unavailable|greyed|grayed)\b.*\bsend\b/.test(lower);
+  const asksAboutLiveSendBlocker =
+    /\blive[- ]?send\b/.test(lower) &&
+    (/\bblocking\b/.test(lower) ||
+      /\bblocked\b/.test(lower) ||
+      /\bblockers?\b/.test(lower) ||
+      /\bwhy\b.*\bblocked\b/.test(lower) ||
+      /\bwhy\b.*\bnot\b/.test(lower));
   if (asksCompactLiveReadiness) return true;
-  if (!lower.includes("napoleon") && !asksAboutSendButton) return false;
+  if (!lower.includes("napoleon") && !asksAboutSendButton && !asksAboutLiveSendBlocker) return false;
   const asksAboutSending =
     asksAboutSendButton ||
     /\bsend\b/.test(lower) ||
@@ -867,6 +874,7 @@ function isNapoleonLiveSendReadinessQuestion(content: string): boolean {
     /\bbridge\b/.test(lower) ||
     /\bendpoint\b/.test(lower);
   const asksAboutReadiness =
+    asksAboutLiveSendBlocker ||
     asksAboutSendButton ||
     /\bready\b/.test(lower) ||
     /\breadiness\b/.test(lower) ||

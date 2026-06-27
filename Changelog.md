@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local live-send blocker answers for direct questions such as "What is blocking live send?", keeping the answer tied to current preflight state without contacting Napoleon or emitting raw question text in telemetry.
 - Added local export for built-in contract-alignment Napoleon required actions, so the current `expose_evolution_proposal_status_runtime_target` blocker can be handed off as a sanitized packet without importing evaluator evidence or contacting Napoleon.
 - Added local Text Concierge answers for built-in contract-alignment Napoleon required actions, so questions like "What does Napoleon need to expose next?" can surface `expose_evolution_proposal_status_runtime_target` without importing evaluator evidence or contacting Napoleon.
 - Added the current Napoleon runtime mapping gap and required-action count to the governed routes panel, so the app now shows `expose_evolution_proposal_status_runtime_target` as Napoleon-owned follow-up work instead of presenting runtime contract alignment as complete.
