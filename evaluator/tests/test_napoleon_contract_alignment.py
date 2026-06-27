@@ -92,6 +92,8 @@ paths:
         self.assertEqual(report["unmappedNapoleonRuntimePaths"], [])
         self.assertEqual(report["napoleonOnlyPaths"], [])
         self.assertEqual(report["conciergeOnlyPaths"], [])
+        self.assertEqual(report["napoleonRequiredActionCount"], 0)
+        self.assertFalse(report["blockingLivePromotion"])
 
     def test_reports_unmapped_napoleon_runtime_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -223,6 +225,8 @@ paths:
                 }
             ],
         )
+        self.assertEqual(report["napoleonRequiredActionCount"], 1)
+        self.assertTrue(report["blockingLivePromotion"])
 
     def test_current_alignment_finding_lists_generated_concierge_paths(self):
         doc = Path("docs/NAPOLEON_CONTRACT_ALIGNMENT.md").read_text(encoding="utf-8")
@@ -371,6 +375,8 @@ paths:
         self.assertEqual(report["conciergeReviewPathsMissingFromNapoleonRuntime"], [])
         self.assertEqual(report["conciergeReviewOperationsMissingFromNapoleonRuntime"], [])
         self.assertEqual(report["napoleonRequiredActions"], [])
+        self.assertEqual(report["napoleonRequiredActionCount"], 0)
+        self.assertFalse(report["blockingLivePromotion"])
         self.assertTrue(report["runtimeAligned"])
         self.assertEqual(report["alignmentStatus"], "runtime_mapped_with_local_contract_paths")
         self.assertEqual(report["unmappedNapoleonRuntimePaths"], [])

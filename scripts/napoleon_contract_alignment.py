@@ -242,6 +242,8 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
     napoleon_required_actions = napoleon_required_actions_for_missing_concierge_review_operations(
         concierge_review_operations_missing
     )
+    napoleon_required_action_count = len(napoleon_required_actions)
+    blocking_live_promotion = any(action.get("blockingLivePromotion") is True for action in napoleon_required_actions)
     aliases = local_handoff_aliases(concierge_set, napoleon_set)
     alias_covered_paths = {
         path
@@ -304,6 +306,8 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
         "conciergeReviewPathsMissingFromNapoleonRuntime": concierge_review_paths_missing,
         "conciergeReviewOperationsMissingFromNapoleonRuntime": concierge_review_operations_missing,
         "napoleonRequiredActions": napoleon_required_actions,
+        "napoleonRequiredActionCount": napoleon_required_action_count,
+        "blockingLivePromotion": blocking_live_promotion,
         "napoleonRuntimeAuthority": napoleon.get("x-napoleon-runtime-authority"),
         "nonAuthorityBoundary": "alignment_check_only",
         "sideEffectsPerformed": False,

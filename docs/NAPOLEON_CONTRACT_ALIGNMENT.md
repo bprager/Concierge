@@ -23,6 +23,7 @@ The report is local evidence only. It does not contact Napoleon, approve a runti
 - `napoleonReviewPathsWithoutLocalAlias` lists contract paths that do not even have a current local handoff alias.
 - `conciergeReviewPathsMissingFromNapoleonRuntime` and `conciergeReviewOperationsMissingFromNapoleonRuntime` list named Concierge Napoleon targets that are generated locally but absent from the inspected Napoleon snapshot; these are runtime exposure gaps, not permission to fall back to free-form paths.
 - `napoleonRequiredActions` turns those missing named targets into Napoleon-owned required actions with the expected operation, target path, request kind, live-promotion blocking state, and non-authority boundary.
+- `napoleonRequiredActionCount` and `blockingLivePromotion` summarize the action list for operator panels, CI checks, and promotion gates without requiring consumers to infer count or blocking status from the action array.
 
 ## Current Finding
 
@@ -59,7 +60,7 @@ The alignment report now also emits a Napoleon-owned required action:
 
 - `expose_evolution_proposal_status_runtime_target`: expose and advertise the read-only `evolution_proposal_status` runtime target at `/evolution/proposals/{proposal_id}/status` with `evolution_proposal_status_handoff` before Concierge can refresh proposal status against live Napoleon.
 
-The latest 2026-06-27 recheck against that snapshot still reports no unmapped Napoleon runtime paths; the remaining gap is this single named Concierge status target missing from the Napoleon snapshot, not a permission to infer or call an unadvertised path.
+The latest 2026-06-27 recheck against that snapshot still reports no unmapped Napoleon runtime paths; the remaining gap is this single named Concierge status target missing from the Napoleon snapshot, with `napoleonRequiredActionCount: 1` and `blockingLivePromotion: true`. This is not a permission to infer or call an unadvertised path.
 
 Text Concierge can answer Napoleon required-action questions and export a focused local required-action packet from this local contract-alignment evidence when no evaluator validation import is present. For example, "What does Napoleon need to expose next?" returns the current Napoleon-owned action, contract-alignment status, and non-authority boundary, and the export keeps the same source and false side-effect flags without contacting Napoleon or treating the answer as approval, runtime validation, free-form path permission, memory permission, agent dispatch, external send, or local application.
 
