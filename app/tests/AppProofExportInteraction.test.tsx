@@ -3407,6 +3407,13 @@ test("clears accepted real-runtime readiness proof when user profile changes", a
       lastOperationId: "text_turn",
       lastTargetPath: "/v1/concierge/turn",
     },
+    descriptor: {
+      state: "ready",
+      checksumState: "matched",
+      signatureState: "valid",
+      canAttemptLiveBridge: true,
+      supportedHandoffs: ["text_turn"],
+    },
     runtimeValidation: {
       source: "real_runtime",
       promotionGate: "real_runtime_evidence_available",
@@ -10093,6 +10100,13 @@ test("imports an accepted real-runtime readiness proof as sanitized local metada
             lastOperationId: "text_turn",
             lastTargetPath: "/v1/concierge/turn",
           },
+          descriptor: {
+            state: "ready",
+            checksumState: "matched",
+            signatureState: "valid",
+            canAttemptLiveBridge: true,
+            supportedHandoffs: ["text_turn"],
+          },
           runtimeValidation: {
             source: "real_runtime",
             promotionGate: "real_runtime_evidence_available",
@@ -10166,6 +10180,13 @@ test("clears accepted real-runtime readiness proof and derived voice proof when 
             lastOperationId: "text_turn",
             lastTargetPath: "/v1/concierge/turn",
           },
+          descriptor: {
+            state: "ready",
+            checksumState: "matched",
+            signatureState: "valid",
+            canAttemptLiveBridge: true,
+            supportedHandoffs: ["text_turn"],
+          },
           runtimeValidation: {
             source: "real_runtime",
             promotionGate: "real_runtime_evidence_available",
@@ -10231,6 +10252,13 @@ test("clears accepted real-runtime readiness proof and derived voice proof when 
             lastOperationId: "text_turn",
             lastTargetPath: "/v1/concierge/turn",
           },
+          descriptor: {
+            state: "ready",
+            checksumState: "matched",
+            signatureState: "valid",
+            canAttemptLiveBridge: true,
+            supportedHandoffs: ["text_turn"],
+          },
           runtimeValidation: {
             source: "real_runtime",
             promotionGate: "real_runtime_evidence_available",
@@ -10295,6 +10323,13 @@ test("clears accepted real-runtime readiness proof and derived voice proof when 
             lastEvidenceStatus: "success",
             lastOperationId: "text_turn",
             lastTargetPath: "/v1/concierge/turn",
+          },
+          descriptor: {
+            state: "ready",
+            checksumState: "matched",
+            signatureState: "valid",
+            canAttemptLiveBridge: true,
+            supportedHandoffs: ["text_turn"],
           },
           runtimeValidation: {
             source: "real_runtime",
@@ -10367,6 +10402,13 @@ test("clears accepted real-runtime readiness proof and derived voice proof when 
             lastOperationId: "text_turn",
             lastTargetPath: "/v1/concierge/turn",
           },
+          descriptor: {
+            state: "ready",
+            checksumState: "matched",
+            signatureState: "valid",
+            canAttemptLiveBridge: true,
+            supportedHandoffs: ["text_turn"],
+          },
           runtimeValidation: {
             source: "real_runtime",
             promotionGate: "real_runtime_evidence_available",
@@ -10431,6 +10473,13 @@ test("clears accepted real-runtime readiness proof and derived voice proof when 
             lastEvidenceStatus: "success",
             lastOperationId: "text_turn",
             lastTargetPath: "/v1/concierge/turn",
+          },
+          descriptor: {
+            state: "ready",
+            checksumState: "matched",
+            signatureState: "valid",
+            canAttemptLiveBridge: true,
+            supportedHandoffs: ["text_turn"],
           },
           runtimeValidation: {
             source: "real_runtime",

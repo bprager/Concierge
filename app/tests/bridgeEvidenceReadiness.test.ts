@@ -967,6 +967,13 @@ test("imports only accepted real-runtime readiness proof metadata", () => {
         lastOperationId: "text_turn",
         lastTargetPath: "/v1/concierge/turn",
       },
+      descriptor: {
+        state: "ready",
+        checksumState: "matched",
+        signatureState: "valid",
+        canAttemptLiveBridge: true,
+        supportedHandoffs: ["text_turn"],
+      },
       runtimeValidation: {
         source: "real_runtime",
         promotionGate: "real_runtime_evidence_available",
@@ -1021,6 +1028,40 @@ test("rejects accepted readiness proof when successful bridge evidence is not a 
   assert.equal(
     accepted.summary,
     "Accepted readiness proof import rejected because it is not successful text-turn runtime evidence.",
+  );
+  assert.equal(accepted.lastRealRuntimeProof, undefined);
+});
+
+test("rejects accepted readiness proof when descriptor text-turn readiness is missing", () => {
+  const accepted = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      kind: "concierge_bridge_readiness_proof",
+      version: 1,
+      evidence: {
+        captureState: "passed",
+        comparisonState: "passed",
+        lastEvidenceStatus: "success",
+        lastOperationId: "text_turn",
+        lastTargetPath: "/v1/concierge/turn",
+      },
+      runtimeValidation: {
+        source: "real_runtime",
+        promotionGate: "real_runtime_evidence_available",
+      },
+      boundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        localApplicationPerformed: false,
+      },
+    }),
+  );
+
+  assert.equal(accepted.status, "rejected");
+  assert.equal(
+    accepted.summary,
+    "Accepted readiness proof import rejected because descriptor text-turn readiness was not proven.",
   );
   assert.equal(accepted.lastRealRuntimeProof, undefined);
 });

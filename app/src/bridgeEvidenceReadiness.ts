@@ -595,6 +595,18 @@ function isAcceptedTextTurnRuntimeEvidence(operationId: string, targetPath: stri
   return operationId === "text_turn" && (targetPath === getBridgeOperation("text_turn").path || targetPath === "/cos/text-turn");
 }
 
+function isAcceptedTextTurnDescriptorProof(proof: Record<string, unknown>): boolean {
+  const descriptor = nestedRecord(proof, "descriptor");
+  const supportedHandoffs = Array.isArray(descriptor.supportedHandoffs) ? descriptor.supportedHandoffs : [];
+  return (
+    descriptor.state === "ready" &&
+    descriptor.canAttemptLiveBridge === true &&
+    descriptor.checksumState === "matched" &&
+    descriptor.signatureState === "valid" &&
+    supportedHandoffs.includes("text_turn")
+  );
+}
+
 export function compareBridgeReadinessProofs(
   previousJson: string | null,
   currentJson: string,
@@ -727,6 +739,14 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
         status: "rejected",
         summary:
           "Accepted readiness proof import rejected because it is not successful text-turn runtime evidence.",
+      };
+    }
+
+    if (!isAcceptedTextTurnDescriptorProof(proof)) {
+      return {
+        status: "rejected",
+        summary:
+          "Accepted readiness proof import rejected because descriptor text-turn readiness was not proven.",
       };
     }
 
