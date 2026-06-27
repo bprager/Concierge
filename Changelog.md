@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local Text Concierge answers for Napoleon capability discovery questions such as "What can Napoleon do right now?", using already-discovered advisory capability/agent metadata without another bridge request and with count-only telemetry.
 - Added broader local Capability Intelligence typo tolerance for "implmented" next-capability questions, preserving proposal-only metadata answers.
 - Added local Text Concierge answers for Napoleon metadata discovery questions such as "Which Napoleon agents are currently available?", using already-discovered agent/profile metadata without another bridge request and with count-only telemetry.
 - Added Napoleon runtime bridge fixtures for denied effects, child-profile review, memory-proposal review, and evolution-recommendation review, with tests proving they remain fail-closed or manual-review-only without side effects.

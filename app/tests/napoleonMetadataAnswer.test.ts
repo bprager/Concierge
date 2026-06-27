@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  formatNapoleonCapabilityAnswer,
   formatNapoleonMetadataAnswer,
+  isNapoleonCapabilityQuestion,
   isNapoleonMetadataQuestion,
 } from "../src/napoleonMetadataAnswer.js";
 import type { ChiefOfStaffCapabilityDiscoveryResult } from "../src/chiefOfStaffCapabilities.js";
@@ -10,7 +12,15 @@ const discoveredMetadata: ChiefOfStaffCapabilityDiscoveryResult = {
   state: "ready",
   message: "Advisory Chief of Staff capabilities discovered. This is not Napoleon approval.",
   serviceId: "napoleon.chief_of_staff",
-  capabilities: [],
+  capabilities: [
+    {
+      id: "chief_of_staff_steering",
+      label: "Chief of Staff steering",
+      description: "Drafts proposal-only improvement recommendations from local evidence.",
+      authorityTier: "advisory_review",
+      proposalOnly: true,
+    },
+  ],
   agents: [
     {
       agentId: "passive_brain",
@@ -71,4 +81,21 @@ test("formats missing Napoleon metadata without inventing agents or profile auth
   assert.match(answer.content, /Napoleon metadata has not been discovered in this UI session/);
   assert.match(answer.content, /Discover the descriptor, then explicitly fetch advisory capabilities and metadata/);
   assert.match(answer.content, /No agent, profile, registry, memory, or approval authority is inferred locally/);
+});
+
+test("recognizes and formats Napoleon capability questions as local non-authorizing discovery state", () => {
+  assert.equal(isNapoleonCapabilityQuestion("What can Napoleon do right now?"), true);
+  assert.equal(isNapoleonCapabilityQuestion("Which Napoleon capabilities are available?"), true);
+  assert.equal(isNapoleonCapabilityQuestion("What did Napoleon do last turn?"), false);
+
+  const answer = formatNapoleonCapabilityAnswer(discoveredMetadata);
+
+  assert.equal(answer.capabilitiesReturned, true);
+  assert.equal(answer.capabilityCount, 1);
+  assert.equal(answer.agentCount, 1);
+  assert.equal(answer.responseSideEffectClaimCount, 0);
+  assert.match(answer.content, /Napoleon capability discovery is available as local connection metadata/);
+  assert.match(answer.content, /Capabilities: Chief of Staff steering \(chief_of_staff_steering\), tier advisory_review, proposal-only/);
+  assert.match(answer.content, /Agent manifests: Passive Brain \(passive_brain\)/);
+  assert.match(answer.content, /Boundary: local discovery only; no agent dispatch, routing, registry update, memory write, approval capture, external send, or local application/);
 });
