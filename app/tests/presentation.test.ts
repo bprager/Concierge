@@ -877,6 +877,52 @@ test("redacts unsafe latest Napoleon turn failure metadata", () => {
   );
 });
 
+test("describes descriptor-specific next steps for latest failed Napoleon turns", () => {
+  const invalid = describeLastNapoleonTurnFailure(
+    new NapoleonBridgeError(
+      "descriptor_mismatch",
+      "trace_descriptor_invalid",
+      "request_descriptor_invalid",
+      undefined,
+      ["memory_write", "agent_dispatch"],
+      {
+        descriptorFailureReason: "descriptor_invalid",
+      },
+    ),
+  );
+  const stale = describeLastNapoleonTurnFailure(
+    new NapoleonBridgeError(
+      "descriptor_mismatch",
+      "trace_descriptor_stale",
+      "request_descriptor_stale",
+      undefined,
+      ["memory_write", "agent_dispatch"],
+      {
+        descriptorFailureReason: "descriptor_stale",
+      },
+    ),
+  );
+  const httpFailure = describeLastNapoleonTurnFailure(
+    new NapoleonBridgeError(
+      "http_failure",
+      "trace_descriptor_http",
+      "request_descriptor_http",
+      503,
+      ["memory_write", "agent_dispatch"],
+      {
+        descriptorFailureReason: "http_failure",
+      },
+    ),
+  );
+
+  assert.equal(
+    invalid.nextStep,
+    "Replace the invalid Napoleon descriptor, then refresh descriptor discovery.",
+  );
+  assert.equal(stale.nextStep, "Refresh the stale Napoleon descriptor before sending again.");
+  assert.equal(httpFailure.nextStep, "Resolve the descriptor HTTP failure, then refresh descriptor discovery.");
+});
+
 test("describes transcript metadata with returned target capability provenance", () => {
   const contract = buildTextTurnContract({
     message: "Summarize the bridge readiness",

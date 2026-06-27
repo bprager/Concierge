@@ -413,14 +413,23 @@ function describeBridgeFailureNextStep(error: NapoleonBridgeError): string {
   if (error.descriptorFailureReason === "no_descriptor") {
     return "Refresh descriptor discovery before attempting a live Napoleon turn.";
   }
+  if (error.descriptorFailureReason === "descriptor_invalid") {
+    return "Replace the invalid Napoleon descriptor, then refresh descriptor discovery.";
+  }
   if (error.descriptorFailureReason === "descriptor_signature_or_checksum_mismatch") {
     return "Resolve the descriptor signature or checksum mismatch before sending again.";
+  }
+  if (error.descriptorFailureReason === "descriptor_stale") {
+    return "Refresh the stale Napoleon descriptor before sending again.";
   }
   if (error.descriptorFailureReason === "auth_failure" || error.reason === "auth_failure") {
     return "Check the governed bridge credentials, then refresh descriptor discovery.";
   }
   if (error.descriptorFailureReason === "bridge_timeout" || error.reason === "bridge_timeout") {
     return "Check Napoleon bridge availability, then retry through the governed endpoint.";
+  }
+  if (error.descriptorFailureReason === "http_failure") {
+    return "Resolve the descriptor HTTP failure, then refresh descriptor discovery.";
   }
   if (error.reason === "governance_denied" || error.reason === "governance_no_go") {
     return "Revise the request or keep it local; Napoleon governance did not allow forwarding.";

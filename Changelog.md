@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Added live-runtime promotion-readiness blocking for Napoleon-owned required actions, so validation summaries cannot mark promotion locally safe while `napoleonRequiredActions` such as `expose_evolution_proposal_status_runtime_target` remain.
+- Added descriptor-specific latest-turn repair guidance for invalid, stale, and HTTP-failed Napoleon descriptors, so blocked attempt summaries point back to descriptor discovery instead of generic bridge-contract repair.
 - Added local evolution-proposal status answers for questions such as "What is the status of my evolution proposal?", using sanitized lifecycle metadata without contacting Napoleon or treating proposal status as approval or implementation.
 - Added local promotion-readiness answers for questions such as "Why is this not promotion-ready?", reusing the current live-send preflight and promotion-gate state without contacting Napoleon or recording raw question text.
 - Added a live-runtime validation no-endpoint message that points to the sanitized `preflight.json` artifact, so missing Napoleon endpoint configuration still leaves an operator-visible validation breadcrumb without retaining endpoints, tokens, prompts, or response bodies.

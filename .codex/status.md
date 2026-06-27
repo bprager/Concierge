@@ -11,6 +11,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Recently Completed
 
 - Added live-runtime promotion-readiness blocking for retained Napoleon-owned required actions, so validation summaries stay promotion-blocked while actions such as `expose_evolution_proposal_status_runtime_target` remain unresolved even if the other runtime checks pass.
+- Added descriptor-specific latest-turn repair guidance for invalid, stale, and HTTP-failed Napoleon descriptors, so blocked-attempt summaries point back to descriptor discovery and repair before another live send.
 - Added local evolution-proposal status answers for questions such as "What is the status of my evolution proposal?", so Concierge summarizes sanitized lifecycle metadata without contacting Napoleon or treating status as approval, implementation, rollout, registry update, or local application.
 - Added local promotion-readiness answers for questions such as "Why is this not promotion-ready?", so Concierge summarizes current preflight and promotion-gate state without contacting Napoleon or storing the raw question in telemetry.
 - Added an operator-visible sanitized preflight path to the no-endpoint `make live-runtime-validation` failure message, preserving the fail-closed result while making the missing Napoleon runtime validation artifact easy to inspect.
