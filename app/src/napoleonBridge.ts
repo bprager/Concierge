@@ -453,7 +453,7 @@ const SELECTED_AGENT_ATTRIBUTION_VERBS = [
 
 const SELECTED_AGENT_ATTRIBUTION_VERB_PATTERN = SELECTED_AGENT_ATTRIBUTION_VERBS.map(escapeRegExp).join("|");
 const TARGET_CAPABILITY_ATTRIBUTION_PATTERN =
-  /\bNapoleon\s+(?:used|uses|selected|chose|picked|routed\s+to|delegated\s+to|handled\s+(?:this|that|it)?\s*(?:through|with|by)?)\s+(?:the\s+)?([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,4})\b/g;
+  /\bNapoleon\s+(?:used|uses|selected|chose|picked|routed\s+to|delegated\s+to|handled\s+(?:(?:this|that|it|a|an|the)(?:\s+response|\s+request|\s+turn)?\s+)?(?:through|with|by)?)\s+(?:the\s+)?([A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*){0,4})\b/g;
 
 function normalizeAttributionText(value: string): string {
   return attributionTokens(value).join(" ");

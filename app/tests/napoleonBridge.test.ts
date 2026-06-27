@@ -2956,6 +2956,67 @@ test("live bridge fails closed when text claims an unproven target capability", 
   );
 });
 
+test("live bridge fails closed when text claims an unproven handled-response target capability", async () => {
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_unproven_handled_response_target",
+          conversationId: "conv_unproven_handled_response_target",
+          turnId: "turn_unproven_handled_response_target",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Draft the bridge plan",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: () => undefined,
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Napoleon handled the response through Passive Brain.",
+              governanceDecision: {
+                decision_id: "decision_unproven_handled_response_target",
+                request_id: "cos_turn_unproven_handled_response_target",
+                outcome: "requires_review",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                rationale: "External effects require owner approval.",
+                blocked_effects: ["external_send"],
+                trace_id: "trace_unproven_handled_response_target",
+                audit_id: "audit_unproven_handled_response_target",
+              },
+              traceEnvelope: {
+                trace_id: "trace_unproven_handled_response_target",
+                parent_trace_id: "conv_unproven_handled_response_target",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_unproven_handled_response_target",
+                decision_id: "decision_unproven_handled_response_target",
+                timestamp: "2026-06-12T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_unproven_handled_response_target",
+                trace_id: "trace_unproven_handled_response_target",
+                decision_id: "decision_unproven_handled_response_target",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prepare_only",
+                approval_requirement: "explicit_owner_approval",
+                evidence_links: ["trace:trace_unproven_handled_response_target"],
+              },
+              targetAgent: "napoleon.chief_of_staff",
+            }),
+          }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("contract_mismatch"),
+  );
+});
+
 test("live bridge accepts guarded selected-agent wording when delegation provenance matches response envelopes", async () => {
   const cases = [
     { slug: "found", text: "Research Analyst found the prior rollout note.", summary: "Found the prior rollout note." },

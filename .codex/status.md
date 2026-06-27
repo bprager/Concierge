@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Extended live Napoleon response validation so handled-response capability claims such as "Napoleon handled the response through Passive Brain" fail closed unless returned target-capability or selected-agent provenance supports that attribution.
 - Hardened live Napoleon response validation so target-capability usage claims such as "Napoleon used Passive Brain" fail closed unless the returned target capability or selected-agent provenance supports that attribution.
 - Hardened accepted readiness proof imports so pasted readiness proof must include ready descriptor evidence with matched checksum, valid signature, live-bridge readiness, and advertised `text_turn` before it can appear as local Napoleon conversation proof.
 - Hardened accepted readiness proof imports so only successful real-runtime governed text-turn evidence can become local Napoleon conversation proof context; unrelated bridge-operation successes are rejected and remain non-authorizing.
