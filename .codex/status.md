@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added visible Text UI labeling for unresolved read-only evolution proposal lifecycle states, so `under_review`, `stale`, `unavailable`, and `unknown` render as tracking-only status rather than approval, implementation, rollout, registry update, evolution application, memory write, agent dispatch, external send, or local application authority.
 - Added evaluator scenario coverage for unresolved read-only evolution proposal status states, requiring `under_review`, `stale`, `unavailable`, and `unknown` to remain tracking metadata only rather than approval, rollout, registry update, evolution application, memory write, agent dispatch, external send, or local application authority.
 - Added support for Napoleon-reported evolution proposal status states `under_review`, `stale`, `unavailable`, and `unknown`, preserving them as sanitized local lifecycle metadata while keeping approval capture, memory writes, agent dispatch, external sends, registry updates, evolution application, and local application blocked.
 - Carried the Napoleon contract-alignment summary fields into the app's built-in runtime-contract summary, governed route rendering, and sanitized readiness proof exports, deriving the proof count/blocking state from the same sanitized Napoleon-owned required-action packets.

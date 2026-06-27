@@ -5709,6 +5709,39 @@ test("shows persisted evolution proposal lifecycle records without an open packe
       JSON.stringify([
         {
           schemaVersion: "concierge.evolution-proposal-lifecycle.v1",
+          proposalId: "evo_stale_lifecycle",
+          sourceCapabilityReviewId: "capability_review_stale_lifecycle",
+          profileMode: "adult_owner",
+          capability: "proposal_status_tracking",
+          architectureArea: "observability",
+          draftedAt: "2026-06-24T00:00:00.000Z",
+          submittedAt: "2026-06-24T00:01:00.000Z",
+          updatedAt: "2026-06-24T00:03:00.000Z",
+          currentLifecycleState: "stale",
+          latestKnownOutcome: "Napoleon reports this proposal status is stale.",
+          intakeDecisionId: "decision_stale_lifecycle",
+          intakeAuditId: "audit_stale_lifecycle",
+          intakeTraceId: "trace_stale_lifecycle",
+          statusRefresh: {
+            available: true,
+            reason: "refreshed_via_governed_route",
+            nextStep: "Refresh through Napoleon-governed status evidence.",
+          },
+          nextRecommendedUserAction: "Treat status as unresolved until Napoleon returns fresh status evidence.",
+          privacyClass: "metadata_only",
+          boundary: {
+            proposalOnly: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            registryUpdatePerformed: false,
+            evolutionApplied: false,
+            appliedLocally: false,
+          },
+        },
+        {
+          schemaVersion: "concierge.evolution-proposal-lifecycle.v1",
           proposalId: "evo_persisted_lifecycle",
           sourceCapabilityReviewId: "capability_review_persisted_lifecycle",
           profileMode: "adult_owner",
@@ -5746,6 +5779,9 @@ test("shows persisted evolution proposal lifecycle records without an open packe
 
     const view = render(<App />);
     const lifecyclePanel = view.getByLabelText("Evolution proposal lifecycle");
+    assert.ok(lifecyclePanel.textContent?.includes("evo_stale_lifecycle"));
+    assert.ok(lifecyclePanel.textContent?.includes("stale"));
+    assert.ok(lifecyclePanel.textContent?.includes("unresolved tracking-only status"));
     assert.ok(lifecyclePanel.textContent?.includes("evo_persisted_lifecycle"));
     assert.ok(lifecyclePanel.textContent?.includes("accepted_for_review"));
     assert.ok(lifecyclePanel.textContent?.includes("decision_persisted_lifecycle"));
