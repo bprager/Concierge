@@ -2092,16 +2092,26 @@ export function deriveCapabilitySignalFromEvent(
     });
   }
 
-  if (eventName === "new_agent_proposal_review_drafted" || eventName.startsWith("new_agent_proposal_review_send_")) {
+  if (
+    eventName === "new_agent_proposal_review_drafted" ||
+    eventName.startsWith("new_agent_proposal_review_send_") ||
+    eventName.startsWith("new_agent_proposal_lifecycle_")
+  ) {
     const failed = eventName.endsWith("_failed");
     const governedBlock = failed && isGovernanceBlockedResponseFailure(attributes);
+    const lifecycleBlocked =
+      eventName === "new_agent_proposal_lifecycle_recorded" && attributes.lifecycleState === "failed_closed";
     return buildCapabilitySignal({
       ...base,
       topicLabel: "agent_registry",
-      intentLabel: "governed_new_agent_proposal_review",
-      capabilityLabel: "new_agent_proposal_review",
-      capabilityStatus: failed ? "blocked" : "working",
-      outcomeSignal: eventName === "new_agent_proposal_review_drafted" ? "rehearsed" : governedBlock ? "blocked" : failed ? "bridge_failed" : "review_required",
+      intentLabel: eventName.startsWith("new_agent_proposal_lifecycle_")
+        ? "track_new_agent_proposal_lifecycle"
+        : "governed_new_agent_proposal_review",
+      capabilityLabel: eventName.startsWith("new_agent_proposal_lifecycle_")
+        ? "new_agent_proposal_lifecycle_tracking"
+        : "new_agent_proposal_review",
+      capabilityStatus: failed || lifecycleBlocked ? "blocked" : "working",
+      outcomeSignal: eventName === "new_agent_proposal_review_drafted" ? "rehearsed" : governedBlock || lifecycleBlocked ? "blocked" : failed ? "bridge_failed" : "review_required",
       confidence: failed ? 0.86 : 0.82,
       architectureArea: governedBlock ? "governance_ux" : failed ? "bridge" : "agent_registry",
       suggestedNextStep: governedBlock ? "no_action" : failed ? "add_backlog_item" : "needs_human_review",

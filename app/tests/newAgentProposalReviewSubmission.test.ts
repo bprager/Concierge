@@ -5,7 +5,17 @@ import { defaultChiefOfStaffDescriptor } from "../src/contractBridge.js";
 import {
   buildNewAgentProposalReviewPacket,
   submitNewAgentProposalForNapoleonReview,
+  type NewAgentProposalReviewSubmissionResult,
 } from "../src/newAgentProposalReviewSubmission.js";
+import {
+  buildDraftNewAgentProposalLifecycleRecord,
+  exportNewAgentProposalLifecycleRecords,
+  loadNewAgentProposalLifecycleRecords,
+  persistNewAgentProposalLifecycleRecords,
+  updateNewAgentProposalLifecycleAfterFailure,
+  updateNewAgentProposalLifecycleAfterSubmission,
+  upsertNewAgentProposalLifecycleRecord,
+} from "../src/newAgentProposalLifecycle.js";
 
 type TestFetchInit = { method?: string; headers?: Record<string, string>; body?: string };
 
@@ -100,7 +110,11 @@ function buildCapabilityPacket(): ExportedCapabilityReviewPacket {
   };
 }
 
-function buildResponse(traceId: string, requestId: string, overrides: Record<string, unknown> = {}) {
+function buildResponse(
+  traceId: string,
+  requestId: string,
+  overrides: Record<string, unknown> = {},
+): NewAgentProposalReviewSubmissionResult {
   return {
     text: "Napoleon accepted the new-agent proposal for governed review.",
     governanceDecision: {
@@ -136,8 +150,10 @@ function buildResponse(traceId: string, requestId: string, overrides: Record<str
     approvalCaptured: false,
     agentDispatchPerformed: false,
     externalSendPerformed: false,
+    registryUpdatePerformed: false,
+    agentActivated: false,
     ...overrides,
-  };
+  } as NewAgentProposalReviewSubmissionResult;
 }
 
 test("new-agent proposal packet is proposal-only and does not request activation or registry update", () => {
@@ -155,6 +171,104 @@ test("new-agent proposal packet is proposal-only and does not request activation
   assert.equal(packet.boundary.registryUpdatePerformed, false);
   assert.deepEqual(packet.blockedEffects, blockedEffects);
   assert.ok(packet.sourceEvidence.includes("trace:trace_agent_gap"));
+});
+
+test("new-agent proposal lifecycle records draft, review return, and blocked failure without side effects", () => {
+  const packet = buildNewAgentProposalReviewPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_agent_lifecycle",
+  });
+  const draft = buildDraftNewAgentProposalLifecycleRecord(packet, {
+    draftedAt: "2026-06-24T00:00:00.000Z",
+  });
+
+  assert.equal(draft.schemaVersion, "concierge.new-agent-proposal-lifecycle.v1");
+  assert.equal(draft.currentLifecycleState, "drafted");
+  assert.equal(draft.latestKnownOutcome, "Drafted locally; not sent to Napoleon.");
+  assert.equal(draft.proposedAgentId, "napoleon.proposed.agent_registry_readiness_review");
+  assert.equal(draft.capability, "agent registry readiness review");
+  assert.equal(draft.boundary.proposalOnly, true);
+  assert.equal(draft.boundary.agentActivated, false);
+  assert.equal(draft.boundary.registryUpdatePerformed, false);
+  assert.equal(draft.boundary.approvalCaptured, false);
+  assert.equal(draft.boundary.memoryWritePerformed, false);
+  assert.equal(draft.boundary.agentDispatchPerformed, false);
+  assert.equal(draft.boundary.externalSendPerformed, false);
+
+  const reviewed = updateNewAgentProposalLifecycleAfterSubmission(
+    draft,
+    buildResponse("trace_agent_lifecycle_review", "cos_trace_agent_lifecycle_review"),
+    {
+      reviewedAt: "2026-06-24T00:01:00.000Z",
+    },
+  );
+  assert.equal(reviewed.currentLifecycleState, "review_returned");
+  assert.equal(reviewed.reviewDecisionId, "decision_trace_agent_lifecycle_review");
+  assert.equal(reviewed.reviewAuditId, "audit_trace_agent_lifecycle_review");
+  assert.equal(
+    reviewed.latestKnownOutcome,
+    "Napoleon returned governed review metadata; Concierge did not activate an agent or update a registry.",
+  );
+  assert.equal(reviewed.boundary.agentActivated, false);
+  assert.equal(reviewed.boundary.registryUpdatePerformed, false);
+
+  const blocked = updateNewAgentProposalLifecycleAfterFailure(draft, "private.example token raw text", {
+    updatedAt: "2026-06-24T00:02:00.000Z",
+  });
+  assert.equal(blocked.currentLifecycleState, "failed_closed");
+  assert.equal(blocked.latestKnownOutcome.includes("private.example"), false);
+  assert.equal(blocked.latestKnownOutcome.includes("token"), false);
+  assert.equal(blocked.boundary.agentActivated, false);
+  assert.equal(blocked.boundary.registryUpdatePerformed, false);
+});
+
+test("new-agent proposal lifecycle persistence filters unsafe local records", () => {
+  const packet = buildNewAgentProposalReviewPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_agent_lifecycle_storage",
+  });
+  const draft = buildDraftNewAgentProposalLifecycleRecord(packet, {
+    draftedAt: "2026-06-24T00:00:00.000Z",
+  });
+  const reviewed = updateNewAgentProposalLifecycleAfterSubmission(
+    draft,
+    buildResponse("trace_agent_lifecycle_storage_review", "cos_trace_agent_lifecycle_storage_review"),
+    {
+      reviewedAt: "2026-06-24T00:01:00.000Z",
+    },
+  );
+  const records = upsertNewAgentProposalLifecycleRecord([], reviewed);
+  const storage = new Map<string, string>();
+  const storageApi = {
+    getItem: (key: string) => storage.get(key) ?? null,
+    setItem: (key: string, value: string) => {
+      storage.set(key, value);
+    },
+    removeItem: (key: string) => {
+      storage.delete(key);
+    },
+  };
+
+  persistNewAgentProposalLifecycleRecords(storageApi, records);
+  const persisted = storage.get("concierge_new_agent_proposal_lifecycle");
+  assert.ok(persisted);
+  assert.equal(persisted.includes("private.example"), false);
+  assert.equal(persisted.includes("token"), false);
+
+  const unsafe = {
+    ...reviewed,
+    responseBody: "raw private.example token text",
+  };
+  storage.set("concierge_new_agent_proposal_lifecycle", JSON.stringify([unsafe, reviewed]));
+  const loaded = loadNewAgentProposalLifecycleRecords(storageApi);
+  assert.equal(loaded.length, 1);
+  assert.equal(loaded[0].proposalId, reviewed.proposalId);
+  const exported = exportNewAgentProposalLifecycleRecords(loaded, {
+    generatedAt: "2026-06-24T00:03:00.000Z",
+  });
+  assert.equal(exported.schemaVersion, "concierge.new-agent-proposal-lifecycle-export.v1");
+  assert.equal(exported.records[0].boundary.agentActivated, false);
+  assert.equal(exported.records[0].boundary.registryUpdatePerformed, false);
 });
 
 test("new-agent proposal review fails closed without endpoint and does not fetch", async () => {

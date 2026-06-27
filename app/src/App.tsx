@@ -139,6 +139,18 @@ import {
   type NewAgentProposalReviewSubmissionResult,
 } from "./newAgentProposalReviewSubmission.js";
 import {
+  buildDraftNewAgentProposalLifecycleRecord,
+  clearNewAgentProposalLifecycleRecords,
+  exportNewAgentProposalLifecycleRecords,
+  loadNewAgentProposalLifecycleRecords,
+  markNewAgentProposalLifecycleSentForReview,
+  persistNewAgentProposalLifecycleRecords,
+  updateNewAgentProposalLifecycleAfterFailure,
+  updateNewAgentProposalLifecycleAfterSubmission,
+  upsertNewAgentProposalLifecycleRecord,
+  type NewAgentProposalLifecycleRecord,
+} from "./newAgentProposalLifecycle.js";
+import {
   buildEvolutionProposalSubmissionPacket,
   submitEvolutionProposalToNapoleon,
   type EvolutionProposalSubmissionPacket,
@@ -1956,6 +1968,10 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [newAgentProposalSubmission, setNewAgentProposalSubmission] =
     useState<NewAgentProposalReviewSubmissionResult | null>(null);
   const [newAgentProposalFailure, setNewAgentProposalFailure] = useState<string | null>(null);
+  const [newAgentProposalLifecycleRecords, setNewAgentProposalLifecycleRecords] = useState(() =>
+    loadNewAgentProposalLifecycleRecords(browserStorage()),
+  );
+  const [newAgentProposalLifecycleExportJson, setNewAgentProposalLifecycleExportJson] = useState<string | null>(null);
   const [evolutionProposalSubmissionPacket, setEvolutionProposalSubmissionPacket] =
     useState<EvolutionProposalSubmissionPacket | null>(null);
   const [evolutionProposalSubmissionPacketExportJson, setEvolutionProposalSubmissionPacketExportJson] =
@@ -2085,6 +2101,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setNewAgentProposalPacketExportJson(null);
     setNewAgentProposalSubmission(null);
     setNewAgentProposalFailure(null);
+    setNewAgentProposalLifecycleRecords([]);
+    setNewAgentProposalLifecycleExportJson(null);
+    clearNewAgentProposalLifecycleRecords(browserStorage());
     setEvolutionProposalSubmissionPacket(null);
     setEvolutionProposalSubmissionPacketExportJson(null);
     setEvolutionProposalSubmission(null);
@@ -5449,6 +5468,55 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     });
   }
 
+  function rememberNewAgentProposalLifecycle(record: NewAgentProposalLifecycleRecord) {
+    setNewAgentProposalLifecycleRecords((current) => {
+      const next = upsertNewAgentProposalLifecycleRecord(current, record);
+      persistNewAgentProposalLifecycleRecords(browserStorage(), next);
+      return next;
+    });
+    setNewAgentProposalLifecycleExportJson(null);
+  }
+
+  function emitNewAgentProposalLifecycleRecorded(traceId: string, record: NewAgentProposalLifecycleRecord) {
+    emitEvent("new_agent_proposal_lifecycle_recorded", {
+      traceId,
+      conversationId,
+      proposalId: record.proposalId,
+      proposedAgentId: record.proposedAgentId,
+      lifecycleState: record.currentLifecycleState,
+      latestKnownOutcome: record.latestKnownOutcome,
+      decisionId: record.reviewDecisionId,
+      auditId: record.reviewAuditId,
+      privacyClass: record.privacyClass,
+      proposalOnly: record.boundary.proposalOnly,
+      approvalCaptured: record.boundary.approvalCaptured,
+      memoryWritePerformed: record.boundary.memoryWritePerformed,
+      agentDispatchPerformed: record.boundary.agentDispatchPerformed,
+      externalSendPerformed: record.boundary.externalSendPerformed,
+      registryUpdatePerformed: record.boundary.registryUpdatePerformed,
+      agentActivated: record.boundary.agentActivated,
+      appliedLocally: record.boundary.appliedLocally,
+    });
+  }
+
+  function exportNewAgentProposalLifecycle() {
+    const exported = exportNewAgentProposalLifecycleRecords(newAgentProposalLifecycleRecords);
+    setNewAgentProposalLifecycleExportJson(JSON.stringify(exported, null, 2));
+    emitEvent("new_agent_proposal_lifecycle_exported", {
+      traceId: newTraceId(),
+      conversationId,
+      recordCount: newAgentProposalLifecycleRecords.length,
+      proposalOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      registryUpdatePerformed: false,
+      agentActivated: false,
+      appliedLocally: false,
+    });
+  }
+
   function draftNewAgentProposalReviewPacket() {
     if (!capabilityReviewPacket) return;
     const traceId = newTraceId();
@@ -5460,6 +5528,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     setNewAgentProposalPacketExportJson(JSON.stringify(packet, null, 2));
     setNewAgentProposalSubmission(null);
     setNewAgentProposalFailure(null);
+    const lifecycleRecord = buildDraftNewAgentProposalLifecycleRecord(packet);
+    rememberNewAgentProposalLifecycle(lifecycleRecord);
     emitEvent("new_agent_proposal_review_drafted", {
       traceId,
       conversationId,
@@ -5476,12 +5546,19 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       externalSendPerformed: packet.boundary.externalSendPerformed,
       appliedLocally: packet.boundary.appliedLocally,
     });
+    emitNewAgentProposalLifecycleRecorded(traceId, lifecycleRecord);
     refreshCapabilityLedgerStatus();
   }
 
   async function submitNewAgentProposalReviewPacket() {
     if (!newAgentProposalPacket) return;
     const traceId = newTraceId();
+    const currentLifecycle =
+      newAgentProposalLifecycleRecords.find((record) => record.proposalId === newAgentProposalPacket.proposalId) ??
+      buildDraftNewAgentProposalLifecycleRecord(newAgentProposalPacket);
+    const sentLifecycle = markNewAgentProposalLifecycleSentForReview(currentLifecycle);
+    rememberNewAgentProposalLifecycle(sentLifecycle);
+    emitNewAgentProposalLifecycleRecorded(traceId, sentLifecycle);
     try {
       const result = await submitNewAgentProposalForNapoleonReview(newAgentProposalPacket, {
         conversationId,
@@ -5492,12 +5569,21 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       });
       setNewAgentProposalSubmission(result);
       setNewAgentProposalFailure(null);
+      const nextLifecycle = updateNewAgentProposalLifecycleAfterSubmission(sentLifecycle, result);
+      rememberNewAgentProposalLifecycle(nextLifecycle);
+      emitNewAgentProposalLifecycleRecorded(traceId, nextLifecycle);
       refreshCapabilityLedgerStatus();
     } catch (error) {
-      setNewAgentProposalFailure(
-        describeGovernedHandoffFailure(error, "New-agent proposal review handoff", "activate agents or update registries"),
+      const failure = describeGovernedHandoffFailure(
+        error,
+        "New-agent proposal review handoff",
+        "activate agents or update registries",
       );
+      setNewAgentProposalFailure(failure);
       setNewAgentProposalSubmission(null);
+      const nextLifecycle = updateNewAgentProposalLifecycleAfterFailure(sentLifecycle, failure);
+      rememberNewAgentProposalLifecycle(nextLifecycle);
+      emitNewAgentProposalLifecycleRecorded(traceId, nextLifecycle);
       refreshCapabilityLedgerStatus();
     }
   }
@@ -6194,6 +6280,41 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         </dl>
         {evolutionProposalLifecycleExportJson ? (
           <pre aria-label="Exported evolution proposal lifecycle">{evolutionProposalLifecycleExportJson}</pre>
+        ) : null}
+      </section>
+    );
+  }
+
+  function renderNewAgentProposalLifecyclePanel() {
+    if (!newAgentProposalLifecycleRecords.length) return null;
+
+    return (
+      <section className="new-agent-proposal-lifecycle" aria-label="New-agent proposal lifecycle">
+        <div className="review-heading">
+          <strong>New-agent proposal lifecycle</strong>
+          <span>
+            Local metadata-only tracking; Napoleon remains the authority for approval, registry updates, activation,
+            and rejection.
+          </span>
+        </div>
+        <button className="secondary" onClick={exportNewAgentProposalLifecycle}>
+          Export new-agent proposal lifecycle
+        </button>
+        <dl>
+          {newAgentProposalLifecycleRecords.slice(0, 3).map((record) => (
+            <div key={record.proposalId}>
+              <dt>{record.proposalId}</dt>
+              <dd>
+                {record.currentLifecycleState}: {record.latestKnownOutcome} Decision{" "}
+                {record.reviewDecisionId ?? "not returned"}; audit {record.reviewAuditId ?? "not returned"}; next step{" "}
+                {record.nextRecommendedUserAction}; boundary proposal-only, not activated, no registry update, no
+                approval capture, no memory write, no agent dispatch, no external send.
+              </dd>
+            </div>
+          ))}
+        </dl>
+        {newAgentProposalLifecycleExportJson ? (
+          <pre aria-label="Exported new-agent proposal lifecycle">{newAgentProposalLifecycleExportJson}</pre>
         ) : null}
       </section>
     );
@@ -8587,6 +8708,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         </>
       ) : null}
 
+      {renderNewAgentProposalLifecyclePanel()}
       {renderEvolutionProposalLifecyclePanel()}
 
       {lastDecision ? (

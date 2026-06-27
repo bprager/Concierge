@@ -4791,8 +4791,8 @@ test("sends new-agent proposal review packets through governed rendered controls
     await user.click(view.getByRole("button", { name: "Send new-agent proposal to Napoleon review" }));
 
     await view.findByText("Napoleon accepted the new-agent proposal for governed review.");
-    assert.ok(view.getByText(/decision_new_agent_rendered/));
-    assert.ok(view.getByText(/audit_new_agent_rendered/));
+    assert.ok(view.getAllByText(/decision_new_agent_rendered/).length >= 1);
+    assert.ok(view.getAllByText(/audit_new_agent_rendered/).length >= 1);
     assert.ok(view.getByText(/not activated; no registry update/));
     assert.equal(postedBodies.length, 1);
     assert.ok(requestedUrls.some((url) => url.endsWith("/chief-of-staff/reviews/new-agent-proposals")));
@@ -4809,6 +4809,39 @@ test("sends new-agent proposal review packets through governed rendered controls
     assert.equal(posted.includes("raw new agent send text"), false);
     assert.equal(posted.includes("private.example"), false);
     assert.equal(posted.includes("token"), false);
+
+    const lifecyclePanel = view.getByLabelText("New-agent proposal lifecycle");
+    assert.ok(lifecyclePanel.textContent?.includes("review_returned"));
+    assert.ok(lifecyclePanel.textContent?.includes("decision_new_agent_rendered"));
+    assert.ok(lifecyclePanel.textContent?.includes("audit_new_agent_rendered"));
+    assert.ok(lifecyclePanel.textContent?.includes("proposal-only"));
+    assert.ok(lifecyclePanel.textContent?.includes("not activated"));
+    assert.ok(lifecyclePanel.textContent?.includes("no registry update"));
+    await user.click(view.getByRole("button", { name: "Export new-agent proposal lifecycle" }));
+    const lifecycleExport = view.getByLabelText("Exported new-agent proposal lifecycle");
+    assert.ok(lifecycleExport.textContent?.includes('"schemaVersion": "concierge.new-agent-proposal-lifecycle-export.v1"'));
+    assert.ok(lifecycleExport.textContent?.includes('"currentLifecycleState": "review_returned"'));
+    assert.ok(lifecycleExport.textContent?.includes('"decision_new_agent_rendered"'));
+    assert.ok(lifecycleExport.textContent?.includes('"audit_new_agent_rendered"'));
+    assert.ok(lifecycleExport.textContent?.includes('"agentActivated": false'));
+    assert.ok(lifecycleExport.textContent?.includes('"registryUpdatePerformed": false'));
+    assert.equal(lifecycleExport.textContent?.includes("raw new agent send text"), false);
+    assert.equal(lifecycleExport.textContent?.includes("private.example"), false);
+    assert.equal(lifecycleExport.textContent?.includes("token"), false);
+
+    const lifecycleStorageBeforeProfileChange = localStorage.getItem("concierge_new_agent_proposal_lifecycle");
+    assert.ok(lifecycleStorageBeforeProfileChange);
+    assert.ok(lifecycleStorageBeforeProfileChange.includes("review_returned"));
+    assert.ok(lifecycleStorageBeforeProfileChange.includes("decision_new_agent_rendered"));
+    assert.ok(lifecycleStorageBeforeProfileChange.includes("audit_new_agent_rendered"));
+    assert.equal(lifecycleStorageBeforeProfileChange.includes("raw new agent send text"), false);
+    assert.equal(lifecycleStorageBeforeProfileChange.includes("private.example"), false);
+    assert.equal(lifecycleStorageBeforeProfileChange.includes("token"), false);
+    fireEvent.change(view.getByLabelText("User profile"), { target: { value: "child_protected" } });
+    assert.equal(localStorage.getItem("concierge_new_agent_proposal_lifecycle"), null);
+    assert.equal(view.queryByLabelText("Exported new-agent proposal review packet"), null);
+    assert.equal(view.queryByLabelText("New-agent proposal lifecycle"), null);
+    assert.equal(view.queryByLabelText("Exported new-agent proposal lifecycle"), null);
   } finally {
     globalThis.fetch = originalFetch;
     console.info = originalInfo;

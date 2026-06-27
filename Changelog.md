@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local new-agent proposal lifecycle tracking in the Text UI, with sanitized draft, sent-for-review, review-returned, and fail-closed records that stay proposal-only and keep agent activation, registry update, approval capture, memory write, agent dispatch, external send, and local application blocked.
 - Added rendered Text Concierge coverage for successful new-agent proposal review submission, proving the governed handoff body carries path, operation, and request-kind metadata while preserving proposal-only no-activation and no-registry-update boundaries.
 - Added rendered Text Concierge coverage for new-agent proposal review packet drafts, proving the visible export names the governed Napoleon review target, stays proposal-only and sanitized, shows agent activation and registry update as blocked, and does not contact Napoleon when no endpoint is configured.
 - Added local Capability Intelligence support for "What capabilities are improving?", comparing recent working metadata against prior missing, blocked, or degraded evidence without granting authority.
