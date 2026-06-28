@@ -97,6 +97,14 @@ export function formatNapoleonRequiredActionPriority(
   return `Highest priority Napoleon fix: ${priority.id}.${target}${requestKind}${operation}${advertiseUsing} ${priority.reason}`;
 }
 
+export function formatNapoleonRequiredActionImplementationStep(
+  priority: NapoleonRequiredActionPriority | null,
+): string | null {
+  if (!priority?.targetPath || !priority.requestKind) return null;
+  const advertiseUsing = priority.advertiseUsing.length ? ` and advertise it via ${priority.advertiseUsing.join(", ")}` : "";
+  return `Implementation next step: expose ${priority.targetPath} for ${priority.requestKind}${advertiseUsing}.`;
+}
+
 export function formatMinimizedNapoleonRequiredActionAnswer(input: {
   actionCount: number;
   status: string;

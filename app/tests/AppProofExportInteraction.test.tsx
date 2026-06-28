@@ -10142,6 +10142,11 @@ test("answers Napoleon contract-alignment required actions without imported eval
       const renderedText = document.body.textContent ?? "";
       assert.ok(renderedText.includes("Current Napoleon required actions from local contract-alignment evidence (1):"));
       assert.ok(renderedText.includes("Highest priority Napoleon fix: expose_evolution_proposal_status_runtime_target"));
+      assert.ok(
+        renderedText.includes(
+          "Implementation next step: expose /evolution/proposals/{proposal_id}/status for evolution_proposal_status_handoff and advertise it via supportedHandoffs, required_for.",
+        ),
+      );
       assert.ok(renderedText.includes("Concierge cannot refresh proposal status against live Napoleon"));
       assert.ok(renderedText.includes("expose_evolution_proposal_status_runtime_target"));
       assert.ok(renderedText.includes("/evolution/proposals/{proposal_id}/status"));

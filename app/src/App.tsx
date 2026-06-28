@@ -134,6 +134,7 @@ import {
   type ObservabilityTraceHandoffResult,
 } from "./observabilityTraceHandoff.js";
 import {
+  formatNapoleonRequiredActionImplementationStep,
   formatMinimizedNapoleonRequiredActionAnswer,
   formatNapoleonRequiredActionPriority,
   prioritizeNapoleonRequiredAction,
@@ -1938,6 +1939,8 @@ function formatNapoleonRequiredActionAnswer(
         externalSendPerformed: false,
         appliedLocally: false,
       }));
+      const priority = prioritizeNapoleonRequiredAction(sanitizedContractActions);
+      const implementationStep = formatNapoleonRequiredActionImplementationStep(priority);
       const rows = contractActions
         .map((action) => {
           const required = action.blockingLivePromotion
@@ -1950,7 +1953,8 @@ function formatNapoleonRequiredActionAnswer(
       return {
         content: [
           `Current Napoleon required actions from local contract-alignment evidence (${contractActions.length}):`,
-          formatNapoleonRequiredActionPriority(prioritizeNapoleonRequiredAction(sanitizedContractActions)),
+          formatNapoleonRequiredActionPriority(priority),
+          ...(implementationStep ? [implementationStep] : []),
           rows,
           `Contract alignment status: ${RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status}. Runtime validation source: contract_alignment.`,
           `Profile scope: ${profileMode}. This is local contract metadata only; Concierge did not contact Napoleon for this answer, and this is not Napoleon approval, runtime validation, free-form paths permission, memory permission, agent dispatch, external send, or local application.`,
@@ -2023,11 +2027,14 @@ function formatNapoleonRequiredActionAnswer(
       return `- ${action.id}.${target}${requestKind}${required}`;
     })
     .join("\n");
+  const priority = prioritizeNapoleonRequiredAction(actions);
+  const implementationStep = formatNapoleonRequiredActionImplementationStep(priority);
 
   return {
     content: [
       `Current Napoleon required actions from sanitized validation evidence (${actions.length}):`,
-      formatNapoleonRequiredActionPriority(prioritizeNapoleonRequiredAction(actions)),
+      formatNapoleonRequiredActionPriority(priority),
+      ...(implementationStep ? [implementationStep] : []),
       rows,
       `Evaluator status: ${evaluatorImport.validation.status}. Runtime validation source: ${runtimeValidationSource}.`,
       `Profile scope: ${profileMode}. This is local review evidence only; Concierge did not contact Napoleon for this answer, approve, apply, write memory, dispatch agents, or send externally.`,
