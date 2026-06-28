@@ -290,11 +290,13 @@ function failClosed(
   status?: number,
   descriptorFailureReason?: DescriptorFailClosedReason,
   governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
+  failureMetadata: { profileMode?: NapoleonProfileMode } = {},
 ): never {
+  const profileMode = failureMetadata.profileMode ?? packet.profileMode;
   emitTraceHandoffEvent(dependencies, "observability_trace_handoff_failed", {
     traceId: packet.traceEvidence.traceId,
     requestId: packet.requestId,
-    profileMode: packet.profileMode,
+    profileMode,
     reason,
     status,
     descriptorFailureReason,
@@ -307,7 +309,7 @@ function failClosed(
     bridgeTargetRequestKind: "observability_trace_handoff",
   });
   throw new NapoleonBridgeError(reason, packet.traceEvidence.traceId, packet.requestId, status, packet.blockedEffects, {
-    profileMode: packet.profileMode,
+    profileMode,
     descriptorFailureReason,
     decisionId: governanceReferences?.decisionId,
     auditId: governanceReferences?.auditId,
@@ -327,7 +329,13 @@ export async function submitObservabilityTraceHandoff(
       descriptor: null,
     },
   );
+  const activeProfileMode = mapProfileToNapoleonMode(dependencies.profile ?? "adult_owner");
 
+  if (packet.profileMode !== activeProfileMode) {
+    failClosed(dependencies, "governance_no_go", packet, undefined, undefined, undefined, {
+      profileMode: activeProfileMode,
+    });
+  }
   if (dependencies.rehearsalMode) {
     failClosed(dependencies, "governance_no_go", packet);
   }

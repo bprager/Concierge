@@ -166,6 +166,40 @@ test("observability trace handoff fails closed before fetch when descriptor does
   assert.equal(fetchCalled, false);
 });
 
+test("observability trace handoff reports active profile when packet profile is stale", async () => {
+  const packet = buildObservabilityTraceHandoffPacket({ traceId: "trace_observed" }, "adult_owner");
+  const events: TelemetryPayload[] = [];
+  let fetchCalled = false;
+
+  await assert.rejects(
+    () =>
+      submitObservabilityTraceHandoff(packet, {
+        profile: "child_protected",
+        getEndpoint: () => "https://napoleon.example",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return {
+            ok: true,
+            status: 200,
+            json: async () => successfulTraceReviewResponse(),
+          };
+        },
+      }),
+    (error) =>
+      error instanceof NapoleonBridgeError &&
+      error.reason === "governance_no_go" &&
+      error.profileMode === "child_protected_user",
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "observability_trace_handoff_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, packet.blockedEffects);
+});
+
 test("observability trace handoff rejects responses that claim trace append authority", async () => {
   const packet = buildObservabilityTraceHandoffPacket({ traceId: "trace_observed" });
 
