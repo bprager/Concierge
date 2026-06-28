@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added count-only protected-block evidence telemetry to local Capability Intelligence snapshot exports, so the UI can report how many protected governance/safety outcomes were included without exposing no-go reasons, raw prompts, endpoints, tokens, approval, memory writes, agent dispatch, external sends, or local application.
 - Added correctly blocked governance and safety outcomes to the local Capability Intelligence snapshot export and snapshot-boundary answer, keeping protected blocks visible as sanitized local evidence without turning them into implementation recommendations or contacting Napoleon.
 - Added local Capability Intelligence answers for "What conversations are correctly blocked?", showing governed safety blocks such as Napoleon no-go handling as protected outcomes rather than implementation recommendations, without contacting Napoleon or exposing raw prompts, endpoints, tokens, approval, memory writes, agent dispatch, external sends, or local application.
 - Added visible `advertiseUsing` guidance to built-in contract-alignment Napoleon required-action answers and readiness panels, so operator-facing UI now names both the missing handoff target and accepted descriptor advertising forms while telemetry remains count-only and no approval, memory write, agent dispatch, external send, or local application boundary changes.

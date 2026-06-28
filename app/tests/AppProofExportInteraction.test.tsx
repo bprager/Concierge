@@ -3965,6 +3965,24 @@ test("capability ledger export and clear telemetry stays proposal-only without a
       turnId: "turn_snapshot_export_ui",
       profile: "adult_owner",
     });
+    emitEvent("bridge_request_failed", {
+      traceId: "trace_snapshot_export_ui_governance_block",
+      conversationId: "conv_snapshot_export_ui",
+      turnId: "turn_snapshot_export_ui_governance_block",
+      profileMode: "adult_owner",
+      reason: "governance_no_go",
+      governanceOutcome: "no_go",
+      blockedEffects: ["memory_write", "external_send"],
+      bridgeTargetOperation: "text_turn",
+      bridgeTargetRequestKind: "text_turn",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      rawPrompt: "unsafe snapshot export prompt",
+      endpoint: "https://napoleon.example.test",
+      bearerToken: "secret-token",
+    });
 
     const view = render(<App />);
 
@@ -3975,7 +3993,10 @@ test("capability ledger export and clear telemetry stays proposal-only without a
     const parsedSnapshot = JSON.parse(snapshot.textContent ?? "{}") as {
       schemaVersion?: string;
       evidenceCount?: number;
-      sections?: { missingOrBlocked?: { rows?: Array<{ label?: string }> } };
+      sections?: {
+        missingOrBlocked?: { rows?: Array<{ label?: string }> };
+        protectedBlocked?: { rows?: Array<{ label?: string; displayLabel?: string; status?: string }> };
+      };
       boundary?: {
         approvalCaptured?: boolean;
         memoryWriteAllowed?: boolean;
@@ -3984,8 +4005,11 @@ test("capability ledger export and clear telemetry stays proposal-only without a
       };
     };
     assert.equal(parsedSnapshot.schemaVersion, "concierge.capability-trend-snapshot.export.v1");
-    assert.equal(parsedSnapshot.evidenceCount, 1);
+    assert.equal(parsedSnapshot.evidenceCount, 2);
     assert.equal(parsedSnapshot.sections?.missingOrBlocked?.rows?.[0]?.label, "bridge_failure_handling");
+    assert.equal(parsedSnapshot.sections?.protectedBlocked?.rows?.[0]?.label, "governed_bridge_no_go_handling");
+    assert.equal(parsedSnapshot.sections?.protectedBlocked?.rows?.[0]?.displayLabel, "Napoleon no-go handling");
+    assert.equal(parsedSnapshot.sections?.protectedBlocked?.rows?.[0]?.status, "blocked");
     assert.equal(parsedSnapshot.boundary?.approvalCaptured, false);
     assert.equal(parsedSnapshot.boundary?.memoryWriteAllowed, false);
     assert.equal(parsedSnapshot.boundary?.agentDispatchAllowed, false);
@@ -4007,6 +4031,11 @@ test("capability ledger export and clear telemetry stays proposal-only without a
     assert.equal(snapshotEvent?.attributes.memoryWritePerformed, false);
     assert.equal(snapshotEvent?.attributes.agentDispatchPerformed, false);
     assert.equal(snapshotEvent?.attributes.externalSendPerformed, false);
+    assert.equal(snapshotEvent?.attributes.protectedBlockedEvidenceCount, 1);
+    assert.equal(JSON.stringify(snapshotEvent).includes("governance_no_go"), false);
+    assert.equal(JSON.stringify(snapshotEvent).includes("unsafe snapshot export prompt"), false);
+    assert.equal(JSON.stringify(snapshotEvent).includes("napoleon.example.test"), false);
+    assert.equal(JSON.stringify(snapshotEvent).includes("secret-token"), false);
     assert.equal(clearEvent?.attributes.approvalCaptured, false);
     assert.equal(clearEvent?.attributes.memoryWritePerformed, false);
     assert.equal(clearEvent?.attributes.agentDispatchPerformed, false);

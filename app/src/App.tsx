@@ -5138,6 +5138,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       conversationId,
       evidenceCount: snapshot.evidenceCount,
       profileMode: snapshot.profileMode,
+      protectedBlockedEvidenceCount: snapshot.sections.protectedBlocked.evidenceCount,
       storage: "local_browser",
       approvalCaptured: false,
       memoryWritePerformed: false,

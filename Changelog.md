@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added count-only protected-block evidence telemetry to local Capability Intelligence snapshot exports.
 - Added correctly blocked governance and safety outcomes to the local Capability Intelligence snapshot export and snapshot-boundary answer.
 - Added local Capability Intelligence answers for correctly blocked governance conversations, so users can inspect protected safety outcomes separately from missing implementation work without contacting Napoleon.
 - Added visible `advertiseUsing` guidance to built-in Napoleon contract-alignment required-action answers and readiness panels, keeping the UI aligned with focused exports while telemetry remains count-only.
