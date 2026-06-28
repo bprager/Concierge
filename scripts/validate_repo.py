@@ -643,6 +643,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bdocument\s*\[\s*['\"]cook['\"]\s*\+\s*['\"]ie['\"]\s*\]\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]\s*\.\s*cookie\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]\s*\[\s*['\"]cookie['\"]\s*\]\s*="),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]\s*\[\s*['\"]cook['\"]\s*\+\s*['\"]ie['\"]\s*\]\s*="
+    ),
     re.compile(r"\b(?:history|window\.history)\.(?:pushState|replaceState)\s*\("),
     re.compile(r"\b(?:history|window\.history)\.(?:pushState|replaceState)\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]history['\"]\s*\]\s*\[\s*['\"](?:pushState|replaceState)['\"]\s*\]\s*\("),
@@ -656,6 +659,7 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(r"\b(?:globalThis|window)\.name\s*="),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]name['\"]\s*\]\s*="),
+    re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]na['\"]\s*\+\s*['\"]me['\"]\s*\]\s*="),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"](?:local|session)['\"]\s*\+\s*['\"]Storage['\"]\s*\]\s*\[\s*(?:['\"](?:get|set|remove)['\"]\s*\+\s*['\"]Item['\"]|['\"]clear['\"])\s*\]\s*(?:\.\s*(?:call|apply))?\s*\("
     ),

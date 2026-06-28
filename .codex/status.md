@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened repository authority-boundary validation against split-string `window.name` and global document cookie writes, so hidden browser-retention aliases cannot store prompt, proof, token, transcript, or response metadata outside bounded local storage controls.
 - Added the canonical count-only selected-agent selection-reason telemetry attribute to Napoleon delegation-answer events while preserving the existing compatibility field and keeping returned delegation text local-only.
 - Aligned the Napoleon delegation-answer observability table with the count-only selected-agent selection-reason and contribution telemetry emitted by the UI, keeping returned delegation text local-only.
 - Added count-only selected-agent contribution telemetry to sanitized Napoleon response proof exports, so returned delegated findings can be audited by count without copying contribution text into telemetry or changing approval, memory, dispatch, external-send, or local-application boundaries.

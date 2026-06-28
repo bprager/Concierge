@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened authority-boundary validation against split-string `window.name` and global document cookie writes, closing hidden browser-retention aliases for prompt, proof, token, or transcript data.
 - Added the canonical `selectedAgentSelectionReasonCount` attribute to Napoleon delegation-answer telemetry while preserving the existing count-only selected-agent reason field for compatibility.
 - Aligned Napoleon delegation-answer observability documentation with the count-only selected-agent selection-reason and contribution telemetry emitted by the UI.
 - Added count-only selected-agent contribution telemetry to sanitized Napoleon response proof exports, keeping returned delegated findings auditable without copying contribution text into telemetry.
