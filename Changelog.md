@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added rendered Text Concierge coverage for "What conversations are most common?", proving the common-conversation answer stays local, sanitized, profile-scoped, and side-effect-free without contacting Napoleon.
 - Added rendered Text Concierge coverage for "What capabilities are most common?", proving the common-capability answer stays local, sanitized, and side-effect-free without contacting Napoleon.
 - Added local Capability Intelligence answers for "What capabilities are most common?", ranking sanitized local capability labels separately from conversation topics without contacting Napoleon or granting authority.
 - Added rendered Text Concierge coverage for unresolved evolution proposal status questions, proving stale local lifecycle metadata is answered as tracking-only without contacting Napoleon or applying side effects.
