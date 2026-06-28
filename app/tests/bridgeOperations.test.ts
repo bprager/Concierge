@@ -776,6 +776,10 @@ test("describes runtime contract alignment without treating path drift as author
     RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions[0]?.path,
     "/evolution/proposals/{proposal_id}/status",
   );
+  assert.deepEqual(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions[0]?.advertiseUsing, [
+    "supportedHandoffs",
+    "required_for",
+  ]);
   assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.summary, /Runtime mapping gap/);
   assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.detail, /local \/v1\/concierge/);
   assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.boundary, /not Napoleon approval/);

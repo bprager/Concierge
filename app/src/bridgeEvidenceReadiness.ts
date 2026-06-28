@@ -292,6 +292,7 @@ function runtimeContractRequiredActions(input: BridgeReadinessProofInput): Napol
     targetPath: action.path,
     requestKind: action.requestKind,
     operationId: action.operationId,
+    advertiseUsing: [...action.advertiseUsing],
     blockingLivePromotion: action.blockingLivePromotion,
     requiredAction: action.blockingLivePromotion
       ? `Napoleon must expose and advertise ${action.operationId} at ${action.path} before Concierge can refresh this capability against live Napoleon.`

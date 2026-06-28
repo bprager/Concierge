@@ -49,6 +49,7 @@ export interface RuntimeContractAlignmentSummary {
     operationId: NapoleonReviewOperationId;
     path: string;
     requestKind: NapoleonReviewOperation["requestKind"];
+    advertiseUsing: readonly string[];
     blockingLivePromotion: boolean;
   }[];
   boundary: string;
@@ -86,6 +87,7 @@ export const RUNTIME_CONTRACT_ALIGNMENT_SUMMARY: RuntimeContractAlignmentSummary
       operationId: "evolution_proposal_status",
       path: "/evolution/proposals/{proposal_id}/status",
       requestKind: "evolution_proposal_status_handoff",
+      advertiseUsing: ["supportedHandoffs", "required_for"],
       blockingLivePromotion: true,
     },
   ],

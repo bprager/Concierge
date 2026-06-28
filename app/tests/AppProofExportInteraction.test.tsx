@@ -10033,7 +10033,24 @@ test("answers Napoleon contract-alignment required actions without imported eval
       source?: string;
       runtimeValidationSource?: string;
       requiredActionCount?: number;
-      highestPriorityAction?: { id?: string; targetPath?: string; requestKind?: string; blockingLivePromotion?: boolean };
+      highestPriorityAction?: {
+        id?: string;
+        handoffName?: string;
+        targetPath?: string;
+        requestKind?: string;
+        operationId?: string;
+        advertiseUsing?: string[];
+        blockingLivePromotion?: boolean;
+      };
+      missingHandoffTarget?: {
+        id?: string;
+        handoffName?: string;
+        targetPath?: string;
+        requestKind?: string;
+        operationId?: string;
+        advertiseUsing?: string[];
+        blockingLivePromotion?: boolean;
+      };
       napoleonRequiredActions?: Array<{ id?: string; targetPath?: string; requestKind?: string }>;
       boundary?: Record<string, boolean>;
     };
@@ -10042,9 +10059,19 @@ test("answers Napoleon contract-alignment required actions without imported eval
     assert.equal(exported.runtimeValidationSource, "contract_alignment");
     assert.equal(exported.requiredActionCount, 1);
     assert.equal(exported.highestPriorityAction?.id, "expose_evolution_proposal_status_runtime_target");
+    assert.equal(exported.highestPriorityAction?.handoffName, "evolution_proposal_status");
     assert.equal(exported.highestPriorityAction?.targetPath, "/evolution/proposals/{proposal_id}/status");
     assert.equal(exported.highestPriorityAction?.requestKind, "evolution_proposal_status_handoff");
+    assert.equal(exported.highestPriorityAction?.operationId, "evolution_proposal_status");
+    assert.deepEqual(exported.highestPriorityAction?.advertiseUsing, ["supportedHandoffs", "required_for"]);
     assert.equal(exported.highestPriorityAction?.blockingLivePromotion, true);
+    assert.equal(exported.missingHandoffTarget?.id, "expose_evolution_proposal_status_runtime_target");
+    assert.equal(exported.missingHandoffTarget?.handoffName, "evolution_proposal_status");
+    assert.equal(exported.missingHandoffTarget?.targetPath, "/evolution/proposals/{proposal_id}/status");
+    assert.equal(exported.missingHandoffTarget?.requestKind, "evolution_proposal_status_handoff");
+    assert.equal(exported.missingHandoffTarget?.operationId, "evolution_proposal_status");
+    assert.deepEqual(exported.missingHandoffTarget?.advertiseUsing, ["supportedHandoffs", "required_for"]);
+    assert.equal(exported.missingHandoffTarget?.blockingLivePromotion, true);
     assert.equal(exported.napoleonRequiredActions?.[0]?.id, "expose_evolution_proposal_status_runtime_target");
     assert.equal(exported.napoleonRequiredActions?.[0]?.targetPath, "/evolution/proposals/{proposal_id}/status");
     assert.equal(exported.napoleonRequiredActions?.[0]?.requestKind, "evolution_proposal_status_handoff");

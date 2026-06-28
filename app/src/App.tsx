@@ -5419,6 +5419,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         targetPath: action.path,
         requestKind: action.requestKind,
         operationId: action.operationId,
+        advertiseUsing: [...action.advertiseUsing],
         requiredAction: action.blockingLivePromotion
           ? `Napoleon must expose and advertise ${action.operationId} at ${action.path} before Concierge can refresh this capability against live Napoleon.`
           : `Napoleon should expose and advertise ${action.operationId} at ${action.path}.`,

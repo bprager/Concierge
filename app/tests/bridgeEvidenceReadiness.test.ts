@@ -516,6 +516,7 @@ test("exports built-in runtime contract required actions in readiness proof", ()
           targetPath: string;
           requestKind: string;
           operationId: string;
+          advertiseUsing?: string[];
           approvalCaptured: boolean;
           memoryWritePerformed: boolean;
           agentDispatchPerformed: boolean;
@@ -537,6 +538,10 @@ test("exports built-in runtime contract required actions in readiness proof", ()
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.targetPath, requiredAction.path);
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.requestKind, requiredAction.requestKind);
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.operationId, requiredAction.operationId);
+  assert.deepEqual(
+    proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.advertiseUsing,
+    ["supportedHandoffs", "required_for"],
+  );
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.approvalCaptured, false);
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.memoryWritePerformed, false);
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.agentDispatchPerformed, false);
