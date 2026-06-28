@@ -85,6 +85,18 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
+function mergeBlockedEffects(returnedEffects: string[], requiredEffects: readonly string[]): string[] {
+  const merged = [...returnedEffects];
+  const seen = new Set(merged.map((effect) => effect.trim()).filter(Boolean));
+  for (const effect of requiredEffects) {
+    if (!seen.has(effect)) {
+      merged.push(effect);
+      seen.add(effect);
+    }
+  }
+  return merged;
+}
+
 function isGovernanceDecision(value: unknown): value is GovernanceDecision {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<GovernanceDecision>;
@@ -187,9 +199,10 @@ function failClosed(
   descriptorFailureReason?: DescriptorFailClosedReason,
   governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
   targetMetadata?: EvolutionProposalStatusTargetMetadata,
-  failureMetadata: { profileMode?: NapoleonProfileMode } = {},
+  failureMetadata: { profileMode?: NapoleonProfileMode; blockedEffects?: string[] } = {},
 ): never {
   const profileMode = failureMetadata.profileMode ?? record.profileMode;
+  const blockedEffects = failureMetadata.blockedEffects ?? [...EVOLUTION_PROPOSAL_STATUS_BLOCKED_EFFECTS];
   emitEvolutionProposalStatusEvent(dependencies, "evolution_proposal_status_refresh_failed", {
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,
@@ -202,10 +215,10 @@ function failClosed(
     decisionId: governanceReferences?.decisionId,
     auditId: governanceReferences?.auditId,
     governanceOutcome: governanceReferences?.governanceOutcome,
-    blockedEffects: [...EVOLUTION_PROPOSAL_STATUS_BLOCKED_EFFECTS],
+    blockedEffects,
     ...targetMetadata,
   });
-  throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, [...EVOLUTION_PROPOSAL_STATUS_BLOCKED_EFFECTS], {
+  throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, blockedEffects, {
     profileMode,
     descriptorFailureReason,
     decisionId: governanceReferences?.decisionId,
@@ -338,6 +351,12 @@ export async function refreshEvolutionProposalStatusFromNapoleon(
         governanceOutcome: payload.governanceDecision.outcome,
       },
       targetMetadata,
+      {
+        blockedEffects: mergeBlockedEffects(
+          payload.governanceDecision.blocked_effects,
+          EVOLUTION_PROPOSAL_STATUS_BLOCKED_EFFECTS,
+        ),
+      },
     );
   }
 

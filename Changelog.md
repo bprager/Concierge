@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Hardened observability trace handoff submission so stale trace packet profile-scope mismatches fail closed before any bridge request and report the active profile scope in errors and telemetry.
+- Hardened read-only evolution proposal status refresh `deny` and `no_go` responses so sparse returned blocked-effect lists preserve Napoleon's returned effects and are supplemented with the local status safety floor in bridge errors and telemetry.
 - Hardened evolution proposal submission and new-agent proposal review `deny` and `no_go` handoff responses so sparse returned blocked-effect lists preserve Napoleon's returned effects and are supplemented with the local proposal safety floors in bridge errors and telemetry.
 - Hardened evolution proposal submission and new-agent proposal review so stale proposal packet profile-scope mismatches fail closed before any bridge request and report the active profile scope in errors and telemetry.
 - Hardened read-only evolution proposal status refresh so lifecycle profile-scope mismatches fail closed before any bridge request and report the active profile scope in errors and telemetry.
