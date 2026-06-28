@@ -5353,6 +5353,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       responseAuditId: proofDetail("Audit"),
       selectedAgentCount: proofArrayCount("selectedAgents"),
       selectedAgentSelectionReasonCount: proofArrayCount("selectedAgentReasons"),
+      selectedAgentContributionCount: proofArrayCount("selectedAgentContributions"),
       allowedEffectCount: proofArrayCount("allowedEffects"),
       blockedEffectCount: proofArrayCount("blockedEffects"),
       targetCapabilityReturned: targetCapabilityProof !== "unavailable" && targetCapabilityProof !== "not returned",

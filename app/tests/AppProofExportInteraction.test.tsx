@@ -3108,6 +3108,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
       .at(-1);
     assert.equal(napoleonProofEvent?.attributes.selectedAgentCount, 1);
     assert.equal(napoleonProofEvent?.attributes.selectedAgentSelectionReasonCount, 1);
+    assert.equal(napoleonProofEvent?.attributes.selectedAgentContributionCount, 1);
     assert.equal(napoleonProofEvent?.attributes.proofAlignment, "same returned trace/audit as Napoleon response proof");
     assert.equal(napoleonProofEvent?.attributes.allowedEffectCount, 1);
     assert.equal(napoleonProofEvent?.attributes.blockedEffectCount, 4);
