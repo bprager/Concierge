@@ -149,6 +149,18 @@ const TAXONOMY_REVIEW_BLOCKED_EFFECTS = [
   "runtime_authority",
 ];
 
+function mergeTaxonomyReviewBlockedEffects(returnedEffects: string[]): string[] {
+  const merged = [...returnedEffects];
+  const observed = new Set(merged.map((effect) => effect.trim().toLocaleLowerCase()).filter(Boolean));
+  for (const effect of TAXONOMY_REVIEW_BLOCKED_EFFECTS) {
+    if (!observed.has(effect)) {
+      merged.push(effect);
+      observed.add(effect);
+    }
+  }
+  return merged;
+}
+
 export function createCapabilityTaxonomy(entries: TaxonomyEntry[] = []): CapabilityTaxonomy {
   return { entries: entries.map((entry) => ({ ...entry })) };
 }
@@ -899,7 +911,7 @@ export async function submitChiefOfStaffTaxonomyReviewDraft(
       payload.governanceDecision.request_id,
       profileMode,
       response.status,
-      payload.governanceDecision.blocked_effects,
+      mergeTaxonomyReviewBlockedEffects(payload.governanceDecision.blocked_effects),
       undefined,
       {
         decisionId: payload.governanceDecision.decision_id,
