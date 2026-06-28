@@ -283,6 +283,10 @@ function hasForbiddenTraceResponseClaim(payload: Record<string, unknown>): boole
   );
 }
 
+function mergeBlockedEffects(returnedEffects: string[], requiredEffects: readonly string[]): string[] {
+  return Array.from(new Set([...returnedEffects, ...requiredEffects]));
+}
+
 function failClosed(
   dependencies: ObservabilityTraceHandoffDependencies,
   reason: ConstructorParameters<typeof NapoleonBridgeError>[0],
@@ -290,9 +294,10 @@ function failClosed(
   status?: number,
   descriptorFailureReason?: DescriptorFailClosedReason,
   governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
-  failureMetadata: { profileMode?: NapoleonProfileMode } = {},
+  failureMetadata: { profileMode?: NapoleonProfileMode; blockedEffects?: string[] } = {},
 ): never {
   const profileMode = failureMetadata.profileMode ?? packet.profileMode;
+  const blockedEffects = failureMetadata.blockedEffects ?? packet.blockedEffects;
   emitTraceHandoffEvent(dependencies, "observability_trace_handoff_failed", {
     traceId: packet.traceEvidence.traceId,
     requestId: packet.requestId,
@@ -303,12 +308,12 @@ function failClosed(
     decisionId: governanceReferences?.decisionId,
     auditId: governanceReferences?.auditId,
     governanceOutcome: governanceReferences?.governanceOutcome,
-    blockedEffects: packet.blockedEffects,
+    blockedEffects,
     bridgeTargetPath: "/observability/traces",
     bridgeTargetOperation: "observability_trace",
     bridgeTargetRequestKind: "observability_trace_handoff",
   });
-  throw new NapoleonBridgeError(reason, packet.traceEvidence.traceId, packet.requestId, status, packet.blockedEffects, {
+  throw new NapoleonBridgeError(reason, packet.traceEvidence.traceId, packet.requestId, status, blockedEffects, {
     profileMode,
     descriptorFailureReason,
     decisionId: governanceReferences?.decisionId,
@@ -431,6 +436,9 @@ export async function submitObservabilityTraceHandoff(
         decisionId: result.governanceDecision.decision_id,
         auditId: result.governanceDecision.audit_id,
         governanceOutcome: result.governanceDecision.outcome,
+      },
+      {
+        blockedEffects: mergeBlockedEffects(result.governanceDecision.blocked_effects, packet.blockedEffects),
       },
     );
   }

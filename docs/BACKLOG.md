@@ -93,6 +93,7 @@ Acceptance criteria:
 - Sparse remote `deny` or `no_go` responses for memory proposal, capability review packet, and Chief of Staff steering handoffs are supplemented with their local handoff safety floors for memory write, approval capture, agent dispatch, external send, and runtime authority in bridge errors and telemetry.
 - Sparse remote `deny` or `no_go` responses for evolution proposal submission and new-agent proposal review preserve Napoleon's returned blocked effects and append the local proposal safety floors for evolution application or agent activation, registry update, approval capture, memory write, agent dispatch, external send, and runtime authority in bridge errors and telemetry.
 - Sparse remote `deny` or `no_go` responses for read-only evolution proposal status refresh preserve Napoleon's returned blocked effects and append the local status safety floor for evolution application, registry update, approval capture, memory write, agent dispatch, external send, and runtime authority in bridge errors and telemetry.
+- Sparse remote `deny` or `no_go` responses for observability trace handoffs preserve Napoleon's returned blocked effects and append the local trace-evidence safety floor for trace append, audit authority, approval capture, memory write, agent dispatch, external send, task routing, and local application in bridge errors and telemetry.
 - `no_go` prevents sending the advisory request forward.
 - Child protected mode uses stricter wording and never implies secret-keeping or external action.
 

@@ -220,3 +220,55 @@ test("observability trace handoff rejects responses that claim trace append auth
     (error) => error instanceof NapoleonBridgeError && error.reason === "contract_mismatch",
   );
 });
+
+test("observability trace handoff supplements sparse no-go blocked effects with local safety floor", async () => {
+  const packet = buildObservabilityTraceHandoffPacket({ traceId: "trace_observed" });
+  const events: TelemetryPayload[] = [];
+
+  await assert.rejects(
+    () =>
+      submitObservabilityTraceHandoff(packet, {
+        getEndpoint: () => "https://napoleon.example",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            ...successfulTraceReviewResponse(),
+            governanceDecision: {
+              ...successfulTraceReviewResponse().governanceDecision,
+              outcome: "no_go",
+              blocked_effects: ["external_send"],
+            },
+          }),
+        }),
+      }),
+    (error) =>
+      error instanceof NapoleonBridgeError &&
+      error.reason === "governance_no_go" &&
+      error.governanceOutcome === "no_go" &&
+      JSON.stringify(error.blockedEffects) ===
+        JSON.stringify([
+          "external_send",
+          "trace_append",
+          "audit_authority",
+          "approval_capture",
+          "memory_write",
+          "agent_dispatch",
+          "task_routing",
+          "local_application",
+        ]),
+  );
+
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
+    "external_send",
+    "trace_append",
+    "audit_authority",
+    "approval_capture",
+    "memory_write",
+    "agent_dispatch",
+    "task_routing",
+    "local_application",
+  ]);
+});
