@@ -393,6 +393,44 @@ test("evolution proposal status refresh fails closed when descriptor does not ad
   assert.equal(fetchCalled, false);
 });
 
+test("evolution proposal status refresh reports active profile when lifecycle record profile is stale", async () => {
+  const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_evolution",
+  });
+  const record = buildDraftEvolutionProposalLifecycleRecord(packet);
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  let fetchCalled = false;
+
+  await assert.rejects(
+    () =>
+      refreshEvolutionProposalStatusFromNapoleon(record, {
+        conversationId: "conv_evolution",
+        traceId: "trace_status_profile_mismatch",
+        profile: "child_protected",
+        getEndpoint: () => "https://napoleon.example",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => buildStatusResponse("trace_status", "cos_trace_status") };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "child_protected_user" &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(blockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "evolution_proposal_status_refresh_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, blockedEffects);
+});
+
 test("evolution proposal status refresh uses read-only Napoleon status path and updates metadata lifecycle", async () => {
   const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
     profile: "adult_owner",

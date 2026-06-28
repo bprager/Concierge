@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened read-only evolution proposal status refresh so lifecycle profile-scope mismatches fail closed before any bridge request and report the active profile scope in errors and telemetry.
 - Hardened Chief of Staff request and governance evaluation contract packet submissions so profile-scope mismatches fail closed before any bridge request can reuse adult-scope packets in child-protected mode, with errors and telemetry reporting the active profile scope.
 - Hardened Chief of Staff taxonomy review `deny` and `no_go` handoff responses so sparse returned blocked-effect lists are supplemented with the taxonomy review safety floor in bridge errors and telemetry.
 - Hardened memory proposal, capability review packet, and Chief of Staff steering `deny` and `no_go` handoff responses so sparse returned blocked-effect lists are supplemented with the local handoff safety floors in bridge errors and telemetry.

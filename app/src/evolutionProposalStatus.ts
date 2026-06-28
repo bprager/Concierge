@@ -187,13 +187,15 @@ function failClosed(
   descriptorFailureReason?: DescriptorFailClosedReason,
   governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
   targetMetadata?: EvolutionProposalStatusTargetMetadata,
+  failureMetadata: { profileMode?: NapoleonProfileMode } = {},
 ): never {
+  const profileMode = failureMetadata.profileMode ?? record.profileMode;
   emitEvolutionProposalStatusEvent(dependencies, "evolution_proposal_status_refresh_failed", {
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,
     requestId,
     proposalId: record.proposalId,
-    profileMode: record.profileMode,
+    profileMode,
     reason,
     status,
     descriptorFailureReason,
@@ -204,7 +206,7 @@ function failClosed(
     ...targetMetadata,
   });
   throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, [...EVOLUTION_PROPOSAL_STATUS_BLOCKED_EFFECTS], {
-    profileMode: record.profileMode,
+    profileMode,
     descriptorFailureReason,
     decisionId: governanceReferences?.decisionId,
     auditId: governanceReferences?.auditId,
@@ -228,7 +230,9 @@ export async function refreshEvolutionProposalStatusFromNapoleon(
   );
 
   if (record.profileMode !== activeProfileMode) {
-    failClosed(dependencies, "governance_no_go", record, requestId);
+    failClosed(dependencies, "governance_no_go", record, requestId, undefined, undefined, undefined, undefined, {
+      profileMode: activeProfileMode,
+    });
   }
   if (dependencies.rehearsalMode) {
     failClosed(dependencies, "governance_no_go", record, requestId);
