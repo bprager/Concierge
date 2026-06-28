@@ -1067,7 +1067,7 @@ export async function sendToNapoleon(
         decisionId: decision.decision_id,
         auditId: decision.audit_id,
         governanceOutcome: decision.outcome,
-        blockedEffects: decision.blocked_effects,
+        blockedEffects: mergeRequiredVisibleBlockedEffects(decision.blocked_effects),
       },
     );
   }

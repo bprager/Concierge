@@ -1485,6 +1485,80 @@ test("live bridge fails closed when Napoleon returns deny or no-go governance", 
   }
 });
 
+test("live bridge supplements sparse blocked effects on remote governance denial", async () => {
+  const evidence: unknown[] = [];
+  const events: TelemetryPayload[] = [];
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_sparse_remote_deny",
+          conversationId: "conv_sparse_remote_deny",
+          turnId: "turn_sparse_remote_deny",
+          profile: "adult_owner",
+          channel: "text",
+          message: "Send a private update outside Concierge",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          emit: (event) => events.push(event),
+          captureEvidence: (record) => evidence.push(record),
+          fetch: async () => ({
+            ok: true,
+            status: 200,
+            json: async () => ({
+              text: "Napoleon denied this request.",
+              governanceDecision: {
+                decision_id: "decision_sparse_remote_deny",
+                request_id: "cos_turn_sparse_remote_deny",
+                outcome: "deny",
+                authority_tier: "prohibited",
+                approval_requirement: "not_available",
+                rationale: "The request is not allowed through this path.",
+                blocked_effects: ["external_send"],
+                trace_id: "trace_sparse_remote_deny",
+                audit_id: "audit_sparse_remote_deny",
+              },
+              traceEnvelope: {
+                trace_id: "trace_sparse_remote_deny",
+                parent_trace_id: "conv_sparse_remote_deny",
+                actor_id: "napoleon.chief_of_staff",
+                request_id: "cos_turn_sparse_remote_deny",
+                decision_id: "decision_sparse_remote_deny",
+                timestamp: "2026-06-12T00:00:00.000Z",
+              },
+              auditEnvelope: {
+                audit_id: "audit_sparse_remote_deny",
+                trace_id: "trace_sparse_remote_deny",
+                decision_id: "decision_sparse_remote_deny",
+                actor_id: "napoleon.chief_of_staff",
+                authority_tier: "prohibited",
+                approval_requirement: "not_available",
+                evidence_links: ["trace:trace_sparse_remote_deny"],
+              },
+            }),
+          }),
+        },
+      ),
+    (error: unknown) => {
+      if (!(error instanceof Error) || error.name !== "NapoleonBridgeError") return false;
+      const blockedEffects = (error as { blockedEffects?: string[] }).blockedEffects ?? [];
+      return ["external_send", "memory_write", "approval_capture", "agent_dispatch"].every((effect) =>
+        blockedEffects.includes(effect),
+      );
+    },
+  );
+
+  const failureEffects = (events.at(-1)?.attributes.blockedEffects as string[] | undefined) ?? [];
+  const evidenceEffects = (evidence[0] as { blockedEffects?: string[] }).blockedEffects ?? [];
+  for (const effect of ["external_send", "memory_write", "approval_capture", "agent_dispatch"]) {
+    assert.ok(failureEffects.includes(effect), `telemetry includes ${effect}`);
+    assert.ok(evidenceEffects.includes(effect), `evidence includes ${effect}`);
+  }
+});
+
 test("live bridge fails closed when Napoleon response omits trace or audit provenance", async () => {
   await assert.rejects(
     () =>

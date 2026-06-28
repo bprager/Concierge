@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened canonical live Napoleon `deny` and `no_go` responses so sparse returned blocked-effect lists cannot hide Concierge's local safety floor for memory writes, approval capture, agent dispatch, or external sends in bridge errors, telemetry, or sanitized evidence.
 - Hardened adapted `/cos/text-turn` advisory responses so sparse returned blocked-effect lists cannot hide Concierge's local safety floor for memory writes, approval capture, agent dispatch, or external sends in governance, delegation, and bridge evidence.
 - Hardened repository authority-boundary validation against split-string browser beacon, location, and storage method aliases, so hidden external-send, navigation, or persistence paths cannot move prompt, proof, token, transcript, or response metadata around the governed Napoleon bridge.
 - Hardened repository authority-boundary validation against call/apply legacy clipboard command aliases, so hidden copy, cut, or paste paths cannot move prompt, proof, token, transcript, or response metadata outside governed visible export flows.
