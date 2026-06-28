@@ -65,6 +65,10 @@ import {
   updateBridgeEvidenceReadinessState,
 } from "./bridgeEvidenceReadiness.js";
 import {
+  ingestReadinessRepairProofs,
+  type ReadinessRepairIngestionResult,
+} from "./readinessRepairIngestion.js";
+import {
   createCapabilityTaxonomy,
   draftChiefOfStaffTaxonomyReview,
   getTaxonomyLabelCounts,
@@ -2209,6 +2213,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [bridgeReadinessProofJson, setBridgeReadinessProofJson] = useState<string | null>(null);
   const [bridgeReadinessProofComparison, setBridgeReadinessProofComparison] =
     useState<BridgeReadinessProofComparison | null>(null);
+  const [readinessRepairChecklist, setReadinessRepairChecklist] =
+    useState<ReadinessRepairIngestionResult | null>(null);
   const [napoleonRequiredActionsExportJson, setNapoleonRequiredActionsExportJson] = useState<string | null>(null);
   const [acceptedReadinessProofInput, setAcceptedReadinessProofInput] = useState("");
   const [acceptedReadinessProofImport, setAcceptedReadinessProofImport] =
@@ -2712,6 +2718,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   function clearBridgeReadinessProof() {
     setBridgeReadinessProofJson(null);
     setBridgeReadinessProofComparison(null);
+    setReadinessRepairChecklist(null);
   }
 
   function clearNapoleonRequiredActionsExport() {
@@ -5278,6 +5285,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const comparison = compareBridgeReadinessProofs(bridgeReadinessProofJson, json);
     setBridgeReadinessProofJson(json);
     setBridgeReadinessProofComparison(comparison);
+    setReadinessRepairChecklist(null);
     emitEvent("bridge_readiness_proof_exported", {
       traceId,
       conversationId,
@@ -5315,6 +5323,24 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       memoryWritePerformed: false,
       agentDispatchPerformed: false,
       externalSendPerformed: false,
+    });
+  }
+
+  function prepareReadinessRepairChecklist() {
+    const traceId = newTraceId();
+    const result = ingestReadinessRepairProofs(bridgeReadinessProofJson ? [bridgeReadinessProofJson] : []);
+    setReadinessRepairChecklist(result);
+    emitEvent("readiness_repair_checklist_prepared", {
+      traceId,
+      conversationId,
+      repairChecklistItemCount: result.checklist.length,
+      rejectedProofCount: result.rejectedProofCount,
+      localOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      localApplicationPerformed: false,
     });
   }
 
@@ -8857,6 +8883,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         <button className="secondary" onClick={exportBridgeReadinessProof}>
           Export readiness proof
         </button>
+        <button className="secondary" onClick={prepareReadinessRepairChecklist} disabled={!bridgeReadinessProofJson}>
+          Prepare repair checklist
+        </button>
         {bridgeReadinessProofComparison ? (
           <div className={`proof-comparison ${bridgeReadinessProofComparison.status}`}>
             <strong>Readiness proof comparison</strong>
@@ -8874,6 +8903,44 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                 ))}
               </dl>
             ) : null}
+          </div>
+        ) : null}
+        {readinessRepairChecklist ? (
+          <div
+            aria-label="Prepared readiness repair checklist"
+            className={`proof-comparison ${readinessRepairChecklist.status}`}
+          >
+            <strong>Readiness repair checklist</strong>
+            <span>{readinessRepairChecklist.summary}</span>
+            {readinessRepairChecklist.checklist.length > 0 ? (
+              <dl>
+                {readinessRepairChecklist.checklist.map((item) => (
+                  <div key={item.id}>
+                    <dt>{item.title}</dt>
+                    <dd>
+                      <span>{item.summary}</span>
+                      <span>Target: {item.targetPath}</span>
+                      <span>Request kind: {item.requestKind}</span>
+                      <span>Operation: {item.operationId}</span>
+                      <span>Advertise using: {item.advertiseUsing.join(", ") || "unavailable"}</span>
+                      <span>Blocks live promotion: {item.blockingLivePromotion ? "yes" : "no"}</span>
+                      {item.implementationNextStep ? <span>{item.implementationNextStep}</span> : null}
+                      <span>
+                        Source: {item.source.runtimeValidationSource}; promotion gate: {item.source.promotionGate}
+                      </span>
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
+            <span>Approval captured: {readinessRepairChecklist.boundary.approvalCaptured ? "yes" : "no"}</span>
+            <span>Memory write: {readinessRepairChecklist.boundary.memoryWritePerformed ? "yes" : "no"}</span>
+            <span>Agent dispatch: {readinessRepairChecklist.boundary.agentDispatchPerformed ? "yes" : "no"}</span>
+            <span>External send: {readinessRepairChecklist.boundary.externalSendPerformed ? "yes" : "no"}</span>
+            <span>
+              Local application: {readinessRepairChecklist.boundary.localApplicationPerformed ? "yes" : "no"}
+            </span>
+            <span>Local repair planning only; not Napoleon approval.</span>
           </div>
         ) : null}
         {bridgeReadinessProofJson ? (

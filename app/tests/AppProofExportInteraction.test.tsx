@@ -11482,6 +11482,19 @@ test("renders unadvertised evaluator handoff required action from validation imp
     assert.ok(readinessExport.textContent?.includes('"sideEffectsPerformed": false'));
     assert.ok(readinessExport.textContent?.includes("supportedHandoffs"));
     assert.equal(readinessExport.textContent?.includes("127.0.0.1"), false);
+
+    await user.click(view.getByText("Prepare repair checklist"));
+    const repairChecklist = view.getByLabelText("Prepared readiness repair checklist");
+    assert.ok(repairChecklist.textContent?.includes("Prepared 3 proposal-only Napoleon repair checklist items."));
+    assert.ok(repairChecklist.textContent?.includes("Repair Napoleon handoff: evaluation_review"));
+    assert.ok(repairChecklist.textContent?.includes("/chief-of-staff/reviews/evaluation"));
+    assert.ok(repairChecklist.textContent?.includes("evaluation_review_handoff"));
+    assert.ok(repairChecklist.textContent?.includes("Implementation next step: expose /chief-of-staff/reviews/evaluation"));
+    assert.ok(repairChecklist.textContent?.includes("Approval captured: no"));
+    assert.ok(repairChecklist.textContent?.includes("Memory write: no"));
+    assert.ok(repairChecklist.textContent?.includes("Agent dispatch: no"));
+    assert.ok(repairChecklist.textContent?.includes("External send: no"));
+    assert.ok(repairChecklist.textContent?.includes("Local application: no"));
     const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };
@@ -11521,6 +11534,19 @@ test("renders unadvertised evaluator handoff required action from validation imp
     assert.equal(JSON.stringify(readinessEvent).includes("missingHandoffTarget"), false);
     assert.equal(JSON.stringify(readinessEvent).includes("implementationNextStep"), false);
     assert.equal(JSON.stringify(readinessEvent).includes("Implementation next step"), false);
+    const repairChecklistEvent = telemetryBuffer.events?.find(
+      (event) => event.event === "readiness_repair_checklist_prepared",
+    );
+    assert.equal(repairChecklistEvent?.attributes.repairChecklistItemCount, 3);
+    assert.equal(repairChecklistEvent?.attributes.rejectedProofCount, 0);
+    assert.equal(repairChecklistEvent?.attributes.localOnly, true);
+    assert.equal(repairChecklistEvent?.attributes.approvalCaptured, false);
+    assert.equal(repairChecklistEvent?.attributes.memoryWritePerformed, false);
+    assert.equal(repairChecklistEvent?.attributes.agentDispatchPerformed, false);
+    assert.equal(repairChecklistEvent?.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(repairChecklistEvent).includes("advertise_evaluation_review_handoff"), false);
+    assert.equal(JSON.stringify(repairChecklistEvent).includes("/chief-of-staff/reviews/evaluation"), false);
+    assert.equal(JSON.stringify(repairChecklistEvent).includes("Implementation next step"), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a Text Concierge readiness-panel action that prepares a local proposal-only Napoleon repair checklist from sanitized readiness proof exports while keeping repair telemetry count-only.
 - Added a local proposal-only readiness-repair ingestion consumer that turns sanitized readiness proof repair metadata into safe checklist items while rejecting unsafe fields, side-effect claims, local-only proof presented as real runtime evidence, and duplicate stale action context.
 - Added a downstream consumer contract for sanitized readiness-proof repair metadata, including Napoleon-side rejection rules, de-duplication guidance, and count-only telemetry boundaries for `highestPriorityAction`, `missingHandoffTarget`, and `implementationNextStep`.
 - Added highest-priority repair metadata and implementation-next-step guidance to sanitized bridge readiness proof exports, so promotion and repair tooling can see the same Napoleon-owned handoff target carried by focused required-action packets without parsing prose or telemetry.
