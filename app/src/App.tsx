@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import {
   buildLocalNeutralAvatarState,
   localAvatarExpressionSample,
@@ -8612,9 +8612,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
           </span>
           <span>{RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.detail}</span>
           {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.map((action) => (
-            <span key={action.id}>
-              Required action: {action.id}
-            </span>
+            <Fragment key={action.id}>
+              <span>Required action: {action.id}</span>
+              <span>
+                Required action target: {action.path}; request kind: {action.requestKind}; advertise using:{" "}
+                {action.advertiseUsing.join(", ")}; blocks live promotion:{" "}
+                {action.blockingLivePromotion ? "yes" : "no"}.
+              </span>
+            </Fragment>
           ))}
           <span>{RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.boundary}</span>
         </div>

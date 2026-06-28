@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added visible Napoleon required-action target details to the governed routes panel so runtime mapping gaps show the missing path, request kind, descriptor advertising fields, and live-promotion blocker state.
 - Added returned blocked effects to the successful observability trace handoff review panel so trace evidence reviews keep their blocked authority visible alongside outcome, decision, audit, and false side-effect flags.
 - Hardened observability trace handoff `deny` and `no_go` responses so sparse returned blocked-effect lists preserve Napoleon's returned effects and are supplemented with the local trace-evidence safety floor in bridge errors and telemetry.
 - Hardened observability trace handoff submission so stale trace packet profile-scope mismatches fail closed before any bridge request and report the active profile scope in errors and telemetry.

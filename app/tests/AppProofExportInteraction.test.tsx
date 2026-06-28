@@ -10098,6 +10098,11 @@ test("shows runtime contract alignment status in governed routes", async () => {
     assert.ok(routes.getByText("Required action: expose_evolution_proposal_status_runtime_target"));
     assert.ok(
       routes.getByText(
+        "Required action target: /evolution/proposals/{proposal_id}/status; request kind: evolution_proposal_status_handoff; advertise using: supportedHandoffs, required_for; blocks live promotion: yes.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
         "Local contract metadata only; this is not Napoleon approval, runtime validation, free-form paths permission, memory permission, agent dispatch, external send, or local application.",
       ),
     );
