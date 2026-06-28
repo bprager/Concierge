@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered Text Concierge coverage for "What capabilities are missing but easy to evolve?", proving the user-visible answer ranks safe missing capability metadata as proposal-only local recommendations while excluding correctly blocked no-go outcomes and avoiding raw prompts, Napoleon contact, approval capture, memory writes, agent dispatch, external sends, or local application.
 - Added rendered Text Concierge coverage for "What conversations are most common?", proving the user-visible answer ranks local conversation metadata without raw prompts, Napoleon contact, approval capture, memory writes, agent dispatch, external sends, or local application.
 - Added rendered Text Concierge coverage for "What capabilities are most common?", proving the user-visible answer ranks local capability metadata without raw prompts, Napoleon contact, approval capture, memory writes, agent dispatch, external sends, or local application.
 - Added local Capability Intelligence answers for "What capabilities are most common?", so Concierge can rank repeated local capability labels separately from conversation topics while staying metadata-only, proposal-only, and local.

@@ -4864,6 +4864,132 @@ test("renders next implementation recommendations as local top-three planning ad
   }
 });
 
+test("renders easy-to-evolve missing capabilities as proposal-only local recommendations", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, fireEvent, render, waitFor },
+    userEventModule,
+    { App },
+    { appendCapabilitySignal, buildCapabilitySignal, clearCapabilityLedger },
+    telemetry,
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/capabilityLedger.js"),
+    import("../src/telemetry.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  let fetchCalls = 0;
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    appendCapabilitySignal(
+      telemetry.capabilityLedger,
+      buildCapabilitySignal({
+        traceId: "trace_ui_easy_bridge_one",
+        conversationId: "conv_ui_easy",
+        turnId: "turn_ui_easy_bridge_one",
+        profileMode: "adult_owner",
+        channel: "text",
+        topicLabel: "governed_text_turn",
+        intentLabel: "send_to_napoleon",
+        capabilityLabel: "bridge_failure_handling",
+        capabilityStatus: "missing",
+        outcomeSignal: "bridge_failed",
+        confidence: 0.88,
+        evidenceRefs: ["trace:trace_ui_easy_bridge_one"],
+        architectureArea: "bridge",
+        privacyClass: "metadata_only",
+        suggestedNextStep: "write_evaluator_case",
+        details: ["contract mismatch after descriptor handoff"],
+        rawMessage: "raw easy evolution request must not render",
+      }),
+    );
+    appendCapabilitySignal(
+      telemetry.capabilityLedger,
+      buildCapabilitySignal({
+        traceId: "trace_ui_easy_governance_block",
+        conversationId: "conv_ui_easy",
+        turnId: "turn_ui_easy_governance_block",
+        profileMode: "adult_owner",
+        channel: "text",
+        topicLabel: "governance",
+        intentLabel: "remote_governance_block",
+        capabilityLabel: "governed_bridge_no_go_handling",
+        capabilityStatus: "blocked",
+        outcomeSignal: "blocked",
+        confidence: 0.9,
+        evidenceRefs: ["trace:trace_ui_easy_governance_block"],
+        architectureArea: "governance_ux",
+        privacyClass: "metadata_only",
+        suggestedNextStep: "no_action",
+        rawMessage: "raw no-go request must not become an evolution recommendation",
+      }),
+    );
+
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What capabilities are missing but easy to evolve?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    const answer = await view.findByText(/Easy-to-evolve missing capabilities by local risk\/value score/);
+    const answerText = answer.closest("article")?.textContent ?? "";
+    assert.ok(answerText.includes("Napoleon bridge failure handling"));
+    assert.ok(answerText.includes("write_evaluator_case"));
+    assert.ok(answerText.includes("proposal-only"));
+    assert.ok(answerText.includes("correctly blocked unsafe requests are excluded"));
+    assert.ok(answerText.includes("Profile scope: adult_owner"));
+    assert.equal(answerText.includes("Napoleon no-go handling"), false);
+    assert.equal(answerText.includes("raw easy evolution request"), false);
+    assert.equal(answerText.includes("raw no-go request"), false);
+    assert.equal(fetchCalls, 0);
+
+    const answered = await waitFor(() => {
+      const payload = telemetryPayloads.find((event) => event.event === "capability_intelligence_answered");
+      assert.ok(payload);
+      return payload;
+    });
+    assert.equal(answered.attributes.kind, "easy_to_evolve_missing_capabilities");
+    assert.equal(answered.attributes.profileMode, "adult_owner");
+    assert.equal(answered.attributes.localAnswerOnly, true);
+    assert.equal(answered.attributes.approvalCaptured, false);
+    assert.equal(answered.attributes.memoryWritePerformed, false);
+    assert.equal(answered.attributes.agentDispatchPerformed, false);
+    assert.equal(answered.attributes.externalSendPerformed, false);
+    assert.equal(answered.attributes.appliedLocally, false);
+    assert.equal(JSON.stringify(answered).includes("trace_ui_easy_bridge_one"), false);
+    assert.equal(JSON.stringify(answered).includes("raw easy evolution request"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders architecture improvement answers with best-tradeoff repair guidance", async () => {
   const dom = installDom();
   const [
