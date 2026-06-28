@@ -156,6 +156,7 @@ export type CapabilityQuestionKind =
   | "common_conversations"
   | "missing_or_blocked_capabilities"
   | "working_well_conversations"
+  | "protected_blocked_conversations"
   | "easy_to_evolve_missing_capabilities"
   | "architecture_improvement_areas"
   | "recommended_next_capabilities"
@@ -847,6 +848,9 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   const asksCommon = /\b(common|most|frequent|popular)\b/.test(lower);
   const asksWorkingWell = /\b(working well|works well|successful|succeeding|good)\b/.test(lower);
   const asksWorked = /\b(worked|working)\b/.test(lower);
+  const asksProtectedBlocked =
+    /\b(correctly|safely|protected|governance)\b/.test(lower) &&
+    /\b(blocked|blocks|refused|denied|no-go|no go|prevented|stopped)\b/.test(lower);
   const asksCapability = /\b(capability|capabilities)\b/.test(lower);
   const asksMissingOrBlocked = /\b(missing|blocked|not working|failed|failing|architecture)\b/.test(lower);
   const asksEasyToEvolve = /\b(easy|easiest|evolve|evolution|small)\b/.test(lower);
@@ -871,6 +875,9 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   if (asksCapability && asksImproving) return "improving_capabilities";
   if (asksWorked && asksRecent) return "recent_working_capabilities";
   if (asksRecent && /\b(changed|changing|this week|week)\b/.test(lower)) return "weekly_changes";
+  if (asksProtectedBlocked && (asksAboutConversation || asksCapability || asksMissingOrBlocked)) {
+    return "protected_blocked_conversations";
+  }
   if (asksCapability && asksMissingOrBlocked && asksEasyToEvolve) return "easy_to_evolve_missing_capabilities";
   if (asksArchitecture && (asksMissingOrBlocked || asksNext)) return "architecture_improvement_areas";
   if ((asksCapability && asksNext) || asksPlainNextWork) return "recommended_next_capabilities";
@@ -1809,6 +1816,12 @@ export function answerCapabilityQuestion(
     (signal) => signal.capabilityStatus === "missing" || signal.capabilityStatus === "blocked",
   );
   const missingSafeRequests = signals.filter((signal) => signal.capabilityStatus === "missing");
+  const protectedBlocks = signals.filter(
+    (signal) =>
+      signal.capabilityStatus === "blocked" &&
+      signal.suggestedNextStep === "no_action" &&
+      (signal.architectureArea === "governance_ux" || signal.topicLabel === "governance"),
+  );
 
   if (kind === "missing_or_blocked_capabilities") {
     const rows = groupedRows(
@@ -1828,6 +1841,27 @@ export function answerCapabilityQuestion(
       caveat: "blocked can mean governance worked correctly; missing means a safe request path failed or is not implemented.",
       boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
     }, missingOrBlocked, drilldownProfileMode);
+  }
+
+  if (kind === "protected_blocked_conversations") {
+    const rows = groupedRows(
+      protectedBlocks,
+      (signal) => `${signal.capabilityLabel}:${signal.architectureArea}`,
+      (signal) => signal.capabilityLabel,
+      (signal) => 1 + signal.confidence,
+      { includeStatus: true, includeArchitectureArea: true },
+    );
+
+    return withCapabilityAnswerDrilldown({
+      kind,
+      question,
+      summary: `Correctly blocked local conversations: ${describeRows(rows)}.`,
+      rows,
+      evidenceCount: protectedBlocks.length,
+      caveat:
+        "Based on local metadata only; protected blocks are safety and governance outcomes, not implementation recommendations, and do not approve, send, write memory, dispatch agents, or apply changes.",
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    }, protectedBlocks, drilldownProfileMode);
   }
 
   if (kind === "easy_to_evolve_missing_capabilities") {

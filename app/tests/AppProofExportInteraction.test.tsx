@@ -4268,6 +4268,108 @@ test("renders governed Napoleon bridge success as a working capability answer", 
   }
 });
 
+test("renders correctly blocked governance conversations as safety outcomes", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }, telemetry] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  let fetchCalls = 0;
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    telemetry.capabilityLedger.clear();
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+
+    const view = render(<App />);
+    telemetry.emitCapabilitySignal("bridge_request_failed", {
+      traceId: "trace_rendered_governance_block",
+      conversationId: "conv_rendered_governance_block",
+      turnId: "turn_rendered_governance_block",
+      profileMode: "adult_owner",
+      reason: "governance_no_go",
+      governanceOutcome: "no_go",
+      blockedEffects: ["external_send", "memory_write"],
+      bridgeTargetOperation: "text_turn",
+      bridgeTargetRequestKind: "text_turn",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      rawPrompt: "do not render unsafe blocked prompt",
+      endpoint: "https://napoleon.example.test",
+      bearerToken: "secret-token",
+    });
+    telemetry.emitCapabilitySignal("bridge_request_failed", {
+      traceId: "trace_rendered_missing_bridge",
+      conversationId: "conv_rendered_missing_bridge",
+      turnId: "turn_rendered_missing_bridge",
+      profileMode: "adult_owner",
+      reason: "contract_mismatch",
+      bridgeTargetOperation: "text_turn",
+      bridgeTargetRequestKind: "text_turn",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+    });
+
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What conversations are correctly blocked?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await view.findByText(/Correctly blocked local conversations/);
+    assert.ok(view.getAllByText(/Napoleon no-go handling/).length >= 1);
+    assert.equal(view.container.textContent?.includes("Napoleon text bridge"), false);
+    assert.equal(view.container.textContent?.includes("do not render unsafe blocked prompt"), false);
+    assert.equal(view.container.textContent?.includes("napoleon.example.test"), false);
+    assert.equal(view.container.textContent?.includes("secret-token"), false);
+    assert.equal(fetchCalls, 0);
+
+    const answered = await waitFor(() => {
+      const payload = telemetryPayloads.find(
+        (event) =>
+          event.event === "capability_intelligence_answered" &&
+          event.attributes.kind === "protected_blocked_conversations",
+      );
+      assert.ok(payload);
+      return payload;
+    });
+    assert.equal(answered.attributes.localAnswerOnly, true);
+    assert.equal(answered.attributes.approvalCaptured, false);
+    assert.equal(answered.attributes.memoryWritePerformed, false);
+    assert.equal(answered.attributes.agentDispatchPerformed, false);
+    assert.equal(answered.attributes.externalSendPerformed, false);
+    assert.equal(JSON.stringify(answered).includes("governance_no_go"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders improving capability trend answers without contacting Napoleon", async () => {
   const dom = installDom();
   const [

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local Capability Intelligence answers for correctly blocked governance conversations, so users can inspect protected safety outcomes separately from missing implementation work without contacting Napoleon.
 - Added visible `advertiseUsing` guidance to built-in Napoleon contract-alignment required-action answers and readiness panels, keeping the UI aligned with focused exports while telemetry remains count-only.
 - Added `advertiseUsing` hints to built-in Napoleon contract-alignment required-action exports, so `highestPriorityAction` and `missingHandoffTarget` tell maintainers where to advertise the missing handoff while telemetry remains count-only.
 - Added a top-level `missingHandoffTarget` to focused Napoleon required-action exports, mirroring the highest-priority sanitized required action so Napoleon maintainers can consume the target metadata without parsing prose or telemetry.

@@ -994,6 +994,64 @@ test("working-well answers display governed Napoleon bridge success in plain lan
   assert.equal(JSON.stringify(answer).includes("secret-token"), false);
 });
 
+test("answers correctly blocked governance conversations separately from missing implementation work", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("bridge_request_failed", {
+      traceId: "trace_governance_blocked",
+      conversationId: "conv_governance_blocked",
+      turnId: "turn_governance_blocked",
+      profileMode: "adult_owner",
+      reason: "governance_no_go",
+      governanceOutcome: "no_go",
+      blockedEffects: ["external_send", "memory_write"],
+      bridgeTargetOperation: "text_turn",
+      bridgeTargetRequestKind: "text_turn",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      text: "unsafe request text must not be retained",
+      endpoint: "https://napoleon.example.test",
+      bearerToken: "secret-token",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("bridge_request_failed", {
+      traceId: "trace_missing_bridge",
+      conversationId: "conv_missing_bridge",
+      turnId: "turn_missing_bridge",
+      profileMode: "adult_owner",
+      reason: "contract_mismatch",
+      bridgeTargetOperation: "text_turn",
+      bridgeTargetRequestKind: "text_turn",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What conversations are correctly blocked?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected protected block answer");
+  assert.equal(answer.kind, "protected_blocked_conversations");
+  assert.equal(answer.rows[0].label, "governed_bridge_no_go_handling");
+  assert.equal(answer.rows[0].displayLabel, "Napoleon no-go handling");
+  assert.equal(answer.rows[0].status, "blocked");
+  assert.equal(answer.rows.some((row) => row.label === "napoleon_text_turn_bridge"), false);
+  assert.ok(answer.summary.includes("Correctly blocked local conversations"));
+  assert.ok(answer.caveat.includes("not implementation recommendations"));
+  assert.equal(answer.boundary.proposalOnly, true);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(JSON.stringify(answer).includes("unsafe request text"), false);
+  assert.equal(JSON.stringify(answer).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify(answer).includes("secret-token"), false);
+});
+
 test("answers easy-to-evolve missing capability questions with deterministic proposal ranking", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(

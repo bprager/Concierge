@@ -500,6 +500,11 @@ function normalizeRequestedSelectedAgentName(value: string | undefined): string 
 export function isNapoleonDelegationQuestion(content: string): boolean {
   const lower = content.toLocaleLowerCase();
   const compact = lower.trim();
+  const asksCapabilityAggregateSafetyQuestion =
+    /\b(conversation|conversations|capability|capabilities)\b/.test(lower) &&
+    /\b(correctly|safely|protected|governance)\b/.test(lower) &&
+    /\b(blocked|blocks|refused|denied|no-go|no go|prevented|stopped)\b/.test(lower);
+  if (asksCapabilityAggregateSafetyQuestion) return false;
   const asksAboutNamedSelectedAgentContribution = isNamedSelectedAgentContributionQuestion(content);
   const asksAboutNamedSelectedAgentReason = isNamedSelectedAgentReasonQuestion(content);
   const asksAboutContextualSelectedAgentReason =
