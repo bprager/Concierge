@@ -18134,6 +18134,7 @@ test("submits latest interaction trace evidence through governed observability h
     assert.ok(buffer.getByText("Outcome: allow_prepare_only"));
     assert.ok(buffer.getByText("Decision: decision_trace_handoff_ui"));
     assert.ok(buffer.getByText("Audit: audit_trace_handoff_ui"));
+    assert.ok(buffer.getByText("Blocked effects: trace_append, memory_write, approval_capture, agent_dispatch, external_send"));
     assert.ok(buffer.getByText("Trace append performed: no"));
     assert.ok(buffer.getByText("Audit authority created: no"));
     assert.ok(buffer.getByText("Applied locally: no"));

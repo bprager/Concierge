@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added returned blocked effects to the successful observability trace handoff review panel so reviewed trace evidence keeps blocked authority visible alongside outcome, decision, audit, and false side-effect flags.
 - Hardened observability trace handoff `deny` and `no_go` responses so sparse returned blocked-effect lists preserve Napoleon's returned effects while appending the local trace-evidence safety floor for trace append, audit authority, approval capture, memory write, agent dispatch, external send, task routing, and local application in bridge errors and telemetry.
 - Hardened read-only evolution proposal status refresh `deny` and `no_go` responses so sparse returned blocked-effect lists preserve Napoleon's returned effects while appending the local status safety floor for evolution application, registry update, approval capture, memory write, agent dispatch, external send, and runtime authority in bridge errors and telemetry.
 - Hardened evolution proposal submission and new-agent proposal review `deny` and `no_go` responses so sparse returned blocked-effect lists preserve Napoleon's returned effects while appending the local proposal safety floors for evolution application or agent activation, registry update, approval capture, memory write, agent dispatch, external send, and runtime authority in bridge errors and telemetry.

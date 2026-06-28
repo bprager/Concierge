@@ -7210,6 +7210,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <span>Outcome: {observabilityTraceHandoffResult.governanceDecision.outcome}</span>
             <span>Decision: {observabilityTraceHandoffResult.governanceDecision.decision_id}</span>
             <span>Audit: {observabilityTraceHandoffResult.governanceDecision.audit_id}</span>
+            <span>Blocked effects: {observabilityTraceHandoffResult.governanceDecision.blocked_effects.join(", ")}</span>
             <span>Trace append performed: {observabilityTraceHandoffResult.traceAppendPerformed ? "yes" : "no"}</span>
             <span>Audit authority created: {observabilityTraceHandoffResult.auditAuthorityCreated ? "yes" : "no"}</span>
             <span>Applied locally: {observabilityTraceHandoffResult.appliedLocally ? "yes" : "no"}</span>
