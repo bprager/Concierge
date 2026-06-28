@@ -552,6 +552,14 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
         r"\b(?:(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]|document)\s*\[\s*['\"]exec['\"]\s*\+\s*['\"]Command['\"]\s*\]\s*\(\s*['\"](?:copy|cut|paste)['\"]",
         re.IGNORECASE,
     ),
+    re.compile(
+        r"\bdocument\.execCommand\s*\.\s*(?:call|apply)\s*\(\s*document\s*,\s*(?:\[\s*)?['\"](?:copy|cut|paste)['\"]",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:(?:globalThis|window)\s*\[\s*['\"]document['\"]\s*\]|document)\s*\[\s*(?:['\"]execCommand['\"]|['\"]exec['\"]\s*\+\s*['\"]Command['\"])\s*\]\s*\.\s*(?:call|apply)\s*\(\s*(?:(?:globalThis|window)\.document|document)\s*,\s*(?:\[\s*)?['\"](?:copy|cut|paste)['\"]",
+        re.IGNORECASE,
+    ),
     re.compile(r"\b(?:globalThis|window)\.(?:showOpenFilePicker|showSaveFilePicker|showDirectoryPicker)\s*\("),
     re.compile(r"\b(?:globalThis|window)\.(?:showOpenFilePicker|showSaveFilePicker|showDirectoryPicker)\.(?:call|apply)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"](?:showOpenFilePicker|showSaveFilePicker|showDirectoryPicker)['\"]\s*\]\s*\("),

@@ -872,6 +872,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'globalThis["document"]["execCommand"]("paste");',
             'document["exec" + "Command"]("cut");',
             'window["document"]["exec" + "Command"]("copy");',
+            'document.execCommand.call(document, "copy");',
+            'document["execCommand"].apply(document, ["paste"]);',
+            'window["document"]["exec" + "Command"].call(window.document, "cut");',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
