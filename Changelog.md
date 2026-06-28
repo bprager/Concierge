@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added local Capability Intelligence answers for "What capabilities are most common?", ranking sanitized local capability labels separately from conversation topics without contacting Napoleon or granting authority.
 - Added rendered Text Concierge coverage for unresolved evolution proposal status questions, proving stale local lifecycle metadata is answered as tracking-only without contacting Napoleon or applying side effects.
 - Kept prepared readiness repair checklist questions local in both Rehearsal and live-send composer paths, so asking about a prepared checklist never contacts Napoleon.
 - Added a local Text Concierge answer for prepared readiness repair checklists, including child-protected detail minimization and count-only telemetry.

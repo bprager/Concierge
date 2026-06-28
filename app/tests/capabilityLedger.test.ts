@@ -739,6 +739,53 @@ test("answers common conversation questions from local aggregates", () => {
   assert.equal(JSON.stringify(answer).includes("raw deployment content"), false);
 });
 
+test("answers common capability questions from local capability aggregates", () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    testSignal("trace_common_capability_1", {
+      topic: "deployment",
+      capability: "release_summary",
+      status: "working",
+      architecture: "text_ui",
+      rawMessage: "raw release content",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    testSignal("trace_common_capability_2", {
+      topic: "memory",
+      capability: "release_summary",
+      status: "working",
+      architecture: "text_ui",
+    }),
+  );
+  appendCapabilitySignal(
+    ledger,
+    testSignal("trace_common_capability_other", {
+      topic: "deployment",
+      capability: "memory_proposal_review",
+      status: "working",
+      architecture: "memory_review",
+    }),
+  );
+
+  const answer = answerCapabilityQuestion("What capabilities are most common?", ledger);
+
+  assert.ok(answer);
+  if (!answer) throw new Error("expected common capability answer");
+  assert.equal(answer.kind, "common_capabilities");
+  assert.ok(answer.summary.includes("Most common local conversation capabilities"));
+  assert.equal(answer.rows[0].label, "release_summary");
+  assert.equal(answer.rows[0].count, 2);
+  assert.equal(answer.rows[1].label, "memory_proposal_review");
+  assert.equal(answer.boundary.proposalOnly, true);
+  assert.equal(answer.boundary.memoryWriteAllowed, false);
+  assert.equal(answer.boundary.agentDispatchAllowed, false);
+  assert.equal(answer.boundary.externalSendAllowed, false);
+  assert.equal(JSON.stringify(answer).includes("raw release content"), false);
+});
+
 test("exports a local capability trend snapshot without raw content or authority", () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(

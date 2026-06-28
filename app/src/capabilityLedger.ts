@@ -154,6 +154,7 @@ export interface RecommendationScoreComponents {
 
 export type CapabilityQuestionKind =
   | "common_conversations"
+  | "common_capabilities"
   | "missing_or_blocked_capabilities"
   | "working_well_conversations"
   | "protected_blocked_conversations"
@@ -885,6 +886,7 @@ function classifyCapabilityQuestion(question: string): CapabilityQuestionKind | 
   if ((asksAboutConversation || asksCapability) && (asksWorkingWell || (asksCapability && asksWorked && !asksMissingOrBlocked))) {
     return "working_well_conversations";
   }
+  if (asksCapability && asksCommon) return "common_capabilities";
   if (asksAboutConversation && asksCommon) return "common_conversations";
   if (asksCapability && asksMissingOrBlocked) return "missing_or_blocked_capabilities";
   return null;
@@ -1800,6 +1802,19 @@ export function answerCapabilityQuestion(
       kind,
       question,
       summary: `Most common local conversation topics: ${describeRows(rows)}.`,
+      rows,
+      evidenceCount: signals.length,
+      caveat: LOCAL_PROPOSAL_CAVEAT,
+      boundary: DEFAULT_RECOMMENDATION_BOUNDARY,
+    }, signals, drilldownProfileMode);
+  }
+
+  if (kind === "common_capabilities") {
+    const rows = sortedRows(aggregate.byCapability);
+    return withCapabilityAnswerDrilldown({
+      kind,
+      question,
+      summary: `Most common local conversation capabilities: ${describeRows(rows)}.`,
       rows,
       evidenceCount: signals.length,
       caveat: LOCAL_PROPOSAL_CAVEAT,
