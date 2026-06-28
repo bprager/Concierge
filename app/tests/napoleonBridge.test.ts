@@ -575,6 +575,65 @@ test("live bridge resolves an advisory harness cos base endpoint to text-turn an
   assert.equal(response.governanceDecision.outcome, "allow_prepare_only");
 });
 
+test("live bridge keeps local blocked-effect floor for sparse advisory harness responses", async () => {
+  const evidence: unknown[] = [];
+
+  const response = await sendToNapoleon(
+    {
+      traceId: "trace_cos_sparse_blocks",
+      conversationId: "conv_cos_sparse_blocks",
+      turnId: "turn_cos_sparse_blocks",
+      profile: "adult_owner",
+      channel: "text",
+      message: "Summarize the governed bridge status",
+    },
+    {
+      getEndpoint: () => "https://napoleon.example/cos/text-turn",
+      descriptorConnection: readyDescriptorConnection,
+      emit: () => undefined,
+      captureEvidence: (record) => evidence.push(record),
+      fetch: async (url) => {
+        if (url.endsWith("/cos/trace/trace_cos_sparse_blocks")) {
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({ trace_id: "trace_cos_sparse_blocks", events: [] }),
+          };
+        }
+        return {
+          ok: true,
+          status: 202,
+          json: async () => ({
+            schema_version: "napoleon/concierge/text-turn-response/v1",
+            status: "accepted_for_prepare_only",
+            answer: "Napoleon prepared an advisory status summary.",
+            trace_id: "trace_cos_sparse_blocks",
+            audit_id: "audit_cos_sparse_blocks",
+            governance_decision: {
+              decision: "allow_prepare_only",
+              reason: "Advisory preparation only.",
+              authority_tier: "prepare_only",
+              blocked_effects: ["external_send"],
+            },
+            delegation_plan: {
+              requested_capability: "napoleon.chief_of_staff",
+              candidate_agents: [],
+              blocked_effects: ["external_send"],
+            },
+            blocked_effects: ["external_send"],
+          }),
+        };
+      },
+    },
+  );
+
+  for (const effect of ["memory_write", "approval_capture", "agent_dispatch", "external_send"]) {
+    assert.ok(response.governanceDecision.blocked_effects.includes(effect));
+    assert.ok(response.delegation?.blockedEffects.includes(effect));
+    assert.ok((evidence[0] as { blockedEffects?: string[] }).blockedEffects?.includes(effect));
+  }
+});
+
 test("live bridge fails closed when advisory harness trace envelope does not match the text turn", async () => {
   const evidence: unknown[] = [];
 

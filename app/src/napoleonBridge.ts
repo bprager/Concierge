@@ -39,6 +39,13 @@ const FORBIDDEN_DELEGATION_ALLOWED_EFFECTS = new Set([
   "task_routing",
 ]);
 
+const REQUIRED_VISIBLE_TEXT_TURN_BLOCKED_EFFECTS = [
+  "memory_write",
+  "approval_capture",
+  "agent_dispatch",
+  "external_send",
+];
+
 export interface BridgeContractEvidence {
   kind: "bridge_contract_evidence";
   operationId: BridgeOperationId;
@@ -343,6 +350,18 @@ function isNapoleonDelegation(value: unknown): value is NapoleonDelegation {
 
 function hasForbiddenDelegationAllowedEffects(allowedEffects: string[]): boolean {
   return allowedEffects.some((effect) => FORBIDDEN_DELEGATION_ALLOWED_EFFECTS.has(effect.trim().toLocaleLowerCase()));
+}
+
+function mergeRequiredVisibleBlockedEffects(returnedEffects: string[]): string[] {
+  const merged = [...returnedEffects];
+  const observed = new Set(merged.map((effect) => effect.trim().toLocaleLowerCase()).filter(Boolean));
+  for (const effect of REQUIRED_VISIBLE_TEXT_TURN_BLOCKED_EFFECTS) {
+    if (!observed.has(effect)) {
+      merged.push(effect);
+      observed.add(effect);
+    }
+  }
+  return merged;
 }
 
 function hasForbiddenDelegationTextSideEffectClaim(delegation: NapoleonDelegation | undefined): boolean {
@@ -658,6 +677,7 @@ function adaptAdvisoryHarnessResponse(
     : isStringArray(governance.blocked_effects)
       ? governance.blocked_effects
       : contract.blockedEffects;
+  const visibleBlockedEffects = mergeRequiredVisibleBlockedEffects(blockedEffects);
   const decisionId = `decision_${payload.trace_id}`;
   const governanceDecision: GovernanceDecision = {
     decision_id: decisionId,
@@ -667,7 +687,7 @@ function adaptAdvisoryHarnessResponse(
     approval_requirement:
       outcome === "allow_prepare_only" ? "none_for_prepare_only" : contract.governanceDecision.approval_requirement,
     rationale: typeof governance.reason === "string" ? governance.reason : "Napoleon advisory harness response.",
-    blocked_effects: blockedEffects,
+    blocked_effects: visibleBlockedEffects,
     trace_id: String(payload.trace_id),
     audit_id: String(payload.audit_id),
   };
@@ -699,8 +719,8 @@ function adaptAdvisoryHarnessResponse(
       contributionSummary: typeof agent.contribution_summary === "string" ? agent.contribution_summary : undefined,
     }));
   const delegationBlockedEffects = isStringArray(delegationPlan.blocked_effects)
-    ? delegationPlan.blocked_effects
-    : blockedEffects;
+    ? mergeRequiredVisibleBlockedEffects(delegationPlan.blocked_effects)
+    : visibleBlockedEffects;
   return {
     text: String(payload.answer),
     profileMode: contract.profileMode,
