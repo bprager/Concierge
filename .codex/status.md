@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added the canonical count-only selected-agent selection-reason telemetry attribute to Napoleon delegation-answer events while preserving the existing compatibility field and keeping returned delegation text local-only.
 - Aligned the Napoleon delegation-answer observability table with the count-only selected-agent selection-reason and contribution telemetry emitted by the UI, keeping returned delegation text local-only.
 - Added count-only selected-agent contribution telemetry to sanitized Napoleon response proof exports, so returned delegated findings can be audited by count without copying contribution text into telemetry or changing approval, memory, dispatch, external-send, or local-application boundaries.
 - Added selected-agent contribution changes to sanitized Napoleon response proof comparison, keeping returned delegated findings reviewable across same-session proof exports without contacting Napoleon, exposing raw response text, or changing approval, memory, dispatch, external-send, or local-application boundaries.

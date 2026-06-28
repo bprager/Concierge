@@ -4048,6 +4048,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       recommendationReturned: answer.recommendationReturned,
       selectedAgentContributionCount: answer.selectedAgentContributionCount,
       selectedAgentReasonCount: answer.selectedAgentReasonCount,
+      selectedAgentSelectionReasonCount: answer.selectedAgentReasonCount,
       traceReturned: answer.traceReturned,
       auditReturned: answer.auditReturned,
       localAnswerOnly: true,

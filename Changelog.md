@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added the canonical `selectedAgentSelectionReasonCount` attribute to Napoleon delegation-answer telemetry while preserving the existing count-only selected-agent reason field for compatibility.
 - Aligned Napoleon delegation-answer observability documentation with the count-only selected-agent selection-reason and contribution telemetry emitted by the UI.
 - Added count-only selected-agent contribution telemetry to sanitized Napoleon response proof exports, keeping returned delegated findings auditable without copying contribution text into telemetry.
 - Added selected-agent contribution changes to sanitized Napoleon response proof comparison, so same-session proof review can show when a returned delegated finding changed without contacting Napoleon or creating authority.

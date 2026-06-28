@@ -1440,6 +1440,7 @@ test("exports and compares Napoleon proof through rendered app controls", async 
     assert.equal(naturalSelectionReasonAnswerEvent?.attributes.localAnswerOnly, true);
     assert.equal(naturalSelectionReasonAnswerEvent?.attributes.selectedAgentCount, 1);
     assert.equal(naturalSelectionReasonAnswerEvent?.attributes.selectedAgentReasonCount, 1);
+    assert.equal(naturalSelectionReasonAnswerEvent?.attributes.selectedAgentSelectionReasonCount, 1);
     assert.equal(naturalSelectionReasonAnswerEvent?.attributes.externalSendPerformed, false);
     assert.equal(JSON.stringify(naturalSelectionReasonAnswerEvent).includes("Why was Passive Brain selected?"), false);
     assert.equal(JSON.stringify(naturalSelectionReasonAnswerEvent).includes("Passive Brain"), false);
