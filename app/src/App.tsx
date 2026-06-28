@@ -438,6 +438,14 @@ function isNapoleonRequiredActionQuestion(content: string): boolean {
   );
 }
 
+function isReadinessRepairChecklistQuestion(content: string): boolean {
+  const lower = content.toLocaleLowerCase();
+  return (
+    /\brepair checklist\b/.test(lower) ||
+    (/\breadiness\b/.test(lower) && /\brepair/.test(lower) && /\b(checklist|items?|prepared|prepare|plan)\b/.test(lower))
+  );
+}
+
 function extractRequestedSelectedAgentName(content: string): string | null {
   const match = content.match(
     /\b[Ww]hat\s+(?:did|has|have)\s+(?:the\s+)?([A-Za-z][A-Za-z0-9]*(?:\s+[A-Za-z][A-Za-z0-9]*){0,3})\s+(?:find|found|identify|identified|report|reported|surface|surfaced|confirm|confirmed|verify|verified|assess|assessed|conclude|concluded|recommend|recommended)\b/,
@@ -2046,6 +2054,60 @@ function formatNapoleonRequiredActionAnswer(
     actionCount: actions.length,
     status: evaluatorImport.validation.status,
     runtimeValidationSource,
+  };
+}
+
+function formatReadinessRepairChecklistAnswer(
+  checklist: ReadinessRepairIngestionResult | null,
+  profileMode: NapoleonProfileMode,
+): { content: string; itemCount: number; rejectedProofCount: number; status: string } {
+  if (!checklist) {
+    return {
+      content: [
+        "No readiness repair checklist is currently prepared.",
+        "Export a sanitized bridge readiness proof, then choose Prepare repair checklist. This local answer did not contact Napoleon, approve, apply, write memory, dispatch agents, or send externally.",
+      ].join("\n\n"),
+      itemCount: 0,
+      rejectedProofCount: 0,
+      status: "not_prepared",
+    };
+  }
+
+  if (profileMode === "child_protected_user") {
+    return {
+      content: [
+        `A readiness repair checklist is prepared with ${checklist.checklist.length} proposal-only item(s).`,
+        "Child protected mode does not show repair target paths, operation IDs, or implementation steps here. Ask a trusted adult/operator to review the local readiness panel.",
+        `Checklist status: ${checklist.status}. Rejected proof count: ${checklist.rejectedProofCount}.`,
+        "Boundary: local repair planning only; not Napoleon approval, not route application, not memory, not agent dispatch, and not external send.",
+      ].join("\n\n"),
+      itemCount: checklist.checklist.length,
+      rejectedProofCount: checklist.rejectedProofCount,
+      status: checklist.status,
+    };
+  }
+
+  const rows = checklist.checklist.length
+    ? checklist.checklist
+        .map((item) => {
+          const implementation = item.implementationNextStep ? ` ${item.implementationNextStep}` : "";
+          return `- ${item.title}. Target: ${item.targetPath}. Request kind: ${item.requestKind}. Operation: ${item.operationId}. Blocks live promotion: ${
+            item.blockingLivePromotion ? "yes" : "no"
+          }.${implementation}`;
+        })
+        .join("\n")
+    : "No valid repair checklist items are currently available.";
+
+  return {
+    content: [
+      `Prepared readiness repair checklist: ${checklist.summary}`,
+      rows,
+      `Checklist status: ${checklist.status}. Rejected proof count: ${checklist.rejectedProofCount}.`,
+      "Boundary: local repair planning only; Concierge did not contact Napoleon, approve, apply routes, mutate state, write memory, dispatch agents, or send externally.",
+    ].join("\n\n"),
+    itemCount: checklist.checklist.length,
+    rejectedProofCount: checklist.rejectedProofCount,
+    status: checklist.status,
   };
 }
 
@@ -4322,6 +4384,56 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     return true;
   }
 
+  function answerReadinessRepairChecklistQuestion(
+    content: string,
+    traceId: string,
+    turnId: string,
+    activeProfileMode: NapoleonProfileMode,
+  ) {
+    if (!isReadinessRepairChecklistQuestion(content)) return false;
+
+    const answer = formatReadinessRepairChecklistAnswer(readinessRepairChecklist, activeProfileMode);
+    emitEvent("readiness_repair_checklist_answered", {
+      traceId,
+      conversationId,
+      turnId,
+      profile,
+      profileMode: activeProfileMode,
+      checklistStatus: answer.status,
+      repairChecklistItemCount: answer.itemCount,
+      rejectedProofCount: answer.rejectedProofCount,
+      localAnswerOnly: true,
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      localApplicationPerformed: false,
+      appliedLocally: false,
+    });
+    setMessages((m) => [
+      ...m,
+      { role: "user", content },
+      {
+        role: "assistant",
+        content: answer.content,
+      },
+    ]);
+    setInput("");
+    setCapabilityAnswerDrilldownExportJson(null);
+    clearCapabilityReviewPacketState();
+    setPendingRehearsal(null);
+    setLastDecision(null);
+    clearNapoleonPresentation();
+    setLastBridgeFailure(null);
+    setLastReview(null);
+    clearGovernanceReviewHandoff();
+    setLastMemoryReviewState(null);
+    setLastMemoryReview(null);
+    setMemorySubmission(null);
+    setMemorySubmissionFailure(null);
+    return true;
+  }
+
   function answerNapoleonMetadataQuestion(content: string, traceId: string, turnId: string, activeProfileMode: NapoleonProfileMode) {
     if (!isNapoleonMetadataQuestion(content)) return false;
 
@@ -4471,6 +4583,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (answerNapoleonProofComparisonQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
+    if (answerReadinessRepairChecklistQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonMetadataQuestion(content, traceId, turnId, activeProfileMode)) return;
     if (answerNapoleonCapabilityQuestion(content, traceId, turnId, activeProfileMode)) return;

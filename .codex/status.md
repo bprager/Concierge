@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added local Text Concierge answers for prepared readiness repair checklists, so adult/operator users can ask what was prepared from sanitized readiness proof metadata while child-protected answers minimize repair details and telemetry stays count-only.
 - Added a Text Concierge readiness-panel action that prepares a local proposal-only Napoleon repair checklist from sanitized readiness proof exports, renders repair targets for operator review, and emits count-only telemetry without IDs, paths, action text, implementation steps, or side effects.
 - Added a local proposal-only readiness-repair ingestion consumer that converts sanitized readiness proof repair metadata into Napoleon repair checklist items, rejects unsafe or authority-crossing proof content, and de-duplicates repeated required actions by freshest proof context.
 - Added a downstream consumer contract for sanitized readiness-proof repair metadata, including Napoleon-side rejection rules, de-duplication guidance, and explicit count-only telemetry boundaries for the local repair fields.
