@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added visible `advertiseUsing` guidance to built-in Napoleon contract-alignment required-action answers and readiness panels, keeping the UI aligned with focused exports while telemetry remains count-only.
 - Added `advertiseUsing` hints to built-in Napoleon contract-alignment required-action exports, so `highestPriorityAction` and `missingHandoffTarget` tell maintainers where to advertise the missing handoff while telemetry remains count-only.
 - Added a top-level `missingHandoffTarget` to focused Napoleon required-action exports, mirroring the highest-priority sanitized required action so Napoleon maintainers can consume the target metadata without parsing prose or telemetry.
 - Added local harness smoke coverage for adult/operator Napoleon required-action answers from sanitized runtime evidence, proving highest-priority fix guidance plus reusable missing-handoff target metadata without raw action text or side effects.

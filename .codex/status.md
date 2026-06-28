@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added visible `advertiseUsing` guidance to built-in contract-alignment Napoleon required-action answers and readiness panels, so operator-facing UI now names both the missing handoff target and accepted descriptor advertising forms while telemetry remains count-only and no approval, memory write, agent dispatch, external send, or local application boundary changes.
 - Added sanitized `advertiseUsing` hints to built-in contract-alignment Napoleon required-action exports, so the focused `highestPriorityAction` and `missingHandoffTarget` packet fields identify both the missing handoff target and accepted descriptor advertising forms while telemetry remains count-only and no approval, memory write, agent dispatch, external send, or local application boundary changes.
 - Added a top-level `missingHandoffTarget` to focused Napoleon required-action packet exports, mirroring the sanitized highest-priority Napoleon-owned required action for operator handoff while keeping telemetry count-only and preserving approval, memory write, agent dispatch, external send, and local application boundaries.
 - Added local harness smoke coverage for adult/operator Napoleon required-action answers from sanitized runtime evidence, proving highest-priority fix guidance, reusable missing-handoff target metadata, no raw action text, no endpoint/token/body retention, and no side effects.

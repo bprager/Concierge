@@ -10007,6 +10007,7 @@ test("answers Napoleon contract-alignment required actions without imported eval
       assert.ok(renderedText.includes("expose_evolution_proposal_status_runtime_target"));
       assert.ok(renderedText.includes("/evolution/proposals/{proposal_id}/status"));
       assert.ok(renderedText.includes("evolution_proposal_status_handoff"));
+      assert.ok(renderedText.includes("Advertise using: supportedHandoffs, required_for."));
       assert.ok(renderedText.includes("Concierge did not contact Napoleon for this answer"));
       assert.ok(renderedText.includes("not Napoleon approval"));
     });
