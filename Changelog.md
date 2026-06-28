@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Kept prepared readiness repair checklist questions local in both Rehearsal and live-send composer paths, so asking about a prepared checklist never contacts Napoleon.
 - Added a local Text Concierge answer for prepared readiness repair checklists, including child-protected detail minimization and count-only telemetry.
 - Added a Text Concierge readiness-panel action that prepares a local proposal-only Napoleon repair checklist from sanitized readiness proof exports while keeping repair telemetry count-only.
 - Added a local proposal-only readiness-repair ingestion consumer that turns sanitized readiness proof repair metadata into safe checklist items while rejecting unsafe fields, side-effect claims, local-only proof presented as real runtime evidence, and duplicate stale action context.

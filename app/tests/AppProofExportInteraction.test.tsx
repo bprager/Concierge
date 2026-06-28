@@ -11511,6 +11511,20 @@ test("renders unadvertised evaluator handoff required action from validation imp
       assert.ok(renderedText.includes("Concierge did not contact Napoleon"));
     });
     assert.equal(fetchCalls, 0);
+
+    fireEvent.click(view.getByLabelText("Rehearsal Mode"));
+    assert.equal((view.getByLabelText("Rehearsal Mode") as HTMLInputElement).checked, false);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What readiness repair checklist did we prepare?" },
+    });
+    await user.click(view.getByRole("button", { name: "Send" }));
+    await waitFor(() => {
+      const answerEvents = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}").events?.filter(
+        (event: { event: string }) => event.event === "readiness_repair_checklist_answered",
+      );
+      assert.equal(answerEvents?.length, 2);
+    });
+    assert.equal(fetchCalls, 0);
     const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
       events?: Array<{ event: string; attributes: Record<string, unknown> }>;
     };
@@ -11563,9 +11577,11 @@ test("renders unadvertised evaluator handoff required action from validation imp
     assert.equal(JSON.stringify(repairChecklistEvent).includes("advertise_evaluation_review_handoff"), false);
     assert.equal(JSON.stringify(repairChecklistEvent).includes("/chief-of-staff/reviews/evaluation"), false);
     assert.equal(JSON.stringify(repairChecklistEvent).includes("Implementation next step"), false);
-    const repairChecklistAnswerEvent = telemetryBuffer.events?.find(
+    const repairChecklistAnswerEvents = telemetryBuffer.events?.filter(
       (event) => event.event === "readiness_repair_checklist_answered",
     );
+    assert.equal(repairChecklistAnswerEvents?.length, 2);
+    const repairChecklistAnswerEvent = repairChecklistAnswerEvents?.at(-1);
     assert.equal(repairChecklistAnswerEvent?.attributes.repairChecklistItemCount, 3);
     assert.equal(repairChecklistAnswerEvent?.attributes.rejectedProofCount, 0);
     assert.equal(repairChecklistAnswerEvent?.attributes.localAnswerOnly, true);

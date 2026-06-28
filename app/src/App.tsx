@@ -4802,6 +4802,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       if (answerNapoleonProofComparisonQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonBlockedAttemptQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonReviewRequirementQuestion(content, traceId, turnId, activeProfileMode)) return;
+      if (answerReadinessRepairChecklistQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonRequiredActionQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonMetadataQuestion(content, traceId, turnId, activeProfileMode)) return;
       if (answerNapoleonCapabilityQuestion(content, traceId, turnId, activeProfileMode)) return;
