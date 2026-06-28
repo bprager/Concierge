@@ -14090,6 +14090,149 @@ test("enables an existing steering draft after governed endpoint readiness becom
   }
 });
 
+test("renders Chief of Staff steering drafts from easy-to-evolve recommendations without applying them", async () => {
+  const dom = installDom();
+  const [
+    { cleanup, render, waitFor },
+    userEventModule,
+    { App },
+    { appendCapabilitySignal, buildCapabilitySignal, clearCapabilityLedger },
+    telemetry,
+  ] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/capabilityLedger.js"),
+    import("../src/telemetry.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  let fetchCalls = 0;
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const [event, payload] = args;
+      if (event === "[concierge.telemetry]" && payload && typeof payload === "object") {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    globalThis.fetch = (async () => {
+      fetchCalls += 1;
+      return new Response(JSON.stringify({ error: "unexpected fetch" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as typeof fetch;
+
+    appendCapabilitySignal(
+      telemetry.capabilityLedger,
+      buildCapabilitySignal({
+        traceId: "trace_ui_steering_easy_bridge",
+        conversationId: "conv_ui_steering_easy",
+        turnId: "turn_ui_steering_easy_bridge",
+        profileMode: "adult_owner",
+        channel: "text",
+        topicLabel: "governed_text_turn",
+        intentLabel: "send_to_napoleon",
+        capabilityLabel: "bridge_failure_handling",
+        capabilityStatus: "missing",
+        outcomeSignal: "bridge_failed",
+        confidence: 0.88,
+        evidenceRefs: ["trace:trace_ui_steering_easy_bridge"],
+        architectureArea: "bridge",
+        privacyClass: "metadata_only",
+        suggestedNextStep: "write_evaluator_case",
+        details: ["contract mismatch after descriptor handoff"],
+        rawMessage: "raw steering recommendation text must not render",
+      }),
+    );
+    appendCapabilitySignal(
+      telemetry.capabilityLedger,
+      buildCapabilitySignal({
+        traceId: "trace_ui_steering_no_go",
+        conversationId: "conv_ui_steering_easy",
+        turnId: "turn_ui_steering_no_go",
+        profileMode: "adult_owner",
+        channel: "text",
+        topicLabel: "governance",
+        intentLabel: "remote_governance_block",
+        capabilityLabel: "governed_bridge_no_go_handling",
+        capabilityStatus: "blocked",
+        outcomeSignal: "blocked",
+        confidence: 0.9,
+        evidenceRefs: ["trace:trace_ui_steering_no_go"],
+        architectureArea: "governance_ux",
+        privacyClass: "metadata_only",
+        suggestedNextStep: "no_action",
+        rawMessage: "raw no-go steering text must not render",
+      }),
+    );
+
+    const view = render(<App />);
+    await user.click(view.getByRole("button", { name: "Draft Chief of Staff steering proposal" }));
+
+    const heading = await view.findByText("Chief of Staff steering draft");
+    const draftText = heading.closest("section")?.textContent ?? "";
+    assert.ok(draftText.includes("bridge_failure_handling, bridge, confidence 0.88"));
+    assert.ok(draftText.includes("scored capability recommendation"));
+    assert.ok(draftText.includes("write_evaluator_case"));
+    assert.ok(draftText.includes("capability_gap_bridge_failure_handling"));
+    assert.ok(draftText.includes("raw user text: no"));
+    assert.ok(draftText.includes("proposal only: yes"));
+    assert.ok(draftText.includes("proposal only; no approval captured; no memory write; no agent dispatch; no external send."));
+    assert.ok(draftText.includes("Chief of Staff steering is blocked until"));
+    assert.ok(draftText.includes("memory_write"));
+    assert.equal(draftText.includes("governed_bridge_no_go_handling"), false);
+    assert.equal(draftText.includes("raw steering recommendation text"), false);
+    assert.equal(draftText.includes("raw no-go steering text"), false);
+    assert.equal((view.getByRole("button", { name: "Send steering draft to Napoleon review" }) as HTMLButtonElement).disabled, true);
+
+    await user.click(view.getByRole("button", { name: "Export steering draft" }));
+    const exportBlock = await view.findByLabelText("Exported Chief of Staff steering draft");
+    const exported = exportBlock.textContent ?? "";
+    assert.ok(exported.includes('"kind": "concierge_chief_of_staff_steering_draft"'));
+    assert.ok(exported.includes('"recommendationType": "scored_capability_recommendation"'));
+    assert.ok(exported.includes('"capabilityLabel": "bridge_failure_handling"'));
+    assert.ok(exported.includes('"architectureArea": "bridge"'));
+    assert.ok(exported.includes('"proposalOnly": true'));
+    assert.ok(exported.includes('"approvalCaptured": false'));
+    assert.ok(exported.includes('"memoryWriteAllowed": false'));
+    assert.ok(exported.includes('"agentDispatchAllowed": false'));
+    assert.ok(exported.includes('"externalSendAllowed": false'));
+    assert.ok(exported.includes('"raw_user_text_stored": false'));
+    assert.equal(exported.includes("governed_bridge_no_go_handling"), false);
+    assert.equal(exported.includes("raw steering recommendation text"), false);
+    assert.equal(exported.includes("raw no-go steering text"), false);
+
+    const recommendationEvent = telemetryPayloads.find((payload) => payload.event === "capability_recommendation_created");
+    assert.equal(recommendationEvent?.attributes.capability, "bridge_failure_handling");
+    assert.equal(recommendationEvent?.attributes.architectureArea, "bridge");
+    assert.equal(recommendationEvent?.attributes.proposalOnly, true);
+    assert.equal(recommendationEvent?.attributes.approvalCaptured, false);
+    assert.equal(recommendationEvent?.attributes.memoryWriteAllowed, false);
+    assert.equal(recommendationEvent?.attributes.agentDispatchAllowed, false);
+    assert.equal(recommendationEvent?.attributes.externalSendAllowed, false);
+
+    const exportEvent = telemetryPayloads.find((payload) => payload.event === "chief_of_staff_steering_draft_exported");
+    assert.equal(exportEvent?.attributes.capability, "bridge_failure_handling");
+    assert.equal(exportEvent?.attributes.proposalOnly, true);
+    assert.equal(exportEvent?.attributes.approvalCaptured, false);
+    assert.equal(exportEvent?.attributes.memoryWriteAllowed, false);
+    assert.equal(exportEvent?.attributes.agentDispatchAllowed, false);
+    assert.equal(exportEvent?.attributes.externalSendAllowed, false);
+    await waitFor(() => assert.equal(fetchCalls, 0));
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    clearCapabilityLedger(telemetry.capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("clears profile-scoped steering drafts when user profile changes", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render }, userEventModule, { App }] = await Promise.all([

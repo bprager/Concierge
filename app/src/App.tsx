@@ -9111,6 +9111,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             <dd>{describeSteeringRecommendationDisplayType(steeringDraft)}</dd>
             <dt>Rationale</dt>
             <dd>{steeringDraft.recommendation.rationale}</dd>
+            <dt>Suggested next step</dt>
+            <dd>{steeringDraft.recommendation.suggestedNextStep}</dd>
             <dt>Evaluator case</dt>
             <dd>
               {steeringDraft.evaluatorCaseCandidate.caseId}: {steeringDraft.evaluatorCaseCandidate.expectedBehavior}
