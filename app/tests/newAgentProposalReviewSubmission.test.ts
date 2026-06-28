@@ -326,6 +326,43 @@ test("new-agent proposal review fails closed while Rehearsal Mode is active", as
   assert.equal(fetchCalled, false);
 });
 
+test("new-agent proposal review reports active profile when packet profile is stale", async () => {
+  const packet = buildNewAgentProposalReviewPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_new_agent",
+  });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  let fetchCalled = false;
+
+  await assert.rejects(
+    () =>
+      submitNewAgentProposalForNapoleonReview(packet, {
+        conversationId: "conv_agent",
+        traceId: "trace_submit_profile_mismatch",
+        profile: "child_protected",
+        getEndpoint: () => "https://napoleon.example",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          fetchCalled = true;
+          return { ok: true, json: async () => buildResponse("trace_submit", "cos_trace_submit") };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      (error as { profileMode?: string }).profileMode === "child_protected_user" &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(blockedEffects),
+  );
+
+  assert.equal(fetchCalled, false);
+  assert.equal(events.at(-1)?.event, "new_agent_proposal_review_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, blockedEffects);
+});
+
 test("new-agent proposal review fails closed when descriptor does not advertise the review handoff", async () => {
   const packet = buildNewAgentProposalReviewPacket(buildCapabilityPacket(), {
     profile: "adult_owner",

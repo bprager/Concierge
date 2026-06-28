@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened evolution proposal submission and new-agent proposal review so stale proposal packets cannot trigger bridge requests under a different active profile, and blocked errors plus telemetry now report the active profile.
 - Hardened read-only evolution proposal status refresh so stale lifecycle records cannot trigger a bridge request under a different active profile, and the blocked error plus telemetry now report the active profile.
 - Hardened Chief of Staff request and governance evaluation contract packet submissions so profile-scope mismatches fail closed before fetch and report the active profile in errors and telemetry, preventing adult-scope packet evidence from being sent while child-protected mode is active.
 - Hardened Chief of Staff taxonomy review `deny` and `no_go` handoff responses so sparse returned blocked-effect lists cannot hide the taxonomy review safety floor for memory write, approval capture, agent dispatch, external send, or runtime authority in bridge errors or telemetry.

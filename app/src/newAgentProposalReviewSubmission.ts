@@ -319,14 +319,16 @@ function failClosed(
   descriptorFailureReason?: DescriptorFailClosedReason,
   governanceReferences?: { decisionId?: string; auditId?: string; governanceOutcome?: string },
   targetMetadata?: NewAgentProposalTargetMetadata,
+  failureMetadata: { profileMode?: NapoleonProfileMode } = {},
 ): never {
+  const profileMode = failureMetadata.profileMode ?? packet.profileMode;
   emitNewAgentProposalEvent(dependencies, "new_agent_proposal_review_send_failed", {
     traceId: dependencies.traceId,
     conversationId: dependencies.conversationId,
     requestId,
     proposalId: packet.proposalId,
     proposedAgentId: packet.proposedAgent.agentId,
-    profileMode: packet.profileMode,
+    profileMode,
     reason,
     status,
     descriptorFailureReason,
@@ -337,7 +339,7 @@ function failClosed(
     ...targetMetadata,
   });
   throw new NapoleonBridgeError(reason, dependencies.traceId, requestId, status, packet.blockedEffects, {
-    profileMode: packet.profileMode,
+    profileMode,
     descriptorFailureReason,
     decisionId: governanceReferences?.decisionId,
     auditId: governanceReferences?.auditId,
@@ -363,7 +365,9 @@ export async function submitNewAgentProposalForNapoleonReview(
   );
 
   if (packet.profileMode !== activeProfileMode) {
-    failClosed(dependencies, "governance_no_go", packet, requestId);
+    failClosed(dependencies, "governance_no_go", packet, requestId, undefined, undefined, undefined, undefined, {
+      profileMode: activeProfileMode,
+    });
   }
   if (dependencies.rehearsalMode) {
     failClosed(dependencies, "governance_no_go", packet, requestId);
