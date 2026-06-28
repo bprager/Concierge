@@ -11517,6 +11517,10 @@ test("renders unadvertised evaluator handoff required action from validation imp
     const readinessEvent = telemetryBuffer.events?.find((event) => event.event === "bridge_readiness_proof_exported");
     assert.equal(readinessEvent?.attributes.evaluatorNapoleonRequiredActionCount, 3);
     assert.equal(JSON.stringify(readinessEvent).includes("advertise_evaluation_review_handoff"), false);
+    assert.equal(JSON.stringify(readinessEvent).includes("highestPriorityAction"), false);
+    assert.equal(JSON.stringify(readinessEvent).includes("missingHandoffTarget"), false);
+    assert.equal(JSON.stringify(readinessEvent).includes("implementationNextStep"), false);
+    assert.equal(JSON.stringify(readinessEvent).includes("Implementation next step"), false);
   } finally {
     globalThis.fetch = originalFetch;
     cleanup();
