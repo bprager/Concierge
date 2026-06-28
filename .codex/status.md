@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened repository authority-boundary validation against split-string browser beacon, location, and storage method aliases, so hidden external-send, navigation, or persistence paths cannot move prompt, proof, token, transcript, or response metadata around the governed Napoleon bridge.
 - Hardened repository authority-boundary validation against call/apply legacy clipboard command aliases, so hidden copy, cut, or paste paths cannot move prompt, proof, token, transcript, or response metadata outside governed visible export flows.
 - Hardened repository authority-boundary validation against split-string legacy clipboard command aliases, so hidden copy, cut, or paste paths cannot move prompt, proof, token, transcript, or response metadata outside governed visible export flows.
 - Hardened repository authority-boundary validation against split-string `window.name` and global document cookie writes, so hidden browser-retention aliases cannot store prompt, proof, token, transcript, or response metadata outside bounded local storage controls.

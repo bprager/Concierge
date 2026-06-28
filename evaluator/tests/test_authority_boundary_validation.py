@@ -355,6 +355,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'navigator["sendBeacon"]("https://api.example.test/audit", payload);',
             'window["navigator"]["sendBeacon"]("https://api.example.test/audit", payload);',
             'globalThis["navigator"]["sendBeacon"]("https://api.example.test/audit", payload);',
+            'window["navigator"]["send" + "Beacon"]("https://api.example.test/audit", payload);',
+            'globalThis["navigator"]["send" + "Beacon"].call(globalThis.navigator, "https://api.example.test/audit", payload);',
         ]:
             with self.subTest(source=source):
                 violations = validate_repo.scan_ungoverned_network_text("app/src/randomService.ts", source)
@@ -929,6 +931,9 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'window.location["replace"](outboundUrl);',
             'globalThis["location"]["assign"](outboundUrl);',
             'globalThis["location"]["replace"].apply(globalThis.location, [outboundUrl]);',
+            'globalThis["location"]["assign" + ""](outboundUrl);',
+            'window["location"]["replace" + ""].apply(window.location, [outboundUrl]);',
+            'window["location"]["href" + ""] = outboundUrl;',
             'document["location"].assign(outboundUrl);',
             'document["location"]["replace"].call(document.location, outboundUrl);',
         ]:
@@ -1258,6 +1263,8 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
             'window["localStorage"].setItem.call(window["localStorage"], "rawPrompt", rawPromptText);',
             'localStorage["setItem"]("rawPrompt", rawPromptText);',
             'localStorage["setItem"].call(localStorage, "rawPrompt", rawPromptText);',
+            'window["localStorage"]["set" + "Item"]("rawPrompt", rawPromptText);',
+            'globalThis["sessionStorage"]["get" + "Item"].call(globalThis.sessionStorage, "rawPrompt");',
             'window["sessionStorage"]["clear"]();',
         ]:
             with self.subTest(source=source):

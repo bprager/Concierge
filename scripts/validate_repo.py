@@ -436,6 +436,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\?\.\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]sendBeacon['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("),
+    re.compile(
+        r"\b(?:globalThis|window)\s*\[\s*['\"]navigator['\"]\s*\]\s*\[\s*['\"]send['\"]\s*\+\s*['\"]Beacon['\"]\s*\]\s*(?:\.\s*(?:call|apply))?\s*\("
+    ),
     re.compile(r"\b(?:Worker|SharedWorker)\s*\("),
     re.compile(r"\b(?:globalThis|window)\s*\[\s*['\"](?:Worker|SharedWorker)['\"]\s*\]\s*\("),
     re.compile(
@@ -475,6 +478,9 @@ UNGOVERNED_NETWORK_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\b(?:window\.|document\.)?location\s*="),
     re.compile(r"\b(?:globalThis|window|document)\s*\[\s*['\"]location['\"]\s*\]\s*="),
     re.compile(r"\b(?:globalThis|window|document)\s*\[\s*['\"]location['\"]\s*\]\s*\[\s*['\"](?:href|assign|replace)['\"]\s*\]"),
+    re.compile(
+        r"\b(?:globalThis|window|document)\s*\[\s*['\"]location['\"]\s*\]\s*\[\s*['\"](?:href|assign|replace)['\"]\s*\+\s*['\"]['\"]\s*\]\s*(?:=|\(|\.\s*(?:call|apply)\s*\()"
+    ),
     re.compile(
         r"\b(?:globalThis|window|document)\s*\[\s*['\"]location['\"]\s*\]\s*\.\s*(?:href|assign|replace)\b"
     ),
@@ -740,6 +746,9 @@ BROWSER_STORAGE_PERSISTENCE_PATTERNS: list[re.Pattern[str]] = [
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\[\s*['\"](?:getItem|setItem|removeItem|clear)['\"]\s*\]\s*\.\s*(?:call|apply)\s*\("
+    ),
+    re.compile(
+        r"\b(?:localStorage|sessionStorage|window\.(?:localStorage|sessionStorage)|(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]|(?:globalThis|window)\s*\.\s*(?:localStorage|sessionStorage))\s*\[\s*(?:['\"]get['\"]\s*\+\s*['\"]Item['\"]|['\"]set['\"]\s*\+\s*['\"]Item['\"]|['\"]remove['\"]\s*\+\s*['\"]Item['\"]|['\"]clear['\"]\s*\+\s*['\"]['\"])\s*\]\s*(?:\.\s*(?:call|apply))?\s*\("
     ),
     re.compile(
         r"\b(?:globalThis|window)\s*\[\s*['\"](?:localStorage|sessionStorage)['\"]\s*\]\s*\.\s*(?:getItem|setItem|removeItem|clear)\s*\.\s*(?:call|apply)\s*\("
