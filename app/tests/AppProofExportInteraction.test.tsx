@@ -11468,6 +11468,13 @@ test("renders unadvertised evaluator handoff required action from validation imp
     await user.click(view.getByText("Export readiness proof"));
     const readinessExport = view.getByLabelText("Exported bridge readiness proof");
     assert.ok(readinessExport.textContent?.includes('"descriptorHandoffRequiredAction"'));
+    assert.ok(readinessExport.textContent?.includes('"highestPriorityAction"'));
+    assert.ok(readinessExport.textContent?.includes('"missingHandoffTarget"'));
+    assert.ok(
+      readinessExport.textContent?.includes(
+        '"implementationNextStep": "Implementation next step: expose /chief-of-staff/reviews/evaluation for evaluation_review_handoff and advertise it via supportedHandoffs, supported_handoffs, required_for, descriptor route metadata for /chief-of-staff/reviews/evaluation."',
+      ),
+    );
     assert.ok(readinessExport.textContent?.includes('"napoleonRequiredActions"'));
     assert.ok(readinessExport.textContent?.includes('"advertise_chief_of_staff_request_handoff"'));
     assert.ok(readinessExport.textContent?.includes('"advertise_governance_evaluation_handoff"'));

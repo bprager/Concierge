@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added highest-priority repair metadata and implementation-next-step guidance to sanitized bridge readiness proof exports, keeping the broader readiness artifact aligned with focused Napoleon required-action handoff packets while telemetry remains count-only.
 - Added implementation-next-step wording to adult Napoleon required-action answers so local contract-alignment and evaluator evidence can say which runtime path to expose, which request kind it serves, and which descriptor fields should advertise it.
 - Added implementation-next-step metadata to focused Napoleon required-action exports so the handoff repair packet now carries the runtime path, request kind, and descriptor advertising fields directly while preserving count-only telemetry.
 - Added visible Napoleon required-action target details to the governed routes panel so runtime mapping gaps show the missing path, request kind, descriptor advertising fields, and live-promotion blocker state.

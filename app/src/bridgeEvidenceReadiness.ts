@@ -6,6 +6,10 @@ import {
 } from "./bridgeOperations.js";
 import { descriptorSupportsGovernedHandoff, type DescriptorConnectionState } from "./contractBridge.js";
 import type { BridgeContractEvidence } from "./napoleonBridge.js";
+import {
+  formatNapoleonRequiredActionImplementationStep,
+  prioritizeNapoleonRequiredAction,
+} from "./napoleonRequiredActions.js";
 import type { LiveBridgeEvidenceState } from "./presentation.js";
 
 export interface BridgeEvidenceReadinessState {
@@ -367,6 +371,8 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
   const blockedEffects = sanitizeReadinessProofList(input.readiness.lastBlockedEffects ?? descriptorStatus?.blockedEffects ?? []);
   const descriptorBlockedEffects = sanitizeReadinessProofList(descriptorStatus?.blockedEffects ?? []);
   const napoleonRequiredActions = sanitizeNapoleonRequiredActions(runtimeContractRequiredActions(input));
+  const highestPriorityAction = prioritizeNapoleonRequiredAction(napoleonRequiredActions);
+  const implementationNextStep = formatNapoleonRequiredActionImplementationStep(highestPriorityAction);
 
   return JSON.stringify(
     {
@@ -511,6 +517,9 @@ export function exportBridgeReadinessProofJson(input: BridgeReadinessProofInput)
           requiredActionSource: runtimeRequiredActionSource(input),
           napoleonRequiredActionCount: napoleonRequiredActions.length,
           blockingLivePromotion: napoleonRequiredActions.some((action) => action.blockingLivePromotion === true),
+          highestPriorityAction,
+          missingHandoffTarget: highestPriorityAction,
+          ...(implementationNextStep ? { implementationNextStep } : {}),
           napoleonRequiredActions,
           connectionValueStored: false,
           credentialValueStored: false,

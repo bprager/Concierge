@@ -510,6 +510,31 @@ test("exports built-in runtime contract required actions in readiness proof", ()
         napoleonRequiredActionCount?: number;
         blockingLivePromotion?: boolean;
         requiredActionSource?: string;
+        highestPriorityAction?: {
+          id: string;
+          targetPath: string;
+          requestKind: string;
+          operationId: string;
+          advertiseUsing?: string[];
+          approvalCaptured: boolean;
+          memoryWritePerformed: boolean;
+          agentDispatchPerformed: boolean;
+          externalSendPerformed: boolean;
+          appliedLocally: boolean;
+        };
+        missingHandoffTarget?: {
+          id: string;
+          targetPath: string;
+          requestKind: string;
+          operationId: string;
+          advertiseUsing?: string[];
+          approvalCaptured: boolean;
+          memoryWritePerformed: boolean;
+          agentDispatchPerformed: boolean;
+          externalSendPerformed: boolean;
+          appliedLocally: boolean;
+        };
+        implementationNextStep?: string;
         napoleonRequiredActions: Array<{
           id: string;
           owner: string;
@@ -533,6 +558,36 @@ test("exports built-in runtime contract required actions in readiness proof", ()
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActionCount, 1);
   assert.equal(proof.runtimeValidation.evaluator.blockingLivePromotion, true);
   assert.equal(proof.runtimeValidation.evaluator.requiredActionSource, "contract_alignment");
+  assert.equal(proof.runtimeValidation.evaluator.highestPriorityAction?.id, requiredAction.id);
+  assert.equal(proof.runtimeValidation.evaluator.highestPriorityAction?.targetPath, requiredAction.path);
+  assert.equal(proof.runtimeValidation.evaluator.highestPriorityAction?.requestKind, requiredAction.requestKind);
+  assert.equal(proof.runtimeValidation.evaluator.highestPriorityAction?.operationId, requiredAction.operationId);
+  assert.deepEqual(proof.runtimeValidation.evaluator.highestPriorityAction?.advertiseUsing, [
+    "supportedHandoffs",
+    "required_for",
+  ]);
+  assert.equal(proof.runtimeValidation.evaluator.highestPriorityAction?.approvalCaptured, false);
+  assert.equal(proof.runtimeValidation.evaluator.highestPriorityAction?.memoryWritePerformed, false);
+  assert.equal(proof.runtimeValidation.evaluator.highestPriorityAction?.agentDispatchPerformed, false);
+  assert.equal(proof.runtimeValidation.evaluator.highestPriorityAction?.externalSendPerformed, false);
+  assert.equal(proof.runtimeValidation.evaluator.highestPriorityAction?.appliedLocally, false);
+  assert.equal(proof.runtimeValidation.evaluator.missingHandoffTarget?.id, requiredAction.id);
+  assert.equal(proof.runtimeValidation.evaluator.missingHandoffTarget?.targetPath, requiredAction.path);
+  assert.equal(proof.runtimeValidation.evaluator.missingHandoffTarget?.requestKind, requiredAction.requestKind);
+  assert.equal(proof.runtimeValidation.evaluator.missingHandoffTarget?.operationId, requiredAction.operationId);
+  assert.deepEqual(proof.runtimeValidation.evaluator.missingHandoffTarget?.advertiseUsing, [
+    "supportedHandoffs",
+    "required_for",
+  ]);
+  assert.equal(proof.runtimeValidation.evaluator.missingHandoffTarget?.approvalCaptured, false);
+  assert.equal(proof.runtimeValidation.evaluator.missingHandoffTarget?.memoryWritePerformed, false);
+  assert.equal(proof.runtimeValidation.evaluator.missingHandoffTarget?.agentDispatchPerformed, false);
+  assert.equal(proof.runtimeValidation.evaluator.missingHandoffTarget?.externalSendPerformed, false);
+  assert.equal(proof.runtimeValidation.evaluator.missingHandoffTarget?.appliedLocally, false);
+  assert.equal(
+    proof.runtimeValidation.evaluator.implementationNextStep,
+    "Implementation next step: expose /evolution/proposals/{proposal_id}/status for evolution_proposal_status_handoff and advertise it via supportedHandoffs, required_for.",
+  );
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.id, requiredAction.id);
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.owner, "napoleon_runtime");
   assert.equal(proof.runtimeValidation.evaluator.napoleonRequiredActions[0]?.targetPath, requiredAction.path);
