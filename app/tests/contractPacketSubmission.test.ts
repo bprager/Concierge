@@ -154,12 +154,13 @@ test("contract packet submission fails closed before fetch when active profile d
     (error: unknown) =>
       error instanceof NapoleonBridgeError &&
       error.reason === "governance_no_go" &&
-      error.profileMode === "adult_owner" &&
+      error.profileMode === "child_protected_user" &&
       chiefOfStaffBlockedEffects.every((effect) => error.blockedEffects.includes(effect)),
   );
 
   assert.equal(fetchCalled, false);
   assert.equal(events.at(-1)?.event, "chief_of_staff_request_packet_send_failed");
   assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.profileMode, "child_protected_user");
   assert.deepEqual(events.at(-1)?.attributes.blockedEffects, chiefOfStaffBlockedEffects);
 });

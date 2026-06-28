@@ -277,13 +277,14 @@ function failClosed(
   status?: number,
   descriptorFailureReason?: DescriptorFailClosedReason,
   targetMetadata?: ContractPacketTargetMetadata,
-  metadata: { decisionId?: string; auditId?: string; governanceOutcome?: string } = {},
+  metadata: { decisionId?: string; auditId?: string; governanceOutcome?: string; profileMode?: string } = {},
 ): never {
+  const reportedProfileMode = metadata.profileMode ?? packet.profileMode;
   emitPacketEvent(dependencies, `${eventPrefix}_send_failed`, {
     traceId: packet.traceEnvelope.trace_id,
     conversationId: dependencies.conversationId,
     requestId: packet.traceEnvelope.request_id,
-    profileMode: packet.profileMode,
+    profileMode: reportedProfileMode,
     reason,
     status,
     blockedEffects,
@@ -298,7 +299,7 @@ function failClosed(
     auditId: metadata.auditId,
     governanceOutcome: metadata.governanceOutcome,
     descriptorFailureReason,
-    profileMode: packet.profileMode,
+    profileMode: reportedProfileMode,
   });
 }
 
@@ -323,7 +324,9 @@ async function submitPacket(
   const activeProfileMode = mapProfileToNapoleonMode(dependencies.profile ?? "adult_owner");
 
   if (packet.profileMode !== activeProfileMode) {
-    failClosed(dependencies, eventPrefix, "governance_no_go", packet, blockedEffects);
+    failClosed(dependencies, eventPrefix, "governance_no_go", packet, blockedEffects, undefined, undefined, undefined, {
+      profileMode: activeProfileMode,
+    });
   }
   if (dependencies.rehearsalMode) {
     failClosed(dependencies, eventPrefix, "governance_no_go", packet, blockedEffects);
