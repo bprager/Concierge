@@ -401,6 +401,7 @@ export function compareNapoleonResponseProofs(
     { label: "Napoleon recommendation", path: ["responseProof", "recommendation"] },
     { label: "Selected agents", path: ["responseProof", "selectedAgents"] },
     { label: "Why selected", path: ["responseProof", "selectedAgentReasons"] },
+    { label: "Selected-agent contributions", path: ["responseProof", "selectedAgentContributions"] },
     { label: "Allowed effects", path: ["responseProof", "allowedEffects"] },
     { label: "Blocked effects", path: ["responseProof", "blockedEffects"] },
   ];

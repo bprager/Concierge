@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added selected-agent contribution changes to sanitized Napoleon response proof comparison, so same-session proof review can show when a returned delegated finding changed without contacting Napoleon or creating authority.
 - Added count-only protected-block evidence telemetry to local Capability Intelligence snapshot exports.
 - Added correctly blocked governance and safety outcomes to the local Capability Intelligence snapshot export and snapshot-boundary answer.
 - Added local Capability Intelligence answers for correctly blocked governance conversations, so users can inspect protected safety outcomes separately from missing implementation work without contacting Napoleon.

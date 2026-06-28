@@ -13,6 +13,7 @@ function responseProofJson(input: {
   governanceOutcome?: "allow_prepare_only" | "requires_review";
   agentName?: string;
   selectionReason?: string;
+  contributionSummary?: string;
   blockedEffects?: string[];
 }): string {
   const contract = buildTextTurnContract({
@@ -38,7 +39,7 @@ function responseProofJson(input: {
           agentId: agentName.toLocaleLowerCase().replaceAll(" ", "_"),
           displayName: agentName,
           selectionReason,
-          contributionSummary: "bridge rollout context",
+          contributionSummary: input.contributionSummary ?? "bridge rollout context",
         },
       ],
       allowedEffects: ["prepare_advisory_response"],
@@ -818,6 +819,29 @@ test("compares Napoleon response proof recommendation provenance changes", () =>
 
   assert.equal(comparison.status, "changed");
   assert.ok(comparison.changes.some((change: { label: string }) => change.label === "Napoleon recommendation"));
+});
+
+test("compares Napoleon response proof selected-agent contribution changes", () => {
+  const previous = responseProofJson({
+    traceId: "trace_previous_contribution",
+    contributionSummary: "bridge rollout context",
+  });
+  const current = responseProofJson({
+    traceId: "trace_current_contribution",
+    contributionSummary: "new bridge blocker evidence",
+  });
+
+  const comparison = compareNapoleonResponseProofs(previous, current);
+
+  assert.equal(comparison.status, "changed");
+  assert.ok(
+    comparison.changes.some(
+      (change) =>
+        change.label === "Selected-agent contributions" &&
+        change.previous === "Passive Brain: bridge rollout context" &&
+        change.current === "Passive Brain: new bridge blocker evidence",
+    ),
+  );
 });
 
 test("labels redacted or unavailable Napoleon proof comparison values as metadata state", () => {
