@@ -963,6 +963,106 @@ test("capability review packet handoff fails closed when returned proof identifi
   assert.equal(JSON.stringify(events).includes("token=secret"), false);
 });
 
+test("capability review packet handoff supplements sparse no-go blocked effects", async () => {
+  const ledger = createCapabilityLedger();
+  appendCapabilitySignal(
+    ledger,
+    buildCapabilitySignal({
+      traceId: "trace_capability_packet_no_go",
+      conversationId: "conv_capability_packet_no_go",
+      turnId: "turn_capability_packet_no_go",
+      profileMode: "adult_owner",
+      channel: "text",
+      topicLabel: "napoleon integration",
+      intentLabel: "send_to_napoleon",
+      capabilityLabel: "bridge_failure_handling",
+      capabilityStatus: "missing",
+      outcomeSignal: "bridge_failed",
+      confidence: 0.9,
+      evidenceRefs: ["trace:trace_capability_packet_no_go"],
+      architectureArea: "bridge",
+      privacyClass: "metadata_only",
+      suggestedNextStep: "write_evaluator_case",
+    }),
+  );
+  const answer = answerCapabilityQuestion("What capabilities should be implemented next?", ledger, undefined, {
+    profileMode: "adult_owner",
+  });
+  assert.ok(answer);
+  if (!answer) throw new Error("expected capability answer");
+  const packet = exportCapabilityReviewPacket(answer, { generatedAt: "2026-06-23T00:00:00.000Z" });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+
+  await assert.rejects(
+    () =>
+      submitCapabilityReviewPacket(packet, {
+        conversationId: "conv_capability_packet",
+        traceId: "trace_submit_capability_packet_no_go",
+        profile: "adult_owner",
+        getEndpoint: () => "https://napoleon.example/concierge",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event: TelemetryPayload) => events.push(event),
+        fetch: async () => ({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            text: "Napoleon marked the capability review packet no-go.",
+            governanceDecision: {
+              decision_id: "decision_capability_packet_no_go",
+              request_id: "cos_trace_submit_capability_packet_no_go",
+              outcome: "no_go",
+              authority_tier: "prohibited",
+              approval_requirement: "not_available",
+              rationale: "The packet is not reviewable through this path.",
+              blocked_effects: ["external_send"],
+              trace_id: "trace_submit_capability_packet_no_go",
+              audit_id: "audit_capability_packet_no_go",
+            },
+            traceEnvelope: {
+              trace_id: "trace_submit_capability_packet_no_go",
+              parent_trace_id: "conv_capability_packet",
+              actor_id: "napoleon.chief_of_staff",
+              request_id: "cos_trace_submit_capability_packet_no_go",
+              decision_id: "decision_capability_packet_no_go",
+              timestamp: "2026-06-23T00:00:00.000Z",
+            },
+            auditEnvelope: {
+              audit_id: "audit_capability_packet_no_go",
+              trace_id: "trace_submit_capability_packet_no_go",
+              decision_id: "decision_capability_packet_no_go",
+              actor_id: "napoleon.chief_of_staff",
+              authority_tier: "prohibited",
+              approval_requirement: "not_available",
+              evidence_links: ["trace:trace_submit_capability_packet_no_go"],
+            },
+            appliedLocally: false,
+            memoryWritePerformed: false,
+            approvalCaptured: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          }),
+        }),
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      "blockedEffects" in error &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
+        JSON.stringify(["external_send", "memory_write", "agent_dispatch", "approval_capture", "runtime_authority"]),
+  );
+
+  assert.equal(events.at(-1)?.event, "capability_review_packet_send_failed");
+  assert.equal(events.at(-1)?.attributes.governanceOutcome, "no_go");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
+    "external_send",
+    "memory_write",
+    "agent_dispatch",
+    "approval_capture",
+    "runtime_authority",
+  ]);
+});
+
 test("steering handoff posts evolution review packet without applying proposal locally", async () => {
   const ledger = createCapabilityLedger();
   appendCapabilitySignal(
@@ -1443,7 +1543,7 @@ test("steering handoff fails closed when Napoleon returns no-go", async () => {
       (error as { governanceOutcome?: string }).governanceOutcome === "no_go" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
-        JSON.stringify(["memory_write", "agent_dispatch", "external_send", "approval_capture"]),
+        JSON.stringify(steeringBlockedEffects),
   );
 
   assert.equal(events.at(-1)?.event, "capability_recommendation_send_failed");
@@ -1454,12 +1554,7 @@ test("steering handoff fails closed when Napoleon returns no-go", async () => {
   assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "chief_of_staff_steering");
   assert.equal(events.at(-1)?.attributes.bridgeTargetRequestKind, "chief_of_staff_steering_handoff");
   assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("napoleon.example"), false);
-  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
-    "memory_write",
-    "agent_dispatch",
-    "external_send",
-    "approval_capture",
-  ]);
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, steeringBlockedEffects);
 });
 
 test("steering handoff rejects response claims that apply proposal or side effects", async () => {

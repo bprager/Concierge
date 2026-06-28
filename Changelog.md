@@ -8,6 +8,8 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Hardened memory proposal, capability review packet, and Chief of Staff steering `deny` and `no_go` handoff responses so sparse returned blocked-effect lists are supplemented with the local handoff safety floors in bridge errors and telemetry.
+- Hardened governed governance-review `deny` and `no_go` handoff responses so sparse returned blocked-effect lists are supplemented with the review handoff safety floor in bridge errors and telemetry.
 - Hardened canonical live Napoleon `deny` and `no_go` responses so sparse returned blocked-effect lists are supplemented with Concierge's visible local safety floor in bridge errors, telemetry, and evidence.
 - Hardened adapted `/cos/text-turn` advisory responses so sparse Napoleon blocked-effect lists are supplemented with Concierge's visible local safety floor for memory writes, approval capture, agent dispatch, and external sends.
 - Hardened authority-boundary validation against split-string browser beacon, location, and storage method aliases, closing hidden external-send, navigation, and persistence paths around the governed Napoleon bridge.

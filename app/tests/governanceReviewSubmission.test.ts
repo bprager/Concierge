@@ -521,11 +521,20 @@ test("governance review submission fails closed when Napoleon denies review", as
         }),
       }),
     (error: unknown) =>
-      error instanceof Error && error.name === "NapoleonBridgeError" && error.message.includes("governance_denied"),
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_denied") &&
+      "blockedEffects" in error &&
+      governanceReviewBlockedEffects.every((effect) =>
+        ((error as { blockedEffects?: string[] }).blockedEffects ?? []).includes(effect),
+      ),
   );
 
   assert.equal(events.at(-1)?.event, "governance_review_send_failed");
-  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, ["approval_capture", "external_send"]);
+  const blockedEffects = (events.at(-1)?.attributes.blockedEffects as string[] | undefined) ?? [];
+  for (const effect of governanceReviewBlockedEffects) {
+    assert.ok(blockedEffects.includes(effect), `event includes ${effect}`);
+  }
   assert.equal(events.at(-1)?.attributes.governanceOutcome, "deny");
   assert.equal(events.at(-1)?.attributes.bridgeTargetPath, "/v1/concierge/chief-of-staff/steering");
   assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "chief_of_staff_steering");

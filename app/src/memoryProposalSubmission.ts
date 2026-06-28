@@ -101,6 +101,18 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
+function mergeMemoryProposalBlockedEffects(returnedEffects: string[], requiredEffects: string[]): string[] {
+  const merged = [...returnedEffects];
+  const observed = new Set(merged.map((effect) => effect.trim().toLocaleLowerCase()).filter(Boolean));
+  for (const effect of requiredEffects) {
+    if (!observed.has(effect)) {
+      merged.push(effect);
+      observed.add(effect);
+    }
+  }
+  return merged;
+}
+
 function isGovernanceDecision(value: unknown): value is GovernanceDecision {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<GovernanceDecision>;
@@ -464,7 +476,7 @@ export async function submitMemoryProposalForReview(
       memoryProposal.proposalId,
       profileMode,
       response.status,
-      payload.governanceDecision.blocked_effects,
+      mergeMemoryProposalBlockedEffects(payload.governanceDecision.blocked_effects, blockedEffects),
       undefined,
       {
         decisionId: payload.governanceDecision.decision_id,

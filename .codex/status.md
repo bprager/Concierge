@@ -10,6 +10,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened memory proposal, capability review packet, and Chief of Staff steering `deny` and `no_go` handoff responses so sparse returned blocked-effect lists cannot hide the local handoff safety floors for memory write, approval capture, agent dispatch, external send, or runtime authority in bridge errors or telemetry.
+- Hardened governed governance-review `deny` and `no_go` handoff responses so sparse returned blocked-effect lists cannot hide the review handoff safety floor for approval capture, memory write, agent dispatch, external send, runtime authority, or audit append in bridge errors or telemetry.
 - Hardened canonical live Napoleon `deny` and `no_go` responses so sparse returned blocked-effect lists cannot hide Concierge's local safety floor for memory writes, approval capture, agent dispatch, or external sends in bridge errors, telemetry, or sanitized evidence.
 - Hardened adapted `/cos/text-turn` advisory responses so sparse returned blocked-effect lists cannot hide Concierge's local safety floor for memory writes, approval capture, agent dispatch, or external sends in governance, delegation, and bridge evidence.
 - Hardened repository authority-boundary validation against split-string browser beacon, location, and storage method aliases, so hidden external-send, navigation, or persistence paths cannot move prompt, proof, token, transcript, or response metadata around the governed Napoleon bridge.

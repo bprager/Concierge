@@ -406,6 +406,18 @@ function hasForbiddenSteeringSideEffectClaim(payload: Partial<ChiefOfStaffSteeri
   return requiredFalseFields.some((field) => payload[field] !== false) || hasForbiddenSideEffectTextClaim(payload.text);
 }
 
+function mergeSteeringBlockedEffects(returnedEffects: string[], requiredEffects: string[]): string[] {
+  const merged = [...returnedEffects];
+  const observed = new Set(merged.map((effect) => effect.trim().toLocaleLowerCase()).filter(Boolean));
+  for (const effect of requiredEffects) {
+    if (!observed.has(effect)) {
+      merged.push(effect);
+      observed.add(effect);
+    }
+  }
+  return merged;
+}
+
 function draftMatchesActiveProfile(draft: ChiefOfStaffSteeringDraft, profileMode: NapoleonProfileMode): boolean {
   return draft.evolutionProposal.affected_profiles.includes(profileMode);
 }
@@ -741,7 +753,7 @@ export async function submitCapabilityReviewPacket(
       payload.governanceDecision.request_id,
       profileMode,
       response.status,
-      payload.governanceDecision.blocked_effects,
+      mergeSteeringBlockedEffects(payload.governanceDecision.blocked_effects, blockedEffects),
       {
         governanceReferences: {
           decisionId: payload.governanceDecision.decision_id,
@@ -1032,7 +1044,7 @@ export async function submitChiefOfStaffSteeringDraft(
       payload.governanceDecision.request_id,
       profileMode,
       response.status,
-      payload.governanceDecision.blocked_effects,
+      mergeSteeringBlockedEffects(payload.governanceDecision.blocked_effects, blockedEffects),
       {
         governanceReferences: {
           decisionId: payload.governanceDecision.decision_id,

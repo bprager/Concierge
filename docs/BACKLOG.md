@@ -89,6 +89,8 @@ Acceptance criteria:
 - Local acknowledgement may record that review was seen, but it is not Napoleon approval.
 - A live governance review packet can be submitted only through the governed Chief of Staff bridge after endpoint and descriptor preflight pass and Rehearsal Mode is off.
 - Napoleon review responses require matching governance, trace, and audit proof before Concierge displays them as reviewed.
+- Sparse remote `deny` or `no_go` responses for governed governance-review handoffs are supplemented with the visible review handoff safety floor for approval capture, memory write, agent dispatch, external send, runtime authority, and audit append in bridge errors and telemetry.
+- Sparse remote `deny` or `no_go` responses for memory proposal, capability review packet, and Chief of Staff steering handoffs are supplemented with their local handoff safety floors for memory write, approval capture, agent dispatch, external send, and runtime authority in bridge errors and telemetry.
 - `no_go` prevents sending the advisory request forward.
 - Child protected mode uses stricter wording and never implies secret-keeping or external action.
 

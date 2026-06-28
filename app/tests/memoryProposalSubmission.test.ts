@@ -495,7 +495,7 @@ test("memory proposal submission fails closed when Napoleon denies review", asyn
       (error as { governanceOutcome?: string }).governanceOutcome === "deny" &&
       "blockedEffects" in error &&
       JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) ===
-        JSON.stringify(["memory_write", "approval_capture", "external_send"]),
+        JSON.stringify(memoryProposalBlockedEffects),
   );
 
   assert.equal(events.at(-1)?.event, "memory_proposal_send_failed");
@@ -506,11 +506,7 @@ test("memory proposal submission fails closed when Napoleon denies review", asyn
   assert.equal(events.at(-1)?.attributes.bridgeTargetOperation, "memory_proposal_review");
   assert.equal(events.at(-1)?.attributes.bridgeTargetRequestKind, "memory_proposal_review_handoff");
   assert.equal(JSON.stringify(events.at(-1)?.attributes).includes("napoleon.example"), false);
-  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, [
-    "memory_write",
-    "approval_capture",
-    "external_send",
-  ]);
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, memoryProposalBlockedEffects);
 });
 
 test("memory proposal submission rejects response claims that write memory or capture approval", async () => {

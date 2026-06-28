@@ -77,6 +77,18 @@ const GOVERNANCE_REVIEW_BLOCKED_EFFECTS = [
   "audit_append",
 ];
 
+function mergeGovernanceReviewBlockedEffects(returnedEffects: string[]): string[] {
+  const merged = [...returnedEffects];
+  const observed = new Set(merged.map((effect) => effect.trim().toLocaleLowerCase()).filter(Boolean));
+  for (const effect of GOVERNANCE_REVIEW_BLOCKED_EFFECTS) {
+    if (!observed.has(effect)) {
+      merged.push(effect);
+      observed.add(effect);
+    }
+  }
+  return merged;
+}
+
 function emitGovernanceReviewEvent(
   dependencies: GovernanceReviewSubmissionDependencies,
   event: string,
@@ -486,7 +498,7 @@ export async function submitGovernanceReviewForNapoleonReview(
       payload.governanceDecision.audit_id,
       review.profile,
       response.status,
-      payload.governanceDecision.blocked_effects,
+      mergeGovernanceReviewBlockedEffects(payload.governanceDecision.blocked_effects),
       undefined,
       targetMetadata,
     );
