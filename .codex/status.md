@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Hardened evolution proposal submission and new-agent proposal review `deny` and `no_go` responses so sparse returned blocked-effect lists preserve Napoleon's returned effects while appending the local proposal safety floors for evolution application or agent activation, registry update, approval capture, memory write, agent dispatch, external send, and runtime authority in bridge errors and telemetry.
 - Hardened observability trace handoff submission so stale trace packets cannot trigger bridge requests under a different active profile, and blocked errors plus telemetry now report the active profile.
 - Hardened evolution proposal submission and new-agent proposal review so stale proposal packets cannot trigger bridge requests under a different active profile, and blocked errors plus telemetry now report the active profile.
 - Hardened read-only evolution proposal status refresh so stale lifecycle records cannot trigger a bridge request under a different active profile, and the blocked error plus telemetry now report the active profile.

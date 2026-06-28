@@ -372,6 +372,60 @@ test("evolution proposal submission sends the packet to the explicit Napoleon in
   assert.equal(result.agentDispatchPerformed, false);
 });
 
+test("evolution proposal submission supplements sparse no-go blocked effects with local safety floor", async () => {
+  const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
+    profile: "adult_owner",
+    traceId: "trace_evolution",
+  });
+  const events: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  const sparseBlockedEffects = ["external_send"];
+  const mergedBlockedEffects = [
+    "external_send",
+    "evolution_application",
+    "registry_update",
+    "approval_capture",
+    "memory_write",
+    "agent_dispatch",
+    "runtime_authority",
+  ];
+
+  await assert.rejects(
+    () =>
+      submitEvolutionProposalToNapoleon(packet, {
+        conversationId: "conv_evolution",
+        traceId: "trace_submit",
+        getEndpoint: () => "https://napoleon.example",
+        descriptorConnection: readyDescriptorConnection,
+        emit: (event) => events.push(event),
+        fetch: async () => {
+          const response = buildResponse("trace_submit", "cos_trace_submit");
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              ...response,
+              governanceDecision: {
+                ...response.governanceDecision,
+                outcome: "no_go",
+                blocked_effects: sparseBlockedEffects,
+              },
+            }),
+          };
+        },
+      }),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_no_go") &&
+      JSON.stringify((error as { blockedEffects?: string[] }).blockedEffects) === JSON.stringify(mergedBlockedEffects),
+  );
+
+  assert.equal(events.at(-1)?.event, "evolution_proposal_submission_send_failed");
+  assert.equal(events.at(-1)?.attributes.reason, "governance_no_go");
+  assert.equal(events.at(-1)?.attributes.governanceOutcome, "no_go");
+  assert.deepEqual(events.at(-1)?.attributes.blockedEffects, mergedBlockedEffects);
+});
+
 test("evolution proposal submission rejects response-side application or registry claims", async () => {
   const packet = buildEvolutionProposalSubmissionPacket(buildCapabilityPacket(), {
     profile: "adult_owner",
