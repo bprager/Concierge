@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Added implementation-next-step wording to adult Napoleon required-action answers so local contract-alignment and evaluator evidence can say which runtime path to expose, which request kind it serves, and which descriptor fields should advertise it.
+- Added implementation-next-step metadata to focused Napoleon required-action exports so the handoff repair packet carries the runtime path, request kind, and descriptor advertising fields without requiring consumers to reconstruct the fix from prose.
 - Added visible Napoleon required-action target details to the governed routes panel so runtime mapping gaps show the missing path, request kind, descriptor advertising fields, and live-promotion blocker state.
 - Added returned blocked effects to the successful observability trace handoff review panel so trace evidence reviews keep their blocked authority visible alongside outcome, decision, audit, and false side-effect flags.
 - Hardened observability trace handoff `deny` and `no_go` responses so sparse returned blocked-effect lists preserve Napoleon's returned effects and are supplemented with the local trace-evidence safety floor in bridge errors and telemetry.

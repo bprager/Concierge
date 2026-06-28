@@ -10196,6 +10196,7 @@ test("answers Napoleon contract-alignment required actions without imported eval
         advertiseUsing?: string[];
         blockingLivePromotion?: boolean;
       };
+      implementationNextStep?: string;
       napoleonRequiredActions?: Array<{ id?: string; targetPath?: string; requestKind?: string }>;
       boundary?: Record<string, boolean>;
     };
@@ -10217,6 +10218,10 @@ test("answers Napoleon contract-alignment required actions without imported eval
     assert.equal(exported.missingHandoffTarget?.operationId, "evolution_proposal_status");
     assert.deepEqual(exported.missingHandoffTarget?.advertiseUsing, ["supportedHandoffs", "required_for"]);
     assert.equal(exported.missingHandoffTarget?.blockingLivePromotion, true);
+    assert.equal(
+      exported.implementationNextStep,
+      "Implementation next step: expose /evolution/proposals/{proposal_id}/status for evolution_proposal_status_handoff and advertise it via supportedHandoffs, required_for.",
+    );
     assert.equal(exported.napoleonRequiredActions?.[0]?.id, "expose_evolution_proposal_status_runtime_target");
     assert.equal(exported.napoleonRequiredActions?.[0]?.targetPath, "/evolution/proposals/{proposal_id}/status");
     assert.equal(exported.napoleonRequiredActions?.[0]?.requestKind, "evolution_proposal_status_handoff");
@@ -11441,6 +11446,11 @@ test("renders unadvertised evaluator handoff required action from validation imp
     assert.ok(requiredActionExport.textContent?.includes('"id": "advertise_evaluation_review_handoff"'));
     assert.ok(requiredActionExport.textContent?.includes('"handoffName": "evaluation_review"'));
     assert.ok(requiredActionExport.textContent?.includes('"operationId": "evaluation_review"'));
+    assert.ok(
+      requiredActionExport.textContent?.includes(
+        '"implementationNextStep": "Implementation next step: expose /chief-of-staff/reviews/evaluation for evaluation_review_handoff and advertise it via supportedHandoffs, supported_handoffs, required_for, descriptor route metadata for /chief-of-staff/reviews/evaluation."',
+      ),
+    );
     assert.ok(requiredActionExport.textContent?.includes('"advertiseUsing"'));
     assert.ok(requiredActionExport.textContent?.includes('"supportedHandoffs"'));
     assert.ok(requiredActionExport.textContent?.includes('"required_for"'));

@@ -5455,6 +5455,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const actions = actionExport.actions;
     if (!actions.length) return;
     const priority = prioritizeNapoleonRequiredAction(actions);
+    const implementationNextStep = formatNapoleonRequiredActionImplementationStep(priority);
 
     const traceId = newTraceId();
     const exportPayload = {
@@ -5478,6 +5479,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       requiredActionCount: actions.length,
       highestPriorityAction: priority,
       missingHandoffTarget: priority,
+      ...(implementationNextStep ? { implementationNextStep } : {}),
       napoleonRequiredActions: actions,
       boundary: {
         localExportOnly: true,

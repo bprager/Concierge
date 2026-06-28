@@ -11,6 +11,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 ## Recently Completed
 
 - Added implementation-next-step wording to adult Napoleon required-action answers so local contract-alignment and evaluator evidence can say which runtime path to expose, which request kind it serves, and which descriptor fields should advertise it.
+- Added implementation-next-step metadata to focused Napoleon required-action exports so the handoff repair packet now carries the runtime path, request kind, and descriptor advertising fields directly while preserving count-only telemetry.
 - Added visible Napoleon required-action target details to the governed routes panel so runtime mapping gaps show the missing path, request kind, descriptor advertising fields, and live-promotion blocker state.
 - Added returned blocked effects to the successful observability trace handoff review panel so reviewed trace evidence keeps blocked authority visible alongside outcome, decision, audit, and false side-effect flags.
 - Hardened observability trace handoff `deny` and `no_go` responses so sparse returned blocked-effect lists preserve Napoleon's returned effects while appending the local trace-evidence safety floor for trace append, audit authority, approval capture, memory write, agent dispatch, external send, task routing, and local application in bridge errors and telemetry.
