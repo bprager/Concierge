@@ -4182,6 +4182,7 @@ test("answers local capability snapshot export boundary questions without contac
     assert.ok(answerText.includes("active profile"));
     assert.ok(answerText.includes("common conversations"));
     assert.ok(answerText.includes("working-well capabilities"));
+    assert.ok(answerText.includes("correctly blocked governance and safety outcomes"));
     assert.ok(answerText.includes("missing or blocked capabilities"));
     assert.ok(answerText.includes("architecture improvement areas"));
     assert.ok(answerText.includes("recommended next capabilities"));

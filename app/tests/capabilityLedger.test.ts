@@ -774,6 +774,27 @@ test("exports a local capability trend snapshot without raw content or authority
       architecture: "text_ui",
     }),
   );
+  appendCapabilitySignal(
+    ledger,
+    deriveCapabilitySignalFromEvent("bridge_request_failed", {
+      traceId: "trace_snapshot_governance_blocked",
+      conversationId: "conv_snapshot_governance_blocked",
+      turnId: "turn_snapshot_governance_blocked",
+      profileMode: "adult_owner",
+      reason: "governance_no_go",
+      governanceOutcome: "no_go",
+      blockedEffects: ["external_send", "memory_write"],
+      bridgeTargetOperation: "text_turn",
+      bridgeTargetRequestKind: "text_turn",
+      approvalCaptured: false,
+      memoryWritePerformed: false,
+      agentDispatchPerformed: false,
+      externalSendPerformed: false,
+      rawPrompt: "unsafe blocked snapshot prompt",
+      endpoint: "https://napoleon.example.test",
+      bearerToken: "secret-token",
+    }),
+  );
 
   const snapshot = exportCapabilityTrendSnapshot(ledger, {
     generatedAt: "2026-06-27T00:00:00.000Z",
@@ -783,10 +804,16 @@ test("exports a local capability trend snapshot without raw content or authority
 
   assert.equal(snapshot.schemaVersion, "concierge.capability-trend-snapshot.export.v1");
   assert.equal(snapshot.profileMode, "adult_owner");
-  assert.equal(snapshot.evidenceCount, 3);
+  assert.equal(snapshot.evidenceCount, 4);
   assert.equal(snapshot.sections.common.rows[0].label, "deployment");
   assert.equal(snapshot.sections.workingWell.rows[0].label, "release_summary");
-  assert.equal(snapshot.sections.missingOrBlocked.rows[0].label, "napoleon_text_turn_bridge");
+  assert.equal(
+    snapshot.sections.missingOrBlocked.rows.some((row) => row.label === "napoleon_text_turn_bridge"),
+    true,
+  );
+  assert.equal(snapshot.sections.protectedBlocked.rows[0].label, "governed_bridge_no_go_handling");
+  assert.equal(snapshot.sections.protectedBlocked.rows[0].displayLabel, "Napoleon no-go handling");
+  assert.equal(snapshot.sections.protectedBlocked.rows[0].status, "blocked");
   assert.equal(snapshot.sections.architectureAreas.rows[0].label, "bridge");
   assert.equal(snapshot.sections.recommendedNext.rows[0].label, "napoleon_text_turn_bridge");
   assert.equal(snapshot.boundary.proposalOnly, true);
@@ -798,6 +825,9 @@ test("exports a local capability trend snapshot without raw content or authority
   assert.ok(snapshot.authorityCaveat.includes("not Napoleon approval"));
   assert.equal(JSON.stringify(snapshot).includes("raw deployment release content"), false);
   assert.equal(JSON.stringify(snapshot).includes("private prompt"), false);
+  assert.equal(JSON.stringify(snapshot).includes("unsafe blocked snapshot prompt"), false);
+  assert.equal(JSON.stringify(snapshot).includes("napoleon.example.test"), false);
+  assert.equal(JSON.stringify(snapshot).includes("secret-token"), false);
 });
 
 test("answers missing or blocked capability questions separately from successful safety blocks", () => {

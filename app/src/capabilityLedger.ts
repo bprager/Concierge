@@ -258,6 +258,7 @@ export interface ExportedCapabilityTrendSnapshot {
     common: CapabilityTrendSnapshotSection;
     workingWell: CapabilityTrendSnapshotSection;
     missingOrBlocked: CapabilityTrendSnapshotSection;
+    protectedBlocked: CapabilityTrendSnapshotSection;
     architectureAreas: CapabilityTrendSnapshotSection;
     recommendedNext: CapabilityTrendSnapshotSection;
   };
@@ -1047,6 +1048,7 @@ export function exportCapabilityTrendSnapshot(
   const common = answerCapabilityQuestion("What conversations are most common?", ledger, options.taxonomy, answerOptions);
   const workingWell = answerCapabilityQuestion("What conversations are working well?", ledger, options.taxonomy, answerOptions);
   const missingOrBlocked = answerCapabilityQuestion("What capabilities are missing or blocked?", ledger, options.taxonomy, answerOptions);
+  const protectedBlocked = answerCapabilityQuestion("What conversations are correctly blocked?", ledger, options.taxonomy, answerOptions);
   const architectureAreas = answerCapabilityQuestion(
     "What part of the Concierge architecture should improve next?",
     ledger,
@@ -1064,6 +1066,7 @@ export function exportCapabilityTrendSnapshot(
       common: capabilityTrendSnapshotSection(common, "common_conversations"),
       workingWell: capabilityTrendSnapshotSection(workingWell, "working_well_conversations"),
       missingOrBlocked: capabilityTrendSnapshotSection(missingOrBlocked, "missing_or_blocked_capabilities"),
+      protectedBlocked: capabilityTrendSnapshotSection(protectedBlocked, "protected_blocked_conversations"),
       architectureAreas: capabilityTrendSnapshotSection(architectureAreas, "architecture_improvement_areas"),
       recommendedNext: capabilityTrendSnapshotSection(recommendedNext, "recommended_next_capabilities"),
     },
@@ -1657,6 +1660,18 @@ export function answerCapabilityQuestion(
         details: ["snapshot section", "sanitized derived metadata"],
       },
       {
+        label: "protected_blocked_capabilities",
+        displayLabel: "correctly blocked capabilities",
+        count: signals.filter(
+          (signal) =>
+            signal.capabilityStatus === "blocked" &&
+            signal.suggestedNextStep === "no_action" &&
+            (signal.architectureArea === "governance_ux" || signal.topicLabel === "governance"),
+        ).length,
+        status: "blocked",
+        details: ["snapshot section", "protected governance and safety outcomes"],
+      },
+      {
         label: "architecture_improvement_areas",
         displayLabel: "architecture improvement areas",
         count: Object.keys(aggregate.byArchitectureArea).length,
@@ -1673,7 +1688,7 @@ export function answerCapabilityQuestion(
       kind,
       question,
       summary:
-        "Local Capability Intelligence snapshot export: active profile scoped sanitized derived metadata for common conversations, working-well capabilities, missing or blocked capabilities, architecture improvement areas, and recommended next capabilities.",
+        "Local Capability Intelligence snapshot export: active profile scoped sanitized derived metadata for common conversations, working-well capabilities, correctly blocked governance and safety outcomes, missing or blocked capabilities, architecture improvement areas, and recommended next capabilities.",
       rows,
       evidenceCount: signals.length,
       caveat: `${CAPABILITY_TREND_SNAPSHOT_PRIVACY_CAVEAT} The snapshot does not contact Napoleon and remains local inspection evidence only. It does not capture approval, write memory, dispatch agents, send externally, apply evolution, or implement capability changes. Recommendations are proposal-only local guidance. raw prompts, raw responses, endpoints, credentials, request bodies, response bodies, raw audio, and raw video are excluded.${childCaveat}`,
