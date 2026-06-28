@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added rendered Text Concierge coverage proving unresolved evolution proposal status questions answer from local lifecycle metadata as tracking-only status without contacting Napoleon, capturing approval, applying evolution, or performing side effects.
 - Kept prepared readiness repair checklist answers local in both Rehearsal Mode and the normal Send path, so asking what was prepared from sanitized proof metadata does not contact Napoleon.
 - Added local Text Concierge answers for prepared readiness repair checklists, so adult/operator users can ask what was prepared from sanitized readiness proof metadata while child-protected answers minimize repair details and telemetry stays count-only.
 - Added a Text Concierge readiness-panel action that prepares a local proposal-only Napoleon repair checklist from sanitized readiness proof exports, renders repair targets for operator review, and emits count-only telemetry without IDs, paths, action text, implementation steps, or side effects.

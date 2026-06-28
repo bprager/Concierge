@@ -6319,6 +6319,109 @@ test("answers local review history questions without contacting Napoleon", async
   }
 });
 
+test("answers unresolved evolution proposal status questions as tracking-only without contacting Napoleon", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  const originalInfo = console.info;
+  const telemetryPayloads: Array<{ event: string; attributes: Record<string, unknown> }> = [];
+  let fetchCalls = 0;
+
+  try {
+    console.info = (...args: unknown[]) => {
+      const payload = args[1];
+      if (
+        args[0] === "[concierge.telemetry]" &&
+        payload &&
+        typeof payload === "object" &&
+        "event" in payload &&
+        "attributes" in payload
+      ) {
+        telemetryPayloads.push(payload as { event: string; attributes: Record<string, unknown> });
+      }
+    };
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+    localStorage.setItem(
+      "concierge_evolution_proposal_lifecycle",
+      JSON.stringify([
+        {
+          schemaVersion: "concierge.evolution-proposal-lifecycle.v1",
+          proposalId: "evolution-proposal-stale-answer",
+          sourceCapabilityReviewId: "capability-review-stale-answer",
+          profileMode: "adult_owner",
+          capability: "Unresolved status question answering",
+          architectureArea: "observability",
+          draftedAt: "2026-06-25T00:03:00.000Z",
+          submittedAt: "2026-06-25T00:04:00.000Z",
+          updatedAt: "2026-06-25T00:05:00.000Z",
+          currentLifecycleState: "stale",
+          latestKnownOutcome: "Napoleon reports this proposal status is stale.",
+          intakeDecisionId: "decision_evolution_stale_answer",
+          intakeAuditId: "audit_evolution_stale_answer",
+          intakeTraceId: "trace_evolution_stale_answer",
+          statusRefresh: {
+            available: true,
+            reason: "refreshed_via_governed_route",
+            nextStep: "Refresh through Napoleon-governed status evidence.",
+          },
+          nextRecommendedUserAction: "Treat status as unresolved until Napoleon returns fresh status evidence.",
+          privacyClass: "metadata_only",
+          boundary: {
+            proposalOnly: true,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+            registryUpdatePerformed: false,
+            evolutionApplied: false,
+            appliedLocally: false,
+          },
+        },
+      ]),
+    );
+
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What is the status of my evolution proposal?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    await waitFor(() => {
+      const text = document.body.textContent ?? "";
+      assert.ok(text.includes("Evolution proposal"));
+      assert.ok(text.includes("stale (unresolved tracking-only status)"));
+      assert.ok(text.includes("Napoleon reports this proposal status is stale."));
+      assert.ok(text.includes("This is a local review-history summary only"));
+      assert.ok(text.includes("does not approve, apply, write memory, dispatch agents, send externally, update registries, activate agents, or apply evolution"));
+    });
+    assert.equal(fetchCalls, 0);
+    const answered = telemetryPayloads.find((event) => event.event === "local_review_history_answered");
+    assert.ok(answered);
+    assert.equal(answered.attributes.localAnswerOnly, true);
+    assert.equal(answered.attributes.profileMode, "adult_owner");
+    assert.equal(answered.attributes.approvalCaptured, false);
+    assert.equal(answered.attributes.memoryWritePerformed, false);
+    assert.equal(answered.attributes.agentDispatchPerformed, false);
+    assert.equal(answered.attributes.externalSendPerformed, false);
+    assert.equal(answered.attributes.evolutionApplied, false);
+    assert.equal(answered.attributes.appliedLocally, false);
+    assert.equal(JSON.stringify(answered).includes("decision_evolution_stale_answer"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    console.info = originalInfo;
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("ignores unsafe persisted evolution proposal lifecycle records after reload", async () => {
   const dom = installDom();
   const [{ cleanup, render }, { App }] = await Promise.all([
