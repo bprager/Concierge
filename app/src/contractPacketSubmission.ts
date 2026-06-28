@@ -8,6 +8,7 @@ import { readConfiguredAuthTokenFromStorage, readConfiguredEndpointFromStorage }
 import {
   buildDescriptorConnectionState,
   descriptorSupportsGovernedHandoff,
+  mapProfileToNapoleonMode,
   type AuditEnvelope,
   type ChiefOfStaffRequest,
   type DescriptorConnectionInput,
@@ -319,7 +320,11 @@ async function submitPacket(
     kind === "chief_of_staff_request"
       ? [...CHIEF_OF_STAFF_REQUEST_BLOCKED_EFFECTS]
       : [...GOVERNANCE_EVALUATION_BLOCKED_EFFECTS];
+  const activeProfileMode = mapProfileToNapoleonMode(dependencies.profile ?? "adult_owner");
 
+  if (packet.profileMode !== activeProfileMode) {
+    failClosed(dependencies, eventPrefix, "governance_no_go", packet, blockedEffects);
+  }
   if (dependencies.rehearsalMode) {
     failClosed(dependencies, eventPrefix, "governance_no_go", packet, blockedEffects);
   }

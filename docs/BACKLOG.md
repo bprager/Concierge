@@ -388,6 +388,7 @@ Acceptance criteria:
 - Chief of Staff steering handoff helpers must re-check the draft's affected profile against the active profile at submission time and fail closed before any request fetch on mismatch.
 - Governance review handoff helpers must re-check the review profile against the active profile at submission time and fail closed before any request fetch on mismatch.
 - Chief of Staff taxonomy review handoff helpers must re-check the draft's affected profiles against the active profile at submission time and fail closed before any request fetch on mismatch.
+- Chief of Staff request and governance evaluation contract packet handoff helpers must re-check packet profile scope against the active profile at submission time and fail closed before any request fetch on mismatch.
 - Fail-closed memory proposal, governance review, Chief of Staff steering, and taxonomy review handoff messages, errors, and telemetry must include the active profile mode, so blocked governed handoffs preserve child-protected, guest, collaborator, or owner scope.
 - Successful and fail-closed text response telemetry must include the active local profile and Napoleon profile mode, so derived capability intelligence preserves child-protected, guest, collaborator, or owner scope.
 - Successful text responses, including adapted explicit `/cos/text-turn` advisory responses, must fail closed as contract mismatches if they claim memory writes, approval capture, external sends, agent dispatch, or local application.
