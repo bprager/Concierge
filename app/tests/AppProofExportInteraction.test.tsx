@@ -4180,6 +4180,92 @@ test("records child profile scope when answering local capability intelligence q
   }
 });
 
+test("renders common capability answers without contacting Napoleon", async () => {
+  const dom = installDom();
+  const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }, telemetry, capabilityLedgerModule] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+    import("../src/telemetry.js"),
+    import("../src/capabilityLedger.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const originalFetch = globalThis.fetch;
+  let fetchCalls = 0;
+
+  try {
+    capabilityLedgerModule.clearCapabilityLedger(telemetry.capabilityLedger);
+    globalThis.fetch = (async (_input: string | URL | Request) => {
+      fetchCalls += 1;
+      return harnessJsonResponse(500, { error: "unexpected fetch" });
+    }) as typeof fetch;
+    telemetry.emitEvent("response_generated", {
+      traceId: "trace_common_capability_rendered_1",
+      conversationId: "conv_common_capability_rendered",
+      turnId: "turn_common_capability_rendered_1",
+      profile: "adult_owner",
+    });
+    telemetry.emitEvent("response_generated", {
+      traceId: "trace_common_capability_rendered_2",
+      conversationId: "conv_common_capability_rendered",
+      turnId: "turn_common_capability_rendered_2",
+      profile: "adult_owner",
+    });
+    telemetry.emitEvent("memory_proposal_review_created", {
+      traceId: "trace_common_capability_rendered_memory",
+      conversationId: "conv_common_capability_rendered",
+      turnId: "turn_common_capability_rendered_memory",
+      profile: "adult_owner",
+      rawPrompt: "raw memory prompt must not render",
+    });
+
+    const view = render(<App />);
+    fireEvent.change(view.getByPlaceholderText("Ask Napoleon through Concierge..."), {
+      target: { value: "What capabilities are most common?" },
+    });
+    await user.click(view.getByRole("button", { name: "Rehearse" }));
+
+    let capabilityAnswer: HTMLElement | undefined;
+    await waitFor(() => {
+      capabilityAnswer = Array.from(document.querySelectorAll("article.assistant")).find((article) =>
+        article.textContent?.includes("Most common local conversation capabilities"),
+      ) as HTMLElement | undefined;
+      assert.ok(capabilityAnswer);
+    });
+    assert.ok(capabilityAnswer);
+    const answerText = capabilityAnswer.textContent ?? "";
+    assert.ok(answerText.includes("Local text response: 2"));
+    assert.ok(answerText.includes("memory_proposal_review: 1"));
+    assert.ok(answerText.includes("Profile scope: adult_owner"));
+    assert.ok(answerText.includes("Based on local metadata only"));
+    assert.ok(answerText.includes("proposal-only"));
+    assert.equal(answerText.includes("raw memory prompt"), false);
+    assert.equal(fetchCalls, 0);
+
+    const telemetryBuffer = JSON.parse(localStorage.getItem("concierge_telemetry_buffer_v1") ?? "{}") as {
+      events?: Array<{ event: string; attributes: Record<string, unknown> }>;
+    };
+    const answered = telemetryBuffer.events
+      ?.filter((event) => event.event === "capability_intelligence_answered")
+      .at(-1);
+    assert.equal(answered?.attributes.kind, "common_capabilities");
+    assert.equal(answered?.attributes.profileMode, "adult_owner");
+    assert.equal(answered?.attributes.localAnswerOnly, true);
+    assert.equal(answered?.attributes.approvalCaptured, false);
+    assert.equal(answered?.attributes.memoryWritePerformed, false);
+    assert.equal(answered?.attributes.agentDispatchPerformed, false);
+    assert.equal(answered?.attributes.externalSendPerformed, false);
+    assert.equal(answered?.attributes.appliedLocally, false);
+    assert.equal(JSON.stringify(answered).includes("What capabilities are most common"), false);
+    assert.equal(JSON.stringify(answered).includes("raw memory prompt"), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    capabilityLedgerModule.clearCapabilityLedger(telemetry.capabilityLedger);
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("answers local capability snapshot export boundary questions without contacting Napoleon", async () => {
   const dom = installDom();
   const [{ cleanup, fireEvent, render, waitFor }, userEventModule, { App }] = await Promise.all([
