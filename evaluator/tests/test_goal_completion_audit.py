@@ -252,12 +252,80 @@ class GoalCompletionAuditTests(unittest.TestCase):
             ["/evolution/proposals/{proposal_id}/status"],
         )
 
+    def test_runtime_handoff_token_blocker_becomes_local_completion_blocker_without_token_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime_handoff_path = Path(tmp) / "concierge-runtime-handoff-status.json"
+            runtime_handoff_path.write_text(
+                json.dumps(
+                    {
+                        "kind": "concierge.runtime-handoff-status.v1",
+                        "authProvisioning": {
+                            "tokenConfigured": False,
+                            "tokenFileConfigured": True,
+                            "tokenFileReadable": False,
+                            "tokenRetained": False,
+                            "tokenFilePathRetained": False,
+                        },
+                        "readiness": {
+                            "canProceed": False,
+                            "blockers": [
+                                {
+                                    "id": "token_file_unreadable",
+                                    "owner": "concierge_operator",
+                                    "external": False,
+                                    "nextAction": (
+                                        "Provision approved runtime token-file access for the Concierge process "
+                                        "without copying token values into artifacts."
+                                    ),
+                                }
+                            ],
+                            "nextAction": "provision_runtime_token_access",
+                            "validation": ["make runtime-handoff-status", "make check"],
+                        },
+                        "boundary": {
+                            "localHandoffEvidenceOnly": True,
+                            "doesNotContactNapoleon": True,
+                            "doesNotApprove": True,
+                            "doesNotWriteMemory": True,
+                            "doesNotDispatchAgents": True,
+                            "doesNotSendExternally": True,
+                            "doesNotApplyEvolution": True,
+                            "endpointHostRetained": False,
+                            "tokenRetained": False,
+                            "tokenFilePathRetained": False,
+                            "requestBodyRetained": False,
+                            "responseBodyRetained": False,
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = goal_completion_audit.build_report(runtime_handoff_status_path=runtime_handoff_path)
+
+        self.assertEqual(report["runtimeHandoffEvidence"]["path"], str(runtime_handoff_path))
+        self.assertTrue(report["runtimeHandoffEvidence"]["loaded"])
+        self.assertFalse(report["runtimeHandoffEvidence"]["canProceed"])
+        self.assertEqual(report["runtimeHandoffEvidence"]["localBlockerCount"], 1)
+        self.assertEqual(report["runtimeHandoffEvidence"]["externalBlockerCount"], 0)
+        self.assertIn("runtime_handoff_token_access", report["completionGate"]["blockingRequirementIds"])
+        self.assertEqual(report["completionGate"]["localBlockerCount"], 1)
+        self.assertEqual(report["completionGate"]["externalBlockerCount"], 1)
+        blocker = next(
+            item for item in report["blockers"] if item["requirementId"] == "runtime_handoff_token_access"
+        )
+        self.assertEqual(blocker["owner"], "concierge_operator")
+        self.assertFalse(blocker["external"])
+        self.assertNotIn("napoleon-runtime-pilot-auth-token", json.dumps(report))
+
     def test_make_target_can_forward_retained_alignment_report(self):
         makefile = Path("Makefile").read_text(encoding="utf-8")
 
         self.assertIn("NAPOLEON_CONTRACT_ALIGNMENT_OUT ?= /tmp/concierge-napoleon-alignment.json", makefile)
+        self.assertIn("GOAL_COMPLETION_RUNTIME_HANDOFF_STATUS ?= /tmp/concierge-runtime-handoff-status.json", makefile)
         self.assertIn("GOAL_COMPLETION_ALIGNMENT_REPORT", makefile)
         self.assertIn("--contract-alignment-report $(GOAL_COMPLETION_ALIGNMENT_REPORT)", makefile)
+        self.assertIn("--runtime-handoff-status $(GOAL_COMPLETION_RUNTIME_HANDOFF_STATUS)", makefile)
 
 
 if __name__ == "__main__":

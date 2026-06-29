@@ -1,6 +1,7 @@
 .PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment runtime-handoff-status goal-completion-audit goal-blocker-handoff goal-blocker-goal-prompt generate-bridge-operations bridge-operations-check eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
 
 NAPOLEON_CONTRACT_ALIGNMENT_OUT ?= /tmp/concierge-napoleon-alignment.json
+GOAL_COMPLETION_RUNTIME_HANDOFF_STATUS ?= /tmp/concierge-runtime-handoff-status.json
 
 check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare bridge-operations-check schema-check app-test app-smoke app-build tauri-check
 
@@ -38,7 +39,7 @@ runtime-handoff-status:
 	uv run python scripts/runtime_handoff_status.py --env .env --out /tmp/concierge-runtime-handoff-status.json $(if $(NAPOLEON_RUNTIME_HEALTH_JSON),--health-json $(NAPOLEON_RUNTIME_HEALTH_JSON),) $(if $(NAPOLEON_CONTRACT_ALIGNMENT_REPORT),--contract-alignment-report $(NAPOLEON_CONTRACT_ALIGNMENT_REPORT),)
 
 goal-completion-audit:
-	uv run python scripts/goal_completion_audit.py --out /tmp/concierge-goal-completion-audit.json --quiet $(if $(GOAL_COMPLETION_ALIGNMENT_REPORT),--contract-alignment-report $(GOAL_COMPLETION_ALIGNMENT_REPORT),)
+	uv run python scripts/goal_completion_audit.py --out /tmp/concierge-goal-completion-audit.json --quiet $(if $(GOAL_COMPLETION_ALIGNMENT_REPORT),--contract-alignment-report $(GOAL_COMPLETION_ALIGNMENT_REPORT),) $(if $(wildcard $(GOAL_COMPLETION_RUNTIME_HANDOFF_STATUS)),--runtime-handoff-status $(GOAL_COMPLETION_RUNTIME_HANDOFF_STATUS),)
 
 goal-blocker-handoff: goal-completion-audit
 	uv run python scripts/create_goal_blocker_handoff.py --audit /tmp/concierge-goal-completion-audit.json --out /tmp/concierge-goal-blocker-handoff.md

@@ -13,6 +13,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ALIGNMENT_REPORT_PATH = Path("/tmp/concierge-napoleon-alignment.json")
+EXPECTED_RUNTIME_HANDOFF_KIND = "concierge.runtime-handoff-status.v1"
 
 
 @dataclass(frozen=True)
@@ -288,6 +289,16 @@ def _load_alignment_report(path: Path | None) -> dict[str, Any] | None:
     return value if isinstance(value, dict) else None
 
 
+def _load_runtime_handoff_report(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
 def _alignment_report_clears_blocker(report: dict[str, Any] | None, marker: str | None) -> bool:
     if report is None or marker != "expose_evolution_proposal_status_runtime_target":
         return False
@@ -350,6 +361,115 @@ def _safe_alignment_evidence_summary(report: dict[str, Any] | None, path: Path |
     }
 
 
+def _runtime_handoff_report_is_safe(report: dict[str, Any] | None) -> bool:
+    if report is None or report.get("kind") != EXPECTED_RUNTIME_HANDOFF_KIND:
+        return False
+    boundary = report.get("boundary")
+    if not isinstance(boundary, dict):
+        return False
+    required_true = (
+        "localHandoffEvidenceOnly",
+        "doesNotContactNapoleon",
+        "doesNotApprove",
+        "doesNotWriteMemory",
+        "doesNotDispatchAgents",
+        "doesNotSendExternally",
+        "doesNotApplyEvolution",
+    )
+    required_false = (
+        "endpointHostRetained",
+        "tokenRetained",
+        "tokenFilePathRetained",
+        "requestBodyRetained",
+        "responseBodyRetained",
+    )
+    return all(boundary.get(key) is True for key in required_true) and all(
+        boundary.get(key) is False for key in required_false
+    )
+
+
+def _safe_runtime_handoff_evidence_summary(report: dict[str, Any] | None, path: Path | None) -> dict[str, Any]:
+    if not _runtime_handoff_report_is_safe(report):
+        return {
+            "path": str(path) if path else None,
+            "loaded": False,
+            "canProceed": None,
+            "nextAction": None,
+            "localBlockerCount": 0,
+            "externalBlockerCount": 0,
+            "blockerIds": [],
+            "authProvisioning": {
+                "tokenConfigured": None,
+                "tokenFileConfigured": None,
+                "tokenFileReadable": None,
+                "tokenRetained": False,
+                "tokenFilePathRetained": False,
+            },
+            "nonAuthorityBoundary": "runtime_handoff_report_only",
+        }
+    readiness = report.get("readiness") if isinstance(report.get("readiness"), dict) else {}
+    auth = report.get("authProvisioning") if isinstance(report.get("authProvisioning"), dict) else {}
+    blockers = readiness.get("blockers") if isinstance(readiness.get("blockers"), list) else []
+    sanitized_blockers = [blocker for blocker in blockers if isinstance(blocker, dict)]
+    return {
+        "path": str(path) if path else None,
+        "loaded": True,
+        "canProceed": readiness.get("canProceed") if isinstance(readiness.get("canProceed"), bool) else None,
+        "nextAction": readiness.get("nextAction") if isinstance(readiness.get("nextAction"), str) else None,
+        "localBlockerCount": sum(1 for blocker in sanitized_blockers if blocker.get("external") is False),
+        "externalBlockerCount": sum(1 for blocker in sanitized_blockers if blocker.get("external") is True),
+        "blockerIds": [blocker["id"] for blocker in sanitized_blockers if isinstance(blocker.get("id"), str)],
+        "authProvisioning": {
+            "tokenConfigured": auth.get("tokenConfigured") if isinstance(auth.get("tokenConfigured"), bool) else None,
+            "tokenFileConfigured": (
+                auth.get("tokenFileConfigured") if isinstance(auth.get("tokenFileConfigured"), bool) else None
+            ),
+            "tokenFileReadable": (
+                auth.get("tokenFileReadable") if isinstance(auth.get("tokenFileReadable"), bool) else None
+            ),
+            "tokenRetained": False,
+            "tokenFilePathRetained": False,
+        },
+        "nonAuthorityBoundary": "runtime_handoff_report_only",
+    }
+
+
+def _runtime_handoff_requirements(report: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if not _runtime_handoff_report_is_safe(report):
+        return []
+    readiness = report.get("readiness") if isinstance(report.get("readiness"), dict) else {}
+    blockers = readiness.get("blockers") if isinstance(readiness.get("blockers"), list) else []
+    requirements: list[dict[str, Any]] = []
+    for blocker in blockers:
+        if not isinstance(blocker, dict) or blocker.get("id") != "token_file_unreadable":
+            continue
+        requirements.append(
+            {
+                "id": "runtime_handoff_token_access",
+                "requirement": "Concierge runtime handoff has approved readable token-file access.",
+                "status": "local_blocker",
+                "evidence": [
+                    {
+                        "path": "scripts/runtime_handoff_status.py",
+                        "status": "present",
+                        "description": "Sanitized retained runtime handoff report supplied to audit.",
+                        "matchedTerms": ["tokenFileConfigured", "tokenFileReadable"],
+                        "missingTerms": [],
+                    }
+                ],
+                "validation": ["make runtime-handoff-status", "make goal-completion-audit", "make check"],
+                "blocker": {
+                    "owner": "concierge_operator",
+                    "nextAction": blocker.get("nextAction")
+                    if isinstance(blocker.get("nextAction"), str)
+                    else "Provision approved runtime token-file access without copying token values into artifacts.",
+                    "external": False,
+                },
+            }
+        )
+    return requirements
+
+
 def evaluate_requirement(requirement: Requirement, alignment_report: dict[str, Any] | None = None) -> dict[str, Any]:
     checks = [evaluate_check(check) for check in requirement.evidence]
     present_count = sum(1 for check in checks if check["status"] == "present")
@@ -391,9 +511,12 @@ def evaluate_acceptance_criteria(requirements: list[dict[str, Any]]) -> list[dic
     requirements_by_id = {requirement["id"]: requirement for requirement in requirements}
     criteria: list[dict[str, Any]] = []
     for criterion in ACCEPTANCE_CRITERIA:
+        requirement_ids = list(criterion.requirement_ids)
+        if criterion.id == "send_text_request_to_napoleon" and "runtime_handoff_token_access" in requirements_by_id:
+            requirement_ids.append("runtime_handoff_token_access")
         linked_requirements = [
             requirements_by_id[requirement_id]
-            for requirement_id in criterion.requirement_ids
+            for requirement_id in requirement_ids
             if requirement_id in requirements_by_id
         ]
         blocking_requirement_ids = [
@@ -403,6 +526,8 @@ def evaluate_acceptance_criteria(requirements: list[dict[str, Any]]) -> list[dic
         status = "proven"
         if "external_blocker" in statuses:
             status = "external_blocker"
+        elif "local_blocker" in statuses:
+            status = "local_blocker"
         elif "missing_evidence" in statuses:
             status = "missing_evidence"
         elif "weak_evidence" in statuses:
@@ -412,7 +537,7 @@ def evaluate_acceptance_criteria(requirements: list[dict[str, Any]]) -> list[dic
                 "id": criterion.id,
                 "criterion": criterion.criterion,
                 "status": status,
-                "requirementIds": list(criterion.requirement_ids),
+                "requirementIds": requirement_ids,
                 "blockingRequirementIds": blocking_requirement_ids,
             }
         )
@@ -422,13 +547,16 @@ def evaluate_acceptance_criteria(requirements: list[dict[str, Any]]) -> list[dic
 def build_report(
     alignment_report_path: Path | None = None,
     default_alignment_report_path: Path | None = DEFAULT_ALIGNMENT_REPORT_PATH,
+    runtime_handoff_status_path: Path | None = None,
 ) -> dict[str, Any]:
     resolved_alignment_report_path = _resolve_alignment_report_path(
         alignment_report_path,
         default_alignment_report_path,
     )
     alignment_report = _load_alignment_report(resolved_alignment_report_path)
+    runtime_handoff_report = _load_runtime_handoff_report(runtime_handoff_status_path)
     requirements = [evaluate_requirement(requirement, alignment_report) for requirement in REQUIREMENTS]
+    requirements.extend(_runtime_handoff_requirements(runtime_handoff_report))
     acceptance_criteria = evaluate_acceptance_criteria(requirements)
     acceptance_criteria_status_counts: dict[str, int] = {}
     for criterion in acceptance_criteria:
@@ -438,7 +566,8 @@ def build_report(
     status_counts: dict[str, int] = {}
     for requirement in requirements:
         status_counts[requirement["status"]] = status_counts.get(requirement["status"], 0) + 1
-    blockers = [item for item in requirements if item["status"] in {"external_blocker", "missing_evidence", "weak_evidence"}]
+    blocker_statuses = {"external_blocker", "local_blocker", "missing_evidence", "weak_evidence"}
+    blockers = [item for item in requirements if item["status"] in blocker_statuses]
     overall_status = "goal_not_complete" if blockers else "all_local_evidence_present"
     blocker_summaries = [
         {
@@ -480,6 +609,10 @@ def build_report(
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "overallStatus": overall_status,
         "alignmentEvidence": _safe_alignment_evidence_summary(alignment_report, resolved_alignment_report_path),
+        "runtimeHandoffEvidence": _safe_runtime_handoff_evidence_summary(
+            runtime_handoff_report,
+            runtime_handoff_status_path,
+        ),
         "statusCounts": status_counts,
         "acceptanceCriteriaStatusCounts": acceptance_criteria_status_counts,
         "requirementCount": len(requirements),
@@ -510,10 +643,18 @@ def main() -> int:
         type=Path,
         help="Optional JSON report from make napoleon-contract-alignment used as fresh non-authorizing runtime evidence.",
     )
+    parser.add_argument(
+        "--runtime-handoff-status",
+        type=Path,
+        help="Optional sanitized JSON report from make runtime-handoff-status used as local provisioning evidence.",
+    )
     parser.add_argument("--quiet", action="store_true", help="Print only JSON path/status summary.")
     args = parser.parse_args()
 
-    report = build_report(alignment_report_path=args.contract_alignment_report)
+    report = build_report(
+        alignment_report_path=args.contract_alignment_report,
+        runtime_handoff_status_path=args.runtime_handoff_status,
+    )
     if args.out:
         out_path = Path(args.out)
         out_path.parent.mkdir(parents=True, exist_ok=True)
