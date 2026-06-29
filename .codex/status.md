@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added `make runtime-handoff-status`, which writes `/tmp/concierge-runtime-handoff-status.json` from local `.env`, optional captured Napoleon health JSON, and optional contract-alignment JSON while omitting endpoint hosts, token values, token-file paths, request bodies, and response bodies; the latest recheck from this Concierge host reached `http://192.168.1.8:8765/cos/health`, but the current `mimir` OpenAPI snapshot still lacks `/evolution/proposals/{proposal_id}/status`.
 - Added sanitized runtime-auth provisioning import and rendering to the Text Concierge evaluator-validation panel, so failed live-runtime summaries can show a configured-but-unreadable token file without retaining token values or token-file paths.
 - Added safe token-file authentication support to bridge evidence capture and live-runtime validation, so an approved Napoleon runtime token file can be used by an authorized process while retained artifacts continue to omit token values and token-file paths.
 - Added sanitized token-provisioning metadata to live-runtime preflight and summary artifacts, so the current Napoleon token handoff can be diagnosed as configured/readable without retaining token contents or token-file paths.

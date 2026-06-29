@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added `make runtime-handoff-status` and a sanitized runtime handoff status report, so operators can retain endpoint-configured, token-file-readable, health, and contract-alignment facts without storing endpoint hosts, tokens, token-file paths, request bodies, or response bodies.
 - Added sanitized runtime-auth provisioning import and rendering for live-runtime validation summaries, so the Text Concierge evaluator-validation panel can show when a token file is configured but unreadable without retaining token values or token-file paths.
 - Added safe token-file authentication support for bridge evidence capture and live-runtime validation, so approved `NAPOLEON_EVAL_TOKEN_FILE` or `NAPOLEON_RUNTIME_AUTH_TOKEN_FILE` values can be used without retaining token values or token-file paths in artifacts.
 - Added sanitized token-provisioning metadata to live-runtime preflight and summary artifacts, so operators can see whether an approved token file was configured and readable without retaining token values or token-file paths.
