@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added visible character-count output to the compact goal-blocker prompt command, so Napoleon-side goal prompts show their exact size against the 4,000-character limit when generated.
 - Added original active-goal acceptance criteria and acceptance-criteria status counts to the goal-completion audit, with the close gate now exposing whether those criteria are satisfied.
 - Added blocking requirement IDs plus external and local blocker counts to the goal-completion close gate so consumers can tell exactly why the active goal cannot be closed.
 - Added explicit validation-evidence fields to the goal-completion close gate so the audit says which required commands were not run by the audit itself.

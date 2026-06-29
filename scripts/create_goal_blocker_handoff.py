@@ -232,6 +232,17 @@ def write_goal_prompt(audit_path: Path, out_path: Path) -> Path:
     return out_path
 
 
+def render_goal_prompt_summary(out_path: Path) -> str:
+    text = out_path.read_text(encoding="utf-8")
+    under_limit = len(text) < GOAL_PROMPT_CHARACTER_LIMIT
+    return "\n".join(
+        [
+            str(out_path),
+            f"Character count: {len(text)}/{GOAL_PROMPT_CHARACTER_LIMIT}; under limit: {_bool_word(under_limit)}",
+        ]
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--audit", type=Path, required=True, help="Path to concierge-goal-completion-audit.json")
@@ -246,9 +257,10 @@ def main() -> int:
 
     if args.format == "goal-prompt":
         out = write_goal_prompt(args.audit, args.out)
+        print(render_goal_prompt_summary(out))
     else:
         out = write_handoff(args.audit, args.out)
-    print(out)
+        print(out)
     return 0
 
 

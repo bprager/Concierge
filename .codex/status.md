@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added visible character-count output to `make goal-blocker-goal-prompt`, so `/tmp/concierge-goal-blocker-goal-prompt.md` reports its exact size against the 4,000-character goal limit when generated.
 - Added original active-goal acceptance criteria plus acceptance-criteria status counts to the local goal-completion audit, so `/tmp/concierge-goal-completion-audit.json` now shows 7 proven criteria and the remaining Napoleon-owned status-route criterion as externally blocked when the current `mimir` alignment report is loaded.
 - Added blocking requirement IDs plus external/local blocker counts to the local goal-completion audit close gate, so `/tmp/concierge-goal-completion-audit.json` now names the exact requirements preventing closure instead of requiring consumers to infer them from top-level blockers.
 - Added explicit validation-evidence fields to the local goal-completion audit close gate, so `/tmp/concierge-goal-completion-audit.json` now distinguishes mapped evidence from the separate validation commands still required before closing the active Napoleon UI goal.

@@ -134,6 +134,21 @@ class GoalBlockerHandoffTests(unittest.TestCase):
 
             self.assertEqual(len(out_path.read_text(encoding="utf-8")), 3999)
 
+    def test_goal_prompt_summary_includes_character_count(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            audit_path = Path(tmp) / "audit.json"
+            out_path = Path(tmp) / "goal.md"
+            audit_path.write_text(json.dumps(_sample_audit()), encoding="utf-8")
+
+            create_goal_blocker_handoff.write_goal_prompt(audit_path, out_path)
+
+            summary = create_goal_blocker_handoff.render_goal_prompt_summary(out_path)
+
+            self.assertIn(str(out_path), summary)
+            self.assertIn("Character count:", summary)
+            self.assertIn("/4000", summary)
+            self.assertIn("under limit: yes", summary)
+
 
 def _sample_audit():
     return {
