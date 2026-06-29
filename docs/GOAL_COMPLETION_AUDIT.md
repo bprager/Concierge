@@ -13,17 +13,17 @@ The audit is deliberately conservative. It can show that local evidence exists f
 When Napoleon publishes a newer Concierge integration contract, retain a fresh contract-alignment report and pass it into the audit:
 
 ```bash
-NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_CONTRACT_ALIGNMENT_OUT=/tmp/concierge-napoleon-alignment.json make napoleon-contract-alignment
-GOAL_COMPLETION_ALIGNMENT_REPORT=/tmp/concierge-napoleon-alignment.json make goal-completion-audit
+NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napoleon-contract-alignment
+make goal-completion-audit
 ```
 
-That optional report is non-authorizing evidence only. It can clear the evolution-status external blocker only when it identifies itself as `concierge.napoleon-contract-alignment.v1`, is runtime-aligned, carries the `alignment_check_only` boundary, exposes `/evolution/proposals/{proposal_id}/status`, has no `expose_evolution_proposal_status_runtime_target` required action, and preserves false approval, memory-write, agent-dispatch, external-send, and side-effect flags.
+By default, `make napoleon-contract-alignment` writes `/tmp/concierge-napoleon-alignment.json`, and `make goal-completion-audit` loads that retained report automatically when no `GOAL_COMPLETION_ALIGNMENT_REPORT` override is supplied. That optional report is non-authorizing evidence only. It can clear the evolution-status external blocker only when it identifies itself as `concierge.napoleon-contract-alignment.v1`, is runtime-aligned, carries the `alignment_check_only` boundary, exposes `/evolution/proposals/{proposal_id}/status`, has no `expose_evolution_proposal_status_runtime_target` required action, and preserves false approval, memory-write, agent-dispatch, external-send, and side-effect flags.
 
 To retain the current connection handoff state without copying endpoint hosts, tokens, token-file paths, request bodies, or response bodies into a tracked artifact, capture any live health response into `/tmp`, retain a contract-alignment report, and render the sanitized runtime handoff status:
 
 ```bash
 curl -sS "$NAPOLEON_RUNTIME_HEALTH_ENDPOINT" -o /tmp/concierge-napoleon-health.json
-NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_CONTRACT_ALIGNMENT_OUT=/tmp/concierge-napoleon-alignment.json make napoleon-contract-alignment
+NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napoleon-contract-alignment
 NAPOLEON_RUNTIME_HEALTH_JSON=/tmp/concierge-napoleon-health.json NAPOLEON_CONTRACT_ALIGNMENT_REPORT=/tmp/concierge-napoleon-alignment.json make runtime-handoff-status
 ```
 

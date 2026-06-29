@@ -12,6 +12,7 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_ALIGNMENT_REPORT_PATH = Path("/tmp/concierge-napoleon-alignment.json")
 
 
 @dataclass(frozen=True)
@@ -266,6 +267,17 @@ def evaluate_check(check: EvidenceCheck) -> dict[str, Any]:
     }
 
 
+def _resolve_alignment_report_path(
+    explicit_path: Path | None,
+    default_path: Path | None = DEFAULT_ALIGNMENT_REPORT_PATH,
+) -> Path | None:
+    if explicit_path is not None:
+        return explicit_path
+    if default_path is not None and default_path.exists():
+        return default_path
+    return None
+
+
 def _load_alignment_report(path: Path | None) -> dict[str, Any] | None:
     if path is None:
         return None
@@ -407,8 +419,15 @@ def evaluate_acceptance_criteria(requirements: list[dict[str, Any]]) -> list[dic
     return criteria
 
 
-def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
-    alignment_report = _load_alignment_report(alignment_report_path)
+def build_report(
+    alignment_report_path: Path | None = None,
+    default_alignment_report_path: Path | None = DEFAULT_ALIGNMENT_REPORT_PATH,
+) -> dict[str, Any]:
+    resolved_alignment_report_path = _resolve_alignment_report_path(
+        alignment_report_path,
+        default_alignment_report_path,
+    )
+    alignment_report = _load_alignment_report(resolved_alignment_report_path)
     requirements = [evaluate_requirement(requirement, alignment_report) for requirement in REQUIREMENTS]
     acceptance_criteria = evaluate_acceptance_criteria(requirements)
     acceptance_criteria_status_counts: dict[str, int] = {}
@@ -460,7 +479,7 @@ def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
         "kind": "concierge.goal-completion-audit.v1",
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "overallStatus": overall_status,
-        "alignmentEvidence": _safe_alignment_evidence_summary(alignment_report, alignment_report_path),
+        "alignmentEvidence": _safe_alignment_evidence_summary(alignment_report, resolved_alignment_report_path),
         "statusCounts": status_counts,
         "acceptanceCriteriaStatusCounts": acceptance_criteria_status_counts,
         "requirementCount": len(requirements),

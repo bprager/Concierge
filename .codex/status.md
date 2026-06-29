@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Made `make napoleon-contract-alignment` write `/tmp/concierge-napoleon-alignment.json` by default and made `make goal-completion-audit` load that retained report automatically when no explicit alignment report is supplied; a fresh 2026-06-29 `mimir` snapshot still reports the Napoleon-owned `/evolution/proposals/{proposal_id}/status` route as missing.
 - Added an ordered readiness decision to `/tmp/concierge-runtime-handoff-status.json`, so the local handoff now reports `canProceed`, sanitized blockers such as unreadable token-file access and the missing Napoleon evolution-status target, a next action, and validation commands without retaining endpoint hosts, token values, token-file paths, request bodies, or response bodies.
 - Added `make runtime-handoff-status`, which writes `/tmp/concierge-runtime-handoff-status.json` from local `.env`, optional captured Napoleon health JSON, and optional contract-alignment JSON while omitting endpoint hosts, token values, token-file paths, request bodies, and response bodies; the latest recheck from this Concierge host reached `http://192.168.1.8:8765/cos/health`, but the current `mimir` OpenAPI snapshot still lacks `/evolution/proposals/{proposal_id}/status`.
 - Added sanitized runtime-auth provisioning import and rendering to the Text Concierge evaluator-validation panel, so failed live-runtime summaries can show a configured-but-unreadable token file without retaining token values or token-file paths.

@@ -1,5 +1,7 @@
 .PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment runtime-handoff-status goal-completion-audit goal-blocker-handoff goal-blocker-goal-prompt generate-bridge-operations bridge-operations-check eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
 
+NAPOLEON_CONTRACT_ALIGNMENT_OUT ?= /tmp/concierge-napoleon-alignment.json
+
 check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare bridge-operations-check schema-check app-test app-smoke app-build tauri-check
 
 eval:
@@ -30,7 +32,7 @@ bridge-evidence-compare:
 	PYTHONPATH=evaluator uv run --with PyYAML python scripts/bridge_evidence_compare.py examples/sample_bridge_contract_evidence.json
 
 napoleon-contract-alignment:
-	uv run --with PyYAML python scripts/napoleon_contract_alignment.py --napoleon-openapi $$NAPOLEON_CONTRACT_OPENAPI $(if $(NAPOLEON_CONTRACT_ALIGNMENT_OUT),--out $(NAPOLEON_CONTRACT_ALIGNMENT_OUT),)
+	uv run --with PyYAML python scripts/napoleon_contract_alignment.py --napoleon-openapi $$NAPOLEON_CONTRACT_OPENAPI --out $(NAPOLEON_CONTRACT_ALIGNMENT_OUT)
 
 runtime-handoff-status:
 	uv run python scripts/runtime_handoff_status.py --env .env --out /tmp/concierge-runtime-handoff-status.json $(if $(NAPOLEON_RUNTIME_HEALTH_JSON),--health-json $(NAPOLEON_RUNTIME_HEALTH_JSON),) $(if $(NAPOLEON_CONTRACT_ALIGNMENT_REPORT),--contract-alignment-report $(NAPOLEON_CONTRACT_ALIGNMENT_REPORT),)
