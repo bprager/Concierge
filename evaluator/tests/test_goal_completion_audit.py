@@ -322,6 +322,22 @@ class GoalCompletionAuditTests(unittest.TestCase):
         )
         self.assertEqual(blocker["owner"], "concierge_operator")
         self.assertFalse(blocker["external"])
+        self.assertEqual(
+            blocker["runtimeTokenHandoff"],
+            {
+                "tokenFileConfigured": True,
+                "tokenFileReadable": False,
+                "tokenRemotePresent": True,
+                "tokenLocalReadableDeclared": False,
+                "tokenRemoteReadableByOperator": False,
+                "tokenRetained": False,
+                "tokenFilePathRetained": False,
+            },
+        )
+        token_action = next(
+            item for item in report["nextActions"] if item["requirementId"] == "runtime_handoff_token_access"
+        )
+        self.assertEqual(token_action["runtimeTokenHandoff"], blocker["runtimeTokenHandoff"])
         self.assertNotIn("napoleon-runtime-pilot-auth-token", json.dumps(report))
 
     def test_make_target_can_forward_retained_alignment_report(self):

@@ -450,10 +450,38 @@ def _safe_runtime_handoff_evidence_summary(report: dict[str, Any] | None, path: 
     }
 
 
+def _safe_runtime_token_handoff(auth: dict[str, Any]) -> dict[str, bool | None]:
+    return {
+        "tokenFileConfigured": (
+            auth.get("tokenFileConfigured") if isinstance(auth.get("tokenFileConfigured"), bool) else None
+        ),
+        "tokenFileReadable": (
+            auth.get("tokenFileReadable") if isinstance(auth.get("tokenFileReadable"), bool) else None
+        ),
+        "tokenRemotePresent": (
+            auth.get("tokenRemotePresent") if isinstance(auth.get("tokenRemotePresent"), bool) else None
+        ),
+        "tokenLocalReadableDeclared": (
+            auth.get("tokenLocalReadableDeclared")
+            if isinstance(auth.get("tokenLocalReadableDeclared"), bool)
+            else None
+        ),
+        "tokenRemoteReadableByOperator": (
+            auth.get("tokenRemoteReadableByOperator")
+            if isinstance(auth.get("tokenRemoteReadableByOperator"), bool)
+            else None
+        ),
+        "tokenRetained": False,
+        "tokenFilePathRetained": False,
+    }
+
+
 def _runtime_handoff_requirements(report: dict[str, Any] | None) -> list[dict[str, Any]]:
     if not _runtime_handoff_report_is_safe(report):
         return []
     readiness = report.get("readiness") if isinstance(report.get("readiness"), dict) else {}
+    auth = report.get("authProvisioning") if isinstance(report.get("authProvisioning"), dict) else {}
+    runtime_token_handoff = _safe_runtime_token_handoff(auth)
     blockers = readiness.get("blockers") if isinstance(readiness.get("blockers"), list) else []
     requirements: list[dict[str, Any]] = []
     for blocker in blockers:
@@ -480,6 +508,7 @@ def _runtime_handoff_requirements(report: dict[str, Any] | None) -> list[dict[st
                     if isinstance(blocker.get("nextAction"), str)
                     else "Provision approved runtime token-file access without copying token values into artifacts.",
                     "external": False,
+                    "runtimeTokenHandoff": runtime_token_handoff,
                 },
             }
         )
@@ -595,6 +624,11 @@ def build_report(
             **(
                 {"napoleonRequiredAction": item["blocker"]["napoleonRequiredAction"]}
                 if "napoleonRequiredAction" in item["blocker"]
+                else {}
+            ),
+            **(
+                {"runtimeTokenHandoff": item["blocker"]["runtimeTokenHandoff"]}
+                if "runtimeTokenHandoff" in item["blocker"]
                 else {}
             ),
         }
