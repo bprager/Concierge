@@ -38,6 +38,9 @@ export interface RuntimeContractAlignmentSummary {
   status: "runtime_mapped_with_local_contract_paths" | "runtime_mapping_gaps_present";
   aligned: false;
   runtimeAligned: boolean;
+  evidenceSource: string;
+  evidenceCheckedAt: string;
+  retainedReportPath?: string;
   summary: string;
   detail: string;
   unmappedNapoleonRuntimePaths: readonly string[];
@@ -74,6 +77,9 @@ export const RUNTIME_CONTRACT_ALIGNMENT_SUMMARY: RuntimeContractAlignmentSummary
   status: "runtime_mapping_gaps_present",
   aligned: false,
   runtimeAligned: false,
+  evidenceSource: "bernd@mimir:~/Projects/Napoleon/docs/concierge-integration/apis/concierge-integration.openapi.yaml",
+  evidenceCheckedAt: "2026-06-29",
+  retainedReportPath: "/tmp/concierge-napoleon-alignment-2026-06-29.json",
   summary: "Runtime mapping gap: Napoleon has not exposed every named Concierge review/evidence/status target.",
   detail:
     "Concierge keeps local /v1/concierge/... packaging paths while named Napoleon /cos, review, evidence, and metadata targets are explicitly mapped; current Napoleon snapshot still lacks evolution_proposal_status at /evolution/proposals/{proposal_id}/status.",

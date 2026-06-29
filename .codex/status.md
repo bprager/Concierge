@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-06-28
+Last updated: 2026-06-29
 
 ## Current Project State
 
@@ -10,6 +10,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Rechecked the current `mimir` Napoleon Concierge integration OpenAPI snapshot on 2026-06-29 and retained `/tmp/concierge-napoleon-alignment-2026-06-29.json`; the report still has `alignmentStatus: runtime_mapping_gaps_present`, `napoleonRequiredActionCount: 1`, and `blockingLivePromotion: true` because `/evolution/proposals/{proposal_id}/status` is still missing from the Napoleon snapshot.
+- Added visible retained-evidence metadata for the built-in Napoleon contract-alignment blocker, so the governed routes panel and local required-action export show the `mimir` snapshot source, 2026-06-29 check date, and retained local report path without treating that metadata as approval, runtime validation, free-form path permission, memory write, agent dispatch, external send, or local application.
 - Added rendered Text Concierge coverage for "What capabilities are missing but easy to evolve?", proving the user-visible answer ranks safe missing capability metadata as proposal-only local recommendations while excluding correctly blocked no-go outcomes and avoiding raw prompts, Napoleon contact, approval capture, memory writes, agent dispatch, external sends, or local application.
 - Added rendered Text Concierge coverage for "What conversations are most common?", proving the user-visible answer ranks local conversation metadata without raw prompts, Napoleon contact, approval capture, memory writes, agent dispatch, external sends, or local application.
 - Added rendered Text Concierge coverage for "What capabilities are most common?", proving the user-visible answer ranks local capability metadata without raw prompts, Napoleon contact, approval capture, memory writes, agent dispatch, external sends, or local application.

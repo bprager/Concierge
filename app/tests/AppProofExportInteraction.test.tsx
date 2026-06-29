@@ -10493,6 +10493,11 @@ test("shows runtime contract alignment status in governed routes", async () => {
     );
     assert.ok(
       routes.getByText(
+        "Alignment evidence: checked 2026-06-29 from bernd@mimir:~/Projects/Napoleon/docs/concierge-integration/apis/concierge-integration.openapi.yaml; retained report: /tmp/concierge-napoleon-alignment-2026-06-29.json.",
+      ),
+    );
+    assert.ok(
+      routes.getByText(
         "Concierge keeps local /v1/concierge/... packaging paths while named Napoleon /cos, review, evidence, and metadata targets are explicitly mapped; current Napoleon snapshot still lacks evolution_proposal_status at /evolution/proposals/{proposal_id}/status.",
       ),
     );
@@ -10578,6 +10583,11 @@ test("answers Napoleon contract-alignment required actions without imported eval
       kind?: string;
       source?: string;
       runtimeValidationSource?: string;
+      evidence?: {
+        source?: string;
+        checkedAt?: string;
+        retainedReportPath?: string;
+      };
       requiredActionCount?: number;
       highestPriorityAction?: {
         id?: string;
@@ -10604,6 +10614,12 @@ test("answers Napoleon contract-alignment required actions without imported eval
     assert.equal(exported.kind, "concierge.napoleon-required-actions.export.v1");
     assert.equal(exported.source, "contract_alignment");
     assert.equal(exported.runtimeValidationSource, "contract_alignment");
+    assert.equal(
+      exported.evidence?.source,
+      "bernd@mimir:~/Projects/Napoleon/docs/concierge-integration/apis/concierge-integration.openapi.yaml",
+    );
+    assert.equal(exported.evidence?.checkedAt, "2026-06-29");
+    assert.equal(exported.evidence?.retainedReportPath, "/tmp/concierge-napoleon-alignment-2026-06-29.json");
     assert.equal(exported.requiredActionCount, 1);
     assert.equal(exported.highestPriorityAction?.id, "expose_evolution_proposal_status_runtime_target");
     assert.equal(exported.highestPriorityAction?.handoffName, "evolution_proposal_status");

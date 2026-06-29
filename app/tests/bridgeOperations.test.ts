@@ -143,6 +143,9 @@ test("runtime contract alignment summary exposes top-level promotion blocker fie
 
   assert.equal(summary.napoleonRequiredActionCount, summary.napoleonRequiredActions.length);
   assert.equal(summary.blockingLivePromotion, true);
+  assert.equal(summary.evidenceCheckedAt, "2026-06-29");
+  assert.match(summary.evidenceSource, /concierge-integration\.openapi\.yaml/);
+  assert.equal(summary.retainedReportPath, "/tmp/concierge-napoleon-alignment-2026-06-29.json");
 });
 
 test("OpenAPI descriptor connection enums match runtime fail-closed states", () => {
@@ -766,6 +769,12 @@ test("describes runtime contract alignment without treating path drift as author
   assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.runtimeAligned, false);
   assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.status, "runtime_mapping_gaps_present");
   assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.unmappedNapoleonRuntimePaths.length, 0);
+  assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.evidenceCheckedAt, "2026-06-29");
+  assert.match(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.evidenceSource, /bernd@mimir/);
+  assert.equal(
+    RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.retainedReportPath,
+    "/tmp/concierge-napoleon-alignment-2026-06-29.json",
+  );
   assert.equal(RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.length, 1);
   assert.equal(
     RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions[0]?.id,

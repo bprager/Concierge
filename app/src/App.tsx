@@ -5604,6 +5604,15 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       conversationId,
       source: actionExport.source,
       runtimeValidationSource: actionExport.runtimeValidationSource,
+      ...(actionExport.source === "contract_alignment"
+        ? {
+            evidence: {
+              source: RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.evidenceSource,
+              checkedAt: RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.evidenceCheckedAt,
+              retainedReportPath: RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.retainedReportPath ?? "unavailable",
+            },
+          }
+        : {}),
       evaluator: {
         status: actionExport.evaluatorStatus,
         failureReason: actionExport.evaluatorFailureReason,
@@ -8758,6 +8767,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
             {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.unmappedNapoleonRuntimePaths.length}. Napoleon required actions:{" "}
             {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActionCount}. Blocking live promotion:{" "}
             {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.blockingLivePromotion ? "yes" : "no"}.
+          </span>
+          <span>
+            Alignment evidence: checked {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.evidenceCheckedAt} from{" "}
+            {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.evidenceSource}; retained report:{" "}
+            {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.retainedReportPath ?? "unavailable"}.
           </span>
           <span>{RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.detail}</span>
           {RUNTIME_CONTRACT_ALIGNMENT_SUMMARY.napoleonRequiredActions.map((action) => (
