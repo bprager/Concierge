@@ -206,6 +206,8 @@ def _load_alignment_report(path: Path | None) -> dict[str, Any] | None:
 def _alignment_report_clears_blocker(report: dict[str, Any] | None, marker: str | None) -> bool:
     if report is None or marker != "expose_evolution_proposal_status_runtime_target":
         return False
+    if report.get("kind") != "concierge.napoleon-contract-alignment.v1":
+        return False
     if report.get("nonAuthorityBoundary") != "alignment_check_only":
         return False
     for flag in (

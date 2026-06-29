@@ -54,6 +54,7 @@ class GoalCompletionAuditTests(unittest.TestCase):
                     {
                         "runtimeAligned": True,
                         "blockingLivePromotion": False,
+                        "kind": "concierge.napoleon-contract-alignment.v1",
                         "nonAuthorityBoundary": "alignment_check_only",
                         "supportedReviewRuntimePaths": ["/evolution/proposals/{proposal_id}/status"],
                         "napoleonRequiredActions": [],
@@ -74,6 +75,34 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertNotIn("external_blocker", report["statusCounts"])
         self.assertEqual(report["blockerCount"], 0)
         self.assertTrue(report["completionGate"]["canCloseGoal"])
+
+    def test_alignment_report_without_expected_kind_cannot_clear_status_blocker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            alignment_path = Path(tmp) / "alignment.json"
+            alignment_path.write_text(
+                json.dumps(
+                    {
+                        "runtimeAligned": True,
+                        "blockingLivePromotion": False,
+                        "nonAuthorityBoundary": "alignment_check_only",
+                        "supportedReviewRuntimePaths": ["/evolution/proposals/{proposal_id}/status"],
+                        "napoleonRequiredActions": [],
+                        "sideEffectsPerformed": False,
+                        "approvalCaptured": False,
+                        "memoryWritePerformed": False,
+                        "agentDispatchPerformed": False,
+                        "externalSendPerformed": False,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = goal_completion_audit.build_report(alignment_report_path=alignment_path)
+
+        by_id = {requirement["id"]: requirement for requirement in report["requirements"]}
+        self.assertEqual(by_id["evolution_status_runtime_blocker"]["status"], "external_blocker")
+        self.assertEqual(report["blockerCount"], 1)
+        self.assertFalse(report["completionGate"]["canCloseGoal"])
 
     def test_make_target_can_forward_retained_alignment_report(self):
         makefile = Path("Makefile").read_text(encoding="utf-8")

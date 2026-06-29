@@ -284,6 +284,7 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
     )
 
     return {
+        "kind": "concierge.napoleon-contract-alignment.v1",
         "aligned": not napoleon_only and not concierge_only,
         "runtimeAligned": runtime_aligned,
         "alignmentStatus": alignment_status,

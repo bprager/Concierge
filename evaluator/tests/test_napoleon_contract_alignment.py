@@ -183,6 +183,7 @@ paths:
 
             report = napoleon_contract_alignment.build_alignment_report(local, napoleon)
 
+        self.assertEqual(report["kind"], "concierge.napoleon-contract-alignment.v1")
         self.assertFalse(report["aligned"])
         self.assertFalse(report["runtimeAligned"])
         self.assertEqual(report["alignmentStatus"], "runtime_mapping_gaps_present")

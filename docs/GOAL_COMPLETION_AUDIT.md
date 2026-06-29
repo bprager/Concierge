@@ -17,7 +17,7 @@ NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_C
 GOAL_COMPLETION_ALIGNMENT_REPORT=/tmp/concierge-napoleon-alignment.json make goal-completion-audit
 ```
 
-That optional report is non-authorizing evidence only. It can clear the evolution-status external blocker only when it is runtime-aligned, carries the `alignment_check_only` boundary, exposes `/evolution/proposals/{proposal_id}/status`, has no `expose_evolution_proposal_status_runtime_target` required action, and preserves false approval, memory-write, agent-dispatch, external-send, and side-effect flags.
+That optional report is non-authorizing evidence only. It can clear the evolution-status external blocker only when it identifies itself as `concierge.napoleon-contract-alignment.v1`, is runtime-aligned, carries the `alignment_check_only` boundary, exposes `/evolution/proposals/{proposal_id}/status`, has no `expose_evolution_proposal_status_runtime_target` required action, and preserves false approval, memory-write, agent-dispatch, external-send, and side-effect flags.
 
 The JSON report includes:
 

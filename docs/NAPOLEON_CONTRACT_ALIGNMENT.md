@@ -16,6 +16,7 @@ NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_C
 
 The report is local evidence only. It does not contact Napoleon, approve a runtime, write memory, dispatch agents, send externally, or grant authority. It also separates exact path drift from practical integration readiness:
 
+- `kind` is `concierge.napoleon-contract-alignment.v1`, so downstream local audits can reject unrelated JSON even when it has similar fields.
 - `aligned` is true only when Concierge and Napoleon expose the same literal path set.
 - `runtimeAligned` is true when every Napoleon-only runtime path in the snapshot is covered by a supported advisory path, supported review/discovery path, or explicit local handoff alias, and every named Concierge Napoleon review/evidence/status target is present in the Napoleon snapshot, even if Concierge intentionally keeps local `/v1/concierge/...` packaging paths.
 - `alignmentStatus` is `exact_path_match`, `runtime_mapped_with_local_contract_paths`, or `runtime_mapping_gaps_present`.
