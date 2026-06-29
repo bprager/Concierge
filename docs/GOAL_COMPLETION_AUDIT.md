@@ -44,7 +44,7 @@ To render the highest-priority blocker as a compact copy-and-paste goal prompt:
 make goal-blocker-goal-prompt
 ```
 
-The command reruns the audit and writes `/tmp/concierge-goal-blocker-goal-prompt.md`. The prompt is generated from the same sanitized blocker metadata, includes a compact retained alignment summary when available, and fails if it reaches the 4,000-character goal limit. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
+The command reruns the audit and writes `/tmp/concierge-goal-blocker-goal-prompt.md`. The prompt is generated from the same sanitized blocker metadata, includes a compact retained alignment summary when available, and fails if the written file would reach the 4,000-character goal limit, including its trailing newline. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
 
 Use the audit when deciding whether the active goal can be closed. A completion claim should require:
 

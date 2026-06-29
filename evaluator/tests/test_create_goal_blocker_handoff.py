@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from scripts import create_goal_blocker_handoff
 
@@ -111,6 +112,27 @@ class GoalBlockerHandoffTests(unittest.TestCase):
             text = out_path.read_text(encoding="utf-8")
             self.assertLess(len(text), 4000)
             self.assertIn("Goal: Complete the remaining Concierge live-promotion blocker.", text)
+
+    def test_rejects_goal_prompt_file_that_reaches_goal_limit_after_trailing_newline(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            audit_path = Path(tmp) / "audit.json"
+            out_path = Path(tmp) / "goal.md"
+            audit_path.write_text(json.dumps(_sample_audit()), encoding="utf-8")
+
+            with mock.patch.object(create_goal_blocker_handoff, "render_goal_prompt", return_value="x" * 3999):
+                with self.assertRaises(ValueError):
+                    create_goal_blocker_handoff.write_goal_prompt(audit_path, out_path)
+
+    def test_writes_largest_goal_prompt_file_below_goal_limit(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            audit_path = Path(tmp) / "audit.json"
+            out_path = Path(tmp) / "goal.md"
+            audit_path.write_text(json.dumps(_sample_audit()), encoding="utf-8")
+
+            with mock.patch.object(create_goal_blocker_handoff, "render_goal_prompt", return_value="x" * 3998):
+                create_goal_blocker_handoff.write_goal_prompt(audit_path, out_path)
+
+            self.assertEqual(len(out_path.read_text(encoding="utf-8")), 3999)
 
 
 def _sample_audit():

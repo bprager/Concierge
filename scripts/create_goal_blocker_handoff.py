@@ -10,6 +10,7 @@ from typing import Any
 
 
 EXPECTED_KIND = "concierge.goal-completion-audit.v1"
+GOAL_PROMPT_CHARACTER_LIMIT = 4000
 
 
 def _require_mapping(value: Any, label: str) -> dict[str, Any]:
@@ -222,8 +223,12 @@ def write_handoff(audit_path: Path, out_path: Path) -> Path:
 
 def write_goal_prompt(audit_path: Path, out_path: Path) -> Path:
     audit = json.loads(audit_path.read_text(encoding="utf-8"))
+    rendered = render_goal_prompt(_require_mapping(audit, "audit"))
+    output = rendered + "\n"
+    if len(output) >= GOAL_PROMPT_CHARACTER_LIMIT:
+        raise ValueError("goal prompt file must be shorter than 4000 characters including trailing newline")
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(render_goal_prompt(_require_mapping(audit, "audit")) + "\n", encoding="utf-8")
+    out_path.write_text(output, encoding="utf-8")
     return out_path
 
 
