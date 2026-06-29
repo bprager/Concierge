@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added `make goal-blocker-handoff` to render the sanitized goal-completion blockers into a copyable local Markdown handoff at `/tmp/concierge-goal-blocker-handoff.md`.
 - Added top-level sanitized `blockers` metadata to `make goal-completion-audit` reports, mirroring blocker owners, validation commands, and Napoleon required-action packets for direct handoff tooling.
 - Added sanitized Napoleon required-action packets to `make goal-completion-audit` next actions for external runtime blockers, including the evolution-status target path, request kind, descriptor advertising forms, live-promotion blocker state, and false side-effect flags.
 - Added an explicit `concierge.napoleon-contract-alignment.v1` report kind and made `make goal-completion-audit` require it before retained alignment evidence can clear the Napoleon-owned evolution-status blocker.

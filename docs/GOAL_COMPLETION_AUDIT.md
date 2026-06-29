@@ -30,6 +30,14 @@ The JSON report includes:
 
 The report is local evidence only. It does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
 
+To render a copyable Markdown handoff from the current sanitized blocker list:
+
+```bash
+make goal-blocker-handoff
+```
+
+The command reruns the audit and writes `/tmp/concierge-goal-blocker-handoff.md`. The handoff includes the blocker owner, requirement ID, target path, request kind, descriptor advertising forms, validation commands, and required false side-effect flags. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
+
 Use the audit when deciding whether the active goal can be closed. A completion claim should require:
 
 - `make check` passing.

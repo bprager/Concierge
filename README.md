@@ -88,6 +88,14 @@ make goal-completion-audit
 This writes a sanitized local report at `/tmp/concierge-goal-completion-audit.json`. The audit is not approval and does not contact Napoleon; it separates local Concierge evidence from external Napoleon runtime blockers such as the current read-only evolution proposal status target gap.
 When a newer Napoleon integration contract is available, first retain a typed contract-alignment report with `NAPOLEON_CONTRACT_ALIGNMENT_OUT`, then pass that JSON through `GOAL_COMPLETION_ALIGNMENT_REPORT` when running `make goal-completion-audit`. The audit can clear the evolution-status blocker only from safe non-authorizing alignment evidence that proves the read-only status route is exposed.
 
+To render the current blocker list as a copyable local handoff for Napoleon-side work:
+
+```bash
+make goal-blocker-handoff
+```
+
+This writes `/tmp/concierge-goal-blocker-handoff.md` from the sanitized audit blockers. It is local evidence only and does not contact Napoleon or grant authority.
+
 The lower-level evaluator-only command is still available:
 
 ```bash
