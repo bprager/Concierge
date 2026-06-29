@@ -49,7 +49,7 @@ To render a copyable Markdown handoff from the current sanitized blocker list:
 make goal-blocker-handoff
 ```
 
-The command reruns the audit and writes `/tmp/concierge-goal-blocker-handoff.md`. The handoff includes the blocker owner, requirement ID, target path, request kind, descriptor advertising forms, validation commands, required false side-effect flags, and any retained sanitized alignment summary loaded through `GOAL_COMPLETION_ALIGNMENT_REPORT`. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
+The command reruns the audit and writes `/tmp/concierge-goal-blocker-handoff.md`. The handoff includes the blocker owner, requirement ID, target path, request kind, descriptor advertising forms, validation commands, required false side-effect flags, any retained sanitized alignment summary loaded through `GOAL_COMPLETION_ALIGNMENT_REPORT`, and sanitized runtime token-handoff booleans for local token-access blockers. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
 
 To render the highest-priority blocker as a compact copy-and-paste goal prompt:
 

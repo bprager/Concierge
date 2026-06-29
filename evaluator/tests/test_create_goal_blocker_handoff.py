@@ -43,6 +43,43 @@ class GoalBlockerHandoffTests(unittest.TestCase):
         self.assertIn("- make check", rendered)
         self.assertIn("This handoff is local evidence only.", rendered)
 
+    def test_render_handoff_includes_local_runtime_token_handoff_without_secret_path(self):
+        audit = _sample_audit()
+        audit["blockerCount"] = 2
+        audit["blockers"].append(
+            {
+                "requirementId": "runtime_handoff_token_access",
+                "owner": "concierge_operator",
+                "external": False,
+                "nextAction": "Provision approved runtime token-file access without copying token values.",
+                "validation": ["make runtime-handoff-status", "make goal-completion-audit", "make check"],
+                "runtimeTokenHandoff": {
+                    "tokenFileConfigured": True,
+                    "tokenFileReadable": False,
+                    "tokenRemotePresent": True,
+                    "tokenLocalReadableDeclared": False,
+                    "tokenRemoteReadableByOperator": False,
+                    "tokenRetained": False,
+                    "tokenFilePathRetained": False,
+                },
+            }
+        )
+
+        rendered = create_goal_blocker_handoff.render_handoff(audit)
+
+        self.assertIn("## Blocker 2: runtime_handoff_token_access", rendered)
+        self.assertIn("Owner: concierge_operator", rendered)
+        self.assertIn("Runtime token handoff:", rendered)
+        self.assertIn("- tokenFileConfigured: yes", rendered)
+        self.assertIn("- tokenFileReadable: no", rendered)
+        self.assertIn("- tokenRemotePresent: yes", rendered)
+        self.assertIn("- tokenLocalReadableDeclared: no", rendered)
+        self.assertIn("- tokenRemoteReadableByOperator: no", rendered)
+        self.assertIn("- tokenRetained: no", rendered)
+        self.assertIn("- tokenFilePathRetained: no", rendered)
+        self.assertNotIn("napoleon-runtime-pilot-auth-token", rendered)
+        self.assertNotIn("/private/tmp", rendered)
+
     def test_invalid_audit_kind_is_rejected(self):
         with self.assertRaises(ValueError):
             create_goal_blocker_handoff.render_handoff({"kind": "wrong"})

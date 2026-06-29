@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added sanitized runtime token-handoff facts to `make goal-blocker-handoff`, so local `runtime_handoff_token_access` blockers show configured/readable/remote-present booleans without exposing token values, token-file paths, or endpoint hosts.
 - Added sanitized token-handoff booleans to local `make goal-completion-audit` blocker and next-action packets, so the token-access blocker can be handed off without exposing token values, token-file paths, or endpoint hosts.
 - Added sanitized declared token-handoff facts to `make runtime-handoff-status`, so operators can distinguish a remote-present but locally unreadable Napoleon token from missing token configuration without retaining token values, token-file paths, or endpoint hosts.
 - Added sanitized runtime handoff evidence ingestion to `make goal-completion-audit`, so unreadable approved token-file access becomes a local close-gate blocker without retaining token values or token-file paths.

@@ -31,6 +31,13 @@ def _safe_string_list(value: Any) -> list[str]:
     return [item for item in value if isinstance(item, str)] if isinstance(value, list) else []
 
 
+def _strict_bool_line(mapping: dict[str, Any], key: str) -> str:
+    value = mapping.get(key)
+    if not isinstance(value, bool):
+        raise ValueError(f"runtimeTokenHandoff.{key} must be boolean")
+    return f"- {key}: {_bool_word(value)}"
+
+
 def _false_flag_line(action: dict[str, Any], key: str) -> str:
     value = action.get(key)
     if value is not False:
@@ -80,13 +87,9 @@ def render_handoff(audit: dict[str, Any]) -> str:
         )
     for index, blocker_value in enumerate(blockers, start=1):
         blocker = _require_mapping(blocker_value, f"blocker {index}")
-        action = _require_mapping(blocker.get("napoleonRequiredAction", {}), "napoleonRequiredAction")
         validation = blocker.get("validation")
         if not isinstance(validation, list) or not all(isinstance(item, str) for item in validation):
             raise ValueError("blocker validation must be a list of strings")
-        advertise_using = action.get("advertiseUsing", [])
-        if not isinstance(advertise_using, list) or not all(isinstance(item, str) for item in advertise_using):
-            raise ValueError("napoleonRequiredAction.advertiseUsing must be a list of strings")
 
         lines.extend(
             [
@@ -94,12 +97,45 @@ def render_handoff(audit: dict[str, Any]) -> str:
                 "",
                 f"Owner: {blocker.get('owner', 'unknown')}",
                 f"External blocker: {_bool_word(blocker.get('external'))}",
-                f"Required action: {action.get('id', 'unknown')}",
-                f"Operation: {action.get('operationId', 'unknown')}",
-                f"Target path: {action.get('targetPath', 'unknown')}",
-                f"Request kind: {action.get('requestKind', 'unknown')}",
-                f"Advertise using: {', '.join(advertise_using) if advertise_using else 'unknown'}",
-                f"Blocking live promotion: {_bool_word(action.get('blockingLivePromotion'))}",
+            ]
+        )
+        if "napoleonRequiredAction" in blocker:
+            action = _require_mapping(blocker.get("napoleonRequiredAction"), "napoleonRequiredAction")
+            advertise_using = action.get("advertiseUsing", [])
+            if not isinstance(advertise_using, list) or not all(isinstance(item, str) for item in advertise_using):
+                raise ValueError("napoleonRequiredAction.advertiseUsing must be a list of strings")
+            lines.extend(
+                [
+                    f"Required action: {action.get('id', 'unknown')}",
+                    f"Operation: {action.get('operationId', 'unknown')}",
+                    f"Target path: {action.get('targetPath', 'unknown')}",
+                    f"Request kind: {action.get('requestKind', 'unknown')}",
+                    f"Advertise using: {', '.join(advertise_using) if advertise_using else 'unknown'}",
+                    f"Blocking live promotion: {_bool_word(action.get('blockingLivePromotion'))}",
+                ]
+            )
+        elif "runtimeTokenHandoff" in blocker:
+            handoff = _require_mapping(blocker.get("runtimeTokenHandoff"), "runtimeTokenHandoff")
+            lines.extend(
+                [
+                    "",
+                    "Runtime token handoff:",
+                    _strict_bool_line(handoff, "tokenFileConfigured"),
+                    _strict_bool_line(handoff, "tokenFileReadable"),
+                    _strict_bool_line(handoff, "tokenRemotePresent"),
+                    _strict_bool_line(handoff, "tokenLocalReadableDeclared"),
+                    _strict_bool_line(handoff, "tokenRemoteReadableByOperator"),
+                    _strict_bool_line(handoff, "tokenRetained"),
+                    _strict_bool_line(handoff, "tokenFilePathRetained"),
+                ]
+            )
+            if handoff.get("tokenRetained") is not False or handoff.get("tokenFilePathRetained") is not False:
+                raise ValueError("runtimeTokenHandoff must not retain token values or token-file paths")
+        else:
+            raise ValueError("blocker must include napoleonRequiredAction or runtimeTokenHandoff")
+
+        lines.extend(
+            [
                 "",
                 "Next action:",
                 f"- {blocker.get('nextAction', 'No next action supplied.')}",
@@ -108,18 +144,22 @@ def render_handoff(audit: dict[str, Any]) -> str:
             ]
         )
         lines.extend(f"- {item}" for item in validation)
-        lines.extend(
-            [
-                "",
-                "Required false side-effect flags:",
-                _false_flag_line(action, "approvalCaptured"),
-                _false_flag_line(action, "memoryWritePerformed"),
-                _false_flag_line(action, "agentDispatchPerformed"),
-                _false_flag_line(action, "externalSendPerformed"),
-                _false_flag_line(action, "appliedLocally"),
-                "",
-            ]
-        )
+        if "napoleonRequiredAction" in blocker:
+            action = _require_mapping(blocker.get("napoleonRequiredAction"), "napoleonRequiredAction")
+            lines.extend(
+                [
+                    "",
+                    "Required false side-effect flags:",
+                    _false_flag_line(action, "approvalCaptured"),
+                    _false_flag_line(action, "memoryWritePerformed"),
+                    _false_flag_line(action, "agentDispatchPerformed"),
+                    _false_flag_line(action, "externalSendPerformed"),
+                    _false_flag_line(action, "appliedLocally"),
+                    "",
+                ]
+            )
+        else:
+            lines.append("")
 
     lines.extend(
         [
