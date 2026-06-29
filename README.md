@@ -79,6 +79,14 @@ NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_C
 
 This is a local alignment report only. It does not contact Napoleon or grant runtime authority.
 
+To audit the active Napoleon UI goal against current repository evidence:
+
+```bash
+make goal-completion-audit
+```
+
+This writes a sanitized local report at `/tmp/concierge-goal-completion-audit.json`. The audit is not approval and does not contact Napoleon; it separates local Concierge evidence from external Napoleon runtime blockers such as the current read-only evolution proposal status target gap.
+
 The lower-level evaluator-only command is still available:
 
 ```bash
@@ -96,6 +104,7 @@ Review the core documents:
 - [Observability](docs/OBSERVABILITY.md)
 - [Rehearsal Mode](docs/REHEARSAL_MODE.md)
 - [Napoleon contract alignment](docs/NAPOLEON_CONTRACT_ALIGNMENT.md)
+- [Goal completion audit](docs/GOAL_COMPLETION_AUDIT.md)
 - [Interaction stance policy](docs/INTERACTION_STANCE_POLICY.md)
 - [Self-evolution](docs/SELF_EVOLUTION.md)
 - [Evaluation efficiency and CoS improvements](docs/reports/EVALUATION_EFFICIENCY_AND_COS_IMPROVEMENTS.md)

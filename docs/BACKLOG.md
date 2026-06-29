@@ -24,6 +24,7 @@ Every story should include:
 | EV-008 | Keep evaluator coverage evidence synchronized | P1 | Repository validation checks documented current evaluator scenario counts in canonical docs, reports, and handoff status against `evaluator/scenarios.yaml`, so readiness evidence cannot drift from the actual suite size | schema_validation_completed |
 | EV-008 | Add human review template | P1 | `make eval-human-review` creates a local review record where a reviewer can approve, reject, or request revision while preserving that the record is not Napoleon approval, not release approval by itself, and not authority to apply changes | eval_review_recorded |
 | EV-009 | Add evaluator report dashboard placeholder | P2 | `make eval-summary` generates a local Markdown evaluator summary with run status, gate counts, dimension scores, case summary, recommendations, and non-authority boundary without copying raw prompt or response text | eval_report_rendered |
+| EV-010 | Add active-goal completion audit | P1 | `make goal-completion-audit` creates a sanitized local evidence map for the Napoleon UI goal, separating proven Concierge-side evidence from weak, missing, and Napoleon-owned external blockers without contacting Napoleon or granting authority | goal_completion_audit_completed |
 
 ### EV-002 details
 

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added a local active-goal completion audit command and documentation, mapping the Napoleon UI goal to current evidence while separating Concierge-side proof from the remaining Napoleon-owned status-route blocker.
 - Added visible evidence freshness metadata for the built-in Napoleon contract-alignment blocker, including the 2026-06-29 `mimir` snapshot source and retained local report path in the governed routes panel and required-action export.
 - Added optional retained JSON output for Napoleon contract-alignment reports, and refreshed the current `mimir` snapshot finding for 2026-06-28 with the remaining read-only evolution proposal status target gap.
 - Added rendered Chief of Staff steering draft coverage for easy-to-evolve capability recommendations, proving the local draft and export show the suggested next step, stay proposal-only and sanitized, exclude correctly blocked no-go outcomes, and do not contact Napoleon or apply changes.
