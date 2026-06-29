@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added sanitized retained contract-alignment summary fields to `make goal-completion-audit`, including alignment status, runtime-aligned state, live-promotion blocker state, Napoleon required-action count, and missing runtime targets.
 - Added `make goal-blocker-goal-prompt` to render the highest-priority sanitized goal-completion blocker into a copyable Napoleon-side goal prompt under 4,000 characters at `/tmp/concierge-goal-blocker-goal-prompt.md`.
 - Added `make goal-blocker-handoff` to render the sanitized goal-completion blockers into a copyable local Markdown handoff at `/tmp/concierge-goal-blocker-handoff.md`.
 - Added top-level sanitized `blockers` metadata to `make goal-completion-audit` reports, mirroring blocker owners, validation commands, and Napoleon required-action packets for direct handoff tooling.

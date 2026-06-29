@@ -21,7 +21,7 @@ That optional report is non-authorizing evidence only. It can clear the evolutio
 
 The JSON report includes:
 
-- `alignmentEvidence`: whether a fresh non-authorizing contract-alignment report was loaded and can clear the current evolution-status blocker.
+- `alignmentEvidence`: whether a fresh non-authorizing contract-alignment report was loaded, whether it can clear the current evolution-status blocker, and a sanitized summary of the retained alignment status, runtime-aligned flag, live-promotion blocker flag, Napoleon required-action count, and missing runtime targets.
 - `statusCounts`: current counts for proven, weak, missing, or externally blocked requirements.
 - `blockers`: sanitized top-level blocker metadata with requirement ID, owner, external flag, next action, validation commands, and any Napoleon required-action packet for direct handoff tooling.
 - `nextActions`: one machine-readable repair action per blocker, including owner, whether the blocker is external, validation commands, the next action text, and, for Napoleon-owned runtime blockers, a sanitized `napoleonRequiredAction` packet with the expected target path, request kind, descriptor advertising forms, live-promotion blocker state, and false side-effect flags.

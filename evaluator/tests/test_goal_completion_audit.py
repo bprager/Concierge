@@ -129,6 +129,49 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertEqual(report["blockerCount"], 1)
         self.assertFalse(report["completionGate"]["canCloseGoal"])
 
+    def test_loaded_alignment_report_exposes_sanitized_summary_metadata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            alignment_path = Path(tmp) / "alignment.json"
+            alignment_path.write_text(
+                json.dumps(
+                    {
+                        "kind": "concierge.napoleon-contract-alignment.v1",
+                        "alignmentStatus": "runtime_mapping_gaps_present",
+                        "runtimeAligned": False,
+                        "blockingLivePromotion": True,
+                        "napoleonRequiredActionCount": 1,
+                        "conciergeReviewPathsMissingFromNapoleonRuntime": [
+                            "/evolution/proposals/{proposal_id}/status"
+                        ],
+                        "napoleonRequiredActions": [
+                            {"id": "expose_evolution_proposal_status_runtime_target"}
+                        ],
+                        "nonAuthorityBoundary": "alignment_check_only",
+                        "sideEffectsPerformed": False,
+                        "approvalCaptured": False,
+                        "memoryWritePerformed": False,
+                        "agentDispatchPerformed": False,
+                        "externalSendPerformed": False,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = goal_completion_audit.build_report(alignment_report_path=alignment_path)
+
+        evidence = report["alignmentEvidence"]
+        self.assertTrue(evidence["loaded"])
+        self.assertEqual(evidence["alignmentStatus"], "runtime_mapping_gaps_present")
+        self.assertFalse(evidence["runtimeAligned"])
+        self.assertTrue(evidence["blockingLivePromotion"])
+        self.assertEqual(evidence["napoleonRequiredActionCount"], 1)
+        self.assertEqual(
+            evidence["missingRuntimeTargets"],
+            ["/evolution/proposals/{proposal_id}/status"],
+        )
+        self.assertFalse(evidence["canClearEvolutionStatusBlocker"])
+        self.assertEqual(evidence["nonAuthorityBoundary"], "alignment_report_only")
+
     def test_make_target_can_forward_retained_alignment_report(self):
         makefile = Path("Makefile").read_text(encoding="utf-8")
 

@@ -249,6 +249,41 @@ def _alignment_report_clears_blocker(report: dict[str, Any] | None, marker: str 
     return not any(isinstance(action, dict) and action.get("id") == marker for action in required_actions)
 
 
+def _safe_alignment_evidence_summary(report: dict[str, Any] | None, path: Path | None) -> dict[str, Any]:
+    missing_targets: list[str] = []
+    required_action_count: int | None = None
+    alignment_status: str | None = None
+    runtime_aligned: bool | None = None
+    blocking_live_promotion: bool | None = None
+    if report is not None:
+        raw_missing_targets = report.get("conciergeReviewPathsMissingFromNapoleonRuntime")
+        if isinstance(raw_missing_targets, list):
+            missing_targets = [item for item in raw_missing_targets if isinstance(item, str)]
+        if isinstance(report.get("napoleonRequiredActionCount"), int):
+            required_action_count = report["napoleonRequiredActionCount"]
+        if isinstance(report.get("alignmentStatus"), str):
+            alignment_status = report["alignmentStatus"]
+        if isinstance(report.get("runtimeAligned"), bool):
+            runtime_aligned = report["runtimeAligned"]
+        if isinstance(report.get("blockingLivePromotion"), bool):
+            blocking_live_promotion = report["blockingLivePromotion"]
+
+    return {
+        "path": str(path) if path else None,
+        "loaded": report is not None,
+        "canClearEvolutionStatusBlocker": _alignment_report_clears_blocker(
+            report,
+            "expose_evolution_proposal_status_runtime_target",
+        ),
+        "alignmentStatus": alignment_status,
+        "runtimeAligned": runtime_aligned,
+        "blockingLivePromotion": blocking_live_promotion,
+        "napoleonRequiredActionCount": required_action_count,
+        "missingRuntimeTargets": missing_targets,
+        "nonAuthorityBoundary": "alignment_report_only",
+    }
+
+
 def evaluate_requirement(requirement: Requirement, alignment_report: dict[str, Any] | None = None) -> dict[str, Any]:
     checks = [evaluate_check(check) for check in requirement.evidence]
     present_count = sum(1 for check in checks if check["status"] == "present")
@@ -324,15 +359,7 @@ def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
         "kind": "concierge.goal-completion-audit.v1",
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "overallStatus": overall_status,
-        "alignmentEvidence": {
-            "path": str(alignment_report_path) if alignment_report_path else None,
-            "loaded": alignment_report is not None,
-            "canClearEvolutionStatusBlocker": _alignment_report_clears_blocker(
-                alignment_report,
-                "expose_evolution_proposal_status_runtime_target",
-            ),
-            "nonAuthorityBoundary": "alignment_report_only",
-        },
+        "alignmentEvidence": _safe_alignment_evidence_summary(alignment_report, alignment_report_path),
         "statusCounts": status_counts,
         "requirementCount": len(requirements),
         "blockerCount": len(blockers),
