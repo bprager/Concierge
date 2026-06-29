@@ -51,6 +51,15 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertIn("make check", gate["requiredBeforeClose"])
         self.assertEqual(gate["requiredButNotRunByAudit"], gate["requiredBeforeClose"])
 
+    def test_completion_gate_lists_blocking_requirements_by_owner_boundary(self):
+        report = goal_completion_audit.build_report()
+
+        gate = report["completionGate"]
+        self.assertFalse(gate["canCloseGoal"])
+        self.assertEqual(gate["blockingRequirementIds"], ["evolution_status_runtime_blocker"])
+        self.assertEqual(gate["externalBlockerCount"], 1)
+        self.assertEqual(gate["localBlockerCount"], 0)
+
     def test_external_runtime_blocker_includes_sanitized_required_action_packet(self):
         report = goal_completion_audit.build_report()
 

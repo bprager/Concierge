@@ -347,6 +347,9 @@ def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
     next_actions = [dict(blocker) for blocker in blocker_summaries]
     completion_gate = {
         "canCloseGoal": not blockers,
+        "blockingRequirementIds": [item["id"] for item in blockers],
+        "externalBlockerCount": sum(1 for item in blockers if item["blocker"]["external"]),
+        "localBlockerCount": sum(1 for item in blockers if not item["blocker"]["external"]),
         "requiredBeforeClose": [
             "make check",
             "make eval",
