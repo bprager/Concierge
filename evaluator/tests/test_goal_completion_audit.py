@@ -187,6 +187,13 @@ class GoalCompletionAuditTests(unittest.TestCase):
                         "napoleonRequiredActions": [
                             {"id": "expose_evolution_proposal_status_runtime_target"}
                         ],
+                        "napoleonContractSha256": (
+                            "f935449c0d0f272542d43d5e4fd463b9f10c60e6407ce56f8ae1e34c334ef78d"
+                        ),
+                        "conciergeContractSha256": (
+                            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+                        ),
+                        "contractContentRetained": False,
                         "nonAuthorityBoundary": "alignment_check_only",
                         "sideEffectsPerformed": False,
                         "approvalCaptured": False,
@@ -212,6 +219,15 @@ class GoalCompletionAuditTests(unittest.TestCase):
         )
         self.assertFalse(evidence["canClearEvolutionStatusBlocker"])
         self.assertEqual(evidence["nonAuthorityBoundary"], "alignment_report_only")
+        self.assertEqual(
+            evidence["napoleonContractSha256"],
+            "f935449c0d0f272542d43d5e4fd463b9f10c60e6407ce56f8ae1e34c334ef78d",
+        )
+        self.assertEqual(
+            evidence["conciergeContractSha256"],
+            "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        )
+        self.assertFalse(evidence["contractContentRetained"])
 
     def test_default_alignment_report_path_is_loaded_when_present(self):
         with tempfile.TemporaryDirectory() as tmp:

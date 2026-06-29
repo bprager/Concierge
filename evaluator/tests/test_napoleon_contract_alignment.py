@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from hashlib import sha256
 from pathlib import Path
 
 from scripts import napoleon_contract_alignment
@@ -142,6 +143,9 @@ paths:
             report = json.loads(out.read_text(encoding="utf-8"))
             self.assertTrue(report["aligned"])
             self.assertTrue(report["runtimeAligned"])
+            self.assertEqual(report["napoleonContractSha256"], sha256(napoleon.read_bytes()).hexdigest())
+            self.assertEqual(report["conciergeContractSha256"], sha256(local.read_bytes()).hexdigest())
+            self.assertFalse(report["contractContentRetained"])
             self.assertEqual(report["nonAuthorityBoundary"], "alignment_check_only")
             self.assertFalse(report["approvalCaptured"])
             self.assertFalse(report["memoryWritePerformed"])

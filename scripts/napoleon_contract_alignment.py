@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -107,6 +108,10 @@ def load_yaml(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"YAML document must be an object: {path}")
     return value
+
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def operation_paths(openapi: dict[str, Any]) -> list[str]:
@@ -289,7 +294,10 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
         "runtimeAligned": runtime_aligned,
         "alignmentStatus": alignment_status,
         "conciergeContract": str(concierge_openapi),
+        "conciergeContractSha256": file_sha256(concierge_openapi),
         "napoleonContract": str(napoleon_openapi),
+        "napoleonContractSha256": file_sha256(napoleon_openapi),
+        "contractContentRetained": False,
         "conciergePaths": concierge_paths,
         "napoleonPaths": napoleon_paths,
         "napoleonOnlyPaths": napoleon_only,

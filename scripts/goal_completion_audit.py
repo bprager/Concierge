@@ -332,6 +332,9 @@ def _safe_alignment_evidence_summary(report: dict[str, Any] | None, path: Path |
     alignment_status: str | None = None
     runtime_aligned: bool | None = None
     blocking_live_promotion: bool | None = None
+    napoleon_contract_sha256: str | None = None
+    concierge_contract_sha256: str | None = None
+    contract_content_retained = False
     if report is not None:
         raw_missing_targets = report.get("conciergeReviewPathsMissingFromNapoleonRuntime")
         if isinstance(raw_missing_targets, list):
@@ -344,6 +347,11 @@ def _safe_alignment_evidence_summary(report: dict[str, Any] | None, path: Path |
             runtime_aligned = report["runtimeAligned"]
         if isinstance(report.get("blockingLivePromotion"), bool):
             blocking_live_promotion = report["blockingLivePromotion"]
+        if isinstance(report.get("napoleonContractSha256"), str):
+            napoleon_contract_sha256 = report["napoleonContractSha256"]
+        if isinstance(report.get("conciergeContractSha256"), str):
+            concierge_contract_sha256 = report["conciergeContractSha256"]
+        contract_content_retained = report.get("contractContentRetained") is True
 
     return {
         "path": str(path) if path else None,
@@ -357,6 +365,9 @@ def _safe_alignment_evidence_summary(report: dict[str, Any] | None, path: Path |
         "blockingLivePromotion": blocking_live_promotion,
         "napoleonRequiredActionCount": required_action_count,
         "missingRuntimeTargets": missing_targets,
+        "napoleonContractSha256": napoleon_contract_sha256,
+        "conciergeContractSha256": concierge_contract_sha256,
+        "contractContentRetained": contract_content_retained,
         "nonAuthorityBoundary": "alignment_report_only",
     }
 

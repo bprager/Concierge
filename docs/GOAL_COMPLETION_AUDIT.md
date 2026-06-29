@@ -17,7 +17,7 @@ NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napol
 make goal-completion-audit
 ```
 
-By default, `make napoleon-contract-alignment` writes `/tmp/concierge-napoleon-alignment.json`, and both `make goal-completion-audit` and `make runtime-handoff-status` load that retained report automatically when no explicit alignment-report override is supplied. That optional report is non-authorizing evidence only. It can clear the evolution-status external blocker only when it identifies itself as `concierge.napoleon-contract-alignment.v1`, is runtime-aligned, carries the `alignment_check_only` boundary, exposes `/evolution/proposals/{proposal_id}/status`, has no `expose_evolution_proposal_status_runtime_target` required action, and preserves false approval, memory-write, agent-dispatch, external-send, and side-effect flags.
+By default, `make napoleon-contract-alignment` writes `/tmp/concierge-napoleon-alignment.json`, and both `make goal-completion-audit` and `make runtime-handoff-status` load that retained report automatically when no explicit alignment-report override is supplied. That optional report is non-authorizing evidence only. It can clear the evolution-status external blocker only when it identifies itself as `concierge.napoleon-contract-alignment.v1`, is runtime-aligned, carries the `alignment_check_only` boundary, exposes `/evolution/proposals/{proposal_id}/status`, has no `expose_evolution_proposal_status_runtime_target` required action, and preserves false approval, memory-write, agent-dispatch, external-send, and side-effect flags. The retained report carries SHA-256 checksums for the inspected Concierge and Napoleon contract files plus `contractContentRetained: false`, so operators can identify the exact snapshots that were compared without storing contract bodies in the audit or handoff.
 
 To retain the current connection handoff state without copying endpoint hosts, tokens, token-file paths, request bodies, or response bodies into a tracked artifact, capture any live health response into `/tmp`, retain a contract-alignment report, and render the sanitized runtime handoff status:
 
@@ -31,7 +31,7 @@ The command writes `/tmp/concierge-runtime-handoff-status.json`. It records only
 
 The JSON report includes:
 
-- `alignmentEvidence`: whether a fresh non-authorizing contract-alignment report was loaded, whether it can clear the current evolution-status blocker, and a sanitized summary of the retained alignment status, runtime-aligned flag, live-promotion blocker flag, Napoleon required-action count, and missing runtime targets.
+- `alignmentEvidence`: whether a fresh non-authorizing contract-alignment report was loaded, whether it can clear the current evolution-status blocker, and a sanitized summary of the retained alignment status, runtime-aligned flag, live-promotion blocker flag, Napoleon required-action count, missing runtime targets, Concierge and Napoleon contract SHA-256 checksums, and `contractContentRetained: false`.
 - `runtimeHandoffEvidence`: whether a sanitized runtime handoff report was loaded, whether local handoff readiness can proceed, sanitized local/external blocker counts, blocker IDs, token-file configured/readable booleans, and declared remote-present/local-readable token handoff booleans without endpoint hosts, tokens, token-file paths, request bodies, or response bodies.
 - `statusCounts`: current counts for proven, weak, missing, or externally blocked requirements.
 - `acceptanceCriteria`: the original active-goal acceptance criteria, each linked back to the requirement IDs that prove or block it.
@@ -49,7 +49,7 @@ To render a copyable Markdown handoff from the current sanitized blocker list:
 make goal-blocker-handoff
 ```
 
-The command reruns the audit and writes `/tmp/concierge-goal-blocker-handoff.md`. The handoff includes the blocker owner, requirement ID, target path, request kind, descriptor advertising forms, validation commands, required false side-effect flags, any retained sanitized alignment summary loaded through `GOAL_COMPLETION_ALIGNMENT_REPORT`, and sanitized runtime token-handoff booleans for local token-access blockers. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
+The command reruns the audit and writes `/tmp/concierge-goal-blocker-handoff.md`. The handoff includes the blocker owner, requirement ID, target path, request kind, descriptor advertising forms, validation commands, required false side-effect flags, any retained sanitized alignment summary loaded through `GOAL_COMPLETION_ALIGNMENT_REPORT`, the retained contract checksums when present, the false contract-content retention flag, and sanitized runtime token-handoff booleans for local token-access blockers. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
 
 To render the highest-priority blocker as a compact copy-and-paste goal prompt:
 

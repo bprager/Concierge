@@ -31,6 +31,12 @@ def _safe_string_list(value: Any) -> list[str]:
     return [item for item in value if isinstance(item, str)] if isinstance(value, list) else []
 
 
+def _optional_line(label: str, value: Any) -> list[str]:
+    if not isinstance(value, str) or not value:
+        return []
+    return [f"- {label}: {value}"]
+
+
 def _strict_bool_line(mapping: dict[str, Any], key: str) -> str:
     value = mapping.get(key)
     if not isinstance(value, bool):
@@ -50,17 +56,28 @@ def _alignment_evidence_lines(audit: dict[str, Any]) -> list[str]:
     if not isinstance(evidence, dict) or evidence.get("loaded") is not True:
         return []
     missing_targets = _safe_string_list(evidence.get("missingRuntimeTargets"))
-    return [
+    if evidence.get("contractContentRetained") is True:
+        raise ValueError("alignmentEvidence must not retain contract contents")
+    lines = [
         "Alignment evidence:",
         f"- Alignment status: {_safe_string(evidence.get('alignmentStatus'))}",
         f"- Runtime aligned: {_bool_word(evidence.get('runtimeAligned'))}",
         f"- Blocking live promotion: {_bool_word(evidence.get('blockingLivePromotion'))}",
         f"- Napoleon required-action count: {evidence.get('napoleonRequiredActionCount') if isinstance(evidence.get('napoleonRequiredActionCount'), int) else 'unknown'}",
         f"- Missing runtime targets: {', '.join(missing_targets) if missing_targets else 'none listed'}",
+    ]
+    lines.extend(_optional_line("Napoleon contract SHA-256", evidence.get("napoleonContractSha256")))
+    lines.extend(_optional_line("Concierge contract SHA-256", evidence.get("conciergeContractSha256")))
+    if "contractContentRetained" in evidence:
+        lines.append(f"- Contract content retained: {_bool_word(evidence.get('contractContentRetained'))}")
+    lines.extend(
+        [
         f"- Can clear evolution-status blocker: {_bool_word(evidence.get('canClearEvolutionStatusBlocker'))}",
         "- Non-authority boundary: alignment_report_only",
         "",
-    ]
+        ]
+    )
+    return lines
 
 
 def render_handoff(audit: dict[str, Any]) -> str:

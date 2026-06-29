@@ -20,6 +20,9 @@ class GoalBlockerHandoffTests(unittest.TestCase):
             "path": "/tmp/concierge-napoleon-alignment-current.json",
             "canClearEvolutionStatusBlocker": False,
             "nonAuthorityBoundary": "alignment_report_only",
+            "napoleonContractSha256": "f935449c0d0f272542d43d5e4fd463b9f10c60e6407ce56f8ae1e34c334ef78d",
+            "conciergeContractSha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            "contractContentRetained": False,
         }
 
         rendered = create_goal_blocker_handoff.render_handoff(audit)
@@ -30,6 +33,15 @@ class GoalBlockerHandoffTests(unittest.TestCase):
         self.assertIn("Alignment status: runtime_mapping_gaps_present", rendered)
         self.assertIn("Runtime aligned: no", rendered)
         self.assertIn("Missing runtime targets: /evolution/proposals/{proposal_id}/status", rendered)
+        self.assertIn(
+            "Napoleon contract SHA-256: f935449c0d0f272542d43d5e4fd463b9f10c60e6407ce56f8ae1e34c334ef78d",
+            rendered,
+        )
+        self.assertIn(
+            "Concierge contract SHA-256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+            rendered,
+        )
+        self.assertIn("Contract content retained: no", rendered)
         self.assertIn("Owner: napoleon_runtime", rendered)
         self.assertIn("Target path: /evolution/proposals/{proposal_id}/status", rendered)
         self.assertIn("Request kind: evolution_proposal_status_handoff", rendered)
