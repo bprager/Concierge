@@ -14,7 +14,7 @@ When Napoleon publishes a newer Concierge integration contract, retain a fresh c
 
 ```bash
 NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_CONTRACT_ALIGNMENT_OUT=/tmp/concierge-napoleon-alignment.json make napoleon-contract-alignment
-python scripts/goal_completion_audit.py --contract-alignment-report /tmp/concierge-napoleon-alignment.json --out /tmp/concierge-goal-completion-audit.json
+GOAL_COMPLETION_ALIGNMENT_REPORT=/tmp/concierge-napoleon-alignment.json make goal-completion-audit
 ```
 
 That optional report is non-authorizing evidence only. It can clear the evolution-status external blocker only when it is runtime-aligned, carries the `alignment_check_only` boundary, exposes `/evolution/proposals/{proposal_id}/status`, has no `expose_evolution_proposal_status_runtime_target` required action, and preserves false approval, memory-write, agent-dispatch, external-send, and side-effect flags.

@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added `GOAL_COMPLETION_ALIGNMENT_REPORT` support to `make goal-completion-audit`, so retained Napoleon contract-alignment evidence can be consumed through the standard audit command.
 - Added optional fresh contract-alignment evidence ingestion to the local active-goal completion audit, so the Napoleon-owned evolution-status blocker can clear only when a retained non-authorizing alignment report proves the read-only route is exposed.
 - Added machine-readable blocker owners, next actions, validation commands, and a close gate to the local active-goal completion audit.
 - Added a local active-goal completion audit command and documentation, mapping the Napoleon UI goal to current evidence while separating Concierge-side proof from the remaining Napoleon-owned status-route blocker.

@@ -75,6 +75,12 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertEqual(report["blockerCount"], 0)
         self.assertTrue(report["completionGate"]["canCloseGoal"])
 
+    def test_make_target_can_forward_retained_alignment_report(self):
+        makefile = Path("Makefile").read_text(encoding="utf-8")
+
+        self.assertIn("GOAL_COMPLETION_ALIGNMENT_REPORT", makefile)
+        self.assertIn("--contract-alignment-report $(GOAL_COMPLETION_ALIGNMENT_REPORT)", makefile)
+
 
 if __name__ == "__main__":
     unittest.main()

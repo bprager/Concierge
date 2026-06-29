@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added `GOAL_COMPLETION_ALIGNMENT_REPORT` support to `make goal-completion-audit`, so once Napoleon publishes a fixed integration contract, the retained alignment report can be consumed through the standard audit command rather than a lower-level script call.
 - Added optional fresh contract-alignment report ingestion to the local goal completion audit; the default report still stays `goal_not_complete`, but once Napoleon exposes and advertises `/evolution/proposals/{proposal_id}/status`, a retained non-authorizing alignment report can clear the external blocker and let the close gate reflect current evidence.
 - Extended the local goal completion audit so `/tmp/concierge-goal-completion-audit.json` now carries machine-readable blocker owners, next actions, validation commands, and `completionGate.canCloseGoal`; the current report still stays `goal_not_complete` because the Napoleon-owned read-only evolution proposal status target remains external.
 - Added `make goal-completion-audit`, `scripts/goal_completion_audit.py`, evaluator coverage, and `docs/GOAL_COMPLETION_AUDIT.md`; the audit writes sanitized local evidence to `/tmp/concierge-goal-completion-audit.json`, does not contact Napoleon, and separates proven Concierge-side evidence from weak, missing, or external-blocker items.

@@ -33,7 +33,7 @@ napoleon-contract-alignment:
 	uv run --with PyYAML python scripts/napoleon_contract_alignment.py --napoleon-openapi $$NAPOLEON_CONTRACT_OPENAPI $(if $(NAPOLEON_CONTRACT_ALIGNMENT_OUT),--out $(NAPOLEON_CONTRACT_ALIGNMENT_OUT),)
 
 goal-completion-audit:
-	uv run python scripts/goal_completion_audit.py --out /tmp/concierge-goal-completion-audit.json --quiet
+	uv run python scripts/goal_completion_audit.py --out /tmp/concierge-goal-completion-audit.json --quiet $(if $(GOAL_COMPLETION_ALIGNMENT_REPORT),--contract-alignment-report $(GOAL_COMPLETION_ALIGNMENT_REPORT),)
 
 generate-bridge-operations:
 	uv run --with PyYAML python scripts/generate_bridge_operations.py
