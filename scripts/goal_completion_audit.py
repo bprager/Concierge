@@ -334,6 +334,7 @@ def _safe_alignment_evidence_summary(report: dict[str, Any] | None, path: Path |
     blocking_live_promotion: bool | None = None
     napoleon_contract_sha256: str | None = None
     concierge_contract_sha256: str | None = None
+    napoleon_contract_snapshot: dict[str, Any] | None = None
     contract_content_retained = False
     if report is not None:
         raw_missing_targets = report.get("conciergeReviewPathsMissingFromNapoleonRuntime")
@@ -351,6 +352,17 @@ def _safe_alignment_evidence_summary(report: dict[str, Any] | None, path: Path |
             napoleon_contract_sha256 = report["napoleonContractSha256"]
         if isinstance(report.get("conciergeContractSha256"), str):
             concierge_contract_sha256 = report["conciergeContractSha256"]
+        snapshot = report.get("napoleonContractSnapshot")
+        if isinstance(snapshot, dict):
+            safe_snapshot = {
+                "sourceClass": snapshot.get("sourceClass") if isinstance(snapshot.get("sourceClass"), str) else None,
+                "fileName": snapshot.get("fileName") if isinstance(snapshot.get("fileName"), str) else None,
+                "sha256": snapshot.get("sha256") if isinstance(snapshot.get("sha256"), str) else None,
+                "modifiedAt": snapshot.get("modifiedAt") if isinstance(snapshot.get("modifiedAt"), str) else None,
+                "contentRetained": snapshot.get("contentRetained") is True,
+                "pathRetained": snapshot.get("pathRetained") is True,
+            }
+            napoleon_contract_snapshot = safe_snapshot
         contract_content_retained = report.get("contractContentRetained") is True
 
     return {
@@ -366,6 +378,7 @@ def _safe_alignment_evidence_summary(report: dict[str, Any] | None, path: Path |
         "napoleonRequiredActionCount": required_action_count,
         "missingRuntimeTargets": missing_targets,
         "napoleonContractSha256": napoleon_contract_sha256,
+        "napoleonContractSnapshot": napoleon_contract_snapshot,
         "conciergeContractSha256": concierge_contract_sha256,
         "contractContentRetained": contract_content_retained,
         "nonAuthorityBoundary": "alignment_report_only",

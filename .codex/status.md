@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added sanitized Napoleon contract snapshot provenance to retained alignment evidence, so `/tmp/concierge-napoleon-alignment.json`, `/tmp/concierge-goal-completion-audit.json`, and `/tmp/concierge-goal-blocker-handoff.md` now identify the inspected `concierge-integration.openapi.yaml` snapshot by filename, modified time, and checksum without retaining contract contents or source paths.
 - Added sanitized token-file existence tracking to runtime handoff evidence, so `/tmp/concierge-runtime-handoff-status.json`, `/tmp/concierge-goal-completion-audit.json`, and `/tmp/concierge-goal-blocker-handoff.md` now distinguish a missing approved token file from an unreadable one without retaining token values, token-file paths, or endpoint hosts.
 - Added SHA-256 traceability for retained Napoleon contract-alignment evidence, so `/tmp/concierge-napoleon-alignment.json`, `/tmp/concierge-goal-completion-audit.json`, and `/tmp/concierge-goal-blocker-handoff.md` can identify the compared contract snapshots while still recording `contractContentRetained: false`.
 - Added sanitized runtime token-handoff facts to `/tmp/concierge-goal-blocker-handoff.md`, so the local `runtime_handoff_token_access` blocker is copyable with configured/readable/remote-present booleans while still omitting token values, token-file paths, and endpoint hosts.

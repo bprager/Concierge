@@ -31,6 +31,7 @@ The report is local evidence only. It does not contact Napoleon, approve a runti
 - `conciergeReviewPathsMissingFromNapoleonRuntime` and `conciergeReviewOperationsMissingFromNapoleonRuntime` list named Concierge Napoleon targets that are generated locally but absent from the inspected Napoleon snapshot; these are runtime exposure gaps, not permission to fall back to free-form paths.
 - `napoleonRequiredActions` turns those missing named targets into Napoleon-owned required actions with the expected operation, target path, request kind, live-promotion blocking state, and non-authority boundary.
 - `napoleonRequiredActionCount` and `blockingLivePromotion` summarize the action list for operator panels, CI checks, and promotion gates without requiring consumers to infer count or blocking status from the action array.
+- `napoleonContractSnapshot` identifies the inspected Napoleon snapshot by source class, filename, modified time, and SHA-256 while keeping `contentRetained: false` and `pathRetained: false`, so handoffs can prove which snapshot was checked without copying the contract body or source path.
 
 ## Current Finding
 
@@ -67,7 +68,7 @@ The alignment report now also emits a Napoleon-owned required action:
 
 - `expose_evolution_proposal_status_runtime_target`: expose and advertise the read-only `evolution_proposal_status` runtime target at `/evolution/proposals/{proposal_id}/status` with `evolution_proposal_status_handoff` before Concierge can refresh proposal status against live Napoleon.
 
-The latest 2026-06-29 recheck against that snapshot was retained locally at `/tmp/concierge-napoleon-alignment-2026-06-29.json` and still reports no unmapped Napoleon runtime paths; the remaining gap is this single named Concierge status target missing from the Napoleon snapshot, with `napoleonRequiredActionCount: 1` and `blockingLivePromotion: true`. This is not a permission to infer or call an unadvertised path.
+The latest 2026-06-29 recheck against that snapshot was retained locally at `/tmp/concierge-napoleon-alignment.json` and still reports no unmapped Napoleon runtime paths; the remaining gap is this single named Concierge status target missing from the Napoleon snapshot, with `napoleonRequiredActionCount: 1` and `blockingLivePromotion: true`. The retained report includes sanitized snapshot provenance for `concierge-integration.openapi.yaml` without retaining the source path or contract contents. This is not a permission to infer or call an unadvertised path.
 
 Text Concierge can answer Napoleon required-action questions and export a focused local required-action packet from this local contract-alignment evidence when no evaluator validation import is present. For example, "What does Napoleon need to expose next?" returns the current Napoleon-owned action, contract-alignment status, and non-authority boundary, and the export keeps the same source, evidence source, checked date, retained local report path, and false side-effect flags without contacting Napoleon or treating the answer as approval, runtime validation, free-form path permission, memory permission, agent dispatch, external send, or local application.
 

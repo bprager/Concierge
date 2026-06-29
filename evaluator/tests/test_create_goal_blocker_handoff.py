@@ -21,6 +21,14 @@ class GoalBlockerHandoffTests(unittest.TestCase):
             "canClearEvolutionStatusBlocker": False,
             "nonAuthorityBoundary": "alignment_report_only",
             "napoleonContractSha256": "f935449c0d0f272542d43d5e4fd463b9f10c60e6407ce56f8ae1e34c334ef78d",
+            "napoleonContractSnapshot": {
+                "sourceClass": "local_file_snapshot",
+                "fileName": "concierge-integration.openapi.yaml",
+                "sha256": "f935449c0d0f272542d43d5e4fd463b9f10c60e6407ce56f8ae1e34c334ef78d",
+                "modifiedAt": "2026-06-29T20:47:00Z",
+                "contentRetained": False,
+                "pathRetained": False,
+            },
             "conciergeContractSha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
             "contractContentRetained": False,
         }
@@ -37,6 +45,10 @@ class GoalBlockerHandoffTests(unittest.TestCase):
             "Napoleon contract SHA-256: f935449c0d0f272542d43d5e4fd463b9f10c60e6407ce56f8ae1e34c334ef78d",
             rendered,
         )
+        self.assertIn("Napoleon snapshot file: concierge-integration.openapi.yaml", rendered)
+        self.assertIn("Napoleon snapshot modified: 2026-06-29T20:47:00Z", rendered)
+        self.assertIn("Napoleon snapshot content retained: no", rendered)
+        self.assertIn("Napoleon snapshot path retained: no", rendered)
         self.assertIn(
             "Concierge contract SHA-256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
             rendered,

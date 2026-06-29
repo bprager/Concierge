@@ -145,6 +145,18 @@ paths:
             self.assertTrue(report["runtimeAligned"])
             self.assertEqual(report["napoleonContractSha256"], sha256(napoleon.read_bytes()).hexdigest())
             self.assertEqual(report["conciergeContractSha256"], sha256(local.read_bytes()).hexdigest())
+            self.assertEqual(
+                report["napoleonContractSnapshot"],
+                {
+                    "sourceClass": "local_file_snapshot",
+                    "fileName": "napoleon.yaml",
+                    "sha256": sha256(napoleon.read_bytes()).hexdigest(),
+                    "contentRetained": False,
+                    "pathRetained": False,
+                    "modifiedAt": report["napoleonContractSnapshot"]["modifiedAt"],
+                },
+            )
+            self.assertRegex(report["napoleonContractSnapshot"]["modifiedAt"], r"^\d{4}-\d{2}-\d{2}T")
             self.assertFalse(report["contractContentRetained"])
             self.assertEqual(report["nonAuthorityBoundary"], "alignment_check_only")
             self.assertFalse(report["approvalCaptured"])

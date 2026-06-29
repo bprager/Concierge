@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -112,6 +113,20 @@ def load_yaml(path: Path) -> dict[str, Any]:
 
 def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def file_snapshot(path: Path) -> dict[str, Any]:
+    return {
+        "sourceClass": "local_file_snapshot",
+        "fileName": path.name,
+        "sha256": file_sha256(path),
+        "modifiedAt": datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z"),
+        "contentRetained": False,
+        "pathRetained": False,
+    }
 
 
 def operation_paths(openapi: dict[str, Any]) -> list[str]:
@@ -297,6 +312,7 @@ def build_alignment_report(concierge_openapi: Path, napoleon_openapi: Path) -> d
         "conciergeContractSha256": file_sha256(concierge_openapi),
         "napoleonContract": str(napoleon_openapi),
         "napoleonContractSha256": file_sha256(napoleon_openapi),
+        "napoleonContractSnapshot": file_snapshot(napoleon_openapi),
         "contractContentRetained": False,
         "conciergePaths": concierge_paths,
         "napoleonPaths": napoleon_paths,

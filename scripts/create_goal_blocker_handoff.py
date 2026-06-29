@@ -67,6 +67,14 @@ def _alignment_evidence_lines(audit: dict[str, Any]) -> list[str]:
         f"- Missing runtime targets: {', '.join(missing_targets) if missing_targets else 'none listed'}",
     ]
     lines.extend(_optional_line("Napoleon contract SHA-256", evidence.get("napoleonContractSha256")))
+    snapshot = evidence.get("napoleonContractSnapshot")
+    if isinstance(snapshot, dict):
+        if snapshot.get("contentRetained") is not False or snapshot.get("pathRetained") is not False:
+            raise ValueError("alignmentEvidence Napoleon contract snapshot must not retain contents or paths")
+        lines.extend(_optional_line("Napoleon snapshot file", snapshot.get("fileName")))
+        lines.extend(_optional_line("Napoleon snapshot modified", snapshot.get("modifiedAt")))
+        lines.append(f"- Napoleon snapshot content retained: {_bool_word(snapshot.get('contentRetained'))}")
+        lines.append(f"- Napoleon snapshot path retained: {_bool_word(snapshot.get('pathRetained'))}")
     lines.extend(_optional_line("Concierge contract SHA-256", evidence.get("conciergeContractSha256")))
     if "contractContentRetained" in evidence:
         lines.append(f"- Contract content retained: {_bool_word(evidence.get('contractContentRetained'))}")
