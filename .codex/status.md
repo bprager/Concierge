@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added sanitized runtime-auth provisioning import and rendering to the Text Concierge evaluator-validation panel, so failed live-runtime summaries can show a configured-but-unreadable token file without retaining token values or token-file paths.
 - Added safe token-file authentication support to bridge evidence capture and live-runtime validation, so an approved Napoleon runtime token file can be used by an authorized process while retained artifacts continue to omit token values and token-file paths.
 - Added sanitized token-provisioning metadata to live-runtime preflight and summary artifacts, so the current Napoleon token handoff can be diagnosed as configured/readable without retaining token contents or token-file paths.
 - Added sanitized transport-failure handling to bridge evidence capture, so failed Napoleon LAN checks now produce a non-authorizing validation summary instead of a raw Python connection traceback.

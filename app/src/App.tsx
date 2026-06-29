@@ -97,6 +97,7 @@ import {
   parseEvaluatorValidationArtifact,
   persistEvaluatorValidationImport,
   type EvaluatorValidationImport,
+  type RuntimeAuthProvisioning,
 } from "./evaluatorValidationArtifact.js";
 import { buildLearningSignalTelemetryAttributes } from "./learningSignal.js";
 import {
@@ -2055,6 +2056,20 @@ function formatNapoleonRequiredActionAnswer(
     status: evaluatorImport.validation.status,
     runtimeValidationSource,
   };
+}
+
+function formatRuntimeAuthProvisioning(authProvisioning: RuntimeAuthProvisioning | undefined): string | null {
+  if (!authProvisioning) return null;
+  if (authProvisioning.source === "token_file_unreadable") {
+    return "Runtime auth: token file configured but unreadable; token and token-file path not retained.";
+  }
+  if (authProvisioning.source === "token_file") {
+    return "Runtime auth: token file configured and readable; token and token-file path not retained.";
+  }
+  if (authProvisioning.source === "not_configured") {
+    return "Runtime auth: not configured; token and token-file path not retained.";
+  }
+  return "Runtime auth: configured; token and token-file path not retained.";
 }
 
 function formatReadinessRepairChecklistAnswer(
@@ -8941,6 +8956,9 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
                 Status: {evaluatorValidationImport.validation.status}; target:{" "}
                 {evaluatorValidationImport.validation.targetPath ?? "unavailable"}
               </span>
+              {formatRuntimeAuthProvisioning(evaluatorValidationImport.authProvisioning) ? (
+                <span>{formatRuntimeAuthProvisioning(evaluatorValidationImport.authProvisioning)}</span>
+              ) : null}
               {evaluatorValidationImport.validation.descriptorHandoffRequiredAction ? (
                 <span>{evaluatorValidationImport.validation.descriptorHandoffRequiredAction}</span>
               ) : null}

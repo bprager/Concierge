@@ -11653,6 +11653,65 @@ test("imports sanitized evaluator validation artifact into readiness and preflig
   }
 });
 
+test("renders sanitized token file provisioning from live-runtime validation import", async () => {
+  const dom = installDom();
+  const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([
+    import("@testing-library/react"),
+    import("@testing-library/user-event"),
+    import("../src/App.js"),
+  ]);
+  const user = userEventModule.default.setup();
+  const tokenPath = "/private/tmp/napoleon-runtime-pilot-auth-token";
+
+  try {
+    const view = render(<App />);
+    const artifactInput = view.getByLabelText("Evaluator validation artifact");
+    fireEvent.change(artifactInput, {
+      target: {
+        value: JSON.stringify({
+          runtimeValidation: {
+            source: "real_runtime",
+            authProvisioning: {
+              source: "token_file_unreadable",
+              tokenConfigured: false,
+              tokenFileConfigured: true,
+              tokenFileReadable: false,
+              tokenRetained: false,
+              tokenFilePathRetained: false,
+            },
+          },
+          httpEvaluator: {
+            status: "failed",
+            failureReason: "bridge_validation_failed_before_evaluator",
+            targetPath: "/chief-of-staff/reviews/evaluation",
+            targetRequestKind: "evaluation_review_handoff",
+            targetOperationId: "evaluation_review",
+            endpointHostRetained: false,
+            tokenRetained: false,
+            requestBodyRetained: false,
+            responseBodyRetained: false,
+            approvalCaptured: false,
+            memoryWritePerformed: false,
+            agentDispatchPerformed: false,
+            externalSendPerformed: false,
+          },
+        }),
+      },
+    });
+
+    await user.click(view.getByText("Import evaluator validation"));
+
+    await waitFor(() => assert.ok(view.getByText("Evaluator HTTP validation failed. Runtime auth token file is configured but unreadable.")));
+    const importPanel = view.getByText("Evaluator validation import").closest(".proof-comparison") as HTMLElement | null;
+    assert.ok(importPanel);
+    assert.ok(within(importPanel).getByText("Runtime auth: token file configured but unreadable; token and token-file path not retained."));
+    assert.equal(document.body.textContent?.includes(tokenPath), false);
+  } finally {
+    cleanup();
+    dom.window.close();
+  }
+});
+
 test("renders unadvertised evaluator handoff required action from validation import", async () => {
   const dom = installDom();
   const [{ cleanup, render, waitFor, within, fireEvent }, userEventModule, { App }] = await Promise.all([

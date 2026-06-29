@@ -245,6 +245,86 @@ test("imports aggregate Napoleon required actions from live runtime summary", ()
   );
 });
 
+test("accepts sanitized auth provisioning metadata from failed live runtime summary", () => {
+  const tokenPath = "/private/tmp/napoleon-runtime-pilot-auth-token";
+  const result = parseEvaluatorValidationArtifact(
+    JSON.stringify({
+      runtimeValidation: {
+        source: "real_runtime",
+        authProvisioning: {
+          source: "token_file_unreadable",
+          tokenConfigured: false,
+          tokenFileConfigured: true,
+          tokenFileReadable: false,
+          tokenRetained: false,
+          tokenFilePathRetained: false,
+        },
+      },
+      httpEvaluator: {
+        status: "failed",
+        failureReason: "bridge_validation_failed_before_evaluator",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+        targetRequestKind: "evaluation_review_handoff",
+        targetOperationId: "evaluation_review",
+        endpointHostRetained: false,
+        tokenRetained: false,
+        requestBodyRetained: false,
+        responseBodyRetained: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+      },
+    }),
+  );
+
+  assert.equal(result.status, "accepted");
+  assert.equal(result.authProvisioning?.source, "token_file_unreadable");
+  assert.equal(result.authProvisioning?.tokenConfigured, false);
+  assert.equal(result.authProvisioning?.tokenFileConfigured, true);
+  assert.equal(result.authProvisioning?.tokenFileReadable, false);
+  assert.equal(result.authProvisioning?.tokenRetained, false);
+  assert.equal(result.authProvisioning?.tokenFilePathRetained, false);
+  assert.equal(JSON.stringify(result).includes(tokenPath), false);
+  assert.ok(result.summary.includes("token file is configured but unreadable"));
+});
+
+test("rejects auth provisioning metadata that retained token details", () => {
+  const result = parseEvaluatorValidationArtifact(
+    JSON.stringify({
+      runtimeValidation: {
+        source: "real_runtime",
+        authProvisioning: {
+          source: "token_file",
+          tokenConfigured: true,
+          tokenFileConfigured: true,
+          tokenFileReadable: true,
+          tokenRetained: true,
+          tokenFilePathRetained: false,
+        },
+      },
+      httpEvaluator: {
+        status: "failed",
+        failureReason: "bridge_validation_failed_before_evaluator",
+        targetPath: "/chief-of-staff/reviews/evaluation",
+        targetRequestKind: "evaluation_review_handoff",
+        targetOperationId: "evaluation_review",
+        endpointHostRetained: false,
+        tokenRetained: false,
+        requestBodyRetained: false,
+        responseBodyRetained: false,
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+      },
+    }),
+  );
+
+  assert.equal(result.status, "rejected");
+  assert.ok(result.validation.failureReason?.includes("invalid auth provisioning metadata"));
+});
+
 test("rejects evaluator required-action metadata that claims side effects", () => {
   const result = parseEvaluatorValidationArtifact(
     JSON.stringify({

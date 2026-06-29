@@ -8,10 +8,20 @@ export interface EvaluatorValidationImport {
   summary: string;
   validation: NonNullable<BridgeReadinessProofInput["evaluatorValidation"]>;
   runtimeValidationSource?: RuntimeValidationSource;
+  authProvisioning?: RuntimeAuthProvisioning;
 }
 
 export interface EvaluatorValidationImportOptions {
   expectedTargetPath?: string;
+}
+
+export interface RuntimeAuthProvisioning {
+  source: "argument" | "environment" | "token_file" | "token_file_unreadable" | "not_configured";
+  tokenConfigured: boolean;
+  tokenFileConfigured: boolean;
+  tokenFileReadable: boolean;
+  tokenRetained: false;
+  tokenFilePathRetained: false;
 }
 
 const PERSISTED_EVALUATOR_VALIDATION_IMPORT_KEY = "concierge_evaluator_validation_import_v1";
@@ -83,6 +93,19 @@ function cleanStatus(value: unknown): EvaluatorValidationStatus | null {
 function cleanRuntimeSource(value: unknown): RuntimeValidationSource | undefined {
   if (value === "real_runtime" || value === "local_harness" || value === "local_simulation") return value;
   return undefined;
+}
+
+function cleanAuthProvisioningSource(value: unknown): RuntimeAuthProvisioning["source"] | null {
+  if (
+    value === "argument" ||
+    value === "environment" ||
+    value === "token_file" ||
+    value === "token_file_unreadable" ||
+    value === "not_configured"
+  ) {
+    return value;
+  }
+  return null;
 }
 
 function cleanOptionalBoolean(value: unknown): boolean | null | undefined {
@@ -183,6 +206,48 @@ function sanitizeNapoleonRequiredActions(value: unknown): NapoleonRequiredAction
   return actions;
 }
 
+function sanitizeAuthProvisioning(value: unknown): RuntimeAuthProvisioning | null | undefined {
+  if (value === undefined) return undefined;
+  const record = objectRecord(value);
+  if (!record) return null;
+  const source = cleanAuthProvisioningSource(record.source);
+  if (!source) return null;
+  if (
+    typeof record.tokenConfigured !== "boolean" ||
+    typeof record.tokenFileConfigured !== "boolean" ||
+    typeof record.tokenFileReadable !== "boolean" ||
+    record.tokenRetained !== false ||
+    record.tokenFilePathRetained !== false
+  ) {
+    return null;
+  }
+  return {
+    source,
+    tokenConfigured: record.tokenConfigured,
+    tokenFileConfigured: record.tokenFileConfigured,
+    tokenFileReadable: record.tokenFileReadable,
+    tokenRetained: false,
+    tokenFilePathRetained: false,
+  };
+}
+
+function authProvisioningSummary(authProvisioning: RuntimeAuthProvisioning | undefined): string {
+  if (!authProvisioning) return "";
+  if (authProvisioning.source === "token_file_unreadable") {
+    return " Runtime auth token file is configured but unreadable.";
+  }
+  if (authProvisioning.source === "token_file") {
+    return " Runtime auth token file is configured and readable.";
+  }
+  if (authProvisioning.source === "not_configured") {
+    return " Runtime auth token is not configured.";
+  }
+  if (authProvisioning.source === "argument" || authProvisioning.source === "environment") {
+    return " Runtime auth token is configured.";
+  }
+  return "";
+}
+
 function mergeNapoleonRequiredActions(...actionGroups: NapoleonRequiredAction[][]): NapoleonRequiredAction[] {
   const merged: NapoleonRequiredAction[] = [];
   const seen = new Set<string>();
@@ -202,6 +267,8 @@ function isCleanEvaluatorValidationImport(value: unknown): value is EvaluatorVal
   if (record.status !== "accepted") return false;
   if (typeof record.summary !== "string") return false;
   if (record.runtimeValidationSource !== undefined && !cleanRuntimeSource(record.runtimeValidationSource)) return false;
+  const authProvisioning = sanitizeAuthProvisioning(record.authProvisioning);
+  if (authProvisioning === null) return false;
   const validation = objectRecord(record.validation);
   if (!validation) return false;
   if (!cleanStatus(validation.status)) return false;
@@ -313,6 +380,10 @@ export function parseEvaluatorValidationArtifact(
   const descriptorHandoffSource = cleanString(evaluator.descriptorHandoffSource);
   const descriptorHandoffFailureReason = cleanString(evaluator.descriptorHandoffFailureReason);
   const descriptorHandoffRequiredAction = cleanString(evaluator.descriptorHandoffRequiredAction);
+  const authProvisioning = sanitizeAuthProvisioning(runtime?.authProvisioning);
+  if (authProvisioning === null) {
+    return rejected("Evaluator validation artifact contains invalid auth provisioning metadata.");
+  }
   const summaryNapoleonRequiredActions = sanitizeNapoleonRequiredActions(root.napoleonRequiredActions);
   const evaluatorNapoleonRequiredActions = sanitizeNapoleonRequiredActions(evaluator.napoleonRequiredActions);
   if (summaryNapoleonRequiredActions === null || evaluatorNapoleonRequiredActions === null) {
@@ -327,15 +398,16 @@ export function parseEvaluatorValidationArtifact(
     status: "accepted",
     summary:
       status === "passed"
-        ? "Evaluator HTTP validation passed."
+        ? `Evaluator HTTP validation passed.${authProvisioningSummary(authProvisioning)}`
         : status === "failed" && cleanString(evaluator.failureReason) === "http_evaluator_handoff_not_advertised"
           ? descriptorHandoffRequiredAction
-            ? `Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review. ${descriptorHandoffRequiredAction}`
-            : "Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review."
+            ? `Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review. ${descriptorHandoffRequiredAction}${authProvisioningSummary(authProvisioning)}`
+            : `Evaluator HTTP validation failed because the Napoleon descriptor does not advertise evaluation review.${authProvisioningSummary(authProvisioning)}`
           : status === "failed"
-            ? "Evaluator HTTP validation failed."
-            : "Evaluator HTTP validation has not run.",
+            ? `Evaluator HTTP validation failed.${authProvisioningSummary(authProvisioning)}`
+            : `Evaluator HTTP validation has not run.${authProvisioningSummary(authProvisioning)}`,
     runtimeValidationSource: cleanRuntimeSource(runtime?.source),
+    ...(authProvisioning ? { authProvisioning } : {}),
     validation: {
       status,
       failureReason: cleanString(evaluator.failureReason) ?? (status === "passed" ? "none" : "unavailable"),
