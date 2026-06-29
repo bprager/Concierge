@@ -1,4 +1,7 @@
 import unittest
+import tempfile
+import json
+from pathlib import Path
 
 from scripts import goal_completion_audit
 
@@ -42,6 +45,35 @@ class GoalCompletionAuditTests(unittest.TestCase):
             for evidence in requirement["evidence"]:
                 self.assertTrue(evidence["path"])
                 self.assertIn(evidence["status"], {"present", "partial", "missing"})
+
+    def test_fresh_runtime_alignment_report_can_clear_external_status_blocker(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            alignment_path = Path(tmp) / "alignment.json"
+            alignment_path.write_text(
+                json.dumps(
+                    {
+                        "runtimeAligned": True,
+                        "blockingLivePromotion": False,
+                        "nonAuthorityBoundary": "alignment_check_only",
+                        "supportedReviewRuntimePaths": ["/evolution/proposals/{proposal_id}/status"],
+                        "napoleonRequiredActions": [],
+                        "sideEffectsPerformed": False,
+                        "approvalCaptured": False,
+                        "memoryWritePerformed": False,
+                        "agentDispatchPerformed": False,
+                        "externalSendPerformed": False,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = goal_completion_audit.build_report(alignment_report_path=alignment_path)
+
+        by_id = {requirement["id"]: requirement for requirement in report["requirements"]}
+        self.assertEqual(by_id["evolution_status_runtime_blocker"]["status"], "proven")
+        self.assertNotIn("external_blocker", report["statusCounts"])
+        self.assertEqual(report["blockerCount"], 0)
+        self.assertTrue(report["completionGate"]["canCloseGoal"])
 
 
 if __name__ == "__main__":

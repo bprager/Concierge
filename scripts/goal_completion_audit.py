@@ -156,7 +156,7 @@ REQUIREMENTS: tuple[Requirement, ...] = (
         ),
         evidence=(
             EvidenceCheck("app/src/evolutionProposalStatus.ts", ("evolution_proposal_status", "appliedLocally")),
-            EvidenceCheck("app/tests/AppProofExportInteraction.test.tsx", ("Evolution proposal status refresh",)),
+            EvidenceCheck("app/tests/evolutionProposalSubmission.test.ts", ("evolution proposal status refresh",)),
             EvidenceCheck("docs/NAPOLEON_CONTRACT_ALIGNMENT.md", ("evolution_proposal_status", "blockingLivePromotion")),
             EvidenceCheck("app/src/bridgeOperations.ts", ("blockingLivePromotion: true", "expose_evolution_proposal_status_runtime_target")),
         ),
@@ -193,7 +193,42 @@ def evaluate_check(check: EvidenceCheck) -> dict[str, Any]:
     }
 
 
-def evaluate_requirement(requirement: Requirement) -> dict[str, Any]:
+def _load_alignment_report(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def _alignment_report_clears_blocker(report: dict[str, Any] | None, marker: str | None) -> bool:
+    if report is None or marker != "expose_evolution_proposal_status_runtime_target":
+        return False
+    if report.get("nonAuthorityBoundary") != "alignment_check_only":
+        return False
+    for flag in (
+        "sideEffectsPerformed",
+        "approvalCaptured",
+        "memoryWritePerformed",
+        "agentDispatchPerformed",
+        "externalSendPerformed",
+    ):
+        if report.get(flag) is not False:
+            return False
+    if report.get("runtimeAligned") is not True or report.get("blockingLivePromotion") is not False:
+        return False
+    supported_paths = report.get("supportedReviewRuntimePaths")
+    if not isinstance(supported_paths, list) or "/evolution/proposals/{proposal_id}/status" not in supported_paths:
+        return False
+    required_actions = report.get("napoleonRequiredActions")
+    if not isinstance(required_actions, list):
+        return False
+    return not any(isinstance(action, dict) and action.get("id") == marker for action in required_actions)
+
+
+def evaluate_requirement(requirement: Requirement, alignment_report: dict[str, Any] | None = None) -> dict[str, Any]:
     checks = [evaluate_check(check) for check in requirement.evidence]
     present_count = sum(1 for check in checks if check["status"] == "present")
     missing_count = sum(1 for check in checks if check["status"] == "missing")
@@ -203,6 +238,11 @@ def evaluate_requirement(requirement: Requirement) -> dict[str, Any]:
         bridge_ops = _read("app/src/bridgeOperations.ts") or ""
         if requirement.external_blocker_marker in bridge_ops and "blockingLivePromotion: true" in bridge_ops:
             status = "external_blocker"
+        if status == "external_blocker" and _alignment_report_clears_blocker(
+            alignment_report,
+            requirement.external_blocker_marker,
+        ):
+            status = "proven"
     if status == "proven" and (missing_count or partial_count):
         status = "weak_evidence" if present_count else "missing_evidence"
     result: dict[str, Any] = {
@@ -222,8 +262,9 @@ def evaluate_requirement(requirement: Requirement) -> dict[str, Any]:
     return result
 
 
-def build_report() -> dict[str, Any]:
-    requirements = [evaluate_requirement(requirement) for requirement in REQUIREMENTS]
+def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
+    alignment_report = _load_alignment_report(alignment_report_path)
+    requirements = [evaluate_requirement(requirement, alignment_report) for requirement in REQUIREMENTS]
     status_counts: dict[str, int] = {}
     for requirement in requirements:
         status_counts[requirement["status"]] = status_counts.get(requirement["status"], 0) + 1
@@ -253,6 +294,15 @@ def build_report() -> dict[str, Any]:
         "kind": "concierge.goal-completion-audit.v1",
         "generatedAt": datetime.now(timezone.utc).isoformat(),
         "overallStatus": overall_status,
+        "alignmentEvidence": {
+            "path": str(alignment_report_path) if alignment_report_path else None,
+            "loaded": alignment_report is not None,
+            "canClearEvolutionStatusBlocker": _alignment_report_clears_blocker(
+                alignment_report,
+                "expose_evolution_proposal_status_runtime_target",
+            ),
+            "nonAuthorityBoundary": "alignment_report_only",
+        },
         "statusCounts": status_counts,
         "requirementCount": len(requirements),
         "blockerCount": len(blockers),
@@ -274,10 +324,15 @@ def build_report() -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", help="Optional JSON output path.")
+    parser.add_argument(
+        "--contract-alignment-report",
+        type=Path,
+        help="Optional JSON report from make napoleon-contract-alignment used as fresh non-authorizing runtime evidence.",
+    )
     parser.add_argument("--quiet", action="store_true", help="Print only JSON path/status summary.")
     args = parser.parse_args()
 
-    report = build_report()
+    report = build_report(alignment_report_path=args.contract_alignment_report)
     if args.out:
         out_path = Path(args.out)
         out_path.parent.mkdir(parents=True, exist_ok=True)

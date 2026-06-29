@@ -10,8 +10,18 @@ The command writes `/tmp/concierge-goal-completion-audit.json`. The report maps 
 
 The audit is deliberately conservative. It can show that local evidence exists for a requirement, but it does not declare the overall goal complete while required runtime evidence is missing or blocked. In the current state, the report keeps the Napoleon-owned `expose_evolution_proposal_status_runtime_target` action separate as an `external_blocker` because the latest inspected Napoleon snapshot does not advertise the read-only `/evolution/proposals/{proposal_id}/status` target.
 
+When Napoleon publishes a newer Concierge integration contract, retain a fresh contract-alignment report and pass it into the audit:
+
+```bash
+NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_CONTRACT_ALIGNMENT_OUT=/tmp/concierge-napoleon-alignment.json make napoleon-contract-alignment
+python scripts/goal_completion_audit.py --contract-alignment-report /tmp/concierge-napoleon-alignment.json --out /tmp/concierge-goal-completion-audit.json
+```
+
+That optional report is non-authorizing evidence only. It can clear the evolution-status external blocker only when it is runtime-aligned, carries the `alignment_check_only` boundary, exposes `/evolution/proposals/{proposal_id}/status`, has no `expose_evolution_proposal_status_runtime_target` required action, and preserves false approval, memory-write, agent-dispatch, external-send, and side-effect flags.
+
 The JSON report includes:
 
+- `alignmentEvidence`: whether a fresh non-authorizing contract-alignment report was loaded and can clear the current evolution-status blocker.
 - `statusCounts`: current counts for proven, weak, missing, or externally blocked requirements.
 - `nextActions`: one machine-readable repair action per blocker, including owner, whether the blocker is external, validation commands, and the next action text.
 - `completionGate`: whether the active goal can be closed and which validation commands must pass first.
@@ -23,6 +33,7 @@ Use the audit when deciding whether the active goal can be closed. A completion 
 
 - `make check` passing.
 - `make eval` passing.
+- A fresh retained Napoleon contract-alignment report when Napoleon contract evidence changed.
 - Live HTTP validation passing when a real Napoleon endpoint is available.
 - `completionGate.canCloseGoal` set to `true`.
 - The goal audit showing no missing, weak, or external-blocker items.
