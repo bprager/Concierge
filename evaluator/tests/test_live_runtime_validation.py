@@ -199,6 +199,47 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertNotIn("token_cos_summary", summary_json)
         self.assertIn("bridge_status", stdout.getvalue())
 
+    def test_main_reads_auth_token_from_environment_file_without_retaining_it(self):
+        with RecordingCosHarness(
+            descriptor_ready=True,
+            supported_handoffs=[
+                "text_turn",
+                "evaluation_review",
+                "chief_of_staff_request",
+                "governance_evaluation",
+            ],
+        ) as cos_harness:
+            with local_bridge_harness.running_harness() as eval_base_url:
+                with tempfile.NamedTemporaryFile("w", suffix=".token") as token_file:
+                    token_file.write("token_from_file\n")
+                    token_file.flush()
+                    with tempfile.TemporaryDirectory() as tmpdir:
+                        exit_code = live_runtime_validation.main(
+                            [
+                                "--bridge-endpoint",
+                                f"{cos_harness.base_url}/cos/text-turn",
+                                "--eval-endpoint",
+                                f"{eval_base_url}/v1/concierge/evaluate",
+                                "--out-dir",
+                                tmpdir,
+                                "--runtime-validation-source",
+                                "local_harness",
+                            ],
+                            env={"NAPOLEON_EVAL_TOKEN_FILE": token_file.name},
+                        )
+
+                        summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+                        evidence = json.loads((Path(tmpdir) / "bridge_evidence.json").read_text(encoding="utf-8"))
+
+        summary_json = json.dumps(summary)
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(cos_harness.last_auth_header, "token_from_file")
+        self.assertEqual(evidence[0]["targetPath"], "/cos/text-turn")
+        self.assertFalse(summary["capabilityDiscovery"]["tokenRetained"])
+        self.assertFalse(summary["httpEvaluator"]["tokenRetained"])
+        self.assertFalse("token_from_file" in summary_json)
+        self.assertFalse(token_file.name in summary_json)
+
     def test_main_blocks_when_contract_packet_handoffs_are_not_advertised(self):
         with RecordingCosHarness(descriptor_ready=True, supported_handoffs=["text_turn", "evaluation_review"]) as cos_harness:
             with local_bridge_harness.running_harness() as eval_base_url:

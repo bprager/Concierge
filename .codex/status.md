@@ -10,6 +10,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added safe token-file authentication support to bridge evidence capture and live-runtime validation, so an approved Napoleon runtime token file can be used by an authorized process while retained artifacts continue to omit token values and token-file paths.
+- Added sanitized transport-failure handling to bridge evidence capture, so failed Napoleon LAN checks now produce a non-authorizing validation summary instead of a raw Python connection traceback.
 - Added visible character-count output to `make goal-blocker-goal-prompt`, so `/tmp/concierge-goal-blocker-goal-prompt.md` reports its exact size against the 4,000-character goal limit when generated.
 - Added original active-goal acceptance criteria plus acceptance-criteria status counts to the local goal-completion audit, so `/tmp/concierge-goal-completion-audit.json` now shows 7 proven criteria and the remaining Napoleon-owned status-route criterion as externally blocked when the current `mimir` alignment report is loaded.
 - Added blocking requirement IDs plus external/local blocker counts to the local goal-completion audit close gate, so `/tmp/concierge-goal-completion-audit.json` now names the exact requirements preventing closure instead of requiring consumers to infer them from top-level blockers.

@@ -98,6 +98,8 @@ def get_json(url: str, auth_token: str | None = None, cos_mode: bool = False) ->
         body = exc.read().decode("utf-8")
         payload = json.loads(body) if body else {}
         return exc.code, payload
+    except error.URLError:
+        return 0, {"error": "transport_unavailable"}
 
 
 def post_json(url: str, payload: dict[str, Any], auth_token: str | None = None, cos_mode: bool = False) -> tuple[int, dict[str, Any]]:
@@ -115,6 +117,38 @@ def post_json(url: str, payload: dict[str, Any], auth_token: str | None = None, 
         body = exc.read().decode("utf-8")
         payload = json.loads(body) if body else {}
         return exc.code, payload
+    except error.URLError:
+        return 0, {"error": "transport_unavailable"}
+
+
+def token_file_from_env(env: dict[str, str]) -> str | None:
+    for key in ("NAPOLEON_EVAL_TOKEN_FILE", "NAPOLEON_RUNTIME_AUTH_TOKEN_FILE"):
+        value = env.get(key)
+        if value and value.strip():
+            return value.strip()
+    return None
+
+
+def read_auth_token_file(path: str) -> str | None:
+    try:
+        token = Path(path).read_text(encoding="utf-8").strip()
+    except OSError:
+        return None
+    return token or None
+
+
+def resolve_auth_token(
+    auth_token: str | None,
+    auth_token_file: str | None,
+    env: dict[str, str],
+) -> str | None:
+    if auth_token and auth_token.strip():
+        return auth_token.strip()
+    token_file = auth_token_file.strip() if auth_token_file and auth_token_file.strip() else token_file_from_env(env)
+    if token_file:
+        return read_auth_token_file(token_file)
+    value = env.get("NAPOLEON_EVAL_TOKEN")
+    return value.strip() if value and value.strip() else None
 
 
 def descriptor_connection_from_response(status_code: int, payload: dict[str, Any]) -> dict[str, Any]:
@@ -427,6 +461,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     parser.add_argument("--out", required=True, help="Where to write the sanitized bridge evidence JSON")
     parser.add_argument("--message", default=DEFAULT_MESSAGE, help="Text request used for the governed capture")
     parser.add_argument("--auth-token", help="Optional local bearer token for the governed bridge")
+    parser.add_argument("--auth-token-file", help="Optional local bearer token file; token contents are never retained")
     parser.add_argument(
         "--runtime-validation-source",
         choices=RUNTIME_VALIDATION_SOURCES,
@@ -437,17 +472,18 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
 
     active_env = os.environ if env is None else env
     endpoint = endpoint_from_args(args.endpoint, active_env)
+    auth_token = resolve_auth_token(args.auth_token, args.auth_token_file, active_env)
     if endpoint is None:
         print("bridge evidence capture requires --endpoint, NAPOLEON_BRIDGE_ENDPOINT, or NAPOLEON_EVAL_ENDPOINT", file=sys.stderr)
         return 2
 
     cos_mode = is_cos_endpoint(endpoint)
-    descriptor_status, descriptor_payload = get_json(descriptor_url(endpoint), args.auth_token, cos_mode)
+    descriptor_status, descriptor_payload = get_json(descriptor_url(endpoint), auth_token, cos_mode)
     descriptor_preflight = descriptor_connection_from_response(descriptor_status, descriptor_payload)
     if not descriptor_preflight["descriptorConnection"]["canAttemptLiveBridge"] and not cos_mode and descriptor_status == 404:
         cos_descriptor_status, cos_descriptor_payload = get_json(
             bridge_url(endpoint, "/cos/descriptor"),
-            args.auth_token,
+            auth_token,
             True,
         )
         cos_descriptor_preflight = descriptor_connection_from_response(cos_descriptor_status, cos_descriptor_payload)
@@ -466,13 +502,13 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
 
     payload = cos_request_payload(args.message, descriptor_preflight) if cos_mode else request_payload(args.message, descriptor_preflight)
     target_url = bridge_url(endpoint, "/cos/text-turn") if cos_mode else text_turn_url(endpoint)
-    status_code, response_payload = post_json(target_url, payload, args.auth_token, cos_mode)
+    status_code, response_payload = post_json(target_url, payload, auth_token, cos_mode)
     trace_status_code: int | None = None
     trace_payload: dict[str, Any] | None = None
     if cos_mode and 200 <= status_code < 300:
         trace_id = str(response_payload.get("trace_id") or "")
         if trace_id:
-            trace_status_code, trace_payload = get_json(cos_trace_url(endpoint, trace_id), args.auth_token, cos_mode)
+            trace_status_code, trace_payload = get_json(cos_trace_url(endpoint, trace_id), auth_token, cos_mode)
     records = [
         evidence_from_cos_response(
             status_code,

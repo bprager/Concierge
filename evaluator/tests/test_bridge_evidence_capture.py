@@ -4,12 +4,33 @@ import json
 import threading
 import tempfile
 import unittest
+from unittest import mock
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from scripts import bridge_evidence_capture, bridge_evidence_compare, local_bridge_harness
 
 
 class BridgeEvidenceCaptureTest(unittest.TestCase):
+    def test_resolve_auth_token_ignores_unreadable_environment_file(self):
+        token = bridge_evidence_capture.resolve_auth_token(
+            None,
+            None,
+            {"NAPOLEON_EVAL_TOKEN_FILE": "/tmp/concierge-token-file-that-does-not-exist"},
+        )
+
+        self.assertIsNone(token)
+
+    def test_get_json_returns_sanitized_transport_failure(self):
+        with mock.patch(
+            "scripts.bridge_evidence_capture.request.urlopen",
+            side_effect=bridge_evidence_capture.error.URLError("No route to host"),
+        ):
+            status, payload = bridge_evidence_capture.get_json("http://192.0.2.1/cos/descriptor")
+
+        self.assertEqual(status, 0)
+        self.assertEqual(payload, {"error": "transport_unavailable"})
+        self.assertNotIn("No route", json.dumps(payload))
+
     def test_capture_runner_records_sanitized_harness_success_evidence(self):
         with local_bridge_harness.running_harness() as base_url:
             with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
@@ -176,6 +197,33 @@ class BridgeEvidenceCaptureTest(unittest.TestCase):
         self.assertEqual(bridge_evidence_compare.compare_bridge_evidence_records(records), [])
         self.assertFalse("token_cos_capture" in json.dumps(records))
         self.assertFalse(harness.base_url in json.dumps(records))
+
+    def test_capture_runner_reads_auth_token_from_environment_file_without_retaining_it(self):
+        with RecordingCosHarness(descriptor_ready=True) as harness:
+            with tempfile.NamedTemporaryFile("w", suffix=".token") as token_file:
+                token_file.write("token_from_file\n")
+                token_file.flush()
+                with tempfile.NamedTemporaryFile("r+", suffix=".json") as handle:
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        exit_code = bridge_evidence_capture.main(
+                            [
+                                "--endpoint",
+                                f"{harness.base_url}/cos/text-turn",
+                                "--out",
+                                handle.name,
+                                "--runtime-validation-source",
+                                "local_harness",
+                            ],
+                            env={"NAPOLEON_EVAL_TOKEN_FILE": token_file.name},
+                        )
+                    handle.seek(0)
+                    records = json.load(handle)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(harness.last_auth_header, "token_from_file")
+        self.assertEqual(records[0]["targetPath"], "/cos/text-turn")
+        self.assertFalse("token_from_file" in json.dumps(records))
+        self.assertFalse(token_file.name in json.dumps(records))
 
     def test_cos_base_endpoint_normalizes_to_single_cos_path_prefix(self):
         endpoint = "http://127.0.0.1:8765/cos"

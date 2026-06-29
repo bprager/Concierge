@@ -1709,6 +1709,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         ),
     )
     parser.add_argument("--auth-token", default=None, help="Optional bearer token; never written to validation artifacts")
+    parser.add_argument("--auth-token-file", default=None, help="Optional bearer token file; token contents are never written")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help="Directory for sanitized validation artifacts")
     parser.add_argument(
         "--runtime-validation-source",
@@ -1719,7 +1720,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     args = parser.parse_args(argv)
 
     active_env = os.environ if env is None else env
-    auth_token = args.auth_token or endpoint_from_env(active_env, "NAPOLEON_EVAL_TOKEN")
+    auth_token = bridge_evidence_capture.resolve_auth_token(args.auth_token, args.auth_token_file, active_env)
     endpoint_config = resolve_endpoint_configuration(args.bridge_endpoint, args.eval_endpoint, active_env)
     bridge_endpoint = endpoint_config["bridgeEndpoint"]
     eval_endpoint = endpoint_config["evalEndpoint"]
