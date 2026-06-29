@@ -149,6 +149,13 @@ def _sanitize_health(report: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
+def _token_file_exists(token_file: str | None) -> bool:
+    if not token_file:
+        return False
+    path = Path(token_file)
+    return path.is_file()
+
+
 def _token_file_readable(token_file: str | None) -> bool:
     if not token_file:
         return False
@@ -173,7 +180,16 @@ def _build_readiness(
                 "nextAction": "Configure the governed Napoleon bridge and evaluator endpoints in local settings or .env.",
             }
         )
-    if auth_provisioning["tokenFileConfigured"] and not auth_provisioning["tokenFileReadable"]:
+    if auth_provisioning["tokenFileConfigured"] and not auth_provisioning["tokenFileExists"]:
+        blockers.append(
+            {
+                "id": "token_file_missing",
+                "owner": "concierge_operator",
+                "external": False,
+                "nextAction": "Provision the approved runtime token file for the Concierge process without copying token values into artifacts.",
+            }
+        )
+    elif auth_provisioning["tokenFileConfigured"] and not auth_provisioning["tokenFileReadable"]:
         blockers.append(
             {
                 "id": "token_file_unreadable",
@@ -208,7 +224,11 @@ def _build_readiness(
     next_action = "ready_for_live_validation"
     if blockers:
         first = blockers[0]["id"]
-        next_action = "provision_runtime_token_access" if first == "token_file_unreadable" else str(first)
+        next_action = (
+            "provision_runtime_token_access"
+            if first in {"token_file_missing", "token_file_unreadable"}
+            else str(first)
+        )
     return {
         "canProceed": not blockers,
         "blockers": blockers,
@@ -245,6 +265,7 @@ def build_report(
     auth_provisioning = {
         "tokenConfigured": bool(env.get("NAPOLEON_EVAL_TOKEN") or env.get("NAPOLEON_RUNTIME_AUTH_TOKEN")),
         "tokenFileConfigured": bool(token_file),
+        "tokenFileExists": _token_file_exists(token_file),
         "tokenFileReadable": _token_file_readable(token_file),
         "tokenRemotePresent": _env_bool(env.get("NAPOLEON_RUNTIME_TOKEN_REMOTE_PRESENT")),
         "tokenLocalReadableDeclared": _env_bool(env.get("NAPOLEON_RUNTIME_TOKEN_LOCAL_READABLE")),

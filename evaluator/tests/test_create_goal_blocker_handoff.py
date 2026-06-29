@@ -67,6 +67,7 @@ class GoalBlockerHandoffTests(unittest.TestCase):
                 "validation": ["make runtime-handoff-status", "make goal-completion-audit", "make check"],
                 "runtimeTokenHandoff": {
                     "tokenFileConfigured": True,
+                    "tokenFileExists": False,
                     "tokenFileReadable": False,
                     "tokenRemotePresent": True,
                     "tokenLocalReadableDeclared": False,
@@ -83,6 +84,7 @@ class GoalBlockerHandoffTests(unittest.TestCase):
         self.assertIn("Owner: concierge_operator", rendered)
         self.assertIn("Runtime token handoff:", rendered)
         self.assertIn("- tokenFileConfigured: yes", rendered)
+        self.assertIn("- tokenFileExists: no", rendered)
         self.assertIn("- tokenFileReadable: no", rendered)
         self.assertIn("- tokenRemotePresent: yes", rendered)
         self.assertIn("- tokenLocalReadableDeclared: no", rendered)

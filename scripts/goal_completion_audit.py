@@ -412,6 +412,7 @@ def _safe_runtime_handoff_evidence_summary(report: dict[str, Any] | None, path: 
             "authProvisioning": {
                 "tokenConfigured": None,
                 "tokenFileConfigured": None,
+                "tokenFileExists": None,
                 "tokenFileReadable": None,
                 "tokenRemotePresent": None,
                 "tokenLocalReadableDeclared": None,
@@ -437,6 +438,9 @@ def _safe_runtime_handoff_evidence_summary(report: dict[str, Any] | None, path: 
             "tokenConfigured": auth.get("tokenConfigured") if isinstance(auth.get("tokenConfigured"), bool) else None,
             "tokenFileConfigured": (
                 auth.get("tokenFileConfigured") if isinstance(auth.get("tokenFileConfigured"), bool) else None
+            ),
+            "tokenFileExists": (
+                auth.get("tokenFileExists") if isinstance(auth.get("tokenFileExists"), bool) else None
             ),
             "tokenFileReadable": (
                 auth.get("tokenFileReadable") if isinstance(auth.get("tokenFileReadable"), bool) else None
@@ -466,6 +470,7 @@ def _safe_runtime_token_handoff(auth: dict[str, Any]) -> dict[str, bool | None]:
         "tokenFileConfigured": (
             auth.get("tokenFileConfigured") if isinstance(auth.get("tokenFileConfigured"), bool) else None
         ),
+        "tokenFileExists": auth.get("tokenFileExists") if isinstance(auth.get("tokenFileExists"), bool) else None,
         "tokenFileReadable": (
             auth.get("tokenFileReadable") if isinstance(auth.get("tokenFileReadable"), bool) else None
         ),
@@ -496,7 +501,10 @@ def _runtime_handoff_requirements(report: dict[str, Any] | None) -> list[dict[st
     blockers = readiness.get("blockers") if isinstance(readiness.get("blockers"), list) else []
     requirements: list[dict[str, Any]] = []
     for blocker in blockers:
-        if not isinstance(blocker, dict) or blocker.get("id") != "token_file_unreadable":
+        if not isinstance(blocker, dict) or blocker.get("id") not in {
+            "token_file_missing",
+            "token_file_unreadable",
+        }:
             continue
         requirements.append(
             {

@@ -138,6 +138,7 @@ def render_handoff(audit: dict[str, Any]) -> str:
                     "",
                     "Runtime token handoff:",
                     _strict_bool_line(handoff, "tokenFileConfigured"),
+                    _strict_bool_line(handoff, "tokenFileExists"),
                     _strict_bool_line(handoff, "tokenFileReadable"),
                     _strict_bool_line(handoff, "tokenRemotePresent"),
                     _strict_bool_line(handoff, "tokenLocalReadableDeclared"),

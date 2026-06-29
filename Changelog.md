@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added sanitized token-file existence tracking to `make runtime-handoff-status`, `make goal-completion-audit`, and `make goal-blocker-handoff`, so missing approved token files are distinguished from unreadable token files without exposing token values or paths.
 - Added SHA-256 contract checksum traceability to Napoleon contract-alignment reports, goal-completion audit evidence, and blocker handoffs without retaining contract contents.
 - Added sanitized runtime token-handoff facts to `make goal-blocker-handoff`, so local `runtime_handoff_token_access` blockers show configured/readable/remote-present booleans without exposing token values, token-file paths, or endpoint hosts.
 - Added sanitized token-handoff booleans to local `make goal-completion-audit` blocker and next-action packets, so the token-access blocker can be handed off without exposing token values, token-file paths, or endpoint hosts.

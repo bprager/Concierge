@@ -278,6 +278,7 @@ class GoalCompletionAuditTests(unittest.TestCase):
                         "authProvisioning": {
                             "tokenConfigured": False,
                             "tokenFileConfigured": True,
+                            "tokenFileExists": False,
                             "tokenFileReadable": False,
                             "tokenRemotePresent": True,
                             "tokenLocalReadableDeclared": False,
@@ -289,7 +290,7 @@ class GoalCompletionAuditTests(unittest.TestCase):
                             "canProceed": False,
                             "blockers": [
                                 {
-                                    "id": "token_file_unreadable",
+                                    "id": "token_file_missing",
                                     "owner": "concierge_operator",
                                     "external": False,
                                     "nextAction": (
@@ -342,6 +343,7 @@ class GoalCompletionAuditTests(unittest.TestCase):
             blocker["runtimeTokenHandoff"],
             {
                 "tokenFileConfigured": True,
+                "tokenFileExists": False,
                 "tokenFileReadable": False,
                 "tokenRemotePresent": True,
                 "tokenLocalReadableDeclared": False,

@@ -76,6 +76,7 @@ class RuntimeHandoffStatusTests(unittest.TestCase):
         self.assertTrue(report["connection"]["bridgeEndpointConfigured"])
         self.assertTrue(report["connection"]["evalEndpointConfigured"])
         self.assertTrue(report["authProvisioning"]["tokenFileConfigured"])
+        self.assertFalse(report["authProvisioning"]["tokenFileExists"])
         self.assertFalse(report["authProvisioning"]["tokenFileReadable"])
         self.assertFalse(report["authProvisioning"]["tokenRetained"])
         self.assertFalse(report["authProvisioning"]["tokenFilePathRetained"])
@@ -91,7 +92,7 @@ class RuntimeHandoffStatusTests(unittest.TestCase):
         self.assertFalse(report["readiness"]["canProceed"])
         self.assertEqual(
             [blocker["id"] for blocker in report["readiness"]["blockers"]],
-            ["token_file_unreadable", "expose_evolution_proposal_status_runtime_target"],
+            ["token_file_missing", "expose_evolution_proposal_status_runtime_target"],
         )
         self.assertEqual(report["readiness"]["nextAction"], "provision_runtime_token_access")
         self.assertIn("make runtime-handoff-status", report["readiness"]["validation"])
@@ -128,8 +129,9 @@ class RuntimeHandoffStatusTests(unittest.TestCase):
         self.assertTrue(report["authProvisioning"]["tokenRemotePresent"])
         self.assertFalse(report["authProvisioning"]["tokenLocalReadableDeclared"])
         self.assertFalse(report["authProvisioning"]["tokenRemoteReadableByOperator"])
+        self.assertFalse(report["authProvisioning"]["tokenFileExists"])
         self.assertFalse(report["authProvisioning"]["tokenFileReadable"])
-        self.assertEqual(report["readiness"]["blockers"][0]["id"], "token_file_unreadable")
+        self.assertEqual(report["readiness"]["blockers"][0]["id"], "token_file_missing")
         rendered = json.dumps(report)
         self.assertNotIn("192.168.1.8", rendered)
         self.assertNotIn(str(token_path), rendered)
