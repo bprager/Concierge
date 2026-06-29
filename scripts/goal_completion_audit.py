@@ -294,7 +294,7 @@ def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
         status_counts[requirement["status"]] = status_counts.get(requirement["status"], 0) + 1
     blockers = [item for item in requirements if item["status"] in {"external_blocker", "missing_evidence", "weak_evidence"}]
     overall_status = "goal_not_complete" if blockers else "all_local_evidence_present"
-    next_actions = [
+    blocker_summaries = [
         {
             "requirementId": item["id"],
             "owner": item["blocker"]["owner"],
@@ -309,6 +309,7 @@ def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
         }
         for item in blockers
     ]
+    next_actions = [dict(blocker) for blocker in blocker_summaries]
     completion_gate = {
         "canCloseGoal": not blockers,
         "requiredBeforeClose": [
@@ -335,6 +336,7 @@ def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
         "statusCounts": status_counts,
         "requirementCount": len(requirements),
         "blockerCount": len(blockers),
+        "blockers": blocker_summaries,
         "nextActions": next_actions,
         "completionGate": completion_gate,
         "requirements": requirements,

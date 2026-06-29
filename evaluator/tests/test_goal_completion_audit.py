@@ -31,6 +31,14 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertGreaterEqual(report["statusCounts"]["proven"], 1)
         self.assertEqual(report["blockerCount"], len(report["nextActions"]))
         self.assertEqual(report["nextActions"][0]["owner"], "napoleon_runtime")
+        self.assertEqual(report["blockers"][0]["requirementId"], "evolution_status_runtime_blocker")
+        self.assertEqual(report["blockers"][0]["owner"], "napoleon_runtime")
+        self.assertTrue(report["blockers"][0]["external"])
+        self.assertEqual(
+            report["blockers"][0]["napoleonRequiredAction"]["id"],
+            "expose_evolution_proposal_status_runtime_target",
+        )
+        self.assertIn("make check", report["blockers"][0]["validation"])
         self.assertFalse(report["completionGate"]["canCloseGoal"])
         self.assertIn("make check", report["completionGate"]["requiredBeforeClose"])
 

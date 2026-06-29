@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added top-level sanitized `blockers` metadata to `make goal-completion-audit` reports, mirroring blocker owners, validation commands, and Napoleon required-action packets for direct handoff tooling.
 - Added sanitized Napoleon required-action packets to `make goal-completion-audit` next actions for external runtime blockers, including the evolution-status target path, request kind, descriptor advertising forms, live-promotion blocker state, and false side-effect flags.
 - Added an explicit `concierge.napoleon-contract-alignment.v1` report kind and made `make goal-completion-audit` require it before retained alignment evidence can clear the Napoleon-owned evolution-status blocker.
 - Added `GOAL_COMPLETION_ALIGNMENT_REPORT` support to `make goal-completion-audit`, so retained Napoleon contract-alignment evidence can be consumed through the standard audit command.
