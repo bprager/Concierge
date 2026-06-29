@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added safe goal-completion audit ingestion to the local readiness-repair checklist consumer, so the current Napoleon-owned external blocker can become a proposal-only repair checklist item without requiring a readiness proof or granting authority.
 - Added retained alignment-evidence summaries to the goal-blocker handoff and compact Napoleon-side goal prompt, so current runtime alignment status travels with the external blocker while staying under the 4,000-character prompt limit.
 - Added sanitized retained contract-alignment summary fields to `make goal-completion-audit`, including alignment status, runtime-aligned state, live-promotion blocker state, Napoleon required-action count, and missing runtime targets.
 - Added `make goal-blocker-goal-prompt` to render the highest-priority sanitized goal-completion blocker into a copyable Napoleon-side goal prompt under 4,000 characters at `/tmp/concierge-goal-blocker-goal-prompt.md`.

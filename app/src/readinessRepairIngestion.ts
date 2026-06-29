@@ -38,12 +38,23 @@ export interface ReadinessRepairIngestionResult {
 interface RepairActionRecord {
   id?: unknown;
   reason?: unknown;
+  boundary?: unknown;
   handoffName?: unknown;
   targetPath?: unknown;
   requestKind?: unknown;
   operationId?: unknown;
   advertiseUsing?: unknown;
   blockingLivePromotion?: unknown;
+  approvalCaptured?: unknown;
+  memoryWritePerformed?: unknown;
+  agentDispatchPerformed?: unknown;
+  externalSendPerformed?: unknown;
+  appliedLocally?: unknown;
+}
+
+interface GoalAuditBlockerRecord {
+  nextAction?: unknown;
+  napoleonRequiredAction?: unknown;
 }
 
 const FORBIDDEN_REPAIR_KEYS = new Set(
@@ -157,12 +168,14 @@ function isValidRepairAction(action: RepairActionRecord): boolean {
   );
 }
 
-function parseProof(json: string): Record<string, unknown> | null {
+function parseEvidence(json: string): Record<string, unknown> | null {
   try {
     const parsed = JSON.parse(json) as unknown;
     if (!isRecord(parsed)) return null;
-    if (parsed.kind !== "concierge_bridge_readiness_proof") return null;
-    if (parsed.version !== 1) return null;
+    if (parsed.kind !== "concierge_bridge_readiness_proof" && parsed.kind !== "concierge.goal-completion-audit.v1") {
+      return null;
+    }
+    if (parsed.kind === "concierge_bridge_readiness_proof" && parsed.version !== 1) return null;
     if (containsUnsafeRepairContent(parsed)) return null;
     return parsed;
   } catch {
@@ -243,13 +256,83 @@ function checklistFromProof(proof: Record<string, unknown>): ReadinessRepairChec
   return checklist.length > 0 ? checklist : null;
 }
 
+function auditBoundaryIsLocalOnly(audit: Record<string, unknown>): boolean {
+  const boundary = nestedRecord(audit, "boundary");
+  return (
+    boundary.localEvidenceOnly === true &&
+    boundary.doesNotContactNapoleon === true &&
+    boundary.doesNotApprove === true &&
+    boundary.doesNotWriteMemory === true &&
+    boundary.doesNotDispatchAgents === true &&
+    boundary.doesNotSendExternally === true &&
+    boundary.doesNotApplyEvolution === true
+  );
+}
+
+function repairActionFalseFlagsAreExplicit(action: RepairActionRecord): boolean {
+  return (
+    action.approvalCaptured === false &&
+    action.memoryWritePerformed === false &&
+    action.agentDispatchPerformed === false &&
+    action.externalSendPerformed === false &&
+    action.appliedLocally === false
+  );
+}
+
+function checklistFromGoalAudit(audit: Record<string, unknown>): ReadinessRepairChecklist[] | null {
+  if (!auditBoundaryIsLocalOnly(audit)) return null;
+  const blockers = Array.isArray(audit.blockers) ? audit.blockers : [];
+  const generatedAt = stringField(audit.generatedAt);
+
+  const checklist = blockers.flatMap((item): ReadinessRepairChecklist[] => {
+    if (!isRecord(item)) return [];
+    const blocker = item as GoalAuditBlockerRecord;
+    if (item.external !== true || item.owner !== "napoleon_runtime") return [];
+    if (!isRecord(blocker.napoleonRequiredAction)) return [];
+    const action = blocker.napoleonRequiredAction as RepairActionRecord;
+    if (!isValidRepairAction(action) || !repairActionFalseFlagsAreExplicit(action)) return [];
+    const handoffName = stringField(action.handoffName, stringField(action.operationId));
+    const summary = stringField(blocker.nextAction, stringField(action.reason, "Napoleon runtime repair is required."));
+    return [
+      {
+        id: stringField(action.id),
+        title: `Repair Napoleon handoff: ${handoffName}`,
+        summary,
+        handoffName,
+        targetPath: stringField(action.targetPath),
+        requestKind: stringField(action.requestKind),
+        operationId: stringField(action.operationId),
+        advertiseUsing: stringListField(action.advertiseUsing),
+        blockingLivePromotion: action.blockingLivePromotion === true,
+        implementationNextStep: summary,
+        source: {
+          generatedAt,
+          requiredActionSource: "goal_completion_audit",
+          runtimeValidationSource: "unavailable",
+          promotionGate: "blocked_until_runtime_contract_actions_cleared",
+          descriptorState: "unavailable",
+          descriptorChecksumState: "unavailable",
+          descriptorSignatureState: "unavailable",
+        },
+      },
+    ];
+  });
+
+  return checklist.length > 0 ? checklist : null;
+}
+
 export function ingestReadinessRepairProofs(proofJsons: string[]): ReadinessRepairIngestionResult {
   const checklistById = new Map<string, ReadinessRepairChecklist>();
   let rejectedProofCount = 0;
 
   for (const proofJson of proofJsons) {
-    const proof = parseProof(proofJson);
-    const checklist = proof ? checklistFromProof(proof) : null;
+    const proof = parseEvidence(proofJson);
+    const checklist =
+      proof?.kind === "concierge_bridge_readiness_proof"
+        ? checklistFromProof(proof)
+        : proof?.kind === "concierge.goal-completion-audit.v1"
+          ? checklistFromGoalAudit(proof)
+          : null;
     if (!checklist) {
       rejectedProofCount += 1;
       continue;

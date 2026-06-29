@@ -159,6 +159,79 @@ test("ingests sanitized readiness proof into proposal-only repair checklist", ()
   } satisfies ReadinessRepairChecklist);
 });
 
+test("ingests sanitized goal-completion audit blockers into proposal-only repair checklist", () => {
+  const audit = {
+    kind: "concierge.goal-completion-audit.v1",
+    generatedAt: "2026-06-29T04:00:00.000Z",
+    overallStatus: "goal_not_complete",
+    blockerCount: 1,
+    blockers: [
+      {
+        requirementId: "evolution_status_runtime_blocker",
+        owner: "napoleon_runtime",
+        external: true,
+        nextAction:
+          "Expose and advertise the read-only evolution_proposal_status runtime target at /evolution/proposals/{proposal_id}/status with request kind evolution_proposal_status_handoff.",
+        napoleonRequiredAction: {
+          id: "expose_evolution_proposal_status_runtime_target",
+          owner: "napoleon_runtime",
+          operationId: "evolution_proposal_status",
+          targetPath: "/evolution/proposals/{proposal_id}/status",
+          requestKind: "evolution_proposal_status_handoff",
+          advertiseUsing: ["supportedHandoffs", "required_for"],
+          blockingLivePromotion: true,
+          boundary:
+            "Napoleon-owned runtime exposure only; Concierge must not infer approval, call free-form paths, apply evolution, write memory, dispatch agents, send externally, or treat status as local authority.",
+          approvalCaptured: false,
+          memoryWritePerformed: false,
+          agentDispatchPerformed: false,
+          externalSendPerformed: false,
+          appliedLocally: false,
+        },
+      },
+    ],
+    boundary: {
+      localEvidenceOnly: true,
+      doesNotContactNapoleon: true,
+      doesNotApprove: true,
+      doesNotWriteMemory: true,
+      doesNotDispatchAgents: true,
+      doesNotSendExternally: true,
+      doesNotApplyEvolution: true,
+    },
+  };
+
+  const result = ingestReadinessRepairProofs([JSON.stringify(audit)]);
+
+  assert.equal(result.status, "accepted");
+  assert.equal(result.rejectedProofCount, 0);
+  assert.deepEqual(result.checklist, [
+    {
+      id: "expose_evolution_proposal_status_runtime_target",
+      title: "Repair Napoleon handoff: evolution_proposal_status",
+      summary:
+        "Expose and advertise the read-only evolution_proposal_status runtime target at /evolution/proposals/{proposal_id}/status with request kind evolution_proposal_status_handoff.",
+      handoffName: "evolution_proposal_status",
+      targetPath: "/evolution/proposals/{proposal_id}/status",
+      requestKind: "evolution_proposal_status_handoff",
+      operationId: "evolution_proposal_status",
+      advertiseUsing: ["supportedHandoffs", "required_for"],
+      blockingLivePromotion: true,
+      implementationNextStep:
+        "Expose and advertise the read-only evolution_proposal_status runtime target at /evolution/proposals/{proposal_id}/status with request kind evolution_proposal_status_handoff.",
+      source: {
+        generatedAt: "2026-06-29T04:00:00.000Z",
+        requiredActionSource: "goal_completion_audit",
+        runtimeValidationSource: "unavailable",
+        promotionGate: "blocked_until_runtime_contract_actions_cleared",
+        descriptorState: "unavailable",
+        descriptorChecksumState: "unavailable",
+        descriptorSignatureState: "unavailable",
+      },
+    },
+  ] satisfies ReadinessRepairChecklist[]);
+});
+
 test("rejects readiness repair proofs with unsafe fields or side-effect claims", () => {
   const unsafeProof = JSON.parse(validProof()) as Record<string, unknown>;
   unsafeProof.requestBody = { message: "raw user text" };
