@@ -9,6 +9,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 ### Added
 
 - Added safe token-file authentication support for bridge evidence capture and live-runtime validation, so approved `NAPOLEON_EVAL_TOKEN_FILE` or `NAPOLEON_RUNTIME_AUTH_TOKEN_FILE` values can be used without retaining token values or token-file paths in artifacts.
+- Added sanitized token-provisioning metadata to live-runtime preflight and summary artifacts, so operators can see whether an approved token file was configured and readable without retaining token values or token-file paths.
 - Added sanitized transport-failure handling to bridge evidence capture so unreachable Napoleon runtime checks fail closed through validation artifacts instead of raising raw connection errors.
 - Added visible character-count output to the compact goal-blocker prompt command, so Napoleon-side goal prompts show their exact size against the 4,000-character limit when generated.
 - Added original active-goal acceptance criteria and acceptance-criteria status counts to the goal-completion audit, with the close gate now exposing whether those criteria are satisfied.

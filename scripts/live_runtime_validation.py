@@ -511,10 +511,49 @@ def resolve_endpoints(
     return config["bridgeEndpoint"], config["evalEndpoint"]
 
 
+def auth_provisioning_metadata(
+    auth_token: str | None,
+    auth_token_file: str | None,
+    env: dict[str, str],
+) -> dict[str, Any]:
+    direct_token_configured = bool(auth_token and auth_token.strip())
+    env_token_configured = bool(env.get("NAPOLEON_EVAL_TOKEN") and env.get("NAPOLEON_EVAL_TOKEN", "").strip())
+    token_file = (
+        auth_token_file.strip()
+        if auth_token_file and auth_token_file.strip()
+        else bridge_evidence_capture.token_file_from_env(env)
+    )
+    token_file_configured = token_file is not None
+    token_file_readable = bool(
+        bridge_evidence_capture.read_auth_token_file(token_file)
+        if token_file_configured and token_file is not None
+        else False
+    )
+    if direct_token_configured:
+        source = "argument"
+    elif token_file_configured and token_file_readable:
+        source = "token_file"
+    elif token_file_configured:
+        source = "token_file_unreadable"
+    elif env_token_configured:
+        source = "environment"
+    else:
+        source = "not_configured"
+    return {
+        "source": source,
+        "tokenConfigured": direct_token_configured or env_token_configured or token_file_readable,
+        "tokenFileConfigured": token_file_configured,
+        "tokenFileReadable": token_file_readable,
+        "tokenRetained": False,
+        "tokenFilePathRetained": False,
+    }
+
+
 def live_runtime_preflight(
     bridge_endpoint: str | None,
     eval_endpoint: str | None,
     endpoint_resolution: dict[str, Any] | None = None,
+    auth_provisioning: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     bridge_configured = bridge_endpoint is not None
     eval_configured = eval_endpoint is not None
@@ -547,6 +586,7 @@ def live_runtime_preflight(
         },
         "endpointHostStored": False,
         "tokenStored": False,
+        "authProvisioning": auth_provisioning or auth_provisioning_metadata(None, None, {}),
         "approvalCaptured": False,
         "memoryWritePerformed": False,
         "agentDispatchPerformed": False,
@@ -561,8 +601,9 @@ def write_preflight(
     bridge_endpoint: str | None,
     eval_endpoint: str | None,
     endpoint_resolution: dict[str, Any] | None = None,
+    auth_provisioning: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    preflight = live_runtime_preflight(bridge_endpoint, eval_endpoint, endpoint_resolution)
+    preflight = live_runtime_preflight(bridge_endpoint, eval_endpoint, endpoint_resolution, auth_provisioning)
     path.write_text(json.dumps(preflight, indent=2) + "\n", encoding="utf-8")
     return preflight
 
@@ -1641,12 +1682,14 @@ def write_summary(
     eval_report_path: Path,
     runtime_validation_source: str,
     artifact_privacy: dict[str, Any],
+    auth_provisioning: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     summary = {
         "boundary": BOUNDARY,
         "runtimeValidation": {
             "source": runtime_validation_source,
             "caveat": runtime_validation_caveat(runtime_validation_source),
+            "authProvisioning": auth_provisioning or auth_provisioning_metadata(None, None, {}),
         },
         "bridgeEvidence": {
             "status": "passed" if bridge_exit_code == 0 else "failed",
@@ -1720,6 +1763,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     args = parser.parse_args(argv)
 
     active_env = os.environ if env is None else env
+    auth_provisioning = auth_provisioning_metadata(args.auth_token, args.auth_token_file, active_env)
     auth_token = bridge_evidence_capture.resolve_auth_token(args.auth_token, args.auth_token_file, active_env)
     endpoint_config = resolve_endpoint_configuration(args.bridge_endpoint, args.eval_endpoint, active_env)
     bridge_endpoint = endpoint_config["bridgeEndpoint"]
@@ -1730,7 +1774,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         out_dir.mkdir(parents=True, exist_ok=True)
         clear_runtime_artifacts(out_dir)
         preflight_path = out_dir / "preflight.json"
-        write_preflight(preflight_path, bridge_endpoint, eval_endpoint, endpoint_resolution)
+        write_preflight(preflight_path, bridge_endpoint, eval_endpoint, endpoint_resolution, auth_provisioning)
         print(
             "live runtime validation requires --bridge-endpoint, NAPOLEON_BRIDGE_ENDPOINT, "
             f"or NAPOLEON_EVAL_ENDPOINT; sanitized preflight written to {preflight_path}",
@@ -1741,7 +1785,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     clear_runtime_artifacts(out_dir)
-    write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint, endpoint_resolution)
+    write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint, endpoint_resolution, auth_provisioning)
     evidence_path = out_dir / "bridge_evidence.json"
     capability_path = out_dir / "capability_discovery.json"
     contract_packet_path = out_dir / "contract_packet_submissions.json"
@@ -1864,6 +1908,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         eval_report_path,
         args.runtime_validation_source,
         artifact_privacy,
+        auth_provisioning,
     )
     print(json.dumps({
         "summary": str(summary_path),

@@ -235,6 +235,12 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(cos_harness.last_auth_header, "token_from_file")
         self.assertEqual(evidence[0]["targetPath"], "/cos/text-turn")
+        self.assertEqual(summary["runtimeValidation"]["authProvisioning"]["source"], "token_file")
+        self.assertTrue(summary["runtimeValidation"]["authProvisioning"]["tokenConfigured"])
+        self.assertTrue(summary["runtimeValidation"]["authProvisioning"]["tokenFileConfigured"])
+        self.assertTrue(summary["runtimeValidation"]["authProvisioning"]["tokenFileReadable"])
+        self.assertFalse(summary["runtimeValidation"]["authProvisioning"]["tokenRetained"])
+        self.assertFalse(summary["runtimeValidation"]["authProvisioning"]["tokenFilePathRetained"])
         self.assertFalse(summary["capabilityDiscovery"]["tokenRetained"])
         self.assertFalse(summary["httpEvaluator"]["tokenRetained"])
         self.assertFalse("token_from_file" in summary_json)
@@ -855,6 +861,27 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             self.assertFalse(preflight["agentDispatchPerformed"])
             self.assertFalse(preflight["externalSendPerformed"])
             self.assertFalse((Path(tmpdir) / "summary.json").exists())
+
+    def test_missing_endpoint_preflight_reports_unreadable_token_file_without_retaining_path(self):
+        missing_token_path = "/tmp/concierge-runtime-token-that-does-not-exist"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with contextlib.redirect_stderr(io.StringIO()):
+                exit_code = live_runtime_validation.main(
+                    ["--out-dir", tmpdir],
+                    env={"NAPOLEON_EVAL_TOKEN_FILE": missing_token_path},
+                )
+
+            preflight = json.loads((Path(tmpdir) / "preflight.json").read_text(encoding="utf-8"))
+
+        preflight_json = json.dumps(preflight)
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(preflight["authProvisioning"]["source"], "token_file_unreadable")
+        self.assertFalse(preflight["authProvisioning"]["tokenConfigured"])
+        self.assertTrue(preflight["authProvisioning"]["tokenFileConfigured"])
+        self.assertFalse(preflight["authProvisioning"]["tokenFileReadable"])
+        self.assertFalse(preflight["authProvisioning"]["tokenRetained"])
+        self.assertFalse(preflight["authProvisioning"]["tokenFilePathRetained"])
+        self.assertNotIn(missing_token_path, preflight_json)
 
     def test_reused_output_directory_does_not_retain_stale_runtime_artifacts(self):
         with tempfile.TemporaryDirectory() as tmpdir:
