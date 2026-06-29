@@ -10,6 +10,13 @@ The command writes `/tmp/concierge-goal-completion-audit.json`. The report maps 
 
 The audit is deliberately conservative. It can show that local evidence exists for a requirement, but it does not declare the overall goal complete while required runtime evidence is missing or blocked. In the current state, the report keeps the Napoleon-owned `expose_evolution_proposal_status_runtime_target` action separate as an `external_blocker` because the latest inspected Napoleon snapshot does not advertise the read-only `/evolution/proposals/{proposal_id}/status` target.
 
+The JSON report includes:
+
+- `statusCounts`: current counts for proven, weak, missing, or externally blocked requirements.
+- `nextActions`: one machine-readable repair action per blocker, including owner, whether the blocker is external, validation commands, and the next action text.
+- `completionGate`: whether the active goal can be closed and which validation commands must pass first.
+- `requirements`: requirement-by-requirement evidence, validation commands, and blocker metadata when applicable.
+
 The report is local evidence only. It does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
 
 Use the audit when deciding whether the active goal can be closed. A completion claim should require:
@@ -17,5 +24,6 @@ Use the audit when deciding whether the active goal can be closed. A completion 
 - `make check` passing.
 - `make eval` passing.
 - Live HTTP validation passing when a real Napoleon endpoint is available.
+- `completionGate.canCloseGoal` set to `true`.
 - The goal audit showing no missing, weak, or external-blocker items.
 - Current docs, backlog, changelog, and `.codex/status.md` reflecting the verified state.

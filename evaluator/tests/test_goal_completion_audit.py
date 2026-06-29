@@ -22,7 +22,14 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertIn("napoleon_delegation_panel", by_id)
         self.assertIn("evolution_status_runtime_blocker", by_id)
         self.assertEqual(by_id["evolution_status_runtime_blocker"]["status"], "external_blocker")
+        self.assertEqual(by_id["evolution_status_runtime_blocker"]["blocker"]["owner"], "napoleon_runtime")
+        self.assertTrue(by_id["evolution_status_runtime_blocker"]["blocker"]["external"])
+        self.assertIn("/evolution/proposals/{proposal_id}/status", by_id["evolution_status_runtime_blocker"]["blocker"]["nextAction"])
         self.assertGreaterEqual(report["statusCounts"]["proven"], 1)
+        self.assertEqual(report["blockerCount"], len(report["nextActions"]))
+        self.assertEqual(report["nextActions"][0]["owner"], "napoleon_runtime")
+        self.assertFalse(report["completionGate"]["canCloseGoal"])
+        self.assertIn("make check", report["completionGate"]["requiredBeforeClose"])
 
     def test_every_requirement_has_evidence_paths(self):
         report = goal_completion_audit.build_report()
@@ -30,6 +37,7 @@ class GoalCompletionAuditTests(unittest.TestCase):
         for requirement in report["requirements"]:
             self.assertTrue(requirement["id"])
             self.assertTrue(requirement["requirement"])
+            self.assertGreater(len(requirement["validation"]), 0, requirement["id"])
             self.assertGreater(len(requirement["evidence"]), 0, requirement["id"])
             for evidence in requirement["evidence"]:
                 self.assertTrue(evidence["path"])
