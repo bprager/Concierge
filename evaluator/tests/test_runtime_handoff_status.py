@@ -127,3 +127,55 @@ class RuntimeHandoffStatusTests(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 runtime_handoff_status.build_report(env_path=env_path, alignment_report_path=alignment_path)
+
+    def test_default_alignment_report_path_is_loaded_when_present(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            env_path = tmp_path / ".env"
+            env_path.write_text(
+                "\n".join(
+                    [
+                        "NAPOLEON_BRIDGE_ENDPOINT=http://192.168.1.8:8765",
+                        "NAPOLEON_EVAL_ENDPOINT=http://192.168.1.8:8765",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            default_alignment_path = tmp_path / "concierge-napoleon-alignment.json"
+            default_alignment_path.write_text(
+                json.dumps(
+                    {
+                        "kind": "concierge.napoleon-contract-alignment.v1",
+                        "alignmentStatus": "runtime_mapping_gaps_present",
+                        "runtimeAligned": False,
+                        "blockingLivePromotion": True,
+                        "napoleonRequiredActions": [
+                            {
+                                "id": "expose_evolution_proposal_status_runtime_target",
+                                "owner": "napoleon_runtime",
+                                "path": "/evolution/proposals/{proposal_id}/status",
+                                "requestKind": "evolution_proposal_status_handoff",
+                                "operationId": "evolution_proposal_status",
+                            }
+                        ],
+                        "approvalCaptured": False,
+                        "memoryWritePerformed": False,
+                        "agentDispatchPerformed": False,
+                        "externalSendPerformed": False,
+                        "sideEffectsPerformed": False,
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            report = runtime_handoff_status.build_report(
+                env_path=env_path,
+                default_alignment_report_path=default_alignment_path,
+            )
+
+        self.assertTrue(report["contractAlignment"]["provided"])
+        self.assertEqual(report["contractAlignment"]["alignmentStatus"], "runtime_mapping_gaps_present")
+        self.assertEqual(
+            [blocker["id"] for blocker in report["readiness"]["blockers"]],
+            ["expose_evolution_proposal_status_runtime_target"],
+        )

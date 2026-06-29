@@ -13,6 +13,7 @@ from typing import Any
 
 EXPECTED_ALIGNMENT_KIND = "concierge.napoleon-contract-alignment.v1"
 OUTPUT_KIND = "concierge.runtime-handoff-status.v1"
+DEFAULT_ALIGNMENT_REPORT_PATH = Path("/tmp/concierge-napoleon-alignment.json")
 
 
 def _read_env(path: Path) -> dict[str, str]:
@@ -35,6 +36,17 @@ def _read_json(path: Path | None) -> dict[str, Any] | None:
     if not isinstance(value, dict):
         raise ValueError(f"{path} must contain a JSON object")
     return value
+
+
+def _resolve_alignment_report_path(
+    explicit_path: Path | None,
+    default_path: Path | None = DEFAULT_ALIGNMENT_REPORT_PATH,
+) -> Path | None:
+    if explicit_path is not None:
+        return explicit_path
+    if default_path is not None and default_path.exists():
+        return default_path
+    return None
 
 
 def _bool(value: Any) -> bool | None:
@@ -204,11 +216,16 @@ def build_report(
     env_path: Path = Path(".env"),
     health_json_path: Path | None = None,
     alignment_report_path: Path | None = None,
+    default_alignment_report_path: Path | None = DEFAULT_ALIGNMENT_REPORT_PATH,
 ) -> dict[str, Any]:
     env = _read_env(env_path)
     token_file = env.get("NAPOLEON_RUNTIME_AUTH_TOKEN_FILE") or env.get("NAPOLEON_EVAL_TOKEN_FILE")
     health = _read_json(health_json_path)
-    alignment = _read_json(alignment_report_path)
+    resolved_alignment_report_path = _resolve_alignment_report_path(
+        alignment_report_path,
+        default_alignment_report_path,
+    )
+    alignment = _read_json(resolved_alignment_report_path)
     connection = {
         "bridgeEndpointConfigured": bool(env.get("NAPOLEON_BRIDGE_ENDPOINT")),
         "evalEndpointConfigured": bool(env.get("NAPOLEON_EVAL_ENDPOINT")),

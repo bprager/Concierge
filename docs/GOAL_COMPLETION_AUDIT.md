@@ -17,14 +17,14 @@ NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napol
 make goal-completion-audit
 ```
 
-By default, `make napoleon-contract-alignment` writes `/tmp/concierge-napoleon-alignment.json`, and `make goal-completion-audit` loads that retained report automatically when no `GOAL_COMPLETION_ALIGNMENT_REPORT` override is supplied. That optional report is non-authorizing evidence only. It can clear the evolution-status external blocker only when it identifies itself as `concierge.napoleon-contract-alignment.v1`, is runtime-aligned, carries the `alignment_check_only` boundary, exposes `/evolution/proposals/{proposal_id}/status`, has no `expose_evolution_proposal_status_runtime_target` required action, and preserves false approval, memory-write, agent-dispatch, external-send, and side-effect flags.
+By default, `make napoleon-contract-alignment` writes `/tmp/concierge-napoleon-alignment.json`, and both `make goal-completion-audit` and `make runtime-handoff-status` load that retained report automatically when no explicit alignment-report override is supplied. That optional report is non-authorizing evidence only. It can clear the evolution-status external blocker only when it identifies itself as `concierge.napoleon-contract-alignment.v1`, is runtime-aligned, carries the `alignment_check_only` boundary, exposes `/evolution/proposals/{proposal_id}/status`, has no `expose_evolution_proposal_status_runtime_target` required action, and preserves false approval, memory-write, agent-dispatch, external-send, and side-effect flags.
 
 To retain the current connection handoff state without copying endpoint hosts, tokens, token-file paths, request bodies, or response bodies into a tracked artifact, capture any live health response into `/tmp`, retain a contract-alignment report, and render the sanitized runtime handoff status:
 
 ```bash
 curl -sS "$NAPOLEON_RUNTIME_HEALTH_ENDPOINT" -o /tmp/concierge-napoleon-health.json
 NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napoleon-contract-alignment
-NAPOLEON_RUNTIME_HEALTH_JSON=/tmp/concierge-napoleon-health.json NAPOLEON_CONTRACT_ALIGNMENT_REPORT=/tmp/concierge-napoleon-alignment.json make runtime-handoff-status
+NAPOLEON_RUNTIME_HEALTH_JSON=/tmp/concierge-napoleon-health.json make runtime-handoff-status
 ```
 
 The command writes `/tmp/concierge-runtime-handoff-status.json`. It records only whether bridge/evaluator endpoints are configured, whether a token file is configured/readable, sanitized health fields such as service ID, runtime owner, prepare-only status, and false side-effect booleans, plus sanitized contract-alignment status and Napoleon-owned required actions. The report also includes a `readiness` section with `canProceed`, ordered sanitized blockers, one next action, and validation commands, so operators can distinguish local token-access work from Napoleon-owned contract work without exposing hosts or secrets. The generator itself does not contact Napoleon and the report remains local handoff evidence only; it does not approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.

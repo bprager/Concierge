@@ -8,7 +8,7 @@ Use this check when a Napoleon contract snapshot is available locally:
 NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napoleon-contract-alignment
 ```
 
-To retain the JSON report as local evidence, set `NAPOLEON_CONTRACT_ALIGNMENT_OUT`:
+The JSON report is retained as local evidence at `/tmp/concierge-napoleon-alignment.json` by default. Override `NAPOLEON_CONTRACT_ALIGNMENT_OUT` only when a different retained path is needed:
 
 ```bash
 NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_CONTRACT_ALIGNMENT_OUT=/tmp/concierge-napoleon-alignment.json make napoleon-contract-alignment

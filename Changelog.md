@@ -8,7 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
-- Added a default `/tmp/concierge-napoleon-alignment.json` output for `make napoleon-contract-alignment` and automatic local audit loading of that retained report when no explicit alignment report is provided.
+- Added a default `/tmp/concierge-napoleon-alignment.json` output for `make napoleon-contract-alignment` and automatic local audit/runtime-handoff loading of that retained report when no explicit alignment report is provided.
 - Added a sanitized readiness decision to the runtime handoff status report, including ordered blockers, next action, and validation commands for token access and Napoleon-owned contract gaps.
 - Added `make runtime-handoff-status` and a sanitized runtime handoff status report, so operators can retain endpoint-configured, token-file-readable, health, and contract-alignment facts without storing endpoint hosts, tokens, token-file paths, request bodies, or response bodies.
 - Added sanitized runtime-auth provisioning import and rendering for live-runtime validation summaries, so the Text Concierge evaluator-validation panel can show when a token file is configured but unreadable without retaining token values or token-file paths.
