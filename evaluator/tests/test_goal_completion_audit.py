@@ -7,8 +7,39 @@ from scripts import goal_completion_audit
 
 
 class GoalCompletionAuditTests(unittest.TestCase):
+    def _write_blocked_alignment_report(self, directory: str) -> Path:
+        alignment_path = Path(directory) / "alignment-blocked.json"
+        alignment_path.write_text(
+            json.dumps(
+                {
+                    "kind": "concierge.napoleon-contract-alignment.v1",
+                    "alignmentStatus": "runtime_mapping_gaps_present",
+                    "runtimeAligned": False,
+                    "blockingLivePromotion": True,
+                    "napoleonRequiredActionCount": 1,
+                    "conciergeReviewPathsMissingFromNapoleonRuntime": [
+                        "/evolution/proposals/{proposal_id}/status"
+                    ],
+                    "napoleonRequiredActions": [
+                        {"id": "expose_evolution_proposal_status_runtime_target"}
+                    ],
+                    "nonAuthorityBoundary": "alignment_check_only",
+                    "sideEffectsPerformed": False,
+                    "approvalCaptured": False,
+                    "memoryWritePerformed": False,
+                    "agentDispatchPerformed": False,
+                    "externalSendPerformed": False,
+                }
+            ),
+            encoding="utf-8",
+        )
+        return alignment_path
+
     def test_report_keeps_external_runtime_blocker_separate(self):
-        report = goal_completion_audit.build_report()
+        with tempfile.TemporaryDirectory() as tmp:
+            report = goal_completion_audit.build_report(
+                alignment_report_path=self._write_blocked_alignment_report(tmp)
+            )
 
         self.assertEqual(report["kind"], "concierge.goal-completion-audit.v1")
         self.assertEqual(report["overallStatus"], "goal_not_complete")
@@ -43,7 +74,7 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertIn("make check", report["completionGate"]["requiredBeforeClose"])
 
     def test_completion_gate_declares_validation_commands_are_not_run_by_audit(self):
-        report = goal_completion_audit.build_report()
+        report = goal_completion_audit.build_report(default_alignment_report_path=None)
 
         gate = report["completionGate"]
         self.assertFalse(gate["validationCommandsExecutedByAudit"])
@@ -52,7 +83,10 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertEqual(gate["requiredButNotRunByAudit"], gate["requiredBeforeClose"])
 
     def test_completion_gate_lists_blocking_requirements_by_owner_boundary(self):
-        report = goal_completion_audit.build_report()
+        with tempfile.TemporaryDirectory() as tmp:
+            report = goal_completion_audit.build_report(
+                alignment_report_path=self._write_blocked_alignment_report(tmp)
+            )
 
         gate = report["completionGate"]
         self.assertFalse(gate["canCloseGoal"])
@@ -61,7 +95,10 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertEqual(gate["localBlockerCount"], 0)
 
     def test_report_tracks_original_acceptance_criteria(self):
-        report = goal_completion_audit.build_report()
+        with tempfile.TemporaryDirectory() as tmp:
+            report = goal_completion_audit.build_report(
+                alignment_report_path=self._write_blocked_alignment_report(tmp)
+            )
 
         by_id = {criterion["id"]: criterion for criterion in report["acceptanceCriteria"]}
         self.assertEqual(
@@ -84,7 +121,10 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertFalse(report["completionGate"]["acceptanceCriteriaSatisfied"])
 
     def test_external_runtime_blocker_includes_sanitized_required_action_packet(self):
-        report = goal_completion_audit.build_report()
+        with tempfile.TemporaryDirectory() as tmp:
+            report = goal_completion_audit.build_report(
+                alignment_report_path=self._write_blocked_alignment_report(tmp)
+            )
 
         action = report["nextActions"][0]["napoleonRequiredAction"]
         self.assertEqual(action["id"], "expose_evolution_proposal_status_runtime_target")
@@ -101,7 +141,7 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertFalse(action["appliedLocally"])
 
     def test_every_requirement_has_evidence_paths(self):
-        report = goal_completion_audit.build_report()
+        report = goal_completion_audit.build_report(default_alignment_report_path=None)
 
         for requirement in report["requirements"]:
             self.assertTrue(requirement["id"])
@@ -340,7 +380,10 @@ class GoalCompletionAuditTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            report = goal_completion_audit.build_report(runtime_handoff_status_path=runtime_handoff_path)
+            report = goal_completion_audit.build_report(
+                alignment_report_path=self._write_blocked_alignment_report(tmp),
+                runtime_handoff_status_path=runtime_handoff_path,
+            )
 
         self.assertEqual(report["runtimeHandoffEvidence"]["path"], str(runtime_handoff_path))
         self.assertTrue(report["runtimeHandoffEvidence"]["loaded"])
