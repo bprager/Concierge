@@ -23,7 +23,7 @@ The JSON report includes:
 
 - `alignmentEvidence`: whether a fresh non-authorizing contract-alignment report was loaded and can clear the current evolution-status blocker.
 - `statusCounts`: current counts for proven, weak, missing, or externally blocked requirements.
-- `nextActions`: one machine-readable repair action per blocker, including owner, whether the blocker is external, validation commands, and the next action text.
+- `nextActions`: one machine-readable repair action per blocker, including owner, whether the blocker is external, validation commands, the next action text, and, for Napoleon-owned runtime blockers, a sanitized `napoleonRequiredAction` packet with the expected target path, request kind, descriptor advertising forms, live-promotion blocker state, and false side-effect flags.
 - `completionGate`: whether the active goal can be closed and which validation commands must pass first.
 - `requirements`: requirement-by-requirement evidence, validation commands, and blocker metadata when applicable.
 

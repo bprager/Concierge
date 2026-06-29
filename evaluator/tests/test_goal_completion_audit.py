@@ -34,6 +34,23 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertFalse(report["completionGate"]["canCloseGoal"])
         self.assertIn("make check", report["completionGate"]["requiredBeforeClose"])
 
+    def test_external_runtime_blocker_includes_sanitized_required_action_packet(self):
+        report = goal_completion_audit.build_report()
+
+        action = report["nextActions"][0]["napoleonRequiredAction"]
+        self.assertEqual(action["id"], "expose_evolution_proposal_status_runtime_target")
+        self.assertEqual(action["owner"], "napoleon_runtime")
+        self.assertEqual(action["operationId"], "evolution_proposal_status")
+        self.assertEqual(action["targetPath"], "/evolution/proposals/{proposal_id}/status")
+        self.assertEqual(action["requestKind"], "evolution_proposal_status_handoff")
+        self.assertEqual(action["advertiseUsing"], ["supportedHandoffs", "required_for"])
+        self.assertTrue(action["blockingLivePromotion"])
+        self.assertFalse(action["approvalCaptured"])
+        self.assertFalse(action["memoryWritePerformed"])
+        self.assertFalse(action["agentDispatchPerformed"])
+        self.assertFalse(action["externalSendPerformed"])
+        self.assertFalse(action["appliedLocally"])
+
     def test_every_requirement_has_evidence_paths(self):
         report = goal_completion_audit.build_report()
 

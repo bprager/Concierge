@@ -29,6 +29,7 @@ class Requirement:
     external_blocker_marker: str | None = None
     blocker_owner: str | None = None
     next_action: str | None = None
+    napoleon_required_action: dict[str, Any] | None = None
     validation: tuple[str, ...] = ()
 
 
@@ -161,6 +162,24 @@ REQUIREMENTS: tuple[Requirement, ...] = (
             EvidenceCheck("app/src/bridgeOperations.ts", ("blockingLivePromotion: true", "expose_evolution_proposal_status_runtime_target")),
         ),
         external_blocker_marker="expose_evolution_proposal_status_runtime_target",
+        napoleon_required_action={
+            "id": "expose_evolution_proposal_status_runtime_target",
+            "owner": "napoleon_runtime",
+            "operationId": "evolution_proposal_status",
+            "targetPath": "/evolution/proposals/{proposal_id}/status",
+            "requestKind": "evolution_proposal_status_handoff",
+            "advertiseUsing": ["supportedHandoffs", "required_for"],
+            "blockingLivePromotion": True,
+            "boundary": (
+                "Napoleon-owned runtime exposure only; Concierge must not infer approval, call free-form paths, "
+                "apply evolution, write memory, dispatch agents, send externally, or treat status as local authority."
+            ),
+            "approvalCaptured": False,
+            "memoryWritePerformed": False,
+            "agentDispatchPerformed": False,
+            "externalSendPerformed": False,
+            "appliedLocally": False,
+        },
     ),
 )
 
@@ -255,12 +274,15 @@ def evaluate_requirement(requirement: Requirement, alignment_report: dict[str, A
         "validation": list(requirement.validation),
     }
     if status in {"external_blocker", "missing_evidence", "weak_evidence"}:
-        result["blocker"] = {
+        blocker = {
             "owner": requirement.blocker_owner or "concierge",
             "nextAction": requirement.next_action
             or "Add or repair the listed evidence, then rerun the requirement validation commands.",
             "external": status == "external_blocker",
         }
+        if requirement.napoleon_required_action is not None:
+            blocker["napoleonRequiredAction"] = dict(requirement.napoleon_required_action)
+        result["blocker"] = blocker
     return result
 
 
@@ -279,6 +301,11 @@ def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
             "nextAction": item["blocker"]["nextAction"],
             "external": item["blocker"]["external"],
             "validation": item["validation"],
+            **(
+                {"napoleonRequiredAction": item["blocker"]["napoleonRequiredAction"]}
+                if "napoleonRequiredAction" in item["blocker"]
+                else {}
+            ),
         }
         for item in blockers
     ]

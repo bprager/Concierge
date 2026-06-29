@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added sanitized Napoleon required-action packets to local goal completion audit `nextActions`, so the current external evolution-status blocker now carries the exact target path, request kind, descriptor advertising forms, live-promotion blocker state, and false side-effect flags for Napoleon-side handoff.
 - Added an explicit `concierge.napoleon-contract-alignment.v1` report kind and made the local goal completion audit reject untyped retained alignment JSON before it can clear the Napoleon-owned evolution-status blocker.
 - Added `GOAL_COMPLETION_ALIGNMENT_REPORT` support to `make goal-completion-audit`, so once Napoleon publishes a fixed integration contract, the retained alignment report can be consumed through the standard audit command rather than a lower-level script call.
 - Added optional fresh contract-alignment report ingestion to the local goal completion audit; the default report still stays `goal_not_complete`, but once Napoleon exposes and advertises `/evolution/proposals/{proposal_id}/status`, a retained non-authorizing alignment report can clear the external blocker and let the close gate reflect current evidence.
