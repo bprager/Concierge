@@ -71,6 +71,12 @@ To compare Concierge's generated bridge paths with a Napoleon integration OpenAP
 NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napoleon-contract-alignment
 ```
 
+To keep a retained local evidence file for review or handoff, also set `NAPOLEON_CONTRACT_ALIGNMENT_OUT`:
+
+```bash
+NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_CONTRACT_ALIGNMENT_OUT=/tmp/concierge-napoleon-alignment.json make napoleon-contract-alignment
+```
+
 This is a local alignment report only. It does not contact Napoleon or grant runtime authority.
 
 The lower-level evaluator-only command is still available:

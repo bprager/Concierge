@@ -8,6 +8,12 @@ Use this check when a Napoleon contract snapshot is available locally:
 NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napoleon-contract-alignment
 ```
 
+To retain the JSON report as local evidence, set `NAPOLEON_CONTRACT_ALIGNMENT_OUT`:
+
+```bash
+NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_CONTRACT_ALIGNMENT_OUT=/tmp/concierge-napoleon-alignment.json make napoleon-contract-alignment
+```
+
 The report is local evidence only. It does not contact Napoleon, approve a runtime, write memory, dispatch agents, send externally, or grant authority. It also separates exact path drift from practical integration readiness:
 
 - `aligned` is true only when Concierge and Napoleon expose the same literal path set.
@@ -27,7 +33,7 @@ The report is local evidence only. It does not contact Napoleon, approve a runti
 
 ## Current Finding
 
-The Napoleon snapshot inspected from `bernd@mimir:~/Projects/Napoleon/docs/concierge-integration/apis/concierge-integration.openapi.yaml` is not path-identical with Concierge's generated bridge registry. The snapshot verified on 2026-06-27 maps all Napoleon-only runtime paths that Concierge knows how to use, but it does not yet expose Concierge's named read-only `evolution_proposal_status` target for `/evolution/proposals/{proposal_id}/status`. In machine-readable report terms, `aligned` remains false because the literal path sets differ, `runtimeAligned` remains false until that Concierge-side target is present in the Napoleon snapshot, and `alignmentStatus` is `runtime_mapping_gaps_present`.
+The Napoleon snapshot inspected from `bernd@mimir:~/Projects/Napoleon/docs/concierge-integration/apis/concierge-integration.openapi.yaml` is not path-identical with Concierge's generated bridge registry. The snapshot verified on 2026-06-28 maps all Napoleon-only runtime paths that Concierge knows how to use, but it does not yet expose Concierge's named read-only `evolution_proposal_status` target for `/evolution/proposals/{proposal_id}/status`. In machine-readable report terms, `aligned` remains false because the literal path sets differ, `runtimeAligned` remains false until that Concierge-side target is present in the Napoleon snapshot, and `alignmentStatus` is `runtime_mapping_gaps_present`.
 
 Concierge currently exposes governed bridge operations under:
 
@@ -60,7 +66,7 @@ The alignment report now also emits a Napoleon-owned required action:
 
 - `expose_evolution_proposal_status_runtime_target`: expose and advertise the read-only `evolution_proposal_status` runtime target at `/evolution/proposals/{proposal_id}/status` with `evolution_proposal_status_handoff` before Concierge can refresh proposal status against live Napoleon.
 
-The latest 2026-06-27 recheck against that snapshot still reports no unmapped Napoleon runtime paths; the remaining gap is this single named Concierge status target missing from the Napoleon snapshot, with `napoleonRequiredActionCount: 1` and `blockingLivePromotion: true`. This is not a permission to infer or call an unadvertised path.
+The latest 2026-06-28 recheck against that snapshot was retained locally at `/tmp/concierge-napoleon-alignment-2026-06-28.json` and still reports no unmapped Napoleon runtime paths; the remaining gap is this single named Concierge status target missing from the Napoleon snapshot, with `napoleonRequiredActionCount: 1` and `blockingLivePromotion: true`. This is not a permission to infer or call an unadvertised path.
 
 Text Concierge can answer Napoleon required-action questions and export a focused local required-action packet from this local contract-alignment evidence when no evaluator validation import is present. For example, "What does Napoleon need to expose next?" returns the current Napoleon-owned action, contract-alignment status, and non-authority boundary, and the export keeps the same source and false side-effect flags without contacting Napoleon or treating the answer as approval, runtime validation, free-form path permission, memory permission, agent dispatch, external send, or local application.
 

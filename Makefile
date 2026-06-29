@@ -30,7 +30,7 @@ bridge-evidence-compare:
 	PYTHONPATH=evaluator uv run --with PyYAML python scripts/bridge_evidence_compare.py examples/sample_bridge_contract_evidence.json
 
 napoleon-contract-alignment:
-	uv run --with PyYAML python scripts/napoleon_contract_alignment.py --napoleon-openapi $$NAPOLEON_CONTRACT_OPENAPI
+	uv run --with PyYAML python scripts/napoleon_contract_alignment.py --napoleon-openapi $$NAPOLEON_CONTRACT_OPENAPI $(if $(NAPOLEON_CONTRACT_ALIGNMENT_OUT),--out $(NAPOLEON_CONTRACT_ALIGNMENT_OUT),)
 
 generate-bridge-operations:
 	uv run --with PyYAML python scripts/generate_bridge_operations.py

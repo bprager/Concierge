@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added optional retained JSON output for Napoleon contract-alignment reports, and refreshed the current `mimir` snapshot finding for 2026-06-28 with the remaining read-only evolution proposal status target gap.
 - Added rendered Chief of Staff steering draft coverage for easy-to-evolve capability recommendations, proving the local draft and export show the suggested next step, stay proposal-only and sanitized, exclude correctly blocked no-go outcomes, and do not contact Napoleon or apply changes.
 - Added rendered Text Concierge coverage for "What capabilities are missing but easy to evolve?", proving easy-to-evolve recommendations stay local, proposal-only, sanitized, profile-scoped, and exclude correctly blocked no-go outcomes.
 - Added rendered Text Concierge coverage for "What conversations are most common?", proving the common-conversation answer stays local, sanitized, profile-scoped, and side-effect-free without contacting Napoleon.

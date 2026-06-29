@@ -930,6 +930,8 @@ The initial scaffold is committed and pushed. The startup review reports under `
 - The remote integration package is contract-only and explicitly does not grant runtime authority, command execution, task routing, agent dispatch, graph writes, memory writes, approval capture, external sends, audit append, event publication, service control, or remediation.
 - Added richer local Capability Intelligence next-work answers for "What should we implement next?", returning top-three proposal-only candidates with one best tradeoff, implementation size, coverage need, privacy impact, and governance impact without contacting Napoleon.
 - Added richer local Capability Intelligence architecture-improvement answers, returning one best tradeoff area with repair focus, needed coverage, privacy impact, and governance impact while keeping raw evidence out of telemetry and avoiding Napoleon contact.
+- Rechecked the current `mimir` Napoleon integration OpenAPI snapshot on 2026-06-28 and retained `/tmp/concierge-napoleon-alignment-2026-06-28.json`; the report still has `alignmentStatus: runtime_mapping_gaps_present`, `napoleonRequiredActionCount: 1`, and `blockingLivePromotion: true` because `/evolution/proposals/{proposal_id}/status` is still missing from the Napoleon snapshot.
+- Added optional retained JSON output for `make napoleon-contract-alignment` via `NAPOLEON_CONTRACT_ALIGNMENT_OUT`, so future Napoleon snapshot checks can leave a reviewable local evidence artifact without contacting Napoleon or granting authority.
 
 ## Next 3 To 5 Priorities
 

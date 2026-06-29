@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -94,6 +95,58 @@ paths:
         self.assertEqual(report["conciergeOnlyPaths"], [])
         self.assertEqual(report["napoleonRequiredActionCount"], 0)
         self.assertFalse(report["blockingLivePromotion"])
+
+    def test_main_writes_report_to_optional_output_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            local = self.write_yaml(
+                directory,
+                "local.yaml",
+                """
+openapi: 3.1.0
+paths:
+  /cos/text-turn:
+    post:
+      responses:
+        "202": {description: accepted}
+""",
+            )
+            napoleon = self.write_yaml(
+                directory,
+                "napoleon.yaml",
+                """
+openapi: 3.1.0
+x-napoleon-runtime-authority: false
+paths:
+  /cos/text-turn:
+    post:
+      responses:
+        "202": {description: accepted}
+""",
+            )
+            out = directory / "reports" / "alignment.json"
+
+            code = napoleon_contract_alignment.main(
+                [
+                    "--concierge-openapi",
+                    str(local),
+                    "--napoleon-openapi",
+                    str(napoleon),
+                    "--out",
+                    str(out),
+                ]
+            )
+
+            self.assertEqual(code, 0)
+            self.assertTrue(out.exists())
+            report = json.loads(out.read_text(encoding="utf-8"))
+            self.assertTrue(report["aligned"])
+            self.assertTrue(report["runtimeAligned"])
+            self.assertEqual(report["nonAuthorityBoundary"], "alignment_check_only")
+            self.assertFalse(report["approvalCaptured"])
+            self.assertFalse(report["memoryWritePerformed"])
+            self.assertFalse(report["agentDispatchPerformed"])
+            self.assertFalse(report["externalSendPerformed"])
 
     def test_reports_unmapped_napoleon_runtime_paths(self):
         with tempfile.TemporaryDirectory() as tmp:

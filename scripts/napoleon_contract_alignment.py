@@ -332,11 +332,20 @@ def main(argv: list[str] | None = None) -> int:
         required=True,
         help="Path to Napoleon's Concierge integration OpenAPI contract.",
     )
+    parser.add_argument(
+        "--out",
+        type=Path,
+        help="Optional path where the alignment report JSON should be written.",
+    )
     parser.add_argument("--strict", action="store_true", help="Exit non-zero when paths are not aligned.")
     args = parser.parse_args(argv)
 
     report = build_alignment_report(args.concierge_openapi, args.napoleon_openapi)
-    print(json.dumps(report, indent=2, sort_keys=True))
+    serialized = json.dumps(report, indent=2, sort_keys=True)
+    if args.out:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(serialized + "\n", encoding="utf-8")
+    print(serialized)
     if args.strict and not report["aligned"]:
         return 1
     return 0
