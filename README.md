@@ -96,6 +96,14 @@ make goal-blocker-handoff
 
 This writes `/tmp/concierge-goal-blocker-handoff.md` from the sanitized audit blockers. It is local evidence only and does not contact Napoleon or grant authority.
 
+To render the same current blocker as a compact copy-and-paste goal prompt under 4,000 characters:
+
+```bash
+make goal-blocker-goal-prompt
+```
+
+This writes `/tmp/concierge-goal-blocker-goal-prompt.md` from the sanitized audit blockers. It is local evidence only and does not contact Napoleon or grant authority.
+
 The lower-level evaluator-only command is still available:
 
 ```bash

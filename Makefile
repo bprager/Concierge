@@ -1,4 +1,4 @@
-.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment goal-completion-audit goal-blocker-handoff generate-bridge-operations bridge-operations-check eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
+.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment goal-completion-audit goal-blocker-handoff goal-blocker-goal-prompt generate-bridge-operations bridge-operations-check eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
 
 check: eval evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare bridge-operations-check schema-check app-test app-smoke app-build tauri-check
 
@@ -37,6 +37,9 @@ goal-completion-audit:
 
 goal-blocker-handoff: goal-completion-audit
 	uv run python scripts/create_goal_blocker_handoff.py --audit /tmp/concierge-goal-completion-audit.json --out /tmp/concierge-goal-blocker-handoff.md
+
+goal-blocker-goal-prompt: goal-completion-audit
+	uv run python scripts/create_goal_blocker_handoff.py --audit /tmp/concierge-goal-completion-audit.json --out /tmp/concierge-goal-blocker-goal-prompt.md --format goal-prompt
 
 generate-bridge-operations:
 	uv run --with PyYAML python scripts/generate_bridge_operations.py

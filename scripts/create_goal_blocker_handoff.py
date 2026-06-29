@@ -103,6 +103,80 @@ def render_handoff(audit: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def render_goal_prompt(audit: dict[str, Any]) -> str:
+    if audit.get("kind") != EXPECTED_KIND:
+        raise ValueError(f"audit kind must be {EXPECTED_KIND}")
+    blockers = audit.get("blockers")
+    if not isinstance(blockers, list):
+        raise ValueError("audit blockers must be a list")
+    if not blockers:
+        return "\n".join(
+            [
+                "Goal: Verify Concierge goal completion.",
+                "",
+                "The local goal-completion audit reports no current blockers. Run make check, make eval, and make goal-completion-audit before closing the Concierge/Napoleon UI goal.",
+                "",
+            ]
+        )
+
+    blocker = _require_mapping(blockers[0], "blocker 1")
+    action = _require_mapping(blocker.get("napoleonRequiredAction", {}), "napoleonRequiredAction")
+    advertise_using = action.get("advertiseUsing", [])
+    if not isinstance(advertise_using, list) or not all(isinstance(item, str) for item in advertise_using):
+        raise ValueError("napoleonRequiredAction.advertiseUsing must be a list of strings")
+    for key in (
+        "approvalCaptured",
+        "memoryWritePerformed",
+        "agentDispatchPerformed",
+        "externalSendPerformed",
+        "appliedLocally",
+    ):
+        _false_flag_line(action, key)
+
+    target_path = action.get("targetPath", "unknown")
+    request_kind = action.get("requestKind", "unknown")
+    operation_id = action.get("operationId", "unknown")
+    advertising = ", ".join(advertise_using) if advertise_using else "supportedHandoffs, required_for"
+
+    lines = [
+        "Goal: Complete the remaining Concierge live-promotion blocker.",
+        "",
+        "Context:",
+        "Concierge is the primary UI for Napoleon, but Napoleon owns authority, governance, memory, routing, registry, and evolution approval. Concierge may display, export, and validate status only.",
+        "",
+        "Objective:",
+        "Implement and advertise the Napoleon-owned read-only evolution proposal status handoff required by Concierge.",
+        "",
+        "Required capability:",
+        f"- Expose read-only GET {target_path}.",
+        f"- Support request kind {request_kind}.",
+        f"- Support operation {operation_id}.",
+        f"- Advertise it through {advertising}.",
+        "- Return enough status evidence for pending, approved, rejected, applied, rolled back, stale, unavailable, or unknown.",
+        "- Do not let Concierge apply proposals, capture approvals, write memory, dispatch agents, send externally, route tasks, update registries, append traces, or perform side effects.",
+        "",
+        "Acceptance:",
+        "- Concierge contract alignment no longer reports this runtime gap.",
+        "- make goal-completion-audit reports no external blocker for evolution proposal status.",
+        "- Live evaluator validation can prove the status target is reachable and governed.",
+        "- Concierge-side effect flags remain false.",
+        "",
+        "Validation:",
+        "1. NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml make napoleon-contract-alignment",
+        "2. make goal-completion-audit",
+        "3. NAPOLEON_EVAL_ENDPOINT=<local Napoleon URL> make eval-http",
+        "4. make check",
+        "",
+        "Expected outcome:",
+        "The Concierge goal audit can close without Concierge taking over Napoleon authority.",
+        "",
+    ]
+    rendered = "\n".join(lines)
+    if len(rendered) >= 4000:
+        raise ValueError("goal prompt must be shorter than 4000 characters")
+    return rendered
+
+
 def write_handoff(audit_path: Path, out_path: Path) -> Path:
     audit = json.loads(audit_path.read_text(encoding="utf-8"))
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -110,13 +184,29 @@ def write_handoff(audit_path: Path, out_path: Path) -> Path:
     return out_path
 
 
+def write_goal_prompt(audit_path: Path, out_path: Path) -> Path:
+    audit = json.loads(audit_path.read_text(encoding="utf-8"))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(render_goal_prompt(_require_mapping(audit, "audit")) + "\n", encoding="utf-8")
+    return out_path
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--audit", type=Path, required=True, help="Path to concierge-goal-completion-audit.json")
     parser.add_argument("--out", type=Path, required=True, help="Markdown handoff output path")
+    parser.add_argument(
+        "--format",
+        choices=("handoff", "goal-prompt"),
+        default="handoff",
+        help="Output format to render",
+    )
     args = parser.parse_args()
 
-    out = write_handoff(args.audit, args.out)
+    if args.format == "goal-prompt":
+        out = write_goal_prompt(args.audit, args.out)
+    else:
+        out = write_handoff(args.audit, args.out)
     print(out)
     return 0
 

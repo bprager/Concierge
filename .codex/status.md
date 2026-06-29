@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added `make goal-blocker-goal-prompt`, which renders the highest-priority sanitized goal-completion blocker into `/tmp/concierge-goal-blocker-goal-prompt.md` as a copyable Napoleon-side prompt under 4,000 characters without contacting Napoleon or granting authority.
 - Added `make goal-blocker-handoff`, which renders current sanitized goal-completion blockers from `/tmp/concierge-goal-completion-audit.json` into `/tmp/concierge-goal-blocker-handoff.md` for Napoleon-side handoff without contacting Napoleon or granting authority.
 - Added top-level sanitized blocker metadata to local goal completion audit reports, so external Napoleon-owned blockers can be consumed directly from `/tmp/concierge-goal-completion-audit.json` with requirement ID, owner, validation commands, next action, and the required-action packet.
 - Added sanitized Napoleon required-action packets to local goal completion audit `nextActions`, so the current external evolution-status blocker now carries the exact target path, request kind, descriptor advertising forms, live-promotion blocker state, and false side-effect flags for Napoleon-side handoff.

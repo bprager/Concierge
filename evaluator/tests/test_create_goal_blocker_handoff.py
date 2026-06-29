@@ -8,34 +8,7 @@ from scripts import create_goal_blocker_handoff
 
 class GoalBlockerHandoffTests(unittest.TestCase):
     def test_render_handoff_includes_sanitized_blocker_details(self):
-        audit = {
-            "kind": "concierge.goal-completion-audit.v1",
-            "overallStatus": "goal_not_complete",
-            "blockerCount": 1,
-            "blockers": [
-                {
-                    "requirementId": "evolution_status_runtime_blocker",
-                    "owner": "napoleon_runtime",
-                    "external": True,
-                    "nextAction": "Expose and advertise the read-only target.",
-                    "validation": ["make goal-completion-audit", "make check"],
-                    "napoleonRequiredAction": {
-                        "id": "expose_evolution_proposal_status_runtime_target",
-                        "owner": "napoleon_runtime",
-                        "operationId": "evolution_proposal_status",
-                        "targetPath": "/evolution/proposals/{proposal_id}/status",
-                        "requestKind": "evolution_proposal_status_handoff",
-                        "advertiseUsing": ["supportedHandoffs", "required_for"],
-                        "blockingLivePromotion": True,
-                        "approvalCaptured": False,
-                        "memoryWritePerformed": False,
-                        "agentDispatchPerformed": False,
-                        "externalSendPerformed": False,
-                        "appliedLocally": False,
-                    },
-                }
-            ],
-        }
+        audit = _sample_audit()
 
         rendered = create_goal_blocker_handoff.render_handoff(audit)
 
@@ -78,6 +51,65 @@ class GoalBlockerHandoffTests(unittest.TestCase):
 
             self.assertEqual(written, out_path)
             self.assertIn("No current blockers", out_path.read_text(encoding="utf-8"))
+
+    def test_render_goal_prompt_is_copyable_and_under_goal_limit(self):
+        rendered = create_goal_blocker_handoff.render_goal_prompt(_sample_audit())
+
+        self.assertLess(len(rendered), 4000)
+        self.assertIn("Goal: Complete the remaining Concierge live-promotion blocker.", rendered)
+        self.assertIn("/evolution/proposals/{proposal_id}/status", rendered)
+        self.assertIn("evolution_proposal_status_handoff", rendered)
+        self.assertIn("supportedHandoffs", rendered)
+        self.assertIn("required_for", rendered)
+        self.assertIn("Do not let Concierge apply proposals", rendered)
+        self.assertIn("make napoleon-contract-alignment", rendered)
+        self.assertIn("make goal-completion-audit", rendered)
+        self.assertIn("make eval-http", rendered)
+        self.assertIn("make check", rendered)
+
+    def test_writes_goal_prompt_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            audit_path = Path(tmp) / "audit.json"
+            out_path = Path(tmp) / "goal.md"
+            audit_path.write_text(json.dumps(_sample_audit()), encoding="utf-8")
+
+            written = create_goal_blocker_handoff.write_goal_prompt(audit_path, out_path)
+
+            self.assertEqual(written, out_path)
+            text = out_path.read_text(encoding="utf-8")
+            self.assertLess(len(text), 4000)
+            self.assertIn("Goal: Complete the remaining Concierge live-promotion blocker.", text)
+
+
+def _sample_audit():
+    return {
+        "kind": "concierge.goal-completion-audit.v1",
+        "overallStatus": "goal_not_complete",
+        "blockerCount": 1,
+        "blockers": [
+            {
+                "requirementId": "evolution_status_runtime_blocker",
+                "owner": "napoleon_runtime",
+                "external": True,
+                "nextAction": "Expose and advertise the read-only target.",
+                "validation": ["make goal-completion-audit", "make check"],
+                "napoleonRequiredAction": {
+                    "id": "expose_evolution_proposal_status_runtime_target",
+                    "owner": "napoleon_runtime",
+                    "operationId": "evolution_proposal_status",
+                    "targetPath": "/evolution/proposals/{proposal_id}/status",
+                    "requestKind": "evolution_proposal_status_handoff",
+                    "advertiseUsing": ["supportedHandoffs", "required_for"],
+                    "blockingLivePromotion": True,
+                    "approvalCaptured": False,
+                    "memoryWritePerformed": False,
+                    "agentDispatchPerformed": False,
+                    "externalSendPerformed": False,
+                    "appliedLocally": False,
+                },
+            }
+        ],
+    }
 
 
 if __name__ == "__main__":
