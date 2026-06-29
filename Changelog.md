@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added explicit validation-evidence fields to the goal-completion close gate so the audit says which required commands were not run by the audit itself.
 - Added a stricter goal-blocker prompt file-size guard so generated Napoleon-side goal prompts remain below the 4,000-character limit after the trailing newline is written.
 - Added safe goal-completion audit ingestion to the local readiness-repair checklist consumer, so the current Napoleon-owned external blocker can become a proposal-only repair checklist item without requiring a readiness proof or granting authority.
 - Added retained alignment-evidence summaries to the goal-blocker handoff and compact Napoleon-side goal prompt, so current runtime alignment status travels with the external blocker while staying under the 4,000-character prompt limit.

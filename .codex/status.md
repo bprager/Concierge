@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added explicit validation-evidence fields to the local goal-completion audit close gate, so `/tmp/concierge-goal-completion-audit.json` now distinguishes mapped evidence from the separate validation commands still required before closing the active Napoleon UI goal.
 - Tightened the compact goal-blocker prompt writer so `/tmp/concierge-goal-blocker-goal-prompt.md` must remain below the 4,000-character goal limit after the trailing newline is written.
 - Added safe local goal-completion audit ingestion to the readiness repair checklist consumer, so the current Napoleon-owned external blocker can be transformed into a proposal-only repair checklist item without contacting Napoleon, approving anything, or applying runtime routes.
 - Added retained alignment-evidence summaries to the local goal-blocker handoff and compact Napoleon-side goal prompt, so the current runtime mapping gap, runtime-aligned state, live-promotion blocker state, and missing target travel with the blocker without contacting Napoleon or granting authority.

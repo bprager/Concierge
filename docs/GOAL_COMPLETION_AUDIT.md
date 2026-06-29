@@ -25,7 +25,7 @@ The JSON report includes:
 - `statusCounts`: current counts for proven, weak, missing, or externally blocked requirements.
 - `blockers`: sanitized top-level blocker metadata with requirement ID, owner, external flag, next action, validation commands, and any Napoleon required-action packet for direct handoff tooling.
 - `nextActions`: one machine-readable repair action per blocker, including owner, whether the blocker is external, validation commands, the next action text, and, for Napoleon-owned runtime blockers, a sanitized `napoleonRequiredAction` packet with the expected target path, request kind, descriptor advertising forms, live-promotion blocker state, and false side-effect flags.
-- `completionGate`: whether the active goal can be closed and which validation commands must pass first.
+- `completionGate`: whether the active goal can be closed, which validation commands must pass first, and explicit `validationCommandsExecutedByAudit: false` plus `requiredButNotRunByAudit` fields so the audit report itself cannot be mistaken for fresh command evidence.
 - `requirements`: requirement-by-requirement evidence, validation commands, and blocker metadata when applicable.
 
 The report is local evidence only. It does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
@@ -53,5 +53,6 @@ Use the audit when deciding whether the active goal can be closed. A completion 
 - A fresh retained Napoleon contract-alignment report when Napoleon contract evidence changed.
 - Live HTTP validation passing when a real Napoleon endpoint is available.
 - `completionGate.canCloseGoal` set to `true`.
+- `completionGate.validationCommandsExecutedByAudit` remaining `false`, with the listed commands run separately in the current worktree.
 - The goal audit showing no missing, weak, or external-blocker items.
 - Current docs, backlog, changelog, and `.codex/status.md` reflecting the verified state.

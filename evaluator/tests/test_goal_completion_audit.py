@@ -42,6 +42,15 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertFalse(report["completionGate"]["canCloseGoal"])
         self.assertIn("make check", report["completionGate"]["requiredBeforeClose"])
 
+    def test_completion_gate_declares_validation_commands_are_not_run_by_audit(self):
+        report = goal_completion_audit.build_report()
+
+        gate = report["completionGate"]
+        self.assertFalse(gate["validationCommandsExecutedByAudit"])
+        self.assertEqual(gate["validationEvidenceSource"], "not_executed_by_goal_completion_audit")
+        self.assertIn("make check", gate["requiredBeforeClose"])
+        self.assertEqual(gate["requiredButNotRunByAudit"], gate["requiredBeforeClose"])
+
     def test_external_runtime_blocker_includes_sanitized_required_action_packet(self):
         report = goal_completion_audit.build_report()
 

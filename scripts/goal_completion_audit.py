@@ -353,8 +353,11 @@ def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
             "make goal-completion-audit",
             "NAPOLEON_EVAL_ENDPOINT=<local-url> make eval-http when a real Napoleon endpoint is available",
         ],
+        "validationCommandsExecutedByAudit": False,
+        "validationEvidenceSource": "not_executed_by_goal_completion_audit",
         "reason": "All audited requirements must be proven and no external blocker may remain.",
     }
+    completion_gate["requiredButNotRunByAudit"] = list(completion_gate["requiredBeforeClose"])
     return {
         "kind": "concierge.goal-completion-audit.v1",
         "generatedAt": datetime.now(timezone.utc).isoformat(),
