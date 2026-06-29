@@ -53,6 +53,17 @@ def _bool(value: Any) -> bool | None:
     return value if isinstance(value, bool) else None
 
 
+def _env_bool(value: str | None) -> bool | None:
+    if value is None:
+        return None
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "y", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "n", "off"}:
+        return False
+    return None
+
+
 def _string(value: Any) -> str | None:
     return value if isinstance(value, str) and value else None
 
@@ -235,6 +246,9 @@ def build_report(
         "tokenConfigured": bool(env.get("NAPOLEON_EVAL_TOKEN") or env.get("NAPOLEON_RUNTIME_AUTH_TOKEN")),
         "tokenFileConfigured": bool(token_file),
         "tokenFileReadable": _token_file_readable(token_file),
+        "tokenRemotePresent": _env_bool(env.get("NAPOLEON_RUNTIME_TOKEN_REMOTE_PRESENT")),
+        "tokenLocalReadableDeclared": _env_bool(env.get("NAPOLEON_RUNTIME_TOKEN_LOCAL_READABLE")),
+        "tokenRemoteReadableByOperator": _env_bool(env.get("NAPOLEON_RUNTIME_TOKEN_REMOTE_READABLE_BY_BERND")),
         "tokenRetained": False,
         "tokenFilePathRetained": False,
     }

@@ -402,6 +402,9 @@ def _safe_runtime_handoff_evidence_summary(report: dict[str, Any] | None, path: 
                 "tokenConfigured": None,
                 "tokenFileConfigured": None,
                 "tokenFileReadable": None,
+                "tokenRemotePresent": None,
+                "tokenLocalReadableDeclared": None,
+                "tokenRemoteReadableByOperator": None,
                 "tokenRetained": False,
                 "tokenFilePathRetained": False,
             },
@@ -426,6 +429,19 @@ def _safe_runtime_handoff_evidence_summary(report: dict[str, Any] | None, path: 
             ),
             "tokenFileReadable": (
                 auth.get("tokenFileReadable") if isinstance(auth.get("tokenFileReadable"), bool) else None
+            ),
+            "tokenRemotePresent": (
+                auth.get("tokenRemotePresent") if isinstance(auth.get("tokenRemotePresent"), bool) else None
+            ),
+            "tokenLocalReadableDeclared": (
+                auth.get("tokenLocalReadableDeclared")
+                if isinstance(auth.get("tokenLocalReadableDeclared"), bool)
+                else None
+            ),
+            "tokenRemoteReadableByOperator": (
+                auth.get("tokenRemoteReadableByOperator")
+                if isinstance(auth.get("tokenRemoteReadableByOperator"), bool)
+                else None
             ),
             "tokenRetained": False,
             "tokenFilePathRetained": False,

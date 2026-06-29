@@ -101,6 +101,40 @@ class RuntimeHandoffStatusTests(unittest.TestCase):
         self.assertNotIn("192.168.1.8", rendered)
         self.assertNotIn(str(token_path), rendered)
 
+    def test_build_report_sanitizes_declared_token_handoff_facts_without_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            env_path = tmp_path / ".env"
+            token_path = tmp_path / "napoleon-runtime-pilot-auth-token"
+            env_path.write_text(
+                "\n".join(
+                    [
+                        "NAPOLEON_BRIDGE_ENDPOINT=http://192.168.1.8:8765",
+                        "NAPOLEON_EVAL_ENDPOINT=http://192.168.1.8:8765",
+                        f"NAPOLEON_RUNTIME_AUTH_TOKEN_FILE={token_path}",
+                        "NAPOLEON_RUNTIME_TOKEN_REMOTE_PRESENT=true",
+                        "NAPOLEON_RUNTIME_TOKEN_LOCAL_READABLE=false",
+                        "NAPOLEON_RUNTIME_TOKEN_REMOTE_READABLE_BY_BERND=false",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            report = runtime_handoff_status.build_report(
+                env_path=env_path,
+                default_alignment_report_path=None,
+            )
+
+        self.assertTrue(report["authProvisioning"]["tokenRemotePresent"])
+        self.assertFalse(report["authProvisioning"]["tokenLocalReadableDeclared"])
+        self.assertFalse(report["authProvisioning"]["tokenRemoteReadableByOperator"])
+        self.assertFalse(report["authProvisioning"]["tokenFileReadable"])
+        self.assertEqual(report["readiness"]["blockers"][0]["id"], "token_file_unreadable")
+        rendered = json.dumps(report)
+        self.assertNotIn("192.168.1.8", rendered)
+        self.assertNotIn(str(token_path), rendered)
+        self.assertNotIn("napoleon-runtime-pilot-auth-token", rendered)
+
     def test_rejects_alignment_report_with_authorizing_side_effect_claim(self):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

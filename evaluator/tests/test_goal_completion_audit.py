@@ -263,6 +263,9 @@ class GoalCompletionAuditTests(unittest.TestCase):
                             "tokenConfigured": False,
                             "tokenFileConfigured": True,
                             "tokenFileReadable": False,
+                            "tokenRemotePresent": True,
+                            "tokenLocalReadableDeclared": False,
+                            "tokenRemoteReadableByOperator": False,
                             "tokenRetained": False,
                             "tokenFilePathRetained": False,
                         },
@@ -308,6 +311,9 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertFalse(report["runtimeHandoffEvidence"]["canProceed"])
         self.assertEqual(report["runtimeHandoffEvidence"]["localBlockerCount"], 1)
         self.assertEqual(report["runtimeHandoffEvidence"]["externalBlockerCount"], 0)
+        self.assertTrue(report["runtimeHandoffEvidence"]["authProvisioning"]["tokenRemotePresent"])
+        self.assertFalse(report["runtimeHandoffEvidence"]["authProvisioning"]["tokenLocalReadableDeclared"])
+        self.assertFalse(report["runtimeHandoffEvidence"]["authProvisioning"]["tokenRemoteReadableByOperator"])
         self.assertIn("runtime_handoff_token_access", report["completionGate"]["blockingRequirementIds"])
         self.assertEqual(report["completionGate"]["localBlockerCount"], 1)
         self.assertEqual(report["completionGate"]["externalBlockerCount"], 1)
