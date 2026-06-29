@@ -9,11 +9,26 @@ from scripts import create_goal_blocker_handoff
 class GoalBlockerHandoffTests(unittest.TestCase):
     def test_render_handoff_includes_sanitized_blocker_details(self):
         audit = _sample_audit()
+        audit["alignmentEvidence"] = {
+            "loaded": True,
+            "alignmentStatus": "runtime_mapping_gaps_present",
+            "runtimeAligned": False,
+            "blockingLivePromotion": True,
+            "napoleonRequiredActionCount": 1,
+            "missingRuntimeTargets": ["/evolution/proposals/{proposal_id}/status"],
+            "path": "/tmp/concierge-napoleon-alignment-current.json",
+            "canClearEvolutionStatusBlocker": False,
+            "nonAuthorityBoundary": "alignment_report_only",
+        }
 
         rendered = create_goal_blocker_handoff.render_handoff(audit)
 
         self.assertIn("# Concierge Goal Blocker Handoff", rendered)
         self.assertIn("Overall status: goal_not_complete", rendered)
+        self.assertIn("Alignment evidence:", rendered)
+        self.assertIn("Alignment status: runtime_mapping_gaps_present", rendered)
+        self.assertIn("Runtime aligned: no", rendered)
+        self.assertIn("Missing runtime targets: /evolution/proposals/{proposal_id}/status", rendered)
         self.assertIn("Owner: napoleon_runtime", rendered)
         self.assertIn("Target path: /evolution/proposals/{proposal_id}/status", rendered)
         self.assertIn("Request kind: evolution_proposal_status_handoff", rendered)
@@ -53,10 +68,27 @@ class GoalBlockerHandoffTests(unittest.TestCase):
             self.assertIn("No current blockers", out_path.read_text(encoding="utf-8"))
 
     def test_render_goal_prompt_is_copyable_and_under_goal_limit(self):
-        rendered = create_goal_blocker_handoff.render_goal_prompt(_sample_audit())
+        audit = _sample_audit()
+        audit["alignmentEvidence"] = {
+            "loaded": True,
+            "alignmentStatus": "runtime_mapping_gaps_present",
+            "runtimeAligned": False,
+            "blockingLivePromotion": True,
+            "napoleonRequiredActionCount": 1,
+            "missingRuntimeTargets": ["/evolution/proposals/{proposal_id}/status"],
+            "path": "/tmp/concierge-napoleon-alignment-current.json",
+            "canClearEvolutionStatusBlocker": False,
+            "nonAuthorityBoundary": "alignment_report_only",
+        }
+
+        rendered = create_goal_blocker_handoff.render_goal_prompt(audit)
 
         self.assertLess(len(rendered), 4000)
         self.assertIn("Goal: Complete the remaining Concierge live-promotion blocker.", rendered)
+        self.assertIn("Current Concierge evidence:", rendered)
+        self.assertIn("Alignment status: runtime_mapping_gaps_present", rendered)
+        self.assertIn("Runtime aligned: no", rendered)
+        self.assertIn("Missing runtime target: /evolution/proposals/{proposal_id}/status", rendered)
         self.assertIn("/evolution/proposals/{proposal_id}/status", rendered)
         self.assertIn("evolution_proposal_status_handoff", rendered)
         self.assertIn("supportedHandoffs", rendered)

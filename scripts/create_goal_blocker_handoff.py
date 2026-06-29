@@ -22,11 +22,37 @@ def _bool_word(value: Any) -> str:
     return "yes" if value is True else "no"
 
 
+def _safe_string(value: Any, default: str = "unknown") -> str:
+    return value if isinstance(value, str) and value else default
+
+
+def _safe_string_list(value: Any) -> list[str]:
+    return [item for item in value if isinstance(item, str)] if isinstance(value, list) else []
+
+
 def _false_flag_line(action: dict[str, Any], key: str) -> str:
     value = action.get(key)
     if value is not False:
         raise ValueError(f"napoleonRequiredAction.{key} must be false")
     return f"- {key}: false"
+
+
+def _alignment_evidence_lines(audit: dict[str, Any]) -> list[str]:
+    evidence = audit.get("alignmentEvidence")
+    if not isinstance(evidence, dict) or evidence.get("loaded") is not True:
+        return []
+    missing_targets = _safe_string_list(evidence.get("missingRuntimeTargets"))
+    return [
+        "Alignment evidence:",
+        f"- Alignment status: {_safe_string(evidence.get('alignmentStatus'))}",
+        f"- Runtime aligned: {_bool_word(evidence.get('runtimeAligned'))}",
+        f"- Blocking live promotion: {_bool_word(evidence.get('blockingLivePromotion'))}",
+        f"- Napoleon required-action count: {evidence.get('napoleonRequiredActionCount') if isinstance(evidence.get('napoleonRequiredActionCount'), int) else 'unknown'}",
+        f"- Missing runtime targets: {', '.join(missing_targets) if missing_targets else 'none listed'}",
+        f"- Can clear evolution-status blocker: {_bool_word(evidence.get('canClearEvolutionStatusBlocker'))}",
+        "- Non-authority boundary: alignment_report_only",
+        "",
+    ]
 
 
 def render_handoff(audit: dict[str, Any]) -> str:
@@ -43,6 +69,7 @@ def render_handoff(audit: dict[str, Any]) -> str:
         f"Blocker count: {audit.get('blockerCount', len(blockers))}",
         "",
     ]
+    lines.extend(_alignment_evidence_lines(audit))
     if not blockers:
         lines.extend(
             [
@@ -137,12 +164,21 @@ def render_goal_prompt(audit: dict[str, Any]) -> str:
     request_kind = action.get("requestKind", "unknown")
     operation_id = action.get("operationId", "unknown")
     advertising = ", ".join(advertise_using) if advertise_using else "supportedHandoffs, required_for"
+    alignment_evidence = audit.get("alignmentEvidence")
+    missing_targets: list[str] = []
+    if isinstance(alignment_evidence, dict):
+        missing_targets = _safe_string_list(alignment_evidence.get("missingRuntimeTargets"))
 
     lines = [
         "Goal: Complete the remaining Concierge live-promotion blocker.",
         "",
         "Context:",
         "Concierge is the primary UI for Napoleon, but Napoleon owns authority, governance, memory, routing, registry, and evolution approval. Concierge may display, export, and validate status only.",
+        "",
+        "Current Concierge evidence:",
+        f"- Alignment status: {_safe_string(alignment_evidence.get('alignmentStatus') if isinstance(alignment_evidence, dict) else None)}.",
+        f"- Runtime aligned: {_bool_word(alignment_evidence.get('runtimeAligned') if isinstance(alignment_evidence, dict) else None)}.",
+        f"- Missing runtime target: {missing_targets[0] if missing_targets else target_path}.",
         "",
         "Objective:",
         "Implement and advertise the Napoleon-owned read-only evolution proposal status handoff required by Concierge.",

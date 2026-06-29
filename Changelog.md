@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added retained alignment-evidence summaries to the goal-blocker handoff and compact Napoleon-side goal prompt, so current runtime alignment status travels with the external blocker while staying under the 4,000-character prompt limit.
 - Added sanitized retained contract-alignment summary fields to `make goal-completion-audit`, including alignment status, runtime-aligned state, live-promotion blocker state, Napoleon required-action count, and missing runtime targets.
 - Added `make goal-blocker-goal-prompt` to render the highest-priority sanitized goal-completion blocker into a copyable Napoleon-side goal prompt under 4,000 characters at `/tmp/concierge-goal-blocker-goal-prompt.md`.
 - Added `make goal-blocker-handoff` to render the sanitized goal-completion blockers into a copyable local Markdown handoff at `/tmp/concierge-goal-blocker-handoff.md`.

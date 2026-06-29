@@ -36,7 +36,7 @@ To render a copyable Markdown handoff from the current sanitized blocker list:
 make goal-blocker-handoff
 ```
 
-The command reruns the audit and writes `/tmp/concierge-goal-blocker-handoff.md`. The handoff includes the blocker owner, requirement ID, target path, request kind, descriptor advertising forms, validation commands, and required false side-effect flags. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
+The command reruns the audit and writes `/tmp/concierge-goal-blocker-handoff.md`. The handoff includes the blocker owner, requirement ID, target path, request kind, descriptor advertising forms, validation commands, required false side-effect flags, and any retained sanitized alignment summary loaded through `GOAL_COMPLETION_ALIGNMENT_REPORT`. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
 
 To render the highest-priority blocker as a compact copy-and-paste goal prompt:
 
@@ -44,7 +44,7 @@ To render the highest-priority blocker as a compact copy-and-paste goal prompt:
 make goal-blocker-goal-prompt
 ```
 
-The command reruns the audit and writes `/tmp/concierge-goal-blocker-goal-prompt.md`. The prompt is generated from the same sanitized blocker metadata and fails if it reaches the 4,000-character goal limit. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
+The command reruns the audit and writes `/tmp/concierge-goal-blocker-goal-prompt.md`. The prompt is generated from the same sanitized blocker metadata, includes a compact retained alignment summary when available, and fails if it reaches the 4,000-character goal limit. It is local evidence only and does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
 
 Use the audit when deciding whether the active goal can be closed. A completion claim should require:
 
