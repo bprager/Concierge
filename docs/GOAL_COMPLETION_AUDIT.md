@@ -6,7 +6,7 @@ Concierge now has a local audit for the active Napoleon UI goal:
 make goal-completion-audit
 ```
 
-The command writes `/tmp/concierge-goal-completion-audit.json`. The report maps the main goal requirements to current repository evidence, including descriptor connection state, generated bridge alignment, delegation rendering, response provenance, fail-closed bridge states, Chief of Staff steering, authority-boundary validation, Rehearsal Mode, local Capability Intelligence, child protected boundaries, and evolution proposal status refresh.
+The command writes `/tmp/concierge-goal-completion-audit.json`. The report maps the main goal requirements and original acceptance criteria to current repository evidence, including descriptor connection state, generated bridge alignment, delegation rendering, response provenance, fail-closed bridge states, Chief of Staff steering, authority-boundary validation, Rehearsal Mode, local Capability Intelligence, child protected boundaries, and evolution proposal status refresh.
 
 The audit is deliberately conservative. It can show that local evidence exists for a requirement, but it does not declare the overall goal complete while required runtime evidence is missing or blocked. In the current state, the report keeps the Napoleon-owned `expose_evolution_proposal_status_runtime_target` action separate as an `external_blocker` because the latest inspected Napoleon snapshot does not advertise the read-only `/evolution/proposals/{proposal_id}/status` target.
 
@@ -23,9 +23,11 @@ The JSON report includes:
 
 - `alignmentEvidence`: whether a fresh non-authorizing contract-alignment report was loaded, whether it can clear the current evolution-status blocker, and a sanitized summary of the retained alignment status, runtime-aligned flag, live-promotion blocker flag, Napoleon required-action count, and missing runtime targets.
 - `statusCounts`: current counts for proven, weak, missing, or externally blocked requirements.
+- `acceptanceCriteria`: the original active-goal acceptance criteria, each linked back to the requirement IDs that prove or block it.
+- `acceptanceCriteriaStatusCounts`: current counts for proven, weak, missing, or externally blocked acceptance criteria.
 - `blockers`: sanitized top-level blocker metadata with requirement ID, owner, external flag, next action, validation commands, and any Napoleon required-action packet for direct handoff tooling.
 - `nextActions`: one machine-readable repair action per blocker, including owner, whether the blocker is external, validation commands, the next action text, and, for Napoleon-owned runtime blockers, a sanitized `napoleonRequiredAction` packet with the expected target path, request kind, descriptor advertising forms, live-promotion blocker state, and false side-effect flags.
-- `completionGate`: whether the active goal can be closed, the exact blocking requirement IDs, external versus local blocker counts, which validation commands must pass first, and explicit `validationCommandsExecutedByAudit: false` plus `requiredButNotRunByAudit` fields so the audit report itself cannot be mistaken for fresh command evidence.
+- `completionGate`: whether the active goal can be closed, whether all acceptance criteria are satisfied, the exact blocking requirement IDs, external versus local blocker counts, which validation commands must pass first, and explicit `validationCommandsExecutedByAudit: false` plus `requiredButNotRunByAudit` fields so the audit report itself cannot be mistaken for fresh command evidence.
 - `requirements`: requirement-by-requirement evidence, validation commands, and blocker metadata when applicable.
 
 The report is local evidence only. It does not contact Napoleon, approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
@@ -53,6 +55,7 @@ Use the audit when deciding whether the active goal can be closed. A completion 
 - A fresh retained Napoleon contract-alignment report when Napoleon contract evidence changed.
 - Live HTTP validation passing when a real Napoleon endpoint is available.
 - `completionGate.canCloseGoal` set to `true`.
+- `completionGate.acceptanceCriteriaSatisfied` set to `true`.
 - `completionGate.blockingRequirementIds` empty and both blocker counts set to `0`.
 - `completionGate.validationCommandsExecutedByAudit` remaining `false`, with the listed commands run separately in the current worktree.
 - The goal audit showing no missing, weak, or external-blocker items.

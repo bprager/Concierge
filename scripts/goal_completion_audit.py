@@ -33,6 +33,13 @@ class Requirement:
     validation: tuple[str, ...] = ()
 
 
+@dataclass(frozen=True)
+class AcceptanceCriterion:
+    id: str
+    criterion: str
+    requirement_ids: tuple[str, ...]
+
+
 REQUIREMENTS: tuple[Requirement, ...] = (
     Requirement(
         id="descriptor_first_class_connection_state",
@@ -184,6 +191,53 @@ REQUIREMENTS: tuple[Requirement, ...] = (
 )
 
 
+ACCEPTANCE_CRITERIA: tuple[AcceptanceCriterion, ...] = (
+    AcceptanceCriterion(
+        id="send_text_request_to_napoleon",
+        criterion="User can send one text request through Concierge to Napoleon.",
+        requirement_ids=("descriptor_first_class_connection_state", "generated_bridge_client_alignment"),
+    ),
+    AcceptanceCriterion(
+        id="show_handling_capability_or_agent",
+        criterion="Concierge shows which Napoleon capability or agent handled the request.",
+        requirement_ids=("napoleon_delegation_panel", "response_authority_provenance"),
+    ),
+    AcceptanceCriterion(
+        id="speak_from_returned_bridge_contributions",
+        criterion=(
+            "Concierge can say Napoleon recommends something or a selected agent found something only when "
+            "the bridge response contains that contribution."
+        ),
+        requirement_ids=("response_authority_provenance",),
+    ),
+    AcceptanceCriterion(
+        id="blocked_effects_visible",
+        criterion="All blocked effects are visible.",
+        requirement_ids=("napoleon_delegation_panel", "fail_closed_bridge_states"),
+    ),
+    AcceptanceCriterion(
+        id="no_go_stops_forwarding",
+        criterion="No-go decisions stop forwarding.",
+        requirement_ids=("fail_closed_bridge_states", "authority_boundary_validation"),
+    ),
+    AcceptanceCriterion(
+        id="rehearsal_preview_local_only",
+        criterion="Rehearsal preview never calls live Napoleon.",
+        requirement_ids=("rehearsal_mode_local_only",),
+    ),
+    AcceptanceCriterion(
+        id="capability_intelligence_drafts_only",
+        criterion="Capability Intelligence can draft, but not apply, evolution proposals.",
+        requirement_ids=("capability_intelligence_local_only", "chief_of_staff_steering_proposal_only"),
+    ),
+    AcceptanceCriterion(
+        id="evolution_status_runtime_status_route",
+        criterion="Read-only evolution proposal status refresh has a descriptor-advertised Napoleon route.",
+        requirement_ids=("evolution_status_runtime_blocker",),
+    ),
+)
+
+
 def _read(path: str) -> str | None:
     file_path = ROOT / path
     if not file_path.exists():
@@ -321,9 +375,47 @@ def evaluate_requirement(requirement: Requirement, alignment_report: dict[str, A
     return result
 
 
+def evaluate_acceptance_criteria(requirements: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    requirements_by_id = {requirement["id"]: requirement for requirement in requirements}
+    criteria: list[dict[str, Any]] = []
+    for criterion in ACCEPTANCE_CRITERIA:
+        linked_requirements = [
+            requirements_by_id[requirement_id]
+            for requirement_id in criterion.requirement_ids
+            if requirement_id in requirements_by_id
+        ]
+        blocking_requirement_ids = [
+            requirement["id"] for requirement in linked_requirements if requirement["status"] != "proven"
+        ]
+        statuses = {requirement["status"] for requirement in linked_requirements}
+        status = "proven"
+        if "external_blocker" in statuses:
+            status = "external_blocker"
+        elif "missing_evidence" in statuses:
+            status = "missing_evidence"
+        elif "weak_evidence" in statuses:
+            status = "weak_evidence"
+        criteria.append(
+            {
+                "id": criterion.id,
+                "criterion": criterion.criterion,
+                "status": status,
+                "requirementIds": list(criterion.requirement_ids),
+                "blockingRequirementIds": blocking_requirement_ids,
+            }
+        )
+    return criteria
+
+
 def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
     alignment_report = _load_alignment_report(alignment_report_path)
     requirements = [evaluate_requirement(requirement, alignment_report) for requirement in REQUIREMENTS]
+    acceptance_criteria = evaluate_acceptance_criteria(requirements)
+    acceptance_criteria_status_counts: dict[str, int] = {}
+    for criterion in acceptance_criteria:
+        acceptance_criteria_status_counts[criterion["status"]] = (
+            acceptance_criteria_status_counts.get(criterion["status"], 0) + 1
+        )
     status_counts: dict[str, int] = {}
     for requirement in requirements:
         status_counts[requirement["status"]] = status_counts.get(requirement["status"], 0) + 1
@@ -347,6 +439,9 @@ def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
     next_actions = [dict(blocker) for blocker in blocker_summaries]
     completion_gate = {
         "canCloseGoal": not blockers,
+        "acceptanceCriteriaSatisfied": all(
+            criterion["status"] == "proven" for criterion in acceptance_criteria
+        ),
         "blockingRequirementIds": [item["id"] for item in blockers],
         "externalBlockerCount": sum(1 for item in blockers if item["blocker"]["external"]),
         "localBlockerCount": sum(1 for item in blockers if not item["blocker"]["external"]),
@@ -367,11 +462,14 @@ def build_report(alignment_report_path: Path | None = None) -> dict[str, Any]:
         "overallStatus": overall_status,
         "alignmentEvidence": _safe_alignment_evidence_summary(alignment_report, alignment_report_path),
         "statusCounts": status_counts,
+        "acceptanceCriteriaStatusCounts": acceptance_criteria_status_counts,
         "requirementCount": len(requirements),
+        "acceptanceCriteriaCount": len(acceptance_criteria),
         "blockerCount": len(blockers),
         "blockers": blocker_summaries,
         "nextActions": next_actions,
         "completionGate": completion_gate,
+        "acceptanceCriteria": acceptance_criteria,
         "requirements": requirements,
         "boundary": {
             "localEvidenceOnly": True,

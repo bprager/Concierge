@@ -60,6 +60,29 @@ class GoalCompletionAuditTests(unittest.TestCase):
         self.assertEqual(gate["externalBlockerCount"], 1)
         self.assertEqual(gate["localBlockerCount"], 0)
 
+    def test_report_tracks_original_acceptance_criteria(self):
+        report = goal_completion_audit.build_report()
+
+        by_id = {criterion["id"]: criterion for criterion in report["acceptanceCriteria"]}
+        self.assertEqual(
+            by_id["send_text_request_to_napoleon"]["requirementIds"],
+            ["descriptor_first_class_connection_state", "generated_bridge_client_alignment"],
+        )
+        self.assertEqual(
+            by_id["capability_intelligence_drafts_only"]["requirementIds"],
+            ["capability_intelligence_local_only", "chief_of_staff_steering_proposal_only"],
+        )
+        self.assertEqual(
+            by_id["evolution_status_runtime_status_route"]["status"],
+            "external_blocker",
+        )
+        self.assertEqual(
+            by_id["evolution_status_runtime_status_route"]["blockingRequirementIds"],
+            ["evolution_status_runtime_blocker"],
+        )
+        self.assertEqual(report["acceptanceCriteriaStatusCounts"]["external_blocker"], 1)
+        self.assertFalse(report["completionGate"]["acceptanceCriteriaSatisfied"])
+
     def test_external_runtime_blocker_includes_sanitized_required_action_packet(self):
         report = goal_completion_audit.build_report()
 
