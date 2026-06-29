@@ -88,6 +88,13 @@ class RuntimeHandoffStatusTests(unittest.TestCase):
             report["contractAlignment"]["napoleonRequiredActions"][0]["id"],
             "expose_evolution_proposal_status_runtime_target",
         )
+        self.assertFalse(report["readiness"]["canProceed"])
+        self.assertEqual(
+            [blocker["id"] for blocker in report["readiness"]["blockers"]],
+            ["token_file_unreadable", "expose_evolution_proposal_status_runtime_target"],
+        )
+        self.assertEqual(report["readiness"]["nextAction"], "provision_runtime_token_access")
+        self.assertIn("make runtime-handoff-status", report["readiness"]["validation"])
         self.assertTrue(report["boundary"]["doesNotContactNapoleon"])
         self.assertTrue(report["boundary"]["localHandoffEvidenceOnly"])
         rendered = json.dumps(report)

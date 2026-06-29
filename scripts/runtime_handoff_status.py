@@ -133,6 +133,72 @@ def _token_file_readable(token_file: str | None) -> bool:
     return path.is_file() and os.access(path, os.R_OK)
 
 
+def _build_readiness(
+    *,
+    connection: dict[str, Any],
+    auth_provisioning: dict[str, Any],
+    health: dict[str, Any],
+    contract_alignment: dict[str, Any],
+) -> dict[str, Any]:
+    blockers: list[dict[str, Any]] = []
+    if not connection["bridgeEndpointConfigured"] or not connection["evalEndpointConfigured"]:
+        blockers.append(
+            {
+                "id": "endpoint_not_configured",
+                "owner": "concierge_operator",
+                "external": False,
+                "nextAction": "Configure the governed Napoleon bridge and evaluator endpoints in local settings or .env.",
+            }
+        )
+    if auth_provisioning["tokenFileConfigured"] and not auth_provisioning["tokenFileReadable"]:
+        blockers.append(
+            {
+                "id": "token_file_unreadable",
+                "owner": "concierge_operator",
+                "external": False,
+                "nextAction": "Provision approved runtime token-file access for the Concierge process without copying token values into artifacts.",
+            }
+        )
+    if health["provided"] and health["safeToCall"] is not True:
+        blockers.append(
+            {
+                "id": "runtime_health_not_safe_to_call",
+                "owner": "napoleon_runtime",
+                "external": True,
+                "nextAction": "Restore Napoleon health to a safe prepare-only callable state before Concierge live validation.",
+            }
+        )
+    for action in contract_alignment["napoleonRequiredActions"]:
+        action_id = action.get("id")
+        if action_id:
+            blockers.append(
+                {
+                    "id": action_id,
+                    "owner": action.get("owner", "napoleon_runtime"),
+                    "external": action.get("owner") == "napoleon_runtime",
+                    "nextAction": "Expose and advertise the missing Napoleon governed runtime target before treating Concierge live promotion as ready.",
+                    "operationId": action.get("operationId"),
+                    "requestKind": action.get("requestKind"),
+                    "path": action.get("path"),
+                }
+            )
+    next_action = "ready_for_live_validation"
+    if blockers:
+        first = blockers[0]["id"]
+        next_action = "provision_runtime_token_access" if first == "token_file_unreadable" else str(first)
+    return {
+        "canProceed": not blockers,
+        "blockers": blockers,
+        "nextAction": next_action,
+        "validation": [
+            "make runtime-handoff-status",
+            "make goal-completion-audit",
+            "NAPOLEON_EVAL_ENDPOINT=<local-url> make eval-http",
+            "make check",
+        ],
+    }
+
+
 def build_report(
     *,
     env_path: Path = Path(".env"),
@@ -143,23 +209,33 @@ def build_report(
     token_file = env.get("NAPOLEON_RUNTIME_AUTH_TOKEN_FILE") or env.get("NAPOLEON_EVAL_TOKEN_FILE")
     health = _read_json(health_json_path)
     alignment = _read_json(alignment_report_path)
+    connection = {
+        "bridgeEndpointConfigured": bool(env.get("NAPOLEON_BRIDGE_ENDPOINT")),
+        "evalEndpointConfigured": bool(env.get("NAPOLEON_EVAL_ENDPOINT")),
+        "endpointHostRetained": False,
+    }
+    auth_provisioning = {
+        "tokenConfigured": bool(env.get("NAPOLEON_EVAL_TOKEN") or env.get("NAPOLEON_RUNTIME_AUTH_TOKEN")),
+        "tokenFileConfigured": bool(token_file),
+        "tokenFileReadable": _token_file_readable(token_file),
+        "tokenRetained": False,
+        "tokenFilePathRetained": False,
+    }
+    sanitized_health = _sanitize_health(health)
+    contract_alignment = _sanitize_alignment(alignment)
     return {
         "kind": OUTPUT_KIND,
         "generatedAt": datetime.now(timezone.utc).isoformat(),
-        "connection": {
-            "bridgeEndpointConfigured": bool(env.get("NAPOLEON_BRIDGE_ENDPOINT")),
-            "evalEndpointConfigured": bool(env.get("NAPOLEON_EVAL_ENDPOINT")),
-            "endpointHostRetained": False,
-        },
-        "authProvisioning": {
-            "tokenConfigured": bool(env.get("NAPOLEON_EVAL_TOKEN") or env.get("NAPOLEON_RUNTIME_AUTH_TOKEN")),
-            "tokenFileConfigured": bool(token_file),
-            "tokenFileReadable": _token_file_readable(token_file),
-            "tokenRetained": False,
-            "tokenFilePathRetained": False,
-        },
-        "health": _sanitize_health(health),
-        "contractAlignment": _sanitize_alignment(alignment),
+        "connection": connection,
+        "authProvisioning": auth_provisioning,
+        "health": sanitized_health,
+        "contractAlignment": contract_alignment,
+        "readiness": _build_readiness(
+            connection=connection,
+            auth_provisioning=auth_provisioning,
+            health=sanitized_health,
+            contract_alignment=contract_alignment,
+        ),
         "boundary": {
             "localHandoffEvidenceOnly": True,
             "doesNotContactNapoleon": True,

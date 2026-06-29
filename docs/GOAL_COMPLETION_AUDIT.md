@@ -27,7 +27,7 @@ NAPOLEON_CONTRACT_OPENAPI=/path/to/concierge-integration.openapi.yaml NAPOLEON_C
 NAPOLEON_RUNTIME_HEALTH_JSON=/tmp/concierge-napoleon-health.json NAPOLEON_CONTRACT_ALIGNMENT_REPORT=/tmp/concierge-napoleon-alignment.json make runtime-handoff-status
 ```
 
-The command writes `/tmp/concierge-runtime-handoff-status.json`. It records only whether bridge/evaluator endpoints are configured, whether a token file is configured/readable, sanitized health fields such as service ID, runtime owner, prepare-only status, and false side-effect booleans, plus sanitized contract-alignment status and Napoleon-owned required actions. The generator itself does not contact Napoleon and the report remains local handoff evidence only; it does not approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
+The command writes `/tmp/concierge-runtime-handoff-status.json`. It records only whether bridge/evaluator endpoints are configured, whether a token file is configured/readable, sanitized health fields such as service ID, runtime owner, prepare-only status, and false side-effect booleans, plus sanitized contract-alignment status and Napoleon-owned required actions. The report also includes a `readiness` section with `canProceed`, ordered sanitized blockers, one next action, and validation commands, so operators can distinguish local token-access work from Napoleon-owned contract work without exposing hosts or secrets. The generator itself does not contact Napoleon and the report remains local handoff evidence only; it does not approve anything, write memory, dispatch agents, send externally, apply evolution, or grant runtime authority.
 
 The JSON report includes:
 
