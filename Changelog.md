@@ -8,6 +8,7 @@ and this project adheres to Semantic Versioning, https://semver.org/spec/v2.0.0.
 
 ### Added
 
+- Added sanitized live-runtime auth provisioning evidence for missing token files, so preflight summaries and evaluator-validation imports distinguish configured-but-missing token files from unreadable token files without retaining token values or token-file paths.
 - Added sanitized Napoleon contract snapshot provenance to `make napoleon-contract-alignment`, `make goal-completion-audit`, and `make goal-blocker-handoff`, so handoffs identify the inspected snapshot by filename, modified time, and checksum without retaining contract contents or source paths.
 - Added sanitized token-file existence tracking to `make runtime-handoff-status`, `make goal-completion-audit`, and `make goal-blocker-handoff`, so missing approved token files are distinguished from unreadable token files without exposing token values or paths.
 - Added SHA-256 contract checksum traceability to Napoleon contract-alignment reports, goal-completion audit evidence, and blocker handoffs without retaining contract contents.

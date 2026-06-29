@@ -16,9 +16,10 @@ export interface EvaluatorValidationImportOptions {
 }
 
 export interface RuntimeAuthProvisioning {
-  source: "argument" | "environment" | "token_file" | "token_file_unreadable" | "not_configured";
+  source: "argument" | "environment" | "token_file" | "token_file_missing" | "token_file_unreadable" | "not_configured";
   tokenConfigured: boolean;
   tokenFileConfigured: boolean;
+  tokenFileExists: boolean;
   tokenFileReadable: boolean;
   tokenRetained: false;
   tokenFilePathRetained: false;
@@ -100,6 +101,7 @@ function cleanAuthProvisioningSource(value: unknown): RuntimeAuthProvisioning["s
     value === "argument" ||
     value === "environment" ||
     value === "token_file" ||
+    value === "token_file_missing" ||
     value === "token_file_unreadable" ||
     value === "not_configured"
   ) {
@@ -215,6 +217,7 @@ function sanitizeAuthProvisioning(value: unknown): RuntimeAuthProvisioning | nul
   if (
     typeof record.tokenConfigured !== "boolean" ||
     typeof record.tokenFileConfigured !== "boolean" ||
+    typeof record.tokenFileExists !== "boolean" ||
     typeof record.tokenFileReadable !== "boolean" ||
     record.tokenRetained !== false ||
     record.tokenFilePathRetained !== false
@@ -225,6 +228,7 @@ function sanitizeAuthProvisioning(value: unknown): RuntimeAuthProvisioning | nul
     source,
     tokenConfigured: record.tokenConfigured,
     tokenFileConfigured: record.tokenFileConfigured,
+    tokenFileExists: record.tokenFileExists,
     tokenFileReadable: record.tokenFileReadable,
     tokenRetained: false,
     tokenFilePathRetained: false,
@@ -233,6 +237,9 @@ function sanitizeAuthProvisioning(value: unknown): RuntimeAuthProvisioning | nul
 
 function authProvisioningSummary(authProvisioning: RuntimeAuthProvisioning | undefined): string {
   if (!authProvisioning) return "";
+  if (authProvisioning.source === "token_file_missing") {
+    return " Runtime auth token file is configured but missing.";
+  }
   if (authProvisioning.source === "token_file_unreadable") {
     return " Runtime auth token file is configured but unreadable.";
   }

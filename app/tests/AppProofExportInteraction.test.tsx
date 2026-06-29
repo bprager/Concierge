@@ -11672,9 +11672,10 @@ test("renders sanitized token file provisioning from live-runtime validation imp
           runtimeValidation: {
             source: "real_runtime",
             authProvisioning: {
-              source: "token_file_unreadable",
+              source: "token_file_missing",
               tokenConfigured: false,
               tokenFileConfigured: true,
+              tokenFileExists: false,
               tokenFileReadable: false,
               tokenRetained: false,
               tokenFilePathRetained: false,
@@ -11701,10 +11702,10 @@ test("renders sanitized token file provisioning from live-runtime validation imp
 
     await user.click(view.getByText("Import evaluator validation"));
 
-    await waitFor(() => assert.ok(view.getByText("Evaluator HTTP validation failed. Runtime auth token file is configured but unreadable.")));
+    await waitFor(() => assert.ok(view.getByText("Evaluator HTTP validation failed. Runtime auth token file is configured but missing.")));
     const importPanel = view.getByText("Evaluator validation import").closest(".proof-comparison") as HTMLElement | null;
     assert.ok(importPanel);
-    assert.ok(within(importPanel).getByText("Runtime auth: token file configured but unreadable; token and token-file path not retained."));
+    assert.ok(within(importPanel).getByText("Runtime auth: token file configured but missing; token and token-file path not retained."));
     assert.equal(document.body.textContent?.includes(tokenPath), false);
   } finally {
     cleanup();

@@ -524,6 +524,7 @@ def auth_provisioning_metadata(
         else bridge_evidence_capture.token_file_from_env(env)
     )
     token_file_configured = token_file is not None
+    token_file_exists = bool(Path(token_file).is_file() if token_file_configured and token_file is not None else False)
     token_file_readable = bool(
         bridge_evidence_capture.read_auth_token_file(token_file)
         if token_file_configured and token_file is not None
@@ -533,6 +534,8 @@ def auth_provisioning_metadata(
         source = "argument"
     elif token_file_configured and token_file_readable:
         source = "token_file"
+    elif token_file_configured and not token_file_exists:
+        source = "token_file_missing"
     elif token_file_configured:
         source = "token_file_unreadable"
     elif env_token_configured:
@@ -543,6 +546,7 @@ def auth_provisioning_metadata(
         "source": source,
         "tokenConfigured": direct_token_configured or env_token_configured or token_file_readable,
         "tokenFileConfigured": token_file_configured,
+        "tokenFileExists": token_file_exists,
         "tokenFileReadable": token_file_readable,
         "tokenRetained": False,
         "tokenFilePathRetained": False,

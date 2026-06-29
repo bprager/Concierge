@@ -252,9 +252,10 @@ test("accepts sanitized auth provisioning metadata from failed live runtime summ
       runtimeValidation: {
         source: "real_runtime",
         authProvisioning: {
-          source: "token_file_unreadable",
+          source: "token_file_missing",
           tokenConfigured: false,
           tokenFileConfigured: true,
+          tokenFileExists: false,
           tokenFileReadable: false,
           tokenRetained: false,
           tokenFilePathRetained: false,
@@ -279,14 +280,15 @@ test("accepts sanitized auth provisioning metadata from failed live runtime summ
   );
 
   assert.equal(result.status, "accepted");
-  assert.equal(result.authProvisioning?.source, "token_file_unreadable");
+  assert.equal(result.authProvisioning?.source, "token_file_missing");
   assert.equal(result.authProvisioning?.tokenConfigured, false);
   assert.equal(result.authProvisioning?.tokenFileConfigured, true);
+  assert.equal(result.authProvisioning?.tokenFileExists, false);
   assert.equal(result.authProvisioning?.tokenFileReadable, false);
   assert.equal(result.authProvisioning?.tokenRetained, false);
   assert.equal(result.authProvisioning?.tokenFilePathRetained, false);
   assert.equal(JSON.stringify(result).includes(tokenPath), false);
-  assert.ok(result.summary.includes("token file is configured but unreadable"));
+  assert.ok(result.summary.includes("token file is configured but missing"));
 });
 
 test("rejects auth provisioning metadata that retained token details", () => {
@@ -298,6 +300,7 @@ test("rejects auth provisioning metadata that retained token details", () => {
           source: "token_file",
           tokenConfigured: true,
           tokenFileConfigured: true,
+          tokenFileExists: true,
           tokenFileReadable: true,
           tokenRetained: true,
           tokenFilePathRetained: false,

@@ -238,6 +238,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(summary["runtimeValidation"]["authProvisioning"]["source"], "token_file")
         self.assertTrue(summary["runtimeValidation"]["authProvisioning"]["tokenConfigured"])
         self.assertTrue(summary["runtimeValidation"]["authProvisioning"]["tokenFileConfigured"])
+        self.assertTrue(summary["runtimeValidation"]["authProvisioning"]["tokenFileExists"])
         self.assertTrue(summary["runtimeValidation"]["authProvisioning"]["tokenFileReadable"])
         self.assertFalse(summary["runtimeValidation"]["authProvisioning"]["tokenRetained"])
         self.assertFalse(summary["runtimeValidation"]["authProvisioning"]["tokenFilePathRetained"])
@@ -862,7 +863,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             self.assertFalse(preflight["externalSendPerformed"])
             self.assertFalse((Path(tmpdir) / "summary.json").exists())
 
-    def test_missing_endpoint_preflight_reports_unreadable_token_file_without_retaining_path(self):
+    def test_missing_endpoint_preflight_reports_missing_token_file_without_retaining_path(self):
         missing_token_path = "/tmp/concierge-runtime-token-that-does-not-exist"
         with tempfile.TemporaryDirectory() as tmpdir:
             with contextlib.redirect_stderr(io.StringIO()):
@@ -875,9 +876,10 @@ class LiveRuntimeValidationTest(unittest.TestCase):
 
         preflight_json = json.dumps(preflight)
         self.assertEqual(exit_code, 2)
-        self.assertEqual(preflight["authProvisioning"]["source"], "token_file_unreadable")
+        self.assertEqual(preflight["authProvisioning"]["source"], "token_file_missing")
         self.assertFalse(preflight["authProvisioning"]["tokenConfigured"])
         self.assertTrue(preflight["authProvisioning"]["tokenFileConfigured"])
+        self.assertFalse(preflight["authProvisioning"]["tokenFileExists"])
         self.assertFalse(preflight["authProvisioning"]["tokenFileReadable"])
         self.assertFalse(preflight["authProvisioning"]["tokenRetained"])
         self.assertFalse(preflight["authProvisioning"]["tokenFilePathRetained"])

@@ -2060,6 +2060,9 @@ function formatNapoleonRequiredActionAnswer(
 
 function formatRuntimeAuthProvisioning(authProvisioning: RuntimeAuthProvisioning | undefined): string | null {
   if (!authProvisioning) return null;
+  if (authProvisioning.source === "token_file_missing") {
+    return "Runtime auth: token file configured but missing; token and token-file path not retained.";
+  }
   if (authProvisioning.source === "token_file_unreadable") {
     return "Runtime auth: token file configured but unreadable; token and token-file path not retained.";
   }
