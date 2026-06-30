@@ -143,6 +143,7 @@ RUNTIME_ARTIFACT_FILENAMES = [
     "summary.json",
     "promotion_review.md",
 ]
+DESKTOP_RUNTIME_TRANSPORT_KIND = "concierge.desktop-runtime-transport-validation.v1"
 FORBIDDEN_ARTIFACT_FIELDS = {
     "authorization",
     "auth",
@@ -558,6 +559,7 @@ def live_runtime_preflight(
     eval_endpoint: str | None,
     endpoint_resolution: dict[str, Any] | None = None,
     auth_provisioning: dict[str, Any] | None = None,
+    packaged_desktop_transport: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     bridge_configured = bridge_endpoint is not None
     eval_configured = eval_endpoint is not None
@@ -568,6 +570,12 @@ def live_runtime_preflight(
         "bridgeEndpointExplicitlyConfigured": bridge_configured,
         "evaluatorEndpointExplicitlyConfigured": eval_configured,
     }
+    packaged_transport = packaged_desktop_transport or packaged_desktop_transport_default(False)
+    next_validation_command = (
+        "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make packaged-live-runtime-validation"
+        if packaged_transport.get("required")
+        else "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make live-runtime-validation"
+    )
     return {
         "status": "ready_to_attempt" if bridge_configured else "blocked",
         "reason": "ready" if bridge_configured else "missing_bridge_endpoint",
@@ -582,7 +590,7 @@ def live_runtime_preflight(
             "acceptedBridgeEndpointForms": ACCEPTED_BRIDGE_ENDPOINT_FORMS,
             "descriptorDiscoveryRequired": True,
             "localHarnessSubstituteAllowed": False,
-            "nextValidationCommand": "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make live-runtime-validation",
+            "nextValidationCommand": next_validation_command,
             "boundary": "A local harness or simulation can test shape only; it cannot prove real Napoleon runtime readiness.",
             **resolution,
             **bridge_target_metadata(bridge_endpoint),
@@ -591,6 +599,7 @@ def live_runtime_preflight(
         "endpointHostStored": False,
         "tokenStored": False,
         "authProvisioning": auth_provisioning or auth_provisioning_metadata(None, None, {}),
+        "packagedDesktopTransport": packaged_transport,
         "approvalCaptured": False,
         "memoryWritePerformed": False,
         "agentDispatchPerformed": False,
@@ -600,14 +609,129 @@ def live_runtime_preflight(
     }
 
 
+def packaged_desktop_transport_default(required: bool) -> dict[str, Any]:
+    return {
+        "status": "missing" if required else "not_required",
+        "required": required,
+        "reportKind": None,
+        "reportStatus": None,
+        "usesTauriCommandPath": False,
+        "browserProxyRequired": None,
+        "nativeAuthFallbackWhenWebviewOmitsAuth": False,
+        "webviewAuthHeadersStrippedWhenNativeAuthEnabled": False,
+        "packagedNoBundleBuildPassed": False,
+        "endpointHostRetained": False,
+        "tokenRetained": False,
+        "tokenFilePathRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        "approvalCaptured": False,
+        "memoryWritePerformed": False,
+        "agentDispatchPerformed": False,
+        "externalSendPerformed": False,
+        "runtimeAuthorityGranted": False,
+        "boundary": "Packaged desktop transport evidence was not provided for this run.",
+    }
+
+
+def packaged_desktop_transport_summary(report_path: Path | None, required: bool) -> dict[str, Any]:
+    if report_path is None:
+        return packaged_desktop_transport_default(required)
+    try:
+        report = load_json(report_path)
+    except Exception as exc:
+        return {
+            **packaged_desktop_transport_default(required),
+            "status": "failed",
+            "failureReason": exc.__class__.__name__,
+        }
+    if not isinstance(report, dict):
+        return {
+            **packaged_desktop_transport_default(required),
+            "status": "failed",
+            "failureReason": "invalid_report",
+        }
+
+    transport = report.get("packagedDesktopTransport") if isinstance(report.get("packagedDesktopTransport"), dict) else {}
+    boundary = report.get("authorityBoundary") if isinstance(report.get("authorityBoundary"), dict) else {}
+    checks = report.get("checks") if isinstance(report.get("checks"), list) else []
+    all_checks_passed = all(isinstance(check, dict) and check.get("status") == "passed" for check in checks)
+    no_retention = not any(
+        transport.get(flag) is True
+        for flag in [
+            "endpointHostRetained",
+            "tokenRetained",
+            "tokenFilePathRetained",
+            "requestBodyRetained",
+            "responseBodyRetained",
+        ]
+    )
+    no_side_effects = not any(
+        boundary.get(flag) is True
+        for flag in [
+            "runtimeAuthorityGranted",
+            "approvalCaptured",
+            "memoryWritePerformed",
+            "agentDispatchPerformed",
+            "externalSendPerformed",
+        ]
+    )
+    passed = (
+        report.get("kind") == DESKTOP_RUNTIME_TRANSPORT_KIND
+        and report.get("status") == "passed"
+        and all_checks_passed
+        and transport.get("usesTauriCommandPath") is True
+        and transport.get("browserProxyRequired") is False
+        and transport.get("nativeAuthFallbackWhenWebviewOmitsAuth") is True
+        and transport.get("webviewAuthHeadersStrippedWhenNativeAuthEnabled") is True
+        and transport.get("packagedNoBundleBuildPassed") is True
+        and no_retention
+        and no_side_effects
+    )
+    return {
+        "status": "passed" if passed else "failed",
+        "required": required,
+        "reportKind": report.get("kind"),
+        "reportStatus": report.get("status"),
+        "checkCount": len(checks),
+        "checksPassed": all_checks_passed,
+        "usesTauriCommandPath": transport.get("usesTauriCommandPath") is True,
+        "browserProxyRequired": transport.get("browserProxyRequired") is True,
+        "nativeAuthFallbackWhenWebviewOmitsAuth": transport.get("nativeAuthFallbackWhenWebviewOmitsAuth") is True,
+        "webviewAuthHeadersStrippedWhenNativeAuthEnabled": (
+            transport.get("webviewAuthHeadersStrippedWhenNativeAuthEnabled") is True
+        ),
+        "packagedNoBundleBuildPassed": transport.get("packagedNoBundleBuildPassed") is True,
+        "endpointHostRetained": transport.get("endpointHostRetained") is True,
+        "tokenRetained": transport.get("tokenRetained") is True,
+        "tokenFilePathRetained": transport.get("tokenFilePathRetained") is True,
+        "requestBodyRetained": transport.get("requestBodyRetained") is True,
+        "responseBodyRetained": transport.get("responseBodyRetained") is True,
+        "approvalCaptured": boundary.get("approvalCaptured") is True,
+        "memoryWritePerformed": boundary.get("memoryWritePerformed") is True,
+        "agentDispatchPerformed": boundary.get("agentDispatchPerformed") is True,
+        "externalSendPerformed": boundary.get("externalSendPerformed") is True,
+        "runtimeAuthorityGranted": boundary.get("runtimeAuthorityGranted") is True,
+        "failureReason": "none" if passed else "packaged_desktop_transport_report_failed",
+        "boundary": "Packaged desktop transport evidence is sanitized build/transport proof only and does not contact Napoleon or grant authority.",
+    }
+
+
 def write_preflight(
     path: Path,
     bridge_endpoint: str | None,
     eval_endpoint: str | None,
     endpoint_resolution: dict[str, Any] | None = None,
     auth_provisioning: dict[str, Any] | None = None,
+    packaged_desktop_transport: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    preflight = live_runtime_preflight(bridge_endpoint, eval_endpoint, endpoint_resolution, auth_provisioning)
+    preflight = live_runtime_preflight(
+        bridge_endpoint,
+        eval_endpoint,
+        endpoint_resolution,
+        auth_provisioning,
+        packaged_desktop_transport,
+    )
     path.write_text(json.dumps(preflight, indent=2) + "\n", encoding="utf-8")
     return preflight
 
@@ -1535,6 +1659,7 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
     packets = summary["contractPacketSubmissions"]
     evaluator = summary["httpEvaluator"]
     artifact_privacy = summary["artifactPrivacy"]
+    packaged_desktop = summary.get("packagedDesktopTransport", {})
     evaluator_failure_reason = evaluator.get("failureReason")
     evaluator_blocker = "Evaluator HTTP mode did not pass."
     if evaluator_failure_reason == "http_evaluator_handoff_not_advertised":
@@ -1550,6 +1675,10 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
         (packets["status"] == "passed", "Governed contract packet submission validation did not pass."),
         (evaluator["status"] == "passed", evaluator_blocker),
         (artifact_privacy["status"] == "passed", "Artifact privacy audit did not pass."),
+        (
+            not packaged_desktop.get("required") or packaged_desktop.get("status") == "passed",
+            "Packaged desktop transport evidence did not pass.",
+        ),
         (
             len(summary.get("napoleonRequiredActions", [])) == 0,
             "Napoleon-owned required actions remain before promotion.",
@@ -1579,6 +1708,7 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
     packets = summary["contractPacketSubmissions"]
     evaluator = summary["httpEvaluator"]
     artifact_privacy = summary["artifactPrivacy"]
+    packaged_desktop = summary.get("packagedDesktopTransport", packaged_desktop_transport_default(False))
     boundary = summary["promotionBoundary"]
     readiness = summary["promotionReadiness"]
     napoleon_actions = summary.get("napoleonRequiredActions", [])
@@ -1637,6 +1767,10 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- Missing artifact count: `{evaluator['missing_artifact_count']}`",
         f"- Regression count: `{evaluator['regression_count']}`",
         f"- Artifact privacy audit: `{artifact_privacy['status']}`",
+        f"- Packaged desktop transport required: `{str(packaged_desktop['required']).lower()}`",
+        f"- Packaged desktop transport status: `{packaged_desktop['status']}`",
+        f"- Packaged desktop no-bundle build passed: `{str(packaged_desktop['packagedNoBundleBuildPassed']).lower()}`",
+        f"- Browser proxy required by packaged transport: `{str(packaged_desktop['browserProxyRequired']).lower()}`",
         "",
         "## Napoleon Required Actions",
         "",
@@ -1649,6 +1783,10 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         checkbox(packets["status"] == "passed", "Governed contract packet submissions passed."),
         checkbox(evaluator["status"] == "passed", "Evaluator HTTP mode passed."),
         checkbox(artifact_privacy["status"] == "passed", "Artifact privacy audit passed."),
+        checkbox(
+            not packaged_desktop.get("required") or packaged_desktop.get("status") == "passed",
+            "Packaged desktop transport evidence passed when required.",
+        ),
         checkbox(runtime["source"] == "real_runtime", "Evidence source is real Napoleon runtime, not local harness or simulation."),
         checkbox(not boundary["approvalCaptured"], "No approval was captured by Concierge."),
         checkbox(not boundary["memoryWritePerformed"], "No memory write was performed by Concierge."),
@@ -1687,6 +1825,7 @@ def write_summary(
     runtime_validation_source: str,
     artifact_privacy: dict[str, Any],
     auth_provisioning: dict[str, Any] | None = None,
+    packaged_desktop_transport: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     summary = {
         "boundary": BOUNDARY,
@@ -1720,6 +1859,7 @@ def write_summary(
             **eval_target_summary(eval_report_path),
         },
         "artifactPrivacy": artifact_privacy,
+        "packagedDesktopTransport": packaged_desktop_transport or packaged_desktop_transport_default(False),
         "promotionBoundary": {
             "requiresHumanReview": True,
             "requiresNapoleonOrReleaseApprovalWhenApplicable": True,
@@ -1759,6 +1899,17 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     parser.add_argument("--auth-token-file", default=None, help="Optional bearer token file; token contents are never written")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help="Directory for sanitized validation artifacts")
     parser.add_argument(
+        "--desktop-runtime-transport-report",
+        type=Path,
+        default=None,
+        help="Optional sanitized packaged desktop transport report to include in promotion readiness.",
+    )
+    parser.add_argument(
+        "--require-packaged-desktop-transport",
+        action="store_true",
+        help="Block promotion readiness unless the packaged desktop transport report passes.",
+    )
+    parser.add_argument(
         "--runtime-validation-source",
         choices=RUNTIME_VALIDATION_SOURCES,
         default="real_runtime",
@@ -1769,6 +1920,10 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     active_env = os.environ if env is None else env
     auth_provisioning = auth_provisioning_metadata(args.auth_token, args.auth_token_file, active_env)
     auth_token = bridge_evidence_capture.resolve_auth_token(args.auth_token, args.auth_token_file, active_env)
+    packaged_desktop_transport = packaged_desktop_transport_summary(
+        args.desktop_runtime_transport_report,
+        args.require_packaged_desktop_transport,
+    )
     endpoint_config = resolve_endpoint_configuration(args.bridge_endpoint, args.eval_endpoint, active_env)
     bridge_endpoint = endpoint_config["bridgeEndpoint"]
     eval_endpoint = endpoint_config["evalEndpoint"]
@@ -1778,7 +1933,14 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         out_dir.mkdir(parents=True, exist_ok=True)
         clear_runtime_artifacts(out_dir)
         preflight_path = out_dir / "preflight.json"
-        write_preflight(preflight_path, bridge_endpoint, eval_endpoint, endpoint_resolution, auth_provisioning)
+        write_preflight(
+            preflight_path,
+            bridge_endpoint,
+            eval_endpoint,
+            endpoint_resolution,
+            auth_provisioning,
+            packaged_desktop_transport,
+        )
         print(
             "live runtime validation requires --bridge-endpoint, NAPOLEON_BRIDGE_ENDPOINT, "
             f"or NAPOLEON_EVAL_ENDPOINT; sanitized preflight written to {preflight_path}",
@@ -1789,7 +1951,14 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     clear_runtime_artifacts(out_dir)
-    write_preflight(out_dir / "preflight.json", bridge_endpoint, eval_endpoint, endpoint_resolution, auth_provisioning)
+    write_preflight(
+        out_dir / "preflight.json",
+        bridge_endpoint,
+        eval_endpoint,
+        endpoint_resolution,
+        auth_provisioning,
+        packaged_desktop_transport,
+    )
     evidence_path = out_dir / "bridge_evidence.json"
     capability_path = out_dir / "capability_discovery.json"
     contract_packet_path = out_dir / "contract_packet_submissions.json"
@@ -1913,6 +2082,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         args.runtime_validation_source,
         artifact_privacy,
         auth_provisioning,
+        packaged_desktop_transport,
     )
     print(json.dumps({
         "summary": str(summary_path),
@@ -1921,6 +2091,7 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         "contract_packet_status": summary["contractPacketSubmissions"]["status"],
         "http_evaluator_status": summary["httpEvaluator"]["status"],
         "artifact_privacy_status": summary["artifactPrivacy"]["status"],
+        "packaged_desktop_transport_status": summary["packagedDesktopTransport"]["status"],
         "boundary": BOUNDARY,
     }, indent=2))
 
@@ -1933,6 +2104,11 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
     if eval_exit_code not in (None, 0):
         return eval_exit_code
     if summary["artifactPrivacy"]["status"] != "passed":
+        return 1
+    if (
+        summary["packagedDesktopTransport"].get("required")
+        and summary["packagedDesktopTransport"].get("status") != "passed"
+    ):
         return 1
     return 0
 

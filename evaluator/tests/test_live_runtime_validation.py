@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest import mock
 
 from evaluator.tests.test_bridge_evidence_capture import RecordingCosHarness
-from scripts import live_runtime_validation, local_bridge_harness
+from scripts import desktop_runtime_transport_validation, live_runtime_validation, local_bridge_harness
 
 
 class LiveRuntimeValidationTest(unittest.TestCase):
@@ -246,6 +246,88 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertFalse(summary["httpEvaluator"]["tokenRetained"])
         self.assertFalse("token_from_file" in summary_json)
         self.assertFalse(token_file.name in summary_json)
+
+    def test_main_carries_packaged_desktop_transport_evidence_into_summary(self):
+        with RecordingCosHarness(
+            descriptor_ready=True,
+            supported_handoffs=[
+                "text_turn",
+                "evaluation_review",
+                "chief_of_staff_request",
+                "governance_evaluation",
+            ],
+        ) as cos_harness:
+            with local_bridge_harness.running_harness() as eval_base_url:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    report_path = Path(tmpdir) / "desktop-runtime.json"
+                    report = desktop_runtime_transport_validation.build_report(
+                        runner=lambda command, cwd: mock.Mock(returncode=0),
+                    )
+                    desktop_runtime_transport_validation.write_report(report, report_path)
+                    exit_code = live_runtime_validation.main([
+                        "--bridge-endpoint", f"{cos_harness.base_url}/cos/text-turn",
+                        "--eval-endpoint", f"{eval_base_url}/v1/concierge/evaluate",
+                        "--out-dir", tmpdir,
+                        "--auth-token", "token_packaged_desktop_summary",
+                        "--runtime-validation-source", "local_harness",
+                        "--desktop-runtime-transport-report", str(report_path),
+                        "--require-packaged-desktop-transport",
+                    ])
+
+                    summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+                    review = (Path(tmpdir) / "promotion_review.md").read_text(encoding="utf-8")
+
+        self.assertEqual(exit_code, 0)
+        packaged = summary["packagedDesktopTransport"]
+        self.assertEqual(packaged["status"], "passed")
+        self.assertTrue(packaged["required"])
+        self.assertTrue(packaged["usesTauriCommandPath"])
+        self.assertFalse(packaged["browserProxyRequired"])
+        self.assertTrue(packaged["packagedNoBundleBuildPassed"])
+        self.assertFalse(packaged["endpointHostRetained"])
+        self.assertFalse(packaged["tokenRetained"])
+        self.assertFalse(packaged["requestBodyRetained"])
+        self.assertFalse(packaged["responseBodyRetained"])
+        self.assertFalse(packaged["approvalCaptured"])
+        self.assertFalse(packaged["memoryWritePerformed"])
+        self.assertFalse(packaged["agentDispatchPerformed"])
+        self.assertFalse(packaged["externalSendPerformed"])
+        self.assertNotIn("Packaged desktop transport evidence did not pass.", summary["promotionReadiness"]["blockingReasons"])
+        self.assertIn("- Packaged desktop transport required: `true`", review)
+        self.assertIn("- Packaged desktop transport status: `passed`", review)
+        self.assertNotIn("token_packaged_desktop_summary", json.dumps(summary))
+
+    def test_required_packaged_desktop_transport_blocks_readiness_when_report_is_missing(self):
+        with RecordingCosHarness(
+            descriptor_ready=True,
+            supported_handoffs=[
+                "text_turn",
+                "evaluation_review",
+                "chief_of_staff_request",
+                "governance_evaluation",
+            ],
+        ) as cos_harness:
+            with local_bridge_harness.running_harness() as eval_base_url:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    exit_code = live_runtime_validation.main([
+                        "--bridge-endpoint", f"{cos_harness.base_url}/cos/text-turn",
+                        "--eval-endpoint", f"{eval_base_url}/v1/concierge/evaluate",
+                        "--out-dir", tmpdir,
+                        "--auth-token", "token_missing_packaged_desktop",
+                        "--runtime-validation-source", "real_runtime",
+                        "--require-packaged-desktop-transport",
+                    ])
+
+                    summary = json.loads((Path(tmpdir) / "summary.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 1)
+        self.assertEqual(summary["packagedDesktopTransport"]["status"], "missing")
+        self.assertTrue(summary["packagedDesktopTransport"]["required"])
+        self.assertIn(
+            "Packaged desktop transport evidence did not pass.",
+            summary["promotionReadiness"]["blockingReasons"],
+        )
+        self.assertNotIn("token_missing_packaged_desktop", json.dumps(summary))
 
     def test_main_blocks_when_contract_packet_handoffs_are_not_advertised(self):
         with RecordingCosHarness(descriptor_ready=True, supported_handoffs=["text_turn", "evaluation_review"]) as cos_harness:
@@ -863,11 +945,46 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             self.assertFalse(preflight["runtimeAlignment"]["evaluatorTokenRetained"])
             self.assertFalse(preflight["endpointHostStored"])
             self.assertFalse(preflight["tokenStored"])
+            self.assertEqual(preflight["packagedDesktopTransport"]["status"], "not_required")
+            self.assertFalse(preflight["packagedDesktopTransport"]["required"])
             self.assertFalse(preflight["approvalCaptured"])
             self.assertFalse(preflight["memoryWritePerformed"])
             self.assertFalse(preflight["agentDispatchPerformed"])
             self.assertFalse(preflight["externalSendPerformed"])
             self.assertFalse((Path(tmpdir) / "summary.json").exists())
+
+    def test_packaged_live_preflight_points_to_packaged_validation_when_required(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report_path = Path(tmpdir) / "desktop-runtime.json"
+            report = desktop_runtime_transport_validation.build_report(
+                runner=lambda command, cwd: mock.Mock(returncode=0),
+            )
+            desktop_runtime_transport_validation.write_report(report, report_path)
+            with contextlib.redirect_stderr(io.StringIO()):
+                exit_code = live_runtime_validation.main(
+                    [
+                        "--out-dir",
+                        tmpdir,
+                        "--desktop-runtime-transport-report",
+                        str(report_path),
+                        "--require-packaged-desktop-transport",
+                    ],
+                    env={},
+                )
+
+            preflight = json.loads((Path(tmpdir) / "preflight.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 2)
+        self.assertEqual(
+            preflight["runtimeAlignment"]["nextValidationCommand"],
+            "NAPOLEON_BRIDGE_ENDPOINT=<base-url-or-operation-url> make packaged-live-runtime-validation",
+        )
+        self.assertEqual(preflight["packagedDesktopTransport"]["status"], "passed")
+        self.assertTrue(preflight["packagedDesktopTransport"]["required"])
+        self.assertFalse(preflight["packagedDesktopTransport"]["endpointHostRetained"])
+        self.assertFalse(preflight["packagedDesktopTransport"]["tokenRetained"])
+        self.assertFalse(preflight["packagedDesktopTransport"]["requestBodyRetained"])
+        self.assertFalse(preflight["packagedDesktopTransport"]["responseBodyRetained"])
 
     def test_missing_endpoint_preflight_reports_missing_token_file_without_retaining_path(self):
         missing_token_path = "/tmp/concierge-runtime-token-that-does-not-exist"

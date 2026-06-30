@@ -1,4 +1,4 @@
-.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment runtime-handoff-status goal-completion-audit goal-blocker-handoff goal-blocker-goal-prompt desktop-runtime-transport-validation generate-bridge-operations bridge-operations-check eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
+.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment runtime-handoff-status goal-completion-audit goal-blocker-handoff goal-blocker-goal-prompt desktop-runtime-transport-validation packaged-live-runtime-validation generate-bridge-operations bridge-operations-check eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
 
 NAPOLEON_CONTRACT_ALIGNMENT_OUT ?= /tmp/concierge-napoleon-alignment.json
 GOAL_COMPLETION_RUNTIME_HANDOFF_STATUS ?= /tmp/concierge-runtime-handoff-status.json
@@ -49,6 +49,9 @@ goal-blocker-goal-prompt: goal-completion-audit
 
 desktop-runtime-transport-validation:
 	uv run python scripts/desktop_runtime_transport_validation.py --out /tmp/concierge-desktop-runtime-transport-validation.json
+
+packaged-live-runtime-validation: desktop-runtime-transport-validation
+	PYTHONPATH=evaluator uv run --with PyYAML --with requests --with jsonschema python scripts/live_runtime_validation.py --desktop-runtime-transport-report /tmp/concierge-desktop-runtime-transport-validation.json --require-packaged-desktop-transport
 
 generate-bridge-operations:
 	uv run --with PyYAML python scripts/generate_bridge_operations.py
