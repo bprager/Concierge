@@ -35,8 +35,8 @@ EVALUATION_REVIEW_HANDOFF_NAMES = {"evaluation_review", "evaluation_reviews"}
 CHIEF_OF_STAFF_REQUEST_HANDOFF_NAMES = {"chief_of_staff_request", "chief_of_staff_requests"}
 GOVERNANCE_EVALUATION_HANDOFF_NAMES = {"governance_evaluation", "governance_evaluations"}
 EVALUATION_REVIEW_HANDOFF_REQUIRED_ACTION = (
-    "Napoleon must advertise evaluation_review in supportedHandoffs, supported_handoffs, "
-    "required_for, or descriptor endpoint metadata for /chief-of-staff/reviews/evaluation."
+    "Napoleon must expose /chief-of-staff/reviews/evaluation and advertise evaluation_review "
+    "in supportedHandoffs, supported_handoffs, required_for, or descriptor endpoint metadata."
 )
 CHIEF_OF_STAFF_REQUEST_HANDOFF_REQUIRED_ACTION = (
     "Napoleon must advertise chief_of_staff_request in supportedHandoffs, supported_handoffs, "
@@ -282,7 +282,7 @@ def evaluator_target_metadata(eval_endpoint: str | None) -> dict[str, Any]:
 
 
 def napoleon_required_actions_for_evaluator_failure(failure_reason: str | None) -> list[dict[str, Any]]:
-    if failure_reason != "http_evaluator_handoff_not_advertised":
+    if failure_reason not in {"http_evaluator_handoff_not_advertised", "http_evaluator_route_not_found"}:
         return []
     return [dict(EVALUATION_REVIEW_NAPOLEON_ACTION)]
 
@@ -665,7 +665,7 @@ def write_sanitized_evaluator_failure_report(
     handoff = descriptor_handoff or {}
     required_action = (
         EVALUATION_REVIEW_HANDOFF_REQUIRED_ACTION
-        if failure_reason == "http_evaluator_handoff_not_advertised"
+        if failure_reason in {"http_evaluator_handoff_not_advertised", "http_evaluator_route_not_found"}
         else None
     )
     napoleon_required_actions = napoleon_required_actions_for_evaluator_failure(failure_reason)

@@ -452,6 +452,12 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(report["status"], "failed")
         self.assertEqual(report["failureReason"], "http_evaluator_route_not_found")
         self.assertEqual(report["evaluationTarget"]["path"], "/chief-of-staff/reviews/evaluation")
+        self.assertEqual(len(report["evaluationTarget"]["napoleonRequiredActions"]), 1)
+        napoleon_action = report["evaluationTarget"]["napoleonRequiredActions"][0]
+        self.assertEqual(napoleon_action["id"], "advertise_evaluation_review_handoff")
+        self.assertEqual(napoleon_action["targetPath"], "/chief-of-staff/reviews/evaluation")
+        self.assertEqual(napoleon_action["requestKind"], "evaluation_review_handoff")
+        self.assertIn(napoleon_action, summary["napoleonRequiredActions"])
         self.assertNotIn(cos_harness.base_url, summary_json)
         self.assertNotIn("token_missing_eval", summary_json)
         self.assertNotIn("127.0.0.1", json.dumps(report))
