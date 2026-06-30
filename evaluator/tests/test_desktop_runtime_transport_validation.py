@@ -7,22 +7,29 @@ from scripts import desktop_runtime_transport_validation
 
 
 class DesktopRuntimeTransportValidationTest(unittest.TestCase):
-    def test_report_records_packaged_transport_without_secret_retention(self):
+    def packaged_binary_probe_runner(self):
+        binary_calls = []
+
         def runner(command, cwd):
             if str(command[0]).endswith("concierge-desktop"):
-                return subprocess.CompletedProcess(
-                    command,
-                    0,
-                    stdout='{"endpointConfigured":true,"authConfigured":true}',
-                    stderr="",
+                binary_calls.append(list(command))
+                stdout = (
+                    '{"endpointConfigured":true,"authConfigured":true}'
+                    if len(binary_calls) == 1
+                    else '{"requestSucceeded":true,"statusOk":true}'
                 )
+                return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr="")
             return subprocess.CompletedProcess(command, 0, stdout="secret output", stderr="secret error")
 
+        return runner
+
+    def test_report_records_packaged_transport_without_secret_retention(self):
+        runner = self.packaged_binary_probe_runner()
         report = desktop_runtime_transport_validation.build_report(runner=runner, tauri_dir=Path("/tmp/tauri"))
 
         self.assertEqual(report["kind"], desktop_runtime_transport_validation.OUTPUT_KIND)
         self.assertEqual(report["status"], "passed")
-        self.assertEqual(len(report["checks"]), 5)
+        self.assertEqual(len(report["checks"]), 6)
         for check in report["checks"]:
             self.assertEqual(check["status"], "passed")
             self.assertFalse(check["stdoutRetained"])
@@ -42,6 +49,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertTrue(transport["endpointHostOmittedFromInvokePayload"])
         self.assertTrue(transport["nativeLocalEndpointReadiness"])
         self.assertTrue(transport["packagedBinaryConfigProbePassed"])
+        self.assertTrue(transport["packagedBinaryTransportProbePassed"])
         self.assertTrue(transport["explicitWebviewAuthPreserved"])
         self.assertTrue(transport["governedRouteAllowlistEnforced"])
         self.assertTrue(transport["governedRouteMethodAllowlistEnforced"])
@@ -72,6 +80,14 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
             "desktop_runtime_config_status_probe_outputs_only_sanitized_booleans",
             report["coveredRustTests"],
         )
+        self.assertIn(
+            "desktop_runtime_transport_probe_outputs_only_sanitized_booleans",
+            report["coveredRustTests"],
+        )
+        self.assertIn(
+            "desktop_runtime_transport_probe_uses_native_endpoint_and_auth",
+            report["coveredRustTests"],
+        )
         boundary = report["authorityBoundary"]
         self.assertTrue(boundary["validationEvidenceOnly"])
         self.assertTrue(boundary["doesNotContactNapoleon"])
@@ -87,10 +103,16 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         def runner(command, cwd):
             calls.append(list(command))
             if str(command[0]).endswith("concierge-desktop"):
+                binary_call_count = sum(1 for call in calls if str(call[0]).endswith("concierge-desktop"))
+                stdout = (
+                    '{"endpointConfigured":true,"authConfigured":true}'
+                    if binary_call_count == 1
+                    else '{"requestSucceeded":true,"statusOk":true}'
+                )
                 return subprocess.CompletedProcess(
                     command,
                     0,
-                    stdout='{"endpointConfigured":true,"authConfigured":true}',
+                    stdout=stdout,
                     stderr="",
                 )
             return subprocess.CompletedProcess(command, 1 if len(calls) == 1 else 0, stdout="", stderr="")
@@ -103,18 +125,11 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(report["checks"][2]["status"], "passed")
         self.assertEqual(report["checks"][3]["status"], "passed")
         self.assertEqual(report["checks"][4]["status"], "passed")
+        self.assertEqual(report["checks"][5]["status"], "passed")
         self.assertTrue(report["packagedDesktopTransport"]["packagedNoBundleBuildPassed"])
 
     def test_main_writes_sanitized_report(self):
-        def runner(command, cwd):
-            if str(command[0]).endswith("concierge-desktop"):
-                return subprocess.CompletedProcess(
-                    command,
-                    0,
-                    stdout='{"endpointConfigured":true,"authConfigured":true}',
-                    stderr="",
-                )
-            return subprocess.CompletedProcess(command, 0, stdout="token_value", stderr="/tmp/token-file")
+        runner = self.packaged_binary_probe_runner()
 
         original = desktop_runtime_transport_validation.run_command
         desktop_runtime_transport_validation.run_command = runner

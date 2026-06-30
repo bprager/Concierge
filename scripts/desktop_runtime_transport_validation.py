@@ -4,12 +4,15 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import subprocess
 import sys
 from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from threading import Thread
 from typing import Any, Callable, Sequence
 
 
@@ -36,6 +39,8 @@ TRANSPORT_TESTS = [
     "desktop_runtime_command_resolves_path_against_local_runtime_endpoint",
     "desktop_runtime_config_status_reports_only_sanitized_booleans",
     "desktop_runtime_config_status_probe_outputs_only_sanitized_booleans",
+    "desktop_runtime_transport_probe_outputs_only_sanitized_booleans",
+    "desktop_runtime_transport_probe_uses_native_endpoint_and_auth",
     "desktop_runtime_command_preserves_explicit_webview_auth_when_native_auth_is_disabled",
 ]
 
@@ -85,6 +90,45 @@ def sanitized_check(
 def release_binary_path(tauri_dir: Path) -> Path:
     suffix = ".exe" if sys.platform.startswith("win") else ""
     return tauri_dir / "target" / "release" / f"concierge-desktop{suffix}"
+
+
+@contextlib.contextmanager
+def local_runtime_probe_server():
+    records: list[dict[str, str]] = []
+
+    class ProbeHandler(BaseHTTPRequestHandler):
+        def log_message(self, format: str, *args: object) -> None:
+            return
+
+        def do_GET(self) -> None:
+            records.append(
+                {
+                    "method": "GET",
+                    "path": self.path,
+                    "xNapoleonAuth": self.headers.get("X-Napoleon-Auth", ""),
+                    "authorization": self.headers.get("Authorization", ""),
+                }
+            )
+            if self.path != "/cos/capabilities":
+                self.send_response(404)
+                self.end_headers()
+                return
+            body = b'{"capabilities":[],"runtimeAuthority":false}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+    server = HTTPServer(("127.0.0.1", 0), ProbeHandler)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{server.server_port}", records
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
 
 
 def packaged_binary_config_probe_check(
@@ -146,6 +190,86 @@ def packaged_binary_config_probe_check(
     }
 
 
+def packaged_binary_transport_probe_check(
+    *,
+    tauri_dir: Path,
+    runner: CommandRunner,
+) -> dict[str, Any]:
+    command = [str(release_binary_path(tauri_dir))]
+    endpoint = PROBE_ENDPOINT
+    records: list[dict[str, str]] = []
+    env = {
+        **os.environ,
+        "CONCIERGE_DESKTOP_RUNTIME_TRANSPORT_PROBE": "1",
+        "NAPOLEON_RUNTIME_ENDPOINT": endpoint,
+        "NAPOLEON_RUNTIME_AUTH_TOKEN": PROBE_TOKEN,
+    }
+    if runner is DEFAULT_COMMAND_RUNNER:
+        with local_runtime_probe_server() as (local_endpoint, local_records):
+            endpoint = local_endpoint
+            records = local_records
+            env = {
+                **env,
+                "NAPOLEON_RUNTIME_ENDPOINT": endpoint,
+            }
+            result = subprocess.run(
+                command,
+                cwd=str(tauri_dir),
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=env,
+            )
+    else:
+        result = runner(command, tauri_dir)
+
+    output = f"{result.stdout or ''}\n{result.stderr or ''}"
+    probe_status = None
+    try:
+        probe_status = json.loads((result.stdout or "").strip())
+    except json.JSONDecodeError:
+        probe_status = None
+    leaked_endpoint = endpoint in output or "napoleon.example" in output or "127.0.0.1" in output
+    leaked_token = PROBE_TOKEN in output
+    native_auth_attached = True
+    if runner is DEFAULT_COMMAND_RUNNER:
+        native_auth_attached = (
+            len(records) == 1
+            and records[0].get("method") == "GET"
+            and records[0].get("path") == "/cos/capabilities"
+            and records[0].get("xNapoleonAuth") == PROBE_TOKEN
+            and records[0].get("authorization") == ""
+        )
+    passed = (
+        result.returncode == 0
+        and isinstance(probe_status, dict)
+        and probe_status.get("requestSucceeded") is True
+        and probe_status.get("statusOk") is True
+        and native_auth_attached
+        and not leaked_endpoint
+        and not leaked_token
+    )
+    return {
+        "id": "tauri_packaged_desktop_binary_transport_probe",
+        "description": (
+            "The built no-bundle desktop binary can make a governed native request "
+            "to a Napoleon-compatible endpoint with local auth and emit only sanitized booleans."
+        ),
+        "status": "passed" if passed else "failed",
+        "exitCode": result.returncode,
+        "command": command,
+        "stdoutRetained": False,
+        "stderrRetained": False,
+        "endpointHostRetained": leaked_endpoint,
+        "tokenRetained": leaked_token,
+        "tokenFilePathRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        "nativeAuthObservedByProbeServer": native_auth_attached,
+    }
+
+
 def build_report(
     *,
     runner: CommandRunner | None = None,
@@ -202,6 +326,10 @@ def build_report(
             tauri_dir=tauri_dir,
             runner=active_runner,
         ),
+        packaged_binary_transport_probe_check(
+            tauri_dir=tauri_dir,
+            runner=active_runner,
+        ),
     ]
     status = "passed" if all(check["status"] == "passed" for check in checks) else "failed"
     packaged_build_passed = any(
@@ -211,6 +339,11 @@ def build_report(
     )
     packaged_config_probe_passed = any(
         check["id"] == "tauri_packaged_desktop_binary_config_probe"
+        and check["status"] == "passed"
+        for check in checks
+    )
+    packaged_transport_probe_passed = any(
+        check["id"] == "tauri_packaged_desktop_binary_transport_probe"
         and check["status"] == "passed"
         for check in checks
     )
@@ -231,6 +364,7 @@ def build_report(
             "endpointHostOmittedFromInvokePayload": True,
             "nativeLocalEndpointReadiness": True,
             "packagedBinaryConfigProbePassed": packaged_config_probe_passed,
+            "packagedBinaryTransportProbePassed": packaged_transport_probe_passed,
             "explicitWebviewAuthPreserved": True,
             "governedRouteAllowlistEnforced": True,
             "governedRouteMethodAllowlistEnforced": True,

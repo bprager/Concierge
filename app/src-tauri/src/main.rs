@@ -167,6 +167,37 @@ where
     )
 }
 
+fn runtime_transport_probe_output(request_succeeded: bool, status_ok: bool) -> String {
+    format!(
+        r#"{{"requestSucceeded":{},"statusOk":{}}}"#,
+        request_succeeded, status_ok
+    )
+}
+
+fn run_runtime_transport_probe() -> String {
+    let result = tauri::async_runtime::block_on(async {
+        let native_auth_token = configured_runtime_auth_token()?;
+        let native_runtime_endpoint = configured_runtime_endpoint();
+        perform_runtime_http_request_with_endpoint(
+            NapoleonRuntimeHttpRequest {
+                url: None,
+                path: Some("/cos/capabilities".to_string()),
+                method: Some("GET".to_string()),
+                native_auth: Some(true),
+                headers: None,
+                body: None,
+            },
+            native_auth_token,
+            native_runtime_endpoint,
+        )
+        .await
+    });
+    match result {
+        Ok(response) => runtime_transport_probe_output(true, response.ok && response.status == 200),
+        Err(_) => runtime_transport_probe_output(false, false),
+    }
+}
+
 fn configured_runtime_endpoint_from<F>(get_env: F) -> Option<String>
 where
     F: Fn(&str) -> Option<String>,
@@ -376,6 +407,15 @@ async fn perform_runtime_http_request_with_endpoint(
 }
 
 fn main() {
+    if std::env::var("CONCIERGE_DESKTOP_RUNTIME_TRANSPORT_PROBE")
+        .ok()
+        .as_deref()
+        == Some("1")
+    {
+        println!("{}", run_runtime_transport_probe());
+        return;
+    }
+
     if std::env::var("CONCIERGE_DESKTOP_RUNTIME_CONFIG_PROBE")
         .ok()
         .as_deref()
@@ -897,6 +937,51 @@ mod tests {
         );
         assert!(!output.contains("napoleon.example"));
         assert!(!output.contains("native_auth_value"));
+    }
+
+    #[test]
+    fn desktop_runtime_transport_probe_outputs_only_sanitized_booleans() {
+        let success = runtime_transport_probe_output(true, true);
+        let failure = runtime_transport_probe_output(false, false);
+
+        assert_eq!(success, r#"{"requestSucceeded":true,"statusOk":true}"#);
+        assert_eq!(failure, r#"{"requestSucceeded":false,"statusOk":false}"#);
+        assert!(!success.contains("napoleon.example"));
+        assert!(!success.contains("native_auth_value"));
+    }
+
+    #[test]
+    fn desktop_runtime_transport_probe_uses_native_endpoint_and_auth() {
+        let harness =
+            RuntimeHarness::start(vec![r#"{"capabilities":[],"runtimeAuthority":false}"#]);
+
+        let response = tauri::async_runtime::block_on(perform_runtime_http_request_with_endpoint(
+            NapoleonRuntimeHttpRequest {
+                url: None,
+                path: Some("/cos/capabilities".to_string()),
+                method: Some("GET".to_string()),
+                native_auth: Some(true),
+                headers: None,
+                body: None,
+            },
+            Some("native_auth_value".to_string()),
+            Some(harness.base_url.clone()),
+        ))
+        .expect("transport probe request succeeds");
+        assert_eq!(
+            runtime_transport_probe_output(response.ok, response.status == 200),
+            r#"{"requestSucceeded":true,"statusOk":true}"#
+        );
+
+        let request = harness.next_request();
+        assert_eq!(request.method, "GET");
+        assert_eq!(request.path, "/cos/capabilities");
+        assert_eq!(
+            request.headers.get("x-napoleon-auth"),
+            Some(&"native_auth_value".to_string())
+        );
+
+        harness.join();
     }
 
     #[test]

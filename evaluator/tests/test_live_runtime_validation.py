@@ -260,14 +260,21 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             with local_bridge_harness.running_harness() as eval_base_url:
                 with tempfile.TemporaryDirectory() as tmpdir:
                     report_path = Path(tmpdir) / "desktop-runtime.json"
+                    binary_calls = []
+
+                    def runner(command, cwd):
+                        if str(command[0]).endswith("concierge-desktop"):
+                            binary_calls.append(list(command))
+                            stdout = (
+                                '{"endpointConfigured":true,"authConfigured":true}'
+                                if len(binary_calls) == 1
+                                else '{"requestSucceeded":true,"statusOk":true}'
+                            )
+                            return mock.Mock(returncode=0, stdout=stdout, stderr="")
+                        return mock.Mock(returncode=0, stdout="", stderr="")
+
                     report = desktop_runtime_transport_validation.build_report(
-                        runner=lambda command, cwd: mock.Mock(
-                            returncode=0,
-                            stdout='{"endpointConfigured":true,"authConfigured":true}'
-                            if str(command[0]).endswith("concierge-desktop")
-                            else "",
-                            stderr="",
-                        ),
+                        runner=runner,
                     )
                     desktop_runtime_transport_validation.write_report(report, report_path)
                     exit_code = live_runtime_validation.main([
@@ -296,6 +303,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertTrue(packaged["endpointHostOmittedFromInvokePayload"])
         self.assertTrue(packaged["nativeLocalEndpointReadiness"])
         self.assertTrue(packaged["packagedBinaryConfigProbePassed"])
+        self.assertTrue(packaged["packagedBinaryTransportProbePassed"])
         self.assertTrue(packaged["packagedNoBundleBuildPassed"])
         self.assertFalse(packaged["endpointHostRetained"])
         self.assertFalse(packaged["tokenRetained"])
@@ -309,6 +317,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertIn("- Packaged desktop transport required: `true`", review)
         self.assertIn("- Packaged desktop transport status: `passed`", review)
         self.assertIn("- Packaged desktop binary config probe passed: `true`", review)
+        self.assertIn("- Packaged desktop binary transport probe passed: `true`", review)
         self.assertNotIn("token_packaged_desktop_summary", json.dumps(summary))
 
     def test_required_packaged_desktop_transport_blocks_readiness_when_report_is_missing(self):
@@ -970,14 +979,21 @@ class LiveRuntimeValidationTest(unittest.TestCase):
     def test_packaged_live_preflight_points_to_packaged_validation_when_required(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             report_path = Path(tmpdir) / "desktop-runtime.json"
+            binary_calls = []
+
+            def runner(command, cwd):
+                if str(command[0]).endswith("concierge-desktop"):
+                    binary_calls.append(list(command))
+                    stdout = (
+                        '{"endpointConfigured":true,"authConfigured":true}'
+                        if len(binary_calls) == 1
+                        else '{"requestSucceeded":true,"statusOk":true}'
+                    )
+                    return mock.Mock(returncode=0, stdout=stdout, stderr="")
+                return mock.Mock(returncode=0, stdout="", stderr="")
+
             report = desktop_runtime_transport_validation.build_report(
-                runner=lambda command, cwd: mock.Mock(
-                    returncode=0,
-                    stdout='{"endpointConfigured":true,"authConfigured":true}'
-                    if str(command[0]).endswith("concierge-desktop")
-                    else "",
-                    stderr="",
-                ),
+                runner=runner,
             )
             desktop_runtime_transport_validation.write_report(report, report_path)
             with contextlib.redirect_stderr(io.StringIO()):
@@ -1008,6 +1024,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertTrue(preflight["packagedDesktopTransport"]["endpointHostOmittedFromInvokePayload"])
         self.assertTrue(preflight["packagedDesktopTransport"]["nativeLocalEndpointReadiness"])
         self.assertTrue(preflight["packagedDesktopTransport"]["packagedBinaryConfigProbePassed"])
+        self.assertTrue(preflight["packagedDesktopTransport"]["packagedBinaryTransportProbePassed"])
         self.assertFalse(preflight["packagedDesktopTransport"]["endpointHostRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["tokenRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["requestBodyRetained"])

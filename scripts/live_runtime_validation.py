@@ -624,6 +624,7 @@ def packaged_desktop_transport_default(required: bool) -> dict[str, Any]:
         "endpointHostOmittedFromInvokePayload": False,
         "nativeLocalEndpointReadiness": False,
         "packagedBinaryConfigProbePassed": False,
+        "packagedBinaryTransportProbePassed": False,
         "governedRouteAllowlistEnforced": False,
         "governedRouteMethodAllowlistEnforced": False,
         "packagedNoBundleBuildPassed": False,
@@ -696,6 +697,7 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         and transport.get("endpointHostOmittedFromInvokePayload") is True
         and transport.get("nativeLocalEndpointReadiness") is True
         and transport.get("packagedBinaryConfigProbePassed") is True
+        and transport.get("packagedBinaryTransportProbePassed") is True
         and transport.get("governedRouteAllowlistEnforced") is True
         and transport.get("governedRouteMethodAllowlistEnforced") is True
         and transport.get("packagedNoBundleBuildPassed") is True
@@ -725,6 +727,9 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         "nativeLocalEndpointReadiness": transport.get("nativeLocalEndpointReadiness") is True,
         "packagedBinaryConfigProbePassed": (
             transport.get("packagedBinaryConfigProbePassed") is True
+        ),
+        "packagedBinaryTransportProbePassed": (
+            transport.get("packagedBinaryTransportProbePassed") is True
         ),
         "governedRouteAllowlistEnforced": transport.get("governedRouteAllowlistEnforced") is True,
         "governedRouteMethodAllowlistEnforced": (
@@ -1800,6 +1805,7 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- Packaged desktop transport status: `{packaged_desktop['status']}`",
         f"- Packaged desktop no-bundle build passed: `{str(packaged_desktop['packagedNoBundleBuildPassed']).lower()}`",
         f"- Packaged desktop binary config probe passed: `{str(packaged_desktop['packagedBinaryConfigProbePassed']).lower()}`",
+        f"- Packaged desktop binary transport probe passed: `{str(packaged_desktop['packagedBinaryTransportProbePassed']).lower()}`",
         f"- Browser proxy required by packaged transport: `{str(packaged_desktop['browserProxyRequired']).lower()}`",
         "",
         "## Napoleon Required Actions",
