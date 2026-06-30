@@ -130,7 +130,14 @@ Prompt length: {len(prompt)}
 
 def strip_evaluator_endpoint_path(endpoint: str) -> str:
     value = endpoint.strip().split("?", 1)[0].split("#", 1)[0].rstrip("/")
-    for path in [GENERATED_EVALUATOR_PATH, NAPOLEON_EVALUATION_REVIEW_PATH]:
+    for path in [
+        GENERATED_EVALUATOR_PATH,
+        NAPOLEON_EVALUATION_REVIEW_PATH,
+        "/cos/descriptor",
+        "/cos/capabilities",
+        "/cos/text-turn",
+        "/cos",
+    ]:
         if value.endswith(path):
             return value[: -len(path)].rstrip("/")
     return value

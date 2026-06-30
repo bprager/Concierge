@@ -102,6 +102,21 @@ class EvaluatorRegressionTest(unittest.TestCase):
                 "operationId": "evaluation_review",
             },
         )
+        self.assertEqual(
+            eval_runner.resolve_evaluation_review_target("https://napoleon.example/cos"),
+            {
+                "url": "https://napoleon.example/chief-of-staff/reviews/evaluation",
+                "path": "/chief-of-staff/reviews/evaluation",
+                "requestKind": "evaluation_review_handoff",
+                "operationId": "evaluation_review",
+            },
+        )
+        self.assertEqual(
+            eval_runner.resolve_evaluation_review_target(
+                "https://napoleon.example/cos/text-turn"
+            )["url"],
+            "https://napoleon.example/chief-of-staff/reviews/evaluation",
+        )
 
     def test_http_eval_posts_named_explicit_evaluation_review_packet(self):
         calls = []
