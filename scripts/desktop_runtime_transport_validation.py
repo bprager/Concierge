@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Sequence
@@ -15,6 +17,8 @@ ROOT = Path(__file__).resolve().parents[1]
 APP_DIR = ROOT / "app"
 TAURI_DIR = ROOT / "app" / "src-tauri"
 OUTPUT_KIND = "concierge.desktop-runtime-transport-validation.v1"
+PROBE_ENDPOINT = "https://napoleon.example/cos"
+PROBE_TOKEN = "probe_native_auth_value"
 TRANSPORT_TESTS = [
     "desktop runtime fetch sends Napoleon HTTP through Tauri invoke without webview auth by default",
     "desktop runtime fetch can keep full endpoint in native configuration for compatibility override",
@@ -31,6 +35,7 @@ TRANSPORT_TESTS = [
     "desktop_runtime_command_strips_webview_auth_when_native_auth_is_enabled",
     "desktop_runtime_command_resolves_path_against_local_runtime_endpoint",
     "desktop_runtime_config_status_reports_only_sanitized_booleans",
+    "desktop_runtime_config_status_probe_outputs_only_sanitized_booleans",
     "desktop_runtime_command_preserves_explicit_webview_auth_when_native_auth_is_disabled",
 ]
 
@@ -47,6 +52,9 @@ def run_command(command: Sequence[str], cwd: Path) -> subprocess.CompletedProces
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
+
+
+DEFAULT_COMMAND_RUNNER = run_command
 
 
 def sanitized_check(
@@ -68,6 +76,70 @@ def sanitized_check(
         "stderrRetained": False,
         "endpointHostRetained": False,
         "tokenRetained": False,
+        "tokenFilePathRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+    }
+
+
+def release_binary_path(tauri_dir: Path) -> Path:
+    suffix = ".exe" if sys.platform.startswith("win") else ""
+    return tauri_dir / "target" / "release" / f"concierge-desktop{suffix}"
+
+
+def packaged_binary_config_probe_check(
+    *,
+    tauri_dir: Path,
+    runner: CommandRunner,
+) -> dict[str, Any]:
+    command = [str(release_binary_path(tauri_dir))]
+    env = {
+        **os.environ,
+        "CONCIERGE_DESKTOP_RUNTIME_CONFIG_PROBE": "1",
+        "NAPOLEON_RUNTIME_ENDPOINT": PROBE_ENDPOINT,
+        "NAPOLEON_RUNTIME_AUTH_TOKEN": PROBE_TOKEN,
+    }
+    if runner is DEFAULT_COMMAND_RUNNER:
+        result = subprocess.run(
+            command,
+            cwd=str(tauri_dir),
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env,
+        )
+    else:
+        result = runner(command, tauri_dir)
+    output = f"{result.stdout or ''}\n{result.stderr or ''}"
+    probe_status = None
+    try:
+        probe_status = json.loads((result.stdout or "").strip())
+    except json.JSONDecodeError:
+        probe_status = None
+    leaked_endpoint = PROBE_ENDPOINT in output or "napoleon.example" in output
+    leaked_token = PROBE_TOKEN in output
+    passed = (
+        result.returncode == 0
+        and isinstance(probe_status, dict)
+        and probe_status.get("endpointConfigured") is True
+        and probe_status.get("authConfigured") is True
+        and not leaked_endpoint
+        and not leaked_token
+    )
+    return {
+        "id": "tauri_packaged_desktop_binary_config_probe",
+        "description": (
+            "The built no-bundle desktop binary can read local endpoint/auth readiness "
+            "and emits only sanitized booleans before the webview starts."
+        ),
+        "status": "passed" if passed else "failed",
+        "exitCode": result.returncode,
+        "command": command,
+        "stdoutRetained": False,
+        "stderrRetained": False,
+        "endpointHostRetained": leaked_endpoint,
+        "tokenRetained": leaked_token,
         "tokenFilePathRetained": False,
         "requestBodyRetained": False,
         "responseBodyRetained": False,
@@ -126,10 +198,19 @@ def build_report(
             cwd=app_dir,
             runner=active_runner,
         ),
+        packaged_binary_config_probe_check(
+            tauri_dir=tauri_dir,
+            runner=active_runner,
+        ),
     ]
     status = "passed" if all(check["status"] == "passed" for check in checks) else "failed"
     packaged_build_passed = any(
         check["id"] == "tauri_packaged_desktop_no_bundle_build"
+        and check["status"] == "passed"
+        for check in checks
+    )
+    packaged_config_probe_passed = any(
+        check["id"] == "tauri_packaged_desktop_binary_config_probe"
         and check["status"] == "passed"
         for check in checks
     )
@@ -149,6 +230,7 @@ def build_report(
             "nativeEndpointResolution": True,
             "endpointHostOmittedFromInvokePayload": True,
             "nativeLocalEndpointReadiness": True,
+            "packagedBinaryConfigProbePassed": packaged_config_probe_passed,
             "explicitWebviewAuthPreserved": True,
             "governedRouteAllowlistEnforced": True,
             "governedRouteMethodAllowlistEnforced": True,

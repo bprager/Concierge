@@ -261,7 +261,13 @@ class LiveRuntimeValidationTest(unittest.TestCase):
                 with tempfile.TemporaryDirectory() as tmpdir:
                     report_path = Path(tmpdir) / "desktop-runtime.json"
                     report = desktop_runtime_transport_validation.build_report(
-                        runner=lambda command, cwd: mock.Mock(returncode=0),
+                        runner=lambda command, cwd: mock.Mock(
+                            returncode=0,
+                            stdout='{"endpointConfigured":true,"authConfigured":true}'
+                            if str(command[0]).endswith("concierge-desktop")
+                            else "",
+                            stderr="",
+                        ),
                     )
                     desktop_runtime_transport_validation.write_report(report, report_path)
                     exit_code = live_runtime_validation.main([
@@ -289,6 +295,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertTrue(packaged["nativeEndpointResolution"])
         self.assertTrue(packaged["endpointHostOmittedFromInvokePayload"])
         self.assertTrue(packaged["nativeLocalEndpointReadiness"])
+        self.assertTrue(packaged["packagedBinaryConfigProbePassed"])
         self.assertTrue(packaged["packagedNoBundleBuildPassed"])
         self.assertFalse(packaged["endpointHostRetained"])
         self.assertFalse(packaged["tokenRetained"])
@@ -301,6 +308,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertNotIn("Packaged desktop transport evidence did not pass.", summary["promotionReadiness"]["blockingReasons"])
         self.assertIn("- Packaged desktop transport required: `true`", review)
         self.assertIn("- Packaged desktop transport status: `passed`", review)
+        self.assertIn("- Packaged desktop binary config probe passed: `true`", review)
         self.assertNotIn("token_packaged_desktop_summary", json.dumps(summary))
 
     def test_required_packaged_desktop_transport_blocks_readiness_when_report_is_missing(self):
@@ -963,7 +971,13 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             report_path = Path(tmpdir) / "desktop-runtime.json"
             report = desktop_runtime_transport_validation.build_report(
-                runner=lambda command, cwd: mock.Mock(returncode=0),
+                runner=lambda command, cwd: mock.Mock(
+                    returncode=0,
+                    stdout='{"endpointConfigured":true,"authConfigured":true}'
+                    if str(command[0]).endswith("concierge-desktop")
+                    else "",
+                    stderr="",
+                ),
             )
             desktop_runtime_transport_validation.write_report(report, report_path)
             with contextlib.redirect_stderr(io.StringIO()):
@@ -993,6 +1007,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertTrue(preflight["packagedDesktopTransport"]["nativeEndpointResolution"])
         self.assertTrue(preflight["packagedDesktopTransport"]["endpointHostOmittedFromInvokePayload"])
         self.assertTrue(preflight["packagedDesktopTransport"]["nativeLocalEndpointReadiness"])
+        self.assertTrue(preflight["packagedDesktopTransport"]["packagedBinaryConfigProbePassed"])
         self.assertFalse(preflight["packagedDesktopTransport"]["endpointHostRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["tokenRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["requestBodyRetained"])
