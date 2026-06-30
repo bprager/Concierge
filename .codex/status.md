@@ -1,6 +1,6 @@
 # Status
 
-Last updated: 2026-06-29
+Last updated: 2026-06-30
 
 ## Current Project State
 
@@ -10,9 +10,11 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Ran the local promotion review for the generated real-runtime validation evidence and recorded the decision in `docs/reports/LIVE_TEXT_INTERACTION_PROMOTION_REVIEW.md`: Concierge may treat the current real-runtime evidence as the baseline `ready for live text interaction` state only. This does not grant Napoleon approval, release approval, memory writes, external sends, agent dispatch, tool execution, voice/avatar promotion, or self-evolution application authority.
+- Revalidated the retained live-runtime summary at `/tmp/concierge-live-runtime-validation/summary.json`; it reports `real_runtime` source, passed bridge evidence, passed capability discovery, passed governed contract packet submissions, passed HTTP evaluator review, passed artifact privacy, `ready_for_human_review`, no blocking reasons, and no Napoleon-required actions. `curl` can reach the Napoleon LAN endpoint directly, but Python socket access to the LAN address fails in this environment, so the successful Python-based validation used a temporary localhost SSH tunnel to the same real Napoleon runtime and the tunnel was stopped afterward.
 - Rechecked the moved Napoleon Concierge integration OpenAPI snapshot at `docs/concierge-integration/apis/concierge-integration.openapi.yaml`; the current retained alignment report shows `/evolution/proposals/{proposal_id}/status` is now mapped, `runtimeAligned: true`, `blockingLivePromotion: false`, and no Napoleon-required actions.
 - Refreshed `/tmp/concierge-runtime-handoff-status.json` and `/tmp/concierge-goal-completion-audit.json`; the runtime handoff now reports no blockers, `canProceed: true`, `ready_for_live_validation`, and the goal completion close gate reports `canCloseGoal: true`.
-- Ran live runtime validation through an SSH tunnel to `mimir`; real `/cos` descriptor, capability, text-turn, and trace evidence passes with privacy audit passing, but promotion remains blocked because the descriptor does not advertise `chief_of_staff_request` or `governance_evaluation`, and `/chief-of-staff/reviews/evaluation` returns 404. The retained `/tmp/concierge-live-runtime-validation/summary.json` now carries all three Napoleon-required actions, including the missing evaluator route.
+- Superseded earlier live-runtime blocker evidence where Napoleon did not yet advertise `chief_of_staff_request`, `governance_evaluation`, or `evaluation_review`; the current retained live-runtime summary now reports all required live text validation gates passing and no Napoleon-required actions.
 - Isolated goal-completion audit tests from retained `/tmp` alignment state, so blocked-contract expectations use explicit blocked fixtures while normal audit tests do not fail after the real runtime mapping is cleared.
 - Added sanitized live-runtime token-file existence evidence to live validation and evaluator-validation imports, so missing approved token files are reported separately from unreadable files without retaining token values or token-file paths.
 - Added sanitized Napoleon contract snapshot provenance to retained alignment evidence, so `/tmp/concierge-napoleon-alignment.json`, `/tmp/concierge-goal-completion-audit.json`, and `/tmp/concierge-goal-blocker-handoff.md` now identify the inspected `concierge-integration.openapi.yaml` snapshot by filename, modified time, and checksum without retaining contract contents or source paths.

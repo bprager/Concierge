@@ -1,6 +1,6 @@
 # Decisions
 
-Last updated: 2026-06-07
+Last updated: 2026-06-30
 
 ADR-lite log for decisions that help future AI sessions. Use `docs/decisions/` for major architectural decisions.
 
@@ -48,3 +48,12 @@ ADR-lite log for decisions that help future AI sessions. Use `docs/decisions/` f
 - Chosen option: Evolution may propose changes, but rollout requires evaluator regression checks, approval, monitoring, and rollback.
 - Tradeoffs: Improvement is slower, but failures remain reviewable and reversible.
 - Revisit trigger: The proposal, approval, evaluator, rollout, and rollback path is implemented and tested.
+
+## Decision: Treat Real-Runtime Evidence As The Live Text Baseline
+
+- Date: 2026-06-30
+- Context: Concierge live-runtime validation passed against the real Napoleon runtime with bridge evidence, capability discovery, governed contract packet submissions, HTTP evaluator review, artifact privacy, and promotion readiness all passing. A local promotion review was recorded in `docs/reports/LIVE_TEXT_INTERACTION_PROMOTION_REVIEW.md`.
+- Options considered: Keep live text interaction blocked until a broader product phase review; approve only the narrow live text baseline; treat the validation as broader release approval.
+- Chosen option: Approve the narrow baseline-ready state for governed live text interaction only.
+- Tradeoffs: Concierge can move forward with live text usage while voice, avatar, memory writes, external sends, agent dispatch, tool execution, and self-evolution application remain blocked by their own gates.
+- Revisit trigger: Runtime evidence fails, Napoleon bridge contracts change, authority boundaries change, or Concierge begins promoting non-text capabilities.
