@@ -21,6 +21,7 @@ TRANSPORT_TESTS = [
     "desktop runtime availability only reports true inside packaged Tauri",
     "rejects_non_http_runtime_targets",
     "rejects_http_runtime_targets_outside_governed_napoleon_paths",
+    "enforces_governed_runtime_methods_for_known_paths",
     "resolves_runtime_auth_from_environment_or_token_file",
     "desktop_runtime_command_forwards_governed_get_and_post_requests",
     "desktop_runtime_command_attaches_native_auth_when_webview_omits_auth",
@@ -92,7 +93,8 @@ def build_report(
                 "Rust tests prove the packaged desktop command rejects non-HTTP targets, "
                 "forwards governed runtime requests, reads approved local auth handoff, "
                 "attaches the expected /cos or generated bridge auth header, and preserves "
-                "explicit webview auth while rejecting non-governed HTTP(S) paths."
+                "explicit webview auth while rejecting non-governed HTTP(S) paths and "
+                "wrong methods for governed paths."
             ),
             command=["cargo", "test", "runtime"],
             cwd=tauri_dir,
@@ -136,6 +138,7 @@ def build_report(
             "webviewAuthHeadersStrippedWhenNativeAuthEnabled": True,
             "explicitWebviewAuthPreserved": True,
             "governedRouteAllowlistEnforced": True,
+            "governedRouteMethodAllowlistEnforced": True,
             "packagedNoBundleBuildPassed": packaged_build_passed,
             "cosAuthHeader": "X-Napoleon-Auth",
             "generatedBridgeAuthHeader": "Authorization",

@@ -32,11 +32,16 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertTrue(transport["webviewAuthHeadersStrippedWhenNativeAuthEnabled"])
         self.assertTrue(transport["explicitWebviewAuthPreserved"])
         self.assertTrue(transport["governedRouteAllowlistEnforced"])
+        self.assertTrue(transport["governedRouteMethodAllowlistEnforced"])
         self.assertTrue(transport["packagedNoBundleBuildPassed"])
         self.assertFalse(transport["endpointHostRetained"])
         self.assertFalse(transport["tokenRetained"])
         self.assertIn(
             "rejects_http_runtime_targets_outside_governed_napoleon_paths",
+            report["coveredRustTests"],
+        )
+        self.assertIn(
+            "enforces_governed_runtime_methods_for_known_paths",
             report["coveredRustTests"],
         )
         boundary = report["authorityBoundary"]

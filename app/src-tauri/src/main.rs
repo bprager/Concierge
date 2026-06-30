@@ -30,36 +30,69 @@ fn validate_runtime_request(request: &NapoleonRuntimeHttpRequest) -> Result<(), 
         "http" | "https" => {}
         _ => return Err("unsupported_url_scheme".to_string()),
     }
-    if !is_governed_napoleon_runtime_path(parsed.path()) {
-        return Err("unsupported_runtime_target".to_string());
-    }
     let method = request.method.as_deref().unwrap_or("GET").to_ascii_uppercase();
     match method.as_str() {
-        "GET" | "POST" => Ok(()),
-        _ => Err("unsupported_http_method".to_string()),
+        "GET" | "POST" => {}
+        _ => return Err("unsupported_http_method".to_string()),
+    }
+    let expected_method =
+        governed_napoleon_runtime_method(parsed.path()).ok_or_else(|| "unsupported_runtime_target".to_string())?;
+    if method != expected_method {
+        return Err("unsupported_runtime_method_for_target".to_string());
+    }
+    Ok(())
+}
+
+fn governed_napoleon_runtime_method(path: &str) -> Option<&'static str> {
+    if is_cos_trace_path(path)
+        || is_evolution_proposal_status_path(path)
+        || is_agent_manifest_path(path)
+        || is_profile_metadata_path(path)
+    {
+        return Some("GET");
+    }
+    match path {
+        "/cos/descriptor"
+        | "/cos/capabilities"
+        | "/v1/concierge/chief-of-staff/descriptor"
+        | "/v1/concierge/chief-of-staff/capabilities"
+        | "/agents" => Some("GET"),
+        "/cos/text-turn"
+        | "/v1/concierge/turn"
+        | "/v1/concierge/evaluate"
+        | "/v1/concierge/chief-of-staff/steering"
+        | "/v1/concierge/memory-proposals"
+        | "/chief-of-staff/requests"
+        | "/chief-of-staff/reviews/evaluation"
+        | "/chief-of-staff/reviews/evolution-proposals"
+        | "/evolution/proposals"
+        | "/governance/evaluate"
+        | "/chief-of-staff/reviews/governance"
+        | "/chief-of-staff/reviews/new-agent-proposals"
+        | "/observability/traces" => Some("POST"),
+        _ => None,
     }
 }
 
-fn is_governed_napoleon_runtime_path(path: &str) -> bool {
-    matches!(
-        path,
-        "/cos"
-            | "/cos/descriptor"
-            | "/cos/capabilities"
-            | "/cos/text-turn"
-            | "/v1/concierge/turn"
-            | "/v1/concierge/evaluate"
-            | "/v1/concierge/chief-of-staff/descriptor"
-            | "/v1/concierge/chief-of-staff/capabilities"
-            | "/v1/concierge/chief-of-staff/steering"
-            | "/v1/concierge/memory-proposals"
-            | "/chief-of-staff/requests"
-            | "/chief-of-staff/reviews/evaluation"
-            | "/chief-of-staff/reviews/evolution-proposals"
-            | "/chief-of-staff/reviews/governance"
-            | "/chief-of-staff/reviews/new-agent-proposals"
-            | "/governance/evaluate"
-    ) || path.starts_with("/cos/trace/")
+fn is_cos_trace_path(path: &str) -> bool {
+    path.strip_prefix("/cos/trace/")
+        .is_some_and(|trace_id| !trace_id.is_empty() && !trace_id.contains('/'))
+}
+
+fn is_evolution_proposal_status_path(path: &str) -> bool {
+    path.strip_prefix("/evolution/proposals/")
+        .and_then(|suffix| suffix.strip_suffix("/status"))
+        .is_some_and(|proposal_id| !proposal_id.is_empty() && !proposal_id.contains('/'))
+}
+
+fn is_agent_manifest_path(path: &str) -> bool {
+    path.strip_prefix("/agents/")
+        .is_some_and(|agent_id| !agent_id.is_empty() && !agent_id.contains('/'))
+}
+
+fn is_profile_metadata_path(path: &str) -> bool {
+    path.strip_prefix("/profiles/")
+        .is_some_and(|profile_id| !profile_id.is_empty() && !profile_id.contains('/'))
 }
 
 fn configured_runtime_auth_token() -> Result<Option<String>, String> {
@@ -323,6 +356,63 @@ mod tests {
             validate_runtime_request(&request),
             Err("unsupported_runtime_target".to_string())
         );
+    }
+
+    #[test]
+    fn enforces_governed_runtime_methods_for_known_paths() {
+        let valid_targets = [
+            ("https://napoleon.example/cos/descriptor", "GET"),
+            ("https://napoleon.example/cos/capabilities", "GET"),
+            ("https://napoleon.example/cos/trace/trace_123", "GET"),
+            ("https://napoleon.example/cos/text-turn", "POST"),
+            ("https://napoleon.example/v1/concierge/chief-of-staff/descriptor", "GET"),
+            ("https://napoleon.example/v1/concierge/chief-of-staff/capabilities", "GET"),
+            ("https://napoleon.example/v1/concierge/turn", "POST"),
+            ("https://napoleon.example/v1/concierge/evaluate", "POST"),
+            ("https://napoleon.example/v1/concierge/chief-of-staff/steering", "POST"),
+            ("https://napoleon.example/v1/concierge/memory-proposals", "POST"),
+            ("https://napoleon.example/chief-of-staff/requests", "POST"),
+            ("https://napoleon.example/chief-of-staff/reviews/evaluation", "POST"),
+            ("https://napoleon.example/chief-of-staff/reviews/evolution-proposals", "POST"),
+            ("https://napoleon.example/evolution/proposals", "POST"),
+            ("https://napoleon.example/evolution/proposals/proposal_123/status", "GET"),
+            ("https://napoleon.example/governance/evaluate", "POST"),
+            ("https://napoleon.example/chief-of-staff/reviews/governance", "POST"),
+            ("https://napoleon.example/chief-of-staff/reviews/new-agent-proposals", "POST"),
+            ("https://napoleon.example/observability/traces", "POST"),
+            ("https://napoleon.example/agents", "GET"),
+            ("https://napoleon.example/agents/chief-of-staff", "GET"),
+            ("https://napoleon.example/profiles/adult_owner", "GET"),
+        ];
+        for (url, method) in valid_targets {
+            let request = NapoleonRuntimeHttpRequest {
+                url: url.to_string(),
+                method: Some(method.to_string()),
+                headers: None,
+                body: None,
+            };
+            assert_eq!(validate_runtime_request(&request), Ok(()), "{method} {url}");
+        }
+
+        let wrong_method_targets = [
+            ("https://napoleon.example/cos/descriptor", "POST"),
+            ("https://napoleon.example/cos/text-turn", "GET"),
+            ("https://napoleon.example/evolution/proposals/proposal_123/status", "POST"),
+            ("https://napoleon.example/observability/traces", "GET"),
+        ];
+        for (url, method) in wrong_method_targets {
+            let request = NapoleonRuntimeHttpRequest {
+                url: url.to_string(),
+                method: Some(method.to_string()),
+                headers: None,
+                body: None,
+            };
+            assert_eq!(
+                validate_runtime_request(&request),
+                Err("unsupported_runtime_method_for_target".to_string()),
+                "{method} {url}",
+            );
+        }
     }
 
     #[test]

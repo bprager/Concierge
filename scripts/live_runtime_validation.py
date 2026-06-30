@@ -620,6 +620,7 @@ def packaged_desktop_transport_default(required: bool) -> dict[str, Any]:
         "nativeAuthFallbackWhenWebviewOmitsAuth": False,
         "webviewAuthHeadersStrippedWhenNativeAuthEnabled": False,
         "governedRouteAllowlistEnforced": False,
+        "governedRouteMethodAllowlistEnforced": False,
         "packagedNoBundleBuildPassed": False,
         "endpointHostRetained": False,
         "tokenRetained": False,
@@ -686,6 +687,7 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         and transport.get("nativeAuthFallbackWhenWebviewOmitsAuth") is True
         and transport.get("webviewAuthHeadersStrippedWhenNativeAuthEnabled") is True
         and transport.get("governedRouteAllowlistEnforced") is True
+        and transport.get("governedRouteMethodAllowlistEnforced") is True
         and transport.get("packagedNoBundleBuildPassed") is True
         and no_retention
         and no_side_effects
@@ -704,6 +706,9 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
             transport.get("webviewAuthHeadersStrippedWhenNativeAuthEnabled") is True
         ),
         "governedRouteAllowlistEnforced": transport.get("governedRouteAllowlistEnforced") is True,
+        "governedRouteMethodAllowlistEnforced": (
+            transport.get("governedRouteMethodAllowlistEnforced") is True
+        ),
         "packagedNoBundleBuildPassed": transport.get("packagedNoBundleBuildPassed") is True,
         "endpointHostRetained": transport.get("endpointHostRetained") is True,
         "tokenRetained": transport.get("tokenRetained") is True,
