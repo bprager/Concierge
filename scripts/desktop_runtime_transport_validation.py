@@ -12,9 +12,13 @@ from typing import Any, Callable, Sequence
 
 
 ROOT = Path(__file__).resolve().parents[1]
+APP_DIR = ROOT / "app"
 TAURI_DIR = ROOT / "app" / "src-tauri"
 OUTPUT_KIND = "concierge.desktop-runtime-transport-validation.v1"
 TRANSPORT_TESTS = [
+    "desktop runtime fetch sends Napoleon HTTP through Tauri invoke without webview auth by default",
+    "desktop runtime fetch can preserve explicit webview auth when native auth is disabled",
+    "desktop runtime availability only reports true inside packaged Tauri",
     "rejects_non_http_runtime_targets",
     "resolves_runtime_auth_from_environment_or_token_file",
     "desktop_runtime_command_forwards_governed_get_and_post_requests",
@@ -65,10 +69,22 @@ def sanitized_check(
 def build_report(
     *,
     runner: CommandRunner | None = None,
+    app_dir: Path = APP_DIR,
     tauri_dir: Path = TAURI_DIR,
 ) -> dict[str, Any]:
     active_runner = runner or run_command
     checks = [
+        sanitized_check(
+            check_id="app_desktop_runtime_transport_tests",
+            description=(
+                "App tests prove packaged desktop fetch uses the Tauri command path, strips "
+                "webview auth headers when native auth is enabled, and only reports packaged "
+                "desktop availability inside Tauri."
+            ),
+            command=["npm", "run", "test:desktop-runtime"],
+            cwd=app_dir,
+            runner=active_runner,
+        ),
         sanitized_check(
             check_id="tauri_desktop_runtime_transport_tests",
             description=(
@@ -101,6 +117,7 @@ def build_report(
             "usesTauriCommandPath": True,
             "browserProxyRequired": False,
             "nativeAuthFallbackWhenWebviewOmitsAuth": True,
+            "webviewAuthHeadersStrippedWhenNativeAuthEnabled": True,
             "explicitWebviewAuthPreserved": True,
             "cosAuthHeader": "X-Napoleon-Auth",
             "generatedBridgeAuthHeader": "Authorization",

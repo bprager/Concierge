@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createDesktopRuntimeFetch, hasPackagedDesktopRuntime } from "../src/desktopRuntimeTransport.js";
 
-test("desktop runtime fetch sends Napoleon HTTP through Tauri invoke", async () => {
+test("desktop runtime fetch sends Napoleon HTTP through Tauri invoke without webview auth by default", async () => {
   const invoked: Array<{ command: string; args: Record<string, unknown> | undefined }> = [];
   const fetcher = createDesktopRuntimeFetch(async (command, args) => {
     invoked.push({ command, args });
@@ -35,9 +35,46 @@ test("desktop runtime fetch sends Napoleon HTTP through Tauri invoke", async () 
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Napoleon-Auth": "secret_token",
       },
       body: JSON.stringify({ requestKind: "text_turn" }),
+    },
+  });
+});
+
+test("desktop runtime fetch can preserve explicit webview auth when native auth is disabled", async () => {
+  const invoked: Array<{ command: string; args: Record<string, unknown> | undefined }> = [];
+  const fetcher = createDesktopRuntimeFetch(
+    async (command, args) => {
+      invoked.push({ command, args });
+      return {
+        ok: true,
+        status: 200,
+        bodyJson: {
+          accepted: true,
+        },
+      };
+    },
+    { nativeAuth: false },
+  );
+
+  await fetcher("https://napoleon.example/cos/descriptor", {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      "X-Napoleon-Auth": "secret_token",
+    },
+  });
+
+  assert.equal(invoked.length, 1);
+  assert.deepEqual(invoked[0]?.args, {
+    request: {
+      url: "https://napoleon.example/cos/descriptor",
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "X-Napoleon-Auth": "secret_token",
+      },
+      body: undefined,
     },
   });
 });

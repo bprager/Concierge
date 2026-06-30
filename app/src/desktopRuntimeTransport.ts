@@ -11,6 +11,10 @@ export type RuntimeFetch = (
 
 export type DesktopRuntimeInvoke = (command: string, args?: Record<string, unknown>) => Promise<unknown>;
 
+export interface DesktopRuntimeFetchOptions {
+  nativeAuth?: boolean;
+}
+
 interface DesktopRuntimeHttpResponse {
   ok?: unknown;
   status?: unknown;
@@ -22,13 +26,31 @@ export function hasPackagedDesktopRuntime(scope: object = globalThis): boolean {
   return "__TAURI_INTERNALS__" in scope;
 }
 
-export function createDesktopRuntimeFetch(invoke: DesktopRuntimeInvoke): RuntimeFetch {
+function headersForDesktopRuntime(
+  headers: Record<string, string> | undefined,
+  options: DesktopRuntimeFetchOptions,
+): Record<string, string> {
+  if (options.nativeAuth === false) return headers ?? {};
+  const sanitized: Record<string, string> = {};
+  for (const [name, value] of Object.entries(headers ?? {})) {
+    if (name.toLocaleLowerCase() === "authorization" || name.toLocaleLowerCase() === "x-napoleon-auth") {
+      continue;
+    }
+    sanitized[name] = value;
+  }
+  return sanitized;
+}
+
+export function createDesktopRuntimeFetch(
+  invoke: DesktopRuntimeInvoke,
+  options: DesktopRuntimeFetchOptions = {},
+): RuntimeFetch {
   return async (url, init = {}) => {
     const payload = await invoke("napoleon_runtime_http_request", {
       request: {
         url,
         method: init.method ?? "GET",
-        headers: init.headers ?? {},
+        headers: headersForDesktopRuntime(init.headers, options),
         body: init.body,
       },
     });
