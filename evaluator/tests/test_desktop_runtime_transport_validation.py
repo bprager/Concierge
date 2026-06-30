@@ -17,6 +17,8 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
                     '{"endpointConfigured":true,"authConfigured":true}'
                     if len(binary_calls) == 1
                     else '{"requestSucceeded":true,"statusOk":true}'
+                    if len(binary_calls) == 2
+                    else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}'
                 )
                 return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr="")
             return subprocess.CompletedProcess(command, 0, stdout="secret output", stderr="secret error")
@@ -25,11 +27,15 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
 
     def test_report_records_packaged_transport_without_secret_retention(self):
         runner = self.packaged_binary_probe_runner()
-        report = desktop_runtime_transport_validation.build_report(runner=runner, tauri_dir=Path("/tmp/tauri"))
+        report = desktop_runtime_transport_validation.build_report(
+            runner=runner,
+            tauri_dir=Path("/tmp/tauri"),
+            live_probe_endpoint="https://napoleon.example/cos",
+        )
 
         self.assertEqual(report["kind"], desktop_runtime_transport_validation.OUTPUT_KIND)
         self.assertEqual(report["status"], "passed")
-        self.assertEqual(len(report["checks"]), 6)
+        self.assertEqual(len(report["checks"]), 7)
         for check in report["checks"]:
             self.assertEqual(check["status"], "passed")
             self.assertFalse(check["stdoutRetained"])
@@ -50,6 +56,13 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertTrue(transport["nativeLocalEndpointReadiness"])
         self.assertTrue(transport["packagedBinaryConfigProbePassed"])
         self.assertTrue(transport["packagedBinaryTransportProbePassed"])
+        self.assertTrue(transport["packagedBinaryLiveProbeConfigured"])
+        self.assertTrue(transport["packagedBinaryLiveProbePassed"])
+        self.assertTrue(transport["packagedBinaryLiveProbeDescriptorPassed"])
+        self.assertTrue(transport["packagedBinaryLiveProbeCapabilitiesPassed"])
+        self.assertTrue(transport["packagedBinaryLiveProbeTextTurnPassed"])
+        self.assertTrue(transport["packagedBinaryLiveProbeTracePassed"])
+        self.assertFalse(transport["packagedBinaryLiveProbeSideEffectClaimed"])
         self.assertTrue(transport["explicitWebviewAuthPreserved"])
         self.assertTrue(transport["governedRouteAllowlistEnforced"])
         self.assertTrue(transport["governedRouteMethodAllowlistEnforced"])
@@ -88,9 +101,17 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
             "desktop_runtime_transport_probe_uses_native_endpoint_and_auth",
             report["coveredRustTests"],
         )
+        self.assertIn(
+            "desktop_runtime_live_probe_outputs_only_sanitized_booleans",
+            report["coveredRustTests"],
+        )
+        self.assertIn(
+            "desktop_runtime_live_probe_uses_governed_native_sequence",
+            report["coveredRustTests"],
+        )
         boundary = report["authorityBoundary"]
         self.assertTrue(boundary["validationEvidenceOnly"])
-        self.assertTrue(boundary["doesNotContactNapoleon"])
+        self.assertFalse(boundary["doesNotContactNapoleon"])
         self.assertFalse(boundary["runtimeAuthorityGranted"])
         self.assertFalse(boundary["approvalCaptured"])
         self.assertFalse(boundary["memoryWritePerformed"])
@@ -108,6 +129,8 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
                     '{"endpointConfigured":true,"authConfigured":true}'
                     if binary_call_count == 1
                     else '{"requestSucceeded":true,"statusOk":true}'
+                    if binary_call_count == 2
+                    else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}'
                 )
                 return subprocess.CompletedProcess(
                     command,
@@ -117,7 +140,11 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
                 )
             return subprocess.CompletedProcess(command, 1 if len(calls) == 1 else 0, stdout="", stderr="")
 
-        report = desktop_runtime_transport_validation.build_report(runner=runner, tauri_dir=Path("/tmp/tauri"))
+        report = desktop_runtime_transport_validation.build_report(
+            runner=runner,
+            tauri_dir=Path("/tmp/tauri"),
+            live_probe_endpoint="https://napoleon.example/cos",
+        )
 
         self.assertEqual(report["status"], "failed")
         self.assertEqual(report["checks"][0]["status"], "failed")
@@ -126,6 +153,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(report["checks"][3]["status"], "passed")
         self.assertEqual(report["checks"][4]["status"], "passed")
         self.assertEqual(report["checks"][5]["status"], "passed")
+        self.assertEqual(report["checks"][6]["status"], "passed")
         self.assertTrue(report["packagedDesktopTransport"]["packagedNoBundleBuildPassed"])
 
     def test_main_writes_sanitized_report(self):
@@ -145,6 +173,9 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertNotIn("token_value", text)
         self.assertNotIn("/tmp/token-file", text)
         self.assertIn('"status": "passed"', text)
+        self.assertIn('"packagedBinaryLiveProbeConfigured": false', text)
+        self.assertIn('"status": "not_configured"', text)
+        self.assertIn('"doesNotContactNapoleon": true', text)
 
 
 if __name__ == "__main__":

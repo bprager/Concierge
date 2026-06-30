@@ -625,6 +625,13 @@ def packaged_desktop_transport_default(required: bool) -> dict[str, Any]:
         "nativeLocalEndpointReadiness": False,
         "packagedBinaryConfigProbePassed": False,
         "packagedBinaryTransportProbePassed": False,
+        "packagedBinaryLiveProbeConfigured": False,
+        "packagedBinaryLiveProbePassed": False,
+        "packagedBinaryLiveProbeDescriptorPassed": False,
+        "packagedBinaryLiveProbeCapabilitiesPassed": False,
+        "packagedBinaryLiveProbeTextTurnPassed": False,
+        "packagedBinaryLiveProbeTracePassed": False,
+        "packagedBinaryLiveProbeSideEffectClaimed": False,
         "governedRouteAllowlistEnforced": False,
         "governedRouteMethodAllowlistEnforced": False,
         "packagedNoBundleBuildPassed": False,
@@ -638,6 +645,7 @@ def packaged_desktop_transport_default(required: bool) -> dict[str, Any]:
         "agentDispatchPerformed": False,
         "externalSendPerformed": False,
         "runtimeAuthorityGranted": False,
+        "doesNotContactNapoleon": True,
         "boundary": "Packaged desktop transport evidence was not provided for this run.",
     }
 
@@ -663,7 +671,17 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
     transport = report.get("packagedDesktopTransport") if isinstance(report.get("packagedDesktopTransport"), dict) else {}
     boundary = report.get("authorityBoundary") if isinstance(report.get("authorityBoundary"), dict) else {}
     checks = report.get("checks") if isinstance(report.get("checks"), list) else []
-    all_checks_passed = all(isinstance(check, dict) and check.get("status") == "passed" for check in checks)
+    all_checks_passed = all(
+        isinstance(check, dict)
+        and (
+            check.get("status") == "passed"
+            or (
+                check.get("id") == "tauri_packaged_desktop_binary_live_probe"
+                and check.get("status") == "not_configured"
+            )
+        )
+        for check in checks
+    )
     no_retention = not any(
         transport.get(flag) is True
         for flag in [
@@ -704,6 +722,12 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         and no_retention
         and no_side_effects
     )
+    does_not_contact_napoleon = boundary.get("doesNotContactNapoleon") is True
+    boundary_text = (
+        "Packaged desktop transport evidence is sanitized local build/transport proof only and does not contact Napoleon or grant authority."
+        if does_not_contact_napoleon
+        else "Packaged desktop transport evidence includes a configured validation-only live probe and does not grant authority or retain endpoint hosts, tokens, request bodies, or response bodies."
+    )
     return {
         "status": "passed" if passed else "failed",
         "required": required,
@@ -731,6 +755,27 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         "packagedBinaryTransportProbePassed": (
             transport.get("packagedBinaryTransportProbePassed") is True
         ),
+        "packagedBinaryLiveProbeConfigured": (
+            transport.get("packagedBinaryLiveProbeConfigured") is True
+        ),
+        "packagedBinaryLiveProbePassed": (
+            transport.get("packagedBinaryLiveProbePassed") is True
+        ),
+        "packagedBinaryLiveProbeDescriptorPassed": (
+            transport.get("packagedBinaryLiveProbeDescriptorPassed") is True
+        ),
+        "packagedBinaryLiveProbeCapabilitiesPassed": (
+            transport.get("packagedBinaryLiveProbeCapabilitiesPassed") is True
+        ),
+        "packagedBinaryLiveProbeTextTurnPassed": (
+            transport.get("packagedBinaryLiveProbeTextTurnPassed") is True
+        ),
+        "packagedBinaryLiveProbeTracePassed": (
+            transport.get("packagedBinaryLiveProbeTracePassed") is True
+        ),
+        "packagedBinaryLiveProbeSideEffectClaimed": (
+            transport.get("packagedBinaryLiveProbeSideEffectClaimed") is True
+        ),
         "governedRouteAllowlistEnforced": transport.get("governedRouteAllowlistEnforced") is True,
         "governedRouteMethodAllowlistEnforced": (
             transport.get("governedRouteMethodAllowlistEnforced") is True
@@ -746,8 +791,9 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         "agentDispatchPerformed": boundary.get("agentDispatchPerformed") is True,
         "externalSendPerformed": boundary.get("externalSendPerformed") is True,
         "runtimeAuthorityGranted": boundary.get("runtimeAuthorityGranted") is True,
+        "doesNotContactNapoleon": does_not_contact_napoleon,
         "failureReason": "none" if passed else "packaged_desktop_transport_report_failed",
-        "boundary": "Packaged desktop transport evidence is sanitized build/transport proof only and does not contact Napoleon or grant authority.",
+        "boundary": boundary_text,
     }
 
 
@@ -1714,6 +1760,12 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
             "Packaged desktop transport evidence did not pass.",
         ),
         (
+            not packaged_desktop.get("required")
+            or runtime["source"] != "real_runtime"
+            or packaged_desktop.get("packagedBinaryLiveProbePassed") is True,
+            "Packaged desktop binary live probe did not pass against the real runtime.",
+        ),
+        (
             len(summary.get("napoleonRequiredActions", [])) == 0,
             "Napoleon-owned required actions remain before promotion.",
         ),
@@ -1806,6 +1858,8 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- Packaged desktop no-bundle build passed: `{str(packaged_desktop['packagedNoBundleBuildPassed']).lower()}`",
         f"- Packaged desktop binary config probe passed: `{str(packaged_desktop['packagedBinaryConfigProbePassed']).lower()}`",
         f"- Packaged desktop binary transport probe passed: `{str(packaged_desktop['packagedBinaryTransportProbePassed']).lower()}`",
+        f"- Packaged desktop binary live probe configured: `{str(packaged_desktop['packagedBinaryLiveProbeConfigured']).lower()}`",
+        f"- Packaged desktop binary live probe passed: `{str(packaged_desktop['packagedBinaryLiveProbePassed']).lower()}`",
         f"- Browser proxy required by packaged transport: `{str(packaged_desktop['browserProxyRequired']).lower()}`",
         "",
         "## Napoleon Required Actions",
@@ -1822,6 +1876,12 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         checkbox(
             not packaged_desktop.get("required") or packaged_desktop.get("status") == "passed",
             "Packaged desktop transport evidence passed when required.",
+        ),
+        checkbox(
+            not packaged_desktop.get("required")
+            or runtime["source"] != "real_runtime"
+            or packaged_desktop.get("packagedBinaryLiveProbePassed") is True,
+            "Packaged desktop binary live probe passed against the real runtime when required.",
         ),
         checkbox(runtime["source"] == "real_runtime", "Evidence source is real Napoleon runtime, not local harness or simulation."),
         checkbox(not boundary["approvalCaptured"], "No approval was captured by Concierge."),

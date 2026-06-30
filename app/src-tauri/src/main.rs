@@ -174,6 +174,26 @@ fn runtime_transport_probe_output(request_succeeded: bool, status_ok: bool) -> S
     )
 }
 
+#[derive(Debug, Default)]
+struct RuntimeLiveProbeStatus {
+    descriptor_ok: bool,
+    capabilities_ok: bool,
+    text_turn_ok: bool,
+    trace_ok: bool,
+    side_effect_claimed: bool,
+}
+
+fn runtime_live_probe_output(status: RuntimeLiveProbeStatus) -> String {
+    format!(
+        r#"{{"descriptorOk":{},"capabilitiesOk":{},"textTurnOk":{},"traceOk":{},"sideEffectClaimed":{}}}"#,
+        status.descriptor_ok,
+        status.capabilities_ok,
+        status.text_turn_ok,
+        status.trace_ok,
+        status.side_effect_claimed
+    )
+}
+
 fn run_runtime_transport_probe() -> String {
     let result = tauri::async_runtime::block_on(async {
         let native_auth_token = configured_runtime_auth_token()?;
@@ -196,6 +216,136 @@ fn run_runtime_transport_probe() -> String {
         Ok(response) => runtime_transport_probe_output(true, response.ok && response.status == 200),
         Err(_) => runtime_transport_probe_output(false, false),
     }
+}
+
+fn live_probe_request(
+    path: &str,
+    method: &str,
+    body: Option<String>,
+) -> NapoleonRuntimeHttpRequest {
+    NapoleonRuntimeHttpRequest {
+        url: None,
+        path: Some(path.to_string()),
+        method: Some(method.to_string()),
+        native_auth: Some(true),
+        headers: Some(HashMap::from([(
+            "Content-Type".to_string(),
+            "application/json".to_string(),
+        )])),
+        body,
+    }
+}
+
+fn runtime_live_probe_text_turn_body() -> String {
+    serde_json::json!({
+        "request_id": "cos_packaged_desktop_live_probe",
+        "profile_mode": "adult_owner",
+        "contract_version": "napoleon/concierge/text-turn/v1",
+        "requested_capability": "governance_review",
+        "user_text": "Packaged desktop live runtime validation probe. Return advisory metadata only.",
+        "requested_effects": [],
+        "authority_tier": "advisory_prepare_only",
+        "approval_requirement": "chief_of_staff_review",
+        "blocked_effects": ["memory_write", "approval_capture", "external_send", "agent_dispatch"],
+        "source_evidence": ["packaged_desktop_live_probe"],
+        "actor_id": "concierge.text",
+        "trace_id": "trace_packaged_desktop_live_probe"
+    })
+    .to_string()
+}
+
+fn response_json(response: &NapoleonRuntimeHttpResponse) -> Option<serde_json::Value> {
+    serde_json::from_str(&response.body_text).ok()
+}
+
+fn response_claims_side_effects(value: &serde_json::Value) -> bool {
+    let true_flags = [
+        "approvalCaptured",
+        "approval_captured",
+        "memoryWritePerformed",
+        "memory_write_performed",
+        "agentDispatchPerformed",
+        "agent_dispatch_performed",
+        "externalSendPerformed",
+        "external_send_performed",
+        "runtimeAuthority",
+        "runtime_authority",
+    ];
+    true_flags
+        .iter()
+        .any(|flag| value.get(*flag).and_then(serde_json::Value::as_bool) == Some(true))
+}
+
+fn response_trace_id(value: &serde_json::Value) -> Option<String> {
+    value
+        .get("trace_id")
+        .or_else(|| value.get("traceId"))
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|trace_id| !trace_id.is_empty() && !trace_id.contains('/'))
+        .map(str::to_string)
+}
+
+fn run_runtime_live_probe() -> String {
+    let status = tauri::async_runtime::block_on(async {
+        let native_auth_token = configured_runtime_auth_token()?;
+        let native_runtime_endpoint = configured_runtime_endpoint();
+        let mut status = RuntimeLiveProbeStatus::default();
+
+        let descriptor = perform_runtime_http_request_with_endpoint(
+            live_probe_request("/cos/descriptor", "GET", None),
+            native_auth_token.clone(),
+            native_runtime_endpoint.clone(),
+        )
+        .await?;
+        status.descriptor_ok = descriptor.ok;
+        if let Some(value) = response_json(&descriptor) {
+            status.side_effect_claimed |= response_claims_side_effects(&value);
+        }
+
+        let capabilities = perform_runtime_http_request_with_endpoint(
+            live_probe_request("/cos/capabilities", "GET", None),
+            native_auth_token.clone(),
+            native_runtime_endpoint.clone(),
+        )
+        .await?;
+        status.capabilities_ok = capabilities.ok;
+        if let Some(value) = response_json(&capabilities) {
+            status.side_effect_claimed |= response_claims_side_effects(&value);
+        }
+
+        let text_turn = perform_runtime_http_request_with_endpoint(
+            live_probe_request(
+                "/cos/text-turn",
+                "POST",
+                Some(runtime_live_probe_text_turn_body()),
+            ),
+            native_auth_token.clone(),
+            native_runtime_endpoint.clone(),
+        )
+        .await?;
+        status.text_turn_ok = text_turn.ok;
+        if let Some(value) = response_json(&text_turn) {
+            status.side_effect_claimed |= response_claims_side_effects(&value);
+            if let Some(trace_id) = response_trace_id(&value) {
+                let trace = perform_runtime_http_request_with_endpoint(
+                    live_probe_request(&format!("/cos/trace/{trace_id}"), "GET", None),
+                    native_auth_token,
+                    native_runtime_endpoint,
+                )
+                .await?;
+                status.trace_ok = trace.ok;
+                if let Some(trace_value) = response_json(&trace) {
+                    status.side_effect_claimed |= response_claims_side_effects(&trace_value);
+                }
+            }
+        }
+
+        Ok::<RuntimeLiveProbeStatus, String>(status)
+    })
+    .unwrap_or_default();
+
+    runtime_live_probe_output(status)
 }
 
 fn configured_runtime_endpoint_from<F>(get_env: F) -> Option<String>
@@ -407,6 +557,15 @@ async fn perform_runtime_http_request_with_endpoint(
 }
 
 fn main() {
+    if std::env::var("CONCIERGE_DESKTOP_RUNTIME_LIVE_PROBE")
+        .ok()
+        .as_deref()
+        == Some("1")
+    {
+        println!("{}", run_runtime_live_probe());
+        return;
+    }
+
     if std::env::var("CONCIERGE_DESKTOP_RUNTIME_TRANSPORT_PROBE")
         .ok()
         .as_deref()
@@ -979,6 +1138,113 @@ mod tests {
         assert_eq!(
             request.headers.get("x-napoleon-auth"),
             Some(&"native_auth_value".to_string())
+        );
+
+        harness.join();
+    }
+
+    #[test]
+    fn desktop_runtime_live_probe_outputs_only_sanitized_booleans() {
+        let output = runtime_live_probe_output(RuntimeLiveProbeStatus {
+            descriptor_ok: true,
+            capabilities_ok: true,
+            text_turn_ok: true,
+            trace_ok: true,
+            side_effect_claimed: false,
+        });
+
+        assert_eq!(
+            output,
+            r#"{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}"#
+        );
+        assert!(!output.contains("napoleon.example"));
+        assert!(!output.contains("native_auth_value"));
+        assert!(!output.contains("Packaged desktop live runtime validation probe"));
+    }
+
+    #[test]
+    fn desktop_runtime_live_probe_uses_governed_native_sequence() {
+        let harness = RuntimeHarness::start(vec![
+            r#"{"descriptor":{"runtimeAuthority":false}}"#,
+            r#"{"capabilities":[{"id":"napoleon.capability.governed_text_turn","proposalOnly":true}],"runtimeAuthority":false}"#,
+            r#"{"trace_id":"trace_packaged_desktop_live_probe","governance_decision":{"decision":"allow_prepare_only"},"approval_captured":false,"memory_write_performed":false,"agent_dispatch_performed":false,"external_send_performed":false}"#,
+            r#"{"trace_id":"trace_packaged_desktop_live_probe"}"#,
+        ]);
+        let native_auth = Some("native_auth_value".to_string());
+        let native_endpoint = Some(harness.base_url.clone());
+        let mut status = RuntimeLiveProbeStatus::default();
+
+        let descriptor =
+            tauri::async_runtime::block_on(perform_runtime_http_request_with_endpoint(
+                live_probe_request("/cos/descriptor", "GET", None),
+                native_auth.clone(),
+                native_endpoint.clone(),
+            ))
+            .expect("descriptor request succeeds");
+        status.descriptor_ok = descriptor.ok;
+
+        let capabilities =
+            tauri::async_runtime::block_on(perform_runtime_http_request_with_endpoint(
+                live_probe_request("/cos/capabilities", "GET", None),
+                native_auth.clone(),
+                native_endpoint.clone(),
+            ))
+            .expect("capabilities request succeeds");
+        status.capabilities_ok = capabilities.ok;
+
+        let text_turn = tauri::async_runtime::block_on(perform_runtime_http_request_with_endpoint(
+            live_probe_request(
+                "/cos/text-turn",
+                "POST",
+                Some(runtime_live_probe_text_turn_body()),
+            ),
+            native_auth.clone(),
+            native_endpoint.clone(),
+        ))
+        .expect("text turn request succeeds");
+        status.text_turn_ok = text_turn.ok;
+        let trace_id = response_json(&text_turn)
+            .and_then(|value| response_trace_id(&value))
+            .expect("text response includes trace id");
+
+        let trace = tauri::async_runtime::block_on(perform_runtime_http_request_with_endpoint(
+            live_probe_request(&format!("/cos/trace/{trace_id}"), "GET", None),
+            native_auth,
+            native_endpoint,
+        ))
+        .expect("trace request succeeds");
+        status.trace_ok = trace.ok;
+
+        assert_eq!(
+            runtime_live_probe_output(status),
+            r#"{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}"#
+        );
+
+        let descriptor_request = harness.next_request();
+        assert_eq!(descriptor_request.method, "GET");
+        assert_eq!(descriptor_request.path, "/cos/descriptor");
+        assert_eq!(
+            descriptor_request.headers.get("x-napoleon-auth"),
+            Some(&"native_auth_value".to_string())
+        );
+
+        let capabilities_request = harness.next_request();
+        assert_eq!(capabilities_request.method, "GET");
+        assert_eq!(capabilities_request.path, "/cos/capabilities");
+
+        let text_turn_request = harness.next_request();
+        assert_eq!(text_turn_request.method, "POST");
+        assert_eq!(text_turn_request.path, "/cos/text-turn");
+        assert!(text_turn_request
+            .body
+            .contains(r#""request_id":"cos_packaged_desktop_live_probe""#));
+        assert!(!text_turn_request.body.contains("native_auth_value"));
+
+        let trace_request = harness.next_request();
+        assert_eq!(trace_request.method, "GET");
+        assert_eq!(
+            trace_request.path,
+            "/cos/trace/trace_packaged_desktop_live_probe"
         );
 
         harness.join();

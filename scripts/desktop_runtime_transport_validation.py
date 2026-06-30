@@ -41,6 +41,8 @@ TRANSPORT_TESTS = [
     "desktop_runtime_config_status_probe_outputs_only_sanitized_booleans",
     "desktop_runtime_transport_probe_outputs_only_sanitized_booleans",
     "desktop_runtime_transport_probe_uses_native_endpoint_and_auth",
+    "desktop_runtime_live_probe_outputs_only_sanitized_booleans",
+    "desktop_runtime_live_probe_uses_governed_native_sequence",
     "desktop_runtime_command_preserves_explicit_webview_auth_when_native_auth_is_disabled",
 ]
 
@@ -270,13 +272,121 @@ def packaged_binary_transport_probe_check(
     }
 
 
+def configured_live_probe_endpoint(env: dict[str, str] | None = None) -> str | None:
+    active_env = os.environ if env is None else env
+    for key in ["NAPOLEON_RUNTIME_ENDPOINT", "NAPOLEON_BRIDGE_ENDPOINT", "NAPOLEON_EVAL_ENDPOINT"]:
+        value = active_env.get(key)
+        if value and value.strip():
+            return value.strip()
+    return None
+
+
+def packaged_binary_live_probe_check(
+    *,
+    tauri_dir: Path,
+    runner: CommandRunner,
+    endpoint: str | None,
+) -> dict[str, Any]:
+    command = [str(release_binary_path(tauri_dir))]
+    if not endpoint:
+        return {
+            "id": "tauri_packaged_desktop_binary_live_probe",
+            "description": (
+                "The built no-bundle desktop binary live probe was not run because no real "
+                "Napoleon endpoint was configured."
+            ),
+            "status": "not_configured",
+            "exitCode": None,
+            "command": command,
+            "stdoutRetained": False,
+            "stderrRetained": False,
+            "endpointHostRetained": False,
+            "tokenRetained": False,
+            "tokenFilePathRetained": False,
+            "requestBodyRetained": False,
+            "responseBodyRetained": False,
+            "liveProbeConfigured": False,
+            "descriptorOk": False,
+            "capabilitiesOk": False,
+            "textTurnOk": False,
+            "traceOk": False,
+            "sideEffectClaimed": False,
+        }
+
+    env = {
+        **os.environ,
+        "CONCIERGE_DESKTOP_RUNTIME_LIVE_PROBE": "1",
+        "NAPOLEON_RUNTIME_ENDPOINT": endpoint,
+    }
+    if not env.get("NAPOLEON_RUNTIME_AUTH_TOKEN"):
+        env["NAPOLEON_RUNTIME_AUTH_TOKEN"] = os.environ.get("NAPOLEON_EVAL_TOKEN", "")
+    if runner is DEFAULT_COMMAND_RUNNER:
+        result = subprocess.run(
+            command,
+            cwd=str(tauri_dir),
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=env,
+        )
+    else:
+        result = runner(command, tauri_dir)
+
+    output = f"{result.stdout or ''}\n{result.stderr or ''}"
+    probe_status = None
+    try:
+        probe_status = json.loads((result.stdout or "").strip())
+    except json.JSONDecodeError:
+        probe_status = None
+    leaked_endpoint = endpoint in output or "napoleon.example" in output
+    leaked_token = PROBE_TOKEN in output or bool(env.get("NAPOLEON_RUNTIME_AUTH_TOKEN") and env["NAPOLEON_RUNTIME_AUTH_TOKEN"] in output)
+    passed = (
+        result.returncode == 0
+        and isinstance(probe_status, dict)
+        and probe_status.get("descriptorOk") is True
+        and probe_status.get("capabilitiesOk") is True
+        and probe_status.get("textTurnOk") is True
+        and probe_status.get("traceOk") is True
+        and probe_status.get("sideEffectClaimed") is False
+        and not leaked_endpoint
+        and not leaked_token
+    )
+    return {
+        "id": "tauri_packaged_desktop_binary_live_probe",
+        "description": (
+            "The built no-bundle desktop binary can run the governed descriptor, capability, "
+            "text-turn, and trace-proof live sequence through native runtime transport while "
+            "retaining only sanitized booleans."
+        ),
+        "status": "passed" if passed else "failed",
+        "exitCode": result.returncode,
+        "command": command,
+        "stdoutRetained": False,
+        "stderrRetained": False,
+        "endpointHostRetained": leaked_endpoint,
+        "tokenRetained": leaked_token,
+        "tokenFilePathRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        "liveProbeConfigured": True,
+        "descriptorOk": isinstance(probe_status, dict) and probe_status.get("descriptorOk") is True,
+        "capabilitiesOk": isinstance(probe_status, dict) and probe_status.get("capabilitiesOk") is True,
+        "textTurnOk": isinstance(probe_status, dict) and probe_status.get("textTurnOk") is True,
+        "traceOk": isinstance(probe_status, dict) and probe_status.get("traceOk") is True,
+        "sideEffectClaimed": isinstance(probe_status, dict) and probe_status.get("sideEffectClaimed") is True,
+    }
+
+
 def build_report(
     *,
     runner: CommandRunner | None = None,
     app_dir: Path = APP_DIR,
     tauri_dir: Path = TAURI_DIR,
+    live_probe_endpoint: str | None = None,
 ) -> dict[str, Any]:
     active_runner = runner or run_command
+    configured_endpoint = live_probe_endpoint or configured_live_probe_endpoint()
     checks = [
         sanitized_check(
             check_id="app_desktop_runtime_transport_tests",
@@ -330,8 +440,17 @@ def build_report(
             tauri_dir=tauri_dir,
             runner=active_runner,
         ),
+        packaged_binary_live_probe_check(
+            tauri_dir=tauri_dir,
+            runner=active_runner,
+            endpoint=configured_endpoint,
+        ),
     ]
-    status = "passed" if all(check["status"] == "passed" for check in checks) else "failed"
+    required_checks_passed = all(
+        check["status"] == "passed" or check["id"] == "tauri_packaged_desktop_binary_live_probe" and check["status"] == "not_configured"
+        for check in checks
+    )
+    status = "passed" if required_checks_passed else "failed"
     packaged_build_passed = any(
         check["id"] == "tauri_packaged_desktop_no_bundle_build"
         and check["status"] == "passed"
@@ -346,6 +465,10 @@ def build_report(
         check["id"] == "tauri_packaged_desktop_binary_transport_probe"
         and check["status"] == "passed"
         for check in checks
+    )
+    packaged_live_probe = next(
+        (check for check in checks if check["id"] == "tauri_packaged_desktop_binary_live_probe"),
+        {},
     )
     return {
         "kind": OUTPUT_KIND,
@@ -365,6 +488,13 @@ def build_report(
             "nativeLocalEndpointReadiness": True,
             "packagedBinaryConfigProbePassed": packaged_config_probe_passed,
             "packagedBinaryTransportProbePassed": packaged_transport_probe_passed,
+            "packagedBinaryLiveProbeConfigured": packaged_live_probe.get("liveProbeConfigured") is True,
+            "packagedBinaryLiveProbePassed": packaged_live_probe.get("status") == "passed",
+            "packagedBinaryLiveProbeDescriptorPassed": packaged_live_probe.get("descriptorOk") is True,
+            "packagedBinaryLiveProbeCapabilitiesPassed": packaged_live_probe.get("capabilitiesOk") is True,
+            "packagedBinaryLiveProbeTextTurnPassed": packaged_live_probe.get("textTurnOk") is True,
+            "packagedBinaryLiveProbeTracePassed": packaged_live_probe.get("traceOk") is True,
+            "packagedBinaryLiveProbeSideEffectClaimed": packaged_live_probe.get("sideEffectClaimed") is True,
             "explicitWebviewAuthPreserved": True,
             "governedRouteAllowlistEnforced": True,
             "governedRouteMethodAllowlistEnforced": True,
@@ -379,7 +509,7 @@ def build_report(
         },
         "authorityBoundary": {
             "validationEvidenceOnly": True,
-            "doesNotContactNapoleon": True,
+            "doesNotContactNapoleon": configured_endpoint is None,
             "doesNotApprove": True,
             "doesNotWriteMemory": True,
             "doesNotDispatchAgents": True,

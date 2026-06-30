@@ -269,12 +269,15 @@ class LiveRuntimeValidationTest(unittest.TestCase):
                                 '{"endpointConfigured":true,"authConfigured":true}'
                                 if len(binary_calls) == 1
                                 else '{"requestSucceeded":true,"statusOk":true}'
+                                if len(binary_calls) == 2
+                                else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}'
                             )
                             return mock.Mock(returncode=0, stdout=stdout, stderr="")
                         return mock.Mock(returncode=0, stdout="", stderr="")
 
                     report = desktop_runtime_transport_validation.build_report(
                         runner=runner,
+                        live_probe_endpoint=f"{cos_harness.base_url}/cos/text-turn",
                     )
                     desktop_runtime_transport_validation.write_report(report, report_path)
                     exit_code = live_runtime_validation.main([
@@ -304,10 +307,18 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertTrue(packaged["nativeLocalEndpointReadiness"])
         self.assertTrue(packaged["packagedBinaryConfigProbePassed"])
         self.assertTrue(packaged["packagedBinaryTransportProbePassed"])
+        self.assertTrue(packaged["packagedBinaryLiveProbeConfigured"])
+        self.assertTrue(packaged["packagedBinaryLiveProbePassed"])
+        self.assertTrue(packaged["packagedBinaryLiveProbeDescriptorPassed"])
+        self.assertTrue(packaged["packagedBinaryLiveProbeCapabilitiesPassed"])
+        self.assertTrue(packaged["packagedBinaryLiveProbeTextTurnPassed"])
+        self.assertTrue(packaged["packagedBinaryLiveProbeTracePassed"])
+        self.assertFalse(packaged["packagedBinaryLiveProbeSideEffectClaimed"])
         self.assertTrue(packaged["packagedNoBundleBuildPassed"])
         self.assertFalse(packaged["endpointHostRetained"])
         self.assertFalse(packaged["tokenRetained"])
         self.assertFalse(packaged["requestBodyRetained"])
+        self.assertFalse(packaged["doesNotContactNapoleon"])
         self.assertFalse(packaged["responseBodyRetained"])
         self.assertFalse(packaged["approvalCaptured"])
         self.assertFalse(packaged["memoryWritePerformed"])
@@ -318,6 +329,8 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertIn("- Packaged desktop transport status: `passed`", review)
         self.assertIn("- Packaged desktop binary config probe passed: `true`", review)
         self.assertIn("- Packaged desktop binary transport probe passed: `true`", review)
+        self.assertIn("- Packaged desktop binary live probe configured: `true`", review)
+        self.assertIn("- Packaged desktop binary live probe passed: `true`", review)
         self.assertNotIn("token_packaged_desktop_summary", json.dumps(summary))
 
     def test_required_packaged_desktop_transport_blocks_readiness_when_report_is_missing(self):
@@ -988,6 +1001,8 @@ class LiveRuntimeValidationTest(unittest.TestCase):
                         '{"endpointConfigured":true,"authConfigured":true}'
                         if len(binary_calls) == 1
                         else '{"requestSucceeded":true,"statusOk":true}'
+                        if len(binary_calls) == 2
+                        else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}'
                     )
                     return mock.Mock(returncode=0, stdout=stdout, stderr="")
                 return mock.Mock(returncode=0, stdout="", stderr="")
@@ -1025,10 +1040,13 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertTrue(preflight["packagedDesktopTransport"]["nativeLocalEndpointReadiness"])
         self.assertTrue(preflight["packagedDesktopTransport"]["packagedBinaryConfigProbePassed"])
         self.assertTrue(preflight["packagedDesktopTransport"]["packagedBinaryTransportProbePassed"])
+        self.assertFalse(preflight["packagedDesktopTransport"]["packagedBinaryLiveProbeConfigured"])
+        self.assertFalse(preflight["packagedDesktopTransport"]["packagedBinaryLiveProbePassed"])
         self.assertFalse(preflight["packagedDesktopTransport"]["endpointHostRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["tokenRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["requestBodyRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["responseBodyRetained"])
+        self.assertTrue(preflight["packagedDesktopTransport"]["doesNotContactNapoleon"])
 
     def test_missing_endpoint_preflight_reports_missing_token_file_without_retaining_path(self):
         missing_token_path = "/tmp/concierge-runtime-token-that-does-not-exist"
