@@ -30,11 +30,36 @@ fn validate_runtime_request(request: &NapoleonRuntimeHttpRequest) -> Result<(), 
         "http" | "https" => {}
         _ => return Err("unsupported_url_scheme".to_string()),
     }
+    if !is_governed_napoleon_runtime_path(parsed.path()) {
+        return Err("unsupported_runtime_target".to_string());
+    }
     let method = request.method.as_deref().unwrap_or("GET").to_ascii_uppercase();
     match method.as_str() {
         "GET" | "POST" => Ok(()),
         _ => Err("unsupported_http_method".to_string()),
     }
+}
+
+fn is_governed_napoleon_runtime_path(path: &str) -> bool {
+    matches!(
+        path,
+        "/cos"
+            | "/cos/descriptor"
+            | "/cos/capabilities"
+            | "/cos/text-turn"
+            | "/v1/concierge/turn"
+            | "/v1/concierge/evaluate"
+            | "/v1/concierge/chief-of-staff/descriptor"
+            | "/v1/concierge/chief-of-staff/capabilities"
+            | "/v1/concierge/chief-of-staff/steering"
+            | "/v1/concierge/memory-proposals"
+            | "/chief-of-staff/requests"
+            | "/chief-of-staff/reviews/evaluation"
+            | "/chief-of-staff/reviews/evolution-proposals"
+            | "/chief-of-staff/reviews/governance"
+            | "/chief-of-staff/reviews/new-agent-proposals"
+            | "/governance/evaluate"
+    ) || path.starts_with("/cos/trace/")
 }
 
 fn configured_runtime_auth_token() -> Result<Option<String>, String> {
@@ -282,6 +307,21 @@ mod tests {
         assert_eq!(
             validate_runtime_request(&request),
             Err("unsupported_url_scheme".to_string())
+        );
+    }
+
+    #[test]
+    fn rejects_http_runtime_targets_outside_governed_napoleon_paths() {
+        let request = NapoleonRuntimeHttpRequest {
+            url: "https://example.com/unrelated-api".to_string(),
+            method: Some("POST".to_string()),
+            headers: None,
+            body: Some(r#"{"requestKind":"text_turn"}"#.to_string()),
+        };
+
+        assert_eq!(
+            validate_runtime_request(&request),
+            Err("unsupported_runtime_target".to_string())
         );
     }
 
