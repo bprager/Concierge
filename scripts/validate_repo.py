@@ -44,6 +44,7 @@ GOVERNED_NETWORK_SOURCE_ALLOWLIST = {
     "app/src/chiefOfStaffSteering.ts",
     "app/src/contractPacketSubmission.ts",
     "app/src/descriptorDiscovery.ts",
+    "app/src/desktopRuntimeTransport.ts",
     "app/src/evolutionProposalSubmission.ts",
     "app/src/evolutionProposalStatus.ts",
     "app/src/governanceReviewSubmission.ts",
@@ -237,7 +238,12 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     ),
 ]
 
-ALLOWED_TAURI_COMMANDS = {"app_status"}
+ALLOWED_TAURI_COMMANDS = {"app_status", "napoleon_runtime_http_request"}
+ALLOWED_TAURI_BRIDGE_SOURCE_PATHS = {"app/src/desktopRuntimeTransport.ts"}
+ALLOWED_RUST_AUTHORITY_DEPENDENCIES_BY_PATH = {
+    "app/src-tauri/Cargo.toml": {"reqwest"},
+    "app/src-tauri/Cargo.lock": {"reqwest"},
+}
 TAURI_COMMAND_ATTRIBUTE_PATTERN = re.compile(r"#\s*\[\s*tauri::command\s*\]")
 RUST_FUNCTION_NAME_PATTERN = re.compile(r"\bfn\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(")
 TAURI_GENERATE_HANDLER_PATTERN = re.compile(r"generate_handler!\s*\[(?P<handlers>[^\]]*)\]")
@@ -1846,6 +1852,8 @@ def scan_authority_boundary_text(path: str, text: str) -> list[str]:
     lines = text.splitlines()
     for line_number, line in enumerate(lines, start=1):
         for pattern, reason in AUTHORITY_BOUNDARY_PATTERNS:
+            if reason == "direct Tauri native bridge access" and path in ALLOWED_TAURI_BRIDGE_SOURCE_PATHS:
+                continue
             if pattern.search(line):
                 violations.append(f"{path}:{line_number}: {reason}")
         if TAURI_COMMAND_ATTRIBUTE_PATTERN.search(line):
@@ -2027,6 +2035,8 @@ def scan_cargo_authority_dependency_text(path: str, text: str) -> list[str]:
         if not dependency_match:
             continue
         dependency_name = dependency_match.group("name")
+        if dependency_name in ALLOWED_RUST_AUTHORITY_DEPENDENCIES_BY_PATH.get(path, set()):
+            continue
         if dependency_name in FORBIDDEN_RUST_AUTHORITY_DEPENDENCIES:
                 violations.append(f"{path}: forbidden authority client dependency: {dependency_name}")
     return violations
@@ -2080,6 +2090,8 @@ def scan_cargo_lock_authority_dependency_text(path: str, text: str) -> list[str]
         if not dependency_match:
             continue
         dependency_name = dependency_match.group(1).split(" ", 1)[0]
+        if dependency_name in ALLOWED_RUST_AUTHORITY_DEPENDENCIES_BY_PATH.get(path, set()):
+            continue
         if dependency_name in FORBIDDEN_RUST_AUTHORITY_DEPENDENCIES:
             violations.append(f"{path}: forbidden authority client dependency in root lockfile package: {dependency_name}")
     return violations

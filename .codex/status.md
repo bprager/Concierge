@@ -10,6 +10,9 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a packaged desktop Napoleon runtime HTTP transport: `app/src/desktopRuntimeTransport.ts` routes descriptor discovery, advisory capability discovery, and governed text turns through the allowlisted Tauri command `napoleon_runtime_http_request` when running inside Tauri, while browser/dev runs keep the existing fetch path.
+- Added the Tauri `napoleon_runtime_http_request` command with HTTP(S)-only and GET/POST-only validation, status/body response forwarding, and no memory, approval, agent dispatch, tool, shell, file, service-control, or external-send authority. Repository validation now narrowly allowlists this command and its `reqwest` dependency while continuing to block other Tauri native bypasses.
+- Added desktop runtime transport tests and authority-boundary tests for the new allowlist. Verified `npm test`, `npm run build`, `cargo test`, `cargo check`, and authority-boundary unit tests locally. A packaged live runtime pilot against real Napoleon is still required before closing the production runtime-connection goal.
 - Ran a rendered live text interaction pilot against the real Napoleon `/cos` runtime through a local same-origin development proxy backed by the existing SSH tunnel; recorded sanitized evidence in `docs/reports/LIVE_TEXT_INTERACTION_PILOT.md` without endpoint hosts, tokens, prompts, request bodies, or response bodies.
 - Added `app/vite.config.ts` with a development-only `/napoleon-runtime` proxy so local browser-rendered pilots can reach the real runtime without CORS failures while preserving governed descriptor, proof, and side-effect gates.
 - Updated `/cos/capabilities` parsing to accept Napoleon's current capability registry response shape, showing 8 advisory capabilities, blocked runtime authority, and no response side-effect claims in the UI.

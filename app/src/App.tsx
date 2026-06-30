@@ -91,6 +91,7 @@ import {
   discoverChiefOfStaffCapabilities,
   type ChiefOfStaffCapabilityDiscoveryResult,
 } from "./chiefOfStaffCapabilities.js";
+import { createPackagedDesktopRuntimeFetch } from "./desktopRuntimeTransport.js";
 import {
   clearPersistedEvaluatorValidationImport,
   loadPersistedEvaluatorValidationImport,
@@ -2211,6 +2212,7 @@ interface AppProps {
 
 export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const mediaSessionReadinessInitialized = useRef(false);
+  const desktopRuntimeFetchRef = useRef(createPackagedDesktopRuntimeFetch());
   const [messages, setMessages] = useState<ConciergeMessage[]>([
     {
       role: "assistant",
@@ -3677,6 +3679,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       const result = await discoverNapoleonDescriptor({
         getEndpoint: () => selectedEndpoint || null,
         getAuthToken: () => authToken.trim() || null,
+        fetch: desktopRuntimeFetchRef.current ?? undefined,
       });
       setLiveDescriptorInput(result.input);
       setDescriptorMode("live");
@@ -3743,6 +3746,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       authToken: authToken.trim() || null,
       descriptorReady: descriptorConnection.canAttemptLiveBridge,
       profileId: mapProfileToNapoleonMode(profile),
+      fetch: desktopRuntimeFetchRef.current ?? undefined,
     });
     setChiefOfStaffCapabilities(result);
     emitEvent(result.state === "ready" ? "chief_of_staff_capabilities_discovered" : "chief_of_staff_capabilities_blocked", {
@@ -4950,6 +4954,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         message: content,
       }, {
         descriptorConnection: currentDescriptorInput(),
+        fetch: desktopRuntimeFetchRef.current ?? undefined,
         captureEvidence: (record) => {
           setBridgeEvidenceReadiness((current) => updateBridgeEvidenceReadinessState(current, record));
         },

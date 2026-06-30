@@ -166,6 +166,26 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("direct Tauri native bridge access", violations[0])
 
+    def test_scanner_allows_governed_desktop_runtime_bridge(self):
+        transport_source = '''
+        const { invoke } = await import("@tauri-apps/api/core");
+        return invoke(command, args);
+        '''
+        command_source = """
+        #[tauri::command]
+        async fn napoleon_runtime_http_request() {}
+        tauri::generate_handler![app_status, napoleon_runtime_http_request]
+        """
+
+        self.assertEqual(
+            validate_repo.scan_authority_boundary_text("app/src/desktopRuntimeTransport.ts", transport_source),
+            [],
+        )
+        self.assertEqual(
+            validate_repo.scan_authority_boundary_text("app/src-tauri/src/main.rs", command_source),
+            [],
+        )
+
     def test_scanner_detects_dynamic_code_execution(self):
         for source in [
             "eval(userSuppliedScript);",
@@ -254,8 +274,13 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         violations = validate_repo.scan_cargo_authority_dependency_text("app/src-tauri/Cargo.toml", source)
 
-        self.assertEqual(len(violations), 4)
+        self.assertEqual(len(violations), 3)
         self.assertTrue(all("forbidden authority client dependency" in violation for violation in violations))
+
+        other_violations = validate_repo.scan_cargo_authority_dependency_text("runtime/Cargo.toml", source)
+
+        self.assertEqual(len(other_violations), 4)
+        self.assertTrue(any("reqwest" in violation for violation in other_violations))
 
     def test_scanner_detects_forbidden_node_lockfile_root_dependencies(self):
         source = """
@@ -301,8 +326,13 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
 
         violations = validate_repo.scan_cargo_lock_authority_dependency_text("app/src-tauri/Cargo.lock", source)
 
-        self.assertEqual(len(violations), 3)
+        self.assertEqual(len(violations), 2)
         self.assertTrue(all("forbidden authority client dependency" in violation for violation in violations))
+
+        other_violations = validate_repo.scan_cargo_lock_authority_dependency_text("runtime/Cargo.lock", source)
+
+        self.assertEqual(len(other_violations), 3)
+        self.assertTrue(any("reqwest" in violation for violation in other_violations))
 
     def test_network_scanner_detects_unallowlisted_fetch_and_socket_calls(self):
         for source in [
