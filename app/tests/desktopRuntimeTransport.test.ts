@@ -31,6 +31,43 @@ test("desktop runtime fetch sends Napoleon HTTP through Tauri invoke without web
   assert.equal(invoked[0]?.command, "napoleon_runtime_http_request");
   assert.deepEqual(invoked[0]?.args, {
     request: {
+      path: "/cos/text-turn",
+      method: "POST",
+      nativeAuth: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ requestKind: "text_turn" }),
+    },
+  });
+});
+
+test("desktop runtime fetch can keep full endpoint in native configuration for compatibility override", async () => {
+  const invoked: Array<{ command: string; args: Record<string, unknown> | undefined }> = [];
+  const fetcher = createDesktopRuntimeFetch(
+    async (command, args) => {
+      invoked.push({ command, args });
+      return {
+        ok: true,
+        status: 202,
+        bodyJson: {
+          accepted: true,
+        },
+      };
+    },
+    { nativeEndpoint: false },
+  );
+
+  await fetcher("https://napoleon.example/cos/text-turn", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ requestKind: "text_turn" }),
+  });
+
+  assert.deepEqual(invoked[0]?.args, {
+    request: {
       url: "https://napoleon.example/cos/text-turn",
       method: "POST",
       nativeAuth: true,
@@ -69,7 +106,7 @@ test("desktop runtime fetch can preserve explicit webview auth when native auth 
   assert.equal(invoked.length, 1);
   assert.deepEqual(invoked[0]?.args, {
     request: {
-      url: "https://napoleon.example/cos/descriptor",
+      path: "/cos/descriptor",
       method: "GET",
       nativeAuth: false,
       headers: {

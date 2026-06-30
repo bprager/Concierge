@@ -620,6 +620,8 @@ def packaged_desktop_transport_default(required: bool) -> dict[str, Any]:
         "nativeAuthFallbackWhenWebviewOmitsAuth": False,
         "webviewAuthHeadersStrippedWhenNativeAuthEnabled": False,
         "nativeAuthEnforcedAtCommandBoundary": False,
+        "nativeEndpointResolution": False,
+        "endpointHostOmittedFromInvokePayload": False,
         "governedRouteAllowlistEnforced": False,
         "governedRouteMethodAllowlistEnforced": False,
         "packagedNoBundleBuildPassed": False,
@@ -688,6 +690,8 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         and transport.get("nativeAuthFallbackWhenWebviewOmitsAuth") is True
         and transport.get("webviewAuthHeadersStrippedWhenNativeAuthEnabled") is True
         and transport.get("nativeAuthEnforcedAtCommandBoundary") is True
+        and transport.get("nativeEndpointResolution") is True
+        and transport.get("endpointHostOmittedFromInvokePayload") is True
         and transport.get("governedRouteAllowlistEnforced") is True
         and transport.get("governedRouteMethodAllowlistEnforced") is True
         and transport.get("packagedNoBundleBuildPassed") is True
@@ -709,6 +713,10 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         ),
         "nativeAuthEnforcedAtCommandBoundary": (
             transport.get("nativeAuthEnforcedAtCommandBoundary") is True
+        ),
+        "nativeEndpointResolution": transport.get("nativeEndpointResolution") is True,
+        "endpointHostOmittedFromInvokePayload": (
+            transport.get("endpointHostOmittedFromInvokePayload") is True
         ),
         "governedRouteAllowlistEnforced": transport.get("governedRouteAllowlistEnforced") is True,
         "governedRouteMethodAllowlistEnforced": (

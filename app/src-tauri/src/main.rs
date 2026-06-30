@@ -5,7 +5,8 @@ use std::time::Duration;
 
 #[derive(Debug, Deserialize)]
 struct NapoleonRuntimeHttpRequest {
-    url: String,
+    url: Option<String>,
+    path: Option<String>,
     method: Option<String>,
     #[serde(rename = "nativeAuth")]
     native_auth: Option<bool>,
@@ -27,11 +28,7 @@ fn app_status() -> &'static str {
 }
 
 fn validate_runtime_request(request: &NapoleonRuntimeHttpRequest) -> Result<(), String> {
-    let parsed = reqwest::Url::parse(request.url.trim()).map_err(|_| "invalid_url".to_string())?;
-    match parsed.scheme() {
-        "http" | "https" => {}
-        _ => return Err("unsupported_url_scheme".to_string()),
-    }
+    let parsed = parsed_runtime_target(request)?;
     let method = request.method.as_deref().unwrap_or("GET").to_ascii_uppercase();
     match method.as_str() {
         "GET" | "POST" => {}
@@ -43,6 +40,25 @@ fn validate_runtime_request(request: &NapoleonRuntimeHttpRequest) -> Result<(), 
         return Err("unsupported_runtime_method_for_target".to_string());
     }
     Ok(())
+}
+
+fn parsed_runtime_target(request: &NapoleonRuntimeHttpRequest) -> Result<reqwest::Url, String> {
+    if let Some(url) = request.url.as_deref().map(str::trim).filter(|url| !url.is_empty()) {
+        let parsed = reqwest::Url::parse(url).map_err(|_| "invalid_url".to_string())?;
+        match parsed.scheme() {
+            "http" | "https" => {}
+            _ => return Err("unsupported_url_scheme".to_string()),
+        }
+        return Ok(parsed);
+    }
+    if let Some(path) = request.path.as_deref().map(str::trim).filter(|path| !path.is_empty()) {
+        if !path.starts_with('/') || path.starts_with("//") || path.contains('#') {
+            return Err("invalid_runtime_path".to_string());
+        }
+        return reqwest::Url::parse(&format!("http://concierge-runtime.local{path}"))
+            .map_err(|_| "invalid_runtime_path".to_string());
+    }
+    Err("missing_runtime_target".to_string())
 }
 
 fn governed_napoleon_runtime_method(path: &str) -> Option<&'static str> {
@@ -99,6 +115,28 @@ fn is_profile_metadata_path(path: &str) -> bool {
 
 fn configured_runtime_auth_token() -> Result<Option<String>, String> {
     configured_runtime_auth_token_from(|key| std::env::var(key).ok())
+}
+
+fn configured_runtime_endpoint() -> Option<String> {
+    configured_runtime_endpoint_from(|key| std::env::var(key).ok())
+}
+
+fn configured_runtime_endpoint_from<F>(get_env: F) -> Option<String>
+where
+    F: Fn(&str) -> Option<String>,
+{
+    for key in [
+        "NAPOLEON_RUNTIME_ENDPOINT",
+        "NAPOLEON_BRIDGE_ENDPOINT",
+        "NAPOLEON_EVAL_ENDPOINT",
+    ] {
+        if let Some(value) = get_env(key).map(|value| value.trim().to_string()) {
+            if !value.is_empty() {
+                return Some(value);
+            }
+        }
+    }
+    None
 }
 
 fn configured_runtime_auth_token_from<F>(get_env: F) -> Result<Option<String>, String>
@@ -169,19 +207,62 @@ fn runtime_auth_header_for_url(url: &str) -> Result<(&'static str, bool), String
     }
 }
 
+fn resolved_runtime_url(
+    request: &NapoleonRuntimeHttpRequest,
+    native_runtime_endpoint: Option<&str>,
+) -> Result<String, String> {
+    if let Some(url) = request.url.as_deref().map(str::trim).filter(|url| !url.is_empty()) {
+        return Ok(url.to_string());
+    }
+    let path = request
+        .path
+        .as_deref()
+        .map(str::trim)
+        .filter(|path| !path.is_empty())
+        .ok_or_else(|| "missing_runtime_target".to_string())?;
+    let endpoint = native_runtime_endpoint
+        .map(str::trim)
+        .filter(|endpoint| !endpoint.is_empty())
+        .ok_or_else(|| "runtime_endpoint_unconfigured".to_string())?;
+    let base = reqwest::Url::parse(endpoint).map_err(|_| "invalid_runtime_endpoint".to_string())?;
+    match base.scheme() {
+        "http" | "https" => {}
+        _ => return Err("unsupported_runtime_endpoint_scheme".to_string()),
+    }
+    base.join(path)
+        .map(|url| url.to_string())
+        .map_err(|_| "invalid_runtime_path".to_string())
+}
+
 #[tauri::command]
 async fn napoleon_runtime_http_request(
     request: NapoleonRuntimeHttpRequest,
 ) -> Result<NapoleonRuntimeHttpResponse, String> {
     let native_auth_token = configured_runtime_auth_token()?;
-    perform_runtime_http_request(request, native_auth_token).await
+    let native_runtime_endpoint = configured_runtime_endpoint();
+    perform_runtime_http_request_with_endpoint(
+        request,
+        native_auth_token,
+        native_runtime_endpoint,
+    )
+    .await
 }
 
+#[cfg(test)]
 async fn perform_runtime_http_request(
-    mut request: NapoleonRuntimeHttpRequest,
+    request: NapoleonRuntimeHttpRequest,
     native_auth_token: Option<String>,
 ) -> Result<NapoleonRuntimeHttpResponse, String> {
+    perform_runtime_http_request_with_endpoint(request, native_auth_token, None).await
+}
+
+async fn perform_runtime_http_request_with_endpoint(
+    mut request: NapoleonRuntimeHttpRequest,
+    native_auth_token: Option<String>,
+    native_runtime_endpoint: Option<String>,
+) -> Result<NapoleonRuntimeHttpResponse, String> {
     validate_runtime_request(&request)?;
+    let target_url = resolved_runtime_url(&request, native_runtime_endpoint.as_deref())?;
     let use_native_auth = native_auth_enabled(&request);
     request.headers = auth_sanitized_headers(request.headers, use_native_auth);
     let method = request.method.as_deref().unwrap_or("GET").to_ascii_uppercase();
@@ -191,10 +272,10 @@ async fn perform_runtime_http_request(
         .timeout(Duration::from_secs(30))
         .build()
         .map_err(|_| "runtime_client_unavailable".to_string())?;
-    let mut builder = client.request(method, request.url.trim());
+    let mut builder = client.request(method, target_url.as_str());
     if use_native_auth && !request_has_auth_header(&request.headers) {
         if let Some(token) = native_auth_token.as_deref().map(str::trim).filter(|token| !token.is_empty()) {
-            let (header_name, bearer_prefix) = runtime_auth_header_for_url(&request.url)?;
+            let (header_name, bearer_prefix) = runtime_auth_header_for_url(&target_url)?;
             let header_value = if bearer_prefix {
                 format!("Bearer {token}")
             } else {
@@ -357,7 +438,8 @@ mod tests {
     #[test]
     fn rejects_non_http_runtime_targets() {
         let request = NapoleonRuntimeHttpRequest {
-            url: "file:///Users/bernd/.ssh/config".to_string(),
+            url: Some("file:///Users/bernd/.ssh/config".to_string()),
+            path: None,
             method: Some("GET".to_string()),
             native_auth: None,
             headers: None,
@@ -373,7 +455,8 @@ mod tests {
     #[test]
     fn rejects_http_runtime_targets_outside_governed_napoleon_paths() {
         let request = NapoleonRuntimeHttpRequest {
-            url: "https://example.com/unrelated-api".to_string(),
+            url: Some("https://example.com/unrelated-api".to_string()),
+            path: None,
             method: Some("POST".to_string()),
             native_auth: None,
             headers: None,
@@ -414,7 +497,8 @@ mod tests {
         ];
         for (url, method) in valid_targets {
             let request = NapoleonRuntimeHttpRequest {
-                url: url.to_string(),
+                url: Some(url.to_string()),
+                path: None,
                 method: Some(method.to_string()),
                 native_auth: None,
                 headers: None,
@@ -431,7 +515,8 @@ mod tests {
         ];
         for (url, method) in wrong_method_targets {
             let request = NapoleonRuntimeHttpRequest {
-                url: url.to_string(),
+                url: Some(url.to_string()),
+                path: None,
                 method: Some(method.to_string()),
                 native_auth: None,
                 headers: None,
@@ -480,7 +565,8 @@ mod tests {
 
         let descriptor_response = tauri::async_runtime::block_on(napoleon_runtime_http_request(
             NapoleonRuntimeHttpRequest {
-                url: harness.url("/cos/descriptor"),
+                url: Some(harness.url("/cos/descriptor")),
+                path: None,
                 method: Some("GET".to_string()),
                 native_auth: Some(false),
                 headers: Some(HashMap::from([(
@@ -497,7 +583,8 @@ mod tests {
 
         let text_response = tauri::async_runtime::block_on(napoleon_runtime_http_request(
             NapoleonRuntimeHttpRequest {
-                url: harness.url("/cos/text-turn"),
+                url: Some(harness.url("/cos/text-turn")),
+                path: None,
                 method: Some("POST".to_string()),
                 native_auth: None,
                 headers: Some(HashMap::from([(
@@ -545,7 +632,8 @@ mod tests {
 
         let capability_response = tauri::async_runtime::block_on(perform_runtime_http_request(
             NapoleonRuntimeHttpRequest {
-                url: harness.url("/cos/capabilities"),
+                url: Some(harness.url("/cos/capabilities")),
+                path: None,
                 method: Some("GET".to_string()),
                 native_auth: None,
                 headers: Some(HashMap::from([("Accept".to_string(), "application/json".to_string())])),
@@ -558,7 +646,8 @@ mod tests {
 
         let text_response = tauri::async_runtime::block_on(perform_runtime_http_request(
             NapoleonRuntimeHttpRequest {
-                url: harness.url("/v1/concierge/turn"),
+                url: Some(harness.url("/v1/concierge/turn")),
+                path: None,
                 method: Some("POST".to_string()),
                 native_auth: None,
                 headers: Some(HashMap::from([(
@@ -599,7 +688,8 @@ mod tests {
 
         let response = tauri::async_runtime::block_on(perform_runtime_http_request(
             NapoleonRuntimeHttpRequest {
-                url: harness.url("/cos/capabilities"),
+                url: Some(harness.url("/cos/capabilities")),
+                path: None,
                 method: Some("GET".to_string()),
                 native_auth: Some(true),
                 headers: Some(HashMap::from([(
@@ -626,12 +716,43 @@ mod tests {
     }
 
     #[test]
+    fn desktop_runtime_command_resolves_path_against_local_runtime_endpoint() {
+        let harness = RuntimeHarness::start(vec![r#"{"capabilities":[],"runtimeAuthority":false}"#]);
+
+        let response = tauri::async_runtime::block_on(perform_runtime_http_request_with_endpoint(
+            NapoleonRuntimeHttpRequest {
+                url: None,
+                path: Some("/cos/capabilities".to_string()),
+                method: Some("GET".to_string()),
+                native_auth: Some(true),
+                headers: Some(HashMap::from([("Accept".to_string(), "application/json".to_string())])),
+                body: None,
+            },
+            Some("native_auth_value".to_string()),
+            Some(harness.base_url.clone()),
+        ))
+        .expect("path-only capability request succeeds");
+        assert_eq!(response.status, 200);
+
+        let request = harness.next_request();
+        assert_eq!(request.method, "GET");
+        assert_eq!(request.path, "/cos/capabilities");
+        assert_eq!(
+            request.headers.get("x-napoleon-auth"),
+            Some(&"native_auth_value".to_string())
+        );
+
+        harness.join();
+    }
+
+    #[test]
     fn desktop_runtime_command_preserves_explicit_webview_auth_when_native_auth_is_disabled() {
         let harness = RuntimeHarness::start(vec![r#"{"capabilities":[],"runtimeAuthority":false}"#]);
 
         let response = tauri::async_runtime::block_on(perform_runtime_http_request(
             NapoleonRuntimeHttpRequest {
-                url: harness.url("/cos/capabilities"),
+                url: Some(harness.url("/cos/capabilities")),
+                path: None,
                 method: Some("GET".to_string()),
                 native_auth: Some(false),
                 headers: Some(HashMap::from([(

@@ -31,6 +31,8 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertTrue(transport["nativeAuthFallbackWhenWebviewOmitsAuth"])
         self.assertTrue(transport["webviewAuthHeadersStrippedWhenNativeAuthEnabled"])
         self.assertTrue(transport["nativeAuthEnforcedAtCommandBoundary"])
+        self.assertTrue(transport["nativeEndpointResolution"])
+        self.assertTrue(transport["endpointHostOmittedFromInvokePayload"])
         self.assertTrue(transport["explicitWebviewAuthPreserved"])
         self.assertTrue(transport["governedRouteAllowlistEnforced"])
         self.assertTrue(transport["governedRouteMethodAllowlistEnforced"])
@@ -47,6 +49,10 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         )
         self.assertIn(
             "desktop_runtime_command_strips_webview_auth_when_native_auth_is_enabled",
+            report["coveredRustTests"],
+        )
+        self.assertIn(
+            "desktop_runtime_command_resolves_path_against_local_runtime_endpoint",
             report["coveredRustTests"],
         )
         boundary = report["authorityBoundary"]

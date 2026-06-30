@@ -13,6 +13,7 @@ export type DesktopRuntimeInvoke = (command: string, args?: Record<string, unkno
 
 export interface DesktopRuntimeFetchOptions {
   nativeAuth?: boolean;
+  nativeEndpoint?: boolean;
 }
 
 interface DesktopRuntimeHttpResponse {
@@ -41,6 +42,12 @@ function headersForDesktopRuntime(
   return sanitized;
 }
 
+function requestTargetForDesktopRuntime(url: string, options: DesktopRuntimeFetchOptions): { url?: string; path?: string } {
+  if (options.nativeEndpoint === false) return { url };
+  const parsed = new URL(url);
+  return { path: `${parsed.pathname}${parsed.search}` };
+}
+
 export function createDesktopRuntimeFetch(
   invoke: DesktopRuntimeInvoke,
   options: DesktopRuntimeFetchOptions = {},
@@ -48,7 +55,7 @@ export function createDesktopRuntimeFetch(
   return async (url, init = {}) => {
     const payload = await invoke("napoleon_runtime_http_request", {
       request: {
-        url,
+        ...requestTargetForDesktopRuntime(url, options),
         method: init.method ?? "GET",
         nativeAuth: options.nativeAuth !== false,
         headers: headersForDesktopRuntime(init.headers, options),
