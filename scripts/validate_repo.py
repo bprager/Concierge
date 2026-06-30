@@ -238,7 +238,7 @@ AUTHORITY_BOUNDARY_PATTERNS: list[tuple[re.Pattern[str], str]] = [
     ),
 ]
 
-ALLOWED_TAURI_COMMANDS = {"app_status", "napoleon_runtime_http_request"}
+ALLOWED_TAURI_COMMANDS = {"app_status", "napoleon_runtime_config_status", "napoleon_runtime_http_request"}
 ALLOWED_TAURI_BRIDGE_SOURCE_PATHS = {"app/src/desktopRuntimeTransport.ts"}
 ALLOWED_RUST_AUTHORITY_DEPENDENCIES_BY_PATH = {
     "app/src-tauri/Cargo.toml": {"reqwest"},

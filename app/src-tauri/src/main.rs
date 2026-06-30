@@ -22,6 +22,14 @@ struct NapoleonRuntimeHttpResponse {
     body_text: String,
 }
 
+#[derive(Debug, Serialize)]
+struct NapoleonRuntimeConfigStatus {
+    #[serde(rename = "endpointConfigured")]
+    endpoint_configured: bool,
+    #[serde(rename = "authConfigured")]
+    auth_configured: bool,
+}
+
 #[tauri::command]
 fn app_status() -> &'static str {
     "Concierge desktop shell running"
@@ -119,6 +127,19 @@ fn configured_runtime_auth_token() -> Result<Option<String>, String> {
 
 fn configured_runtime_endpoint() -> Option<String> {
     configured_runtime_endpoint_from(|key| std::env::var(key).ok())
+}
+
+fn runtime_config_status_from<F>(get_env: F) -> NapoleonRuntimeConfigStatus
+where
+    F: Fn(&str) -> Option<String> + Copy,
+{
+    NapoleonRuntimeConfigStatus {
+        endpoint_configured: configured_runtime_endpoint_from(get_env).is_some(),
+        auth_configured: configured_runtime_auth_token_from(get_env)
+            .ok()
+            .flatten()
+            .is_some(),
+    }
 }
 
 fn configured_runtime_endpoint_from<F>(get_env: F) -> Option<String>
@@ -235,6 +256,11 @@ fn resolved_runtime_url(
 }
 
 #[tauri::command]
+fn napoleon_runtime_config_status() -> NapoleonRuntimeConfigStatus {
+    runtime_config_status_from(|key| std::env::var(key).ok())
+}
+
+#[tauri::command]
 async fn napoleon_runtime_http_request(
     request: NapoleonRuntimeHttpRequest,
 ) -> Result<NapoleonRuntimeHttpResponse, String> {
@@ -314,6 +340,7 @@ fn main() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             app_status,
+            napoleon_runtime_config_status,
             napoleon_runtime_http_request
         ])
         .run(tauri::generate_context!())
@@ -743,6 +770,18 @@ mod tests {
         );
 
         harness.join();
+    }
+
+    #[test]
+    fn desktop_runtime_config_status_reports_only_sanitized_booleans() {
+        let status = runtime_config_status_from(|key| match key {
+            "NAPOLEON_RUNTIME_ENDPOINT" => Some("https://napoleon.example/cos".to_string()),
+            "NAPOLEON_RUNTIME_AUTH_TOKEN" => Some("native_auth_value".to_string()),
+            _ => None,
+        });
+
+        assert!(status.endpoint_configured);
+        assert!(status.auth_configured);
     }
 
     #[test]

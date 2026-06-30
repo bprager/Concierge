@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createDesktopRuntimeFetch, hasPackagedDesktopRuntime } from "../src/desktopRuntimeTransport.js";
+import {
+  DESKTOP_RUNTIME_PLACEHOLDER_ENDPOINT,
+  createDesktopRuntimeFetch,
+  effectiveDesktopRuntimeEndpoint,
+  getDesktopRuntimeConfigStatus,
+  hasPackagedDesktopRuntime,
+} from "../src/desktopRuntimeTransport.js";
 
 test("desktop runtime fetch sends Napoleon HTTP through Tauri invoke without webview auth by default", async () => {
   const invoked: Array<{ command: string; args: Record<string, unknown> | undefined }> = [];
@@ -121,4 +127,35 @@ test("desktop runtime fetch can preserve explicit webview auth when native auth 
 test("desktop runtime availability only reports true inside packaged Tauri", () => {
   assert.equal(hasPackagedDesktopRuntime({}), false);
   assert.equal(hasPackagedDesktopRuntime({ __TAURI_INTERNALS__: {} }), true);
+});
+
+test("desktop runtime config status is sanitized and does not expose endpoint or token values", async () => {
+  const invoked: Array<{ command: string; args: Record<string, unknown> | undefined }> = [];
+  const status = await getDesktopRuntimeConfigStatus(async (command, args) => {
+    invoked.push({ command, args });
+    return {
+      endpointConfigured: true,
+      authConfigured: true,
+      endpoint: "https://napoleon.example",
+      token: "secret_token",
+    };
+  });
+
+  assert.equal(status.endpointConfigured, true);
+  assert.equal(status.authConfigured, true);
+  assert.deepEqual(invoked, [{ command: "napoleon_runtime_config_status", args: undefined }]);
+  assert.equal("endpoint" in status, false);
+  assert.equal("token" in status, false);
+});
+
+test("desktop runtime effective endpoint uses placeholder only for native-local packaged endpoint", () => {
+  assert.equal(
+    effectiveDesktopRuntimeEndpoint("", { endpointConfigured: true, authConfigured: false }),
+    DESKTOP_RUNTIME_PLACEHOLDER_ENDPOINT,
+  );
+  assert.equal(
+    effectiveDesktopRuntimeEndpoint("https://configured.example/cos", { endpointConfigured: true, authConfigured: true }),
+    "https://configured.example/cos",
+  );
+  assert.equal(effectiveDesktopRuntimeEndpoint("  ", { endpointConfigured: false, authConfigured: true }), "");
 });

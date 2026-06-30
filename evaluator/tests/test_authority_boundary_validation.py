@@ -187,8 +187,10 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
         '''
         command_source = """
         #[tauri::command]
+        fn napoleon_runtime_config_status() {}
+        #[tauri::command]
         async fn napoleon_runtime_http_request() {}
-        tauri::generate_handler![app_status, napoleon_runtime_http_request]
+        tauri::generate_handler![app_status, napoleon_runtime_config_status, napoleon_runtime_http_request]
         """
 
         self.assertEqual(

@@ -11,9 +11,16 @@ export type RuntimeFetch = (
 
 export type DesktopRuntimeInvoke = (command: string, args?: Record<string, unknown>) => Promise<unknown>;
 
+export const DESKTOP_RUNTIME_PLACEHOLDER_ENDPOINT = "https://concierge-runtime.local";
+
 export interface DesktopRuntimeFetchOptions {
   nativeAuth?: boolean;
   nativeEndpoint?: boolean;
+}
+
+export interface DesktopRuntimeConfigStatus {
+  endpointConfigured: boolean;
+  authConfigured: boolean;
 }
 
 interface DesktopRuntimeHttpResponse {
@@ -25,6 +32,28 @@ interface DesktopRuntimeHttpResponse {
 
 export function hasPackagedDesktopRuntime(scope: object = globalThis): boolean {
   return "__TAURI_INTERNALS__" in scope;
+}
+
+function booleanField(source: Record<string, unknown>, field: string): boolean {
+  return source[field] === true;
+}
+
+export async function getDesktopRuntimeConfigStatus(invoke: DesktopRuntimeInvoke): Promise<DesktopRuntimeConfigStatus> {
+  const payload = await invoke("napoleon_runtime_config_status");
+  const status = payload && typeof payload === "object" ? payload as Record<string, unknown> : {};
+  return {
+    endpointConfigured: booleanField(status, "endpointConfigured"),
+    authConfigured: booleanField(status, "authConfigured"),
+  };
+}
+
+export function effectiveDesktopRuntimeEndpoint(
+  browserEndpoint: string,
+  status: DesktopRuntimeConfigStatus | null,
+): string {
+  const configured = browserEndpoint.trim();
+  if (configured) return configured;
+  return status?.endpointConfigured ? DESKTOP_RUNTIME_PLACEHOLDER_ENDPOINT : "";
 }
 
 function headersForDesktopRuntime(
@@ -83,4 +112,12 @@ export function createPackagedDesktopRuntimeFetch(scope: object = globalThis): R
     const { invoke } = await import("@tauri-apps/api/core");
     return invoke(command, args);
   });
+}
+
+export async function getPackagedDesktopRuntimeConfigStatus(
+  scope: object = globalThis,
+): Promise<DesktopRuntimeConfigStatus | null> {
+  if (!hasPackagedDesktopRuntime(scope)) return null;
+  const { invoke } = await import("@tauri-apps/api/core");
+  return getDesktopRuntimeConfigStatus((command, args) => invoke(command, args));
 }

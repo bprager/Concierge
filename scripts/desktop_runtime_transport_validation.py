@@ -20,6 +20,8 @@ TRANSPORT_TESTS = [
     "desktop runtime fetch can keep full endpoint in native configuration for compatibility override",
     "desktop runtime fetch can preserve explicit webview auth when native auth is disabled",
     "desktop runtime availability only reports true inside packaged Tauri",
+    "desktop runtime config status is sanitized and does not expose endpoint or token values",
+    "desktop runtime effective endpoint uses placeholder only for native-local packaged endpoint",
     "rejects_non_http_runtime_targets",
     "rejects_http_runtime_targets_outside_governed_napoleon_paths",
     "enforces_governed_runtime_methods_for_known_paths",
@@ -28,6 +30,7 @@ TRANSPORT_TESTS = [
     "desktop_runtime_command_attaches_native_auth_when_webview_omits_auth",
     "desktop_runtime_command_strips_webview_auth_when_native_auth_is_enabled",
     "desktop_runtime_command_resolves_path_against_local_runtime_endpoint",
+    "desktop_runtime_config_status_reports_only_sanitized_booleans",
     "desktop_runtime_command_preserves_explicit_webview_auth_when_native_auth_is_disabled",
 ]
 
@@ -97,7 +100,8 @@ def build_report(
                 "forwards governed runtime requests, reads approved local auth handoff, "
                 "attaches the expected /cos or generated bridge auth header, strips webview "
                 "auth at the command boundary when native auth is enabled, resolves governed "
-                "path-only requests against a locally configured runtime endpoint, and preserves "
+                "path-only requests against a locally configured runtime endpoint, exposes only "
+                "sanitized native endpoint/auth readiness booleans to the webview, and preserves "
                 "explicit webview auth only when native auth is disabled while rejecting "
                 "non-governed HTTP(S) paths and wrong methods for governed paths."
             ),
@@ -144,6 +148,7 @@ def build_report(
             "nativeAuthEnforcedAtCommandBoundary": True,
             "nativeEndpointResolution": True,
             "endpointHostOmittedFromInvokePayload": True,
+            "nativeLocalEndpointReadiness": True,
             "explicitWebviewAuthPreserved": True,
             "governedRouteAllowlistEnforced": True,
             "governedRouteMethodAllowlistEnforced": True,

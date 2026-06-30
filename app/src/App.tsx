@@ -91,7 +91,12 @@ import {
   discoverChiefOfStaffCapabilities,
   type ChiefOfStaffCapabilityDiscoveryResult,
 } from "./chiefOfStaffCapabilities.js";
-import { createPackagedDesktopRuntimeFetch } from "./desktopRuntimeTransport.js";
+import {
+  createPackagedDesktopRuntimeFetch,
+  effectiveDesktopRuntimeEndpoint,
+  getPackagedDesktopRuntimeConfigStatus,
+  type DesktopRuntimeConfigStatus,
+} from "./desktopRuntimeTransport.js";
 import {
   clearPersistedEvaluatorValidationImport,
   loadPersistedEvaluatorValidationImport,
@@ -2213,6 +2218,8 @@ interface AppProps {
 export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const mediaSessionReadinessInitialized = useRef(false);
   const desktopRuntimeFetchRef = useRef(createPackagedDesktopRuntimeFetch());
+  const [desktopRuntimeConfigStatus, setDesktopRuntimeConfigStatus] =
+    useState<DesktopRuntimeConfigStatus | null>(null);
   const [messages, setMessages] = useState<ConciergeMessage[]>([
     {
       role: "assistant",
@@ -2374,6 +2381,28 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const [observabilityTraceHandoffResult, setObservabilityTraceHandoffResult] =
     useState<ObservabilityTraceHandoffResult | null>(null);
   const [observabilityTraceHandoffFailure, setObservabilityTraceHandoffFailure] = useState<string | null>(null);
+  const configuredEndpoint = effectiveDesktopRuntimeEndpoint(endpoint, desktopRuntimeConfigStatus);
+  const endpointConfigured = configuredEndpoint.length > 0;
+  const browserConfiguredEndpoint = endpoint.trim();
+  const configuredAuthToken = browserConfiguredEndpoint ? authToken.trim() : "";
+
+  useEffect(() => {
+    let cancelled = false;
+    void getPackagedDesktopRuntimeConfigStatus().then((status) => {
+      if (!cancelled) setDesktopRuntimeConfigStatus(status);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function getConfiguredEndpointForBridge(): string | null {
+    return configuredEndpoint || null;
+  }
+
+  function getConfiguredAuthTokenForBridge(): string | null {
+    return configuredAuthToken || null;
+  }
 
   function clearNapoleonPresentation(reason: NapoleonProofClearReason = "local_state_changed") {
     setBridgeResponseProvenanceState((current) =>
@@ -2506,12 +2535,12 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     if (descriptorMode === "live" && liveDescriptorInput) {
       return {
         ...liveDescriptorInput,
-        endpointConfigured: Boolean(endpoint.trim()),
+        endpointConfigured,
       };
     }
     if (descriptorMode === "stale") {
       return {
-        endpointConfigured: Boolean(endpoint.trim()),
+        endpointConfigured,
         descriptor: defaultChiefOfStaffDescriptor,
         expectedChecksum: "sha256:local-static",
         actualChecksum: "sha256:local-static",
@@ -2521,14 +2550,14 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         now: "2026-01-01T00:02:00.000Z",
       };
     }
-    if (endpoint.trim() && descriptorMode !== "checksum_mismatch") {
+    if (endpointConfigured && descriptorMode !== "checksum_mismatch") {
       return {
         endpointConfigured: true,
         descriptor: null,
       };
     }
     return {
-      endpointConfigured: Boolean(endpoint.trim()),
+      endpointConfigured,
       descriptor: descriptorMode === "missing" ? null : defaultChiefOfStaffDescriptor,
       expectedChecksum: descriptorMode === "checksum_mismatch" ? "sha256:expected" : "sha256:local-static",
       actualChecksum: descriptorMode === "checksum_mismatch" ? "sha256:actual" : "sha256:local-static",
@@ -2639,13 +2668,13 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   });
   const evolutionProposalStatusRefreshAvailable = Boolean(
     !rehearsalMode &&
-      endpoint.trim() &&
+      endpointConfigured &&
       descriptorConnection.canAttemptLiveBridge &&
       descriptorSupportsGovernedHandoff(descriptorConnection, "evolution_proposal_status"),
   );
   const evolutionProposalStatusRefreshBlockedReason = rehearsalMode
     ? "Rehearsal Mode is active, so Concierge will not contact Napoleon."
-    : !endpoint.trim()
+    : !endpointConfigured
       ? "No Napoleon endpoint is configured."
       : !descriptorConnection.canAttemptLiveBridge
         ? descriptorConnection.message
@@ -2724,8 +2753,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         profile,
         rehearsalMode,
         descriptorConnection: currentDescriptorInput(),
-        getEndpoint: () => endpoint.trim() || null,
-        getAuthToken: () => authToken.trim() || null,
+        getEndpoint: getConfiguredEndpointForBridge,
+        getAuthToken: getConfiguredAuthTokenForBridge,
       });
       setObservabilityTraceHandoffResult(result);
       setObservabilityTraceHandoffFailure(null);
@@ -3674,11 +3703,11 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   }
 
   async function discoverDescriptor(endpointOverride?: string) {
-    const selectedEndpoint = endpointOverride?.trim() || endpoint.trim();
+    const selectedEndpoint = endpointOverride?.trim() || configuredEndpoint;
     try {
       const result = await discoverNapoleonDescriptor({
         getEndpoint: () => selectedEndpoint || null,
-        getAuthToken: () => authToken.trim() || null,
+        getAuthToken: getConfiguredAuthTokenForBridge,
         fetch: desktopRuntimeFetchRef.current ?? undefined,
       });
       setLiveDescriptorInput(result.input);
@@ -3742,8 +3771,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   async function discoverCapabilities() {
     clearBridgeReadinessProof();
     const result = await discoverChiefOfStaffCapabilities({
-      endpoint: endpoint.trim() || null,
-      authToken: authToken.trim() || null,
+      endpoint: configuredEndpoint || null,
+      authToken: getConfiguredAuthTokenForBridge(),
       descriptorReady: descriptorConnection.canAttemptLiveBridge,
       profileId: mapProfileToNapoleonMode(profile),
       fetch: desktopRuntimeFetchRef.current ?? undefined,
@@ -3820,7 +3849,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const answer = formatNapoleonConnectionRepairAnswer({
       preflight: liveSendPreflight,
       descriptorConnection,
-      endpointConfigured: Boolean(endpoint.trim()),
+      endpointConfigured,
       rehearsalMode,
     });
     emitEvent("napoleon_connection_repair_answered", {
@@ -3871,7 +3900,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const answer = formatNapoleonDescriptorValidityAnswer({
       preflight: liveSendPreflight,
       descriptorConnection,
-      endpointConfigured: Boolean(endpoint.trim()),
+      endpointConfigured,
       rehearsalMode,
     });
     emitEvent("napoleon_descriptor_validity_answered", {
@@ -3925,7 +3954,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       currentStep: connectionGuideStep,
       preflight: liveSendPreflight,
       descriptorConnection,
-      endpointConfigured: Boolean(endpoint.trim()),
+      endpointConfigured,
       rehearsalMode,
     });
     emitEvent("napoleon_connection_setup_answered", {
@@ -3977,7 +4006,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const answer = formatNapoleonLiveSendReadinessAnswer({
       preflight: liveSendPreflight,
       descriptorConnection,
-      endpointConfigured: Boolean(endpoint.trim()),
+      endpointConfigured,
       rehearsalMode,
     });
     emitEvent("napoleon_live_send_readiness_answered", {
@@ -4955,6 +4984,8 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
       }, {
         descriptorConnection: currentDescriptorInput(),
         fetch: desktopRuntimeFetchRef.current ?? undefined,
+        getEndpoint: getConfiguredEndpointForBridge,
+        getAuthToken: getConfiguredAuthTokenForBridge,
         captureEvidence: (record) => {
           setBridgeEvidenceReadiness((current) => updateBridgeEvidenceReadinessState(current, record));
         },
@@ -5325,7 +5356,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
         currentStep: connectionGuideStep.replaceAll(" ", "_"),
         nextLocalAction: liveSendPreflight.nextStepSummary,
         liveSendReady: liveSendPreflight.canAttemptLiveSend,
-        endpointConfigured: endpoint.trim().length > 0,
+        endpointConfigured,
         descriptorDiscovered: descriptorConnection.state === "ready",
         descriptorIntegrityState: descriptorConnection.descriptorStatus
           ? `${descriptorConnection.checksumState}_${descriptorConnection.signatureState}`
@@ -5955,7 +5986,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
     const draft = draftChiefOfStaffSteering(capabilityLedger, {
       conversationId,
       traceId,
-      endpointConfigured: Boolean(endpoint.trim()),
+      endpointConfigured,
       profileMode: mapProfileToNapoleonMode(profile),
       handoffContext: {
         status: steeringDraftHandoffReadiness.status,
@@ -6738,7 +6769,7 @@ export function App({ initialProfile = "adult_owner" }: AppProps = {}) {
   const directSendPreflightBlocker = !rehearsalMode && !localGovernanceBlocksDirectSend
     ? liveSendPreflight.items.find((item) => item.status === "blocked")
     : undefined;
-  const connectionGuideStep = !endpoint.trim()
+  const connectionGuideStep = !endpointConfigured
     ? "configure endpoint"
     : !descriptorConnection.canAttemptLiveBridge
       ? "discover descriptor"

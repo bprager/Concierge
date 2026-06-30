@@ -622,6 +622,7 @@ def packaged_desktop_transport_default(required: bool) -> dict[str, Any]:
         "nativeAuthEnforcedAtCommandBoundary": False,
         "nativeEndpointResolution": False,
         "endpointHostOmittedFromInvokePayload": False,
+        "nativeLocalEndpointReadiness": False,
         "governedRouteAllowlistEnforced": False,
         "governedRouteMethodAllowlistEnforced": False,
         "packagedNoBundleBuildPassed": False,
@@ -692,6 +693,7 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         and transport.get("nativeAuthEnforcedAtCommandBoundary") is True
         and transport.get("nativeEndpointResolution") is True
         and transport.get("endpointHostOmittedFromInvokePayload") is True
+        and transport.get("nativeLocalEndpointReadiness") is True
         and transport.get("governedRouteAllowlistEnforced") is True
         and transport.get("governedRouteMethodAllowlistEnforced") is True
         and transport.get("packagedNoBundleBuildPassed") is True
@@ -718,6 +720,7 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         "endpointHostOmittedFromInvokePayload": (
             transport.get("endpointHostOmittedFromInvokePayload") is True
         ),
+        "nativeLocalEndpointReadiness": transport.get("nativeLocalEndpointReadiness") is True,
         "governedRouteAllowlistEnforced": transport.get("governedRouteAllowlistEnforced") is True,
         "governedRouteMethodAllowlistEnforced": (
             transport.get("governedRouteMethodAllowlistEnforced") is True
