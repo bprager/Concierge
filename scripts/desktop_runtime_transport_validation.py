@@ -104,8 +104,23 @@ def build_report(
             cwd=tauri_dir,
             runner=active_runner,
         ),
+        sanitized_check(
+            check_id="tauri_packaged_desktop_no_bundle_build",
+            description=(
+                "Tauri packaged desktop no-bundle build succeeds with the governed runtime "
+                "transport command and production frontend bundle."
+            ),
+            command=["npm", "run", "tauri", "--", "build", "--no-bundle"],
+            cwd=app_dir,
+            runner=active_runner,
+        ),
     ]
     status = "passed" if all(check["status"] == "passed" for check in checks) else "failed"
+    packaged_build_passed = any(
+        check["id"] == "tauri_packaged_desktop_no_bundle_build"
+        and check["status"] == "passed"
+        for check in checks
+    )
     return {
         "kind": OUTPUT_KIND,
         "generatedAt": datetime.now(timezone.utc).isoformat(),
@@ -119,6 +134,7 @@ def build_report(
             "nativeAuthFallbackWhenWebviewOmitsAuth": True,
             "webviewAuthHeadersStrippedWhenNativeAuthEnabled": True,
             "explicitWebviewAuthPreserved": True,
+            "packagedNoBundleBuildPassed": packaged_build_passed,
             "cosAuthHeader": "X-Napoleon-Auth",
             "generatedBridgeAuthHeader": "Authorization",
             "endpointHostRetained": False,

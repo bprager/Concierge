@@ -15,7 +15,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
 
         self.assertEqual(report["kind"], desktop_runtime_transport_validation.OUTPUT_KIND)
         self.assertEqual(report["status"], "passed")
-        self.assertEqual(len(report["checks"]), 3)
+        self.assertEqual(len(report["checks"]), 4)
         for check in report["checks"]:
             self.assertEqual(check["status"], "passed")
             self.assertFalse(check["stdoutRetained"])
@@ -31,6 +31,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertTrue(transport["nativeAuthFallbackWhenWebviewOmitsAuth"])
         self.assertTrue(transport["webviewAuthHeadersStrippedWhenNativeAuthEnabled"])
         self.assertTrue(transport["explicitWebviewAuthPreserved"])
+        self.assertTrue(transport["packagedNoBundleBuildPassed"])
         self.assertFalse(transport["endpointHostRetained"])
         self.assertFalse(transport["tokenRetained"])
         boundary = report["authorityBoundary"]
@@ -55,6 +56,8 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(report["checks"][0]["status"], "failed")
         self.assertEqual(report["checks"][1]["status"], "passed")
         self.assertEqual(report["checks"][2]["status"], "passed")
+        self.assertEqual(report["checks"][3]["status"], "passed")
+        self.assertTrue(report["packagedDesktopTransport"]["packagedNoBundleBuildPassed"])
 
     def test_main_writes_sanitized_report(self):
         def runner(command, cwd):
