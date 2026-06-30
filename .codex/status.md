@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added a desktop-backend runtime harness test for the packaged transport command, proving `napoleon_runtime_http_request` forwards governed descriptor GET and text-turn POST traffic to a local HTTP runtime with headers/body intact while still rejecting non-HTTP targets. Authority validation now ignores Rust `#[cfg(test)]` helper threads without allowing production process execution.
 - Added a packaged desktop Napoleon runtime HTTP transport: `app/src/desktopRuntimeTransport.ts` routes descriptor discovery, advisory capability discovery, and governed text turns through the allowlisted Tauri command `napoleon_runtime_http_request` when running inside Tauri, while browser/dev runs keep the existing fetch path.
 - Added the Tauri `napoleon_runtime_http_request` command with HTTP(S)-only and GET/POST-only validation, status/body response forwarding, and no memory, approval, agent dispatch, tool, shell, file, service-control, or external-send authority. Repository validation now narrowly allowlists this command and its `reqwest` dependency while continuing to block other Tauri native bypasses.
 - Added desktop runtime transport tests and authority-boundary tests for the new allowlist. Verified `npm test`, `npm run build`, `cargo test`, `cargo check`, and authority-boundary unit tests locally. A packaged live runtime pilot against real Napoleon is still required before closing the production runtime-connection goal.

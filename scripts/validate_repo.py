@@ -1850,7 +1850,10 @@ def authority_source_paths() -> list[Path]:
 def scan_authority_boundary_text(path: str, text: str) -> list[str]:
     violations: list[str] = []
     lines = text.splitlines()
+    rust_test_lines = rust_cfg_test_line_numbers(lines) if path.endswith(".rs") else set()
     for line_number, line in enumerate(lines, start=1):
+        if line_number in rust_test_lines:
+            continue
         for pattern, reason in AUTHORITY_BOUNDARY_PATTERNS:
             if reason == "direct Tauri native bridge access" and path in ALLOWED_TAURI_BRIDGE_SOURCE_PATHS:
                 continue
@@ -1872,6 +1875,36 @@ def scan_authority_boundary_text(path: str, text: str) -> list[str]:
             if blocked_handlers:
                 violations.append(f"{path}:{line_number}: direct Tauri native bridge access")
     return violations
+
+
+def rust_cfg_test_line_numbers(lines: list[str]) -> set[int]:
+    excluded: set[int] = set()
+    pending_cfg_test = False
+    test_block_depth: int | None = None
+    for line_number, line in enumerate(lines, start=1):
+        stripped = line.strip()
+        if test_block_depth is not None:
+            excluded.add(line_number)
+            test_block_depth += line.count("{") - line.count("}")
+            if test_block_depth <= 0:
+                test_block_depth = None
+            continue
+        if stripped == "#[cfg(test)]":
+            pending_cfg_test = True
+            continue
+        if not pending_cfg_test:
+            continue
+        if not stripped or stripped.startswith("#["):
+            continue
+        if re.search(r"\bmod\s+tests\s*\{", line):
+            excluded.add(line_number)
+            test_block_depth = line.count("{") - line.count("}")
+            if test_block_depth <= 0:
+                test_block_depth = None
+            pending_cfg_test = False
+            continue
+        pending_cfg_test = False
+    return excluded
 
 
 def find_direct_authority_boundary_violations() -> list[str]:

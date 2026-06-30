@@ -50,6 +50,20 @@ class AuthorityBoundaryValidationTest(unittest.TestCase):
                 self.assertTrue(violations)
                 self.assertIn("direct process or shell execution", violations[0])
 
+    def test_scanner_ignores_rust_cfg_test_helper_threads(self):
+        source = """
+        #[cfg(test)]
+        mod tests {
+            fn local_harness_helper() {
+                let handle = thread::spawn(|| {});
+            }
+        }
+        """
+
+        violations = validate_repo.scan_authority_boundary_text("app/src-tauri/src/main.rs", source)
+
+        self.assertEqual(violations, [])
+
     def test_scanner_detects_direct_process_execution_aliases(self):
         for source in [
             'await childProcess["execFile"]("osascript", args);',
