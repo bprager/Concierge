@@ -1314,6 +1314,58 @@ test("live bridge captures sanitized fail-closed evidence on auth failure", asyn
   assert.equal(JSON.stringify(evidence).includes("Unauthorized"), false);
 });
 
+test("live bridge treats forbidden text-turn responses as governance denied", async () => {
+  const evidence: unknown[] = [];
+
+  await assert.rejects(
+    () =>
+      sendToNapoleon(
+        {
+          traceId: "trace_forbidden_evidence",
+          conversationId: "conv_forbidden_evidence",
+          turnId: "turn_forbidden_evidence",
+          profile: "child_protected",
+          channel: "text",
+          message: "Help me plan a safe homework question",
+        },
+        {
+          getEndpoint: () => "https://napoleon.example/concierge",
+          descriptorConnection: readyDescriptorConnection,
+          getAuthToken: () => "secret_token",
+          emit: () => undefined,
+          captureEvidence: (record) => evidence.push(record),
+          fetch: async () => ({ ok: false, status: 403, json: async () => ({ text: "Forbidden" }) }),
+        },
+      ),
+    (error: unknown) =>
+      error instanceof Error &&
+      error.name === "NapoleonBridgeError" &&
+      error.message.includes("governance_denied"),
+  );
+
+  assert.deepEqual(evidence, [
+    {
+      kind: "bridge_contract_evidence",
+      operationId: "text_turn",
+      requestKind: "text_turn",
+      transport: "http_post",
+      status: "fail_closed",
+      reason: "governance_denied",
+      httpStatus: 403,
+      targetPath: "/v1/concierge/turn",
+      traceId: "trace_forbidden_evidence",
+      requestId: "cos_turn_forbidden_evidence",
+      descriptorStatus: "ready",
+      profileMode: "child_protected_user",
+      provenanceVerified: false,
+      blockedEffects: textTurnBlockedEffects,
+    },
+  ]);
+  assert.equal(JSON.stringify(evidence).includes("secret_token"), false);
+  assert.equal(JSON.stringify(evidence).includes("safe homework"), false);
+  assert.equal(JSON.stringify(evidence).includes("Forbidden"), false);
+});
+
 test("live bridge fails closed when Napoleon returns deny or no-go governance", async () => {
   for (const outcome of ["deny", "no_go"] as const) {
     const evidence: unknown[] = [];

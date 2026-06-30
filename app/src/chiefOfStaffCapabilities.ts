@@ -138,9 +138,15 @@ function stringArrayValue(value: unknown): string[] | null {
 
 function responseSideEffectClaims(record: Record<string, unknown>): ResponseSideEffectClaims {
   const approvalCaptured = booleanValue(record.approvalCaptured) ?? booleanValue(record.approval_captured);
-  const memoryWritePerformed = booleanValue(record.memoryWritePerformed) ?? booleanValue(record.memory_write_performed);
+  const memoryWritePerformed =
+    booleanValue(record.memoryWritePerformed) ??
+    booleanValue(record.memory_write_performed) ??
+    booleanValue(record.memory_write);
   const agentDispatchPerformed = booleanValue(record.agentDispatchPerformed) ?? booleanValue(record.agent_dispatch_performed);
-  const externalSendPerformed = booleanValue(record.externalSendPerformed) ?? booleanValue(record.external_send_performed);
+  const externalSendPerformed =
+    booleanValue(record.externalSendPerformed) ??
+    booleanValue(record.external_send_performed) ??
+    booleanValue(record.external_send);
   return {
     responseApprovalCaptured: approvalCaptured === true,
     responseMemoryWritePerformed: memoryWritePerformed === true,
@@ -158,21 +164,44 @@ function sideEffectBoundaryClear(claims: ResponseSideEffectClaims): boolean {
   );
 }
 
-function parseCapabilities(value: unknown): ChiefOfStaffCapability[] | null {
+function parseCapabilities(value: unknown, fallbackAuthorityTier?: string | null): ChiefOfStaffCapability[] | null {
   if (!Array.isArray(value)) return null;
   const capabilities: ChiefOfStaffCapability[] = [];
   for (const item of value) {
     if (!item || typeof item !== "object") return null;
     const record = item as Record<string, unknown>;
-    const id = stringValue(record.id);
-    const label = stringValue(record.label);
-    const description = stringValue(record.description);
-    const authorityTier = stringValue(record.authorityTier) ?? stringValue(record.authority_tier);
+    const id = stringValue(record.id) ?? stringValue(record.capability_id);
+    const label = stringValue(record.label) ?? stringValue(record.name);
+    const description = stringValue(record.description) ?? stringValue(record.summary);
+    const authorityTier = stringValue(record.authorityTier) ?? stringValue(record.authority_tier) ?? fallbackAuthorityTier;
     const proposalOnly = booleanValue(record.proposalOnly) ?? booleanValue(record.proposal_only);
-    if (!id || !label || !description || !authorityTier || proposalOnly !== true) return null;
-    capabilities.push({ id, label, description, authorityTier, proposalOnly });
+    const runtimeAuthority = booleanValue(record.runtimeAuthority) ?? booleanValue(record.runtime_authority);
+    const blockedEffects = stringArrayValue(record.blockedEffects) ?? stringArrayValue(record.blocked_effects);
+    const inferredProposalOnly = proposalOnly ?? (runtimeAuthority === false && Boolean(blockedEffects));
+    if (!id || !label || !description || !authorityTier || inferredProposalOnly !== true) return null;
+    capabilities.push({ id, label, description, authorityTier, proposalOnly: inferredProposalOnly });
   }
   return capabilities;
+}
+
+function deriveBlockedEffects(record: Record<string, unknown>): string[] | null {
+  const explicit = stringArrayValue(record.blockedEffects) ?? stringArrayValue(record.blocked_effects);
+  if (explicit) return explicit;
+  const blocked: string[] = [];
+  const rootClaims: Array<[string, unknown]> = [
+    ["runtime_authority", record.runtimeAuthority ?? record.runtime_authority],
+    ["memory_write", record.memoryWritePerformed ?? record.memory_write_performed ?? record.memory_write],
+    ["approval_capture", record.approvalCaptured ?? record.approval_captured],
+    ["agent_dispatch", record.agentDispatchPerformed ?? record.agent_dispatch_performed ?? record.task_dispatch],
+    ["external_send", record.externalSendPerformed ?? record.external_send_performed ?? record.external_send],
+    ["service_control", record.service_control],
+    ["graph_write", record.graph_write],
+  ];
+  for (const [effect, value] of rootClaims) {
+    if (value === false) blocked.push(effect);
+    if (value === true) return null;
+  }
+  return blocked.length ? blocked : null;
 }
 
 function parseAgents(value: unknown): NapoleonAgentMetadata[] | null {
@@ -290,14 +319,17 @@ export async function discoverChiefOfStaffCapabilities(
   const record = payload as Record<string, unknown>;
   const serviceId = stringValue(record.serviceId) ?? stringValue(record.service_id);
   const runtimeAuthority = booleanValue(record.runtimeAuthority) ?? booleanValue(record.runtime_authority);
-  const blockedEffects = stringArrayValue(record.blockedEffects) ?? stringArrayValue(record.blocked_effects);
-  const capabilities = parseCapabilities(record.capabilities);
+  const blockedEffects = deriveBlockedEffects(record);
+  const capabilities = parseCapabilities(
+    record.capabilities,
+    stringValue(record.authorityTier) ?? stringValue(record.authority_tier),
+  );
   const sideEffectClaims = responseSideEffectClaims(record);
   if (!sideEffectBoundaryClear(sideEffectClaims)) {
     return blocked("Capability discovery blocked: response side-effect claims were returned.", blockedEffects ?? DEFAULT_BLOCKED_EFFECTS, sideEffectClaims);
   }
   if (
-    serviceId !== "napoleon.chief_of_staff" ||
+    (serviceId !== null && serviceId !== "napoleon.chief_of_staff") ||
     runtimeAuthority !== false ||
     !blockedEffects ||
     !capabilities
@@ -307,7 +339,7 @@ export async function discoverChiefOfStaffCapabilities(
 
   let agents: NapoleonAgentMetadata[] = [];
   let profileMetadata: NapoleonProfileMetadata | null = null;
-  if (input.profileId) {
+  if (input.profileId && !cosEndpoint) {
     try {
       const agentsPayload = await fetchJson(
         fetcher,

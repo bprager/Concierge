@@ -893,7 +893,8 @@ export async function sendToNapoleon(
   }
 
   if (!response.ok) {
-    const reason = response.status === 401 || response.status === 403 ? "auth_failure" : "http_failure";
+    const reason =
+      response.status === 401 ? "auth_failure" : response.status === 403 ? "governance_denied" : "http_failure";
     failClosed(dependencies, reason, request.traceId, contract.chiefOfStaffRequest.request_id, response.status, evidenceContext);
   }
 

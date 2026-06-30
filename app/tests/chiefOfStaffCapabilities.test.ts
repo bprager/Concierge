@@ -149,6 +149,61 @@ test("capability discovery uses explicit cos capabilities endpoint and X-Napoleo
   assert.equal(result.state, "ready");
 });
 
+test("capability discovery accepts current runtime cos capability registry shape", async () => {
+  const result = await discoverChiefOfStaffCapabilities({
+    endpoint: "/napoleon-runtime/cos",
+    authToken: "token_cos_capabilities",
+    descriptorReady: true,
+    profileId: "adult_owner",
+    fetch: async () => ({
+      ok: true,
+      json: async () => ({
+        schema_version: "napoleon/cos/capabilities/v1",
+        status: "ready",
+        authority_tier: "advisory_prepare_only",
+        capabilities: [
+          {
+            capability_id: "napoleon.capability.answer",
+            name: "Answer with governance",
+            summary: "Prepare advisory answers through Napoleon.",
+            runtime_authority: false,
+            blocked_effects: ["memory_write", "approval_capture", "agent_dispatch", "external_send"],
+          },
+        ],
+        capability_count: 1,
+        runtime_authority: false,
+        command_execution: false,
+        graph_write: false,
+        memory_write: false,
+        external_send: false,
+        approval_captured: false,
+        service_control: false,
+        task_dispatch: false,
+      }),
+    }),
+  });
+
+  assert.equal(result.state, "ready");
+  assert.equal(result.serviceId, null);
+  assert.equal(result.capabilities[0]?.id, "napoleon.capability.answer");
+  assert.equal(result.capabilities[0]?.authorityTier, "advisory_prepare_only");
+  assert.equal(result.capabilities[0]?.proposalOnly, true);
+  assert.deepEqual(result.blockedEffects, [
+    "runtime_authority",
+    "memory_write",
+    "approval_capture",
+    "agent_dispatch",
+    "external_send",
+    "service_control",
+    "graph_write",
+  ]);
+  assert.equal(result.agents.length, 0);
+  assert.equal(result.profileMetadata, null);
+  assert.equal(result.responseMemoryWritePerformed, false);
+  assert.equal(result.responseAgentDispatchPerformed, false);
+  assert.equal(result.responseExternalSendPerformed, false);
+});
+
 test("capability discovery rejects capabilities that grant runtime authority", async () => {
   const result = await discoverChiefOfStaffCapabilities({
     endpoint: "https://napoleon.example/concierge",
