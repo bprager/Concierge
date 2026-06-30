@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs;
 use std::time::Duration;
 
 #[derive(Debug, Deserialize)]
@@ -36,9 +37,67 @@ fn validate_runtime_request(request: &NapoleonRuntimeHttpRequest) -> Result<(), 
     }
 }
 
+fn configured_runtime_auth_token() -> Result<Option<String>, String> {
+    configured_runtime_auth_token_from(|key| std::env::var(key).ok())
+}
+
+fn configured_runtime_auth_token_from<F>(get_env: F) -> Result<Option<String>, String>
+where
+    F: Fn(&str) -> Option<String>,
+{
+    for key in ["NAPOLEON_RUNTIME_AUTH_TOKEN", "NAPOLEON_EVAL_TOKEN"] {
+        if let Some(value) = get_env(key).map(|value| value.trim().to_string()) {
+            if !value.is_empty() {
+                return Ok(Some(value));
+            }
+        }
+    }
+    for key in ["NAPOLEON_RUNTIME_AUTH_TOKEN_FILE", "NAPOLEON_EVAL_TOKEN_FILE"] {
+        if let Some(path) = get_env(key).map(|value| value.trim().to_string()) {
+            if path.is_empty() {
+                continue;
+            }
+            let token = fs::read_to_string(&path)
+                .map_err(|_| "runtime_auth_token_file_unreadable".to_string())?
+                .trim()
+                .to_string();
+            if token.is_empty() {
+                return Err("runtime_auth_token_file_empty".to_string());
+            }
+            return Ok(Some(token));
+        }
+    }
+    Ok(None)
+}
+
+fn request_has_auth_header(headers: &Option<HashMap<String, String>>) -> bool {
+    headers.as_ref().is_some_and(|headers| {
+        headers
+            .keys()
+            .any(|name| name.eq_ignore_ascii_case("authorization") || name.eq_ignore_ascii_case("x-napoleon-auth"))
+    })
+}
+
+fn runtime_auth_header_for_url(url: &str) -> Result<(&'static str, bool), String> {
+    let parsed = reqwest::Url::parse(url.trim()).map_err(|_| "invalid_url".to_string())?;
+    if parsed.path().starts_with("/cos") {
+        Ok(("X-Napoleon-Auth", false))
+    } else {
+        Ok(("Authorization", true))
+    }
+}
+
 #[tauri::command]
 async fn napoleon_runtime_http_request(
     request: NapoleonRuntimeHttpRequest,
+) -> Result<NapoleonRuntimeHttpResponse, String> {
+    let native_auth_token = configured_runtime_auth_token()?;
+    perform_runtime_http_request(request, native_auth_token).await
+}
+
+async fn perform_runtime_http_request(
+    request: NapoleonRuntimeHttpRequest,
+    native_auth_token: Option<String>,
 ) -> Result<NapoleonRuntimeHttpResponse, String> {
     validate_runtime_request(&request)?;
     let method = request.method.as_deref().unwrap_or("GET").to_ascii_uppercase();
@@ -49,6 +108,17 @@ async fn napoleon_runtime_http_request(
         .build()
         .map_err(|_| "runtime_client_unavailable".to_string())?;
     let mut builder = client.request(method, request.url.trim());
+    if !request_has_auth_header(&request.headers) {
+        if let Some(token) = native_auth_token.as_deref().map(str::trim).filter(|token| !token.is_empty()) {
+            let (header_name, bearer_prefix) = runtime_auth_header_for_url(&request.url)?;
+            let header_value = if bearer_prefix {
+                format!("Bearer {token}")
+            } else {
+                token.to_string()
+            };
+            builder = builder.header(header_name, header_value);
+        }
+    }
     for (name, value) in request.headers.unwrap_or_default() {
         let header_name = reqwest::header::HeaderName::from_bytes(name.as_bytes())
             .map_err(|_| "invalid_header".to_string())?;
@@ -216,6 +286,32 @@ mod tests {
     }
 
     #[test]
+    fn resolves_runtime_auth_from_environment_or_token_file() {
+        assert_eq!(
+            configured_runtime_auth_token_from(|key| match key {
+                "NAPOLEON_RUNTIME_AUTH_TOKEN" => Some(" env_auth_value ".to_string()),
+                _ => None,
+            })
+            .expect("environment token resolves"),
+            Some("env_auth_value".to_string())
+        );
+
+        let token_path = std::env::temp_dir().join(format!(
+            "concierge-runtime-auth-test-{}",
+            std::process::id()
+        ));
+        fs::write(&token_path, " file_auth_value\n").expect("write test token file");
+        let resolved = configured_runtime_auth_token_from(|key| match key {
+            "NAPOLEON_RUNTIME_AUTH_TOKEN_FILE" => Some(token_path.to_string_lossy().to_string()),
+            _ => None,
+        })
+        .expect("token file resolves");
+        fs::remove_file(&token_path).expect("remove test token file");
+
+        assert_eq!(resolved, Some("file_auth_value".to_string()));
+    }
+
+    #[test]
     fn desktop_runtime_command_forwards_governed_get_and_post_requests() {
         let harness = RuntimeHarness::start(vec![
             r#"{"descriptor":{"runtimeAuthority":false},"checksum":{"expected":"sha256:test","actual":"sha256:test"}}"#,
@@ -274,6 +370,92 @@ mod tests {
             text_request.body,
             r#"{"requestKind":"text_turn","profileMode":"adult_owner"}"#
         );
+
+        harness.join();
+    }
+
+    #[test]
+    fn desktop_runtime_command_attaches_native_auth_when_webview_omits_auth() {
+        let harness = RuntimeHarness::start(vec![
+            r#"{"capabilities":[],"runtimeAuthority":false}"#,
+            r#"{"text":"review draft","approvalCaptured":false,"memoryWritePerformed":false,"agentDispatchPerformed":false,"externalSendPerformed":false}"#,
+        ]);
+
+        let capability_response = tauri::async_runtime::block_on(perform_runtime_http_request(
+            NapoleonRuntimeHttpRequest {
+                url: harness.url("/cos/capabilities"),
+                method: Some("GET".to_string()),
+                headers: Some(HashMap::from([("Accept".to_string(), "application/json".to_string())])),
+                body: None,
+            },
+            Some("native_auth_value".to_string()),
+        ))
+        .expect("capability request succeeds");
+        assert_eq!(capability_response.status, 200);
+
+        let text_response = tauri::async_runtime::block_on(perform_runtime_http_request(
+            NapoleonRuntimeHttpRequest {
+                url: harness.url("/v1/concierge/turn"),
+                method: Some("POST".to_string()),
+                headers: Some(HashMap::from([(
+                    "Content-Type".to_string(),
+                    "application/json".to_string(),
+                )])),
+                body: Some(r#"{"requestKind":"text_turn"}"#.to_string()),
+            },
+            Some("native_auth_value".to_string()),
+        ))
+        .expect("text turn request succeeds");
+        assert_eq!(text_response.status, 200);
+
+        let capability_request = harness.next_request();
+        assert_eq!(capability_request.method, "GET");
+        assert_eq!(capability_request.path, "/cos/capabilities");
+        assert_eq!(
+            capability_request.headers.get("x-napoleon-auth"),
+            Some(&"native_auth_value".to_string())
+        );
+        assert_eq!(capability_request.headers.get("authorization"), None);
+
+        let text_request = harness.next_request();
+        assert_eq!(text_request.method, "POST");
+        assert_eq!(text_request.path, "/v1/concierge/turn");
+        assert_eq!(
+            text_request.headers.get("authorization"),
+            Some(&"Bearer native_auth_value".to_string())
+        );
+        assert_eq!(text_request.headers.get("x-napoleon-auth"), None);
+
+        harness.join();
+    }
+
+    #[test]
+    fn desktop_runtime_command_preserves_explicit_webview_auth() {
+        let harness = RuntimeHarness::start(vec![r#"{"capabilities":[],"runtimeAuthority":false}"#]);
+
+        let response = tauri::async_runtime::block_on(perform_runtime_http_request(
+            NapoleonRuntimeHttpRequest {
+                url: harness.url("/cos/capabilities"),
+                method: Some("GET".to_string()),
+                headers: Some(HashMap::from([(
+                    "X-Napoleon-Auth".to_string(),
+                    "webview_auth_value".to_string(),
+                )])),
+                body: None,
+            },
+            Some("native_auth_value".to_string()),
+        ))
+        .expect("capability request succeeds");
+        assert_eq!(response.status, 200);
+
+        let request = harness.next_request();
+        assert_eq!(request.method, "GET");
+        assert_eq!(request.path, "/cos/capabilities");
+        assert_eq!(
+            request.headers.get("x-napoleon-auth"),
+            Some(&"webview_auth_value".to_string())
+        );
+        assert_eq!(request.headers.get("authorization"), None);
 
         harness.join();
     }

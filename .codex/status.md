@@ -10,6 +10,7 @@ The initial scaffold is committed and pushed. The startup review reports under `
 
 ## Recently Completed
 
+- Added native packaged-runtime auth fallback in the Tauri transport: when the webview omits auth headers, `napoleon_runtime_http_request` can read the approved local runtime auth environment or token-file handoff and attach the correct `/cos` or generated bridge auth header without exposing token values to retained artifacts; explicit webview auth still wins.
 - Added a desktop-backend runtime harness test for the packaged transport command, proving `napoleon_runtime_http_request` forwards governed descriptor GET and text-turn POST traffic to a local HTTP runtime with headers/body intact while still rejecting non-HTTP targets. Authority validation now ignores Rust `#[cfg(test)]` helper threads without allowing production process execution.
 - Added a packaged desktop Napoleon runtime HTTP transport: `app/src/desktopRuntimeTransport.ts` routes descriptor discovery, advisory capability discovery, and governed text turns through the allowlisted Tauri command `napoleon_runtime_http_request` when running inside Tauri, while browser/dev runs keep the existing fetch path.
 - Added the Tauri `napoleon_runtime_http_request` command with HTTP(S)-only and GET/POST-only validation, status/body response forwarding, and no memory, approval, agent dispatch, tool, shell, file, service-control, or external-send authority. Repository validation now narrowly allowlists this command and its `reqwest` dependency while continuing to block other Tauri native bypasses.
