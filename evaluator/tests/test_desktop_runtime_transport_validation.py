@@ -30,6 +30,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertFalse(transport["browserProxyRequired"])
         self.assertTrue(transport["nativeAuthFallbackWhenWebviewOmitsAuth"])
         self.assertTrue(transport["webviewAuthHeadersStrippedWhenNativeAuthEnabled"])
+        self.assertTrue(transport["nativeAuthEnforcedAtCommandBoundary"])
         self.assertTrue(transport["explicitWebviewAuthPreserved"])
         self.assertTrue(transport["governedRouteAllowlistEnforced"])
         self.assertTrue(transport["governedRouteMethodAllowlistEnforced"])
@@ -42,6 +43,10 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         )
         self.assertIn(
             "enforces_governed_runtime_methods_for_known_paths",
+            report["coveredRustTests"],
+        )
+        self.assertIn(
+            "desktop_runtime_command_strips_webview_auth_when_native_auth_is_enabled",
             report["coveredRustTests"],
         )
         boundary = report["authorityBoundary"]

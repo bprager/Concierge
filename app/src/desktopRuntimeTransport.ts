@@ -50,6 +50,7 @@ export function createDesktopRuntimeFetch(
       request: {
         url,
         method: init.method ?? "GET",
+        nativeAuth: options.nativeAuth !== false,
         headers: headersForDesktopRuntime(init.headers, options),
         body: init.body,
       },

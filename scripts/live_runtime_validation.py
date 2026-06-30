@@ -619,6 +619,7 @@ def packaged_desktop_transport_default(required: bool) -> dict[str, Any]:
         "browserProxyRequired": None,
         "nativeAuthFallbackWhenWebviewOmitsAuth": False,
         "webviewAuthHeadersStrippedWhenNativeAuthEnabled": False,
+        "nativeAuthEnforcedAtCommandBoundary": False,
         "governedRouteAllowlistEnforced": False,
         "governedRouteMethodAllowlistEnforced": False,
         "packagedNoBundleBuildPassed": False,
@@ -686,6 +687,7 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         and transport.get("browserProxyRequired") is False
         and transport.get("nativeAuthFallbackWhenWebviewOmitsAuth") is True
         and transport.get("webviewAuthHeadersStrippedWhenNativeAuthEnabled") is True
+        and transport.get("nativeAuthEnforcedAtCommandBoundary") is True
         and transport.get("governedRouteAllowlistEnforced") is True
         and transport.get("governedRouteMethodAllowlistEnforced") is True
         and transport.get("packagedNoBundleBuildPassed") is True
@@ -704,6 +706,9 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         "nativeAuthFallbackWhenWebviewOmitsAuth": transport.get("nativeAuthFallbackWhenWebviewOmitsAuth") is True,
         "webviewAuthHeadersStrippedWhenNativeAuthEnabled": (
             transport.get("webviewAuthHeadersStrippedWhenNativeAuthEnabled") is True
+        ),
+        "nativeAuthEnforcedAtCommandBoundary": (
+            transport.get("nativeAuthEnforcedAtCommandBoundary") is True
         ),
         "governedRouteAllowlistEnforced": transport.get("governedRouteAllowlistEnforced") is True,
         "governedRouteMethodAllowlistEnforced": (

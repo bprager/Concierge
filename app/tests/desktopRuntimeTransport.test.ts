@@ -33,6 +33,7 @@ test("desktop runtime fetch sends Napoleon HTTP through Tauri invoke without web
     request: {
       url: "https://napoleon.example/cos/text-turn",
       method: "POST",
+      nativeAuth: true,
       headers: {
         "Content-Type": "application/json",
       },
@@ -70,6 +71,7 @@ test("desktop runtime fetch can preserve explicit webview auth when native auth 
     request: {
       url: "https://napoleon.example/cos/descriptor",
       method: "GET",
+      nativeAuth: false,
       headers: {
         Accept: "application/json",
         "X-Napoleon-Auth": "secret_token",

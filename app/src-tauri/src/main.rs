@@ -7,6 +7,8 @@ use std::time::Duration;
 struct NapoleonRuntimeHttpRequest {
     url: String,
     method: Option<String>,
+    #[serde(rename = "nativeAuth")]
+    native_auth: Option<bool>,
     headers: Option<HashMap<String, String>>,
     body: Option<String>,
 }
@@ -136,6 +138,28 @@ fn request_has_auth_header(headers: &Option<HashMap<String, String>>) -> bool {
     })
 }
 
+fn native_auth_enabled(request: &NapoleonRuntimeHttpRequest) -> bool {
+    request.native_auth.unwrap_or(true)
+}
+
+fn auth_sanitized_headers(
+    headers: Option<HashMap<String, String>>,
+    use_native_auth: bool,
+) -> Option<HashMap<String, String>> {
+    if !use_native_auth {
+        return headers;
+    }
+    let headers = headers?;
+    Some(
+        headers
+            .into_iter()
+            .filter(|(name, _)| {
+                !name.eq_ignore_ascii_case("authorization") && !name.eq_ignore_ascii_case("x-napoleon-auth")
+            })
+            .collect(),
+    )
+}
+
 fn runtime_auth_header_for_url(url: &str) -> Result<(&'static str, bool), String> {
     let parsed = reqwest::Url::parse(url.trim()).map_err(|_| "invalid_url".to_string())?;
     if parsed.path().starts_with("/cos") {
@@ -154,10 +178,12 @@ async fn napoleon_runtime_http_request(
 }
 
 async fn perform_runtime_http_request(
-    request: NapoleonRuntimeHttpRequest,
+    mut request: NapoleonRuntimeHttpRequest,
     native_auth_token: Option<String>,
 ) -> Result<NapoleonRuntimeHttpResponse, String> {
     validate_runtime_request(&request)?;
+    let use_native_auth = native_auth_enabled(&request);
+    request.headers = auth_sanitized_headers(request.headers, use_native_auth);
     let method = request.method.as_deref().unwrap_or("GET").to_ascii_uppercase();
     let method = reqwest::Method::from_bytes(method.as_bytes())
         .map_err(|_| "unsupported_http_method".to_string())?;
@@ -166,7 +192,7 @@ async fn perform_runtime_http_request(
         .build()
         .map_err(|_| "runtime_client_unavailable".to_string())?;
     let mut builder = client.request(method, request.url.trim());
-    if !request_has_auth_header(&request.headers) {
+    if use_native_auth && !request_has_auth_header(&request.headers) {
         if let Some(token) = native_auth_token.as_deref().map(str::trim).filter(|token| !token.is_empty()) {
             let (header_name, bearer_prefix) = runtime_auth_header_for_url(&request.url)?;
             let header_value = if bearer_prefix {
@@ -333,6 +359,7 @@ mod tests {
         let request = NapoleonRuntimeHttpRequest {
             url: "file:///Users/bernd/.ssh/config".to_string(),
             method: Some("GET".to_string()),
+            native_auth: None,
             headers: None,
             body: None,
         };
@@ -348,6 +375,7 @@ mod tests {
         let request = NapoleonRuntimeHttpRequest {
             url: "https://example.com/unrelated-api".to_string(),
             method: Some("POST".to_string()),
+            native_auth: None,
             headers: None,
             body: Some(r#"{"requestKind":"text_turn"}"#.to_string()),
         };
@@ -388,6 +416,7 @@ mod tests {
             let request = NapoleonRuntimeHttpRequest {
                 url: url.to_string(),
                 method: Some(method.to_string()),
+                native_auth: None,
                 headers: None,
                 body: None,
             };
@@ -404,6 +433,7 @@ mod tests {
             let request = NapoleonRuntimeHttpRequest {
                 url: url.to_string(),
                 method: Some(method.to_string()),
+                native_auth: None,
                 headers: None,
                 body: None,
             };
@@ -452,6 +482,7 @@ mod tests {
             NapoleonRuntimeHttpRequest {
                 url: harness.url("/cos/descriptor"),
                 method: Some("GET".to_string()),
+                native_auth: Some(false),
                 headers: Some(HashMap::from([(
                     "X-Napoleon-Auth".to_string(),
                     "test_auth_value".to_string(),
@@ -468,6 +499,7 @@ mod tests {
             NapoleonRuntimeHttpRequest {
                 url: harness.url("/cos/text-turn"),
                 method: Some("POST".to_string()),
+                native_auth: None,
                 headers: Some(HashMap::from([(
                     "Content-Type".to_string(),
                     "application/json".to_string(),
@@ -515,6 +547,7 @@ mod tests {
             NapoleonRuntimeHttpRequest {
                 url: harness.url("/cos/capabilities"),
                 method: Some("GET".to_string()),
+                native_auth: None,
                 headers: Some(HashMap::from([("Accept".to_string(), "application/json".to_string())])),
                 body: None,
             },
@@ -527,6 +560,7 @@ mod tests {
             NapoleonRuntimeHttpRequest {
                 url: harness.url("/v1/concierge/turn"),
                 method: Some("POST".to_string()),
+                native_auth: None,
                 headers: Some(HashMap::from([(
                     "Content-Type".to_string(),
                     "application/json".to_string(),
@@ -560,13 +594,46 @@ mod tests {
     }
 
     #[test]
-    fn desktop_runtime_command_preserves_explicit_webview_auth() {
+    fn desktop_runtime_command_strips_webview_auth_when_native_auth_is_enabled() {
         let harness = RuntimeHarness::start(vec![r#"{"capabilities":[],"runtimeAuthority":false}"#]);
 
         let response = tauri::async_runtime::block_on(perform_runtime_http_request(
             NapoleonRuntimeHttpRequest {
                 url: harness.url("/cos/capabilities"),
                 method: Some("GET".to_string()),
+                native_auth: Some(true),
+                headers: Some(HashMap::from([(
+                    "X-Napoleon-Auth".to_string(),
+                    "webview_auth_value".to_string(),
+                )])),
+                body: None,
+            },
+            Some("native_auth_value".to_string()),
+        ))
+        .expect("capability request succeeds");
+        assert_eq!(response.status, 200);
+
+        let request = harness.next_request();
+        assert_eq!(request.method, "GET");
+        assert_eq!(request.path, "/cos/capabilities");
+        assert_eq!(
+            request.headers.get("x-napoleon-auth"),
+            Some(&"native_auth_value".to_string())
+        );
+        assert_eq!(request.headers.get("authorization"), None);
+
+        harness.join();
+    }
+
+    #[test]
+    fn desktop_runtime_command_preserves_explicit_webview_auth_when_native_auth_is_disabled() {
+        let harness = RuntimeHarness::start(vec![r#"{"capabilities":[],"runtimeAuthority":false}"#]);
+
+        let response = tauri::async_runtime::block_on(perform_runtime_http_request(
+            NapoleonRuntimeHttpRequest {
+                url: harness.url("/cos/capabilities"),
+                method: Some("GET".to_string()),
+                native_auth: Some(false),
                 headers: Some(HashMap::from([(
                     "X-Napoleon-Auth".to_string(),
                     "webview_auth_value".to_string(),

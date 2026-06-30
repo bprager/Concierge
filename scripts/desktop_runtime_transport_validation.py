@@ -25,7 +25,8 @@ TRANSPORT_TESTS = [
     "resolves_runtime_auth_from_environment_or_token_file",
     "desktop_runtime_command_forwards_governed_get_and_post_requests",
     "desktop_runtime_command_attaches_native_auth_when_webview_omits_auth",
-    "desktop_runtime_command_preserves_explicit_webview_auth",
+    "desktop_runtime_command_strips_webview_auth_when_native_auth_is_enabled",
+    "desktop_runtime_command_preserves_explicit_webview_auth_when_native_auth_is_disabled",
 ]
 
 
@@ -92,9 +93,10 @@ def build_report(
             description=(
                 "Rust tests prove the packaged desktop command rejects non-HTTP targets, "
                 "forwards governed runtime requests, reads approved local auth handoff, "
-                "attaches the expected /cos or generated bridge auth header, and preserves "
-                "explicit webview auth while rejecting non-governed HTTP(S) paths and "
-                "wrong methods for governed paths."
+                "attaches the expected /cos or generated bridge auth header, strips webview "
+                "auth at the command boundary when native auth is enabled, and preserves "
+                "explicit webview auth only when native auth is disabled while rejecting "
+                "non-governed HTTP(S) paths and wrong methods for governed paths."
             ),
             command=["cargo", "test", "runtime"],
             cwd=tauri_dir,
@@ -136,6 +138,7 @@ def build_report(
             "browserProxyRequired": False,
             "nativeAuthFallbackWhenWebviewOmitsAuth": True,
             "webviewAuthHeadersStrippedWhenNativeAuthEnabled": True,
+            "nativeAuthEnforcedAtCommandBoundary": True,
             "explicitWebviewAuthPreserved": True,
             "governedRouteAllowlistEnforced": True,
             "governedRouteMethodAllowlistEnforced": True,
