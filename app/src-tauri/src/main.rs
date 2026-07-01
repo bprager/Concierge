@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs;
 use std::time::Duration;
 
@@ -463,6 +464,19 @@ fn response_has_generated_trace_proof(value: &serde_json::Value) -> bool {
     has_trace && has_audit
 }
 
+fn live_probe_failure_kind(error: &str) -> &'static str {
+    match error {
+        "runtime_request_connection_refused" => "connection_refused",
+        "runtime_request_no_route_to_host" => "no_route_to_host",
+        "runtime_request_network_unreachable" => "network_unreachable",
+        "runtime_request_dns_resolution_failed" => "dns_resolution_failed",
+        "runtime_request_connect_failed" => "connect_failed",
+        "runtime_request_timeout" => "timeout",
+        "runtime_request_tls_or_certificate_failed" => "tls_or_certificate_failed",
+        _ => "request_failed",
+    }
+}
+
 async fn run_runtime_live_probe_family(
     family: RuntimeLiveProbeRouteFamily,
     native_auth_token: Option<String>,
@@ -479,9 +493,9 @@ async fn run_runtime_live_probe_family(
     .await
     {
         Ok(response) => response,
-        Err(_) => {
+        Err(error) => {
             status.failure_stage = "descriptor";
-            status.failure_kind = "request_failed";
+            status.failure_kind = live_probe_failure_kind(&error);
             return Ok(status);
         }
     };
@@ -503,9 +517,9 @@ async fn run_runtime_live_probe_family(
     .await
     {
         Ok(response) => response,
-        Err(_) => {
+        Err(error) => {
             status.failure_stage = "capabilities";
-            status.failure_kind = "request_failed";
+            status.failure_kind = live_probe_failure_kind(&error);
             return Ok(status);
         }
     };
@@ -531,9 +545,9 @@ async fn run_runtime_live_probe_family(
     .await
     {
         Ok(response) => response,
-        Err(_) => {
+        Err(error) => {
             status.failure_stage = "text_turn";
-            status.failure_kind = "request_failed";
+            status.failure_kind = live_probe_failure_kind(&error);
             return Ok(status);
         }
     };
@@ -556,9 +570,9 @@ async fn run_runtime_live_probe_family(
                     .await
                     {
                         Ok(response) => response,
-                        Err(_) => {
+                        Err(error) => {
                             status.failure_stage = "trace";
-                            status.failure_kind = "request_failed";
+                            status.failure_kind = live_probe_failure_kind(&error);
                             return Ok(status);
                         }
                     };
@@ -595,6 +609,46 @@ async fn run_runtime_live_probe_family(
     status.failure_stage = "none";
     status.failure_kind = "none";
     Ok(status)
+}
+
+fn runtime_request_error_label(error: &reqwest::Error) -> &'static str {
+    if error.is_timeout() {
+        return "runtime_request_timeout";
+    }
+    let mut message = error.to_string();
+    let mut source = error.source();
+    while let Some(cause) = source {
+        message.push_str(": ");
+        message.push_str(&cause.to_string());
+        source = cause.source();
+    }
+    runtime_request_error_label_from_message(&message, error.is_connect())
+}
+
+fn runtime_request_error_label_from_message(message: &str, is_connect: bool) -> &'static str {
+    let message = message.to_ascii_lowercase();
+    if message.contains("connection refused") {
+        return "runtime_request_connection_refused";
+    }
+    if message.contains("no route to host") {
+        return "runtime_request_no_route_to_host";
+    }
+    if message.contains("network is unreachable") {
+        return "runtime_request_network_unreachable";
+    }
+    if message.contains("dns")
+        || message.contains("could not resolve")
+        || message.contains("failed to lookup address")
+    {
+        return "runtime_request_dns_resolution_failed";
+    }
+    if message.contains("tls") || message.contains("ssl") || message.contains("certificate") {
+        return "runtime_request_tls_or_certificate_failed";
+    }
+    if is_connect {
+        return "runtime_request_connect_failed";
+    }
+    "runtime_request_failed"
 }
 
 fn run_runtime_live_probe() -> String {
@@ -827,7 +881,7 @@ async fn perform_runtime_http_request_with_endpoint(
     let response = builder
         .send()
         .await
-        .map_err(|_| "runtime_request_failed".to_string())?;
+        .map_err(|error| runtime_request_error_label(&error).to_string())?;
     let status = response.status().as_u16();
     let body_text = response
         .text()
@@ -1222,6 +1276,39 @@ mod tests {
         );
 
         harness.join();
+    }
+
+    #[test]
+    fn desktop_runtime_request_failures_are_sanitized_by_kind() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("bind closed test port");
+        let addr = listener.local_addr().expect("read test port");
+        drop(listener);
+
+        let error = tauri::async_runtime::block_on(perform_runtime_http_request(
+            NapoleonRuntimeHttpRequest {
+                url: Some(format!("http://{addr}/cos/descriptor")),
+                path: None,
+                method: Some("GET".to_string()),
+                native_auth: Some(false),
+                headers: None,
+                body: None,
+            },
+            None,
+        ))
+        .expect_err("closed port request fails");
+
+        assert_eq!(error, "runtime_request_connection_refused");
+    }
+
+    #[test]
+    fn desktop_runtime_request_no_route_failures_are_sanitized_by_kind() {
+        assert_eq!(
+            runtime_request_error_label_from_message(
+                "tcp connect error: No route to host (os error 65)",
+                true,
+            ),
+            "runtime_request_no_route_to_host"
+        );
     }
 
     #[test]

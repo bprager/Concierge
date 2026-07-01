@@ -29,13 +29,13 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         runner = self.packaged_binary_probe_runner()
         report = desktop_runtime_transport_validation.build_report(
             runner=runner,
-            tauri_dir=Path("/tmp/tauri"),
+            tauri_dir=desktop_runtime_transport_validation.TAURI_DIR,
             live_probe_endpoint="https://napoleon.example/cos",
         )
 
         self.assertEqual(report["kind"], desktop_runtime_transport_validation.OUTPUT_KIND)
         self.assertEqual(report["status"], "passed")
-        self.assertEqual(len(report["checks"]), 9)
+        self.assertEqual(len(report["checks"]), 10)
         for check in report["checks"]:
             self.assertEqual(check["status"], "passed")
             self.assertFalse(check["stdoutRetained"])
@@ -52,6 +52,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertTrue(transport["webviewAuthHeadersStrippedWhenNativeAuthEnabled"])
         self.assertTrue(transport["nativeAuthEnforcedAtCommandBoundary"])
         self.assertTrue(transport["nativeEndpointResolution"])
+        self.assertTrue(transport["macosLocalNetworkUsageDeclared"])
         self.assertTrue(transport["endpointHostOmittedFromInvokePayload"])
         self.assertTrue(transport["nativeLocalEndpointReadiness"])
         self.assertTrue(transport["packagedBinaryConfigProbePassed"])
@@ -152,7 +153,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
 
         report = desktop_runtime_transport_validation.build_report(
             runner=runner,
-            tauri_dir=Path("/tmp/tauri"),
+            tauri_dir=desktop_runtime_transport_validation.TAURI_DIR,
             live_probe_endpoint="https://napoleon.example/cos",
         )
 
@@ -166,7 +167,24 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(report["checks"][6]["status"], "passed")
         self.assertEqual(report["checks"][7]["status"], "passed")
         self.assertEqual(report["checks"][8]["status"], "passed")
+        self.assertEqual(report["checks"][9]["status"], "passed")
         self.assertTrue(report["packagedDesktopTransport"]["packagedNoBundleBuildPassed"])
+
+    def test_report_requires_macos_local_network_usage_description(self):
+        runner = self.packaged_binary_probe_runner()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report = desktop_runtime_transport_validation.build_report(
+                runner=runner,
+                tauri_dir=Path(tmpdir),
+                live_probe_endpoint="https://napoleon.example/cos",
+            )
+
+        self.assertEqual(report["status"], "failed")
+        declaration_check = report["checks"][4]
+        self.assertEqual(declaration_check["id"], "tauri_macos_local_network_usage_description")
+        self.assertEqual(declaration_check["status"], "failed")
+        self.assertFalse(report["packagedDesktopTransport"]["macosLocalNetworkUsageDeclared"])
 
     def test_failed_live_probe_retains_sanitized_failure_diagnostics(self):
         binary_calls = []
@@ -186,12 +204,12 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
 
         report = desktop_runtime_transport_validation.build_report(
             runner=runner,
-            tauri_dir=Path("/tmp/tauri"),
+            tauri_dir=desktop_runtime_transport_validation.TAURI_DIR,
             live_probe_endpoint="https://napoleon.example/v1/concierge/turn",
         )
 
         self.assertEqual(report["status"], "failed")
-        live_check = report["checks"][8]
+        live_check = report["checks"][9]
         self.assertEqual(live_check["id"], "tauri_packaged_desktop_binary_live_probe")
         self.assertEqual(live_check["status"], "failed")
         self.assertEqual(live_check["routeFamily"], "generated")

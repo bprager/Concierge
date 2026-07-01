@@ -7,6 +7,7 @@ import argparse
 import contextlib
 import json
 import os
+import plistlib
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -55,6 +56,13 @@ LIVE_PROBE_FAILURE_KINDS = {
     "none",
     "not_run",
     "request_failed",
+    "connect_failed",
+    "connection_refused",
+    "no_route_to_host",
+    "network_unreachable",
+    "dns_resolution_failed",
+    "timeout",
+    "tls_or_certificate_failed",
     "http_not_ok",
     "missing_trace_id",
     "missing_generated_proof",
@@ -103,6 +111,38 @@ def sanitized_check(
         "tokenFilePathRetained": False,
         "requestBodyRetained": False,
         "responseBodyRetained": False,
+    }
+
+
+def macos_local_network_usage_check(tauri_dir: Path) -> dict[str, Any]:
+    plist_path = tauri_dir / "Info.plist"
+    declared = False
+    if plist_path.exists():
+        try:
+            with plist_path.open("rb") as handle:
+                plist = plistlib.load(handle)
+            value = plist.get("NSLocalNetworkUsageDescription")
+            declared = isinstance(value, str) and bool(value.strip())
+        except (OSError, plistlib.InvalidFileException):
+            declared = False
+    return {
+        "id": "tauri_macos_local_network_usage_description",
+        "description": (
+            "The packaged macOS app declares local-network access so private Napoleon "
+            "runtime endpoints can use the OS permission path instead of failing as an "
+            "undeclared local-network client."
+        ),
+        "status": "passed" if declared else "failed",
+        "exitCode": None,
+        "command": [],
+        "stdoutRetained": False,
+        "stderrRetained": False,
+        "endpointHostRetained": False,
+        "tokenRetained": False,
+        "tokenFilePathRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        "macosLocalNetworkUsageDeclared": declared,
     }
 
 
@@ -660,6 +700,7 @@ def build_report(
             cwd=app_dir,
             runner=active_runner,
         ),
+        macos_local_network_usage_check(tauri_dir),
         packaged_binary_config_probe_check(
             tauri_dir=tauri_dir,
             runner=active_runner,
@@ -699,6 +740,11 @@ def build_report(
         and check["status"] == "passed"
         for check in checks
     )
+    macos_local_network_usage_declared = any(
+        check["id"] == "tauri_macos_local_network_usage_description"
+        and check["status"] == "passed"
+        for check in checks
+    )
     packaged_transport_probe_passed = any(
         check["id"] == "tauri_packaged_desktop_binary_transport_probe"
         and check["status"] == "passed"
@@ -732,6 +778,7 @@ def build_report(
             "webviewAuthHeadersStrippedWhenNativeAuthEnabled": True,
             "nativeAuthEnforcedAtCommandBoundary": True,
             "nativeEndpointResolution": True,
+            "macosLocalNetworkUsageDeclared": macos_local_network_usage_declared,
             "endpointHostOmittedFromInvokePayload": True,
             "nativeLocalEndpointReadiness": True,
             "packagedBinaryConfigProbePassed": packaged_config_probe_passed,
