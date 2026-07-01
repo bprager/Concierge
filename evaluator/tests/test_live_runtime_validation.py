@@ -1255,7 +1255,10 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertIn("descriptor preflight failed", stderr.getvalue())
         self.assertEqual(summary["bridgeEvidence"]["status"], "failed")
-        self.assertEqual(summary["promotionReadiness"]["gate"], "blocked_until_real_runtime_evidence_passes")
+        self.assertEqual(summary["promotionReadiness"]["gate"], "ready_for_human_review")
+        self.assertTrue(summary["promotionReadiness"]["locallySafeToConsider"])
+        self.assertEqual(summary["promotionReadiness"]["evidencePath"], "packaged_desktop_runtime_connection")
+        self.assertEqual(summary["promotionReadiness"]["blockingReasons"], [])
         desktop_connection = summary["packagedDesktopRuntimeConnection"]
         self.assertEqual(desktop_connection["status"], "passed")
         self.assertTrue(desktop_connection["locallySafeToConsider"])

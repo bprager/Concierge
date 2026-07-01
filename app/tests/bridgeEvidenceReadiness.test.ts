@@ -1298,6 +1298,75 @@ test("imports successful live-runtime summary as accepted readiness proof metada
   });
 });
 
+test("imports packaged desktop live-runtime summary when host bridge evidence failed", () => {
+  const accepted = importAcceptedBridgeReadinessProof(
+    JSON.stringify({
+      runtimeValidation: {
+        source: "real_runtime",
+      },
+      bridgeEvidence: {
+        status: "failed",
+        lastEvidenceStatus: "not_run",
+        captureState: "failed",
+        comparisonState: "not_run",
+      },
+      httpEvaluator: {
+        status: "not_run",
+      },
+      contractPacketSubmissions: {
+        status: "not_run",
+        submissionCount: 0,
+      },
+      artifactPrivacy: {
+        status: "passed",
+      },
+      packagedDesktopRuntimeConnection: {
+        status: "passed",
+        locallySafeToConsider: true,
+        pythonHostTransportRequired: false,
+        browserProxyRequired: false,
+        endpointAndTokenKeptLocal: true,
+        governedRoutesOnly: true,
+        binaryLiveProofPassed: true,
+        appBundleLiveProofPassed: true,
+        descriptorProofPassed: true,
+        capabilityProofPassed: true,
+        textTurnProofPassed: true,
+        traceProofPassed: true,
+        sideEffectClaimed: false,
+        blockingReasons: [],
+      },
+      promotionReadiness: {
+        gate: "ready_for_human_review",
+        locallySafeToConsider: true,
+        evidencePath: "packaged_desktop_runtime_connection",
+      },
+      promotionBoundary: {
+        approvalCaptured: false,
+        memoryWritePerformed: false,
+        agentDispatchPerformed: false,
+        externalSendPerformed: false,
+        appliedLocally: false,
+      },
+    }),
+  );
+
+  assert.equal(accepted.status, "accepted");
+  assert.equal(accepted.summary, "Accepted packaged desktop live-runtime validation summary imported.");
+  assert.deepEqual(accepted.lastRealRuntimeProof, {
+    operationId: "packaged_desktop_text_turn",
+    targetPath: "packaged_desktop_runtime_connection",
+    status: "success",
+    promotionGate: "ready_for_human_review",
+    governedPacketEvidence: {
+      status: "passed",
+      submissionCount: 0,
+      chiefOfStaffRequestObserved: false,
+      governanceEvaluationObserved: false,
+    },
+  });
+});
+
 test("rejects live-runtime summary when successful bridge evidence is not a text turn", () => {
   const accepted = importAcceptedBridgeReadinessProof(
     JSON.stringify({

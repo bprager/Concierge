@@ -1823,6 +1823,9 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
     evaluator = summary["httpEvaluator"]
     artifact_privacy = summary["artifactPrivacy"]
     packaged_desktop = summary.get("packagedDesktopTransport", {})
+    desktop_connection = summary.get("packagedDesktopRuntimeConnection")
+    if not isinstance(desktop_connection, dict):
+        desktop_connection = packaged_desktop_runtime_connection_readiness(packaged_desktop)
     evaluator_failure_reason = evaluator.get("failureReason")
     evaluator_blocker = "Evaluator HTTP mode did not pass."
     if evaluator_failure_reason == "http_evaluator_handoff_not_advertised":
@@ -1859,6 +1862,35 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
             "Napoleon-owned required actions remain before promotion.",
         ),
     ]
+    desktop_checks = [
+        (runtime["source"] == "real_runtime", "Evidence source is not real Napoleon runtime."),
+        (
+            desktop_connection.get("status") == "passed" and desktop_connection.get("locallySafeToConsider") is True,
+            "Packaged desktop runtime connection evidence did not pass.",
+        ),
+        (artifact_privacy["status"] == "passed", "Artifact privacy audit did not pass."),
+        (
+            len(summary.get("napoleonRequiredActions", [])) == 0,
+            "Napoleon-owned required actions remain before promotion.",
+        ),
+    ]
+    if desktop_connection.get("status") == "passed":
+        blocking_reasons = [reason for passed, reason in desktop_checks if not passed]
+        locally_safe = not blocking_reasons
+        gate = "ready_for_human_review"
+        if not locally_safe:
+            gate = (
+                "blocked_until_runtime_contract_actions_cleared"
+                if blocking_reasons == ["Napoleon-owned required actions remain before promotion."]
+                else "blocked_until_real_runtime_evidence_passes"
+            )
+        return {
+            "locallySafeToConsider": locally_safe,
+            "gate": gate,
+            "evidencePath": "packaged_desktop_runtime_connection",
+            "blockingReasons": blocking_reasons,
+            "boundary": "Readiness is local evidence only; human review and any required Napoleon or release approval are still required.",
+        }
     blocking_reasons = [reason for passed, reason in checks if not passed]
     locally_safe = not blocking_reasons
     gate = "ready_for_human_review"
@@ -1871,6 +1903,7 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
     return {
         "locallySafeToConsider": locally_safe,
         "gate": gate,
+        "evidencePath": "host_live_runtime_validation",
         "blockingReasons": blocking_reasons,
         "boundary": "Readiness is local evidence only; human review and any required Napoleon or release approval are still required.",
     }
@@ -2096,8 +2129,9 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         "",
         f"- Locally safe to consider for promotion: `{str(readiness['locallySafeToConsider']).lower()}`",
         f"- Promotion gate: `{readiness['gate']}`",
+        f"- Promotion evidence path: `{readiness.get('evidencePath', 'unknown')}`",
         f"- Blocking reasons: {' '.join(blocking_reasons)}",
-        "- Promotion remains blocked until this record is reviewed by a human and any required Napoleon or release process approves it.",
+        "- Human review and any required Napoleon or release process remain required before treating this evidence as an approved promotion.",
         "",
     ])
 

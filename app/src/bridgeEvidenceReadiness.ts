@@ -606,6 +606,7 @@ function liveRuntimeSectionSideEffectClaimed(section: Record<string, unknown>): 
     "traceAppendPerformed",
     "localApplicationPerformed",
     "appliedLocally",
+    "sideEffectClaimed",
   ];
   if (sideEffectKeys.some((key) => section[key] === true)) return true;
   const submissions = Array.isArray(section.submissions) ? section.submissions : [];
@@ -649,6 +650,26 @@ function liveRuntimePacketEvidencePassed(section: Record<string, unknown>): bool
 
 function liveRuntimePromotionGateAccepted(gate: unknown): boolean {
   return gate === "real_runtime_evidence_available" || gate === "ready_for_human_review";
+}
+
+function packagedDesktopRuntimeConnectionAccepted(section: Record<string, unknown>): boolean {
+  const blockingReasons = Array.isArray(section.blockingReasons) ? section.blockingReasons : [];
+  return (
+    liveRuntimeSectionPassed(section) &&
+    section.locallySafeToConsider === true &&
+    section.pythonHostTransportRequired === false &&
+    section.browserProxyRequired === false &&
+    section.endpointAndTokenKeptLocal === true &&
+    section.governedRoutesOnly === true &&
+    section.binaryLiveProofPassed === true &&
+    section.appBundleLiveProofPassed === true &&
+    section.descriptorProofPassed === true &&
+    section.capabilityProofPassed === true &&
+    section.textTurnProofPassed === true &&
+    section.traceProofPassed === true &&
+    section.sideEffectClaimed !== true &&
+    blockingReasons.length === 0
+  );
 }
 
 function isAcceptedTextTurnRuntimeEvidence(operationId: string, targetPath: string): boolean {
@@ -835,6 +856,7 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
   const evaluator = nestedRecord(summary, "httpEvaluator");
   const contractPackets = nestedRecord(summary, "contractPacketSubmissions");
   const artifactPrivacy = nestedRecord(summary, "artifactPrivacy");
+  const packagedDesktopRuntimeConnection = nestedRecord(summary, "packagedDesktopRuntimeConnection");
   const promotionReadiness = nestedRecord(summary, "promotionReadiness");
   const boundary = nestedRecord(summary, "promotionBoundary");
   const sideEffectKeys = [
@@ -849,7 +871,8 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
     sideEffectKeys.some((key) => boundary[key] === true) ||
     liveRuntimeSectionSideEffectClaimed(evidence) ||
     liveRuntimeSectionSideEffectClaimed(evaluator) ||
-    liveRuntimeSectionSideEffectClaimed(contractPackets);
+    liveRuntimeSectionSideEffectClaimed(contractPackets) ||
+    liveRuntimeSectionSideEffectClaimed(packagedDesktopRuntimeConnection);
 
   if (sideEffectClaimed) {
     return {
@@ -860,6 +883,32 @@ export function importAcceptedBridgeReadinessProof(json: string): AcceptedBridge
 
   const operationId = proofField(summary, ["bridgeEvidence", "lastOperationId"]);
   const targetPath = proofField(summary, ["bridgeEvidence", "lastTargetPath"]);
+  const packagedDesktopSummaryAccepted =
+    runtimeValidation.source === "real_runtime" &&
+    liveRuntimePromotionGateAccepted(promotionReadiness.gate) &&
+    promotionReadiness.locallySafeToConsider === true &&
+    promotionReadiness.evidencePath === "packaged_desktop_runtime_connection" &&
+    packagedDesktopRuntimeConnectionAccepted(packagedDesktopRuntimeConnection) &&
+    liveRuntimeSectionPassed(artifactPrivacy);
+
+  if (packagedDesktopSummaryAccepted) {
+    return {
+      status: "accepted",
+      summary: "Accepted packaged desktop live-runtime validation summary imported.",
+      lastRealRuntimeProof: {
+        operationId: "packaged_desktop_text_turn",
+        targetPath: "packaged_desktop_runtime_connection",
+        status: "success",
+        promotionGate: proofField(summary, ["promotionReadiness", "gate"]),
+        governedPacketEvidence: {
+          status: "passed",
+          submissionCount: 0,
+          chiefOfStaffRequestObserved: false,
+          governanceEvaluationObserved: false,
+        },
+      },
+    };
+  }
 
   if (
     runtimeValidation.source !== "real_runtime" ||
