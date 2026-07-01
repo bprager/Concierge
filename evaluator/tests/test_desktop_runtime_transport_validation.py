@@ -1,12 +1,34 @@
 import subprocess
 import tempfile
 import unittest
+import plistlib
 from pathlib import Path
 
 from scripts import desktop_runtime_transport_validation
 
 
 class DesktopRuntimeTransportValidationTest(unittest.TestCase):
+    def write_tauri_metadata(self, tauri_dir: Path):
+        tauri_dir.mkdir(parents=True, exist_ok=True)
+        (tauri_dir / "tauri.conf.json").write_text(
+            '{"productName":"Concierge","identifier":"ws.prager.concierge"}',
+            encoding="utf-8",
+        )
+        plist = {
+            "CFBundleIdentifier": "ws.prager.concierge",
+            "NSLocalNetworkUsageDescription": (
+                "Concierge needs local network access to connect to your configured Napoleon runtime on this network."
+            ),
+        }
+        with (tauri_dir / "Info.plist").open("wb") as handle:
+            plistlib.dump(plist, handle)
+        bundle_contents = (
+            tauri_dir / "target" / "release" / "bundle" / "macos" / "Concierge.app" / "Contents"
+        )
+        bundle_contents.mkdir(parents=True, exist_ok=True)
+        with (bundle_contents / "Info.plist").open("wb") as handle:
+            plistlib.dump(plist, handle)
+
     def packaged_binary_probe_runner(self):
         binary_calls = []
 
@@ -26,16 +48,19 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         return runner
 
     def test_report_records_packaged_transport_without_secret_retention(self):
-        runner = self.packaged_binary_probe_runner()
-        report = desktop_runtime_transport_validation.build_report(
-            runner=runner,
-            tauri_dir=desktop_runtime_transport_validation.TAURI_DIR,
-            live_probe_endpoint="https://napoleon.example/cos",
-        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tauri_dir = Path(tmpdir) / "src-tauri"
+            self.write_tauri_metadata(tauri_dir)
+            runner = self.packaged_binary_probe_runner()
+            report = desktop_runtime_transport_validation.build_report(
+                runner=runner,
+                tauri_dir=tauri_dir,
+                live_probe_endpoint="https://napoleon.example/cos",
+            )
 
         self.assertEqual(report["kind"], desktop_runtime_transport_validation.OUTPUT_KIND)
         self.assertEqual(report["status"], "passed")
-        self.assertEqual(len(report["checks"]), 10)
+        self.assertEqual(len(report["checks"]), 12)
         for check in report["checks"]:
             self.assertEqual(check["status"], "passed")
             self.assertFalse(check["stdoutRetained"])
@@ -53,6 +78,8 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertTrue(transport["nativeAuthEnforcedAtCommandBoundary"])
         self.assertTrue(transport["nativeEndpointResolution"])
         self.assertTrue(transport["macosLocalNetworkUsageDeclared"])
+        self.assertTrue(transport["macosAppBundleBuilt"])
+        self.assertTrue(transport["macosAppBundleIdentityBound"])
         self.assertTrue(transport["endpointHostOmittedFromInvokePayload"])
         self.assertTrue(transport["nativeLocalEndpointReadiness"])
         self.assertTrue(transport["packagedBinaryConfigProbePassed"])
@@ -151,11 +178,14 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
                 )
             return subprocess.CompletedProcess(command, 1 if len(calls) == 1 else 0, stdout="", stderr="")
 
-        report = desktop_runtime_transport_validation.build_report(
-            runner=runner,
-            tauri_dir=desktop_runtime_transport_validation.TAURI_DIR,
-            live_probe_endpoint="https://napoleon.example/cos",
-        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tauri_dir = Path(tmpdir) / "src-tauri"
+            self.write_tauri_metadata(tauri_dir)
+            report = desktop_runtime_transport_validation.build_report(
+                runner=runner,
+                tauri_dir=tauri_dir,
+                live_probe_endpoint="https://napoleon.example/cos",
+            )
 
         self.assertEqual(report["status"], "failed")
         self.assertEqual(report["checks"][0]["status"], "failed")
@@ -168,15 +198,22 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(report["checks"][7]["status"], "passed")
         self.assertEqual(report["checks"][8]["status"], "passed")
         self.assertEqual(report["checks"][9]["status"], "passed")
+        self.assertEqual(report["checks"][10]["status"], "passed")
+        self.assertEqual(report["checks"][11]["status"], "passed")
         self.assertTrue(report["packagedDesktopTransport"]["packagedNoBundleBuildPassed"])
 
     def test_report_requires_macos_local_network_usage_description(self):
         runner = self.packaged_binary_probe_runner()
 
         with tempfile.TemporaryDirectory() as tmpdir:
+            tauri_dir = Path(tmpdir)
+            (tauri_dir / "tauri.conf.json").write_text(
+                '{"productName":"Concierge","identifier":"ws.prager.concierge"}',
+                encoding="utf-8",
+            )
             report = desktop_runtime_transport_validation.build_report(
                 runner=runner,
-                tauri_dir=Path(tmpdir),
+                tauri_dir=tauri_dir,
                 live_probe_endpoint="https://napoleon.example/cos",
             )
 
@@ -185,6 +222,35 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(declaration_check["id"], "tauri_macos_local_network_usage_description")
         self.assertEqual(declaration_check["status"], "failed")
         self.assertFalse(report["packagedDesktopTransport"]["macosLocalNetworkUsageDeclared"])
+
+    def test_report_requires_macos_app_bundle_identity_binding(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tauri_dir = Path(tmpdir) / "src-tauri"
+            self.write_tauri_metadata(tauri_dir)
+            bundle_info = (
+                tauri_dir
+                / "target"
+                / "release"
+                / "bundle"
+                / "macos"
+                / "Concierge.app"
+                / "Contents"
+                / "Info.plist"
+            )
+            with bundle_info.open("wb") as handle:
+                plistlib.dump({"CFBundleIdentifier": "wrong.bundle"}, handle)
+
+            report = desktop_runtime_transport_validation.build_report(
+                runner=self.packaged_binary_probe_runner(),
+                tauri_dir=tauri_dir,
+                live_probe_endpoint="https://napoleon.example/cos",
+            )
+
+        self.assertEqual(report["status"], "failed")
+        identity_check = report["checks"][6]
+        self.assertEqual(identity_check["id"], "tauri_macos_app_bundle_identity")
+        self.assertEqual(identity_check["status"], "failed")
+        self.assertFalse(report["packagedDesktopTransport"]["macosAppBundleIdentityBound"])
 
     def test_failed_live_probe_retains_sanitized_failure_diagnostics(self):
         binary_calls = []
@@ -202,14 +268,17 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
                 return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr="")
             return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
 
-        report = desktop_runtime_transport_validation.build_report(
-            runner=runner,
-            tauri_dir=desktop_runtime_transport_validation.TAURI_DIR,
-            live_probe_endpoint="https://napoleon.example/v1/concierge/turn",
-        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tauri_dir = Path(tmpdir) / "src-tauri"
+            self.write_tauri_metadata(tauri_dir)
+            report = desktop_runtime_transport_validation.build_report(
+                runner=runner,
+                tauri_dir=tauri_dir,
+                live_probe_endpoint="https://napoleon.example/v1/concierge/turn",
+            )
 
         self.assertEqual(report["status"], "failed")
-        live_check = report["checks"][9]
+        live_check = report["checks"][11]
         self.assertEqual(live_check["id"], "tauri_packaged_desktop_binary_live_probe")
         self.assertEqual(live_check["status"], "failed")
         self.assertEqual(live_check["routeFamily"], "generated")

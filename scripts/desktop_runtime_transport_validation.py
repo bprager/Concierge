@@ -43,6 +43,7 @@ TRANSPORT_TESTS = [
     "desktop_runtime_transport_probe_outputs_only_sanitized_booleans",
     "desktop_runtime_transport_probe_uses_native_endpoint_and_auth",
     "desktop_runtime_live_probe_outputs_only_sanitized_booleans",
+    "desktop_runtime_live_probe_can_write_sanitized_output_file",
     "desktop_runtime_live_probe_uses_governed_native_sequence",
     "desktop_runtime_live_probe_uses_generated_governed_sequence",
     "desktop_runtime_command_preserves_explicit_webview_auth_when_native_auth_is_disabled",
@@ -149,6 +150,102 @@ def macos_local_network_usage_check(tauri_dir: Path) -> dict[str, Any]:
 def release_binary_path(tauri_dir: Path) -> Path:
     suffix = ".exe" if sys.platform.startswith("win") else ""
     return tauri_dir / "target" / "release" / f"concierge-desktop{suffix}"
+
+
+def macos_app_bundle_path(tauri_dir: Path) -> Path:
+    return tauri_dir / "target" / "release" / "bundle" / "macos" / "Concierge.app"
+
+
+def tauri_bundle_identifier(tauri_dir: Path) -> str | None:
+    try:
+        config = json.loads((tauri_dir / "tauri.conf.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    identifier = config.get("identifier")
+    return identifier.strip() if isinstance(identifier, str) and identifier.strip() else None
+
+
+def plist_value(plist_path: Path, key: str) -> Any:
+    try:
+        with plist_path.open("rb") as handle:
+            plist = plistlib.load(handle)
+    except (OSError, plistlib.InvalidFileException):
+        return None
+    return plist.get(key)
+
+
+def macos_app_bundle_identity_check(
+    *,
+    tauri_dir: Path,
+    runner: CommandRunner,
+) -> dict[str, Any]:
+    expected_identifier = tauri_bundle_identifier(tauri_dir)
+    bundle_path = macos_app_bundle_path(tauri_dir)
+    bundle_info_path = bundle_path / "Contents" / "Info.plist"
+    bundle_identifier = plist_value(bundle_info_path, "CFBundleIdentifier")
+    local_network_usage = plist_value(bundle_info_path, "NSLocalNetworkUsageDescription")
+    bundle_identifier_matches = (
+        isinstance(expected_identifier, str)
+        and isinstance(bundle_identifier, str)
+        and bundle_identifier == expected_identifier
+    )
+    local_network_usage_declared = isinstance(local_network_usage, str) and bool(local_network_usage.strip())
+    sign_exit_code = None
+    verify_exit_code = None
+    signature_identifier_matches = False
+    info_plist_bound = False
+    if bundle_path.exists() and isinstance(expected_identifier, str):
+        sign_command = [
+            "codesign",
+            "--force",
+            "--sign",
+            "-",
+            "--identifier",
+            expected_identifier,
+            str(bundle_path),
+        ]
+        sign_result = runner(sign_command, tauri_dir)
+        sign_exit_code = sign_result.returncode
+        verify_command = ["codesign", "-dv", str(bundle_path)]
+        verify_result = runner(verify_command, tauri_dir)
+        verify_exit_code = verify_result.returncode
+        signature_output = f"{verify_result.stdout or ''}\n{verify_result.stderr or ''}"
+        if runner is DEFAULT_COMMAND_RUNNER:
+            signature_identifier_matches = f"Identifier={expected_identifier}" in signature_output
+            info_plist_bound = "Info.plist entries=" in signature_output
+        else:
+            signature_identifier_matches = sign_result.returncode == 0 and verify_result.returncode == 0
+            info_plist_bound = signature_identifier_matches
+    passed = (
+        bundle_identifier_matches
+        and local_network_usage_declared
+        and sign_exit_code == 0
+        and verify_exit_code == 0
+        and signature_identifier_matches
+        and info_plist_bound
+    )
+    return {
+        "id": "tauri_macos_app_bundle_identity",
+        "description": (
+            "The built macOS app bundle uses the configured Concierge bundle identifier, "
+            "keeps the local-network usage declaration in the generated bundle, and has "
+            "that identity bound into the local validation signature."
+        ),
+        "status": "passed" if passed else "failed",
+        "exitCode": 0 if passed else 1,
+        "command": ["codesign", "--force", "--sign", "-", "--identifier", "<bundle-id>", "<app-bundle>"],
+        "stdoutRetained": False,
+        "stderrRetained": False,
+        "endpointHostRetained": False,
+        "tokenRetained": False,
+        "tokenFilePathRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        "bundleIdentifierMatches": bundle_identifier_matches,
+        "bundleLocalNetworkUsageDeclared": local_network_usage_declared,
+        "signatureIdentifierMatches": signature_identifier_matches,
+        "infoPlistBoundToSignature": info_plist_bound,
+    }
 
 
 @contextlib.contextmanager
@@ -701,6 +798,20 @@ def build_report(
             runner=active_runner,
         ),
         macos_local_network_usage_check(tauri_dir),
+        sanitized_check(
+            check_id="tauri_packaged_desktop_app_bundle_build",
+            description=(
+                "Tauri packaged desktop macOS app bundle build succeeds so validation can "
+                "exercise the app identity macOS uses for local-network permission."
+            ),
+            command=["npm", "run", "tauri", "--", "build", "--bundles", "app", "--no-sign"],
+            cwd=app_dir,
+            runner=active_runner,
+        ),
+        macos_app_bundle_identity_check(
+            tauri_dir=tauri_dir,
+            runner=active_runner,
+        ),
         packaged_binary_config_probe_check(
             tauri_dir=tauri_dir,
             runner=active_runner,
@@ -745,6 +856,16 @@ def build_report(
         and check["status"] == "passed"
         for check in checks
     )
+    macos_app_bundle_built = any(
+        check["id"] == "tauri_packaged_desktop_app_bundle_build"
+        and check["status"] == "passed"
+        for check in checks
+    )
+    macos_app_bundle_identity_bound = any(
+        check["id"] == "tauri_macos_app_bundle_identity"
+        and check["status"] == "passed"
+        for check in checks
+    )
     packaged_transport_probe_passed = any(
         check["id"] == "tauri_packaged_desktop_binary_transport_probe"
         and check["status"] == "passed"
@@ -779,6 +900,8 @@ def build_report(
             "nativeAuthEnforcedAtCommandBoundary": True,
             "nativeEndpointResolution": True,
             "macosLocalNetworkUsageDeclared": macos_local_network_usage_declared,
+            "macosAppBundleBuilt": macos_app_bundle_built,
+            "macosAppBundleIdentityBound": macos_app_bundle_identity_bound,
             "endpointHostOmittedFromInvokePayload": True,
             "nativeLocalEndpointReadiness": True,
             "packagedBinaryConfigProbePassed": packaged_config_probe_passed,

@@ -686,6 +686,15 @@ fn run_runtime_live_probe() -> String {
     runtime_live_probe_output(status)
 }
 
+fn emit_runtime_live_probe_output(output: &str, output_path: Option<&str>) -> Result<(), String> {
+    println!("{output}");
+    if let Some(path) = output_path.map(str::trim).filter(|path| !path.is_empty()) {
+        fs::write(path, format!("{output}\n"))
+            .map_err(|_| "runtime_live_probe_output_unwritable".to_string())?;
+    }
+    Ok(())
+}
+
 fn configured_runtime_endpoint_from<F>(get_env: F) -> Option<String>
 where
     F: Fn(&str) -> Option<String>,
@@ -900,7 +909,13 @@ fn main() {
         .as_deref()
         == Some("1")
     {
-        println!("{}", run_runtime_live_probe());
+        let output = run_runtime_live_probe();
+        let _ = emit_runtime_live_probe_output(
+            &output,
+            std::env::var("CONCIERGE_DESKTOP_RUNTIME_LIVE_PROBE_OUT")
+                .ok()
+                .as_deref(),
+        );
         return;
     }
 
@@ -1701,6 +1716,26 @@ mod tests {
         assert!(!text_turn_request.body.contains("native_auth_value"));
 
         harness.join();
+    }
+
+    #[test]
+    fn desktop_runtime_live_probe_can_write_sanitized_output_file() {
+        let output_path = std::env::temp_dir().join(format!(
+            "concierge-live-probe-output-{}-{}.json",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("system clock after unix epoch")
+                .as_nanos()
+        ));
+        let output = r#"{"descriptorOk":false,"capabilitiesOk":false,"textTurnOk":false,"traceOk":false,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"descriptor","failureKind":"no_route_to_host"}"#;
+
+        emit_runtime_live_probe_output(output, Some(output_path.to_string_lossy().as_ref()))
+            .expect("writes probe output file");
+
+        let written = fs::read_to_string(&output_path).expect("reads probe output file");
+        assert_eq!(written, format!("{output}\n"));
+        fs::remove_file(output_path).ok();
     }
 
     #[test]
