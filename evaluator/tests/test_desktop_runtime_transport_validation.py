@@ -30,16 +30,16 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
             plistlib.dump(plist, handle)
 
     def packaged_binary_probe_runner(self):
-        binary_calls = []
+        probe_calls = []
 
         def runner(command, cwd):
-            if str(command[0]).endswith("concierge-desktop"):
-                binary_calls.append(list(command))
+            if str(command[0]).endswith("concierge-desktop") or command[0] == "open":
+                probe_calls.append(list(command))
                 stdout = (
                     '{"endpointConfigured":true,"authConfigured":true}'
-                    if len(binary_calls) == 1
+                    if len(probe_calls) == 1
                     else '{"requestSucceeded":true,"statusOk":true}'
-                    if len(binary_calls) == 2
+                    if len(probe_calls) == 2
                     else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"none","failureKind":"none"}'
                 )
                 return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr="")
@@ -60,7 +60,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
 
         self.assertEqual(report["kind"], desktop_runtime_transport_validation.OUTPUT_KIND)
         self.assertEqual(report["status"], "passed")
-        self.assertEqual(len(report["checks"]), 12)
+        self.assertEqual(len(report["checks"]), 13)
         for check in report["checks"]:
             self.assertEqual(check["status"], "passed")
             self.assertFalse(check["stdoutRetained"])
@@ -80,6 +80,9 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertTrue(transport["macosLocalNetworkUsageDeclared"])
         self.assertTrue(transport["macosAppBundleBuilt"])
         self.assertTrue(transport["macosAppBundleIdentityBound"])
+        self.assertTrue(transport["macosAppBundleLiveProbePassed"])
+        self.assertTrue(transport["macosAppBundleLiveProbeDescriptorPassed"])
+        self.assertEqual(transport["macosAppBundleLiveProbeFailureKind"], "none")
         self.assertTrue(transport["endpointHostOmittedFromInvokePayload"])
         self.assertTrue(transport["nativeLocalEndpointReadiness"])
         self.assertTrue(transport["packagedBinaryConfigProbePassed"])
@@ -161,8 +164,12 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
 
         def runner(command, cwd):
             calls.append(list(command))
-            if str(command[0]).endswith("concierge-desktop"):
-                binary_call_count = sum(1 for call in calls if str(call[0]).endswith("concierge-desktop"))
+            if str(command[0]).endswith("concierge-desktop") or command[0] == "open":
+                binary_call_count = sum(
+                    1
+                    for call in calls
+                    if str(call[0]).endswith("concierge-desktop") or call[0] == "open"
+                )
                 stdout = (
                     '{"endpointConfigured":true,"authConfigured":true}'
                     if binary_call_count == 1
@@ -200,6 +207,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(report["checks"][9]["status"], "passed")
         self.assertEqual(report["checks"][10]["status"], "passed")
         self.assertEqual(report["checks"][11]["status"], "passed")
+        self.assertEqual(report["checks"][12]["status"], "passed")
         self.assertTrue(report["packagedDesktopTransport"]["packagedNoBundleBuildPassed"])
 
     def test_report_requires_macos_local_network_usage_description(self):
@@ -291,6 +299,46 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(transport["packagedBinaryLiveProbeFailureStage"], "descriptor")
         self.assertEqual(transport["packagedBinaryLiveProbeFailureKind"], "http_not_ok")
 
+    def test_failed_app_bundle_live_probe_retains_sanitized_failure_diagnostics(self):
+        probe_calls = []
+
+        def runner(command, cwd):
+            if str(command[0]).endswith("concierge-desktop") or command[0] == "open":
+                probe_calls.append(list(command))
+                stdout = (
+                    '{"endpointConfigured":true,"authConfigured":true}'
+                    if len(probe_calls) == 1
+                    else '{"requestSucceeded":true,"statusOk":true}'
+                    if len(probe_calls) == 2
+                    else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"none","failureKind":"none"}'
+                    if len(probe_calls) == 3
+                    else '{"descriptorOk":false,"capabilitiesOk":false,"textTurnOk":false,"traceOk":false,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"descriptor","failureKind":"no_route_to_host"}'
+                )
+                return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr="")
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tauri_dir = Path(tmpdir) / "src-tauri"
+            self.write_tauri_metadata(tauri_dir)
+            report = desktop_runtime_transport_validation.build_report(
+                runner=runner,
+                tauri_dir=tauri_dir,
+                live_probe_endpoint="https://napoleon.example/cos",
+            )
+
+        self.assertEqual(report["status"], "failed")
+        app_check = report["checks"][12]
+        self.assertEqual(app_check["id"], "tauri_macos_app_bundle_live_probe")
+        self.assertEqual(app_check["status"], "failed")
+        self.assertEqual(app_check["routeFamily"], "cos")
+        self.assertEqual(app_check["failureStage"], "descriptor")
+        self.assertEqual(app_check["failureKind"], "no_route_to_host")
+        self.assertFalse(app_check["endpointHostRetained"])
+        self.assertFalse(app_check["tokenRetained"])
+        transport = report["packagedDesktopTransport"]
+        self.assertFalse(transport["macosAppBundleLiveProbePassed"])
+        self.assertEqual(transport["macosAppBundleLiveProbeFailureKind"], "no_route_to_host")
+
     def test_main_writes_sanitized_report(self):
         runner = self.packaged_binary_probe_runner()
 
@@ -309,6 +357,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertNotIn("/tmp/token-file", text)
         self.assertIn('"status": "passed"', text)
         self.assertIn('"packagedBinaryLiveProbeConfigured": false', text)
+        self.assertIn('"macosAppBundleLiveProbeConfigured": false', text)
         self.assertIn('"packagedBinaryLocalLiveProbePassed": true', text)
         self.assertIn('"status": "not_configured"', text)
         self.assertIn('"doesNotContactNapoleon": true', text)

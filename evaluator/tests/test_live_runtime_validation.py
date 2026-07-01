@@ -273,6 +273,12 @@ class LiveRuntimeValidationTest(unittest.TestCase):
                                 else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"none","failureKind":"none"}'
                             )
                             return mock.Mock(returncode=0, stdout=stdout, stderr="")
+                        if command[0] == "open":
+                            return mock.Mock(
+                                returncode=0,
+                                stdout='{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"none","failureKind":"none"}',
+                                stderr="",
+                            )
                         return mock.Mock(returncode=0, stdout="", stderr="")
 
                     report = desktop_runtime_transport_validation.build_report(
@@ -320,6 +326,16 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(packaged["packagedBinaryLiveProbeRouteFamily"], "cos")
         self.assertEqual(packaged["packagedBinaryLiveProbeFailureStage"], "none")
         self.assertEqual(packaged["packagedBinaryLiveProbeFailureKind"], "none")
+        self.assertTrue(packaged["macosAppBundleLiveProbeConfigured"])
+        self.assertTrue(packaged["macosAppBundleLiveProbePassed"])
+        self.assertTrue(packaged["macosAppBundleLiveProbeDescriptorPassed"])
+        self.assertTrue(packaged["macosAppBundleLiveProbeCapabilitiesPassed"])
+        self.assertTrue(packaged["macosAppBundleLiveProbeTextTurnPassed"])
+        self.assertTrue(packaged["macosAppBundleLiveProbeTracePassed"])
+        self.assertFalse(packaged["macosAppBundleLiveProbeSideEffectClaimed"])
+        self.assertEqual(packaged["macosAppBundleLiveProbeRouteFamily"], "cos")
+        self.assertEqual(packaged["macosAppBundleLiveProbeFailureStage"], "none")
+        self.assertEqual(packaged["macosAppBundleLiveProbeFailureKind"], "none")
         self.assertTrue(packaged["packagedNoBundleBuildPassed"])
         self.assertFalse(packaged["endpointHostRetained"])
         self.assertFalse(packaged["tokenRetained"])
@@ -342,6 +358,11 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertIn("- Packaged desktop binary live probe route family: `cos`", review)
         self.assertIn("- Packaged desktop binary live probe failure stage: `none`", review)
         self.assertIn("- Packaged desktop binary live probe failure kind: `none`", review)
+        self.assertIn("- Packaged desktop app-bundle live probe configured: `true`", review)
+        self.assertIn("- Packaged desktop app-bundle live probe passed: `true`", review)
+        self.assertIn("- Packaged desktop app-bundle live probe route family: `cos`", review)
+        self.assertIn("- Packaged desktop app-bundle live probe failure stage: `none`", review)
+        self.assertIn("- Packaged desktop app-bundle live probe failure kind: `none`", review)
         self.assertNotIn("token_packaged_desktop_summary", json.dumps(summary))
 
     def test_required_packaged_desktop_transport_blocks_readiness_when_report_is_missing(self):
@@ -903,6 +924,33 @@ class LiveRuntimeValidationTest(unittest.TestCase):
             readiness["blockingReasons"],
         )
 
+    def test_promotion_readiness_requires_packaged_app_bundle_probe_for_real_runtime(self):
+        packaged_desktop = {
+            **live_runtime_validation.packaged_desktop_transport_default(True),
+            "status": "passed",
+            "packagedBinaryLiveProbePassed": True,
+            "macosAppBundleLiveProbePassed": False,
+        }
+        summary = {
+            "runtimeValidation": {"source": "real_runtime"},
+            "bridgeEvidence": {"status": "passed"},
+            "capabilityDiscovery": {"status": "passed"},
+            "contractPacketSubmissions": {"status": "passed"},
+            "httpEvaluator": {"status": "passed", "failureReason": "none"},
+            "artifactPrivacy": {"status": "passed"},
+            "packagedDesktopTransport": packaged_desktop,
+            "napoleonRequiredActions": [],
+        }
+
+        readiness = live_runtime_validation.promotion_readiness(summary)
+
+        self.assertFalse(readiness["locallySafeToConsider"])
+        self.assertEqual(readiness["gate"], "blocked_until_real_runtime_evidence_passes")
+        self.assertIn(
+            "Packaged desktop app-bundle live probe did not pass against the real runtime.",
+            readiness["blockingReasons"],
+        )
+
     def test_records_http_evaluator_failure_without_traceback_or_endpoint_retention(self):
         with local_bridge_harness.running_harness() as base_url:
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -1059,6 +1107,11 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(preflight["packagedDesktopTransport"]["packagedBinaryLiveProbeRouteFamily"], "unknown")
         self.assertEqual(preflight["packagedDesktopTransport"]["packagedBinaryLiveProbeFailureStage"], "unknown")
         self.assertEqual(preflight["packagedDesktopTransport"]["packagedBinaryLiveProbeFailureKind"], "unknown")
+        self.assertFalse(preflight["packagedDesktopTransport"]["macosAppBundleLiveProbeConfigured"])
+        self.assertFalse(preflight["packagedDesktopTransport"]["macosAppBundleLiveProbePassed"])
+        self.assertEqual(preflight["packagedDesktopTransport"]["macosAppBundleLiveProbeRouteFamily"], "unknown")
+        self.assertEqual(preflight["packagedDesktopTransport"]["macosAppBundleLiveProbeFailureStage"], "unknown")
+        self.assertEqual(preflight["packagedDesktopTransport"]["macosAppBundleLiveProbeFailureKind"], "unknown")
         self.assertFalse(preflight["packagedDesktopTransport"]["endpointHostRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["tokenRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["requestBodyRetained"])

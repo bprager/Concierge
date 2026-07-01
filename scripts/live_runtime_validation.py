@@ -638,6 +638,16 @@ def packaged_desktop_transport_default(required: bool) -> dict[str, Any]:
         "packagedBinaryLiveProbeRouteFamily": "unknown",
         "packagedBinaryLiveProbeFailureStage": "unknown",
         "packagedBinaryLiveProbeFailureKind": "unknown",
+        "macosAppBundleLiveProbeConfigured": False,
+        "macosAppBundleLiveProbePassed": False,
+        "macosAppBundleLiveProbeDescriptorPassed": False,
+        "macosAppBundleLiveProbeCapabilitiesPassed": False,
+        "macosAppBundleLiveProbeTextTurnPassed": False,
+        "macosAppBundleLiveProbeTracePassed": False,
+        "macosAppBundleLiveProbeSideEffectClaimed": False,
+        "macosAppBundleLiveProbeRouteFamily": "unknown",
+        "macosAppBundleLiveProbeFailureStage": "unknown",
+        "macosAppBundleLiveProbeFailureKind": "unknown",
         "governedRouteAllowlistEnforced": False,
         "governedRouteMethodAllowlistEnforced": False,
         "packagedNoBundleBuildPassed": False,
@@ -682,7 +692,11 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         and (
             check.get("status") == "passed"
             or (
-                check.get("id") == "tauri_packaged_desktop_binary_live_probe"
+                check.get("id")
+                in {
+                    "tauri_packaged_desktop_binary_live_probe",
+                    "tauri_macos_app_bundle_live_probe",
+                }
                 and check.get("status") == "not_configured"
             )
         )
@@ -807,6 +821,42 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         "packagedBinaryLiveProbeFailureKind": (
             transport.get("packagedBinaryLiveProbeFailureKind")
             if isinstance(transport.get("packagedBinaryLiveProbeFailureKind"), str)
+            else "unknown"
+        ),
+        "macosAppBundleLiveProbeConfigured": (
+            transport.get("macosAppBundleLiveProbeConfigured") is True
+        ),
+        "macosAppBundleLiveProbePassed": (
+            transport.get("macosAppBundleLiveProbePassed") is True
+        ),
+        "macosAppBundleLiveProbeDescriptorPassed": (
+            transport.get("macosAppBundleLiveProbeDescriptorPassed") is True
+        ),
+        "macosAppBundleLiveProbeCapabilitiesPassed": (
+            transport.get("macosAppBundleLiveProbeCapabilitiesPassed") is True
+        ),
+        "macosAppBundleLiveProbeTextTurnPassed": (
+            transport.get("macosAppBundleLiveProbeTextTurnPassed") is True
+        ),
+        "macosAppBundleLiveProbeTracePassed": (
+            transport.get("macosAppBundleLiveProbeTracePassed") is True
+        ),
+        "macosAppBundleLiveProbeSideEffectClaimed": (
+            transport.get("macosAppBundleLiveProbeSideEffectClaimed") is True
+        ),
+        "macosAppBundleLiveProbeRouteFamily": (
+            transport.get("macosAppBundleLiveProbeRouteFamily")
+            if isinstance(transport.get("macosAppBundleLiveProbeRouteFamily"), str)
+            else "unknown"
+        ),
+        "macosAppBundleLiveProbeFailureStage": (
+            transport.get("macosAppBundleLiveProbeFailureStage")
+            if isinstance(transport.get("macosAppBundleLiveProbeFailureStage"), str)
+            else "unknown"
+        ),
+        "macosAppBundleLiveProbeFailureKind": (
+            transport.get("macosAppBundleLiveProbeFailureKind")
+            if isinstance(transport.get("macosAppBundleLiveProbeFailureKind"), str)
             else "unknown"
         ),
         "governedRouteAllowlistEnforced": transport.get("governedRouteAllowlistEnforced") is True,
@@ -1799,6 +1849,12 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
             "Packaged desktop binary live probe did not pass against the real runtime.",
         ),
         (
+            not packaged_desktop.get("required")
+            or runtime["source"] != "real_runtime"
+            or packaged_desktop.get("macosAppBundleLiveProbePassed") is True,
+            "Packaged desktop app-bundle live probe did not pass against the real runtime.",
+        ),
+        (
             len(summary.get("napoleonRequiredActions", [])) == 0,
             "Napoleon-owned required actions remain before promotion.",
         ),
@@ -1898,6 +1954,11 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- Packaged desktop binary live probe route family: `{packaged_desktop['packagedBinaryLiveProbeRouteFamily']}`",
         f"- Packaged desktop binary live probe failure stage: `{packaged_desktop['packagedBinaryLiveProbeFailureStage']}`",
         f"- Packaged desktop binary live probe failure kind: `{packaged_desktop['packagedBinaryLiveProbeFailureKind']}`",
+        f"- Packaged desktop app-bundle live probe configured: `{str(packaged_desktop['macosAppBundleLiveProbeConfigured']).lower()}`",
+        f"- Packaged desktop app-bundle live probe passed: `{str(packaged_desktop['macosAppBundleLiveProbePassed']).lower()}`",
+        f"- Packaged desktop app-bundle live probe route family: `{packaged_desktop['macosAppBundleLiveProbeRouteFamily']}`",
+        f"- Packaged desktop app-bundle live probe failure stage: `{packaged_desktop['macosAppBundleLiveProbeFailureStage']}`",
+        f"- Packaged desktop app-bundle live probe failure kind: `{packaged_desktop['macosAppBundleLiveProbeFailureKind']}`",
         f"- Browser proxy required by packaged transport: `{str(packaged_desktop['browserProxyRequired']).lower()}`",
         "",
         "## Napoleon Required Actions",
@@ -1920,6 +1981,12 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
             or runtime["source"] != "real_runtime"
             or packaged_desktop.get("packagedBinaryLiveProbePassed") is True,
             "Packaged desktop binary live probe passed against the real runtime when required.",
+        ),
+        checkbox(
+            not packaged_desktop.get("required")
+            or runtime["source"] != "real_runtime"
+            or packaged_desktop.get("macosAppBundleLiveProbePassed") is True,
+            "Packaged desktop app-bundle live probe passed against the real runtime when required.",
         ),
         checkbox(runtime["source"] == "real_runtime", "Evidence source is real Napoleon runtime, not local harness or simulation."),
         checkbox(not boundary["approvalCaptured"], "No approval was captured by Concierge."),

@@ -10,6 +10,7 @@ import os
 import plistlib
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -743,6 +744,171 @@ def packaged_binary_live_probe_check(
     }
 
 
+def live_probe_check_from_result(
+    *,
+    check_id: str,
+    description: str,
+    command: Sequence[str],
+    result: subprocess.CompletedProcess[str],
+    probe_output: str,
+    endpoint: str,
+    auth_token: str,
+    live_probe_configured: bool,
+) -> dict[str, Any]:
+    output = f"{probe_output or ''}\n{result.stdout or ''}\n{result.stderr or ''}"
+    probe_status = None
+    try:
+        probe_status = json.loads((probe_output or "").strip())
+    except json.JSONDecodeError:
+        probe_status = None
+    leaked_endpoint = endpoint in output or "napoleon.example" in output
+    leaked_token = PROBE_TOKEN in output or bool(auth_token and auth_token in output)
+    passed = (
+        result.returncode == 0
+        and isinstance(probe_status, dict)
+        and probe_status.get("descriptorOk") is True
+        and probe_status.get("capabilitiesOk") is True
+        and probe_status.get("textTurnOk") is True
+        and probe_status.get("traceOk") is True
+        and probe_status.get("sideEffectClaimed") is False
+        and not leaked_endpoint
+        and not leaked_token
+    )
+    return {
+        "id": check_id,
+        "description": description,
+        "status": "passed" if passed else "failed",
+        "exitCode": result.returncode,
+        "command": list(command),
+        "stdoutRetained": False,
+        "stderrRetained": False,
+        "endpointHostRetained": leaked_endpoint,
+        "tokenRetained": leaked_token,
+        "tokenFilePathRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        "liveProbeConfigured": live_probe_configured,
+        "descriptorOk": isinstance(probe_status, dict) and probe_status.get("descriptorOk") is True,
+        "capabilitiesOk": isinstance(probe_status, dict) and probe_status.get("capabilitiesOk") is True,
+        "textTurnOk": isinstance(probe_status, dict) and probe_status.get("textTurnOk") is True,
+        "traceOk": isinstance(probe_status, dict) and probe_status.get("traceOk") is True,
+        "sideEffectClaimed": isinstance(probe_status, dict) and probe_status.get("sideEffectClaimed") is True,
+        "routeFamily": sanitized_label(
+            probe_status.get("routeFamily") if isinstance(probe_status, dict) else None,
+            LIVE_PROBE_ROUTE_FAMILIES,
+            "unknown",
+        ),
+        "failureStage": sanitized_label(
+            probe_status.get("failureStage") if isinstance(probe_status, dict) else None,
+            LIVE_PROBE_FAILURE_STAGES,
+            "unknown",
+        ),
+        "failureKind": sanitized_label(
+            probe_status.get("failureKind") if isinstance(probe_status, dict) else None,
+            LIVE_PROBE_FAILURE_KINDS,
+            "unknown",
+        ),
+    }
+
+
+def macos_app_bundle_live_probe_check(
+    *,
+    tauri_dir: Path,
+    runner: CommandRunner,
+    endpoint: str | None,
+) -> dict[str, Any]:
+    bundle_path = macos_app_bundle_path(tauri_dir)
+    display_command = [
+        "open",
+        "-W",
+        "-n",
+        "-g",
+        "<app-bundle>",
+        "--env",
+        "CONCIERGE_DESKTOP_RUNTIME_LIVE_PROBE=1",
+        "--env",
+        "CONCIERGE_DESKTOP_RUNTIME_LIVE_PROBE_OUT=<sanitized-output-path>",
+        "--env",
+        "NAPOLEON_RUNTIME_ENDPOINT=<configured>",
+        "--env",
+        "NAPOLEON_RUNTIME_AUTH_TOKEN=<configured>",
+    ]
+    if not endpoint:
+        return {
+            "id": "tauri_macos_app_bundle_live_probe",
+            "description": (
+                "The macOS app bundle live probe was not run because no real Napoleon endpoint "
+                "was configured."
+            ),
+            "status": "not_configured",
+            "exitCode": None,
+            "command": display_command,
+            "stdoutRetained": False,
+            "stderrRetained": False,
+            "endpointHostRetained": False,
+            "tokenRetained": False,
+            "tokenFilePathRetained": False,
+            "requestBodyRetained": False,
+            "responseBodyRetained": False,
+            "liveProbeConfigured": False,
+            "descriptorOk": False,
+            "capabilitiesOk": False,
+            "textTurnOk": False,
+            "traceOk": False,
+            "sideEffectClaimed": False,
+        }
+
+    auth_token = os.environ.get("NAPOLEON_RUNTIME_AUTH_TOKEN") or os.environ.get("NAPOLEON_EVAL_TOKEN", "")
+    if runner is DEFAULT_COMMAND_RUNNER:
+        with tempfile.TemporaryDirectory(prefix="concierge-app-live-probe-") as tmpdir:
+            output_path = Path(tmpdir) / "probe.json"
+            command = [
+                "open",
+                "-W",
+                "-n",
+                "-g",
+                str(bundle_path),
+                "--env",
+                "CONCIERGE_DESKTOP_RUNTIME_LIVE_PROBE=1",
+                "--env",
+                f"CONCIERGE_DESKTOP_RUNTIME_LIVE_PROBE_OUT={output_path}",
+                "--env",
+                f"NAPOLEON_RUNTIME_ENDPOINT={endpoint}",
+            ]
+            if auth_token:
+                command.extend(["--env", f"NAPOLEON_RUNTIME_AUTH_TOKEN={auth_token}"])
+            result = subprocess.run(
+                command,
+                cwd=str(tauri_dir),
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            try:
+                probe_output = output_path.read_text(encoding="utf-8")
+            except OSError:
+                probe_output = ""
+    else:
+        result = runner(["open", "-W", "-n", "-g", str(bundle_path)], tauri_dir)
+        probe_output = result.stdout or ""
+
+    return live_probe_check_from_result(
+        check_id="tauri_macos_app_bundle_live_probe",
+        description=(
+            "The macOS app bundle can be launched through LaunchServices with local-only "
+            "runtime configuration and can write the sanitized governed descriptor, capability, "
+            "text-turn, and trace-proof live probe result."
+        ),
+        command=display_command,
+        result=result,
+        probe_output=probe_output,
+        endpoint=endpoint,
+        auth_token=auth_token,
+        live_probe_configured=True,
+    )
+
+
 def build_report(
     *,
     runner: CommandRunner | None = None,
@@ -835,9 +1001,16 @@ def build_report(
             runner=active_runner,
             endpoint=configured_endpoint,
         ),
+        macos_app_bundle_live_probe_check(
+            tauri_dir=tauri_dir,
+            runner=active_runner,
+            endpoint=configured_endpoint,
+        ),
     ]
     required_checks_passed = all(
-        check["status"] == "passed" or check["id"] == "tauri_packaged_desktop_binary_live_probe" and check["status"] == "not_configured"
+        check["status"] == "passed"
+        or check["id"] in {"tauri_packaged_desktop_binary_live_probe", "tauri_macos_app_bundle_live_probe"}
+        and check["status"] == "not_configured"
         for check in checks
     )
     status = "passed" if required_checks_passed else "failed"
@@ -885,6 +1058,10 @@ def build_report(
         (check for check in checks if check["id"] == "tauri_packaged_desktop_binary_live_probe"),
         {},
     )
+    macos_app_bundle_live_probe = next(
+        (check for check in checks if check["id"] == "tauri_macos_app_bundle_live_probe"),
+        {},
+    )
     return {
         "kind": OUTPUT_KIND,
         "generatedAt": datetime.now(timezone.utc).isoformat(),
@@ -902,6 +1079,16 @@ def build_report(
             "macosLocalNetworkUsageDeclared": macos_local_network_usage_declared,
             "macosAppBundleBuilt": macos_app_bundle_built,
             "macosAppBundleIdentityBound": macos_app_bundle_identity_bound,
+            "macosAppBundleLiveProbeConfigured": macos_app_bundle_live_probe.get("liveProbeConfigured") is True,
+            "macosAppBundleLiveProbePassed": macos_app_bundle_live_probe.get("status") == "passed",
+            "macosAppBundleLiveProbeDescriptorPassed": macos_app_bundle_live_probe.get("descriptorOk") is True,
+            "macosAppBundleLiveProbeCapabilitiesPassed": macos_app_bundle_live_probe.get("capabilitiesOk") is True,
+            "macosAppBundleLiveProbeTextTurnPassed": macos_app_bundle_live_probe.get("textTurnOk") is True,
+            "macosAppBundleLiveProbeTracePassed": macos_app_bundle_live_probe.get("traceOk") is True,
+            "macosAppBundleLiveProbeSideEffectClaimed": macos_app_bundle_live_probe.get("sideEffectClaimed") is True,
+            "macosAppBundleLiveProbeRouteFamily": macos_app_bundle_live_probe.get("routeFamily") or "unknown",
+            "macosAppBundleLiveProbeFailureStage": macos_app_bundle_live_probe.get("failureStage") or "unknown",
+            "macosAppBundleLiveProbeFailureKind": macos_app_bundle_live_probe.get("failureKind") or "unknown",
             "endpointHostOmittedFromInvokePayload": True,
             "nativeLocalEndpointReadiness": True,
             "packagedBinaryConfigProbePassed": packaged_config_probe_passed,
