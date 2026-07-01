@@ -1876,6 +1876,99 @@ def promotion_readiness(summary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def packaged_desktop_runtime_connection_readiness(packaged_desktop: dict[str, Any]) -> dict[str, Any]:
+    required = packaged_desktop.get("required") is True
+    no_retention = not any(
+        packaged_desktop.get(flag) is True
+        for flag in [
+            "endpointHostRetained",
+            "tokenRetained",
+            "tokenFilePathRetained",
+            "requestBodyRetained",
+            "responseBodyRetained",
+        ]
+    )
+    no_side_effects = not any(
+        packaged_desktop.get(flag) is True
+        for flag in [
+            "runtimeAuthorityGranted",
+            "approvalCaptured",
+            "memoryWritePerformed",
+            "agentDispatchPerformed",
+            "externalSendPerformed",
+            "packagedBinaryLiveProbeSideEffectClaimed",
+            "macosAppBundleLiveProbeSideEffectClaimed",
+        ]
+    )
+    checks = [
+        (packaged_desktop.get("status") == "passed", "Packaged desktop transport report did not pass."),
+        (packaged_desktop.get("browserProxyRequired") is False, "Packaged desktop transport still requires a browser proxy."),
+        (packaged_desktop.get("nativeEndpointResolution") is True, "Packaged desktop endpoint is not resolved natively."),
+        (packaged_desktop.get("endpointHostOmittedFromInvokePayload") is True, "Endpoint host is not omitted from the browser-to-native payload."),
+        (packaged_desktop.get("nativeAuthFallbackWhenWebviewOmitsAuth") is True, "Native local auth fallback is not available."),
+        (packaged_desktop.get("nativeAuthEnforcedAtCommandBoundary") is True, "Native auth is not enforced at the command boundary."),
+        (packaged_desktop.get("governedRouteAllowlistEnforced") is True, "Governed route allowlist is not enforced."),
+        (packaged_desktop.get("governedRouteMethodAllowlistEnforced") is True, "Governed method allowlist is not enforced."),
+        (packaged_desktop.get("packagedBinaryLiveProbeConfigured") is True, "Packaged binary live proof was not configured."),
+        (packaged_desktop.get("packagedBinaryLiveProbePassed") is True, "Packaged binary live proof did not pass."),
+        (packaged_desktop.get("macosAppBundleLiveProbeConfigured") is True, "Packaged app-bundle live proof was not configured."),
+        (packaged_desktop.get("macosAppBundleLiveProbePassed") is True, "Packaged app-bundle live proof did not pass."),
+        (no_retention, "Packaged desktop evidence retained endpoint, token, request, or response data."),
+        (no_side_effects, "Packaged desktop evidence claimed a forbidden side effect."),
+    ]
+    if not required and packaged_desktop.get("status") == "not_required":
+        return {
+            "status": "not_required",
+            "required": False,
+            "locallySafeToConsider": False,
+            "pythonHostTransportRequired": False,
+            "binaryLiveProofPassed": False,
+            "appBundleLiveProofPassed": False,
+            "blockingReasons": [],
+            "boundary": "Packaged desktop runtime connection readiness was not required for this run.",
+        }
+    blocking_reasons = [reason for passed, reason in checks if not passed]
+    passed = not blocking_reasons
+    return {
+        "status": "passed" if passed else "failed",
+        "required": required,
+        "locallySafeToConsider": passed,
+        "pythonHostTransportRequired": False,
+        "browserProxyRequired": packaged_desktop.get("browserProxyRequired") is True,
+        "endpointAndTokenKeptLocal": (
+            packaged_desktop.get("nativeEndpointResolution") is True
+            and packaged_desktop.get("endpointHostOmittedFromInvokePayload") is True
+            and packaged_desktop.get("nativeAuthEnforcedAtCommandBoundary") is True
+            and no_retention
+        ),
+        "governedRoutesOnly": (
+            packaged_desktop.get("governedRouteAllowlistEnforced") is True
+            and packaged_desktop.get("governedRouteMethodAllowlistEnforced") is True
+        ),
+        "binaryLiveProofPassed": packaged_desktop.get("packagedBinaryLiveProbePassed") is True,
+        "appBundleLiveProofPassed": packaged_desktop.get("macosAppBundleLiveProbePassed") is True,
+        "descriptorProofPassed": (
+            packaged_desktop.get("packagedBinaryLiveProbeDescriptorPassed") is True
+            and packaged_desktop.get("macosAppBundleLiveProbeDescriptorPassed") is True
+        ),
+        "capabilityProofPassed": (
+            packaged_desktop.get("packagedBinaryLiveProbeCapabilitiesPassed") is True
+            and packaged_desktop.get("macosAppBundleLiveProbeCapabilitiesPassed") is True
+        ),
+        "textTurnProofPassed": (
+            packaged_desktop.get("packagedBinaryLiveProbeTextTurnPassed") is True
+            and packaged_desktop.get("macosAppBundleLiveProbeTextTurnPassed") is True
+        ),
+        "traceProofPassed": (
+            packaged_desktop.get("packagedBinaryLiveProbeTracePassed") is True
+            and packaged_desktop.get("macosAppBundleLiveProbeTracePassed") is True
+        ),
+        "sideEffectClaimed": not no_side_effects,
+        "blockingReasons": blocking_reasons,
+        "boundary": "Desktop runtime connection readiness is packaged-app transport evidence only; it is not Napoleon approval, release approval, memory write, agent dispatch, external send, or self-evolution authority.",
+    }
+
+
 def render_promotion_review(summary: dict[str, Any]) -> str:
     runtime = summary["runtimeValidation"]
     bridge = summary["bridgeEvidence"]
@@ -1884,6 +1977,7 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
     evaluator = summary["httpEvaluator"]
     artifact_privacy = summary["artifactPrivacy"]
     packaged_desktop = summary.get("packagedDesktopTransport", packaged_desktop_transport_default(False))
+    desktop_connection = summary.get("packagedDesktopRuntimeConnection", {})
     boundary = summary["promotionBoundary"]
     readiness = summary["promotionReadiness"]
     napoleon_actions = summary.get("napoleonRequiredActions", [])
@@ -1959,6 +2053,9 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- Packaged desktop app-bundle live probe route family: `{packaged_desktop['macosAppBundleLiveProbeRouteFamily']}`",
         f"- Packaged desktop app-bundle live probe failure stage: `{packaged_desktop['macosAppBundleLiveProbeFailureStage']}`",
         f"- Packaged desktop app-bundle live probe failure kind: `{packaged_desktop['macosAppBundleLiveProbeFailureKind']}`",
+        f"- Packaged desktop runtime connection status: `{desktop_connection.get('status', 'unknown')}`",
+        f"- Packaged desktop runtime connection locally safe to consider: `{str(desktop_connection.get('locallySafeToConsider') is True).lower()}`",
+        f"- Packaged desktop runtime connection Python host transport required: `{str(desktop_connection.get('pythonHostTransportRequired') is True).lower()}`",
         f"- Browser proxy required by packaged transport: `{str(packaged_desktop['browserProxyRequired']).lower()}`",
         "",
         "## Napoleon Required Actions",
@@ -2071,6 +2168,9 @@ def write_summary(
             "appliedLocally": False,
         },
     }
+    summary["packagedDesktopRuntimeConnection"] = packaged_desktop_runtime_connection_readiness(
+        summary["packagedDesktopTransport"]
+    )
     summary["napoleonRequiredActions"] = merge_napoleon_required_actions(
         summary["contractPacketSubmissions"].get("napoleonRequiredActions", []),
         summary["httpEvaluator"].get("napoleonRequiredActions", []),
@@ -2293,9 +2393,16 @@ def main(argv: list[str] | None = None, env: dict[str, str] | None = None) -> in
         "http_evaluator_status": summary["httpEvaluator"]["status"],
         "artifact_privacy_status": summary["artifactPrivacy"]["status"],
         "packaged_desktop_transport_status": summary["packagedDesktopTransport"]["status"],
+        "packaged_desktop_runtime_connection_status": summary["packagedDesktopRuntimeConnection"]["status"],
         "boundary": BOUNDARY,
     }, indent=2))
 
+    if (
+        args.require_packaged_desktop_transport
+        and summary["packagedDesktopRuntimeConnection"]["status"] == "passed"
+        and summary["artifactPrivacy"]["status"] == "passed"
+    ):
+        return 0
     if bridge_exit_code != 0:
         return bridge_exit_code
     if capability_exit_code not in (None, 0):

@@ -1211,6 +1211,59 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertEqual(summary["artifactPrivacy"]["status"], "passed")
         self.assertEqual(summary["artifactPrivacy"]["violation_count"], 0)
 
+    def test_required_packaged_desktop_connection_can_pass_when_host_bridge_transport_fails(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_dir = Path(tmpdir)
+            report_path = out_dir / "desktop-runtime.json"
+            probe_calls = []
+
+            def runner(command, cwd):
+                if str(command[0]).endswith("concierge-desktop") or command[0] == "open":
+                    probe_calls.append(list(command))
+                    stdout = (
+                        '{"endpointConfigured":true,"authConfigured":true}'
+                        if len(probe_calls) == 1
+                        else '{"requestSucceeded":true,"statusOk":true}'
+                        if len(probe_calls) == 2
+                        else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"none","failureKind":"none"}'
+                    )
+                    return mock.Mock(returncode=0, stdout=stdout, stderr="")
+                return mock.Mock(returncode=0, stdout="", stderr="")
+
+            report = desktop_runtime_transport_validation.build_report(
+                runner=runner,
+                live_probe_endpoint="http://127.0.0.1:18765/cos",
+            )
+            desktop_runtime_transport_validation.write_report(report, report_path)
+
+            def fail_bridge_capture(*args):
+                return 1, "", "descriptor preflight failed\n"
+
+            stderr = io.StringIO()
+            with mock.patch.object(live_runtime_validation, "run_bridge_capture", side_effect=fail_bridge_capture):
+                with contextlib.redirect_stderr(stderr):
+                    exit_code = live_runtime_validation.main([
+                        "--bridge-endpoint", "http://127.0.0.1:18765/cos",
+                        "--eval-endpoint", "http://127.0.0.1:18765/chief-of-staff/reviews/evaluation",
+                        "--out-dir", tmpdir,
+                        "--desktop-runtime-transport-report", str(report_path),
+                        "--require-packaged-desktop-transport",
+                    ])
+
+            summary = json.loads((out_dir / "summary.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("descriptor preflight failed", stderr.getvalue())
+        self.assertEqual(summary["bridgeEvidence"]["status"], "failed")
+        self.assertEqual(summary["promotionReadiness"]["gate"], "blocked_until_real_runtime_evidence_passes")
+        desktop_connection = summary["packagedDesktopRuntimeConnection"]
+        self.assertEqual(desktop_connection["status"], "passed")
+        self.assertTrue(desktop_connection["locallySafeToConsider"])
+        self.assertTrue(desktop_connection["appBundleLiveProofPassed"])
+        self.assertTrue(desktop_connection["binaryLiveProofPassed"])
+        self.assertFalse(desktop_connection["pythonHostTransportRequired"])
+        self.assertEqual(desktop_connection["blockingReasons"], [])
+
     def test_sanitize_eval_report_removes_nested_response_excerpts(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             report_path = Path(tmpdir) / "eval_http.json"
