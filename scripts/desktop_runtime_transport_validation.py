@@ -134,6 +134,89 @@ def local_runtime_probe_server():
         server.server_close()
 
 
+@contextlib.contextmanager
+def local_live_probe_server(route_family: str):
+    records: list[dict[str, str]] = []
+
+    generated_responses = {
+        ("GET", "/v1/concierge/chief-of-staff/descriptor"): b'{"descriptor":{"runtimeAuthority":false}}',
+        ("GET", "/v1/concierge/chief-of-staff/capabilities"): (
+            b'{"capabilities":[{"id":"napoleon.capability.governed_text_turn","proposalOnly":true}],'
+            b'"runtimeAuthority":false}'
+        ),
+        ("POST", "/v1/concierge/turn"): (
+            b'{"governanceDecision":{"trace_id":"trace_packaged_desktop_live_probe",'
+            b'"audit_id":"audit_packaged_desktop_live_probe","outcome":"allow_prepare_only"},'
+            b'"approvalCaptured":false,"memoryWritePerformed":false,'
+            b'"agentDispatchPerformed":false,"externalSendPerformed":false}'
+        ),
+    }
+    cos_responses = {
+        ("GET", "/cos/descriptor"): b'{"descriptor":{"runtimeAuthority":false}}',
+        ("GET", "/cos/capabilities"): (
+            b'{"capabilities":[{"id":"napoleon.capability.governed_text_turn","proposalOnly":true}],'
+            b'"runtimeAuthority":false}'
+        ),
+        ("POST", "/cos/text-turn"): (
+            b'{"trace_id":"trace_packaged_desktop_live_probe",'
+            b'"governance_decision":{"decision":"allow_prepare_only"},'
+            b'"approval_captured":false,"memory_write_performed":false,'
+            b'"agent_dispatch_performed":false,"external_send_performed":false}'
+        ),
+        ("GET", "/cos/trace/trace_packaged_desktop_live_probe"): (
+            b'{"trace_id":"trace_packaged_desktop_live_probe"}'
+        ),
+    }
+    responses = generated_responses if route_family == "generated" else cos_responses
+
+    class ProbeHandler(BaseHTTPRequestHandler):
+        def log_message(self, format: str, *args: object) -> None:
+            return
+
+        def _record(self) -> bytes:
+            content_length = int(self.headers.get("Content-Length") or "0")
+            body = self.rfile.read(content_length) if content_length else b""
+            records.append(
+                {
+                    "method": self.command,
+                    "path": self.path,
+                    "xNapoleonAuth": self.headers.get("X-Napoleon-Auth", ""),
+                    "authorization": self.headers.get("Authorization", ""),
+                    "body": body.decode("utf-8", errors="replace"),
+                }
+            )
+            return body
+
+        def _send(self) -> None:
+            self._record()
+            response_body = responses.get((self.command, self.path))
+            if response_body is None:
+                self.send_response(404)
+                self.end_headers()
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(response_body)))
+            self.end_headers()
+            self.wfile.write(response_body)
+
+        def do_GET(self) -> None:
+            self._send()
+
+        def do_POST(self) -> None:
+            self._send()
+
+    server = HTTPServer(("127.0.0.1", 0), ProbeHandler)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{server.server_port}", records
+    finally:
+        server.shutdown()
+        thread.join(timeout=5)
+        server.server_close()
+
+
 def packaged_binary_config_probe_check(
     *,
     tauri_dir: Path,
@@ -270,6 +353,119 @@ def packaged_binary_transport_probe_check(
         "requestBodyRetained": False,
         "responseBodyRetained": False,
         "nativeAuthObservedByProbeServer": native_auth_attached,
+    }
+
+
+def packaged_binary_local_live_probe_check(
+    *,
+    tauri_dir: Path,
+    runner: CommandRunner,
+    route_family: str,
+) -> dict[str, Any]:
+    command = [str(release_binary_path(tauri_dir))]
+    endpoint = PROBE_ENDPOINT
+    records: list[dict[str, str]] = []
+    env = {
+        **os.environ,
+        "CONCIERGE_DESKTOP_RUNTIME_LIVE_PROBE": "1",
+        "NAPOLEON_RUNTIME_ENDPOINT": endpoint,
+        "NAPOLEON_RUNTIME_AUTH_TOKEN": PROBE_TOKEN,
+    }
+    if runner is DEFAULT_COMMAND_RUNNER:
+        with local_live_probe_server(route_family) as (local_endpoint, local_records):
+            endpoint = f"{local_endpoint}/cos" if route_family == "cos" else local_endpoint
+            records = local_records
+            env = {
+                **env,
+                "NAPOLEON_RUNTIME_ENDPOINT": endpoint,
+            }
+            result = subprocess.run(
+                command,
+                cwd=str(tauri_dir),
+                check=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=env,
+            )
+    else:
+        result = runner(command, tauri_dir)
+
+    output = f"{result.stdout or ''}\n{result.stderr or ''}"
+    probe_status = None
+    try:
+        probe_status = json.loads((result.stdout or "").strip())
+    except json.JSONDecodeError:
+        probe_status = None
+    leaked_endpoint = endpoint in output or "napoleon.example" in output or "127.0.0.1" in output
+    leaked_token = PROBE_TOKEN in output
+    sequence_observed = True
+    if runner is DEFAULT_COMMAND_RUNNER:
+        expected_paths = (
+            [
+                "/v1/concierge/chief-of-staff/descriptor",
+                "/v1/concierge/chief-of-staff/capabilities",
+                "/v1/concierge/turn",
+            ]
+            if route_family == "generated"
+            else [
+                "/cos/descriptor",
+                "/cos/capabilities",
+                "/cos/text-turn",
+                "/cos/trace/trace_packaged_desktop_live_probe",
+            ]
+        )
+        expected_methods = ["GET", "GET", "POST"] if route_family == "generated" else ["GET", "GET", "POST", "GET"]
+        expected_auth = (
+            ("authorization", f"Bearer {PROBE_TOKEN}", "xNapoleonAuth", "")
+            if route_family == "generated"
+            else ("xNapoleonAuth", PROBE_TOKEN, "authorization", "")
+        )
+        sequence_observed = (
+            [record.get("path") for record in records] == expected_paths
+            and [record.get("method") for record in records] == expected_methods
+            and all(record.get(expected_auth[0]) == expected_auth[1] for record in records)
+            and all(record.get(expected_auth[2]) == expected_auth[3] for record in records)
+            and all(PROBE_TOKEN not in record.get("body", "") for record in records)
+        )
+    passed = (
+        result.returncode == 0
+        and isinstance(probe_status, dict)
+        and probe_status.get("descriptorOk") is True
+        and probe_status.get("capabilitiesOk") is True
+        and probe_status.get("textTurnOk") is True
+        and probe_status.get("traceOk") is True
+        and probe_status.get("sideEffectClaimed") is False
+        and sequence_observed
+        and not leaked_endpoint
+        and not leaked_token
+    )
+    label = "generated Concierge-compatible" if route_family == "generated" else "explicit /cos"
+    return {
+        "id": f"tauri_packaged_desktop_binary_{route_family}_live_probe_local",
+        "description": (
+            f"The built no-bundle desktop binary can run the full validation-only {label} "
+            "live-probe sequence through native runtime transport against a local "
+            "Napoleon-compatible harness while retaining only sanitized booleans."
+        ),
+        "status": "passed" if passed else "failed",
+        "exitCode": result.returncode,
+        "command": command,
+        "stdoutRetained": False,
+        "stderrRetained": False,
+        "endpointHostRetained": leaked_endpoint,
+        "tokenRetained": leaked_token,
+        "tokenFilePathRetained": False,
+        "requestBodyRetained": False,
+        "responseBodyRetained": False,
+        "routeFamily": route_family,
+        "localLiveProbe": True,
+        "descriptorOk": isinstance(probe_status, dict) and probe_status.get("descriptorOk") is True,
+        "capabilitiesOk": isinstance(probe_status, dict) and probe_status.get("capabilitiesOk") is True,
+        "textTurnOk": isinstance(probe_status, dict) and probe_status.get("textTurnOk") is True,
+        "traceOk": isinstance(probe_status, dict) and probe_status.get("traceOk") is True,
+        "sideEffectClaimed": isinstance(probe_status, dict) and probe_status.get("sideEffectClaimed") is True,
+        "nativeAuthObservedByProbeServer": sequence_observed,
     }
 
 
@@ -441,6 +637,16 @@ def build_report(
             tauri_dir=tauri_dir,
             runner=active_runner,
         ),
+        packaged_binary_local_live_probe_check(
+            tauri_dir=tauri_dir,
+            runner=active_runner,
+            route_family="generated",
+        ),
+        packaged_binary_local_live_probe_check(
+            tauri_dir=tauri_dir,
+            runner=active_runner,
+            route_family="cos",
+        ),
         packaged_binary_live_probe_check(
             tauri_dir=tauri_dir,
             runner=active_runner,
@@ -467,6 +673,16 @@ def build_report(
         and check["status"] == "passed"
         for check in checks
     )
+    packaged_generated_local_live_probe_passed = any(
+        check["id"] == "tauri_packaged_desktop_binary_generated_live_probe_local"
+        and check["status"] == "passed"
+        for check in checks
+    )
+    packaged_cos_local_live_probe_passed = any(
+        check["id"] == "tauri_packaged_desktop_binary_cos_live_probe_local"
+        and check["status"] == "passed"
+        for check in checks
+    )
     packaged_live_probe = next(
         (check for check in checks if check["id"] == "tauri_packaged_desktop_binary_live_probe"),
         {},
@@ -489,6 +705,11 @@ def build_report(
             "nativeLocalEndpointReadiness": True,
             "packagedBinaryConfigProbePassed": packaged_config_probe_passed,
             "packagedBinaryTransportProbePassed": packaged_transport_probe_passed,
+            "packagedBinaryGeneratedLocalLiveProbePassed": packaged_generated_local_live_probe_passed,
+            "packagedBinaryCosLocalLiveProbePassed": packaged_cos_local_live_probe_passed,
+            "packagedBinaryLocalLiveProbePassed": (
+                packaged_generated_local_live_probe_passed and packaged_cos_local_live_probe_passed
+            ),
             "packagedBinaryLiveProbeConfigured": packaged_live_probe.get("liveProbeConfigured") is True,
             "packagedBinaryLiveProbePassed": packaged_live_probe.get("status") == "passed",
             "packagedBinaryLiveProbeDescriptorPassed": packaged_live_probe.get("descriptorOk") is True,

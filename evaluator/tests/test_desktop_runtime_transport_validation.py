@@ -35,7 +35,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
 
         self.assertEqual(report["kind"], desktop_runtime_transport_validation.OUTPUT_KIND)
         self.assertEqual(report["status"], "passed")
-        self.assertEqual(len(report["checks"]), 7)
+        self.assertEqual(len(report["checks"]), 9)
         for check in report["checks"]:
             self.assertEqual(check["status"], "passed")
             self.assertFalse(check["stdoutRetained"])
@@ -56,6 +56,9 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertTrue(transport["nativeLocalEndpointReadiness"])
         self.assertTrue(transport["packagedBinaryConfigProbePassed"])
         self.assertTrue(transport["packagedBinaryTransportProbePassed"])
+        self.assertTrue(transport["packagedBinaryGeneratedLocalLiveProbePassed"])
+        self.assertTrue(transport["packagedBinaryCosLocalLiveProbePassed"])
+        self.assertTrue(transport["packagedBinaryLocalLiveProbePassed"])
         self.assertTrue(transport["packagedBinaryLiveProbeConfigured"])
         self.assertTrue(transport["packagedBinaryLiveProbePassed"])
         self.assertTrue(transport["packagedBinaryLiveProbeDescriptorPassed"])
@@ -158,6 +161,8 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(report["checks"][4]["status"], "passed")
         self.assertEqual(report["checks"][5]["status"], "passed")
         self.assertEqual(report["checks"][6]["status"], "passed")
+        self.assertEqual(report["checks"][7]["status"], "passed")
+        self.assertEqual(report["checks"][8]["status"], "passed")
         self.assertTrue(report["packagedDesktopTransport"]["packagedNoBundleBuildPassed"])
 
     def test_main_writes_sanitized_report(self):
@@ -178,6 +183,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertNotIn("/tmp/token-file", text)
         self.assertIn('"status": "passed"', text)
         self.assertIn('"packagedBinaryLiveProbeConfigured": false', text)
+        self.assertIn('"packagedBinaryLocalLiveProbePassed": true', text)
         self.assertIn('"status": "not_configured"', text)
         self.assertIn('"doesNotContactNapoleon": true', text)
 
