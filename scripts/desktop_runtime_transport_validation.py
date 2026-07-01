@@ -43,6 +43,7 @@ TRANSPORT_TESTS = [
     "desktop_runtime_transport_probe_uses_native_endpoint_and_auth",
     "desktop_runtime_live_probe_outputs_only_sanitized_booleans",
     "desktop_runtime_live_probe_uses_governed_native_sequence",
+    "desktop_runtime_live_probe_uses_generated_governed_sequence",
     "desktop_runtime_command_preserves_explicit_webview_auth_when_native_auth_is_disabled",
 ]
 

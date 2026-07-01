@@ -109,6 +109,10 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
             "desktop_runtime_live_probe_uses_governed_native_sequence",
             report["coveredRustTests"],
         )
+        self.assertIn(
+            "desktop_runtime_live_probe_uses_generated_governed_sequence",
+            report["coveredRustTests"],
+        )
         boundary = report["authorityBoundary"]
         self.assertTrue(boundary["validationEvidenceOnly"])
         self.assertFalse(boundary["doesNotContactNapoleon"])
