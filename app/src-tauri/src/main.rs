@@ -174,13 +174,31 @@ fn runtime_transport_probe_output(request_succeeded: bool, status_ok: bool) -> S
     )
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 struct RuntimeLiveProbeStatus {
     descriptor_ok: bool,
     capabilities_ok: bool,
     text_turn_ok: bool,
     trace_ok: bool,
     side_effect_claimed: bool,
+    route_family: Option<RuntimeLiveProbeRouteFamily>,
+    failure_stage: &'static str,
+    failure_kind: &'static str,
+}
+
+impl Default for RuntimeLiveProbeStatus {
+    fn default() -> Self {
+        Self {
+            descriptor_ok: false,
+            capabilities_ok: false,
+            text_turn_ok: false,
+            trace_ok: false,
+            side_effect_claimed: false,
+            route_family: None,
+            failure_stage: "not_run",
+            failure_kind: "not_run",
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -190,6 +208,13 @@ enum RuntimeLiveProbeRouteFamily {
 }
 
 impl RuntimeLiveProbeRouteFamily {
+    fn label(self) -> &'static str {
+        match self {
+            Self::Cos => "cos",
+            Self::Generated => "generated",
+        }
+    }
+
     fn descriptor_path(self) -> &'static str {
         match self {
             Self::Cos => "/cos/descriptor",
@@ -220,13 +245,20 @@ impl RuntimeLiveProbeRouteFamily {
 }
 
 fn runtime_live_probe_output(status: RuntimeLiveProbeStatus) -> String {
+    let route_family = status
+        .route_family
+        .map(RuntimeLiveProbeRouteFamily::label)
+        .unwrap_or("unknown");
     format!(
-        r#"{{"descriptorOk":{},"capabilitiesOk":{},"textTurnOk":{},"traceOk":{},"sideEffectClaimed":{}}}"#,
+        r#"{{"descriptorOk":{},"capabilitiesOk":{},"textTurnOk":{},"traceOk":{},"sideEffectClaimed":{},"routeFamily":"{}","failureStage":"{}","failureKind":"{}"}}"#,
         status.descriptor_ok,
         status.capabilities_ok,
         status.text_turn_ok,
         status.trace_ok,
-        status.side_effect_claimed
+        status.side_effect_claimed,
+        route_family,
+        status.failure_stage,
+        status.failure_kind
     )
 }
 
@@ -437,33 +469,57 @@ async fn run_runtime_live_probe_family(
     native_runtime_endpoint: Option<String>,
 ) -> Result<RuntimeLiveProbeStatus, String> {
     let mut status = RuntimeLiveProbeStatus::default();
+    status.route_family = Some(family);
 
-    let descriptor = perform_runtime_http_request_with_endpoint(
+    let descriptor = match perform_runtime_http_request_with_endpoint(
         live_probe_request(family.descriptor_path(), "GET", None),
         native_auth_token.clone(),
         native_runtime_endpoint.clone(),
     )
-    .await?;
+    .await
+    {
+        Ok(response) => response,
+        Err(_) => {
+            status.failure_stage = "descriptor";
+            status.failure_kind = "request_failed";
+            return Ok(status);
+        }
+    };
     status.descriptor_ok = descriptor.ok;
     if let Some(value) = response_json(&descriptor) {
         status.side_effect_claimed |= response_claims_side_effects(&value);
     }
     if !status.descriptor_ok {
+        status.failure_stage = "descriptor";
+        status.failure_kind = "http_not_ok";
         return Ok(status);
     }
 
-    let capabilities = perform_runtime_http_request_with_endpoint(
+    let capabilities = match perform_runtime_http_request_with_endpoint(
         live_probe_request(family.capabilities_path(), "GET", None),
         native_auth_token.clone(),
         native_runtime_endpoint.clone(),
     )
-    .await?;
+    .await
+    {
+        Ok(response) => response,
+        Err(_) => {
+            status.failure_stage = "capabilities";
+            status.failure_kind = "request_failed";
+            return Ok(status);
+        }
+    };
     status.capabilities_ok = capabilities.ok;
     if let Some(value) = response_json(&capabilities) {
         status.side_effect_claimed |= response_claims_side_effects(&value);
     }
+    if !status.capabilities_ok {
+        status.failure_stage = "capabilities";
+        status.failure_kind = "http_not_ok";
+        return Ok(status);
+    }
 
-    let text_turn = perform_runtime_http_request_with_endpoint(
+    let text_turn = match perform_runtime_http_request_with_endpoint(
         live_probe_request(
             family.text_turn_path(),
             "POST",
@@ -472,31 +528,72 @@ async fn run_runtime_live_probe_family(
         native_auth_token.clone(),
         native_runtime_endpoint.clone(),
     )
-    .await?;
+    .await
+    {
+        Ok(response) => response,
+        Err(_) => {
+            status.failure_stage = "text_turn";
+            status.failure_kind = "request_failed";
+            return Ok(status);
+        }
+    };
     status.text_turn_ok = text_turn.ok;
     if let Some(value) = response_json(&text_turn) {
         status.side_effect_claimed |= response_claims_side_effects(&value);
+        if !status.text_turn_ok {
+            status.failure_stage = "text_turn";
+            status.failure_kind = "http_not_ok";
+            return Ok(status);
+        }
         match family {
             RuntimeLiveProbeRouteFamily::Cos => {
                 if let Some(trace_id) = response_trace_id(&value) {
-                    let trace = perform_runtime_http_request_with_endpoint(
+                    let trace = match perform_runtime_http_request_with_endpoint(
                         live_probe_request(&format!("/cos/trace/{trace_id}"), "GET", None),
                         native_auth_token,
                         native_runtime_endpoint,
                     )
-                    .await?;
+                    .await
+                    {
+                        Ok(response) => response,
+                        Err(_) => {
+                            status.failure_stage = "trace";
+                            status.failure_kind = "request_failed";
+                            return Ok(status);
+                        }
+                    };
                     status.trace_ok = trace.ok;
                     if let Some(trace_value) = response_json(&trace) {
                         status.side_effect_claimed |= response_claims_side_effects(&trace_value);
                     }
+                    if !status.trace_ok {
+                        status.failure_stage = "trace";
+                        status.failure_kind = "http_not_ok";
+                        return Ok(status);
+                    }
+                } else {
+                    status.failure_stage = "trace";
+                    status.failure_kind = "missing_trace_id";
+                    return Ok(status);
                 }
             }
             RuntimeLiveProbeRouteFamily::Generated => {
                 status.trace_ok = response_has_generated_trace_proof(&value);
+                if !status.trace_ok {
+                    status.failure_stage = "trace";
+                    status.failure_kind = "missing_generated_proof";
+                    return Ok(status);
+                }
             }
         }
+    } else {
+        status.failure_stage = "text_turn";
+        status.failure_kind = "invalid_json";
+        return Ok(status);
     }
 
+    status.failure_stage = "none";
+    status.failure_kind = "none";
     Ok(status)
 }
 
@@ -1338,15 +1435,41 @@ mod tests {
             text_turn_ok: true,
             trace_ok: true,
             side_effect_claimed: false,
+            route_family: Some(RuntimeLiveProbeRouteFamily::Cos),
+            failure_stage: "none",
+            failure_kind: "none",
         });
 
         assert_eq!(
             output,
-            r#"{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}"#
+            r#"{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"none","failureKind":"none"}"#
         );
         assert!(!output.contains("napoleon.example"));
         assert!(!output.contains("native_auth_value"));
         assert!(!output.contains("Packaged desktop live runtime validation probe"));
+    }
+
+    #[test]
+    fn desktop_runtime_live_probe_reports_sanitized_failure_reason() {
+        let output = runtime_live_probe_output(RuntimeLiveProbeStatus {
+            descriptor_ok: false,
+            capabilities_ok: false,
+            text_turn_ok: false,
+            trace_ok: false,
+            side_effect_claimed: false,
+            route_family: Some(RuntimeLiveProbeRouteFamily::Generated),
+            failure_stage: "descriptor",
+            failure_kind: "http_not_ok",
+        });
+
+        assert_eq!(
+            output,
+            r#"{"descriptorOk":false,"capabilitiesOk":false,"textTurnOk":false,"traceOk":false,"sideEffectClaimed":false,"routeFamily":"generated","failureStage":"descriptor","failureKind":"http_not_ok"}"#
+        );
+        assert!(!output.contains("napoleon.example"));
+        assert!(!output.contains("127.0.0.1"));
+        assert!(!output.contains("native_auth_value"));
+        assert!(!output.contains("not found"));
     }
 
     #[test]
@@ -1360,6 +1483,7 @@ mod tests {
         let native_auth = Some("native_auth_value".to_string());
         let native_endpoint = Some(harness.base_url.clone());
         let mut status = RuntimeLiveProbeStatus::default();
+        status.route_family = Some(RuntimeLiveProbeRouteFamily::Cos);
 
         let descriptor =
             tauri::async_runtime::block_on(perform_runtime_http_request_with_endpoint(
@@ -1401,10 +1525,12 @@ mod tests {
         ))
         .expect("trace request succeeds");
         status.trace_ok = trace.ok;
+        status.failure_stage = "none";
+        status.failure_kind = "none";
 
         assert_eq!(
             runtime_live_probe_output(status),
-            r#"{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}"#
+            r#"{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"none","failureKind":"none"}"#
         );
 
         let descriptor_request = harness.next_request();
@@ -1454,7 +1580,7 @@ mod tests {
 
         assert_eq!(
             runtime_live_probe_output(status),
-            r#"{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}"#
+            r#"{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"generated","failureStage":"none","failureKind":"none"}"#
         );
 
         let descriptor_request = harness.next_request();

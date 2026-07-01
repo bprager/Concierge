@@ -270,7 +270,7 @@ class LiveRuntimeValidationTest(unittest.TestCase):
                                 if len(binary_calls) == 1
                                 else '{"requestSucceeded":true,"statusOk":true}'
                                 if len(binary_calls) == 2
-                                else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}'
+                                else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"none","failureKind":"none"}'
                             )
                             return mock.Mock(returncode=0, stdout=stdout, stderr="")
                         return mock.Mock(returncode=0, stdout="", stderr="")
@@ -317,6 +317,9 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertTrue(packaged["packagedBinaryLiveProbeTextTurnPassed"])
         self.assertTrue(packaged["packagedBinaryLiveProbeTracePassed"])
         self.assertFalse(packaged["packagedBinaryLiveProbeSideEffectClaimed"])
+        self.assertEqual(packaged["packagedBinaryLiveProbeRouteFamily"], "cos")
+        self.assertEqual(packaged["packagedBinaryLiveProbeFailureStage"], "none")
+        self.assertEqual(packaged["packagedBinaryLiveProbeFailureKind"], "none")
         self.assertTrue(packaged["packagedNoBundleBuildPassed"])
         self.assertFalse(packaged["endpointHostRetained"])
         self.assertFalse(packaged["tokenRetained"])
@@ -336,6 +339,9 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertIn("- Packaged desktop binary transport probe passed: `true`", review)
         self.assertIn("- Packaged desktop binary live probe configured: `true`", review)
         self.assertIn("- Packaged desktop binary live probe passed: `true`", review)
+        self.assertIn("- Packaged desktop binary live probe route family: `cos`", review)
+        self.assertIn("- Packaged desktop binary live probe failure stage: `none`", review)
+        self.assertIn("- Packaged desktop binary live probe failure kind: `none`", review)
         self.assertNotIn("token_packaged_desktop_summary", json.dumps(summary))
 
     def test_required_packaged_desktop_transport_blocks_readiness_when_report_is_missing(self):
@@ -1050,6 +1056,9 @@ class LiveRuntimeValidationTest(unittest.TestCase):
         self.assertTrue(preflight["packagedDesktopTransport"]["packagedBinaryLocalLiveProbePassed"])
         self.assertFalse(preflight["packagedDesktopTransport"]["packagedBinaryLiveProbeConfigured"])
         self.assertFalse(preflight["packagedDesktopTransport"]["packagedBinaryLiveProbePassed"])
+        self.assertEqual(preflight["packagedDesktopTransport"]["packagedBinaryLiveProbeRouteFamily"], "unknown")
+        self.assertEqual(preflight["packagedDesktopTransport"]["packagedBinaryLiveProbeFailureStage"], "unknown")
+        self.assertEqual(preflight["packagedDesktopTransport"]["packagedBinaryLiveProbeFailureKind"], "unknown")
         self.assertFalse(preflight["packagedDesktopTransport"]["endpointHostRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["tokenRetained"])
         self.assertFalse(preflight["packagedDesktopTransport"]["requestBodyRetained"])

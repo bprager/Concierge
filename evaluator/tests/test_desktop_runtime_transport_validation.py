@@ -18,7 +18,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
                     if len(binary_calls) == 1
                     else '{"requestSucceeded":true,"statusOk":true}'
                     if len(binary_calls) == 2
-                    else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}'
+                    else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"none","failureKind":"none"}'
                 )
                 return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr="")
             return subprocess.CompletedProcess(command, 0, stdout="secret output", stderr="secret error")
@@ -66,6 +66,9 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertTrue(transport["packagedBinaryLiveProbeTextTurnPassed"])
         self.assertTrue(transport["packagedBinaryLiveProbeTracePassed"])
         self.assertFalse(transport["packagedBinaryLiveProbeSideEffectClaimed"])
+        self.assertEqual(transport["packagedBinaryLiveProbeRouteFamily"], "cos")
+        self.assertEqual(transport["packagedBinaryLiveProbeFailureStage"], "none")
+        self.assertEqual(transport["packagedBinaryLiveProbeFailureKind"], "none")
         self.assertTrue(transport["explicitWebviewAuthPreserved"])
         self.assertTrue(transport["governedRouteAllowlistEnforced"])
         self.assertTrue(transport["governedRouteMethodAllowlistEnforced"])
@@ -137,7 +140,7 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
                     if binary_call_count == 1
                     else '{"requestSucceeded":true,"statusOk":true}'
                     if binary_call_count == 2
-                    else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false}'
+                    else '{"descriptorOk":true,"capabilitiesOk":true,"textTurnOk":true,"traceOk":true,"sideEffectClaimed":false,"routeFamily":"cos","failureStage":"none","failureKind":"none"}'
                 )
                 return subprocess.CompletedProcess(
                     command,
@@ -164,6 +167,42 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(report["checks"][7]["status"], "passed")
         self.assertEqual(report["checks"][8]["status"], "passed")
         self.assertTrue(report["packagedDesktopTransport"]["packagedNoBundleBuildPassed"])
+
+    def test_failed_live_probe_retains_sanitized_failure_diagnostics(self):
+        binary_calls = []
+
+        def runner(command, cwd):
+            if str(command[0]).endswith("concierge-desktop"):
+                binary_calls.append(list(command))
+                stdout = (
+                    '{"endpointConfigured":true,"authConfigured":true}'
+                    if len(binary_calls) == 1
+                    else '{"requestSucceeded":true,"statusOk":true}'
+                    if len(binary_calls) == 2
+                    else '{"descriptorOk":false,"capabilitiesOk":false,"textTurnOk":false,"traceOk":false,"sideEffectClaimed":false,"routeFamily":"generated","failureStage":"descriptor","failureKind":"http_not_ok"}'
+                )
+                return subprocess.CompletedProcess(command, 0, stdout=stdout, stderr="")
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+        report = desktop_runtime_transport_validation.build_report(
+            runner=runner,
+            tauri_dir=Path("/tmp/tauri"),
+            live_probe_endpoint="https://napoleon.example/v1/concierge/turn",
+        )
+
+        self.assertEqual(report["status"], "failed")
+        live_check = report["checks"][8]
+        self.assertEqual(live_check["id"], "tauri_packaged_desktop_binary_live_probe")
+        self.assertEqual(live_check["status"], "failed")
+        self.assertEqual(live_check["routeFamily"], "generated")
+        self.assertEqual(live_check["failureStage"], "descriptor")
+        self.assertEqual(live_check["failureKind"], "http_not_ok")
+        self.assertFalse(live_check["endpointHostRetained"])
+        self.assertFalse(live_check["tokenRetained"])
+        transport = report["packagedDesktopTransport"]
+        self.assertEqual(transport["packagedBinaryLiveProbeRouteFamily"], "generated")
+        self.assertEqual(transport["packagedBinaryLiveProbeFailureStage"], "descriptor")
+        self.assertEqual(transport["packagedBinaryLiveProbeFailureKind"], "http_not_ok")
 
     def test_main_writes_sanitized_report(self):
         runner = self.packaged_binary_probe_runner()

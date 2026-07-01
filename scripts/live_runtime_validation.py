@@ -635,6 +635,9 @@ def packaged_desktop_transport_default(required: bool) -> dict[str, Any]:
         "packagedBinaryLiveProbeTextTurnPassed": False,
         "packagedBinaryLiveProbeTracePassed": False,
         "packagedBinaryLiveProbeSideEffectClaimed": False,
+        "packagedBinaryLiveProbeRouteFamily": "unknown",
+        "packagedBinaryLiveProbeFailureStage": "unknown",
+        "packagedBinaryLiveProbeFailureKind": "unknown",
         "governedRouteAllowlistEnforced": False,
         "governedRouteMethodAllowlistEnforced": False,
         "packagedNoBundleBuildPassed": False,
@@ -790,6 +793,21 @@ def packaged_desktop_transport_summary(report_path: Path | None, required: bool)
         ),
         "packagedBinaryLiveProbeSideEffectClaimed": (
             transport.get("packagedBinaryLiveProbeSideEffectClaimed") is True
+        ),
+        "packagedBinaryLiveProbeRouteFamily": (
+            transport.get("packagedBinaryLiveProbeRouteFamily")
+            if isinstance(transport.get("packagedBinaryLiveProbeRouteFamily"), str)
+            else "unknown"
+        ),
+        "packagedBinaryLiveProbeFailureStage": (
+            transport.get("packagedBinaryLiveProbeFailureStage")
+            if isinstance(transport.get("packagedBinaryLiveProbeFailureStage"), str)
+            else "unknown"
+        ),
+        "packagedBinaryLiveProbeFailureKind": (
+            transport.get("packagedBinaryLiveProbeFailureKind")
+            if isinstance(transport.get("packagedBinaryLiveProbeFailureKind"), str)
+            else "unknown"
         ),
         "governedRouteAllowlistEnforced": transport.get("governedRouteAllowlistEnforced") is True,
         "governedRouteMethodAllowlistEnforced": (
@@ -1877,6 +1895,9 @@ def render_promotion_review(summary: dict[str, Any]) -> str:
         f"- Packaged desktop binary cos local live probe passed: `{str(packaged_desktop['packagedBinaryCosLocalLiveProbePassed']).lower()}`",
         f"- Packaged desktop binary live probe configured: `{str(packaged_desktop['packagedBinaryLiveProbeConfigured']).lower()}`",
         f"- Packaged desktop binary live probe passed: `{str(packaged_desktop['packagedBinaryLiveProbePassed']).lower()}`",
+        f"- Packaged desktop binary live probe route family: `{packaged_desktop['packagedBinaryLiveProbeRouteFamily']}`",
+        f"- Packaged desktop binary live probe failure stage: `{packaged_desktop['packagedBinaryLiveProbeFailureStage']}`",
+        f"- Packaged desktop binary live probe failure kind: `{packaged_desktop['packagedBinaryLiveProbeFailureKind']}`",
         f"- Browser proxy required by packaged transport: `{str(packaged_desktop['browserProxyRequired']).lower()}`",
         "",
         "## Napoleon Required Actions",

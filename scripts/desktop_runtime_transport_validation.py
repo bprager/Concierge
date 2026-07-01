@@ -49,6 +49,18 @@ TRANSPORT_TESTS = [
 
 
 CommandRunner = Callable[[Sequence[str], Path], subprocess.CompletedProcess[str]]
+LIVE_PROBE_ROUTE_FAMILIES = {"cos", "generated", "unknown"}
+LIVE_PROBE_FAILURE_STAGES = {"none", "not_run", "descriptor", "capabilities", "text_turn", "trace"}
+LIVE_PROBE_FAILURE_KINDS = {
+    "none",
+    "not_run",
+    "request_failed",
+    "http_not_ok",
+    "missing_trace_id",
+    "missing_generated_proof",
+    "invalid_json",
+    "unknown",
+}
 
 
 def run_command(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -63,6 +75,10 @@ def run_command(command: Sequence[str], cwd: Path) -> subprocess.CompletedProces
 
 
 DEFAULT_COMMAND_RUNNER = run_command
+
+
+def sanitized_label(value: Any, allowed: set[str], default: str) -> str:
+    return value if isinstance(value, str) and value in allowed else default
 
 
 def sanitized_check(
@@ -572,6 +588,21 @@ def packaged_binary_live_probe_check(
         "textTurnOk": isinstance(probe_status, dict) and probe_status.get("textTurnOk") is True,
         "traceOk": isinstance(probe_status, dict) and probe_status.get("traceOk") is True,
         "sideEffectClaimed": isinstance(probe_status, dict) and probe_status.get("sideEffectClaimed") is True,
+        "routeFamily": sanitized_label(
+            probe_status.get("routeFamily") if isinstance(probe_status, dict) else None,
+            LIVE_PROBE_ROUTE_FAMILIES,
+            "unknown",
+        ),
+        "failureStage": sanitized_label(
+            probe_status.get("failureStage") if isinstance(probe_status, dict) else None,
+            LIVE_PROBE_FAILURE_STAGES,
+            "unknown",
+        ),
+        "failureKind": sanitized_label(
+            probe_status.get("failureKind") if isinstance(probe_status, dict) else None,
+            LIVE_PROBE_FAILURE_KINDS,
+            "unknown",
+        ),
     }
 
 
@@ -717,6 +748,9 @@ def build_report(
             "packagedBinaryLiveProbeTextTurnPassed": packaged_live_probe.get("textTurnOk") is True,
             "packagedBinaryLiveProbeTracePassed": packaged_live_probe.get("traceOk") is True,
             "packagedBinaryLiveProbeSideEffectClaimed": packaged_live_probe.get("sideEffectClaimed") is True,
+            "packagedBinaryLiveProbeRouteFamily": packaged_live_probe.get("routeFamily") or "unknown",
+            "packagedBinaryLiveProbeFailureStage": packaged_live_probe.get("failureStage") or "unknown",
+            "packagedBinaryLiveProbeFailureKind": packaged_live_probe.get("failureKind") or "unknown",
             "explicitWebviewAuthPreserved": True,
             "governedRouteAllowlistEnforced": True,
             "governedRouteMethodAllowlistEnforced": True,
