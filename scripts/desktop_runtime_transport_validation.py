@@ -71,6 +71,17 @@ LIVE_PROBE_FAILURE_KINDS = {
     "invalid_json",
     "unknown",
 }
+LIVE_RUNTIME_ENV_KEYS = {
+    "CONCIERGE_DESKTOP_RUNTIME_LIVE_PROBE",
+    "CONCIERGE_DESKTOP_RUNTIME_LIVE_PROBE_OUT",
+    "NAPOLEON_BRIDGE_ENDPOINT",
+    "NAPOLEON_EVAL_ENDPOINT",
+    "NAPOLEON_EVAL_TOKEN",
+    "NAPOLEON_EVAL_TOKEN_FILE",
+    "NAPOLEON_RUNTIME_AUTH_TOKEN",
+    "NAPOLEON_RUNTIME_AUTH_TOKEN_FILE",
+    "NAPOLEON_RUNTIME_ENDPOINT",
+}
 
 
 def run_command(command: Sequence[str], cwd: Path) -> subprocess.CompletedProcess[str]:
@@ -81,10 +92,20 @@ def run_command(command: Sequence[str], cwd: Path) -> subprocess.CompletedProces
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        env=scrubbed_generic_check_env(),
     )
 
 
 DEFAULT_COMMAND_RUNNER = run_command
+
+
+def scrubbed_generic_check_env(env: dict[str, str] | None = None) -> dict[str, str]:
+    active_env = os.environ if env is None else env
+    return {
+        key: value
+        for key, value in active_env.items()
+        if key not in LIVE_RUNTIME_ENV_KEYS
+    }
 
 
 def sanitized_label(value: Any, allowed: set[str], default: str) -> str:

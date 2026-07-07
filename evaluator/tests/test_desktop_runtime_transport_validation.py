@@ -1,6 +1,7 @@
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 import plistlib
 from pathlib import Path
 
@@ -209,6 +210,44 @@ class DesktopRuntimeTransportValidationTest(unittest.TestCase):
         self.assertEqual(report["checks"][11]["status"], "passed")
         self.assertEqual(report["checks"][12]["status"], "passed")
         self.assertTrue(report["packagedDesktopTransport"]["packagedNoBundleBuildPassed"])
+
+    def test_generic_checks_do_not_inherit_live_runtime_auth_file(self):
+        captured_envs = []
+
+        def fake_run(command, **kwargs):
+            captured_envs.append(kwargs.get("env", {}))
+            return subprocess.CompletedProcess(command, 0, stdout="", stderr="")
+
+        with mock.patch.dict(
+            "os.environ",
+            {
+                "NAPOLEON_RUNTIME_ENDPOINT": "http://127.0.0.1:18765/cos",
+                "NAPOLEON_RUNTIME_AUTH_TOKEN": "live_token",
+                "NAPOLEON_RUNTIME_AUTH_TOKEN_FILE": "/tmp/live-token",
+                "NAPOLEON_EVAL_TOKEN": "eval_token",
+                "NAPOLEON_EVAL_TOKEN_FILE": "/tmp/eval-token",
+                "UNRELATED_SETTING": "kept",
+            },
+            clear=False,
+        ):
+            with mock.patch.object(subprocess, "run", side_effect=fake_run):
+                check = desktop_runtime_transport_validation.sanitized_check(
+                    check_id="tauri_desktop_runtime_transport_tests",
+                    description="Rust tests run without live runtime auth settings.",
+                    command=["cargo", "test", "runtime"],
+                    cwd=Path("."),
+                    runner=desktop_runtime_transport_validation.DEFAULT_COMMAND_RUNNER,
+                )
+
+        self.assertEqual(check["status"], "passed")
+        self.assertEqual(len(captured_envs), 1)
+        scrubbed_env = captured_envs[0]
+        self.assertNotIn("NAPOLEON_RUNTIME_ENDPOINT", scrubbed_env)
+        self.assertNotIn("NAPOLEON_RUNTIME_AUTH_TOKEN", scrubbed_env)
+        self.assertNotIn("NAPOLEON_RUNTIME_AUTH_TOKEN_FILE", scrubbed_env)
+        self.assertNotIn("NAPOLEON_EVAL_TOKEN", scrubbed_env)
+        self.assertNotIn("NAPOLEON_EVAL_TOKEN_FILE", scrubbed_env)
+        self.assertEqual(scrubbed_env["UNRELATED_SETTING"], "kept")
 
     def test_report_requires_macos_local_network_usage_description(self):
         runner = self.packaged_binary_probe_runner()

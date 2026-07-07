@@ -1,4 +1,4 @@
-.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment runtime-handoff-status goal-completion-audit goal-blocker-handoff goal-blocker-goal-prompt desktop-runtime-transport-validation packaged-live-runtime-validation generate-bridge-operations bridge-operations-check eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
+.PHONY: check eval eval-with-baseline eval-accept-baseline eval-human-review eval-summary evaluator-test bridge-harness bridge-evidence-capture bridge-evidence-compare napoleon-contract-alignment runtime-handoff-status goal-completion-audit goal-blocker-handoff goal-blocker-goal-prompt desktop-runtime-transport-validation packaged-live-runtime-validation packaged-desktop-release-gate-review packaged-desktop-release-gate-check generate-bridge-operations bridge-operations-check eval-http eval-http-local-harness live-runtime-validation live-runtime-local-harness schema-check app-test app-smoke app-build tauri-check zip
 
 NAPOLEON_CONTRACT_ALIGNMENT_OUT ?= /tmp/concierge-napoleon-alignment.json
 GOAL_COMPLETION_RUNTIME_HANDOFF_STATUS ?= /tmp/concierge-runtime-handoff-status.json
@@ -52,6 +52,12 @@ desktop-runtime-transport-validation:
 
 packaged-live-runtime-validation: desktop-runtime-transport-validation
 	PYTHONPATH=evaluator uv run --with PyYAML --with requests --with jsonschema python scripts/live_runtime_validation.py --desktop-runtime-transport-report /tmp/concierge-desktop-runtime-transport-validation.json --require-packaged-desktop-transport
+
+packaged-desktop-release-gate-review:
+	uv run python scripts/create_packaged_desktop_release_gate.py --summary /tmp/concierge-live-runtime-validation/summary.json --out docs/reports/PACKAGED_DESKTOP_RUNTIME_RELEASE_GATE.json --markdown-out docs/reports/PACKAGED_DESKTOP_RUNTIME_RELEASE_GATE.md --reviewer "$${PACKAGED_DESKTOP_RELEASE_REVIEWER:-Owner reviewer}" --decision accept
+
+packaged-desktop-release-gate-check:
+	uv run python scripts/create_packaged_desktop_release_gate.py --summary /tmp/concierge-live-runtime-validation/summary.json --check-artifact docs/reports/PACKAGED_DESKTOP_RUNTIME_RELEASE_GATE.json
 
 generate-bridge-operations:
 	uv run --with PyYAML python scripts/generate_bridge_operations.py
